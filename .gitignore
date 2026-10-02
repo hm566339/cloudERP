@@ -20,9 +20,6 @@ dist/
 build/
 *.jar
 *.war
-*.class
-account-main/org/
-account-main/META-INF/
 
 # OS & Editor
 .DS_Store
