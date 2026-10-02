@@ -1,0 +1,16 @@
+package com.erp.manufacturing.integration.inventory.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductInventoryResponse {
+    private UUID id;
+    private UUID companyId;
+    private ProductInventoryInfo product;
+}

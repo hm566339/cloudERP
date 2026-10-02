@@ -1,0 +1,220 @@
+sso:
+  authorization:
+    # ------------------------------------------------------------------
+    # SSO-only authorization routing.
+    #
+    # THIS FILE CONTAINS NO ROLES, NO ROLE->MODULE MAPPINGS AND NO LOCAL
+    # PERMISSION GRANTS. Roles, features and permissions are managed
+    # exclusively by the SSO service (POST /api/sso/token/verify).
+    #
+    # What lives here instead:
+    # 1. modules:            SSO module code -> URL (Ant) patterns. Purely a
+    #                        routing aid used to decide which SSO module a
+    #                        request belongs to. Grants nothing by itself.
+    # 2. method-actions:     Explicit HTTP method -> SSO action(s) mapping.
+    #                        The default POST/PUT/PATCH lists also accept
+    #                        WRITE because the SSO permission data carries an
+    #                        explicit `action` field; this is documented, not
+    #                        silent inference.
+    # 3. custom-action-suffixes: URL suffix -> SSO action for state-transition
+    #                        or import/export endpoints. Extend for any other
+    #                        action dynamically supported by SSO.
+    # 4. write-implies-create-update: THE ONLY explicit opt-in that lets an
+    #                        active+allowed WRITE also satisfy CREATE/UPDATE.
+    #                        Default false; never silently enabled.
+    # ------------------------------------------------------------------
+    modules:
+      CUSTOMERS:
+        - "/api/account/customers/**"
+      VENDORS:
+        - "/api/account/vendors/**"
+        - "/api/account/v1/vendors/**"
+      SALES_INVOICES:
+        - "/api/account/sales/invoices/**"
+      SALES_ORDERS:
+        - "/api/account/v1/sales-orders/**"
+        - "/api/account/v2/sales-orders/**"
+      DELIVERY_CHALLANS:
+        - "/api/account/v1/delivery-challans/**"
+      QUOTATIONS:
+        - "/api/account/sales/quotations/**"
+        - "/api/account/v1/quotations/**"
+      PROFORMA_INVOICES:
+        - "/api/account/v1/proforma-invoices/**"
+        - "/api/account/v2/proforma-invoices/**"
+        - "/api/account/proforma-invoices/**"
+      EXPENSE_REQUESTS:
+        - "/api/account/v1/expense-requests"
+        - "/api/account/v1/expense-requests/**"
+      EXPENSES:
+        - "/api/account/v1/expenses"
+        - "/api/account/v1/expenses/**"
+      REIMBURSEMENTS:
+        - "/api/account/v1/reimbursements"
+        - "/api/account/v1/reimbursements/**"
+      EXPENSE_REPORTS:
+        - "/api/account/v1/expense-reports"
+        - "/api/account/v1/expense-reports/**"
+      EXPENSE_CATEGORIES:
+        - "/api/account/expense-categories"
+        - "/api/account/expense-categories/**"
+      PURCHASE_INVOICES:
+        - "/api/account/invoices/**"
+      PURCHASE_ORDERS:
+        - "/api/account/purchase-orders"
+        - "/api/account/purchase-orders/**"
+      GOODS_RECEIPTS:
+        - "/api/account/goods-receipts"
+        - "/api/account/goods-receipts/**"
+      PURCHASE_RETURNS:
+        - "/api/account/purchase-returns"
+        - "/api/account/purchase-returns/**"
+      PURCHASE_REQUISITIONS:
+        - "/api/account/purchase-requisitions"
+        - "/api/account/purchase-requisitions/**"
+      RFQS:
+        - "/api/account/rfqs"
+        - "/api/account/rfqs/**"
+      SUPPLIER_QUOTATIONS:
+        - "/api/account/supplier-quotations"
+        - "/api/account/supplier-quotations/**"
+      AR_INVOICES:
+        - "/api/v1/ar-invoices"
+        - "/api/v1/ar-invoices/**"
+        - "/api/account/v1/ar-invoices"
+        - "/api/account/v1/ar-invoices/**"
+      PAYMENT_VOUCHERS:
+        - "/api/account/payment-vouchers/**"
+        - "/api/account/payments/**"
+      AP_PAYMENTS:
+        - "/api/account/ap-payments"
+        - "/api/account/ap-payments/**"
+      RECEIPTS:
+        - "/api/account/receipt-vouchers/**"
+        - "/api/account/receipts/**"
+      CREDIT_NOTES:
+        - "/api/account/credit-notes/**"
+      DEBIT_NOTES:
+        - "/api/account/debit-notes/**"
+      GENERAL_LEDGER:
+        - "/api/account/gl/**"
+        - "/api/account/ledger/**"
+        - "/api/account/integration/**"
+      CHART_OF_ACCOUNTS:
+        - "/api/account/chart-of-accounts"
+        - "/api/account/chart-of-accounts/**"
+        - "/api/account/coa/**"
+        - "/api/account/ledger/coa/**"
+      BANK_ACCOUNTS:
+        - "/api/account/bank-accounts/**"
+        - "/api/account/banks/accounts/**"
+      BANK_TRANSACTIONS:
+        - "/api/account/bank-transactions/**"
+        - "/api/account/banks/transactions/**"
+      BUDGET_HEADERS:
+        - "/api/account/budget-headers/**"
+        - "/api/account/budgets/headers/**"
+      BUDGET_LINES:
+        - "/api/account/budget-lines/**"
+        - "/api/account/budgets/lines/**"
+      REPORTS:
+        - "/api/account/reports"
+        - "/api/account/reports/**"
+        - "/api/account/v1/reports"
+        - "/api/account/v1/reports/**"
+        - "/api/account/reports/cash-flow/**"
+      DASHBOARD:
+        - "/api/account/dashboard"
+        - "/api/account/dashboard/**"
+      GL_JOURNALS:
+        - "/api/account/gl-journals/**"
+        - "/api/account/gl/journals/**"
+      GL_JOURNAL_LINES:
+        - "/api/account/gl-journal-lines/**"
+        - "/api/account/gl/journal-lines/**"
+      ACCOUNT_GROUPS:
+        - "/api/account/account-groups"
+        - "/api/account/account-groups/**"
+        - "/api/account/ledger/groups/**"
+      ACCOUNT_CATEGORIES:
+        - "/api/account/account-categories"
+        - "/api/account/account-categories/**"
+        - "/api/account/ledger/categories/**"
+      GST_SLABS:
+        - "/api/account/gst-slabs/**"
+        - "/api/account/tax/gst-slabs/**"
+      HSN_SAC:
+        - "/api/account/hsn-sac/**"
+        - "/api/account/tax/hsn-sac/**"
+      SALES_TAXES:
+        - "/api/account/sales-taxes/**"
+        - "/api/account/tax/sales-taxes/**"
+      BANK_RECONCILIATION:
+        - "/api/account/bank-reconciliation/**"
+        - "/api/account/banks/reconciliation/**"
+      AUDIT_LOGS:
+        - "/api/account/audit-logs"
+        - "/api/account/audit-logs/**"
+      ACCOUNTING_PERIODS:
+        - "/api/account/accounting-periods"
+        - "/api/account/accounting-periods/**"
+      FISCAL_YEARS:
+        - "/api/account/fiscal-years"
+        - "/api/account/fiscal-years/**"
+      GST_MASTER:
+        - "/api/account/gst/master/**"
+      GST_REPORTS:
+        - "/api/reports/gst/**"
+        - "/api/account/reports/gst/**"
+        - "/api/account/gst/ledger/**"
+        - "/api/gst/ecl/**"
+        - "/api/gst/gstr2b/**"
+      SETTINGS:
+        - "/api/account/v1/settings/**"
+        - "/api/account/workflow/**"
+
+    method-actions:
+      GET:
+        - "READ"
+      POST:
+        - "CREATE"
+        - "WRITE"
+      PUT:
+        - "UPDATE"
+        - "WRITE"
+      PATCH:
+        - "UPDATE"
+        - "WRITE"
+      DELETE:
+        - "DELETE"
+
+    custom-action-suffixes:
+      "/approve": "APPROVE"
+      "/award": "AWARD"
+      "/reject": "REJECT"
+      "/cancel": "CANCEL"
+      "/send": "SEND"
+      "/reverse": "REVERSE"
+      "/close": "CLOSE"
+      "/post": "POST"
+      "/confirm": "POST"
+      "/verify": "UPDATE"
+      "/export": "EXPORT"
+
+    feature-groups:
+      SALES_INVOICE:
+        SALES_INVOICES:
+          - READ
+          - CREATE
+          - UPDATE
+          - DELETE
+        CUSTOMERS:
+          - READ
+        HSN_SAC:
+          - READ
+        SALES_TAXES:
+          - READ
+        GST_SLABS:
+          - READ
+
+    write-implies-create-update: false

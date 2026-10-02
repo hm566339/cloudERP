@@ -1,0 +1,11 @@
+.git
+.github
+.vscode
+**/.git
+**/node_modules
+**/target
+**/*.log
+**/*.tmp
+deploy-project/releases
+*.zip
+*.pdf

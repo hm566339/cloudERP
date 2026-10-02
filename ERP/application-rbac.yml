@@ -1,0 +1,242 @@
+rbac:
+  modules:
+    PRODUCTS:
+      - "/api/inventory/products/**"
+    PRODUCT_CATEGORIES:
+      - "/api/inventory/product-categories/**"
+    PRODUCT_UOMS:
+      - "/api/inventory/product-uoms/**"
+    PRODUCT_PRICES:
+      - "/api/inventory/product-prices/**"
+    WAREHOUSES:
+      - "/api/inventory/warehouses/**"
+    WAREHOUSE_LOCATIONS:
+      - "/api/inventory/warehouse-locations/**"
+    STOCK:
+      - "/api/inventory/inventory-stocks/**"
+    STOCK_MOVEMENTS:
+      - "/api/inventory/stock-movements/**"
+    STOCK_ADJUSTMENTS:
+      - "/api/inventory/stock-adjustments/**"
+    STOCK_TRANSFERS:
+      - "/api/inventory/stock-transfers/**"
+    STOCK_RESERVATIONS:
+      - "/api/inventory/stock-reservations/**"
+    PRODUCT_BATCHES:
+      - "/api/inventory/product-batches/**"
+    PRODUCT_SERIALS:
+      - "/api/inventory/product-serials/**"
+    INVENTORY_VALUATION:
+      - "/api/inventory/inventory-valuations/**"
+    OPENING_STOCK:
+      - "/api/inventory/opening-stocks/**"
+    INVENTORY_REPORTS:
+      - "/api/inventory/reports/**"
+    INVENTORY_POSTING:
+      - "/api/inventory/inventory-posting/**"
+    ALL_MODULES:
+      - "/api/inventory/**"
+    SALES_INVOICE_INTEGRATION:
+      - "/api/inventory/integration/sales-invoice/**"
+    PURCHASE_INVOICE_INTEGRATION:
+      - "/api/inventory/integration/purchase-invoice/**"
+    STOCK_INTEGRATION:
+      - "/api/inventory/integration/stock/**"
+
+  roles:
+    SYSTEM_ADMIN:
+      permissions:
+        - CREATE
+        - READ
+        - UPDATE
+        - DELETE
+        - APPROVE
+        - EXPORT
+        - PRINT
+      modules:
+        - ALL_MODULES
+    FINANCE_MANAGER:
+      permissions:
+        - CREATE
+        - READ
+        - UPDATE
+        - DELETE
+        - APPROVE
+        - EXPORT
+        - PRINT
+      modules:
+        - PRODUCTS
+        - PRODUCT_PRICES
+        - STOCK
+        - STOCK_MOVEMENTS
+        - STOCK_ADJUSTMENTS
+        - INVENTORY_VALUATION
+        - INVENTORY_REPORTS
+        - SALES_INVOICE_INTEGRATION
+        - PURCHASE_INVOICE_INTEGRATION
+        - STOCK_INTEGRATION
+        - WAREHOUSES
+        - WAREHOUSE_LOCATIONS
+    ACCOUNTANT:
+      permissions:
+        - CREATE
+        - READ
+        - UPDATE
+        - EXPORT
+        - PRINT
+      modules:
+        - PRODUCTS
+        - PRODUCT_PRICES
+        - STOCK
+        - WAREHOUSES
+        - WAREHOUSE_LOCATIONS
+        - STOCK_MOVEMENTS
+        - INVENTORY_VALUATION
+        - INVENTORY_REPORTS
+        - SALES_INVOICE_INTEGRATION
+        - PURCHASE_INVOICE_INTEGRATION
+        - STOCK_INTEGRATION
+    GL_ACCOUNTANT:
+      permissions:
+        - READ
+        - EXPORT
+        - PRINT
+      modules:
+        - PRODUCTS
+        - STOCK
+        - WAREHOUSES
+        - WAREHOUSE_LOCATIONS
+        - INVENTORY_VALUATION
+        - INVENTORY_REPORTS
+    AP_EXECUTIVE:
+      permissions:
+        - READ
+        - EXPORT
+      modules:
+        - PRODUCTS
+        - PRODUCT_UOMS
+        - WAREHOUSES
+        - WAREHOUSE_LOCATIONS
+        - PRODUCT_PRICES
+        - PRODUCT_BATCHES
+        - PURCHASE_INVOICE_INTEGRATION
+    AR_EXECUTIVE:
+      permissions:
+        - READ
+        - EXPORT
+      modules:
+        - PRODUCTS
+        - PRODUCT_UOMS
+        - PRODUCT_PRICES
+        - SALES_INVOICE_INTEGRATION
+    TAX_MANAGER:
+      permissions:
+        - CREATE
+        - READ
+        - UPDATE
+        - DELETE
+        - EXPORT
+        - PRINT
+      modules:
+        - PRODUCTS
+        - PRODUCT_CATEGORIES
+        - PRODUCT_UOMS
+        - INVENTORY_REPORTS
+    INVENTORY_MANAGER:
+      permissions:
+        - CREATE
+        - READ
+        - UPDATE
+        - DELETE
+        - APPROVE
+        - EXPORT
+        - PRINT
+      modules:
+        - PRODUCTS
+        - PRODUCT_CATEGORIES
+        - PRODUCT_UOMS
+        - PRODUCT_PRICES
+        - WAREHOUSES
+        - WAREHOUSE_LOCATIONS
+        - STOCK
+        - STOCK_MOVEMENTS
+        - STOCK_ADJUSTMENTS
+        - STOCK_TRANSFERS
+        - STOCK_RESERVATIONS
+        - PRODUCT_BATCHES
+        - PRODUCT_SERIALS
+        - INVENTORY_VALUATION
+        - OPENING_STOCK
+        - INVENTORY_REPORTS
+    WAREHOUSE_MANAGER:
+      permissions:
+        - CREATE
+        - READ
+        - UPDATE
+        - APPROVE
+        - EXPORT
+        - PRINT
+      modules:
+        - PRODUCTS
+        - WAREHOUSES
+        - WAREHOUSE_LOCATIONS
+        - STOCK
+        - STOCK_MOVEMENTS
+        - STOCK_TRANSFERS
+        - STOCK_RESERVATIONS
+        - PRODUCT_BATCHES
+        - PRODUCT_SERIALS
+    STOCK_EXECUTIVE:
+      permissions:
+        - CREATE
+        - READ
+        - UPDATE
+      modules:
+        - PRODUCTS
+        - STOCK
+        - STOCK_MOVEMENTS
+        - STOCK_RESERVATIONS
+        - PRODUCT_BATCHES
+        - PRODUCT_SERIALS
+    INVENTORY_AUDITOR:
+      permissions:
+        - READ
+        - EXPORT
+        - PRINT
+      modules:
+        - PRODUCTS
+        - WAREHOUSES
+        - STOCK
+        - STOCK_MOVEMENTS
+        - STOCK_ADJUSTMENTS
+        - STOCK_TRANSFERS
+        - INVENTORY_VALUATION
+        - INVENTORY_REPORTS
+    AUDITOR:
+      permissions:
+        - READ
+        - EXPORT
+        - PRINT
+      modules:
+        - ALL_MODULES
+    CFO:
+      permissions:
+        - READ
+        - APPROVE
+        - EXPORT
+        - PRINT
+      modules:
+        - ALL_MODULES
+    VIEWER:
+      permissions:
+        - READ
+      modules:
+        - PRODUCTS
+        - STOCK
+        - INVENTORY_REPORTS
+    INVENTORY_SERVICE:
+      permissions:
+        - READ
+        - CREATE
+      modules:
+        - INVENTORY_POSTING

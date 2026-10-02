@@ -1,0 +1,136 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: ${NAME}
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 20000
+      max-lifetime: 1800000
+
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_AUTH}
+          starttls:
+            enable: ${MAIL_STARTTLS_ENABLE}
+            required: true
+
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_HIBERNATE_DDL_AUTO}
+    show-sql: ${JPA_SHOW_SQL}
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: ${JPA_FORMAT_SQL}
+        jdbc:
+          time_zone: UTC
+
+server:
+  port: ${PORT}
+  address: ${SERVER_ADDRESS}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    enabled: ${SWAGGER_ENABLED}
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus
+
+  endpoint:
+    health:
+      show-details: when_authorized
+
+  health:
+    diskspace:
+      enabled: true
+    db:
+      enabled: true
+
+info:
+  app:
+    name: ${NAME}
+    description: ${DESCRIPTION}
+    version: ${VERSION}
+    developer: ${DEVELOPER}
+    organization: ${ORGANIZATION}
+
+logging:
+  level:
+    root: INFO
+    org.springframework: WARN
+  #    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# jwt:
+#   secret: ${JWT_SECRET}
+#   expiration: ${JWT_EXPIRATION}
+
+api:
+  frontend: ${APP_FRONTEND_URL}
+  base: ${SSO_BASE_URL}
+  createCompany: ${CREATE_ADMIN_COMPANY}
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+    same-site: ${COOKIE_SAME_SITE:Lax}
+
+billing:
+  webhook:
+    secret: ${BILLING_WEBHOOK_SECRET:}
+
+system:
+  admin:
+    email: ${ADMIN_USERNAME}
+    password: ${ADMIN_PASSWORD}
+
+strapi:
+  server: ${STRAPI_SERVER}
+  token: ${STRAPI_TOKEN}
+
+sso:
+  trial-days: ${SSO_TRIAL_DAYS:30}
+  trial-expiry-cron: ${SSO_TRIAL_EXPIRY_CRON:0 0 * * * *}
+  cookies:
+    secure: ${COOKIE_SECURE:false}
+    same-site: ${COOKIE_SAME_SITE:Lax}
+    
+cloudinary:
+  cloud_name: ${CLOUDINARY_CLOUD_NAME}
+  api_key: ${CLOUDINARY_API_KEY}
+  api_secret: ${CLOUDINARY_API_SECRET}
+
+platform:
+  admin:
+    session-duration-minutes: ${PLATFORM_ADMIN_SESSION_DURATION:480}
+    support:
+      default-duration-minutes: ${PLATFORM_SUPPORT_DEFAULT_DURATION:30}
+      max-duration-minutes: ${PLATFORM_SUPPORT_MAX_DURATION:60}
+    login:
+      max-failed-attempts: ${PLATFORM_LOGIN_MAX_FAILED_ATTEMPTS:5}
+      lockout-minutes: ${PLATFORM_LOGIN_LOCKOUT_MINUTES:15}
+

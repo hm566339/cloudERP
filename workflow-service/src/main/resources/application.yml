@@ -1,0 +1,85 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+  application:
+    name: ${SPRING_APPLICATION_NAME:workflow-service}
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/workflow_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: WorkflowHikariCP
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${WORKFLOW_ATTACHMENT_MAX_FILE_SIZE:10MB}
+      max-request-size: ${WORKFLOW_ATTACHMENT_MAX_REQUEST_SIZE:15MB}
+
+server:
+  port: ${SERVER_PORT:8083}
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operationsSorter: method
+
+logging:
+  level:
+    root: INFO
+    com.erp.workflow: DEBUG
+    org.springframework.security: WARN
+
+workflow:
+  attachment:
+    storage-path: ${WORKFLOW_ATTACHMENT_STORAGE_PATH:uploads/workflow}
+  sla:
+    check-delay-ms: ${WORKFLOW_SLA_CHECK_DELAY_MS:60000}
+  callback:
+    timeout-ms: ${WORKFLOW_CALLBACK_TIMEOUT_MS:5000}
+    retry-enabled: ${WORKFLOW_CALLBACK_RETRY_ENABLED:true}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:default-must-be-overridden-in-production}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3001,http://localhost:8080}
+
+auth:
+  service:
+    base-url: ${AUTH_SERVICE_BASE_URL:http://localhost:8090}

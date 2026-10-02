@@ -1,0 +1,12 @@
+import React from 'react';
+import { Printer } from 'lucide-react';
+
+export default function TransactionFormFooter({ config, values, onChange, onCancel, onPrint, loading, disabled }) {
+  const renderAction = action => {
+    if (action.type === 'checkbox') return <label key={action.key} className="flex items-center gap-1.5 text-[9px] text-zinc-600"><input type="checkbox" checked={Boolean(values[action.key])} disabled={disabled || loading} onChange={e => onChange(action.key, e.target.checked)} />{action.label}</label>;
+    const isSubmit = action.type === 'submit';
+    const onClick = action.key === 'cancel' ? onCancel : action.key === 'print' ? onPrint : action.onClick;
+    return <button key={action.key} type={isSubmit ? 'submit' : 'button'} onClick={onClick} disabled={disabled || loading} className={`h-8 px-3 rounded-md text-[9px] font-semibold flex items-center gap-1.5 ${action.variant === 'primary' ? 'bg-zinc-900 text-white hover:bg-zinc-700' : 'bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-50'}`}>{action.icon === 'print' && <Printer size={12} />}{action.label}</button>;
+  };
+  return <footer className="flex flex-wrap items-center justify-between gap-3 p-2.5 border-t border-zinc-200 bg-zinc-50/70"> <div className="flex flex-wrap items-center gap-4">{(config.footer?.leftActions || []).map(renderAction)}</div><div className="flex items-center gap-2">{(config.footer?.rightActions || []).map(renderAction)}</div></footer>;
+}

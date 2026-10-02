@@ -1,0 +1,126 @@
+import React from 'react';
+import DataTableActionMenu from './DataTableActionMenu';
+
+/**
+ * Individual row component for DataTable with custom cell rendering,
+ * sticky actions, and expandable row content.
+ */
+export default function DataTableRow({
+  row,
+  index,
+  columns = [],
+  rowActions = [],
+  showIndex = true,
+  rowIndex,
+  selectable = false,
+  isSelected = false,
+  onSelectRow,
+  isExpanded = false,
+  onToggleExpand,
+  renderExpandedRow,
+  onRowClick,
+  rowClassName
+}) {
+  const handleRowClick = (e) => {
+    if (onRowClick) {
+      onRowClick(row, index, e);
+    }
+    if (renderExpandedRow && onToggleExpand) {
+      onToggleExpand(row, index);
+    }
+  };
+
+  const resolvedActions = typeof rowActions === 'function' ? rowActions(row, index) : (Array.isArray(rowActions) ? rowActions : []);
+  const hasRowActions = Boolean(resolvedActions && resolvedActions.length > 0);
+
+  const hasClickAction = Boolean(onRowClick || renderExpandedRow);
+  const totalColSpan = columns.length + (showIndex ? 1 : 0) + (hasRowActions ? 1 : 0) + (selectable ? 1 : 0);
+
+  const customClass = typeof rowClassName === 'function' ? rowClassName(row, index) : rowClassName || '';
+
+  return (
+    <>
+      <tr
+        onClick={hasClickAction ? handleRowClick : undefined}
+        className={`border-b border-zinc-100 transition-colors ${
+          hasClickAction ? 'cursor-pointer' : ''
+        } ${isSelected ? 'bg-zinc-50/90' : isExpanded ? 'bg-zinc-50/80' : 'hover:bg-zinc-50/70'} ${customClass}`}
+      >
+        {/* Selection Checkbox */}
+        {selectable && (
+          <td
+            className="p-4 text-center w-10 select-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-center">
+              <input
+                type="checkbox"
+                checked={Boolean(isSelected)}
+                onChange={(e) => onSelectRow && onSelectRow(e)}
+                onClick={(e) => e.stopPropagation()}
+                className="w-4 h-4 rounded border-zinc-300 text-zinc-900 accent-zinc-900 focus:ring-zinc-900/20 focus:ring-offset-0 transition-colors cursor-pointer"
+                aria-label={`Select row ${rowIndex !== undefined ? rowIndex : index + 1}`}
+              />
+            </div>
+          </td>
+        )}
+
+        {/* Row Index (#) */}
+        {showIndex && (
+          <td className="p-4 text-center text-zinc-400 text-xs w-12 select-none">
+            {rowIndex !== undefined ? rowIndex : index + 1}
+          </td>
+        )}
+
+        {/* Dynamic Columns */}
+        {columns.map((col) => {
+          const colKey = col.key || col.id;
+          const rawValue = row[colKey];
+
+          const alignClass =
+            col.align === 'right'
+              ? 'text-right'
+              : col.align === 'center'
+              ? 'text-center'
+              : 'text-left';
+
+          const renderedContent = col.render
+            ? col.render(rawValue, row, index)
+            : typeof col.cell === 'function'
+            ? col.cell(row, rawValue, index)
+            : rawValue !== undefined && rawValue !== null && rawValue !== ''
+            ? String(rawValue)
+            : '-';
+
+          return (
+            <td
+              key={colKey}
+              className={`p-4 text-zinc-800 text-sm ${alignClass} ${col.className || ''}`}
+              style={col.width ? { width: col.width, minWidth: col.width } : undefined}
+            >
+              {renderedContent}
+            </td>
+          );
+        })}
+
+        {/* Actions Column (Sticky Right) */}
+        {hasRowActions && (
+          <td className="p-4 text-right sticky right-0 bg-white group-hover:bg-zinc-50/70 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] z-10">
+            <DataTableActionMenu actions={resolvedActions} row={row} index={index} />
+          </td>
+        )}
+      </tr>
+
+      {/* Optional Expanded Row Drawer */}
+      {isExpanded && renderExpandedRow && (
+        <tr>
+          <td colSpan={totalColSpan} className="p-0 border-b border-zinc-100">
+            <div className="bg-zinc-50/50 p-6 shadow-inner border-y border-zinc-100 animate-slide-down">
+              {renderExpandedRow(row, index)}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}

@@ -1,0 +1,13 @@
+package com.erp.inventory.modules.auth.dto.request;
+
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class TokenExchangeRequest {
+
+    private String code;
+    private String clientId;
+    private String clientSecret;
+}

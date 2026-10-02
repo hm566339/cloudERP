@@ -1,0 +1,7 @@
+package com.erp.account.common.exception;
+
+public class InvalidAmountException extends ValidationException {
+    public InvalidAmountException(String message) {
+        super(message);
+    }
+}

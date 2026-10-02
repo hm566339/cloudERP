@@ -1,0 +1,26 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/proxy?path=:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "ngrok-skip-browser-warning", "value": "true" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}

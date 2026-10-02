@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: f2-integration-postgres
+    environment:
+      POSTGRES_USER: f2_test
+      POSTGRES_PASSWORD: f2_test
+      POSTGRES_DB: postgres
+    ports:
+      - "55432:5432"
+    volumes:
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/01-create-databases.sql:ro
+      - f2-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U f2_test -d postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  f2-postgres-data:

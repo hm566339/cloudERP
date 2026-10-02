@@ -1,0 +1,100 @@
+sso:
+  authorization:
+    # ------------------------------------------------------------------
+    # SSO-only authorization routing.
+    #
+    # THIS FILE CONTAINS NO ROLES, NO ROLE->MODULE MAPPINGS AND NO LOCAL
+    # PERMISSION GRANTS. Roles, features and permissions are managed
+    # exclusively by the SSO service (POST /api/sso/token/verify).
+    #
+    # What lives here instead:
+    # 1. modules:            SSO module code -> URL (Ant) patterns. Purely a
+    #                        routing aid used to decide which SSO module a
+    #                        request belongs to. Grants nothing by itself.
+    # 2. method-actions:     Explicit HTTP method -> SSO action(s) mapping.
+    #                        The default POST/PUT/PATCH lists also accept
+    #                        WRITE because the SSO permission data carries an
+    #                        explicit `action` field; this is documented, not
+    #                        silent inference.
+    # 3. custom-action-suffixes: URL suffix -> SSO action for state-transition
+    #                        or import/export endpoints. Extend for any other
+    #                        action dynamically supported by SSO.
+    # 4. write-implies-create-update: THE ONLY explicit opt-in that lets an
+    #                        active+allowed WRITE also satisfy CREATE/UPDATE.
+    #                        Default false; never silently enabled.
+    # ------------------------------------------------------------------
+    modules:
+      PRODUCTS:
+        - "/api/inventory/products/**"
+      PRODUCT_CATEGORIES:
+        - "/api/inventory/product-categories/**"
+      PRODUCT_UOMS:
+        - "/api/inventory/unit-of-measures/**"
+        - "/api/inventory/product-uoms/**"
+      PRODUCT_PRICES:
+        - "/api/inventory/product-prices/**"
+      WAREHOUSES:
+        - "/api/inventory/warehouses/**"
+      WAREHOUSE_LOCATIONS:
+        - "/api/inventory/warehouse-locations/**"
+      STOCK:
+        - "/api/inventory/inventory-stocks/**"
+        - "/api/inventory/integration/**"
+      STOCK_MOVEMENTS:
+        - "/api/inventory/stock-movements/**"
+        - "/api/inventory/stock-movement-lines/**"
+      STOCK_ADJUSTMENTS:
+        - "/api/inventory/stock-adjustments/**"
+      STOCK_TRANSFERS:
+        - "/api/inventory/stock-transfers/**"
+        - "/api/inventory/stock-transfer-lines/**"
+      STOCK_RESERVATIONS:
+        - "/api/inventory/stock-reservations/**"
+      PRODUCT_BATCHES:
+        - "/api/inventory/product-batches/**"
+      PRODUCT_SERIALS:
+        - "/api/inventory/product-serials/**"
+      INVENTORY_VALUATION:
+        - "/api/inventory/inventory-valuations/**"
+        - "/api/inventory/inventory-cost-layers/**"
+      OPENING_STOCK:
+        - "/api/inventory/opening-stocks/**"
+      INVENTORY_REPORTS:
+        - "/api/inventory/reports/**"
+        - "/api/inventory/dashboard"
+        - "/api/inventory/dashboard/**"
+      INVENTORY_POSTING:
+        - "/api/inventory/inventory-posting/**"
+      INVENTORY_SNAPSHOTS:
+        - "/api/inventory/inventory-snapshots/**"
+        - "/api/inventory/inventory-periods/**"
+
+    method-actions:
+      GET:
+        - "READ"
+      POST:
+        - "CREATE"
+        - "WRITE"
+      PUT:
+        - "UPDATE"
+        - "WRITE"
+      PATCH:
+        - "UPDATE"
+        - "WRITE"
+      DELETE:
+        - "DELETE"
+
+    custom-action-suffixes:
+      "/approve": "APPROVE"
+      "/award": "AWARD"
+      "/reject": "REJECT"
+      "/cancel": "CANCEL"
+      "/send": "SEND"
+      "/reverse": "REVERSE"
+      "/close": "CLOSE"
+      "/post": "POST"
+      "/confirm": "POST"
+      "/verify": "UPDATE"
+      "/export": "EXPORT"
+
+    write-implies-create-update: false

@@ -1,0 +1,196 @@
+Table company {
+  id uuid [pk]
+  company_code varchar(100) [not null, unique]
+  company_secret varchar(100)
+  company_name varchar(255) [not null]
+  gstin varchar
+  base_currency varchar
+  email varchar(255)
+  phone varchar(20)
+  address varchar(500)
+  active boolean [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table module {
+  id uuid [pk]
+  name varchar(100) [not null, unique]
+  client_id uuid [not null, unique]
+  client_secret varchar(500) [not null]
+  host varchar(255)
+  module_status boolean [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table company_module {
+  id uuid [pk]
+  company_id uuid [not null]
+  module_id uuid [not null]
+  active boolean [not null]
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (company_id)
+    (module_id)
+    (company_id, module_id) [unique]
+  }
+
+}
+
+Table user {
+  id uuid [pk]
+  emp_id varchar
+  company_id uuid [not null]
+
+  username varchar(100) [not null]
+  email varchar(255) [not null]
+  password varchar [not null]
+  full_name varchar(255)
+
+  account_status varchar [not null]
+  email_status varchar [not null]
+
+  failed_login_count int [not null]
+  locked_until timestamp
+
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (company_id, username) [unique]
+    (company_id, email) [unique]
+  }
+
+}
+
+Table role {
+  id uuid [pk]
+  company_id uuid
+
+  name varchar(100) [not null]
+  status boolean [not null]
+
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (company_id, name) [unique]
+  }
+
+}
+
+Table user_role {
+  user_id uuid [not null]
+  role_id uuid [not null]
+
+  assigned_at timestamp
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (user_id, role_id) [pk]
+  }
+
+}
+
+Table user_portal_access {
+  id uuid [pk]
+
+  user_id uuid [not null]
+  company_module_id uuid [not null]
+
+  status boolean [not null]
+
+  created_at timestamp
+  updated_at timestamp
+
+  indexes {
+    (user_id, company_module_id) [unique]
+  }
+
+}
+
+Table session {
+  id uuid [pk]
+
+  user_id uuid [not null]
+  company_id uuid [not null]
+  module_id uuid
+
+  access_token text [not null, unique]
+  access_token_valid_till timestamp [not null]
+
+  refresh_token text [not null, unique]
+  refresh_token_valid_till timestamp [not null]
+
+  ip_address varchar(100)
+  user_agent text
+
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table authorization_code {
+  code varchar(255) [pk]
+
+  used boolean [not null]
+  expires_at timestamp [not null]
+
+  user_id uuid [not null]
+  company_id uuid [not null]
+  module_id uuid [not null]
+
+  goto_url varchar(500)
+
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table user_token {
+  id uuid [pk]
+
+  token varchar(500) [not null, unique]
+  token_type varchar [not null]
+
+  user_id uuid [not null]
+  company_id uuid [not null]
+  module_id uuid [not null]
+
+  used boolean [not null]
+  expires_at timestamp [not null]
+
+  created_at timestamp
+  updated_at timestamp
+}
+
+/* ===========================
+RELATIONSHIPS
+=========================== */
+
+Ref: user.company_id > company.id
+
+Ref: role.company_id > company.id
+
+Ref: company_module.company_id > company.id
+Ref: company_module.module_id > module.id
+
+Ref: user_role.user_id > user.id
+Ref: user_role.role_id > role.id
+
+Ref: user_portal_access.user_id > user.id
+Ref: user_portal_access.company_module_id > company_module.id
+
+Ref: session.user_id > user.id
+Ref: session.company_id > company.id
+Ref: session.module_id > module.id
+
+Ref: authorization_code.user_id > user.id
+Ref: authorization_code.company_id > company.id
+Ref: authorization_code.module_id > module.id
+
+Ref: user_token.user_id > user.id
+Ref: user_token.company_id > company.id
+Ref: user_token.module_id > module.id

@@ -1,0 +1,329 @@
+Table stock_adjustment {
+  id UUID [primary key]
+  adjustment_no varchar
+  adjustment_date datetime
+  warehouse_id UUID
+  location_id UUID
+  reason varchar
+  remarks varchar
+  status varchar
+  stock_movement_id UUID
+  approved_by UUID
+  approved_at datetime
+  version integer
+}
+
+Table stock_adjustment_line {
+  id UUID [primary key]
+  stock_adjustment_id UUID
+  product_id UUID
+  batch_id UUID
+  serial_id UUID
+  adjustment_type varchar
+  quantity decimal
+  unit_cost decimal
+  adjustment_value decimal
+}
+
+Table product_batch {
+  id UUID [primary key]
+  product_id UUID
+  batch_number varchar
+  manufacturing_date datetime
+  expiry_date datetime
+  supplier_id UUID
+  status varchar
+}
+
+Table opening_stock {
+  id UUID [primary key]
+  opening_stock_no varchar
+  opening_date datetime
+  warehouse_id UUID
+  status varchar
+  stock_movement_id UUID
+  remarks varchar
+  approved_by UUID
+  approved_at datetime
+  version integer
+}
+
+Table opening_stock_line {
+  id UUID [primary key]
+  opening_stock_id UUID
+  warehouse_location_id UUID
+  product_id UUID
+  batch_id UUID
+  serial_id UUID
+  quantity decimal
+  unit_cost decimal
+  total_value decimal
+  uom_id UUID
+}
+
+Table inventory_period {
+  id UUID [primary key]
+  period_name varchar
+  start_date datetime
+  end_date datetime
+  status varchar
+  closed_at datetime
+  closed_by UUID
+}
+
+Table inventory_snapshot {
+  id UUID [primary key]
+  snapshot_scope varchar
+  snapshot_date datetime
+  product_id UUID
+  warehouse_id UUID
+  location_id UUID
+  batch_id UUID
+  quantity decimal
+  reserved_quantity decimal
+  available_quantity decimal
+  average_cost decimal
+  stock_value decimal
+}
+
+Table product_price {
+  id UUID [primary key]
+  product_id UUID
+  price_type PriceType
+  price decimal
+  currency_code varchar
+  min_quantity decimal
+  effective_from datetime
+  effective_to datetime
+  status varchar
+}
+
+Table product {
+  id UUID [primary key]
+  product_code varchar
+  sku varchar
+  product_name varchar
+  product_type ProductType
+  category_id UUID
+  base_uom_id UUID
+  hsn_sac_id UUID
+  hsn_sac_code varchar
+  hsn_sac_name varchar
+  barcode varchar
+  alternate_barcode varchar
+  description varchar
+  tracking_type TrackingType
+  valuation_method ValuationMethod
+  standard_cost decimal
+  selling_price decimal
+  minimum_stock decimal
+  maximum_stock decimal
+  reorder_level decimal
+  reorder_quantity decimal
+  inventory_account_id UUID
+  cogs_account_id UUID
+  sales_account_id UUID
+  purchase_account_id UUID
+  status ProductStatus
+  version integer
+}
+
+Table product_category {
+  id UUID [primary key]
+  parent_category_id UUID
+  code varchar
+  name varchar
+  description varchar
+  is_active boolean
+}
+
+Table product_uom {
+  id UUID [primary key]
+  product_id UUID
+  uom_id UUID
+  conversion_factor decimal
+  is_purchase_uom boolean
+  is_sales_uom boolean
+  is_stock_uom boolean
+}
+
+Table unit_of_measure {
+  id UUID [primary key]
+  code varchar
+  name varchar
+  decimal_places integer
+  is_active boolean
+}
+
+Table stock_reservation {
+  id UUID [primary key]
+  reservation_no varchar
+  product_id UUID
+  warehouse_id UUID
+  location_id UUID
+  batch_id UUID
+  reference_type ReferenceType
+  reference_id UUID
+  reference_line_id UUID
+  reserved_quantity decimal
+  released_quantity decimal
+  status varchar
+  expires_at datetime
+  version integer
+}
+
+Table product_serial {
+  id UUID [primary key]
+  product_id UUID
+  batch_id UUID
+  serial_number varchar
+  status varchar
+  purchase_date datetime
+  warranty_start_date datetime
+  warranty_end_date datetime
+}
+
+Table inventory_stock {
+  id UUID [primary key]
+  product_id UUID
+  warehouse_id UUID
+  location_id UUID
+  batch_id UUID
+  quantity decimal
+  reserved_quantity decimal
+  available_quantity decimal
+  average_cost decimal
+  stock_value decimal
+  last_movement_at datetime
+  version integer
+}
+
+Table stock_movement {
+  id UUID [primary key]
+  idempotency_key UUID
+  movement_no varchar
+  movement_date datetime
+  movement_type varchar
+  status varchar
+  reference_type ReferenceType
+  reference_id UUID
+  reference_number varchar
+  remarks varchar
+  total_quantity decimal
+  total_value decimal
+  posted_at datetime
+  posted_by UUID
+  reversed_movement_id UUID
+  version integer
+}
+
+Table stock_movement_line {
+  id UUID [primary key]
+  stock_movement_id UUID
+  product_id UUID
+  source_warehouse_id UUID
+  source_location_id UUID
+  destination_warehouse_id UUID
+  destination_location_id UUID
+  batch_id UUID
+  serial_id UUID
+  uom_id UUID
+  quantity decimal
+  unit_cost decimal
+  total_cost decimal
+  quantity_before decimal
+  quantity_after decimal
+  reference_line_id UUID
+}
+
+Table stock_transfer {
+  id UUID [primary key]
+  transfer_no varchar
+  transfer_date datetime
+  source_warehouse_id UUID
+  destination_warehouse_id UUID
+  status varchar
+  stock_movement_id UUID
+  remarks varchar
+  initiated_by UUID
+  approved_by UUID
+  approved_at datetime
+  dispatched_at datetime
+  received_at datetime
+  version integer
+}
+
+Table stock_transfer_line {
+  id UUID [primary key]
+  stock_transfer_id UUID
+  product_id UUID
+  batch_id UUID
+  serial_id UUID
+  uom_id UUID
+  quantity decimal
+  unit_cost decimal
+  source_location_id UUID
+  destination_location_id UUID
+}
+
+Table inventory_cost_layer {
+  id UUID [primary key]
+  product_id UUID
+  warehouse_id UUID
+  batch_id UUID
+  source_movement_id UUID
+  source_movement_line_id UUID
+  received_quantity decimal
+  remaining_quantity decimal
+  unit_cost decimal
+  version integer
+  total_cost decimal
+  consumed_cost decimal
+}
+
+Table inventory_valuation {
+  id UUID [primary key]
+  stock_movement_id UUID
+  stock_movement_line_id UUID
+  product_id UUID
+  warehouse_id UUID
+  quantity decimal
+  valuation_method ValuationMethod
+  inventory_cost decimal
+  cogs_amount decimal
+  currency_code varchar
+  gl_posting_required boolean
+  gl_posted boolean
+  gl_journal_entry_id UUID
+  location_id UUID
+  batch_id UUID
+  average_cost decimal
+  stock_value decimal
+  valuation_date datetime
+}
+
+Table warehouse {
+  id UUID [primary key]
+  warehouse_code varchar
+  warehouse_name varchar
+  warehouse_type WarehouseType
+  address_line1 varchar
+  address_line2 varchar
+  city varchar
+  state varchar
+  country varchar
+  pin_code varchar
+  status varchar
+}
+
+Table warehouse_location {
+  id UUID [primary key]
+  warehouse_id UUID
+  parent_location_id UUID
+  location_type LocationType
+  location_code varchar
+  location_name varchar
+  is_active boolean
+}
+
+

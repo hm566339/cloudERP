@@ -1,0 +1,285 @@
+import { createSlice } from '@reduxjs/toolkit';
+import { authApi } from './services/authApi.js';
+import {
+  normalizeModuleName,
+  normalizeRole,
+  normalizeModulesList,
+  normalizeFeaturesList,
+  normalizePermissionsList,
+  buildAuthContext,
+} from '../../utils/moduleNormalization.js';
+
+const initialState = {
+  user: null,
+  // Global ERP shell context — sourced canonically from SSO /me
+  organization: null,       // { id, code, name, status, accessMode, timezone, currency }
+  currentCompany: null,     // { id, code, name, legalName, active }
+  companies: [],            // All accessible companies for the org member
+  membership: null,         // { memberId, memberType, membershipStatus, joinedAt }
+  subscription: null,       // { id, planCode, status, accessMode, trialing, daysRemaining, trialEndsAt, ... }
+  accessMode: 'FULL',       // Effective access mode: FULL | READ_ONLY | BLOCKED
+  modules: [],              // Authorized module contexts: [{ id, name, code, canonical, host, active }]
+  features: [],             // Authorized feature contexts: [{ featureCode, featureName, moduleName, active }]
+  permissions: [],          // Authorized permissions: [{ featureCode, action, permissionCode, moduleName, active, allowed }]
+  sessionStatus: 'idle',    // 'idle' | 'checking' | 'authenticated' | 'unauthenticated'
+};
+
+/**
+ * Apply the rich SSO /me response shape to the Redux state.
+ * Sourced canonically from GET /api/sso/auth/me
+ */
+function applySsoMePayload(state, payload) {
+  const data = payload?.data || payload;
+  if (!data) return;
+
+  const normalized = buildAuthContext(payload);
+
+  state.user = {
+    ...(state.user || {}),
+    ...normalized.user,
+  };
+
+  if (normalized.organization) state.organization = normalized.organization;
+  if (normalized.currentCompany) state.currentCompany = normalized.currentCompany;
+  if (normalized.companies && normalized.companies.length > 0) state.companies = normalized.companies;
+  if (normalized.membership) state.membership = normalized.membership;
+  if (normalized.subscription) state.subscription = normalized.subscription;
+  if (normalized.accessMode) state.accessMode = normalized.accessMode;
+  if (normalized.modules) state.modules = normalized.modules;
+  if (normalized.features) state.features = normalized.features;
+  if (normalized.permissions) state.permissions = normalized.permissions;
+
+  state.sessionStatus = 'authenticated';
+}
+
+// ─── Slice ────────────────────────────────────────────────────────────────────
+
+const authSlice = createSlice({
+  name: 'auth',
+  initialState,
+  reducers: {
+    setCredentials: (state, action) => {
+      state.user = action.payload.user;
+      if (action.payload.permissions) {
+        state.permissions = normalizePermissionsList(action.payload.permissions);
+      }
+      if (action.payload.features) {
+        state.features = normalizeFeaturesList(action.payload.features);
+      }
+      if (action.payload.organization) state.organization = action.payload.organization;
+      if (action.payload.currentCompany) state.currentCompany = action.payload.currentCompany;
+      if (action.payload.companies) state.companies = action.payload.companies;
+      if (action.payload.membership) state.membership = action.payload.membership;
+      if (action.payload.subscription) state.subscription = action.payload.subscription;
+      if (action.payload.accessMode) state.accessMode = action.payload.accessMode;
+      if (action.payload.modules) {
+        state.modules = normalizeModulesList(action.payload.modules);
+      }
+      state.sessionStatus = 'authenticated';
+    },
+
+    /** Partial update of SSO context (e.g. after company switch) */
+    setSsoContext: (state, action) => {
+      applySsoMePayload(state, action.payload);
+    },
+
+    logout: (state) => {
+      state.user = null;
+      state.permissions = [];
+      state.features = [];
+      state.organization = null;
+      state.currentCompany = null;
+      state.companies = [];
+      state.membership = null;
+      state.subscription = null;
+      state.accessMode = 'FULL';
+      state.modules = [];
+      state.sessionStatus = 'unauthenticated';
+    },
+
+    clearAuthState: (state) => {
+      state.user = null;
+      state.permissions = [];
+      state.features = [];
+      state.organization = null;
+      state.currentCompany = null;
+      state.companies = [];
+      state.membership = null;
+      state.subscription = null;
+      state.accessMode = 'FULL';
+      state.modules = [];
+      state.sessionStatus = 'unauthenticated';
+    },
+
+    setSessionStatus: (state, action) => {
+      state.sessionStatus = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    // ── SSO /me pending → mark sessionStatus checking
+    builder.addMatcher(
+      authApi.endpoints.ssoGetMe.matchPending,
+      (state) => {
+        if (state.sessionStatus !== 'authenticated' || !state.modules || state.modules.length === 0) {
+          state.sessionStatus = 'checking';
+        }
+      }
+    );
+
+    // ── SSO /me fulfilled → apply rich canonical context (PRIMARY)
+    builder.addMatcher(
+      authApi.endpoints.ssoGetMe.matchFulfilled,
+      (state, { payload }) => {
+        applySsoMePayload(state, payload);
+      }
+    );
+
+    // ── Account /me fulfilled → backward-compat
+    builder.addMatcher(
+      authApi.endpoints.getMe.matchFulfilled,
+      (state, { payload }) => {
+        if (!state.organization || !state.modules || state.modules.length === 0) {
+          applySsoMePayload(state, payload);
+        } else {
+          state.sessionStatus = 'authenticated';
+        }
+      }
+    );
+
+    // ── Account /me rejected → unauth on 401/403 or no active user
+    builder.addMatcher(
+      authApi.endpoints.getMe.matchRejected,
+      (state, action) => {
+        const payload = action?.payload;
+        const error = action?.error;
+        const status = payload?.status || payload?.originalStatus || error?.status || error?.originalStatus;
+        const isAuthRejection = status === 401 || status === 403;
+        let hasCookieToken = false;
+        if (typeof document !== 'undefined') {
+          const value = `; ${document.cookie}`;
+          hasCookieToken = value.includes('; ACCESS_TOKEN=') || value.includes('; auth_token=');
+        }
+        if (isAuthRejection || (!hasCookieToken && !state.user)) {
+          state.user = null;
+          state.permissions = [];
+          state.features = [];
+          state.organization = null;
+          state.currentCompany = null;
+          state.companies = [];
+          state.membership = null;
+          state.subscription = null;
+          state.accessMode = 'FULL';
+          state.modules = [];
+          state.sessionStatus = 'unauthenticated';
+        } else {
+          state.sessionStatus = 'unauthenticated';
+        }
+      }
+    );
+
+    // ── SSO /me rejected → unauth on 401 or 403
+    builder.addMatcher(
+      authApi.endpoints.ssoGetMe.matchRejected,
+      (state, action) => {
+        const payload = action?.payload;
+        const error = action?.error;
+        const status = payload?.status || payload?.originalStatus || error?.status || error?.originalStatus;
+        const isAuthRejection = status === 401 || status === 403;
+
+        // When unauthenticated (401 or 403) or if session fails during bootstrap
+        if (isAuthRejection || !state.user) {
+          state.user = null;
+          state.permissions = [];
+          state.features = [];
+          state.organization = null;
+          state.currentCompany = null;
+          state.companies = [];
+          state.membership = null;
+          state.subscription = null;
+          state.accessMode = 'FULL';
+          state.modules = [];
+          state.sessionStatus = 'unauthenticated';
+        } else {
+          // If server returned 5xx or network error, mark as unauthenticated so UI does not stay in 'checking'
+          state.sessionStatus = 'unauthenticated';
+        }
+      }
+    );
+
+    // ── Logout fulfilled → clear everything
+    builder.addMatcher(
+      authApi.endpoints.logoutApi.matchFulfilled,
+      (state) => {
+        state.user = null;
+        state.permissions = [];
+        state.features = [];
+        state.organization = null;
+        state.currentCompany = null;
+        state.companies = [];
+        state.membership = null;
+        state.subscription = null;
+        state.accessMode = 'FULL';
+        state.modules = [];
+        state.sessionStatus = 'unauthenticated';
+      }
+    );
+  },
+});
+
+export const { setCredentials, setSsoContext, logout, setSessionStatus, clearAuthState } = authSlice.actions;
+
+export default authSlice.reducer;
+
+// ─── Selectors ────────────────────────────────────────────────────────────────
+
+export const selectCurrentUser = (state) => state.auth?.user ?? null;
+export const selectSessionStatus = (state) => state.auth?.sessionStatus ?? 'idle';
+export const selectIsAuthenticated = (state) =>
+  state.auth?.sessionStatus === 'authenticated' && !!state.auth?.user;
+export const selectPermissions = (state) => state.auth?.permissions ?? [];
+export const selectFeatures = (state) => state.auth?.features ?? [];
+
+// Global ERP shell selectors
+export const selectOrganization = (state) => state.auth?.organization ?? null;
+export const selectCurrentCompany = (state) => state.auth?.currentCompany ?? null;
+export const selectAccessibleCompanies = (state) => state.auth?.companies ?? [];
+export const selectMembership = (state) => state.auth?.membership ?? null;
+export const selectSubscription = (state) => state.auth?.subscription ?? null;
+export const selectAccessMode = (state) => state.auth?.accessMode ?? 'FULL';
+export const selectAuthorizedModules = (state) => state.auth?.modules ?? [];
+
+/**
+ * Returns the single canonical authorization context object
+ */
+export const selectAuthContext = (state) => ({
+  user: state.auth?.user ?? null,
+  organization: state.auth?.organization ?? null,
+  currentCompany: state.auth?.currentCompany ?? null,
+  companies: state.auth?.companies ?? [],
+  membership: state.auth?.membership ?? null,
+  subscription: state.auth?.subscription ?? null,
+  accessMode: state.auth?.accessMode ?? 'FULL',
+  modules: state.auth?.modules ?? [],
+  features: state.auth?.features ?? [],
+  permissions: state.auth?.permissions ?? [],
+});
+
+/** true if the current session is in 30-day trial and trial has not expired */
+export const selectIsTrialing = (state) => {
+  const sub = state.auth?.subscription;
+  return sub?.trialing === true;
+};
+
+/** Days remaining in trial (or subscription period). 0 if expired. */
+export const selectDaysRemaining = (state) => {
+  return state.auth?.subscription?.daysRemaining ?? 0;
+};
+
+/** true if the user has FULL access (trial or paid) */
+export const selectIsFullAccess = (state) => state.auth?.accessMode === 'FULL';
+
+/** true if the user is in READ_ONLY mode (trial expired, unpaid) */
+export const selectIsReadOnly = (state) => state.auth?.accessMode === 'READ_ONLY';
+
+/** true if the user is BLOCKED */
+export const selectIsBlocked = (state) => state.auth?.accessMode === 'BLOCKED';

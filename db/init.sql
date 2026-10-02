@@ -1,0 +1,5 @@
+CREATE DATABASE account;
+CREATE DATABASE sso;
+CREATE DATABASE workflow_db;
+CREATE DATABASE inventory;
+CREATE DATABASE manufacturing;

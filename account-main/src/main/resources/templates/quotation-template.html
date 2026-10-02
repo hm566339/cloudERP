@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Sales Quotation</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            margin: 0;
+            padding: 0;
+            color: #000;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        .font-bold {
+            font-weight: bold;
+        }
+
+        .float-right {
+            float: right;
+        }
+
+        .header-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+            margin-top: 0px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td,
+        th {
+            border: 1px solid #000;
+            padding: 4px;
+            vertical-align: top;
+        }
+
+        .no-border,
+        .no-border td {
+            border: none !important;
+        }
+
+        .no-border-bottom {
+            border-bottom: none !important;
+        }
+
+        .no-border-top {
+            border-top: none !important;
+        }
+
+        .items-table th {
+            text-align: center;
+            font-weight: bold;
+            font-size: 9px;
+            background-color: #f5f5f5;
+        }
+
+        .items-table td {
+            font-size: 9px;
+        }
+
+        .company-info {
+            padding-left: 20px;
+            font-size: 10px;
+            text-align: right;
+        }
+
+        .main-box {
+            border: 1px solid #000;
+        }
+
+        .info-cell {
+            width: 33.33%;
+            padding: 5px;
+        }
+
+        .bg-light {
+            background-color: #f0f0f0;
+        }
+
+        .invoice-summary {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .invoice-summary td {
+            border: 1px solid #000;
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .summary-left {
+            width: 42%;
+            vertical-align: top;
+        }
+
+        .summary-qr {
+            width: 20%;
+            text-align: center;
+            vertical-align: middle !important;
+        }
+
+        .summary-totals {
+            width: 38%;
+            vertical-align: top;
+            padding: 0 !important;
+        }
+
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            border: none !important;
+            padding: 2px 5px;
+            vertical-align: middle;
+        }
+
+        .totals-table td:first-child {
+            text-align: left;
+        }
+
+        .totals-table td:last-child {
+            text-align: right;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="text-align: right; font-size: 9px; margin-bottom: 2px;">Original</div>
+    <div class="main-box">
+        <table class="no-border" style="border-bottom: 1px solid #000;">
+            <tr>
+                <td width="40%" style="vertical-align: top; text-align: left; padding: 10px;">
+                    <h1 th:if="${company == null or company.logoUrl == null or company.logoUrl.trim().isEmpty()}"
+                        th:text="${company != null ? company.companyName : ''}"
+                        style="font-size: 24px; margin: 0;"></h1>
+                    <img th:if="${company != null and company.logoUrl != null and !company.logoUrl.trim().isEmpty()}"
+                        th:src="${company.logoUrl}"
+                        style="height: 100px; width: auto;" />
+                </td>
+                <td width="60%" class="company-info" style="padding: 10px;">
+                    <span style="font-size: 18px; font-weight: bold;" th:text="${company != null ? company.companyName : ''}"></span><br />
+                    <th:block th:if="${company != null and company.legalName != null and !company.legalName.isEmpty()}">
+                        <span th:text="'Formerly : ' + ${company.legalName}"></span><br />
+                    </th:block>
+                    <th:block th:if="${company != null and company.addressLine1 != null and !company.addressLine1.isEmpty()}">
+                        <span th:text="${company.addressLine1}"></span><br />
+                    </th:block>
+                    <th:block th:if="${company != null and company.addressLine2 != null and !company.addressLine2.isEmpty()}">
+                        <span th:text="${company.addressLine2}"></span><br />
+                    </th:block>
+                    <th:block
+                        th:if="${company != null and ((company.city != null and !company.city.isEmpty()) or (company.state != null and !company.state.isEmpty()))}">
+                        <span
+                            th:text="${(company.city != null ? company.city : '') + ((company.city != null and !company.city.isEmpty() and company.state != null and !company.state.isEmpty()) ? ', ' : '') + (company.state != null ? company.state : '')}"></span><br />
+                    </th:block>
+                    <th:block
+                        th:if="${company != null and ((company.city != null and !company.city.isEmpty()) or (company.postalCode != null and !company.postalCode.isEmpty()) or (company.state != null and !company.state.isEmpty()))}">
+                        <span
+                            th:text="${(company.city != null ? company.city : '') + ((company.city != null and !company.city.isEmpty() and company.postalCode != null and !company.postalCode.isEmpty()) ? '-' : '') + (company.postalCode != null ? company.postalCode : '') + ((company.postalCode != null and !company.postalCode.isEmpty() and company.state != null and !company.state.isEmpty()) ? ' ' : '') + (company.state != null ? company.state : '')}"></span><br />
+                    </th:block>
+                    <th:block th:if="${company != null and company.country != null and !company.country.isEmpty()}">
+                        <span th:text="${company.country}"></span><br />
+                    </th:block>
+                    <br />
+                    <th:block
+                        th:if="${company != null and ((company.email != null and !company.email.isEmpty()) or (company.phone != null and !company.phone.isEmpty()))}">
+                        <span th:if="${company.email != null and !company.email.isEmpty()}">Email: <span
+                                th:text="${company.email}"></span></span><span
+                            th:if="${company.email != null and !company.email.isEmpty() and company.phone != null and !company.phone.isEmpty()}">
+                            | </span><span th:if="${company.phone != null and !company.phone.isEmpty()}">Contact No:
+                            <span th:text="${company.phone}"></span></span><br />
+                    </th:block>
+                    <th:block th:if="${company != null and company.companyCode != null and !company.companyCode.isEmpty()}">
+                        MSME No.: <span th:text="${company.companyCode}"></span><br />
+                    </th:block>
+                    <th:block th:if="${companyGstin != null and !companyGstin.isEmpty()}">
+                        GST No.: <span class="font-bold" th:text="${companyGstin}"></span><br />
+                    </th:block>
+                    <th:block th:if="${companyStateCode != null and !companyStateCode.isEmpty()}">
+                        State Code: <span th:text="${companyStateCode}"></span>
+                    </th:block>
+                </td>
+            </tr>
+        </table>
+
+        <div class="header-title no-border-top no-border-bottom">Sales Quotation</div>
+
+        <table>
+            <tr>
+                <td class="info-cell">
+                    <div class="font-bold">Quote To : <span th:text="${customer != null ? customer.customerName : ''}"></span></div>
+                    <span th:text="${customer != null ? customer.customerName : ''}"></span><br />
+                    <span th:if="${billAddress != null and !billAddress.isEmpty()}" th:text="${billAddress}"></span><br
+                        th:if="${billAddress != null and !billAddress.isEmpty()}" />
+
+                    <span
+                        th:if="${(billCity != null and !billCity.isEmpty()) or (billState != null and !billState.isEmpty())}">
+                        <span
+                            th:text="${(billCity != null ? billCity : '') + (billCity != null and !billCity.isEmpty() and billState != null and !billState.isEmpty() ? ' ' : '') + (billState != null ? billState : '')}"></span><br />
+                    </span>
+
+                    <span th:if="${billCountry != null and !billCountry.isEmpty()}" th:text="${billCountry}"></span><br
+                        th:if="${billCountry != null and !billCountry.isEmpty()}" />
+
+                    <span class="font-bold">State Code: <span
+                            th:text="${quotation.placeOfSupplyStateCode}"></span></span><br />
+                    <span class="font-bold">GST No.: <span th:text="${customer != null ? customer.gstin : ''}"></span></span><br />
+                    Contact Person: <span th:text="${customer != null ? customer.customerName : ''}"></span><br />
+                    Contact No.: <span th:text="${customer != null ? customer.phone : ''}"></span><br />
+                    <span th:if="${quotation.referenceNumber != null and !quotation.referenceNumber.isEmpty()}">
+                        <span class="font-bold">Ref No: </span><span th:text="${quotation.referenceNumber}"></span>
+                    </span>
+                </td>
+                <td class="info-cell">
+                    <div class="font-bold">Ship To : <span th:text="${customer != null ? customer.customerName : ''}"></span></div>
+                    <span th:text="${customer != null ? customer.customerName : ''}"></span><br />
+                    <span th:if="${shipAddress != null and !shipAddress.isEmpty()}" th:text="${shipAddress}"></span><br
+                        th:if="${shipAddress != null and !shipAddress.isEmpty()}" />
+                    <span th:if="${shipCity != null and !shipCity.isEmpty()}" th:text="${shipCity}"></span><br
+                        th:if="${shipCity != null and !shipCity.isEmpty()}" />
+                    <span th:if="${shipState != null and !shipState.isEmpty()}" th:text="${shipState}"></span><br
+                        th:if="${shipState != null and !shipState.isEmpty()}" />
+                    <span th:if="${shipCountry != null and !shipCountry.isEmpty()}" th:text="${shipCountry}"></span><br
+                        th:if="${shipCountry != null and !shipCountry.isEmpty()}" />
+                    <span th:if="${shipPostalCode != null and !shipPostalCode.isEmpty()}"
+                        th:text="${shipPostalCode}"></span><br
+                        th:if="${shipPostalCode != null and !shipPostalCode.isEmpty()}" />
+                    <span class="font-bold">GST No.: <span th:text="${customer != null ? customer.gstin : ''}"></span></span><br />
+                    Contact Person: <span th:text="${customer != null ? customer.customerName : ''}"></span><br />
+                    Contact No.: <span th:text="${customer != null ? customer.phone : ''}"></span>
+                </td>
+                <td class="info-cell" style="padding: 0;">
+                    <table class="no-border">
+                        <tr>
+                            <td width="40%">Quotation No:</td>
+                            <td th:text="${quotation.quotationNumber}"></td>
+                        </tr>
+                        <tr>
+                            <td>Quotation Date:</td>
+                            <td th:text="${quotation.quotationDate != null ? #temporals.format(quotation.quotationDate, 'dd-MMM-yyyy') : ''}"></td>
+                        </tr>
+                        <tr>
+                            <td>Valid Until:</td>
+                            <td th:text="${quotation.validUntil != null ? #temporals.format(quotation.validUntil, 'dd-MMM-yyyy') : ''}"></td>
+                        </tr>
+                        <tr th:if="${quotation.paymentTerms != null and !quotation.paymentTerms.isEmpty()}">
+                            <td>Payment Terms:</td>
+                            <td th:text="${quotation.paymentTerms}"></td>
+                        </tr>
+                        <tr th:if="${quotation.deliveryTerms != null and !quotation.deliveryTerms.isEmpty()}">
+                            <td>Delivery Terms:</td>
+                            <td th:text="${quotation.deliveryTerms}"></td>
+                        </tr>
+                        <tr>
+                            <td>Place of Supply:</td>
+                            <td><span
+                                    th:text="${placeOfSupplyName != null and !placeOfSupplyName.isEmpty() ? placeOfSupplyName : quotation.placeOfSupplyStateCode}"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>State Code:</td>
+                            <td><span th:text="${quotation.placeOfSupplyStateCode}"></span></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <table class="items-table" style="border-top: none;">
+            <thead>
+                <tr>
+                    <th rowspan="2" width="3%">S.No.</th>
+                    <th rowspan="2" width="30%">Item Details</th>
+                    <th rowspan="2" width="5%">Qty.<br />(Pcs.)</th>
+                    <th rowspan="2" width="8%">Price Per<br />Unit (INR)</th>
+                    <th rowspan="2" width="4%">Disc.<br />%</th>
+                    <th rowspan="2" width="8%">Gross<br />Amt.(INR)</th>
+                    <!-- Intra-State: Show CGST + SGST, hide IGST -->
+                    <th th:if="${isIntraState}" colspan="2">CGST</th>
+                    <th th:if="${isIntraState}" colspan="2">SGST</th>
+                    <!-- Inter-State: Show IGST only -->
+                    <th th:if="${!isIntraState}" colspan="2">IGST</th>
+                    <th rowspan="2" width="9%">Total</th>
+                </tr>
+                <tr>
+                    <!-- Intra-State sub-headers -->
+                    <th th:if="${isIntraState}" width="4%">Rate<br />%</th>
+                    <th th:if="${isIntraState}" width="7%">Amt.</th>
+                    <th th:if="${isIntraState}" width="4%">Rate<br />%</th>
+                    <th th:if="${isIntraState}" width="7%">Amt.</th>
+                    <!-- Inter-State sub-headers -->
+                    <th th:if="${!isIntraState}" width="4%">Rate<br />%</th>
+                    <th th:if="${!isIntraState}" width="7%">Amt.</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item, stat : ${items}">
+                    <td class="text-center" th:text="${stat.count}"></td>
+                    <td>
+                        <span class="font-bold" th:text="${item.itemName}"></span><br />
+                        <span th:if="${item.description != null and !item.description.isEmpty()}" th:text="${item.description}"></span><br th:if="${item.description != null and !item.description.isEmpty()}" />
+                        <span th:text="${item.hsnSacMaster != null ? 'HSN-' + item.hsnSacMaster.code : ''}"></span>
+                    </td>
+                    <td class="text-center"
+                        th:text="${item.quantity != null ? item.quantity.stripTrailingZeros().toPlainString() : ''}">
+                    </td>
+                    <td class="text-right" th:text="${#numbers.formatDecimal(item.unitPrice != null ? item.unitPrice : 0.00, 1, 'COMMA', 2, 'POINT')}">
+                    </td>
+                    <td class="text-center"
+                        th:text="${item.discountPercent != null ? #numbers.formatDecimal(item.discountPercent, 1, 'POINT', 2, 'POINT') : '0.00'}">
+                        0.00</td>
+                    <td class="text-right"
+                        th:text="${#numbers.formatDecimal(item.taxableAmount != null ? item.taxableAmount : (item.quantity != null and item.unitPrice != null ? (item.quantity * item.unitPrice) : 0.00), 1, 'COMMA', 2, 'POINT')}">
+                    </td>
+                    <!-- Intra-State: CGST Rate + Amount, SGST Rate + Amount -->
+                    <td th:if="${isIntraState}" class="text-center"
+                        th:text="${item.cgstRate != null ? #numbers.formatDecimal(item.cgstRate, 1, 'POINT', 2, 'POINT') : (item.hsnSacMaster != null and item.hsnSacMaster.gstSlab != null and item.hsnSacMaster.gstSlab.cgstRate != null ? #numbers.formatDecimal(item.hsnSacMaster.gstSlab.cgstRate, 1, 'POINT', 2, 'POINT') : '0.00')}">
+                        0.00</td>
+                    <td th:if="${isIntraState}" class="text-right"><span
+                            th:text="${#numbers.formatDecimal(item.cgstAmount != null ? item.cgstAmount : 0.00, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                    </td>
+                    <td th:if="${isIntraState}" class="text-center"
+                        th:text="${item.sgstRate != null ? #numbers.formatDecimal(item.sgstRate, 1, 'POINT', 2, 'POINT') : (item.hsnSacMaster != null and item.hsnSacMaster.gstSlab != null and item.hsnSacMaster.gstSlab.sgstRate != null ? #numbers.formatDecimal(item.hsnSacMaster.gstSlab.sgstRate, 1, 'POINT', 2, 'POINT') : '0.00')}">
+                        0.00</td>
+                    <td th:if="${isIntraState}" class="text-right"><span
+                            th:text="${#numbers.formatDecimal(item.sgstAmount != null ? item.sgstAmount : 0.00, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                    </td>
+                    <!-- Inter-State: IGST Rate + Amount only -->
+                    <td th:if="${!isIntraState}" class="text-center"
+                        th:text="${item.igstRate != null ? #numbers.formatDecimal(item.igstRate, 1, 'POINT', 2, 'POINT') : (item.hsnSacMaster != null and item.hsnSacMaster.gstSlab != null and item.hsnSacMaster.gstSlab.igstRate != null ? #numbers.formatDecimal(item.hsnSacMaster.gstSlab.igstRate, 1, 'POINT', 2, 'POINT') : '0.00')}">
+                        0.00</td>
+                    <td th:if="${!isIntraState}" class="text-right"><span
+                            th:text="${#numbers.formatDecimal(item.igstAmount != null ? item.igstAmount : 0.00, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                    </td>
+                    <td class="text-right"><span
+                            th:text="${#numbers.formatDecimal(item.totalAmount != null ? item.totalAmount : 0.00, 1, 'COMMA', 2, 'POINT')}"></span></td>
+                </tr>
+
+                <!-- Total Row -->
+                <tr>
+                    <td colspan="2" class="text-right font-bold">Total Qty.:</td>
+                    <td class="text-center font-bold"
+                        th:text="${totalQuantity != null ? totalQuantity.stripTrailingZeros().toPlainString() : ''}">
+                    </td>
+                    <td colspan="2"></td>
+                    <td class="text-right font-bold"
+                        th:text="${#numbers.formatDecimal(quotation.subtotal != null ? quotation.subtotal : 0.00, 1, 'COMMA', 2, 'POINT')}"></td>
+                    <!-- Intra-State totals: sum of item CGST + SGST -->
+                    <td th:if="${isIntraState}"></td>
+                    <td th:if="${isIntraState}" class="text-right font-bold"><span
+                            th:text="${#numbers.formatDecimal(totalCgst != null ? totalCgst : 0.00, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                    </td>
+                    <td th:if="${isIntraState}"></td>
+                    <td th:if="${isIntraState}" class="text-right font-bold"><span
+                            th:text="${#numbers.formatDecimal(totalSgst != null ? totalSgst : 0.00, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                    </td>
+                    <!-- Inter-State totals: sum of item IGST -->
+                    <td th:if="${!isIntraState}"></td>
+                    <td th:if="${!isIntraState}" class="text-right font-bold"><span
+                            th:text="${#numbers.formatDecimal(totalIgst != null ? totalIgst : 0.00, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                    </td>
+                    <td class="text-right font-bold"
+                        th:text="${#numbers.formatDecimal(quotation.totalAmount != null ? quotation.totalAmount : 0.00, 1, 'COMMA', 2, 'POINT')}"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="invoice-summary">
+            <tr>
+                <!-- LEFT: Amount in Words + Bank Details -->
+                <td class="summary-left">
+                    <span class="font-bold">Amount (INR) in Words: </span><br />
+                    <span class="font-bold" th:text="${amountInWords}"></span><br /><br />
+                    <div class="font-bold" style="margin-bottom: 3px;">Bank Details:</div>
+                    Bank name: <span th:text="${bankAccount != null ? bankAccount.bankName : ''}"></span><br />
+                    Beneficiary name: <span
+                        th:text="${bankAccount != null and bankAccount.accountHolderName != null ? bankAccount.accountHolderName : (company != null ? company.legalName : '')}"></span><br />
+                    Account no.: <span th:text="${bankAccount != null ? bankAccount.accountNumber : ''}"></span><br />
+                    IFSC code: <span th:text="${bankAccount != null ? bankAccount.ifscCode : ''}"></span>
+                </td>
+
+                <!-- CENTER: QR Code -->
+                <td class="summary-qr">
+                    <img th:if="${qrCodeImage != null}" th:src="${qrCodeImage}" width="100" height="100" />
+                </td>
+
+                <!-- RIGHT: Totals -->
+                <td class="summary-totals">
+                    <table class="totals-table">
+                        <tr>
+                            <td>Sub Total:</td>
+                            <td class="text-right"
+                                th:text="${#numbers.formatDecimal(quotation.subtotal != null ? quotation.subtotal : 0.00, 1, 'COMMA', 2, 'POINT')}">
+                            </td>
+                        </tr>
+                        <tr th:if="${quotation.discountAmount != null and quotation.discountAmount > 0}">
+                            <td>Discount:</td>
+                            <td class="text-right"
+                                th:text="${#numbers.formatDecimal(quotation.discountAmount, 1, 'COMMA', 2, 'POINT')}">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Tax Charges:</td>
+                            <td class="text-right"
+                                th:text="${#numbers.formatDecimal(quotation.taxAmount != null ? quotation.taxAmount : 0.00, 1, 'COMMA', 2, 'POINT')}">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Freight Charges:</td>
+                            <td class="text-right"
+                                th:text="${#numbers.formatDecimal(quotation.freightCharges != null ? quotation.freightCharges : 0.00, 1, 'COMMA', 2, 'POINT')}">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Total Before Round Off:</td>
+                            <td class="text-right"
+                                th:text="${#numbers.formatDecimal(quotation.totalBeforeRoundOff != null ? quotation.totalBeforeRoundOff : (quotation.totalAmount != null ? quotation.totalAmount : 0.00), 1, 'COMMA', 2, 'POINT')}">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Round Off:</td>
+                            <td class="text-right"
+                                th:text="${#numbers.formatDecimal(quotation.roundOff != null ? quotation.roundOff : 0.00, 1, 'COMMA', 2, 'POINT')}">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">Grand Total:</td>
+                            <td class="text-right font-bold"
+                                th:text="${#numbers.formatDecimal(quotation.totalAmount != null ? quotation.totalAmount : 0.00, 1, 'COMMA', 2, 'POINT')}">
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <table class="no-border">
+            <tr>
+                <td style="padding: 5px; font-size: 9px;">
+                    <span th:if="${quotation.notes != null and !quotation.notes.isEmpty()}">
+                        Remarks: <span th:text="${quotation.notes}"></span><br /><br />
+                    </span>
+                    <div th:if="${formattedTerms != null and !formattedTerms.isEmpty()}" style="margin-bottom: 10px;">
+                        <div>Terms &amp; Conditions:</div>
+                        <div style="padding-left: 15px; margin-top: 5px;">
+                            <div th:each="term : ${formattedTerms}" th:text="${term}" style="text-indent: -15px; padding-left: 15px; margin-bottom: 2px;"></div>
+                        </div>
+                    </div>
+                    <span th:if="${quotation.warrantyTerms != null and !quotation.warrantyTerms.isEmpty()}">
+                        Warranty Terms: <span th:text="${quotation.warrantyTerms}"></span><br />
+                    </span>
+                    <span class="font-bold">Declaration:-</span><br />
+                    We declare that this quotation shows the estimated price of the goods/services described &amp; that all
+                    particulars are true and correct.<br />
+                    Prices are valid until the validity date mentioned above.<br />
+                </td>
+                <td class="text-right" style="vertical-align: bottom; padding: 5px;">
+                    <span class="font-bold" th:text="${company != null ? company.companyName : ''}"></span><br /><br /><br /><br />
+                    <span class="font-bold">Authorised Signatory</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" class="text-center" style="padding-top: 10px; font-size: 9px;">
+                    Registered office Address:- <span
+                        th:text="${(company != null and company.addressLine1 != null ? company.addressLine1 : '') + (company != null and company.addressLine1 != null and company.city != null ? ', ' : '') + (company != null and company.city != null ? company.city : '')}"></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="margin-top: 10px; font-size: 9px; clear: both;">
+        <span class="float-right" style="margin-right: 10px;">Page 1 of 1</span>
+        <span class="text-center" style="display: block; width: 100%;">This is a Computer Generated Quotation</span>
+    </div>
+</body>
+
+</html>
+

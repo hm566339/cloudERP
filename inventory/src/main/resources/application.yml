@@ -1,0 +1,95 @@
+
+inventory:
+  seed:
+    master-data: true
+spring:
+  application:
+    name: ${SPRING_APPLICATION_NAME:inventory-service}
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:classpath:application-sso-auth.yml
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/inventory}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: HikariCP
+  
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.erp.inventory: DEBUG
+
+  sql:
+    init:
+      mode: always
+
+    show-sql: true
+
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: ${SERVER_PORT:8082}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+frontend:
+  url: ${FRONTEND_URL}
+
+sso:
+  frontend: ${SSO_FRONTEND}
+  backend: ${SSO_BACKEND}
+  cookie: ${COOKIE_PATH}
+
+  base-url: ${BASE_URL}
+  login-url: ${SSO_LOGIN_URL}
+
+  client-id: ${SSO_CLIENT_ID}
+  client-secret: ${SSO_CLIENT_SECRET}
+
+  transport: ${SSO_TRANSPORT}
+  callback-path: ${SSO_CALLBACK_PATH}
+
+  cookie-name: ${SSO_COOKIE_NAME}
+  cookie-path: ${SSO_COOKIE_PATH}
+  cookie-secure: ${SSO_COOKIE_SECURE}
+  cookie-http-only: ${SSO_COOKIE_HTTP_ONLY}
+  cookie-same-site: ${SSO_COOKIE_SAME_SITE}
+
+  module-name: ${SSO_MODULE_NAME}
+
+core:
+  service:
+    url: ${CORE_SERVICE_URL}  
+
+jwt:
+  secret: "defaultSecretKeyWithAtLeast32CharactersForHmacSha256"
+
+

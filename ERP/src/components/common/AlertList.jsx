@@ -1,0 +1,63 @@
+import React from 'react';
+import { AlertTriangle, AlertCircle, Info, Bell } from 'lucide-react';
+import { SkeletonBox } from './SkeletonLoader';
+
+function AlertList({ alerts = [], loading = false, emptyMessage = 'No alerts at this time.' }) {
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex items-start gap-3 p-3 bg-white rounded-xl border border-gray-200 shadow-sm animate-pulse">
+            <div className="w-5 h-5 rounded bg-gray-100 shrink-0 mt-0.5" />
+            <div className="flex-1 space-y-2">
+              <SkeletonBox className="h-4 w-3/4 rounded" />
+              <SkeletonBox className="h-3 w-1/2 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!alerts || alerts.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center flex flex-col items-center justify-center min-h-[200px]">
+        <Bell className="mx-auto text-gray-300 mb-3" size={32} />
+        <p className="text-sm text-gray-500 font-medium">{emptyMessage}</p>
+      </div>
+    );
+  }
+
+  const getSeverityStyles = (severity) => {
+    switch ((severity || 'INFO').toUpperCase()) {
+      case 'HIGH':
+        return { text: 'text-red-500', icon: AlertTriangle };
+      case 'MEDIUM':
+        return { text: 'text-amber-500', icon: AlertCircle };
+      case 'LOW':
+        return { text: 'text-blue-500', icon: Info };
+      case 'INFO':
+      default:
+        return { text: 'text-gray-500', icon: Info };
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      {alerts.map((alert, idx) => {
+        const { text, icon: Icon } = getSeverityStyles(alert.severity);
+        return (
+          <div key={alert.id || idx} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-200 shadow-sm hover:border-blue-300 transition-colors">
+            <Icon size={16} className={`${text} shrink-0`} />
+            <div>
+              <p className="text-sm font-semibold text-gray-700">{alert.title}</p>
+              {alert.message && <p className="text-xs mt-0.5 text-gray-500">{alert.message}</p>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default React.memo(AlertList);

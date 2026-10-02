@@ -1,0 +1,174 @@
+package com.erp.account.security.authorization;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * SSO-only authorization routing configuration.
+ * <p>
+ * This configuration intentionally contains NO roles, NO role-to-module mappings and NO
+ * role-level permissions. Those are exclusively managed by the SSO service.
+ * <p>
+ * It only describes how an incoming request is mapped onto the SSO authorization namespace:
+ * <ul>
+ *   <li>{@code modules} - maps SSO module codes to URL (Ant) patterns. Purely a routing aid:
+ *       which SSO module does this request belong to? It grants nothing by itself.</li>
+ *   <li>{@code method-actions} - explicit HTTP method to SSO action(s) mapping.
+ *       Defaults: GET->READ, POST->[CREATE, WRITE], PUT/PATCH->[UPDATE, WRITE], DELETE->DELETE.
+ *       The default POST/PUT/PATCH accepting WRITE is documented behavior driven by SSO
+ *       permission data ({@code action}-field), it is NOT an automatic cross-inference.</li>
+ *   <li>{@code custom-action-suffixes} - maps URL suffixes to SSO actions (e.g. {@code /approve}).
+ *       Extend this list for any other action that SSO dynamically supports.</li>
+ *   <li>{@code write-implies-create-update} - when {@code true}, an active+allowed WRITE
+ *       permission also satisfies CREATE and UPDATE requirements. Default {@code false}.
+ *       This is the ONLY explicit, opt-in switch for that escalation. Nothing is ever
+ *       inferred silently.</li>
+ *   <li>{@code feature-groups} - SSO feature code (== group) to module-to-actions map.
+ *       While the user holds the group feature code actively from SSO (features list OR an
+ *       active+allowed permission carrying the code), each listed module/action pair becomes
+ *       an effective API permission in addition to the user's direct SSO permissions. Actions
+ *       are matched exactly (READ is never CREATE/UPDATE, WRITE is not converted), only
+ *       configured modules are affected, and nothing outside the group scope is granted.</li>
+ * </ul>
+ */
+@Getter
+@Setter
+@Configuration
+@ConfigurationProperties(prefix = "sso.authorization")
+public class SsoAuthorizationProperties {
+
+    /** SSO module code -> list of Ant URL patterns (routing only, grants nothing). */
+    private Map<String, List<String>> modules = new LinkedHashMap<>();
+
+    /** HTTP method -> candidate SSO actions that satisfy the request. */
+    private Map<String, List<String>> methodActions = defaultMethodActions();
+
+    /** URL suffix -> SSO action (custom/state-transition endpoints). */
+    private Map<String, String> customActionSuffixes = defaultCustomActionSuffixes();
+
+    /**
+     * SSO feature code (== group) -> module -> actions.
+     * <p>
+     * Group-based automatic API access. While the user holds the group feature code
+     * actively from SSO, each listed module/action pair is an effective API permission
+     * in addition to direct SSO permissions. Grants ONLY within the configured scope;
+     * actions are matched exactly and nothing is silently inferred.
+     */
+    private Map<String, Map<String, List<String>>> featureGroups = new LinkedHashMap<>();
+
+    /**
+     * Explicit opt-in for treating an active+allowed WRITE permission as CREATE/UPDATE.
+     * Never silently inferred. See class Javadoc.
+     */
+    private boolean writeImpliesCreateUpdate = false;
+
+    private static Map<String, List<String>> defaultMethodActions() {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+        map.put("GET", List.of("READ"));
+        map.put("POST", List.of("CREATE", "WRITE"));
+        map.put("PUT", List.of("UPDATE", "WRITE"));
+        map.put("PATCH", List.of("UPDATE", "WRITE"));
+        map.put("DELETE", List.of("DELETE"));
+        return map;
+    }
+
+    private static Map<String, String> defaultCustomActionSuffixes() {
+        Map<String, String> map = new LinkedHashMap<>();
+        map.put("/approve", "APPROVE");
+        map.put("/award", "AWARD");
+        map.put("/reject", "REJECT");
+        map.put("/cancel", "CANCEL");
+        map.put("/send", "SEND");
+        map.put("/reverse", "REVERSE");
+        map.put("/close", "CLOSE");
+        map.put("/post", "POST");
+        map.put("/confirm", "POST");
+        map.put("/verify", "UPDATE");
+        map.put("/export", "EXPORT");
+        return map;
+    }
+
+    public List<String> actionsForMethod(String method) {
+        if (method == null) {
+            return List.of();
+        }
+        List<String> actions = methodActions.get(method.toUpperCase());
+        return actions != null ? actions : List.of();
+    }
+
+    public String actionForSuffix(String uri) {
+        if (uri == null) {
+            return null;
+        }
+        String lower = uri.toLowerCase();
+        for (Map.Entry<String, String> entry : customActionSuffixes.entrySet()) {
+            String suffix = entry.getKey().toLowerCase();
+            boolean matched = "/export".equals(suffix)
+                    ? lower.contains(suffix)
+                    : lower.endsWith(suffix);
+            if (matched) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * True when the given feature code is configured as a group key (case-insensitive).
+     */
+    public boolean hasFeatureGroup(String featureCode) {
+        if (featureGroups == null || !hasText(featureCode)) {
+            return false;
+        }
+        String target = normalize(featureCode);
+        for (String key : featureGroups.keySet()) {
+            if (target.equals(normalize(key))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Actions granted by a configured group for a module (case-insensitive lookups).
+     * Returns an empty list when the group or the module is not configured.
+     */
+    public List<String> groupActionsFor(String featureCode, String module) {
+        if (featureGroups == null || !hasText(featureCode) || !hasText(module)) {
+            return List.of();
+        }
+        String targetGroup = normalize(featureCode);
+        String targetModule = normalize(module);
+        for (Map.Entry<String, Map<String, List<String>>> groupEntry : featureGroups.entrySet()) {
+            if (!targetGroup.equals(normalize(groupEntry.getKey()))) {
+                continue;
+            }
+            Map<String, List<String>> modules = groupEntry.getValue();
+            if (modules == null) {
+                return List.of();
+            }
+            for (Map.Entry<String, List<String>> moduleEntry : modules.entrySet()) {
+                if (targetModule.equals(normalize(moduleEntry.getKey()))) {
+                    List<String> actions = moduleEntry.getValue();
+                    return actions != null ? actions : List.of();
+                }
+            }
+            return List.of();
+        }
+        return List.of();
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private static String normalize(String value) {
+        return value == null ? null : value.trim().toUpperCase();
+    }
+}

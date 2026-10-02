@@ -1,0 +1,6 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+# Apply docs/phase-2-organization-migration.sql before starting production with this profile.

@@ -1,0 +1,39 @@
+import React from 'react';
+import { Inbox, RotateCcw } from 'lucide-react';
+
+/**
+ * Domain-agnostic empty state for DataTable when no records match.
+ */
+export default function DataTableEmptyState({
+  colSpan,
+  message = 'No records found',
+  description = 'Try adjusting your search or filters to find what you are looking for.',
+  onReset,
+  resetLabel = 'Reset Filters'
+}) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="p-12 text-center">
+        <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+          <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mb-3 border border-zinc-200">
+            <Inbox size={22} strokeWidth={1.5} />
+          </div>
+          <h3 className="text-sm font-semibold text-zinc-800 tracking-tight mb-1">{message}</h3>
+          {description && (
+            <p className="text-xs text-zinc-500 leading-relaxed mb-4">{description}</p>
+          )}
+          {onReset && (
+            <button
+              type="button"
+              onClick={onReset}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 hover:text-zinc-900 transition-all active:scale-95 shadow-2xs"
+            >
+              <RotateCcw size={13} />
+              <span>{resetLabel}</span>
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+}

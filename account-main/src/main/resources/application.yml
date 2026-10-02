@@ -1,0 +1,135 @@
+spring:
+  cloud:
+    openfeign:
+      httpclient:
+        hc5:
+          enabled: true
+  application:
+    name: ${SPRING_APPLICATION_NAME:account-service}
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:classpath:application-sso-auth.yml
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${EXPENSE_ATTACHMENT_MAX_FILE_SIZE:10MB}
+      max-request-size: ${EXPENSE_ATTACHMENT_MAX_REQUEST_SIZE:15MB}
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/accounting}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: HikariCP
+  
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_AUTH}
+          starttls:
+            enable: ${MAIL_STARTTLS_ENABLE}
+            required: true
+
+  jpa:
+    open-in-view: false
+    show-sql: true
+    hibernate:
+      ddl-auto: ${HIBERNATE_DDL_AUTO:update}
+    defer-datasource-initialization: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1.39
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.erp.account: DEBUG
+
+  sql:
+    init:
+      mode: always
+
+    show-sql: true
+
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+frontend:
+  base: ${FRONTEND_BASE}
+  url: ${FRONTEND_URL}
+
+sso:
+  frontend: ${SSO_FRONTEND}
+  backend: ${SSO_BACKEND}
+  cookie: ${COOKIE_PATH}
+
+  base-url: ${BASE_URL}
+  login-url: ${SSO_LOGIN_URL}
+
+  client-id: ${SSO_CLIENT_ID}
+  client-secret: ${SSO_CLIENT_SECRET}
+
+  transport: ${SSO_TRANSPORT}
+  callback-path: ${SSO_CALLBACK_PATH}
+
+  cookie-name: ${SSO_COOKIE_NAME}
+  cookie-path: ${SSO_COOKIE_PATH}
+  cookie-secure: ${SSO_COOKIE_SECURE}
+  cookie-http-only: ${SSO_COOKIE_HTTP_ONLY}
+  cookie-same-site: ${SSO_COOKIE_SAME_SITE}
+
+  module-name: ${SSO_MODULE_NAME}
+
+core:
+  service:
+    url: ${CORE_SERVICE_URL}
+
+service:
+  api:
+    inventory: ${INVENTORY_API_URL}
+inventory:
+  integration:
+    token: ${CORE_SERVICE_TOKEN}
+
+expense:
+  attachment:
+    storage-path: ${EXPENSE_ATTACHMENT_STORAGE_PATH:uploads/expenses}
+    max-size: ${EXPENSE_ATTACHMENT_MAX_SIZE:10MB}
+
+workflow:
+  service:
+    base-url: ${WORKFLOW_SERVICE_BASE_URL:http://localhost:8083}
+
+account:
+  service:
+    callback-base-url: ${ACCOUNT_SERVICE_CALLBACK_BASE_URL:http://account-service:8081}

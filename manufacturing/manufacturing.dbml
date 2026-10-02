@@ -1,0 +1,840 @@
+Project ManufacturingService {
+  database_type: 'PostgreSQL'
+  Note: '''
+    Manufacturing Service - Database Design (DBML)
+
+    Ownership boundaries:
+    - Manufacturing owns: Product Profile/Classification, BOM, BOM Revision, BOM Items,
+      BOM Outputs, Production Orders, Production Order Materials/Outputs, BOM/Material
+      Snapshots, Material Consumption, Production Completion, Production Scrap,
+      Manufacturing-side WIP, Production Genealogy, Production Cost, Outbox/Integration.
+    - Inventory owns (NOT duplicated here): Product, Product Category, UOM,
+      Product-UOM conversion, Warehouse, Location, Stock, Stock Movement, Batch,
+      Serial, Reservation, Valuation.
+    - Account owns (NOT duplicated here): Company, Vendor, Customer, Purchase/Sales,
+      AP/AR, GST, Chart of Accounts, GL Journal, Payments.
+
+    All references to Inventory or Account entities (product_id, uom_id, warehouse_id,
+    location_id, batch_id, serial_id, company_id, inventory_reservation_id,
+    inventory_movement_id, etc.) are stored as plain UUID columns with descriptive
+    notes. They are logical external references only - there are NO DBML Ref
+    relationships and NO physical cross-database foreign keys to Inventory or
+    Account tables. Ref relationships in this file exist ONLY between
+    Manufacturing-owned tables.
+  '''
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+Enum manufacturing_product_type {
+  RAW_MATERIAL
+  FINISHED_GOOD
+  SEMI_FINISHED
+  CONSUMABLE
+  PACKAGING
+  SCRAP
+  BY_PRODUCT
+}
+
+Enum bom_type {
+  STANDARD
+  PRODUCTION
+  ENGINEERING
+  SUBCONTRACT
+}
+
+Enum bom_status {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  ACTIVE
+  INACTIVE
+  CANCELLED
+}
+
+Enum bom_revision_status {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  ACTIVE
+  SUPERSEDED
+  CANCELLED
+}
+
+Enum bom_output_type {
+  FINISHED_GOOD
+  BY_PRODUCT
+}
+
+Enum production_order_status {
+  DRAFT
+  PENDING_APPROVAL
+  CONFIRMED
+  RELEASED
+  IN_PROGRESS
+  PARTIALLY_COMPLETED
+  COMPLETED
+  CANCELLED
+  CLOSED
+}
+
+Enum production_material_status {
+  PLANNED
+  PARTIALLY_RESERVED
+  RESERVED
+  PARTIALLY_CONSUMED
+  CONSUMED
+  CANCELLED
+}
+
+Enum production_output_status {
+  PLANNED
+  PARTIALLY_PRODUCED
+  PRODUCED
+  REJECTED
+  CANCELLED
+}
+
+Enum production_output_type {
+  FINISHED_GOOD
+  BY_PRODUCT
+  SCRAP
+}
+
+Enum consumption_status {
+  DRAFT
+  CONFIRMED
+  POSTED
+  REVERSED
+  CANCELLED
+}
+
+Enum completion_status {
+  DRAFT
+  CONFIRMED
+  POSTED
+  REVERSED
+  CANCELLED
+}
+
+Enum scrap_status {
+  DRAFT
+  CONFIRMED
+  POSTED
+  REVERSED
+  CANCELLED
+}
+
+Enum wip_status {
+  NOT_STARTED
+  IN_PROGRESS
+  PARTIALLY_COMPLETED
+  COMPLETED
+  CANCELLED
+}
+
+Enum production_cost_status {
+  DRAFT
+  CALCULATED
+  FINALIZED
+  REVERSED
+}
+
+Enum genealogy_relationship_type {
+  CONSUMED_INTO
+  PRODUCED_FROM
+  BY_PRODUCT_FROM
+  SCRAP_FROM
+}
+
+Enum outbox_status {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  DEAD_LETTER
+}
+
+Enum outbox_event_type {
+  PRODUCTION_MATERIAL_RESERVATION
+  PRODUCTION_MATERIAL_CONSUMPTION
+  PRODUCTION_FINISHED_GOODS
+  PRODUCTION_SCRAP
+  PRODUCTION_BY_PRODUCT
+  PRODUCTION_REVERSAL
+}
+
+// ============================================================
+// 1. MANUFACTURING PRODUCT PROFILE
+// ============================================================
+
+Table manufacturing_product_profile {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null, note: 'External Account company UUID - no FK']
+  product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  manufacturing_type manufacturing_product_type [not null]
+  is_manufactured boolean [not null, default: false]
+  is_purchasable boolean [not null, default: true]
+  is_sellable boolean [not null, default: true]
+  is_active boolean [not null, default: true]
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    (company_id, product_id) [unique, name: 'uk_mfg_product_profile_company_product']
+    company_id [name: 'idx_mfg_product_profile_company']
+    product_id [name: 'idx_mfg_product_profile_product']
+  }
+
+  Note: 'product_id is an external Inventory product UUID (no DBML Ref).'
+}
+
+// ============================================================
+// 2. BOM
+// ============================================================
+
+Table bom {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null, note: 'External Account company UUID - no FK']
+  bom_number varchar [not null]
+  finished_product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  name varchar [not null]
+  description text
+  bom_type bom_type [not null, default: 'STANDARD']
+  status bom_status [not null, default: 'DRAFT']
+  is_default boolean [not null, default: false]
+  effective_from date
+  effective_to date
+  current_revision integer [not null, default: 0]
+  approved_by uuid
+  approved_at timestamp
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    (company_id, bom_number) [unique, name: 'uk_bom_company_number']
+    company_id [name: 'idx_bom_company']
+    finished_product_id [name: 'idx_bom_finished_product']
+    status [name: 'idx_bom_status']
+    (company_id, finished_product_id, is_default) [name: 'idx_bom_company_product_default']
+  }
+
+  Note: 'finished_product_id is an external Inventory product UUID (no DBML Ref).'
+}
+
+// ============================================================
+// 3. BOM REVISION
+// ============================================================
+
+Table bom_revision {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  bom_id uuid [not null]
+  revision_number integer [not null]
+  revision_label varchar
+  effective_from date
+  effective_to date
+  status bom_revision_status [not null, default: 'DRAFT']
+  change_reason text
+  approved_by uuid
+  approved_at timestamp
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    (company_id, bom_id, revision_number) [unique, name: 'uk_bom_revision_company_bom_number']
+    company_id [name: 'idx_bom_revision_company']
+    bom_id [name: 'idx_bom_revision_bom']
+    status [name: 'idx_bom_revision_status']
+  }
+}
+
+// ============================================================
+// 4. BOM ITEM
+// ============================================================
+
+Table bom_item {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  bom_revision_id uuid [not null]
+  component_product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  quantity decimal(19,6) [not null]
+  uom_id uuid [not null, note: 'External Inventory UOM UUID - no FK']
+  scrap_percentage decimal(9,4) [not null, default: 0]
+  wastage_percentage decimal(9,4) [not null, default: 0]
+  sequence_no integer [not null, default: 0]
+  is_optional boolean [not null, default: false]
+  is_active boolean [not null, default: true]
+  notes text
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    company_id [name: 'idx_bom_item_company']
+    bom_revision_id [name: 'idx_bom_item_revision']
+    component_product_id [name: 'idx_bom_item_component_product']
+    uom_id [name: 'idx_bom_item_uom']
+  }
+
+  Note: 'component_product_id -> Inventory product UUID; uom_id -> Inventory UOM UUID. Both logical references only.'
+}
+
+// ============================================================
+// 5. BOM OUTPUT
+// ============================================================
+
+Table bom_output {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  bom_revision_id uuid [not null]
+  product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  quantity decimal(19,6) [not null]
+  uom_id uuid [not null, note: 'External Inventory UOM UUID - no FK']
+  output_type bom_output_type [not null, default: 'FINISHED_GOOD']
+  is_primary boolean [not null, default: false]
+  sequence_no integer [not null, default: 0]
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    company_id [name: 'idx_bom_output_company']
+    bom_revision_id [name: 'idx_bom_output_revision']
+    product_id [name: 'idx_bom_output_product']
+  }
+}
+
+// ============================================================
+// 6. PRODUCTION ORDER
+// ============================================================
+
+Table production_order {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  production_order_no varchar [not null]
+  finished_product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  bom_id uuid [not null]
+  bom_revision_id uuid [not null]
+  warehouse_id uuid [not null, note: 'External Inventory warehouse UUID - no FK']
+  production_location_id uuid [note: 'External Inventory location UUID - no FK']
+  planned_quantity decimal(19,6) [not null]
+  produced_quantity decimal(19,6) [not null, default: 0]
+  rejected_quantity decimal(19,6) [not null, default: 0]
+  scrap_quantity decimal(19,6) [not null, default: 0]
+  remaining_quantity decimal(19,6) [not null, default: 0]
+  planned_start_date date
+  planned_end_date date
+  actual_start_date timestamp
+  actual_end_date timestamp
+  status production_order_status [not null, default: 'DRAFT']
+  priority varchar
+  notes text
+  approved_by uuid
+  approved_at timestamp
+  released_by uuid
+  released_at timestamp
+  completed_by uuid
+  completed_at timestamp
+  cancelled_by uuid
+  cancelled_at timestamp
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    (company_id, production_order_no) [unique, name: 'uk_production_order_company_number']
+    company_id [name: 'idx_production_order_company']
+    status [name: 'idx_production_order_status']
+    finished_product_id [name: 'idx_production_order_finished_product']
+    bom_id [name: 'idx_production_order_bom']
+    bom_revision_id [name: 'idx_production_order_bom_revision']
+    warehouse_id [name: 'idx_production_order_warehouse']
+    production_location_id [name: 'idx_production_order_location']
+    planned_start_date [name: 'idx_production_order_planned_start']
+  }
+
+  Note: 'finished_product_id, warehouse_id, production_location_id are external Inventory UUIDs (no DBML Ref).'
+}
+
+// ============================================================
+// 7. PRODUCTION ORDER MATERIAL
+// ============================================================
+
+Table production_order_material {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  production_order_id uuid [not null]
+  bom_item_id uuid [not null]
+  component_product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  planned_quantity decimal(19,6) [not null]
+  reserved_quantity decimal(19,6) [not null, default: 0]
+  consumed_quantity decimal(19,6) [not null, default: 0]
+  returned_quantity decimal(19,6) [not null, default: 0]
+  wastage_quantity decimal(19,6) [not null, default: 0]
+  scrap_quantity decimal(19,6) [not null, default: 0]
+  uom_id uuid [not null, note: 'External Inventory UOM UUID - no FK']
+  inventory_reservation_id uuid [note: 'External Inventory stock_reservation UUID - no FK']
+  status production_material_status [not null, default: 'PLANNED']
+  sequence_no integer [not null, default: 0]
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    company_id [name: 'idx_po_material_company']
+    production_order_id [name: 'idx_po_material_order']
+    component_product_id [name: 'idx_po_material_component_product']
+    bom_item_id [name: 'idx_po_material_bom_item']
+    inventory_reservation_id [name: 'idx_po_material_reservation']
+  }
+
+  Note: 'inventory_reservation_id is an external Inventory UUID. Do NOT create a DB relationship to Inventory.'
+}
+
+// ============================================================
+// 8. PRODUCTION ORDER OUTPUT
+// ============================================================
+
+Table production_order_output {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  production_order_id uuid [not null]
+  product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  output_type production_output_type [not null]
+  planned_quantity decimal(19,6) [not null, default: 0]
+  produced_quantity decimal(19,6) [not null, default: 0]
+  rejected_quantity decimal(19,6) [not null, default: 0]
+  scrap_quantity decimal(19,6) [not null, default: 0]
+  uom_id uuid [not null, note: 'External Inventory UOM UUID - no FK']
+  warehouse_id uuid [note: 'External Inventory warehouse UUID - no FK']
+  location_id uuid [note: 'External Inventory location UUID - no FK']
+  batch_id uuid [note: 'External Inventory batch UUID - no FK']
+  serial_id uuid [note: 'External Inventory serial UUID - no FK']
+  status production_output_status [not null, default: 'PLANNED']
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    company_id [name: 'idx_po_output_company']
+    production_order_id [name: 'idx_po_output_order']
+    product_id [name: 'idx_po_output_product']
+    warehouse_id [name: 'idx_po_output_warehouse']
+    batch_id [name: 'idx_po_output_batch']
+    serial_id [name: 'idx_po_output_serial']
+  }
+
+  Note: 'All product/uom/warehouse/location/batch/serial references are external Inventory UUIDs (no DBML Ref).'
+}
+
+// ============================================================
+// 9. PRODUCTION ORDER BOM SNAPSHOT
+// ============================================================
+
+Table production_order_bom_snapshot {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  production_order_id uuid [not null]
+  bom_id uuid [not null]
+  bom_revision_id uuid [not null]
+  bom_number varchar [not null]
+  revision_number integer [not null]
+  revision_label varchar
+  finished_product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  snapshot_created_at timestamp [not null, default: `now()`]
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    (company_id, production_order_id) [unique, name: 'uk_po_bom_snapshot_company_order']
+    bom_id [name: 'idx_po_bom_snapshot_bom']
+    bom_revision_id [name: 'idx_po_bom_snapshot_revision']
+  }
+
+  Note: 'Historical immutable snapshot of the BOM revision used by the Production Order.'
+}
+
+// ============================================================
+// 10. PRODUCTION ORDER MATERIAL SNAPSHOT
+// ============================================================
+
+Table production_order_material_snapshot {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  production_order_id uuid [not null]
+  production_order_bom_snapshot_id uuid [not null]
+  bom_item_id uuid [not null]
+  component_product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  quantity decimal(19,6) [not null]
+  uom_id uuid [not null, note: 'External Inventory UOM UUID - no FK']
+  scrap_percentage decimal(9,4) [not null, default: 0]
+  wastage_percentage decimal(9,4) [not null, default: 0]
+  sequence_no integer [not null, default: 0]
+  is_optional boolean [not null, default: false]
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    production_order_id [name: 'idx_po_material_snapshot_order']
+    production_order_bom_snapshot_id [name: 'idx_po_material_snapshot_bom_snapshot']
+    component_product_id [name: 'idx_po_material_snapshot_component_product']
+    company_id [name: 'idx_po_material_snapshot_company']
+  }
+
+  Note: 'Historical immutable snapshot of BOM component requirements.'
+}
+
+// ============================================================
+// 11. MATERIAL CONSUMPTION
+// ============================================================
+
+Table material_consumption {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  production_order_id uuid [not null]
+  production_order_material_id uuid [not null]
+  component_product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  planned_quantity decimal(19,6) [not null, default: 0]
+  actual_quantity decimal(19,6) [not null]
+  uom_id uuid [not null, note: 'External Inventory UOM UUID - no FK']
+  warehouse_id uuid [note: 'External Inventory warehouse UUID - no FK']
+  location_id uuid [note: 'External Inventory location UUID - no FK']
+  batch_id uuid [note: 'External Inventory batch UUID - no FK']
+  serial_id uuid [note: 'External Inventory serial UUID - no FK']
+  consumption_date timestamp [not null, default: `now()`]
+  status consumption_status [not null, default: 'DRAFT']
+  inventory_movement_id uuid [note: 'External Inventory stock_movement UUID - no FK']
+  idempotency_key varchar [not null]
+  remarks text
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    (company_id, idempotency_key) [unique, name: 'uk_material_consumption_company_idempotency']
+    production_order_id [name: 'idx_material_consumption_order']
+    production_order_material_id [name: 'idx_material_consumption_order_material']
+    component_product_id [name: 'idx_material_consumption_component_product']
+    inventory_movement_id [name: 'idx_material_consumption_movement']
+  }
+}
+
+// ============================================================
+// 12. PRODUCTION COMPLETION
+// ============================================================
+
+Table production_completion {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  completion_no varchar [not null]
+  production_order_id uuid [not null]
+  completion_date timestamp [not null, default: `now()`]
+  status completion_status [not null, default: 'DRAFT']
+  remarks text
+  idempotency_key varchar [not null]
+  inventory_movement_id uuid [note: 'External Inventory stock_movement UUID - no FK']
+  completed_by uuid
+  completed_at timestamp
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    (company_id, completion_no) [unique, name: 'uk_production_completion_company_number']
+    (company_id, idempotency_key) [unique, name: 'uk_production_completion_company_idempotency']
+    production_order_id [name: 'idx_production_completion_order']
+    inventory_movement_id [name: 'idx_production_completion_movement']
+  }
+}
+
+// ============================================================
+// 13. PRODUCTION COMPLETION LINE
+// ============================================================
+
+Table production_completion_line {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  production_completion_id uuid [not null]
+  product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  output_type production_output_type [not null]
+  quantity decimal(19,6) [not null]
+  uom_id uuid [not null, note: 'External Inventory UOM UUID - no FK']
+  warehouse_id uuid [note: 'External Inventory warehouse UUID - no FK']
+  location_id uuid [note: 'External Inventory location UUID - no FK']
+  batch_id uuid [note: 'External Inventory batch UUID - no FK']
+  serial_id uuid [note: 'External Inventory serial UUID - no FK']
+  unit_cost decimal(19,4) [not null, default: 0]
+  total_cost decimal(19,6) [not null, default: 0]
+  inventory_movement_line_id uuid [note: 'External Inventory stock_movement_line UUID - no FK']
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    production_completion_id [name: 'idx_production_completion_line_completion']
+    product_id [name: 'idx_production_completion_line_product']
+    batch_id [name: 'idx_production_completion_line_batch']
+    serial_id [name: 'idx_production_completion_line_serial']
+    inventory_movement_line_id [name: 'idx_production_completion_line_movement_line']
+    company_id [name: 'idx_production_completion_line_company']
+  }
+}
+
+// ============================================================
+// 14. PRODUCTION SCRAP
+// ============================================================
+
+Table production_scrap {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  production_order_id uuid [not null]
+  scrap_product_id uuid [not null, note: 'External Inventory product UUID - no FK']
+  quantity decimal(19,6) [not null]
+  uom_id uuid [not null, note: 'External Inventory UOM UUID - no FK']
+  warehouse_id uuid [note: 'External Inventory warehouse UUID - no FK']
+  location_id uuid [note: 'External Inventory location UUID - no FK']
+  reason varchar
+  scrap_date timestamp [not null, default: `now()`]
+  status scrap_status [not null, default: 'DRAFT']
+  inventory_movement_id uuid [note: 'External Inventory stock_movement UUID - no FK']
+  approved_by uuid
+  approved_at timestamp
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    production_order_id [name: 'idx_production_scrap_order']
+    scrap_product_id [name: 'idx_production_scrap_product']
+    inventory_movement_id [name: 'idx_production_scrap_movement']
+    company_id [name: 'idx_production_scrap_company']
+  }
+}
+
+// ============================================================
+// 15. PRODUCTION WIP (Manufacturing-side logical state only)
+// ============================================================
+
+Table production_wip {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  production_order_id uuid [not null]
+  status wip_status [not null, default: 'NOT_STARTED']
+  started_at timestamp
+  completed_at timestamp
+  material_cost decimal(19,4) [not null, default: 0]
+  labor_cost decimal(19,4) [not null, default: 0]
+  machine_cost decimal(19,4) [not null, default: 0]
+  overhead_cost decimal(19,4) [not null, default: 0]
+  total_wip_cost decimal(19,4) [not null, default: 0]
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    (company_id, production_order_id) [unique, name: 'uk_production_wip_company_order']
+    production_order_id [name: 'idx_production_wip_order']
+    company_id [name: 'idx_production_wip_company']
+    status [name: 'idx_production_wip_status']
+  }
+
+  Note: 'Manufacturing-side logical WIP state tracking only. This is NOT a stock ledger and does not duplicate Inventory stock.'
+}
+
+// ============================================================
+// 16. PRODUCTION GENEALOGY
+// ============================================================
+
+Table production_genealogy {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  production_order_id uuid [not null]
+  production_completion_id uuid
+  input_product_id uuid [note: 'External Inventory product UUID - no FK']
+  input_batch_id uuid [note: 'External Inventory batch UUID - no FK']
+  input_serial_id uuid [note: 'External Inventory serial UUID - no FK']
+  input_quantity decimal(19,6)
+  input_uom_id uuid [note: 'External Inventory UOM UUID - no FK']
+  output_product_id uuid [note: 'External Inventory product UUID - no FK']
+  output_batch_id uuid [note: 'External Inventory batch UUID - no FK']
+  output_serial_id uuid [note: 'External Inventory serial UUID - no FK']
+  output_quantity decimal(19,6)
+  output_uom_id uuid [note: 'External Inventory UOM UUID - no FK']
+  relationship_type genealogy_relationship_type [not null]
+  created_at timestamp [not null, default: `now()`]
+  created_by uuid
+
+  indexes {
+    production_order_id [name: 'idx_genealogy_order']
+    production_completion_id [name: 'idx_genealogy_completion']
+    input_product_id [name: 'idx_genealogy_input_product']
+    input_batch_id [name: 'idx_genealogy_input_batch']
+    input_serial_id [name: 'idx_genealogy_input_serial']
+    output_product_id [name: 'idx_genealogy_output_product']
+    output_batch_id [name: 'idx_genealogy_output_batch']
+    output_serial_id [name: 'idx_genealogy_output_serial']
+    company_id [name: 'idx_genealogy_company']
+  }
+
+  Note: 'All product/UOM/batch/serial references are external Inventory UUIDs (no DBML Ref).'
+}
+
+// ============================================================
+// 17. PRODUCTION COST
+// ============================================================
+
+Table production_cost {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  production_order_id uuid [not null]
+  material_cost decimal(19,4) [not null, default: 0]
+  labor_cost decimal(19,4) [not null, default: 0]
+  machine_cost decimal(19,4) [not null, default: 0]
+  overhead_cost decimal(19,4) [not null, default: 0]
+  subcontract_cost decimal(19,4) [not null, default: 0]
+  scrap_recovery decimal(19,4) [not null, default: 0]
+  by_product_credit decimal(19,4) [not null, default: 0]
+  total_cost decimal(19,4) [not null, default: 0]
+  good_output_quantity decimal(19,6) [not null, default: 0]
+  cost_per_unit decimal(19,6) [not null, default: 0]
+  currency_code varchar(3) [not null, default: 'INR']
+  status production_cost_status [not null, default: 'DRAFT']
+  calculated_at timestamp
+  version bigint [not null, default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+  created_by uuid
+  updated_by uuid
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    (company_id, production_order_id) [unique, name: 'uk_production_cost_company_order']
+  }
+
+  Note: 'Manufacturing-side cost rollup only. Does not create GL/accounting tables.'
+}
+
+// ============================================================
+// 18. MANUFACTURING OUTBOX
+// ============================================================
+
+Table manufacturing_outbox {
+  id uuid [pk, default: `gen_random_uuid()`]
+  company_id uuid [not null]
+  aggregate_type varchar [not null]
+  aggregate_id uuid [not null]
+  event_type outbox_event_type [not null]
+  idempotency_key varchar [not null]
+  payload jsonb [not null]
+  status outbox_status [not null, default: 'PENDING']
+  retry_count integer [not null, default: 0]
+  next_attempt_at timestamp
+  last_error text
+  processed_at timestamp
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null, default: `now()`]
+
+  indexes {
+    (company_id, idempotency_key) [unique, name: 'uk_mfg_outbox_company_idempotency']
+    company_id [name: 'idx_mfg_outbox_company']
+    aggregate_type [name: 'idx_mfg_outbox_aggregate_type']
+    aggregate_id [name: 'idx_mfg_outbox_aggregate_id']
+    event_type [name: 'idx_mfg_outbox_event_type']
+    status [name: 'idx_mfg_outbox_status']
+    next_attempt_at [name: 'idx_mfg_outbox_next_attempt']
+  }
+}
+
+// ============================================================
+// RELATIONSHIPS (Manufacturing-owned tables only)
+// ============================================================
+
+Ref: bom_revision.bom_id > bom.id
+Ref: bom_item.bom_revision_id > bom_revision.id
+Ref: bom_output.bom_revision_id > bom_revision.id
+
+Ref: production_order.bom_id > bom.id
+Ref: production_order.bom_revision_id > bom_revision.id
+
+Ref: production_order_bom_snapshot.production_order_id > production_order.id
+Ref: production_order_material_snapshot.production_order_bom_snapshot_id > production_order_bom_snapshot.id
+Ref: production_order_material_snapshot.bom_item_id > bom_item.id
+
+Ref: production_order_material.production_order_id > production_order.id
+Ref: production_order_material.bom_item_id > bom_item.id
+
+Ref: production_order_output.production_order_id > production_order.id
+
+Ref: material_consumption.production_order_id > production_order.id
+Ref: material_consumption.production_order_material_id > production_order_material.id
+
+Ref: production_completion.production_order_id > production_order.id
+Ref: production_completion_line.production_completion_id > production_completion.id
+
+Ref: production_scrap.production_order_id > production_order.id
+
+Ref: production_wip.production_order_id > production_order.id
+
+Ref: production_genealogy.production_order_id > production_order.id
+Ref: production_genealogy.production_completion_id > production_completion.id
+
+Ref: production_cost.production_order_id > production_order.id
+
+// No Ref relationships are created for external Inventory or Account UUID
+// columns (company_id, product_id, uom_id, warehouse_id, location_id,
+// batch_id, serial_id, inventory_reservation_id, inventory_movement_id,
+// inventory_movement_line_id). These remain plain UUID columns per the
+// no-cross-database-FK requirement.

@@ -1,0 +1,37 @@
+package com.erp.account.security;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+/**
+ * Ensures request-scoped company context is cleared after every HTTP request.
+ * This protects thread pool reuse and prevents leakage between requests.
+ */
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class RequestCompanyContextFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(RequestCompanyContextFilter.class);
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        try {
+            RequestCompanyContext.clear();
+            filterChain.doFilter(request, response);
+        } finally {
+            RequestCompanyContext.clear();
+        }
+    }
+}

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Bank Ledger</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 18px;
+            margin: 0 0 5px 0;
+        }
+        .header h2 {
+            font-size: 16px;
+            margin: 0 0 5px 0;
+        }
+        .info-section {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+        }
+        .info-section td {
+            padding: 5px;
+            vertical-align: top;
+        }
+        .label {
+            font-weight: bold;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        .summary-table th, .summary-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+        }
+        .summary-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .transaction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .transaction-table th, .transaction-table td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+        }
+        .transaction-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .text-right {
+            text-align: right !important;
+        }
+        .text-center {
+            text-align: center !important;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 9px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1 th:text="${company.companyName}">Company Name</h1>
+    <h2>Bank Ledger</h2>
+    <p th:text="'Period: ' + ${period}">Period: All Time</p>
+</div>
+
+<table class="info-section">
+    <tr>
+        <td width="15%"><span class="label">Bank Name:</span></td>
+        <td width="35%" th:text="${ledger.bankName}">Bank Name</td>
+        <td width="15%"><span class="label">Account No:</span></td>
+        <td width="35%" th:text="${ledger.accountNumber}">Account Number</td>
+    </tr>
+    <tr>
+        <td><span class="label">IFSC Code:</span></td>
+        <td th:text="${ledger.ifscCode}">IFSC</td>
+        <td><span class="label">Generated Date:</span></td>
+        <td th:text="${generatedDate}">Date</td>
+    </tr>
+</table>
+
+<table class="summary-table">
+    <tr>
+        <th>Opening Balance</th>
+        <th>Total Debits</th>
+        <th>Total Credits</th>
+        <th>Closing Balance</th>
+    </tr>
+    <tr>
+        <td th:text="${#numbers.formatDecimal(ledger.openingBalance, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+        <td th:text="${#numbers.formatDecimal(ledger.totalDebits, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+        <td th:text="${#numbers.formatDecimal(ledger.totalCredits, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+        <td th:text="${#numbers.formatDecimal(ledger.closingBalance, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+    </tr>
+</table>
+
+<table class="transaction-table">
+    <thead>
+        <tr>
+            <th width="10%">Date</th>
+            <th width="12%">Ref No</th>
+            <th width="12%">UTR No</th>
+            <th width="32%">Narration</th>
+            <th width="11%" class="text-right">Debit</th>
+            <th width="11%" class="text-right">Credit</th>
+            <th width="12%" class="text-right">Balance</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Opening Balance Row -->
+        <tr>
+            <td colspan="6" class="text-right" style="font-weight: bold;">Opening Balance</td>
+            <td class="text-right" style="font-weight: bold;" th:text="${#numbers.formatDecimal(ledger.openingBalance, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+        </tr>
+        
+        <!-- Transaction Rows -->
+        <tr th:each="entry : ${ledger.ledgerEntries}">
+            <td th:text="${#temporals.format(entry.transactionDate, 'dd-MM-yyyy')}">Date</td>
+            <td th:text="${entry.referenceNo}">Ref No</td>
+            <td th:text="${entry.utrNo}">UTR No</td>
+            <td th:text="${entry.narration}">Narration</td>
+            <td class="text-right" th:text="${entry.debitAmount != null && entry.debitAmount > 0 ? #numbers.formatDecimal(entry.debitAmount, 1, 'COMMA', 2, 'POINT') : '-'}">Debit</td>
+            <td class="text-right" th:text="${entry.creditAmount != null && entry.creditAmount > 0 ? #numbers.formatDecimal(entry.creditAmount, 1, 'COMMA', 2, 'POINT') : '-'}">Credit</td>
+            <td class="text-right" th:text="${#numbers.formatDecimal(entry.runningBalance, 1, 'COMMA', 2, 'POINT')}">Balance</td>
+        </tr>
+        
+        <!-- Closing Balance Row -->
+        <tr>
+            <td colspan="6" class="text-right" style="font-weight: bold;">Closing Balance</td>
+            <td class="text-right" style="font-weight: bold;" th:text="${#numbers.formatDecimal(ledger.closingBalance, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="footer">
+    <p>This is a computer-generated document and does not require a signature.</p>
+</div>
+
+</body>
+</html>

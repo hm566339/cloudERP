@@ -1,0 +1,76 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  mail:
+    host: localhost
+    port: 25
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.erp.account.modules.auditlog: DEBUG
+
+sso:
+  backend: http://localhost:8080
+  frontend: http://localhost:3000
+  client-id: dummy-client-id
+  client-secret: dummy-client-secret
+  cookie-name: JSESSIONID
+  cookie-path: /
+  cookie-secure: false
+  cookie-http-only: true
+  cookie-same-site: Lax
+  module-name: account
+  transport: http
+  callback-path: /callback
+  login-url: http://localhost:8080/login
+  base-url: http://localhost:8080/sso
+  cookie: /
+
+service:
+  api:
+    inventory: http://localhost:8081
+
+FRONTEND_BASE: http://localhost
+FRONTEND_URL: http://localhost:4173
+SSO_FRONTEND: http://localhost:3000
+SSO_BACKEND: http://localhost:8080
+SSO_CLIENT_ID: dummy-client-id
+SSO_CLIENT_SECRET: dummy-client-secret
+SSO_COOKIE_NAME: JSESSIONID
+SSO_COOKIE_PATH: /
+SSO_COOKIE_SECURE: false
+SSO_COOKIE_HTTP_ONLY: true
+SSO_COOKIE_SAME_SITE: Lax
+SSO_MODULE_NAME: account
+SSO_TRANSPORT: http
+SSO_CALLBACK_PATH: /callback
+SSO_LOGIN_URL: http://localhost:8080/login
+BASE_URL: http://localhost:8080/sso
+COOKIE_PATH: /
+INVENTORY_API_URL: http://localhost:8081
+CORE_SERVICE_URL: http://localhost:8082
+CORE_SERVICE_TOKEN: dummy-token
+MAIL_HOST: localhost
+MAIL_PORT: 25
+MAIL_USERNAME: dummy
+MAIL_PASSWORD: dummy
+MAIL_AUTH: false
+MAIL_STARTTLS_ENABLE: false
+
+# Disable Eureka for tests
+eureka:
+  client:
+    enabled: false

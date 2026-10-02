@@ -1,0 +1,7 @@
+package com.erp.inventory.modules.product.enums;
+
+public enum InventoryPeriodStatus {
+    OPEN,
+    CLOSED,
+    LOCKED
+}

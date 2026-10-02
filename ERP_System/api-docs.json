@@ -1,0 +1,4359 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8090",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/api/sso/user/{id}": {
+      "get": {
+        "tags": ["user-controller"],
+        "operationId": "getUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperUserResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["user-controller"],
+        "operationId": "updateUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperUpdateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperUserResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["user-controller"],
+        "operationId": "deleteUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/role/{id}": {
+      "get": {
+        "tags": ["role-controller"],
+        "operationId": "getRoleDetails",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperRoleDetailsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["role-controller"],
+        "operationId": "updateRole",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperCreateRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperRoleResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["role-controller"],
+        "operationId": "deleteRole",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/module/{id}": {
+      "get": {
+        "tags": ["module-controller"],
+        "operationId": "getModuleById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperModuleSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["module-controller"],
+        "operationId": "updateModule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperUpdateModuleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperModuleResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["module-controller"],
+        "operationId": "deleteModule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/module-routes/{id}": {
+      "get": {
+        "tags": ["module-route-controller"],
+        "operationId": "getModuleRouteById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperModuleRouteResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["module-route-controller"],
+        "operationId": "updateModuleRoute",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperUpdateModuleRouteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperModuleRouteResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["module-route-controller"],
+        "operationId": "deleteModuleRoute",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/company/{id}": {
+      "get": {
+        "tags": ["company-controller"],
+        "operationId": "getCompanyById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperCompanyResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["company-controller"],
+        "operationId": "updateCompany",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperCompanyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["company-controller"],
+        "operationId": "deleteCompany",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/company-modules/{id}": {
+      "get": {
+        "tags": ["company-module-controller"],
+        "operationId": "getCompanyModuleById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperCompanyModuleResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["company-module-controller"],
+        "operationId": "updateCompanyModule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperUpdateComapnyModule"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["company-module-controller"],
+        "operationId": "deleteCompanyModule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user": {
+      "post": {
+        "tags": ["user-controller"],
+        "operationId": "createUser",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "module",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperCreateUserByAdmin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperUserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/{id}/role": {
+      "post": {
+        "tags": ["user-controller"],
+        "operationId": "assignRole",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperAssignRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperUserRoleAssignmentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/{id}/portal-access": {
+      "post": {
+        "tags": ["user-controller"],
+        "operationId": "grantPortalAccess",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperGrantPortalAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperPortalAccessGrantResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/{id}/change-password": {
+      "post": {
+        "tags": ["user-controller"],
+        "operationId": "changePassword",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/reset-password": {
+      "post": {
+        "tags": ["user-controller"],
+        "operationId": "resetPassword",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperPasswordReset"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/forgot-password": {
+      "post": {
+        "tags": ["user-controller"],
+        "operationId": "forgotPassword",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "companyCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/token/verify": {
+      "post": {
+        "tags": ["auth-controller"],
+        "operationId": "verify",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperTokenVerifyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/token/revoke": {
+      "post": {
+        "tags": ["auth-controller"],
+        "operationId": "revoke",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperTokenRevokeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/token/refresh": {
+      "post": {
+        "tags": ["auth-controller"],
+        "operationId": "refresh",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperRefreshTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperRefreshTokenResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/token/exchange": {
+      "post": {
+        "tags": ["auth-controller"],
+        "operationId": "exchange",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperTokenExchangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/session/sso/logout": {
+      "post": {
+        "tags": ["session-controller"],
+        "operationId": "logout",
+        "parameters": [
+          {
+            "name": "access_token",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sso/role": {
+      "get": {
+        "tags": ["role-controller"],
+        "operationId": "getAllRoles",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "companyId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperRoleListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["role-controller"],
+        "operationId": "createRole",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperCreateRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperRoleResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/module": {
+      "get": {
+        "tags": ["module-controller"],
+        "operationId": "getAllModules",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperModuleListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["module-controller"],
+        "operationId": "createModule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperCreateModuleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperModuleCreateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/module/{id}/rotatesecret": {
+      "post": {
+        "tags": ["module-controller"],
+        "operationId": "rotateSecret",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperRotateSecretResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/module-routes": {
+      "get": {
+        "tags": ["module-route-controller"],
+        "operationId": "getAllModuleRoutes",
+        "parameters": [
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "moduleId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperModuleRouteListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["module-route-controller"],
+        "operationId": "createModuleRoute",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperCreateModuleRouteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperModuleRouteResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/company": {
+      "get": {
+        "tags": ["company-controller"],
+        "operationId": "getAllCompanies",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperCompanyListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["company-controller"],
+        "operationId": "createCompany",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperCompanyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/company-modules": {
+      "get": {
+        "tags": ["company-module-controller"],
+        "operationId": "getAllCompanyModules",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperCompanyModuleResponseList"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["company-module-controller"],
+        "operationId": "createCompanyModule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperCompanyModuleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/auth/register": {
+      "post": {
+        "tags": ["auth-controller"],
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperCreateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperUserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/auth/logout": {
+      "post": {
+        "tags": ["auth-controller"],
+        "operationId": "logout_1",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/auth/login": {
+      "post": {
+        "tags": ["auth-controller"],
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperLoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/auth/admin-login": {
+      "post": {
+        "tags": ["auth-controller"],
+        "operationId": "adminLogin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/admin/token/refresh": {
+      "post": {
+        "tags": ["auth-controller"],
+        "operationId": "adminRefresh",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperAdminRefreshToken"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperRefreshTokenResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/{userId}/verify-email": {
+      "patch": {
+        "tags": ["user-controller"],
+        "operationId": "verifyEmailAdmin",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["VERIFIED", "UNVERIFIED"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/{userId}/portal/{moduleId}/toggle": {
+      "patch": {
+        "tags": ["user-controller"],
+        "operationId": "togglePortalAccess",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "moduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/{id}/status": {
+      "patch": {
+        "tags": ["user-controller"],
+        "operationId": "updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["ACTIVE", "INACTIVE", "BLOCKED"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperUserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/role/{id}/status": {
+      "patch": {
+        "tags": ["role-controller"],
+        "operationId": "updateRoleStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperRoleResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/module/{id}/status": {
+      "patch": {
+        "tags": ["module-controller"],
+        "operationId": "updateModuleStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperUpdateModuleStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperModuleStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/module-routes/{id}/status": {
+      "patch": {
+        "tags": ["module-route-controller"],
+        "operationId": "updateModuleRouteStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestWrapperUpdateModuleRouteStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/company/{id}/status": {
+      "patch": {
+        "tags": ["company-controller"],
+        "operationId": "changeStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/company-modules/{id}/status": {
+      "patch": {
+        "tags": ["company-module-controller"],
+        "operationId": "changeStatus_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/verify-email": {
+      "get": {
+        "tags": ["user-controller"],
+        "operationId": "verifyEmail",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/company/{companyId}": {
+      "get": {
+        "tags": ["user-controller"],
+        "operationId": "getAllUsers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperUserListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/session/sso/refresh": {
+      "get": {
+        "tags": ["session-controller"],
+        "operationId": "refresh_1",
+        "parameters": [
+          {
+            "name": "refresh_token",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/session/sso/callback": {
+      "get": {
+        "tags": ["session-controller"],
+        "operationId": "callback",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "goto",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sso/session/my": {
+      "get": {
+        "tags": ["session-controller"],
+        "operationId": "getMySessions",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperSessionPageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/session/all/{companyId}": {
+      "get": {
+        "tags": ["session-controller"],
+        "operationId": "getAllSessions",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperSessionPageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/portal-access/{companyId}": {
+      "get": {
+        "tags": ["auth-controller"],
+        "operationId": "checkPortalAccess",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperUserPortalAccessListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/module-routes/internal/routes": {
+      "get": {
+        "tags": ["module-route-controller"],
+        "operationId": "getActiveRoutes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ModuleRouteResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/dashboard/{companyId}": {
+      "get": {
+        "tags": ["dashboard-controller"],
+        "operationId": "getDashboard",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperDashboardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/company/open": {
+      "get": {
+        "tags": ["company-controller"],
+        "operationId": "getCompanyOpenByCode",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperListComapanyOpenResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/company/code/{companyCode}": {
+      "get": {
+        "tags": ["company-controller"],
+        "operationId": "getCompanyByCode",
+        "parameters": [
+          {
+            "name": "companyCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperCompanyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/authorize": {
+      "get": {
+        "tags": ["auth-controller"],
+        "operationId": "authorize",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "module_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/auth/me": {
+      "get": {
+        "tags": ["auth-controller"],
+        "operationId": "me",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperUserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/{id}/role/{roleId}": {
+      "delete": {
+        "tags": ["user-controller"],
+        "operationId": "removeRole",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "roleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/user/{id}/portalaccess/{moduleId}": {
+      "delete": {
+        "tags": ["user-controller"],
+        "operationId": "removePortalAccess",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "moduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/session/{id}": {
+      "delete": {
+        "tags": ["session-controller"],
+        "operationId": "revokeSession",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/session/all": {
+      "delete": {
+        "tags": ["session-controller"],
+        "operationId": "revokeAllSessions",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/session/admin/{id}": {
+      "delete": {
+        "tags": ["session-controller"],
+        "operationId": "revokeSessionByAdmin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseWrapperMapStringString"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RequestWrapperUpdateUserRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UpdateUserRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "UpdateUserRequest": {
+        "type": "object",
+        "properties": {
+          "empId": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 0,
+            "pattern": "^[a-zA-Z0-9]*\\d$"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "fullName": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3
+          }
+        },
+        "required": ["email", "empId", "fullName", "username"]
+      },
+      "ResponseWrapperUserResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserResponse"
+          }
+        }
+      },
+      "RoleResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SsoSessionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "ipAddress": {
+            "type": "string"
+          },
+          "userAgent": {
+            "type": "string"
+          },
+          "moduleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "moduleName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "accessTokenValidTill": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UserPortalAccessResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "moduleName": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "status": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyCode": {
+            "type": "string"
+          },
+          "empId": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "emailStatus": {
+            "type": "string",
+            "enum": ["VERIFIED", "UNVERIFIED"]
+          },
+          "accountStatus": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE", "BLOCKED"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "role": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleResponse"
+            }
+          },
+          "portalAccess": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserPortalAccessResponse"
+            }
+          },
+          "session": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SsoSessionResponse"
+            }
+          }
+        }
+      },
+      "CreateRoleRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 3,
+            "pattern": "^[A-Z_]+$"
+          },
+          "status": {
+            "type": "boolean"
+          }
+        },
+        "required": ["name", "status"]
+      },
+      "RequestWrapperCreateRoleRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CreateRoleRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "ResponseWrapperRoleResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RoleResponse"
+          }
+        }
+      },
+      "RequestWrapperUpdateModuleRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UpdateModuleRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "UpdateModuleRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 3
+          },
+          "host": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(http|https)://.*$"
+          }
+        },
+        "required": ["host", "name"]
+      },
+      "ModuleResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string"
+          },
+          "moduleStatus": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ResponseWrapperModuleResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ModuleResponse"
+          }
+        }
+      },
+      "RequestWrapperUpdateModuleRouteRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UpdateModuleRouteRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "UpdateModuleRouteRequest": {
+        "type": "object",
+        "properties": {
+          "moduleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "apiPattern": {
+            "type": "string"
+          },
+          "serviceUrl": {
+            "type": "string"
+          },
+          "routeOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ModuleRouteResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "moduleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "moduleName": {
+            "type": "string"
+          },
+          "apiPattern": {
+            "type": "string"
+          },
+          "serviceUrl": {
+            "type": "string"
+          },
+          "routeOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ResponseWrapperModuleRouteResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ModuleRouteResponse"
+          }
+        }
+      },
+      "CompanyRequest": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": ["companyName"]
+      },
+      "RequestWrapperCompanyRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CompanyRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "ResponseWrapperMapStringString": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RequestWrapperUpdateComapnyModule": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UpdateComapnyModule"
+          }
+        },
+        "required": ["data"]
+      },
+      "UpdateComapnyModule": {
+        "type": "object",
+        "properties": {
+          "company": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "module": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateUserByAdmin": {
+        "type": "object",
+        "properties": {
+          "empId": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 3
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 4,
+            "pattern": "^[a-zA-Z0-9._]+$"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          },
+          "fullName": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3
+          }
+        },
+        "required": ["email", "empId", "fullName", "username"]
+      },
+      "RequestWrapperCreateUserByAdmin": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CreateUserByAdmin"
+          }
+        },
+        "required": ["data"]
+      },
+      "AssignRoleRequest": {
+        "type": "object",
+        "properties": {
+          "roleId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["roleId"]
+      },
+      "RequestWrapperAssignRoleRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AssignRoleRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "ResponseWrapperUserRoleAssignmentResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserRoleAssignmentResponse"
+          }
+        }
+      },
+      "UserRoleAssignmentResponse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assignedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GrantPortalAccessRequest": {
+        "type": "object",
+        "properties": {
+          "moduleId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["moduleId"]
+      },
+      "RequestWrapperGrantPortalAccessRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/GrantPortalAccessRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "PortalAccessGrantResponse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "moduleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ResponseWrapperPortalAccessGrantResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PortalAccessGrantResponse"
+          }
+        }
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 8,
+            "pattern": "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$"
+          },
+          "newPassword": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 8,
+            "pattern": "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$"
+          }
+        },
+        "required": ["currentPassword", "newPassword"]
+      },
+      "RequestWrapperChangePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ChangePasswordRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "PasswordReset": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 8,
+            "pattern": "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$"
+          }
+        },
+        "required": ["password"]
+      },
+      "RequestWrapperPasswordReset": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PasswordReset"
+          }
+        },
+        "required": ["data"]
+      },
+      "ResponseWrapperTokenVerifyResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/TokenVerifyResponse"
+          }
+        }
+      },
+      "TokenVerifyResponse": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          }
+        }
+      },
+      "RequestWrapperTokenRevokeRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TokenRevokeRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "TokenRevokeRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "tokenType": {
+            "type": "string"
+          },
+          "clientSecret": {
+            "type": "string"
+          }
+        },
+        "required": ["clientSecret", "token", "tokenType"]
+      },
+      "RefreshTokenRequest": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["refreshToken"]
+      },
+      "RequestWrapperRefreshTokenRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RefreshTokenRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "RefreshTokenResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          },
+          "expires_in": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ResponseWrapperRefreshTokenResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RefreshTokenResponse"
+          }
+        }
+      },
+      "RequestWrapperTokenExchangeRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TokenExchangeRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "TokenExchangeRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "clientSecret": {
+            "type": "string"
+          }
+        },
+        "required": ["clientId", "clientSecret", "code"]
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          },
+          "access_token": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          },
+          "expires_in": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "CreateModuleRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 3
+          },
+          "host": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(http|https)://.*$"
+          }
+        },
+        "required": ["host", "name"]
+      },
+      "RequestWrapperCreateModuleRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CreateModuleRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "ModuleCreateResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string"
+          },
+          "clientSecret": {
+            "type": "string"
+          },
+          "moduleStatus": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ResponseWrapperModuleCreateResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ModuleCreateResponse"
+          }
+        }
+      },
+      "ResponseWrapperRotateSecretResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RotateSecretResponse"
+          }
+        }
+      },
+      "RotateSecretResponse": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string"
+          },
+          "clientSecret": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateModuleRouteRequest": {
+        "type": "object",
+        "properties": {
+          "moduleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "apiPattern": {
+            "type": "string",
+            "minLength": 1
+          },
+          "serviceUrl": {
+            "type": "string",
+            "minLength": 1
+          },
+          "routeOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": ["apiPattern", "moduleId", "serviceUrl"]
+      },
+      "RequestWrapperCreateModuleRouteRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CreateModuleRouteRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "CompanyModuleRequest": {
+        "type": "object",
+        "properties": {
+          "company": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "module": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "RequestWrapperCompanyModuleRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CompanyModuleRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "properties": {
+          "empId": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 3
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 4,
+            "pattern": "^[a-zA-Z0-9._]+$"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "module": {
+            "type": "string",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 8,
+            "pattern": "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$"
+          },
+          "companyCode": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3
+          }
+        },
+        "required": [
+          "email",
+          "empId",
+          "fullName",
+          "module",
+          "password",
+          "role",
+          "username"
+        ]
+      },
+      "RequestWrapperCreateUserRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CreateUserRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "pattern": "^(?:[a-zA-Z0-9_]{3,20}|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})$"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 8,
+            "pattern": "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$"
+          },
+          "host": {
+            "type": "string",
+            "pattern": "^(http|https)://.*$"
+          },
+          "companyCode": {
+            "type": "string"
+          }
+        },
+        "required": ["password", "username"]
+      },
+      "RequestWrapperLoginRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/LoginRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "redirectUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseWrapperLoginResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/LoginResponse"
+          }
+        }
+      },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "accountStatus": {
+            "type": "string"
+          }
+        }
+      },
+      "AdminRefreshToken": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": ["refreshToken"]
+      },
+      "RequestWrapperAdminRefreshToken": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AdminRefreshToken"
+          }
+        },
+        "required": ["data"]
+      },
+      "ResponseWrapperStatus": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string",
+            "enum": ["VERIFIED", "UNVERIFIED"]
+          }
+        }
+      },
+      "RequestWrapperUpdateModuleStatusRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UpdateModuleStatusRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "UpdateModuleStatusRequest": {
+        "type": "object",
+        "properties": {
+          "moduleStatus": {
+            "type": "boolean"
+          }
+        },
+        "required": ["moduleStatus"]
+      },
+      "ModuleStatusResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "moduleStatus": {
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ResponseWrapperModuleStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ModuleStatusResponse"
+          }
+        }
+      },
+      "RequestWrapperUpdateModuleRouteStatusRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UpdateModuleRouteStatusRequest"
+          }
+        },
+        "required": ["data"]
+      },
+      "UpdateModuleRouteStatusRequest": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": ["active"]
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseWrapperMessageResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MessageResponse"
+          }
+        }
+      },
+      "PaginationResponse": {
+        "type": "object",
+        "properties": {
+          "currentPage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ResponseWrapperUserListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserListResponse"
+          }
+        }
+      },
+      "UserListResponse": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        }
+      },
+      "ResponseWrapperSessionPageResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/SessionPageResponse"
+          }
+        }
+      },
+      "SessionPageResponse": {
+        "type": "object",
+        "properties": {
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SsoSessionResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        }
+      },
+      "ResponseWrapperRoleListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RoleListResponse"
+          }
+        }
+      },
+      "RoleListResponse": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        }
+      },
+      "ResponseWrapperRoleDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/RoleDetailsResponse"
+          }
+        }
+      },
+      "RoleDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleUserResponse"
+            }
+          }
+        }
+      },
+      "RoleUserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "empId": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "accountStatus": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseWrapperUserPortalAccessListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserPortalAccessListResponse"
+          }
+        }
+      },
+      "UserPortalAccessListResponse": {
+        "type": "object",
+        "properties": {
+          "portalAccesses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserPortalAccessResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        }
+      },
+      "ModuleListResponse": {
+        "type": "object",
+        "properties": {
+          "modules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModuleSummaryResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        }
+      },
+      "ModuleSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "clientSecret": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string"
+          },
+          "moduleStatus": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ResponseWrapperModuleListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ModuleListResponse"
+          }
+        }
+      },
+      "ResponseWrapperModuleSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ModuleSummaryResponse"
+          }
+        }
+      },
+      "ModuleRouteListResponse": {
+        "type": "object",
+        "properties": {
+          "moduleRoutes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModuleRouteResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        }
+      },
+      "ResponseWrapperModuleRouteListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ModuleRouteListResponse"
+          }
+        }
+      },
+      "AuthorizationCodeStats": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "active": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "used": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "expired": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "DashboardResponse": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string"
+          },
+          "modules": {
+            "$ref": "#/components/schemas/ModuleStats"
+          },
+          "roles": {
+            "$ref": "#/components/schemas/RoleStats"
+          },
+          "users": {
+            "$ref": "#/components/schemas/UserStats"
+          },
+          "sessions": {
+            "$ref": "#/components/schemas/SessionStats"
+          },
+          "portalAccess": {
+            "$ref": "#/components/schemas/PortalAccessStats"
+          },
+          "authorizationCodes": {
+            "$ref": "#/components/schemas/AuthorizationCodeStats"
+          }
+        }
+      },
+      "ModuleStats": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "active": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "inactive": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "PortalAccessGraphItem": {
+        "type": "object",
+        "properties": {
+          "moduleName": {
+            "type": "string"
+          },
+          "grantedUsers": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "PortalAccessStats": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "active": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "inactive": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PortalAccessGraphItem"
+            }
+          }
+        }
+      },
+      "ResponseWrapperDashboardResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/DashboardResponse"
+          }
+        }
+      },
+      "RoleGraphItem": {
+        "type": "object",
+        "properties": {
+          "roleName": {
+            "type": "string"
+          },
+          "assignedUsers": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "RoleStats": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleGraphItem"
+            }
+          }
+        }
+      },
+      "SessionStats": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "active": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "expired": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "UserStats": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "active": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "inactive": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "blocked": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unverified": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "CompanyListResponse": {
+        "type": "object",
+        "properties": {
+          "companies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        }
+      },
+      "CompanyResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyCode": {
+            "type": "string"
+          },
+          "companyName": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ResponseWrapperCompanyListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CompanyListResponse"
+          }
+        }
+      },
+      "ResponseWrapperCompanyResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CompanyResponse"
+          }
+        }
+      },
+      "ComapanyOpenResponse": {
+        "type": "object",
+        "properties": {
+          "companyCode": {
+            "type": "string"
+          },
+          "companyName": {
+            "type": "string"
+          }
+        }
+      },
+      "ResponseWrapperListComapanyOpenResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComapanyOpenResponse"
+            }
+          }
+        }
+      },
+      "CompanyModuleResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company": {
+            "$ref": "#/components/schemas/CompanyResponse"
+          },
+          "module": {
+            "$ref": "#/components/schemas/ModuleResponse"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CompanyModuleResponseList": {
+        "type": "object",
+        "properties": {
+          "companyModuleResponse": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyModuleResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        }
+      },
+      "ResponseWrapperCompanyModuleResponseList": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CompanyModuleResponseList"
+          }
+        }
+      },
+      "ResponseWrapperCompanyModuleResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CompanyModuleResponse"
+          }
+        }
+      },
+      "ResponseWrapperMapStringObject": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        }
+      },
+      "ResponseWrapperObject": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {}
+        }
+      }
+    }
+  }
+}

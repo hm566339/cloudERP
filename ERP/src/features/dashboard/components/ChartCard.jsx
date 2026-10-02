@@ -1,0 +1,72 @@
+import React from 'react';
+import { PieChart as PieChartIcon } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+
+/**
+ * Reusable Chart Card for Dashboard Visualizations
+ */
+function arePieChartPropsEqual(prevProps, nextProps) {
+  if (prevProps.title !== nextProps.title) return false;
+  if (prevProps.data !== nextProps.data) {
+    const pData = prevProps.data || [];
+    const nData = nextProps.data || [];
+    if (pData.length !== nData.length) return false;
+    for (let i = 0; i < pData.length; i++) {
+      if (pData[i]?.value !== nData[i]?.value || pData[i]?.name !== nData[i]?.name) return false;
+    }
+  }
+  if (prevProps.colors !== nextProps.colors) {
+    const pC = prevProps.colors || [];
+    const nC = nextProps.colors || [];
+    if (pC.length !== nC.length) return false;
+    for (let i = 0; i < pC.length; i++) {
+      if (pC[i] !== nC[i]) return false;
+    }
+  }
+  return true;
+}
+
+function ChartCard({ title, data, colors }) {
+  // Ensure we only render chart if there is data > 0
+  const hasData = data && data.some(d => d.value > 0);
+
+  return (
+    <div className="card p-5 h-[240px] flex flex-col bg-white border border-zinc-200 rounded-xl shadow-sm">
+      <h3 className="text-sm font-bold text-zinc-700 mb-4">{title}</h3>
+      <div className="flex-1 w-full relative overflow-hidden">
+        {hasData ? (
+          <ResponsiveContainer width="100%" height="100%" debounce={300}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+                isAnimationActive={false}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                itemStyle={{ fontWeight: 600 }}
+              />
+              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 500 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-400">
+            <PieChartIcon size={32} className="opacity-50 mb-2" />
+            <p className="text-sm font-medium">No data available</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default React.memo(ChartCard, arePieChartPropsEqual);

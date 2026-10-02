@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0754D6"/>
+      <stop offset="48%" stop-color="#078FEA"/>
+      <stop offset="100%" stop-color="#18D9F1"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#083B9E"/>
+      <stop offset="55%" stop-color="#087BE3"/>
+      <stop offset="100%" stop-color="#18D9F1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- MARK2 M2 symbol -->
+  <g>
+    <!-- left vertical M -->
+    <path d="M245 130 L350 210 L350 430 L245 495 Z" fill="url(#g2)"/>
+    <path d="M245 130 L350 210 L350 280 L245 205 Z" fill="#0864D8"/>
+
+    <!-- central sweeping M stroke -->
+    <path d="M300 205 L420 300 L650 105
+             Q700 65 775 55 L775 135
+             Q730 145 690 180 L455 375
+             Q425 400 395 377 L300 300 Z" fill="url(#g)"/>
+
+    <!-- lower slash -->
+    <path d="M245 475 L350 410 L350 438 L245 505 Z" fill="#079DEB"/>
+
+    <!-- 2 -->
+    <path d="M700 150
+             Q750 105 820 125
+             Q875 140 875 195
+             Q875 245 825 275
+             L670 385 L875 385 L875 475 L600 475
+             Q580 475 580 455
+             Q580 435 605 418 L790 285
+             Q815 268 815 238
+             Q815 215 785 210 L700 210 Z" fill="url(#g2)"/>
+
+    <!-- pixel trail -->
+    <rect x="780" y="52" width="18" height="18" rx="4" fill="#0797EA"/>
+    <rect x="812" y="30" width="15" height="15" rx="3" fill="#0BBBEF"/>
+    <rect x="842" y="4" width="34" height="34" rx="6" fill="#12D8F1"/>
+    <rect x="820" y="58" width="13" height="13" rx="3" fill="#0BD0F1"/>
+    <rect x="850" y="45" width="17" height="17" rx="3" fill="#087DE4"/>
+  </g>
+
+  <!-- MARK2 wordmark -->
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="800">
+    <text x="115" y="620" font-size="142" letter-spacing="1" fill="#FFFFFF">MARK</text>
+    <text x="895" y="620" font-size="142" fill="url(#g)">2</text>
+  </g>
+
+  <!-- stylized A inner dot -->
+  <circle cx="432" cy="575" r="16" fill="#12CBEF"/>
+
+  <!-- tagline -->
+  <text x="600" y="680" text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="30" font-weight="600" letter-spacing="12"
+        fill="#08BDEB">IDEAS | TECHNOLOGY | IMPACT</text>
+</svg>

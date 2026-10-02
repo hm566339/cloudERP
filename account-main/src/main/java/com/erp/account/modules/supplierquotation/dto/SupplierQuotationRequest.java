@@ -1,0 +1,3 @@
+package com.erp.account.modules.supplierquotation.dto;
+import jakarta.validation.*; import jakarta.validation.constraints.*; import lombok.*; import java.time.LocalDate; import java.util.*;
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder public class SupplierQuotationRequest { @NotNull private UUID rfqId; @NotNull private UUID vendorId; private LocalDate quotationDate; private LocalDate validUntil; private String deliveryTerms; private String paymentTerms; @DecimalMin("0.0") private java.math.BigDecimal freight; @DecimalMin("0.0") private java.math.BigDecimal discount; private String remarks; @Valid @NotEmpty private List<SupplierQuotationItemRequest> items; }

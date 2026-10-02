@@ -1,0 +1,281 @@
+# ==============================================================================
+# Cloud ERP - Production Docker Compose Stack
+# ==============================================================================
+# Routing Policy:
+# - Frontend: https://www.mark2.in/erp/
+# - Backend API: https://www.mark2.in/api/* -> gateway-service:8080/api/*
+#
+# Security Policy:
+# - PostgreSQL and all backend microservices are NOT exposed to the public internet.
+# - Inter-service communication occurs securely over the isolated 'erp-network'.
+# - Frontend Nginx container binds locally to 127.0.0.1:3001, to be reverse-proxied
+#   by the host Nginx server for www.mark2.in.
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. PostgreSQL Database Service (Internal only - NOT publicly exposed)
+  # ----------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: erp-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - erp-network
+
+  # ----------------------------------------------------------------------------
+  # 2. Auth / SSO Service (Internal only)
+  # ----------------------------------------------------------------------------
+  auth-service:
+    build:
+      context: ./ERP_System
+      dockerfile: dockerfile
+    container_name: erp-auth-service
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/sso
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      STRAPI_SERVER: http://auth-service:8090
+      SSO_BASE_URL: ${AUTH_SERVICE_EXTERNAL_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/api/sso}
+      APP_FRONTEND_URL: ${FRONTEND_EXTERNAL_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin@mark2.in}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_AUTH: ${MAIL_AUTH:-true}
+      MAIL_STARTTLS_ENABLE: ${MAIL_STARTTLS_ENABLE:-true}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8090/actuator/health || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - erp-network
+
+  # ----------------------------------------------------------------------------
+  # 3. Account Service (Internal only)
+  # ----------------------------------------------------------------------------
+  account-service:
+    build:
+      context: ./account-main
+      dockerfile: dockerfile
+    container_name: erp-account-service
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/account
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      SSO_BACKEND: http://auth-service:8090
+      COOKIE_PATH: ${COOKIE_PATH:-/}
+      SSO_CLIENT_ID: ${ACCOUNT_SSO_CLIENT_ID:-}
+      SSO_CLIENT_SECRET: ${ACCOUNT_SSO_CLIENT_SECRET:-}
+      FRONTEND_URL: ${ACCOUNT_FRONTEND_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/accounts}
+      SSO_FRONTEND: ${ACCOUNT_SSO_FRONTEND:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/accounts}
+      BASE_URL: ${ACCOUNT_BASE_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/api/account}
+      SSO_LOGIN_URL: ${ACCOUNT_SSO_LOGIN_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/login}
+      WORKFLOW_SERVICE_BASE_URL: http://workflow-service:8083
+      INVENTORY_API_URL: http://inventory-service:8082
+    depends_on:
+      db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8081/actuator/health || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - erp-network
+
+  # ----------------------------------------------------------------------------
+  # 4. Gateway Service (Internal only - Ingress routed via Frontend Nginx)
+  # ----------------------------------------------------------------------------
+  gateway-service:
+    build:
+      context: ./gateway_service
+      dockerfile: dockerfile
+    container_name: erp-gateway-service
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      AUTH_SERVER_BASE_URI: http://auth-service:8090
+      AUTH_SERVICE_BASE_URL: http://auth-service:8090
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://www.mark2.in,https://mark2.in,http://localhost:3001}
+    depends_on:
+      auth-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - erp-network
+
+  # ----------------------------------------------------------------------------
+  # 5. Workflow Service (Internal only)
+  # ----------------------------------------------------------------------------
+  workflow-service:
+    build:
+      context: ./workflow-service
+      dockerfile: Dockerfile
+    container_name: erp-workflow-service
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/workflow_db
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      AUTH_SERVICE_BASE_URL: http://auth-service:8090
+      JWT_SECRET: ${JWT_SECRET}
+      WORKFLOW_CALLBACK_TIMEOUT_MS: ${WORKFLOW_CALLBACK_TIMEOUT_MS:-5000}
+      WORKFLOW_CALLBACK_RETRY_ENABLED: ${WORKFLOW_CALLBACK_RETRY_ENABLED:-true}
+      WORKFLOW_ATTACHMENT_STORAGE_PATH: ${WORKFLOW_ATTACHMENT_STORAGE_PATH:-uploads/workflow}
+      WORKFLOW_SLA_CHECK_DELAY_MS: ${WORKFLOW_SLA_CHECK_DELAY_MS:-60000}
+    depends_on:
+      db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8083/actuator/health || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - erp-network
+
+  # ----------------------------------------------------------------------------
+  # 6. Inventory Service (Internal only)
+  # ----------------------------------------------------------------------------
+  inventory-service:
+    build:
+      context: ./inventory
+      dockerfile: dockerfile
+    container_name: erp-inventory-service
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/inventory
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - erp-network
+
+  # ----------------------------------------------------------------------------
+  # 7. Frontend Client & Subpath Reverse Proxy (Binds to 127.0.0.1:3001)
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: erp-frontend
+    restart: unless-stopped
+    environment:
+      VITE_BASE_PATH: ${VITE_BASE_PATH:-/erp/}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    ports:
+      # Bound to localhost only so host Nginx can proxy https://www.mark2.in/erp/ -> 127.0.0.1:3001
+      - "127.0.0.1:${FRONTEND_PORT:-3001}:3001"
+    depends_on:
+      gateway-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3001/healthz || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - erp-network
+
+# ------------------------------------------------------------------------------
+# Persistent Volumes (DB data strictly preserved)
+# ------------------------------------------------------------------------------
+volumes:
+  db-data:
+
+# ------------------------------------------------------------------------------
+# Isolated Internal Network
+# ------------------------------------------------------------------------------
+networks:
+  erp-network:
+    driver: bridge

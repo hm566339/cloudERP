@@ -1,0 +1,3124 @@
+Project accounting_erp {
+  database_type: 'PostgreSQL'
+  Note: 'ACCOUNTING ERP - Database Schema (Spring Boot / JPA / Hibernate)'
+}
+
+// ============================================================
+// CORE / COMPANY
+// ============================================================
+
+Table company {
+  id uuid [pk]
+  company_code varchar
+  company_name varchar
+  gstin varchar
+  base_currency varchar
+  email varchar(255)
+  phone varchar(20)
+  address_line_1 varchar(255)
+  address_line_2 varchar(255)
+  city varchar(100)
+  state varchar(100)
+  country varchar(100)
+  postal_code varchar(20)
+  company_type varchar(100)
+  legal_name varchar(255)
+  logo_url varchar(500)
+  pan varchar(20)
+  website varchar(255)
+  active boolean [default: true, not null]
+  initialization_completed boolean [default: false]
+  initialization_in_progress boolean [default: false]
+  is_composition_scheme boolean [default: false]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table country {
+  id uuid [pk]
+  country_code varchar(10) [unique, not null]
+  country_name varchar(100) [not null]
+  iso_country_code varchar(3)
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+// ============================================================
+// CHART OF ACCOUNTS
+// ============================================================
+
+Table account_category {
+  id uuid [pk]
+  company_id uuid [not null]
+  code varchar(50) [not null]
+  name varchar(255) [not null]
+  nature varchar [not null]  // AccountNature enum (STRING)
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, code) [unique]
+  }
+}
+
+Table account_group {
+  id uuid [pk]
+  company_id uuid [not null]
+  category_id uuid [not null]
+  parent_group_id uuid
+  code varchar(50) [not null]
+  name varchar [not null]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, code) [unique, name: 'uk_account_group_company_code']
+  }
+}
+
+Table chart_of_account {
+  id uuid [pk]
+  company_id uuid [not null]
+  group_id uuid [not null]
+  parent_account_id uuid
+  account_code varchar [not null]
+  account_name varchar [not null]
+  account_type varchar [not null]  // AccountNature enum (STRING)
+  posting_allowed boolean
+  is_active boolean
+  opening_balance decimal(19,4)
+  is_deleted boolean [default: false]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, account_code) [unique]
+  }
+}
+
+Table tax_transaction {
+  id uuid [pk]
+  company_id uuid [not null]
+  source_type varchar
+  source_id uuid
+  hsn_sac_id uuid
+  taxable_amount decimal(19,4)
+  cgst_amount decimal(19,4)
+  sgst_amount decimal(19,4)
+  igst_amount decimal(19,4)
+  cess_amount decimal(19,4)
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+// ============================================================
+// GL JOURNAL (DOUBLE ENTRY)
+// ============================================================
+
+Table gl_journal_entry {
+  id uuid [pk]
+  company_id uuid [not null]
+  fiscal_year_id uuid
+  accounting_period_id uuid
+  voucher_no varchar(20) [not null]
+  voucher_date date [not null]
+  reference_no varchar(50)
+  source_module varchar(30)  // SourceModule enum
+  source_id uuid
+  event_type varchar(60)
+  idempotency_key varchar(200)
+  narration text
+  status varchar [not null, default: 'DRAFT']  // PostingStatus enum
+  total_debit decimal(19,4) [default: 0]
+  total_credit decimal(19,4) [default: 0]
+  hash_value text
+  previous_hash text
+  hash_algorithm varchar(50) [default: 'SHA-256']
+  posted_by uuid
+  posted_at timestamp
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_gl_journal_entry_company_id']
+    voucher_date [name: 'idx_voucher_date']
+    status [name: 'idx_status']
+    (company_id, voucher_no) [unique, name: 'idx_company_voucher_no']
+    (company_id, voucher_date, status) [name: 'idx_gl_journal_entry_company_date_status']
+    (company_id, fiscal_year_id) [name: 'idx_gl_journal_entry_company_fiscal_year']
+    (company_id, source_module, source_id, event_type) [unique, name: 'uk_gl_manufacturing_source']
+    (company_id, source_module, idempotency_key) [unique, name: 'uk_gl_manufacturing_idempotency']
+  }
+}
+
+Table gl_journal_line {
+  id uuid [pk]
+  company_id uuid [not null]
+  journal_entry_id uuid [not null]
+  account_id uuid
+  debit_amount decimal(19,4) [default: 0]
+  credit_amount decimal(19,4) [default: 0]
+  currency_code varchar(3)
+  exchange_rate decimal(19,6)
+  line_description text
+  branch_id uuid
+  cost_center_id uuid
+  project_id uuid
+  department_id uuid
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_gl_journal_line_company_id']
+    journal_entry_id [name: 'idx_journal_entry_id']
+    account_id [name: 'idx_account_id']
+    (company_id, account_id) [name: 'idx_gl_journal_line_company_account']
+    (company_id, branch_id) [name: 'idx_gl_journal_line_company_branch']
+    (company_id, cost_center_id) [name: 'idx_gl_journal_line_company_cost_center']
+    (company_id, project_id) [name: 'idx_gl_journal_line_company_project']
+    (company_id, department_id) [name: 'idx_gl_journal_line_company_department']
+  }
+}
+
+// ============================================================
+// CUSTOMERS / VENDORS
+// ============================================================
+
+Table customer {
+  id uuid [pk]
+  company_id uuid [not null]
+  customer_code varchar
+  customer_name varchar [not null]
+  gstin varchar
+  pan_no varchar
+  email varchar
+  phone varchar
+  credit_limit decimal(19,4)
+  is_active boolean
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table customer_address {
+  id uuid [pk]
+  customer_id uuid [not null]
+  address_type varchar(50) [not null]
+  address_line1 varchar [not null]
+  address_line2 varchar
+  city varchar [not null]
+  gst_state_id uuid
+  country varchar [not null]
+  postal_code varchar(20)
+  is_default boolean [not null]
+  is_active boolean [not null]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table vendor {
+  id uuid [pk]
+  company_id uuid [not null]
+  vendor_code varchar [not null]
+  vendor_name varchar [not null]
+  gstin varchar
+  pan_no varchar
+  email varchar
+  phone varchar
+  address_line1 varchar
+  city varchar
+  state varchar
+  country varchar
+  pin_code varchar
+  credit_limit decimal(19,4)
+  payable_account_id uuid [not null]
+  opening_balance decimal(19,4)
+  opening_balance_date date
+  payment_term_days int
+  default_currency varchar(3)
+  tds_applicable boolean [default: false, not null]
+  tds_section varchar(30)
+  tds_rate decimal(9,4)
+  is_active boolean [default: true, not null]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, vendor_code) [unique, name: 'uk_vendor_code_company']
+    (company_id, gstin) [unique, name: 'uk_vendor_gstin']
+    (pan_no, company_id) [unique, name: 'uk_vendor_pan_company']
+  }
+}
+
+Table vendor_address {
+  id uuid [pk]
+  vendor_id uuid [not null]
+  address_type varchar(50) [not null]
+  address_line1 varchar [not null]
+  address_line2 varchar
+  city varchar [not null]
+  gst_state_id uuid
+  country varchar [not null]
+  postal_code varchar(20)
+  is_default boolean [not null]
+  is_active boolean [not null]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+// ============================================================
+// SALES CYCLE: QUOTATION -> PROFORMA -> SO -> DC -> SALES INVOICE
+// ============================================================
+
+Table quotation {
+  id uuid [pk]
+  company_id uuid [not null]
+  customer_id uuid [not null]
+  quotation_number varchar(50) [not null]
+  quotation_date date [not null]
+  valid_until date [not null]
+  reference_number varchar(100)
+  quotation_currency varchar(3)
+  exchange_rate decimal(19,6)
+  subtotal decimal(19,4) [not null]
+  discount_amount decimal(19,4)
+  freight_charges decimal(19,4)
+  other_charges decimal(19,4)
+  total_before_round_off decimal(19,4)
+  tax_amount decimal(19,4) [not null]
+  round_off decimal(19,4)
+  total_amount decimal(19,4) [not null]
+  place_of_supply_state_id uuid
+  place_of_supply_state_code varchar(10)
+  delivery_address_id uuid
+  delivery_address_line1 varchar
+  delivery_address_line2 varchar
+  delivery_city varchar
+  delivery_state varchar
+  delivery_postal_code varchar
+  delivery_country varchar
+  billing_address_id uuid
+  billing_address_line1 varchar
+  billing_address_line2 varchar
+  billing_city varchar
+  billing_state varchar
+  billing_postal_code varchar
+  billing_country varchar
+  billing_state_code varchar(10)
+  payment_terms text
+  delivery_terms text
+  warranty_terms text
+  terms_and_conditions text
+  notes text
+  payment_term_id uuid
+  delivery_term_id uuid
+  warranty_term_id uuid
+  terms_condition_id uuid
+  sales_manager_id uuid
+  status varchar(30) [not null, default: 'DRAFT']  // QuotationStatus enum
+  approved_by uuid
+  approved_at timestamp
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, quotation_number) [unique, name: 'uk_quotation_company_number']
+    company_id [name: 'idx_quotation_company']
+    customer_id [name: 'idx_quotation_customer']
+    status [name: 'idx_quotation_status']
+    quotation_date [name: 'idx_quotation_date']
+    valid_until [name: 'idx_quotation_valid_until']
+    quotation_number [name: 'idx_quotation_number']
+  }
+}
+
+Table quotation_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  quotation_id uuid [not null]
+  item_id uuid
+  item_name varchar(255) [not null]
+  description text
+  quantity decimal(19,4) [not null]
+  unit varchar(50)
+  unit_price decimal(19,4) [not null]
+  discount_percent decimal(5,2)
+  discount_amount decimal(19,4)
+  taxable_amount decimal(19,4) [not null]
+  cgst_rate decimal(5,2)
+  cgst_amount decimal(19,4)
+  sgst_rate decimal(5,2)
+  sgst_amount decimal(19,4)
+  igst_rate decimal(5,2)
+  igst_amount decimal(19,4)
+  cess_rate decimal(5,2)
+  cess_amount decimal(19,4)
+  tax_amount decimal(19,4) [not null]
+  total_amount decimal(19,4) [not null]
+  hsn_sac_id uuid
+  warehouse_id uuid
+  location_id uuid
+  notes text
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    quotation_id [name: 'idx_quotation_item_quotation']
+    company_id [name: 'idx_quotation_item_company']
+    hsn_sac_id [name: 'idx_quotation_item_hsn']
+  }
+}
+
+Table quotation_acceptance_token {
+  id uuid [pk]
+  quotation_id uuid [not null]
+  token_hash varchar(64) [unique, not null]
+  expires_at timestamp [not null]
+  used_at timestamp
+  revoked_at timestamp
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+}
+
+Table proforma_invoice {
+  id uuid [pk]
+  company_id uuid [not null]
+  pi_number varchar(50) [not null]
+  pi_date date [not null]
+  pi_valid_till date [not null]
+  source_quotation_id uuid
+  source_quotation_number varchar(50)
+  customer_id uuid [not null]
+  billing_address_id uuid
+  billing_address_snapshot text
+  billing_state_code varchar(2)
+  delivery_address_id uuid
+  delivery_address_snapshot text
+  advance_required boolean [default: false]
+  advance_amount decimal(19,4) [default: 0]
+  bank_account_id uuid
+  bank_details_snapshot text
+  reference_number varchar(100)
+  currency varchar(3) [not null, default: 'INR']
+  exchange_rate decimal(19,6) [not null, default: 1]
+  place_of_supply_state_id uuid
+  place_of_supply_state_code varchar(2)
+  subtotal decimal(19,4) [not null, default: 0]
+  discount_amount decimal(19,4) [default: 0]
+  tax_amount decimal(19,4) [not null, default: 0]
+  freight_charges decimal(19,4) [default: 0]
+  other_charges decimal(19,4) [default: 0]
+  total_before_round_off decimal(19,4) [not null, default: 0]
+  round_off decimal(19,4) [default: 0]
+  total_amount decimal(19,4) [not null, default: 0]
+  payment_terms text
+  delivery_terms text
+  terms_and_conditions text
+  payment_term_id uuid
+  terms_condition_id uuid
+  notes text
+  status varchar(20) [not null, default: 'DRAFT']  // ProformaInvoiceStatus enum
+  deleted_at timestamp
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+
+  indexes {
+    company_id [name: 'idx_pi_company']
+    customer_id [name: 'idx_pi_customer']
+    source_quotation_id [name: 'idx_pi_quotation']
+    pi_number [unique, name: 'idx_pi_number']
+  }
+}
+
+Table proforma_invoice_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  proforma_invoice_id uuid [not null]
+  source_quotation_item_id uuid
+  item_id uuid
+  item_name varchar(255) [not null]
+  description text
+  quantity decimal(19,4) [not null]
+  converted_quantity decimal(19,4) [not null, default: 0]
+  remaining_quantity decimal(19,4) [not null, default: 0]
+  unit varchar(50)
+  unit_price decimal(19,4) [not null]
+  discount_percent decimal(5,2)
+  discount_amount decimal(19,4)
+  taxable_amount decimal(19,4) [not null]
+  cgst_rate decimal(5,2)
+  cgst_amount decimal(19,4)
+  sgst_rate decimal(5,2)
+  sgst_amount decimal(19,4)
+  igst_rate decimal(5,2)
+  igst_amount decimal(19,4)
+  cess_rate decimal(5,2)
+  cess_amount decimal(19,4)
+  tax_amount decimal(19,4) [not null]
+  total_amount decimal(19,4) [not null]
+  hsn_sac_id uuid
+  warehouse_id uuid
+  location_id uuid
+  notes text
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    proforma_invoice_id [name: 'idx_pi_item_pi']
+    company_id [name: 'idx_pi_item_company']
+  }
+}
+
+Table sales_order {
+  id uuid [pk]
+  company_id uuid [not null]
+  so_number varchar(50) [not null]
+  so_date date [not null]
+  source_pi_id uuid
+  source_pi_number varchar(50)
+  source_quotation_id uuid
+  source_quotation_number varchar(50)
+  customer_id uuid [not null]
+  billing_address_id uuid
+  billing_address_snapshot text
+  billing_state_code varchar(2)
+  delivery_address_id uuid
+  delivery_address_snapshot text
+  bank_account_id uuid
+  bank_details_snapshot text
+  reference_number varchar(100)
+  currency varchar(3) [not null, default: 'INR']
+  exchange_rate decimal(19,6) [not null, default: 1]
+  place_of_supply_state_id uuid
+  place_of_supply_state_code varchar(2)
+  subtotal decimal(19,4) [not null, default: 0]
+  discount_amount decimal(19,4) [default: 0]
+  tax_amount decimal(19,4) [not null, default: 0]
+  freight_charges decimal(19,4) [default: 0]
+  other_charges decimal(19,4) [default: 0]
+  total_before_round_off decimal(19,4) [not null, default: 0]
+  round_off decimal(19,4) [default: 0]
+  total_amount decimal(19,4) [not null, default: 0]
+  payment_terms text
+  delivery_terms text
+  terms_and_conditions text
+  payment_term_id uuid
+  terms_condition_id uuid
+  notes text
+  status varchar(20) [not null, default: 'DRAFT']  // SalesOrderStatus enum
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_so_company']
+    customer_id [name: 'idx_so_customer']
+    source_pi_id [name: 'idx_so_pi']
+    so_number [unique, name: 'idx_so_number']
+  }
+}
+
+Table sales_order_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  sales_order_id uuid [not null]
+  source_pi_item_id uuid
+  item_id uuid
+  item_name varchar(255) [not null]
+  description text
+  quantity decimal(19,4) [not null]
+  unit varchar(50)
+  unit_price decimal(19,4) [not null]
+  discount_percent decimal(5,2)
+  discount_amount decimal(19,4)
+  taxable_amount decimal(19,4) [not null]
+  cgst_rate decimal(5,2)
+  cgst_amount decimal(19,4)
+  sgst_rate decimal(5,2)
+  sgst_amount decimal(19,4)
+  igst_rate decimal(5,2)
+  igst_amount decimal(19,4)
+  cess_rate decimal(5,2)
+  cess_amount decimal(19,4)
+  tax_amount decimal(19,4) [not null]
+  total_amount decimal(19,4) [not null]
+  hsn_sac_id uuid
+  warehouse_id uuid
+  location_id uuid
+  notes text
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    sales_order_id [name: 'idx_so_item_so']
+    company_id [name: 'idx_so_item_company']
+  }
+}
+
+Table delivery_challan {
+  id uuid [pk]
+  company_id uuid [not null]
+  dc_number varchar(50) [not null]
+  dc_date date [not null]
+  source_so_id uuid
+  source_so_number varchar(50)
+  source_si_id uuid
+  source_si_number varchar(50)
+  source_rv_id uuid
+  source_rv_number varchar(50)
+  customer_id uuid [not null]
+  billing_address_id uuid
+  billing_address_snapshot text
+  billing_state_code varchar(2)
+  delivery_address_id uuid
+  delivery_address_snapshot text
+  dispatch_date date
+  transporter_id uuid
+  vehicle_number varchar(50)
+  lr_number varchar(100)
+  reference_number varchar(100)
+  subtotal decimal(19,4) [not null, default: 0]
+  discount_amount decimal(19,4) [default: 0]
+  tax_amount decimal(19,4) [not null, default: 0]
+  total_amount decimal(19,4) [not null, default: 0]
+  notes text
+  status varchar(20) [not null, default: 'DRAFT']  // DeliveryChallanStatus enum
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_dc_company']
+    customer_id [name: 'idx_dc_customer']
+    source_so_id [name: 'idx_dc_so']
+    source_si_id [name: 'idx_dc_si']
+    source_rv_id [name: 'idx_dc_rv']
+    dc_number [unique, name: 'idx_dc_number']
+  }
+}
+
+Table delivery_challan_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  delivery_challan_id uuid [not null]
+  source_so_item_id uuid
+  source_si_item_id uuid
+  item_id uuid
+  item_name varchar(255) [not null]
+  description text
+  quantity decimal(19,4) [not null]
+  unit varchar(50)
+  unit_price decimal(19,4) [not null]
+  discount_percent decimal(5,2)
+  discount_amount decimal(19,4)
+  taxable_amount decimal(19,4) [not null]
+  cgst_rate decimal(5,2)
+  cgst_amount decimal(19,4)
+  sgst_rate decimal(5,2)
+  sgst_amount decimal(19,4)
+  igst_rate decimal(5,2)
+  igst_amount decimal(19,4)
+  cess_rate decimal(5,2)
+  cess_amount decimal(19,4)
+  tax_amount decimal(19,4) [not null]
+  total_amount decimal(19,4) [not null]
+  hsn_sac_id uuid
+  warehouse_id uuid
+  location_id uuid
+  notes text
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    delivery_challan_id [name: 'idx_dc_item_dc']
+    company_id [name: 'idx_dc_item_company']
+    source_so_item_id [name: 'idx_dc_item_source_so_item']
+    source_si_item_id [name: 'idx_dc_item_source_si_item']
+  }
+}
+
+Table sales_invoice {
+  id uuid [pk]
+  company_id uuid [not null]
+  customer_id uuid [not null]
+  source_sales_order_id uuid
+  source_sales_order_number varchar(50)
+  source_delivery_challan_id uuid
+  source_delivery_challan_number varchar(50)
+  invoice_number varchar(50) [not null]
+  invoice_date date [not null]
+  due_date date [not null]
+  invoice_currency varchar(3)
+  exchange_rate decimal(19,6)
+  subtotal decimal(19,4) [not null]
+  tax_amount decimal(19,4) [not null]
+  total_amount decimal(19,4) [not null]
+  freight_charges decimal(19,4)
+  other_charges decimal(19,4)
+  total_before_round_off decimal(19,4)
+  round_off decimal(19,4)
+  received_amount decimal(19,4)
+  outstanding_amount decimal(19,4)
+  payment_status varchar(20) [not null, default: 'UNPAID']  // PaymentStatus enum
+  receivable_account_id uuid [not null]
+  revenue_account_id uuid [not null]
+  output_cgst_account_id uuid
+  output_sgst_account_id uuid
+  output_igst_account_id uuid
+  output_cess_account_id uuid
+  place_of_supply_state_id uuid
+  place_of_supply_state_code varchar(10)
+  delivery_address_id uuid
+  delivery_address_line1 varchar
+  delivery_address_line2 varchar
+  delivery_city varchar
+  delivery_state varchar
+  delivery_postal_code varchar
+  delivery_country varchar
+  billing_address_id uuid
+  billing_address_line1 varchar
+  billing_address_line2 varchar
+  billing_city varchar
+  billing_state varchar
+  billing_postal_code varchar
+  billing_country varchar
+  billing_state_code varchar(10)
+  status varchar(30) [not null]  // InvoiceStatus enum
+  approved_by uuid
+  approved_at timestamp
+  gl_journal_entry_id uuid
+  gl_posting_status varchar  // PostingStatus enum
+  posted_by uuid
+  posted_at timestamp
+  payment_term_id uuid
+  payment_terms text
+  terms_condition_id uuid
+  terms_and_conditions text
+  delivery_terms text
+  notes text
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, invoice_number) [unique, name: 'uk_sales_invoice_company_number']
+    company_id [name: 'idx_sales_invoice_company']
+    customer_id [name: 'idx_sales_invoice_customer']
+    status [name: 'idx_sales_invoice_status']
+    invoice_date [name: 'idx_sales_invoice_invoice_date']
+    due_date [name: 'idx_sales_invoice_due_date']
+    invoice_number [name: 'idx_sales_invoice_number']
+    source_sales_order_id [name: 'idx_sales_invoice_so']
+    source_delivery_challan_id [name: 'idx_sales_invoice_dc']
+  }
+}
+
+Table sales_invoice_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  sales_invoice_id uuid [not null]
+  item_name varchar(255) [not null]
+  description text
+  quantity decimal(19,4) [not null]
+  unit_price decimal(19,4) [not null]
+  discount_percentage decimal(5,2)
+  discount_amount decimal(19,4)
+  discounted_amount decimal(19,4)
+  taxable_amount decimal(19,4) [not null]
+  tax_amount decimal(19,4) [not null]
+  total_amount decimal(19,4) [not null]
+  cgst_amount decimal(19,4)
+  sgst_amount decimal(19,4)
+  igst_amount decimal(19,4)
+  cess_amount decimal(19,4)
+  item_id uuid
+  unit varchar(50)
+  hsn_sac_id uuid
+  warehouse_id uuid
+  location_id uuid
+  notes text
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    sales_invoice_id [name: 'idx_sales_invoice_item_invoice']
+    company_id [name: 'idx_sales_invoice_item_company']
+    hsn_sac_id [name: 'idx_sales_invoice_item_hsn']
+  }
+}
+
+Table invoice_tax {
+  id uuid [pk]
+  company_id uuid [not null]
+  sales_invoice_id uuid [not null]
+  gst_slab_id uuid [not null]
+  taxable_amount decimal(19,4)
+  cgst_amount decimal(19,4)
+  sgst_amount decimal(19,4)
+  igst_amount decimal(19,4)
+  cess_amount decimal(19,4)
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table credit_note {
+  id uuid [pk]
+  company_id uuid [not null]
+  sales_invoice_id uuid [not null]
+  credit_note_no varchar [not null]
+  note_date date [not null]
+  amount decimal(19,4) [not null]
+  gst_amount decimal(19,4)
+  reference_no varchar
+  receivable_account_id uuid
+  revenue_adjustment_account_id uuid
+  reason text
+  status varchar(30)  // DocumentStatus enum
+  gl_posting_status varchar(30)  // PostingStatus enum
+  gl_journal_entry_id uuid
+  approved_by uuid
+  approved_date timestamp
+  posted_by uuid
+  posting_time timestamp
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_credit_note_company']
+    sales_invoice_id [name: 'idx_credit_note_invoice']
+    (company_id, credit_note_no) [unique, name: 'idx_credit_note_no_unique']
+  }
+}
+
+Table debit_note {
+  id uuid [pk]
+  company_id uuid [not null]
+  ap_invoice_id uuid [not null]
+  debit_note_no varchar [not null]
+  note_date date [not null]
+  amount decimal(19,4) [not null]
+  gst_amount decimal(19,4)
+  reference_no varchar
+  reason text
+  payable_account_id uuid
+  purchase_return_account_id uuid
+  status varchar(30)  // DocumentStatus enum
+  gl_posting_status varchar(30)  // PostingStatus enum
+  gl_journal_entry_id uuid
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_debit_note_company']
+    ap_invoice_id [name: 'idx_debit_note_invoice']
+    (company_id, debit_note_no) [unique, name: 'idx_debit_note_no_unique']
+  }
+}
+
+// ============================================================
+// PURCHASE CYCLE: PR -> RFQ -> SQ -> PO -> GRN -> AP INVOICE
+// ============================================================
+
+Table purchase_requisition {
+  id uuid [pk]
+  company_id uuid [not null]
+  requisition_number varchar(50) [not null]
+  requisition_name varchar(255)
+  requester_id uuid
+  department_id uuid
+  cost_center_id uuid
+  required_date date [not null]
+  priority varchar(20) [not null, default: 'NORMAL']
+  purpose text
+  status varchar(20) [not null, default: 'DRAFT']  // PurchaseRequisitionStatus enum
+  submitted_by uuid
+  submitted_at timestamp
+  approved_by uuid
+  approved_at timestamp
+  rejected_by uuid
+  rejected_at timestamp
+  rejection_reason text
+  cancelled_by uuid
+  cancelled_at timestamp
+  remarks text
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_prq_company']
+    status [name: 'idx_prq_status']
+    requisition_number [unique, name: 'idx_prq_number']
+  }
+}
+
+Table purchase_requisition_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  purchase_requisition_id uuid [not null]
+  item_id uuid
+  item_name varchar(255) [not null]
+  description text
+  item_type varchar(20) [default: 'PRODUCT']  // ItemType enum
+  requested_quantity decimal(19,4) [not null]
+  unit varchar(50)
+  estimated_unit_price decimal(19,4)
+  estimated_amount decimal(19,4)
+  required_date date
+  warehouse_id uuid
+  location_id uuid
+  remarks text
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    purchase_requisition_id [name: 'idx_prqi_requisition']
+    company_id [name: 'idx_prqi_company']
+  }
+}
+
+Table rfq {
+  id uuid [pk]
+  company_id uuid [not null]
+  rfq_number varchar(50) [not null]
+  purchase_requisition_id uuid [not null]
+  issue_date date [not null]
+  quotation_deadline date
+  expected_delivery_date date
+  terms text
+  notes text
+  status varchar(30) [not null, default: 'DRAFT']  // RfqStatus enum
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_rfq_company']
+    status [name: 'idx_rfq_status']
+    rfq_number [unique, name: 'idx_rfq_number']
+  }
+}
+
+Table rfq_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  rfq_id uuid [not null]
+  item_id uuid
+  item_name varchar [not null]
+  description text
+  item_type varchar(20)  // ItemType enum
+  quantity decimal(19,4) [not null]
+  unit varchar(50)
+  required_date date
+  specifications text
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    rfq_id [name: 'idx_rfqi_rfq']
+    company_id [name: 'idx_rfqi_company']
+  }
+}
+
+Table rfq_vendor {
+  id uuid [pk]
+  company_id uuid [not null]
+  rfq_id uuid [not null]
+  vendor_id uuid [not null]
+  invited_at timestamp [not null]
+  response_status varchar(20) [not null, default: 'INVITED']  // RfqVendorResponseStatus enum
+  response_date timestamp
+  remarks text
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (rfq_id, vendor_id) [unique, name: 'uk_rfq_vendor']
+    company_id [name: 'idx_rfqv_company']
+    vendor_id [name: 'idx_rfqv_vendor']
+  }
+}
+
+Table supplier_quotation {
+  id uuid [pk]
+  company_id uuid [not null]
+  quotation_number varchar(50) [not null]
+  rfq_id uuid [not null]
+  vendor_id uuid [not null]
+  quotation_date date [not null]
+  valid_until date
+  delivery_terms text
+  payment_terms text
+  freight decimal(19,4) [default: 0]
+  discount decimal(19,4) [default: 0]
+  taxable_amount decimal(19,4) [default: 0]
+  cgst_amount decimal(19,4) [default: 0]
+  sgst_amount decimal(19,4) [default: 0]
+  igst_amount decimal(19,4) [default: 0]
+  cess_amount decimal(19,4) [default: 0]
+  tax_amount decimal(19,4) [default: 0]
+  grand_total decimal(19,4) [default: 0]
+  status varchar(20) [not null, default: 'DRAFT']  // SupplierQuotationStatus enum
+  remarks text
+  awarded_by uuid
+  awarded_at timestamp
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (rfq_id, vendor_id) [unique, name: 'uk_sq_rfq_vendor']
+    company_id [name: 'idx_sq_company']
+    rfq_id [name: 'idx_sq_rfq']
+    vendor_id [name: 'idx_sq_vendor']
+    status [name: 'idx_sq_status']
+  }
+}
+
+Table supplier_quotation_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  quotation_id uuid [not null]
+  item_id uuid
+  item_name varchar [not null]
+  description text
+  item_type varchar(20)  // ItemType enum
+  quantity decimal(19,4) [not null]
+  unit varchar(50)
+  unit_price decimal(19,4) [not null]
+  discount decimal(19,4) [default: 0]
+  taxable_amount decimal(19,4) [default: 0]
+  cgst_rate decimal(5,2) [default: 0]
+  cgst_amount decimal(19,4) [default: 0]
+  sgst_rate decimal(5,2) [default: 0]
+  sgst_amount decimal(19,4) [default: 0]
+  igst_rate decimal(5,2) [default: 0]
+  igst_amount decimal(19,4) [default: 0]
+  cess_rate decimal(5,2) [default: 0]
+  cess_amount decimal(19,4) [default: 0]
+  tax_amount decimal(19,4) [default: 0]
+  total decimal(19,4) [default: 0]
+  delivery_date date
+  hsn_sac_id uuid
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    quotation_id [name: 'idx_sqi_quotation']
+    company_id [name: 'idx_sqi_company']
+  }
+}
+
+Table purchase_order {
+  id uuid [pk]
+  company_id uuid [not null]
+  vendor_id uuid [not null]
+  po_number varchar(50) [not null]
+  po_date date [not null]
+  expected_delivery_date date
+  currency varchar(3) [not null, default: 'INR']
+  exchange_rate decimal(19,6) [not null, default: 1]
+  place_of_supply_state_id uuid
+  place_of_supply_state_code varchar(10)
+  vendor_address_id uuid
+  purchase_address_line1 varchar
+  purchase_address_line2 varchar
+  purchase_city varchar(100)
+  purchase_state varchar(100)
+  purchase_country varchar(100)
+  purchase_postal_code varchar(20)
+  shipping_address_snapshot text
+  reference_number varchar(100)
+  supplier_quotation_id uuid
+  rfq_id uuid
+  purchase_requisition_id uuid
+  payment_terms text
+  delivery_terms text
+  terms_and_conditions text
+  notes text
+  subtotal decimal(19,4) [not null, default: 0]
+  discount_amount decimal(19,4) [default: 0]
+  taxable_amount decimal(19,4) [not null, default: 0]
+  cgst_amount decimal(19,4) [default: 0]
+  sgst_amount decimal(19,4) [default: 0]
+  igst_amount decimal(19,4) [default: 0]
+  cess_amount decimal(19,4) [default: 0]
+  tax_amount decimal(19,4) [not null, default: 0]
+  freight_charges decimal(19,4) [default: 0]
+  other_charges decimal(19,4) [default: 0]
+  total_before_round_off decimal(19,4) [not null, default: 0]
+  round_off decimal(19,4) [default: 0]
+  total_amount decimal(19,4) [not null, default: 0]
+  advance_required boolean [default: false]
+  advance_amount decimal(19,4) [default: 0]
+  advance_paid_amount decimal(19,4) [default: 0]
+  status varchar(30) [not null, default: 'DRAFT']  // PurchaseOrderStatus enum
+  approved_by uuid
+  approved_at timestamp
+  rejection_reason text
+  cancelled_reason text
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_po_company']
+    vendor_id [name: 'idx_po_vendor']
+    po_number [unique, name: 'idx_po_number']
+    status [name: 'idx_po_status']
+  }
+}
+
+Table purchase_order_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  purchase_order_id uuid [not null]
+  hsn_sac_id uuid
+  item_id uuid
+  item_name varchar(255) [not null]
+  description text
+  item_type varchar(20) [default: 'PRODUCT']  // ItemType enum
+  ordered_quantity decimal(19,4) [not null]
+  received_quantity decimal(19,4) [not null, default: 0]
+  pending_quantity decimal(19,4) [not null]
+  unit varchar(50)
+  unit_price decimal(19,4) [not null]
+  discount_percent decimal(5,2) [default: 0]
+  discount_amount decimal(19,4) [default: 0]
+  taxable_amount decimal(19,4) [not null, default: 0]
+  cgst_rate decimal(5,2) [default: 0]
+  cgst_amount decimal(19,4) [default: 0]
+  sgst_rate decimal(5,2) [default: 0]
+  sgst_amount decimal(19,4) [default: 0]
+  igst_rate decimal(5,2) [default: 0]
+  igst_amount decimal(19,4) [default: 0]
+  cess_rate decimal(5,2) [default: 0]
+  cess_amount decimal(19,4) [default: 0]
+  tax_amount decimal(19,4) [not null, default: 0]
+  total_amount decimal(19,4) [not null, default: 0]
+  warehouse_id uuid
+  location_id uuid
+  notes text
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    purchase_order_id [name: 'idx_po_item_po']
+    company_id [name: 'idx_po_item_company']
+  }
+}
+
+Table goods_receipt {
+  id uuid [pk]
+  company_id uuid [not null]
+  vendor_id uuid [not null]
+  purchase_order_id uuid [not null]
+  grn_number varchar(50) [not null]
+  grn_date date [not null]
+  warehouse_id uuid
+  delivery_note_number varchar(100)
+  delivery_note_date date
+  vehicle_number varchar(50)
+  transporter_name varchar(100)
+  notes text
+  status varchar(30) [not null, default: 'DRAFT']  // GoodsReceiptStatus enum
+  confirmed_by uuid
+  confirmed_at timestamp
+  cancelled_by uuid
+  cancelled_at timestamp
+  cancellation_reason text
+  reversed_by uuid
+  reversed_at timestamp
+  reversal_reason varchar(500)
+  verified_by uuid
+  verified_at timestamp
+  posted_by uuid
+  posted_at timestamp
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_grn_company']
+    vendor_id [name: 'idx_grn_vendor']
+    purchase_order_id [name: 'idx_grn_po']
+    grn_number [unique, name: 'idx_grn_number']
+    status [name: 'idx_grn_status']
+  }
+}
+
+Table goods_receipt_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  goods_receipt_id uuid [not null]
+  purchase_order_item_id uuid [not null]
+  item_id uuid
+  item_name varchar(255) [not null]
+  description text
+  unit varchar(50)
+  item_type varchar(20) [default: 'PRODUCT']  // ItemType enum
+  ordered_quantity decimal(19,4) [not null]
+  previously_received_quantity decimal(19,4) [default: 0]
+  received_quantity decimal(19,4) [not null]
+  accepted_quantity decimal(19,4) [not null, default: 0]
+  returned_quantity decimal(19,4) [default: 0]
+  rejected_quantity decimal(19,4) [default: 0]
+  pending_quantity decimal(19,4)
+  unit_price decimal(19,4)
+  batch_number varchar(100)
+  serial_number varchar(100)
+  expiry_date date
+  warehouse_id uuid
+  location_id uuid
+  rejection_reason varchar(500)
+  notes text
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    goods_receipt_id [name: 'idx_grn_item_grn']
+    purchase_order_item_id [name: 'idx_grn_item_po_item']
+    company_id [name: 'idx_grn_item_company']
+  }
+}
+
+Table purchase_return {
+  id uuid [pk]
+  company_id uuid [not null]
+  return_number varchar(50) [not null]
+  return_date date [not null]
+  goods_receipt_id uuid [not null]
+  purchase_order_id uuid
+  vendor_id uuid [not null]
+  status varchar(30) [not null, default: 'DRAFT']  // PurchaseReturnStatus enum
+  reason varchar(500)
+  notes varchar(1000)
+  subtotal decimal(15,2) [default: 0]
+  tax_amount decimal(15,2) [default: 0]
+  total_amount decimal(15,2) [default: 0]
+  confirmed_by uuid
+  confirmed_at timestamp
+  cancelled_by uuid
+  cancelled_at timestamp
+  cancellation_reason varchar(500)
+  debit_note_id uuid
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_pr_company']
+    goods_receipt_id [name: 'idx_pr_grn']
+    purchase_order_id [name: 'idx_pr_po']
+    vendor_id [name: 'idx_pr_vendor']
+    status [name: 'idx_pr_status']
+  }
+}
+
+Table purchase_return_item {
+  id uuid [pk]
+  purchase_return_id uuid [not null]
+  company_id uuid [not null]
+  goods_receipt_item_id uuid
+  purchase_order_item_id uuid
+  item_id uuid
+  item_name varchar [not null]
+  unit varchar(30)
+  returned_quantity decimal(15,4) [not null]
+  unit_price decimal(15,4) [default: 0]
+  tax_amount decimal(15,2) [default: 0]
+  total_amount decimal(15,2) [default: 0]
+  reason varchar(500)
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    purchase_return_id [name: 'idx_pri_return']
+    goods_receipt_item_id [name: 'idx_pri_grn_item']
+    item_id [name: 'idx_pri_item']
+  }
+}
+
+Table ap_invoice {
+  id uuid [pk]
+  company_id uuid [not null]
+  vendor_id uuid [not null]
+  invoice_no varchar [not null]
+  invoice_date date
+  due_date date
+  invoice_currency varchar
+  is_reverse_charge boolean [default: false]
+  is_blocked_itc boolean [default: false]
+  exchange_rate decimal(19,6)
+  subtotal decimal(19,4)
+  tax_amount decimal(19,4)
+  cgst_amount decimal(19,4)
+  sgst_amount decimal(19,4)
+  igst_amount decimal(19,4)
+  cess_amount decimal(19,4)
+  input_cgst_account_id uuid
+  input_sgst_account_id uuid
+  input_igst_account_id uuid
+  input_cess_account_id uuid
+  total_amount decimal(19,4)
+  freight_charges decimal(19,4)
+  total_before_round_off decimal(19,4)
+  round_off decimal(19,4)
+  paid_amount decimal(19,4)
+  outstanding_amount decimal(19,4)
+  tds_amount decimal(19,4)
+  gl_journal_entry_id uuid
+  reverse_gl_journal_entry_id uuid
+  gl_posting_status varchar  // PostingStatus enum
+  gl_posting_time timestamp
+  status varchar  // InvoiceStatus enum
+  approved_by uuid
+  approved_at timestamp
+  place_of_supply_state_id uuid
+  place_of_supply_state_code varchar(10)
+  vendor_address_id uuid
+  purchase_address_line1 varchar
+  purchase_address_line2 varchar
+  purchase_city varchar
+  purchase_state varchar
+  purchase_postal_code varchar
+  purchase_country varchar
+  purchase_order_id uuid
+  goods_receipt_id uuid
+  purchase_source varchar(40)  // PurchaseSource enum
+  document_type varchar(40)  // PurchaseDocumentType enum
+  purchase_nature varchar(20)  // PurchaseNature enum
+  payment_type varchar(20)  // PaymentType enum
+  gst_treatment varchar(30)  // GstTreatment enum
+  itc_eligibility varchar(30)  // ItcEligibility enum
+  itc_reason varchar(500)
+  supplier_invoice_number varchar(100)
+  supplier_invoice_date date
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table ap_invoice_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  ap_invoice_id uuid [not null]
+  item_id uuid
+  item_type varchar  // ItemType enum
+  warehouse_id uuid
+  location_id uuid
+  unit varchar
+  description varchar
+  quantity decimal(19,4)
+  unit_price decimal(19,4)
+  taxable_amount decimal(19,4)
+  tax_amount decimal(19,4)
+  cgst_amount decimal(19,4)
+  sgst_amount decimal(19,4)
+  igst_amount decimal(19,4)
+  cess_amount decimal(19,4)
+  expense_account_id uuid
+  itc_eligibility varchar
+  reversal_type varchar
+  reversal_reason varchar
+  is_common_credit boolean [default: false]
+  exempt_supply decimal(19,4) [default: 0]
+  total_amount decimal(19,4)
+  hsn_sac_id uuid
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table einvoice_request {
+  id uuid [pk]
+  company_id uuid [not null]
+  sales_invoice_id uuid [not null]
+  irn varchar
+  request_payload jsonb
+  response_payload jsonb
+  ack_number varchar
+  ack_date timestamp
+  signed_invoice varchar
+  qr_code_data varchar
+  status varchar  // EinvoiceStatus enum
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+// ============================================================
+// BANKING & PAYMENTS
+// ============================================================
+
+Table bank_account {
+  id uuid [pk]
+  company_id uuid [not null]
+  bank_name varchar(200) [not null]
+  branch_name varchar(200)
+  account_number varchar(40) [not null]
+  ifsc_code varchar(20) [not null]
+  account_holder_name varchar(255)
+  swift_code varchar(20)
+  is_primary boolean [default: false]
+  upi_id varchar(100)
+  account_type varchar(20) [not null]  // BankAccountType enum
+  opening_balance decimal(19,4) [not null]
+  gl_account_id uuid [not null]
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, account_number) [unique]
+  }
+}
+
+Table bank_transaction {
+  id uuid [pk]
+  company_id uuid [not null]
+  bank_account_id uuid [not null]
+  transaction_date date [not null]
+  reference_no varchar(100) [not null]
+  utr_no varchar(50)
+  transaction_type varchar(20) [not null]  // BankTransactionType enum
+  debit_amount decimal(19,4)
+  credit_amount decimal(19,4)
+  narration varchar(1000)
+  reconciled boolean [default: false]
+  reconciled_date timestamp
+  gl_journal_entry_id uuid
+  gl_posting_status varchar(30)  // PostingStatus enum
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, transaction_date) [name: 'idx_company_date']
+    (bank_account_id, transaction_date) [name: 'idx_bank_account_date']
+    (reference_no, company_id) [name: 'idx_reference_company']
+    (utr_no, company_id) [name: 'idx_utr_company']
+    reconciled [name: 'idx_reconciled']
+  }
+}
+
+Table ap_payment {
+  id uuid [pk]
+  company_id uuid [not null]
+  vendor_id uuid [not null]
+  payment_no varchar [not null]
+  payment_date date [not null]
+  payment_amount decimal(19,4)
+  tds_amount decimal(19,4)
+  tds_payable_account_id uuid
+  payment_mode varchar(20)  // PaymentMode enum
+  bank_account_id uuid
+  reference_no varchar
+  cheque_number varchar
+  utr_number varchar
+  transaction_id varchar
+  cheque_date date
+  remarks text
+  payment_status varchar(30)  // PaymentStatus enum
+  gl_posting_status varchar(30)  // PostingStatus enum
+  gl_journal_entry_id uuid
+  reverse_gl_journal_entry_id uuid
+  gl_posting_time timestamp
+  total_allocated_amount decimal(19,4)
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_ap_payment_company']
+    vendor_id [name: 'idx_ap_payment_vendor']
+    (company_id, payment_no) [unique, name: 'idx_ap_payment_no_unique']
+  }
+}
+
+Table ap_payment_allocation {
+  id uuid [pk]
+  ap_payment_id uuid [not null]
+  ap_invoice_id uuid [not null]
+  allocated_amount decimal(19,4)
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    ap_payment_id [name: 'idx_ap_payment_allocation_payment']
+    ap_invoice_id [name: 'idx_ap_payment_allocation_invoice']
+  }
+}
+
+Table payment_voucher {
+  id uuid [pk]
+  company_id uuid [not null]
+  vendor_id uuid [not null]
+  bank_account_id uuid
+  voucher_no varchar [not null]
+  voucher_date date [not null]
+  payment_amount decimal(19,4) [not null]
+  payment_mode varchar(20) [not null]  // PaymentMode enum
+  reference_no varchar
+  cheque_number varchar
+  cheque_date date
+  upi_reference_number varchar
+  transaction_reference varchar
+  remarks text
+  payment_status varchar(30)  // PaymentStatus enum
+  gl_posting_status varchar(30)  // PostingStatus enum
+  gl_journal_entry_id uuid
+  gl_posting_time timestamp
+  posted_by uuid
+  approved_by uuid
+  approved_date timestamp
+  payable_account_id uuid [not null]
+  payment_account_id uuid [not null]
+  total_allocated_amount decimal(19,4)
+  purchase_order_id uuid
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_payment_voucher_company']
+    vendor_id [name: 'idx_payment_voucher_vendor']
+    (company_id, voucher_no) [unique, name: 'idx_payment_voucher_no_unique']
+  }
+}
+
+Table payment_voucher_allocation {
+  id uuid [pk]
+  payment_voucher_id uuid [not null]
+  ap_invoice_id uuid
+  purchase_order_id uuid
+  allocated_amount decimal(19,4) [not null]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    payment_voucher_id [name: 'idx_payment_voucher_allocation_voucher']
+    ap_invoice_id [name: 'idx_payment_voucher_allocation_invoice']
+    purchase_order_id [name: 'idx_payment_voucher_allocation_po']
+  }
+}
+
+Table receipt_voucher {
+  id uuid [pk]
+  company_id uuid [not null]
+  customer_id uuid [not null]
+  bank_account_id uuid
+  receipt_no varchar [not null]
+  receipt_date date [not null]
+  receipt_amount decimal(19,4) [not null]
+  payment_mode varchar(20) [not null]  // PaymentMode enum
+  reference_no varchar
+  remarks text
+  receipt_status varchar(30)  // ReceiptVoucherStatus enum
+  gl_posting_status varchar(30)  // PostingStatus enum
+  gl_journal_entry_id uuid
+  gl_posting_time timestamp
+  approved_by uuid
+  approved_date timestamp
+  posted_by uuid
+  receivable_account_id uuid [not null]
+  receipt_account_id uuid [not null]
+  sales_invoice_id uuid
+  total_allocated_amount decimal(19,4)
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_receipt_voucher_company']
+    customer_id [name: 'idx_receipt_voucher_customer']
+    (company_id, receipt_no) [unique, name: 'idx_receipt_voucher_no_unique']
+  }
+}
+
+Table receipt_allocation {
+  id uuid [pk]
+  receipt_voucher_id uuid [not null]
+  sales_invoice_id uuid
+  proforma_invoice_id uuid
+  allocated_amount decimal(19,4) [not null]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+// ============================================================
+// GST / TAX
+// ============================================================
+
+Table gst_slab {
+  id uuid [pk]
+  slab_name varchar
+  cgst_rate decimal(5,2)
+  sgst_rate decimal(5,2)
+  igst_rate decimal(5,2)
+  cess_rate decimal(5,2)
+  effective_from date
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table hsn_sac_master {
+  id uuid [pk]
+  code varchar [not null]
+  description varchar [not null]
+  type varchar [not null]
+  gst_slab_id uuid [not null]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table gst_registration {
+  id uuid [pk]
+  company_id uuid [not null]
+  branch_id uuid
+  gstin varchar(15)
+  pan varchar(10)
+  registration_type varchar [not null]  // GstRegistrationType enum
+  registered_date date
+  legal_name varchar(255)
+  trade_name varchar(255)
+  state_code_id uuid
+  is_default boolean [not null]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table gst_state_code {
+  id uuid [pk]
+  state_code varchar(2) [unique, not null]
+  state_name varchar(100) [not null]
+  is_union_territory boolean [not null]
+  short_name varchar(10)
+  iso_state_code varchar(10)
+  capital_city varchar(100)
+  region varchar(50)
+  time_zone varchar(50)
+  currency_code varchar(3)
+  currency_name varchar(50)
+  registration_allowed boolean
+  default_place_of_supply varchar(100)
+  reverse_charge_applicable boolean
+  display_name varchar(150)
+  country_id uuid
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table gst_tax_summary {
+  id uuid [pk]
+  company_id uuid [not null]
+  branch_id uuid
+  financial_year varchar(10)
+  month int [not null]
+  total_output_cgst decimal(19,4)
+  total_output_sgst decimal(19,4)
+  total_output_igst decimal(19,4)
+  total_output_cess decimal(19,4)
+  net_payable_cgst decimal(19,4)
+  net_payable_sgst decimal(19,4)
+  net_payable_igst decimal(19,4)
+  total_net_payable decimal(19,4)
+  status varchar(50)
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table gst_input_tax {
+  id uuid [pk]
+  company_id uuid [not null]
+  branch_id uuid
+  purchase_invoice_id uuid [not null]
+  purchase_invoice_number varchar(100)
+  invoice_date date
+  vendor_id uuid
+  vendor_gstin varchar(15)
+  supply_type varchar [not null]  // GstSupplyType enum
+  taxable_value decimal(19,4)
+  gst_rate decimal(5,2)
+  cgst_amount decimal(19,4)
+  sgst_amount decimal(19,4)
+  igst_amount decimal(19,4)
+  cess_amount decimal(19,4)
+  is_eligible_for_itc boolean
+  is_reverse_charge boolean
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table gst_output_tax {
+  id uuid [pk]
+  company_id uuid [not null]
+  branch_id uuid
+  invoice_id uuid [not null]
+  invoice_number varchar(100)
+  invoice_date date
+  customer_id uuid
+  customer_gstin varchar(15)
+  supply_type varchar [not null]  // GstSupplyType enum
+  hsn_sac_code varchar(20)
+  taxable_value decimal(19,4)
+  gst_rate decimal(5,2)
+  cgst_amount decimal(19,4)
+  sgst_amount decimal(19,4)
+  igst_amount decimal(19,4)
+  cess_amount decimal(19,4)
+  total_tax_amount decimal(19,4)
+  is_reverse_charge boolean
+  is_filed boolean
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table gst_itc {
+  id uuid [pk]
+  company_id uuid [not null]
+  branch_id uuid
+  financial_year varchar(10)
+  month int [not null]
+  eligible_cgst decimal(19,4)
+  eligible_sgst decimal(19,4)
+  eligible_igst decimal(19,4)
+  eligible_cess decimal(19,4)
+  blocked_itc_cgst decimal(19,4)
+  blocked_itc_sgst decimal(19,4)
+  blocked_itc_igst decimal(19,4)
+  reversed_itc decimal(19,4)
+  utilized_itc_cgst decimal(19,4)
+  utilized_itc_sgst decimal(19,4)
+  utilized_itc_igst decimal(19,4)
+  balance_cgst decimal(19,4)
+  balance_sgst decimal(19,4)
+  balance_igst decimal(19,4)
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table gstr2b_reconciliation {
+  id uuid [pk]
+  company_id uuid [not null]
+  supplier_gstin varchar [not null]
+  invoice_number varchar [not null]
+  invoice_date date
+  taxable_value decimal(19,4)
+  tax_amount decimal(19,4)
+  match_status varchar
+  remarks varchar
+  reconciliation_date timestamp
+  reconciled_by varchar
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table electronic_credit_ledger {
+  id uuid [pk]
+  company_id uuid [not null]
+  gst_registration_id uuid
+  financial_year_id uuid [not null]
+  month int [not null]
+  year int [not null]
+  opening_igst decimal(19,4) [default: 0]
+  opening_cgst decimal(19,4) [default: 0]
+  opening_sgst decimal(19,4) [default: 0]
+  opening_cess decimal(19,4) [default: 0]
+  credit_igst decimal(19,4) [default: 0]
+  credit_cgst decimal(19,4) [default: 0]
+  credit_sgst decimal(19,4) [default: 0]
+  credit_cess decimal(19,4) [default: 0]
+  utilized_igst decimal(19,4) [default: 0]
+  utilized_cgst decimal(19,4) [default: 0]
+  utilized_sgst decimal(19,4) [default: 0]
+  utilized_cess decimal(19,4) [default: 0]
+  closing_igst decimal(19,4) [default: 0]
+  closing_cgst decimal(19,4) [default: 0]
+  closing_sgst decimal(19,4) [default: 0]
+  closing_cess decimal(19,4) [default: 0]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table electronic_credit_ledger_history {
+  id uuid [pk]
+  electronic_credit_ledger_id uuid [not null]
+  transaction_date timestamp [not null]
+  transaction_type varchar [not null]
+  reference_number varchar
+  igst_amount decimal(19,4) [default: 0]
+  cgst_amount decimal(19,4) [default: 0]
+  sgst_amount decimal(19,4) [default: 0]
+  cess_amount decimal(19,4) [default: 0]
+  remarks varchar
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+// ============================================================
+// BUDGET
+// ============================================================
+
+Table budget_header {
+  id uuid [pk]
+  company_id uuid [not null]
+  fiscal_year_id uuid
+  budget_name varchar
+  total_budget decimal(19,4)
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table budget_line {
+  id uuid [pk]
+  company_id uuid [not null]
+  budget_header_id uuid [not null]
+  account_id uuid [not null]
+  department_id uuid
+  allocated_amount decimal(19,4)
+  utilized_amount decimal(19,4)
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+// ============================================================
+// EXPENSE MANAGEMENT
+// ============================================================
+
+Table expense_category {
+  id uuid [pk]
+  company_id uuid [not null]
+  category_name varchar
+  category_code varchar(50) [not null]
+  description varchar(500)
+  is_active boolean [not null, default: true]
+  expense_account_id uuid
+  approval_required boolean
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, category_code) [unique]
+    (company_id, category_name) [unique]
+  }
+}
+
+Table expense_request {
+  id uuid [pk]
+  company_id uuid [not null]
+  request_number varchar(50) [not null]
+  request_type varchar(30) [not null]  // RequestType enum
+  request_date date [not null]
+  requester_id uuid [not null]
+  employee_driver_id uuid [not null]
+  employee_name varchar
+  role_type varchar(20) [not null]  // RoleType enum
+  expense_category_id uuid [not null]
+  requested_amount decimal(19,4) [not null]
+  purpose_description text
+  additional_notes text
+  status varchar(30) [not null]  // ExpenseRequestStatus enum
+  approval_status varchar(30)  // ExpenseRequestStatus enum
+  approved_amount decimal(19,4)
+  approved_by uuid
+  approved_at timestamp
+  rejection_reason text
+  rejected_by uuid
+  rejected_at timestamp
+  requires_advance boolean [default: false]
+  advance_amount decimal(19,4)
+  sales_order_id uuid
+  delivery_challan_id uuid
+  vehicle_id uuid
+  vehicle_number varchar(50)
+  claim_id uuid
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table expense_claim {
+  id uuid [pk]
+  company_id uuid [not null]
+  employee_id uuid [not null]
+  employee_name varchar
+  employee_role varchar
+  claim_no varchar
+  claim_date date
+  claim_amount decimal(19,4)
+  status varchar  // ApprovalStatus enum
+  expense_request_id uuid
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table expense_claim_item {
+  id uuid [pk]
+  company_id uuid [not null]
+  expense_claim_id uuid [not null]
+  expense_category_id uuid [not null]
+  expense_date date
+  description varchar
+  amount decimal(19,4)
+  bill_attachment_url varchar
+  payment_type varchar(30)  // PaymentType enum
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table reimbursement {
+  id uuid [pk]
+  company_id uuid [not null]
+  employee_id uuid [not null]
+  expense_claim_id uuid [not null]
+  reimbursement_no varchar(50) [not null]
+  reimbursement_date date [not null]
+  reimbursement_amount decimal(19,4) [not null]
+  status varchar  // ReimbursementStatus enum
+  payment_method varchar  // PaymentMode enum
+  payment_reference varchar
+  payment_date date
+  notes text
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+
+Table unit_master {
+  id uuid [pk]
+  code varchar(50) [unique, not null]
+  name varchar(100) [not null]
+  symbol varchar(20)
+  allow_decimal boolean [not null, default: true]
+  decimal_places int [default: 2]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    code [unique, name: 'idx_unit_code']
+  }
+}
+
+Table payment_term {
+  id uuid [pk]
+  company_id uuid [not null]
+  name varchar(255) [not null]
+  description text
+  is_default boolean [default: false]
+  is_active boolean [default: true]
+  document_type varchar(50) [not null]  // SalesDocumentType enum
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, is_active, is_deleted) [name: 'idx_payment_term_company_active']
+  }
+}
+
+Table terms_condition {
+  id uuid [pk]
+  company_id uuid [not null]
+  title varchar(255) [not null]
+  content text
+  is_default boolean [default: false]
+  is_active boolean [default: true]
+  document_type varchar(50) [not null]  // SalesDocumentType enum
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, is_active, is_deleted) [name: 'idx_terms_condition_company_active']
+  }
+}
+
+Table delivery_term {
+  id uuid [pk]
+  company_id uuid [not null]
+  document_type varchar(50) [not null]  // SalesDocumentType enum
+  name varchar [not null]
+  description text
+  is_default boolean [default: false]
+  is_active boolean [default: true]
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table warranty_term {
+  id uuid [pk]
+  company_id uuid [not null]
+  document_type varchar(50) [not null]  // SalesDocumentType enum
+  name varchar [not null]
+  description text
+  is_default boolean [default: false]
+  is_active boolean [default: true]
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+// ============================================================
+// WORKFLOW / AUDIT / FISCAL
+// ============================================================
+
+Table workflow_definition {
+  id uuid [pk]
+  company_id uuid [not null]
+  workflow_code varchar(100) [not null]
+  workflow_name varchar(255) [not null]
+  module_name varchar(100)
+  document_type varchar(100) [not null]
+  description text
+  version int [default: 1, not null]
+  is_active boolean [default: true, not null]
+  is_default boolean [default: false, not null]
+  effective_from timestamp
+  effective_to timestamp
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table workflow_stage {
+  id uuid [pk]
+  workflow_definition_id uuid [not null]
+  stage_code varchar(100) [not null]
+  stage_name varchar(255) [not null]
+  stage_order int
+  sequence_no int [not null]
+  execution_type varchar(50) [default: 'SEQUENTIAL', not null]
+  minimum_approvals_required int [default: 1, not null]
+  rejection_action varchar(50) [default: 'REJECT_DOCUMENT', not null]
+  is_mandatory boolean [default: true, not null]
+  is_active boolean [default: true, not null]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table workflow_transaction {
+  id uuid [pk]
+  company_id uuid [not null]
+  workflow_definition_id uuid [not null]
+  entity_name varchar
+  entity_id uuid
+  document_type varchar(100) [not null]
+  document_id uuid [not null]
+  document_number varchar(100)
+  current_stage_id uuid
+  status varchar(50) [default: 'PENDING', not null]
+  initiated_by uuid [not null]
+  initiated_by_name varchar(255)
+  initiated_at timestamp
+  submitted_at timestamp [not null]
+  completed_at timestamp
+  cancelled_at timestamp
+  version bigint [default: 0, not null]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+}
+
+Table workflow_approver {
+  id uuid [pk]
+  workflow_stage_id uuid [not null]
+  approver_type varchar(50) [not null]
+  user_id uuid
+  user_name varchar(255)
+  role_id uuid
+  role_name varchar(100)
+  department_id uuid
+  department_name varchar(100)
+  rule_expression text
+  approval_order int [default: 1, not null]
+  is_required boolean [default: true, not null]
+  can_delegate boolean [default: true, not null]
+  created_at timestamp
+  updated_at timestamp
+  is_deleted boolean [default: false, not null]
+}
+
+Table workflow_transition {
+  id uuid [pk]
+  workflow_definition_id uuid [not null]
+  action_type varchar(50) [not null]
+  source_stage_id uuid
+  target_stage_id uuid
+  transition_condition text
+  allowed_roles varchar(255)
+  is_active boolean [default: true, not null]
+  created_at timestamp
+  updated_at timestamp
+  is_deleted boolean [default: false, not null]
+}
+
+Table workflow_task {
+  id uuid [pk]
+  workflow_transaction_id uuid [not null]
+  workflow_stage_id uuid [not null]
+  assigned_user_id uuid
+  assigned_role_name varchar(100)
+  delegated_from_user_id uuid
+  task_status varchar(50) [default: 'PENDING', not null]
+  action_taken varchar(50)
+  assigned_at timestamp [not null]
+  due_at timestamp
+  completed_at timestamp
+  completed_by uuid
+  completed_by_name varchar(255)
+  comments text
+  version bigint [default: 0, not null]
+  created_at timestamp
+  updated_at timestamp
+  is_deleted boolean [default: false, not null]
+}
+
+Table workflow_action {
+  id uuid [pk]
+  workflow_transaction_id uuid [not null]
+  workflow_task_id uuid
+  action_type varchar(50) [not null]
+  performed_by uuid [not null]
+  performed_by_name varchar(255)
+  previous_status varchar(50)
+  new_status varchar(50)
+  comments text
+  metadata jsonb
+  ip_address varchar(100)
+  created_at timestamp [not null]
+}
+
+Table workflow_comment {
+  id uuid [pk]
+  workflow_transaction_id uuid [not null]
+  workflow_task_id uuid
+  user_id uuid [not null]
+  user_name varchar(255)
+  comment_text text [not null]
+  is_internal boolean [default: false, not null]
+  created_at timestamp
+  updated_at timestamp
+  is_deleted boolean [default: false, not null]
+}
+
+Table workflow_attachment {
+  id uuid [pk]
+  workflow_transaction_id uuid [not null]
+  workflow_task_id uuid
+  file_name varchar(255) [not null]
+  stored_file_name varchar(255) [not null]
+  file_url varchar(500) [not null]
+  content_type varchar(100) [not null]
+  file_size bigint [not null]
+  uploaded_by uuid [not null]
+  uploaded_by_name varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  is_deleted boolean [default: false, not null]
+}
+
+Table workflow_sla {
+  id uuid [pk]
+  workflow_stage_id uuid [not null]
+  duration_hours int [not null]
+  reminder_hours int
+  escalation_action varchar(50) [default: 'NOTIFY_MANAGER', not null]
+  escalate_to_user_id uuid
+  escalate_to_role_name varchar(100)
+  is_active boolean [default: true, not null]
+  created_at timestamp
+  updated_at timestamp
+  is_deleted boolean [default: false, not null]
+}
+
+Table workflow_notification {
+  id uuid [pk]
+  company_id uuid [not null]
+  workflow_transaction_id uuid [not null]
+  workflow_task_id uuid
+  recipient_user_id uuid [not null]
+  notification_type varchar(50) [not null]
+  title varchar(255) [not null]
+  message text [not null]
+  is_read boolean [default: false, not null]
+  read_at timestamp
+  channel varchar(50) [default: 'IN_APP', not null]
+  delivery_status varchar(50) [default: 'SENT', not null]
+  created_at timestamp [not null]
+}
+
+Table audit_log {
+  id uuid [pk]
+  company_id uuid
+  module_name varchar
+  entity_name varchar
+  entity_id uuid
+  action_type varchar
+  old_value jsonb
+  new_value jsonb
+  performed_by uuid
+  performed_by_username varchar
+  performed_at timestamp
+  ip_address varchar
+  user_agent varchar
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_audit_log_company']
+    entity_name [name: 'idx_audit_log_entity']
+    performed_by [name: 'idx_audit_log_user']
+  }
+}
+
+Table fiscal_year {
+  id uuid [pk]
+  company_id uuid [not null]
+  fiscal_year varchar(100) [not null]
+  start_date date [not null]
+  end_date date [not null]
+  is_closed boolean [not null, default: false]  // FiscalYearStatus enum -> boolean
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, fiscal_year) [unique, name: 'uk_fiscal_year_company_name']
+  }
+}
+
+Table accounting_period {
+  id uuid [pk]
+  company_id uuid [not null]
+  fiscal_year_id uuid [not null]
+  period_number int [not null]
+  period_name varchar(100) [not null]
+  start_date date [not null]
+  end_date date [not null]
+  period_type varchar(20) [not null, default: 'CUSTOM']  // PeriodType enum
+  status varchar(20) [not null, default: 'OPEN']  // AccountingPeriodStatus enum
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (fiscal_year_id, period_number) [unique, name: 'uk_accounting_period_fiscal_year_number']
+    (fiscal_year_id, period_name) [unique, name: 'uk_accounting_period_fiscal_year_name']
+  }
+}
+
+Table voucher_sequence {
+  id uuid [pk]
+  company_id uuid [not null]
+  voucher_type varchar(100) [not null]
+  prefix varchar(20) [not null]
+  next_number bigint [not null]
+  padding_length int [not null]
+  is_active boolean [not null]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    (company_id, voucher_type) [unique, name: 'uk_voucher_sequence_company_type']
+  }
+}
+
+Table gl_balance_snapshot {
+  id uuid [pk]
+  company_id uuid [not null]
+  account_id uuid [not null]
+  fiscal_year_id uuid
+  accounting_period_id uuid
+  snapshot_date date
+  opening_balance decimal(19,4) [default: 0]
+  debit_amount decimal(19,4) [default: 0]
+  credit_amount decimal(19,4) [default: 0]
+  closing_balance decimal(19,4) [default: 0]
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    company_id [name: 'idx_balance_company_id']
+    account_id [name: 'idx_balance_account_id']
+    accounting_period_id [name: 'idx_balance_period_id']
+  }
+}
+
+// ============================================================
+// INTEGRATION
+// ============================================================
+
+Table inventory_sync_task {
+  id uuid [pk]
+  company_id uuid [not null]
+  invoice_id uuid [not null]
+  event_type varchar(50) [not null]
+  status varchar(30) [not null]  // SyncStatus enum
+  retry_count int [not null, default: 0]
+  last_error text
+  token text
+  next_retry_at timestamp
+  payload text
+  version bigint
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar
+  updated_by uuid
+  updated_by_username varchar
+  is_deleted boolean [default: false]
+  deleted_by uuid
+  deleted_by_username varchar
+  deleted_at timestamp
+
+  indexes {
+    invoice_id [name: 'idx_inv_sync_task_invoice']
+    status [name: 'idx_inv_sync_task_status']
+    next_retry_at [name: 'idx_inv_sync_task_next_retry']
+  }
+}
+
+// ============================================================
+// RELATIONSHIPS
+// ============================================================
+
+// --- Chart of Accounts ---
+Ref: company.id < account_category.company_id
+Ref: company.id < account_group.company_id
+Ref: account_category.id < account_group.category_id
+Ref: account_group.id < account_group.parent_group_id
+Ref: company.id < chart_of_account.company_id
+Ref: account_group.id < chart_of_account.group_id
+Ref: chart_of_account.id < chart_of_account.parent_account_id
+
+// --- GL Journal ---
+Ref: company.id < gl_journal_entry.company_id
+Ref: fiscal_year.id < gl_journal_entry.fiscal_year_id
+Ref: accounting_period.id < gl_journal_entry.accounting_period_id
+Ref: gl_journal_entry.id < gl_journal_line.journal_entry_id
+Ref: company.id < gl_journal_line.company_id
+Ref: chart_of_account.id < gl_journal_line.account_id
+
+// --- Tax transaction ---
+Ref: company.id < tax_transaction.company_id
+Ref: hsn_sac_master.id < tax_transaction.hsn_sac_id
+
+// --- Customers / Vendors ---
+Ref: company.id < customer.company_id
+Ref: customer.id < customer_address.customer_id
+Ref: gst_state_code.id < customer_address.gst_state_id
+Ref: company.id < vendor.company_id
+Ref: chart_of_account.id < vendor.payable_account_id
+Ref: vendor.id < vendor_address.vendor_id
+Ref: gst_state_code.id < vendor_address.gst_state_id
+
+// --- Sales cycle ---
+Ref: company.id < quotation.company_id
+Ref: customer.id < quotation.customer_id
+Ref: quotation.id < quotation_item.quotation_id
+Ref: hsn_sac_master.id < quotation_item.hsn_sac_id
+Ref: quotation.id < quotation_acceptance_token.quotation_id
+
+Ref: company.id < proforma_invoice.company_id
+Ref: quotation.id < proforma_invoice.source_quotation_id
+Ref: customer.id < proforma_invoice.customer_id
+Ref: proforma_invoice.id < proforma_invoice_item.proforma_invoice_id
+Ref: quotation_item.id < proforma_invoice_item.source_quotation_item_id
+Ref: hsn_sac_master.id < proforma_invoice_item.hsn_sac_id
+
+Ref: company.id < sales_order.company_id
+Ref: proforma_invoice.id < sales_order.source_pi_id
+Ref: quotation.id < sales_order.source_quotation_id
+Ref: customer.id < sales_order.customer_id
+Ref: sales_order.id < sales_order_item.sales_order_id
+Ref: proforma_invoice_item.id < sales_order_item.source_pi_item_id
+Ref: hsn_sac_master.id < sales_order_item.hsn_sac_id
+
+Ref: company.id < delivery_challan.company_id
+Ref: sales_order.id < delivery_challan.source_so_id
+Ref: sales_invoice.id < delivery_challan.source_si_id
+Ref: receipt_voucher.id < delivery_challan.source_rv_id
+Ref: customer.id < delivery_challan.customer_id
+Ref: delivery_challan.id < delivery_challan_item.delivery_challan_id
+Ref: sales_order_item.id < delivery_challan_item.source_so_item_id
+Ref: sales_invoice_item.id < delivery_challan_item.source_si_item_id
+Ref: hsn_sac_master.id < delivery_challan_item.hsn_sac_id
+
+Ref: company.id < sales_invoice.company_id
+Ref: customer.id < sales_invoice.customer_id
+Ref: delivery_challan.id < sales_invoice.source_delivery_challan_id
+Ref: sales_invoice.id < sales_invoice_item.sales_invoice_id
+Ref: hsn_sac_master.id < sales_invoice_item.hsn_sac_id
+Ref: sales_invoice.id < invoice_tax.sales_invoice_id
+Ref: gst_slab.id < invoice_tax.gst_slab_id
+
+Ref: company.id < credit_note.company_id
+Ref: sales_invoice.id < credit_note.sales_invoice_id
+Ref: company.id < debit_note.company_id
+Ref: ap_invoice.id < debit_note.ap_invoice_id
+
+// --- Purchase cycle ---
+Ref: company.id < purchase_requisition.company_id
+Ref: purchase_requisition.id < purchase_requisition_item.purchase_requisition_id
+
+Ref: company.id < rfq.company_id
+Ref: purchase_requisition.id < rfq.purchase_requisition_id
+Ref: rfq.id < rfq_item.rfq_id
+Ref: rfq.id < rfq_vendor.rfq_id
+Ref: vendor.id < rfq_vendor.vendor_id
+
+Ref: company.id < supplier_quotation.company_id
+Ref: rfq.id < supplier_quotation.rfq_id
+Ref: vendor.id < supplier_quotation.vendor_id
+Ref: supplier_quotation.id < supplier_quotation_item.quotation_id
+Ref: hsn_sac_master.id < supplier_quotation_item.hsn_sac_id
+
+Ref: company.id < purchase_order.company_id
+Ref: vendor.id < purchase_order.vendor_id
+Ref: purchase_order.id < purchase_order_item.purchase_order_id
+Ref: hsn_sac_master.id < purchase_order_item.hsn_sac_id
+
+Ref: company.id < goods_receipt.company_id
+Ref: vendor.id < goods_receipt.vendor_id
+Ref: purchase_order.id < goods_receipt.purchase_order_id
+Ref: goods_receipt.id < goods_receipt_item.goods_receipt_id
+Ref: purchase_order_item.id < goods_receipt_item.purchase_order_item_id
+
+Ref: company.id < purchase_return.company_id
+Ref: goods_receipt.id < purchase_return.goods_receipt_id
+Ref: purchase_order.id < purchase_return.purchase_order_id
+Ref: vendor.id < purchase_return.vendor_id
+Ref: purchase_return.id < purchase_return_item.purchase_return_id
+
+Ref: company.id < ap_invoice.company_id
+Ref: vendor.id < ap_invoice.vendor_id
+Ref: ap_invoice.id < ap_invoice_item.ap_invoice_id
+
+Ref: company.id < einvoice_request.company_id
+Ref: sales_invoice.id < einvoice_request.sales_invoice_id
+
+// --- Banking & Payments ---
+Ref: company.id < bank_account.company_id
+Ref: chart_of_account.id < bank_account.gl_account_id
+Ref: company.id < bank_transaction.company_id
+Ref: bank_account.id < bank_transaction.bank_account_id
+
+Ref: company.id < ap_payment.company_id
+Ref: vendor.id < ap_payment.vendor_id
+Ref: bank_account.id < ap_payment.bank_account_id
+Ref: ap_payment.id < ap_payment_allocation.ap_payment_id
+Ref: ap_invoice.id < ap_payment_allocation.ap_invoice_id
+
+Ref: company.id < payment_voucher.company_id
+Ref: vendor.id < payment_voucher.vendor_id
+Ref: bank_account.id < payment_voucher.bank_account_id
+Ref: chart_of_account.id < payment_voucher.payable_account_id
+Ref: chart_of_account.id < payment_voucher.payment_account_id
+Ref: purchase_order.id < payment_voucher.purchase_order_id
+Ref: payment_voucher.id < payment_voucher_allocation.payment_voucher_id
+Ref: ap_invoice.id < payment_voucher_allocation.ap_invoice_id
+Ref: purchase_order.id < payment_voucher_allocation.purchase_order_id
+
+Ref: company.id < receipt_voucher.company_id
+Ref: customer.id < receipt_voucher.customer_id
+Ref: bank_account.id < receipt_voucher.bank_account_id
+Ref: chart_of_account.id < receipt_voucher.receivable_account_id
+Ref: chart_of_account.id < receipt_voucher.receipt_account_id
+Ref: sales_invoice.id < receipt_voucher.sales_invoice_id
+Ref: receipt_voucher.id < receipt_allocation.receipt_voucher_id
+Ref: sales_invoice.id < receipt_allocation.sales_invoice_id
+Ref: proforma_invoice.id < receipt_allocation.proforma_invoice_id
+
+// --- GST / Tax ---
+Ref: gst_slab.id < hsn_sac_master.gst_slab_id
+Ref: company.id < gst_registration.company_id
+Ref: gst_state_code.id < gst_registration.state_code_id
+Ref: country.id < gst_state_code.country_id
+
+// --- Budget ---
+Ref: company.id < budget_header.company_id
+Ref: fiscal_year.id < budget_header.fiscal_year_id
+Ref: budget_header.id < budget_line.budget_header_id
+Ref: company.id < budget_line.company_id
+Ref: chart_of_account.id < budget_line.account_id
+
+// --- Expense ---
+Ref: company.id < expense_category.company_id
+Ref: chart_of_account.id < expense_category.expense_account_id
+Ref: company.id < expense_request.company_id
+Ref: expense_category.id < expense_request.expense_category_id
+Ref: company.id < expense_claim.company_id
+Ref: company.id < expense_claim_item.company_id
+Ref: expense_claim.id < expense_claim_item.expense_claim_id
+Ref: expense_category.id < expense_claim_item.expense_category_id
+Ref: company.id < reimbursement.company_id
+
+// --- Settings ---
+Ref: company.id < payment_term.company_id
+Ref: company.id < terms_condition.company_id
+Ref: company.id < delivery_term.company_id
+Ref: company.id < warranty_term.company_id
+
+// --- Workflow / Audit / Fiscal ---
+Ref: workflow_definition.id < workflow_stage.workflow_definition_id
+Ref: workflow_definition.id < workflow_transaction.workflow_definition_id
+Ref: workflow_stage.id < workflow_transaction.current_stage_id
+Ref: workflow_stage.id < workflow_approver.workflow_stage_id
+Ref: workflow_definition.id < workflow_transition.workflow_definition_id
+Ref: workflow_stage.id < workflow_transition.source_stage_id
+Ref: workflow_stage.id < workflow_transition.target_stage_id
+Ref: workflow_transaction.id < workflow_task.workflow_transaction_id
+Ref: workflow_stage.id < workflow_task.workflow_stage_id
+Ref: workflow_transaction.id < workflow_action.workflow_transaction_id
+Ref: workflow_task.id < workflow_action.workflow_task_id
+Ref: workflow_transaction.id < workflow_comment.workflow_transaction_id
+Ref: workflow_task.id < workflow_comment.workflow_task_id
+Ref: workflow_transaction.id < workflow_attachment.workflow_transaction_id
+Ref: workflow_task.id < workflow_attachment.workflow_task_id
+Ref: workflow_stage.id < workflow_sla.workflow_stage_id
+Ref: workflow_transaction.id < workflow_notification.workflow_transaction_id
+Ref: workflow_task.id < workflow_notification.workflow_task_id
+Ref: company.id < audit_log.company_id
+Ref: company.id < fiscal_year.company_id
+Ref: company.id < accounting_period.company_id
+Ref: fiscal_year.id < accounting_period.fiscal_year_id
+Ref: company.id < voucher_sequence.company_id
+Ref: company.id < gl_balance_snapshot.company_id
+Ref: chart_of_account.id < gl_balance_snapshot.account_id
+Ref: fiscal_year.id < gl_balance_snapshot.fiscal_year_id
+Ref: accounting_period.id < gl_balance_snapshot.accounting_period_id
+
+// --- Integration ---
+Ref: electronic_credit_ledger.id < electronic_credit_ledger_history.electronic_credit_ledger_id

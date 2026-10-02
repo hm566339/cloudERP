@@ -1,0 +1,31 @@
+# Environment & Secret files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Deployment state & backups
+.last_release
+releases/
+*.backup
+
+# Logs
+logs/
+*.log
+
+# Dependencies & Build artifacts (if built outside Docker)
+node_modules/
+target/
+dist/
+build/
+*.jar
+*.war
+*.class
+account-main/org/
+account-main/META-INF/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
