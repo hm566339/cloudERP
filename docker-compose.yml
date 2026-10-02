@@ -45,6 +45,7 @@ services:
   # 2. Auth / SSO Service (Internal only)
   # ----------------------------------------------------------------------------
   auth-service:
+    image: ${IMAGE_AUTH:-mohit950/clouderp:auth-${TAG:-latest}}
     build:
       context: ./ERP_System
       dockerfile: dockerfile
@@ -93,6 +94,7 @@ services:
   # 3. Account Service (Internal only)
   # ----------------------------------------------------------------------------
   account-service:
+    image: ${IMAGE_ACCOUNT:-mohit950/clouderp:account-${TAG:-latest}}
     build:
       context: ./account-main
       dockerfile: dockerfile
@@ -138,6 +140,7 @@ services:
   # 4. Gateway Service (Internal only - Ingress routed via Frontend Nginx)
   # ----------------------------------------------------------------------------
   gateway-service:
+    image: ${IMAGE_GATEWAY:-mohit950/clouderp:gateway-${TAG:-latest}}
     build:
       context: ./gateway_service
       dockerfile: dockerfile
@@ -171,6 +174,7 @@ services:
   # 5. Workflow Service (Internal only)
   # ----------------------------------------------------------------------------
   workflow-service:
+    image: ${IMAGE_WORKFLOW:-mohit950/clouderp:workflow-${TAG:-latest}}
     build:
       context: ./workflow-service
       dockerfile: Dockerfile
@@ -212,6 +216,7 @@ services:
   # 6. Inventory Service (Internal only)
   # ----------------------------------------------------------------------------
   inventory-service:
+    image: ${IMAGE_INVENTORY:-mohit950/clouderp:inventory-${TAG:-latest}}
     build:
       context: ./inventory
       dockerfile: dockerfile
@@ -239,6 +244,7 @@ services:
   # 7. Frontend Client & Subpath Reverse Proxy (Binds to 127.0.0.1:3001)
   # ----------------------------------------------------------------------------
   frontend:
+    image: ${IMAGE_FRONTEND:-mohit950/clouderp:frontend-${TAG:-latest}}
     build:
       context: .
       dockerfile: Dockerfile.frontend

@@ -1,64 +1,86 @@
-# Cloud ERP - Production Deployment Guide for www.mark2.in
+# Cloud ERP - Production Deployment & CI/CD Guide for www.mark2.in
 
-This standalone deployment package (`deploy-project/`) runs Cloud ERP as a sub-application under **`https://www.mark2.in`**:
-* **Frontend**: `https://www.mark2.in/erp/`
-* **Backend API**: `https://www.mark2.in/api/*`
+This deployment package runs Cloud ERP as a high-performance, containerized microservices suite under **`https://www.mark2.in`**:
+* **Frontend Application**: `https://www.mark2.in/erp/`
+* **Backend API Gateway**: `https://www.mark2.in/api/*`
+* **Existing Website**: `https://www.mark2.in/` (**Untouched**)
 
 > **CRITICAL ARCHITECTURAL GUARANTEE**:
-> Your existing website running at `https://www.mark2.in/` is **NOT** replaced or broken. CloudERP operates strictly within `/erp/` and `/api/` locations. All other paths on `www.mark2.in` continue to be served by your existing website configuration.
+> Your existing website running at `https://www.mark2.in/` is **NEVER** modified or disrupted. CloudERP operates strictly within `/erp/` and `/api/` subpaths. All root traffic continues to be served by your existing website configuration.
 
 ---
 
-## 1. Production Architecture Overview
+## 1. Automated CI/CD Architecture Overview
 
 ```text
-                  Internet Traffic (HTTPS 443)
-                               │
-                               ▼
-        ┌──────────────────────────────────────────────┐
-        │       Host Nginx (www.mark2.in on VPS)       │
-        │                                              │
-        │  /           ──► Existing Website (Untouched)│
-        │  /erp/       ──► Reverse Proxy (127.0.0.1:3001)
-        │  /api/       ──► Reverse Proxy (127.0.0.1:3001)
-        └──────────────────────┬───────────────────────┘
-                               │
-                               ▼
-        ┌──────────────────────────────────────────────┐
-        │  Cloud ERP Nginx Container (127.0.0.1:3001)  │
-        │                                              │
-        │  /erp/assets/ ──► Static JS / CSS / Media    │
-        │  /erp/        ──► SPA Fallback (/erp/index.html)
-        │  /api/        ──► Proxy to Gateway           │
-        └──────────────────────┬───────────────────────┘
-                               │ (Internal Docker Network: erp-network)
-                               ▼
-                    ┌──────────────────────┐
-                    │ erp-gateway-service  │ (Port 8080)
-                    └──────────┬───────────┘
-                               │
-        ┌───────────────┬──────┴────────┬───────────────┐
-        ▼               ▼               ▼               ▼
-┌──────────────┐┌──────────────┐┌──────────────┐┌──────────────┐
-│  erp-auth    ││ erp-account  ││ erp-workflow ││erp-inventory │
-│ (Port 8090)  ││ (Port 8081)  ││ (Port 8083)  ││ (Port 8082)  │
-└───────┬──────┘└───────┬──────┘└───────┬──────┘└───────┬──────┘
-        │               │               │               │
-        └───────────────┼───────────────┼───────────────┘
-                        ▼
-            ┌──────────────────────┐
-            │   PostgreSQL (db)    │ (Port 5432 - Internal Only)
-            └──────────────────────┘
+       Developer Push
+             │
+             ▼ git push origin main
+┌──────────────────────────────┐
+│        GitHub Actions        │
+│   (.github/workflows/        │
+│        deploy.yml)           │
+└──────────────┬───────────────┘
+               │ 1. Build 6 Docker Images in parallel
+               │ 2. Tag with :<service>-latest and :<service>-${GITHUB_SHA}
+               │ 3. Push to Docker Hub
+               ▼
+┌──────────────────────────────┐
+│          Docker Hub          │
+│   (mohit950/clouderp)        │
+└──────────────┬───────────────┘
+               │ 4. SSH trigger deployment on server
+               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Production Linux Server                   │
+│                       (/opt/cloudERP)                       │
+│                                                             │
+│  5. git sync compose & scripts                              │
+│  6. docker compose pull (prebuilt images from Docker Hub)    │
+│  7. docker compose up -d (recreate only modified containers)│
+│  8. Persistent database volume 'db-data' preserved          │
+│  9. Health checks verify all 7 containers online            │
+└─────────────────────────────────────────────────────────────┘
 ```
-
-### Security & Isolation:
-1. **No Backend Public Exposure**: PostgreSQL (`5432`), Gateway (`8080`), Auth (`8090`), Account (`8081`), Workflow (`8083`), and Inventory (`8082`) are **NOT** bound to public host ports.
-2. **Local Host Binding**: Frontend Nginx container binds strictly to `127.0.0.1:3001`, accessible only to your host Nginx reverse proxy.
-3. **Existing Website Untouched**: Requests to `https://www.mark2.in/` continue to be handled by your existing website configuration.
 
 ---
 
-## 2. Host Server Nginx Configuration (`www.mark2.in`)
+## 2. Docker Hub Image Strategy
+
+All microservices are stored in the single repository **`mohit950/clouderp`** using service-specific tags:
+
+| Service | Latest Tag | Immutable Git SHA Tag |
+| :--- | :--- | :--- |
+| **Frontend UI (Nginx + Vite)** | `mohit950/clouderp:frontend-latest` | `mohit950/clouderp:frontend-${GITHUB_SHA}` |
+| **API Gateway** | `mohit950/clouderp:gateway-latest` | `mohit950/clouderp:gateway-${GITHUB_SHA}` |
+| **Authentication & SSO** | `mohit950/clouderp:auth-latest` | `mohit950/clouderp:auth-${GITHUB_SHA}` |
+| **Account Service** | `mohit950/clouderp:account-latest` | `mohit950/clouderp:account-${GITHUB_SHA}` |
+| **Inventory Service** | `mohit950/clouderp:inventory-latest` | `mohit950/clouderp:inventory-${GITHUB_SHA}` |
+| **Workflow Service** | `mohit950/clouderp:workflow-latest` | `mohit950/clouderp:workflow-${GITHUB_SHA}` |
+
+* **Immutable Rollbacks**: The Git SHA tag ensures exact reproducibility and instantaneous rollback to any specific build.
+* **No Server Compilations**: The production VPS pulls pre-compiled Docker images, saving CPU/memory and avoiding long build delays on the server.
+
+---
+
+## 3. Required GitHub Repository Secrets
+
+In your GitHub repository, navigate to **Settings** → **Secrets and variables** → **Actions** → **New repository secret**, and define:
+
+| Secret Name | Value Description | Example |
+| :--- | :--- | :--- |
+| `DOCKERHUB_USERNAME` | Your Docker Hub account username | `mohit950` |
+| `DOCKERHUB_TOKEN` | Docker Hub Personal Access Token (Read/Write) | `dckr_pat_xxxx...` |
+| `SERVER_HOST` | Production VPS public IP or hostname | `123.45.67.89` or `mark2.in` |
+| `SERVER_USER` | SSH user with Docker permissions | `ubuntu` or `root` |
+| `SERVER_SSH_KEY` | Private SSH Key (ed25519 or RSA) | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `SERVER_PORT` | *(Optional)* SSH Port if not default 22 | `22` |
+
+> **Security Note**: Never commit passwords, tokens, or SSH private keys to Git. The `.gitignore` prevents `.env` and sensitive files from being pushed.
+
+---
+
+## 4. Host Server Nginx Configuration (`www.mark2.in`)
 
 In your host server's Nginx configuration (e.g. `/etc/nginx/sites-available/default` or inside your domain's server block in `/etc/nginx/sites-available/mark2.in`), add the following blocks inside your existing `server { listen 443 ssl ...; server_name www.mark2.in mark2.in; ... }`:
 
@@ -121,10 +143,10 @@ In your host server's Nginx configuration (e.g. `/etc/nginx/sites-available/defa
         proxy_busy_buffers_size 256k;
     }
 
-    # (Your existing website "location /" or PHP/Node proxy remains untouched below)
+    # (Your existing website "location /" remains untouched below)
 ```
 
-Then test and reload your host Nginx:
+Reload host Nginx after updating:
 ```bash
 sudo nginx -t
 sudo systemctl reload nginx
@@ -132,83 +154,91 @@ sudo systemctl reload nginx
 
 ---
 
-## 3. Quick Start: Deployment on Server
+## 5. First-Time Production Server Setup
 
-### Step 1: Upload `deploy-project` to Server
-```bash
-scp -r deploy-project user@YOUR_SERVER_IP:/opt/cloudERP
-```
+Run these commands once on your production Linux server:
 
-### Step 2: Configure Production Environment
 ```bash
+# 1. Connect to VPS
+ssh user@YOUR_SERVER_IP
+
+# 2. Clone the repository into /opt/cloudERP
+sudo mkdir -p /opt/cloudERP
+sudo chown -R $USER:$USER /opt/cloudERP
+git clone https://github.com/hm566339/cloudERP.git /opt/cloudERP
 cd /opt/cloudERP
+
+# 3. Create production .env file
 cp .env.example .env
 chmod 600 .env
 nano .env
-```
-Ensure the following are set:
-* `POSTGRES_PASSWORD`: Your strong database password.
-* `JWT_SECRET`: Random 32+ character key.
-* `ADMIN_PASSWORD`: Your secure initial admin password.
+# Set secure values for POSTGRES_PASSWORD, JWT_SECRET, and ADMIN_PASSWORD
 
-### Step 3: Launch Services
-```bash
+# 4. Make scripts executable and trigger initial deployment
 chmod +x *.sh
 ./deploy.sh
 ```
 
-### Step 4: Verify Deployment Status
+---
+
+## 6. Daily Operations & Troubleshooting
+
+### How to Check Container Status
 ```bash
 ./status.sh
+# Or view with docker
+docker compose ps
+```
+
+### How to Check Logs
+```bash
+# Tail all logs aggregated:
+./logs.sh
+
+# Or inspect an individual microservice:
+./logs.sh erp-gateway-service
+./logs.sh erp-auth-service
+./logs.sh erp-account-service
+./logs.sh erp-workflow-service
+./logs.sh erp-inventory-service
+./logs.sh erp-frontend
+./logs.sh erp-db
+```
+
+### How to Manually Deploy an Update
+```bash
+# Deploy latest tagged images:
+./deploy.sh
+
+# Or deploy a specific Git commit SHA tag:
+./deploy.sh 8a1f4b2
+```
+
+### How to Rollback
+The rollback procedure safely switches running containers to a previous Docker tag:
+```bash
+# Automatically rollback to the previous release recorded in .last_release:
+./rollback.sh
+
+# Or rollback to a specific Git SHA tag:
+./rollback.sh 8a1f4b2
+```
+> **SAFETY GUARANTEE**: Rollback **never** touches PostgreSQL or the `db-data` volume. Only application containers are recreated.
+
+### How to Safely Stop and Start Services
+```bash
+./stop.sh       # Gracefully stops containers (db-data volume preserved)
+./start.sh      # Starts existing containers
+./restart.sh    # Restarts all containers
 ```
 
 ---
 
-## 4. Verification Checklist
+## 7. Database Persistence & Safety Guarantees
 
-Test the following endpoints to ensure everything functions properly:
-
-1. **Bare subpath redirect**:
-   ```bash
-   curl -I https://www.mark2.in/erp
-   # Expected: HTTP 301 Moved Permanently -> https://www.mark2.in/erp/
-   ```
-2. **Frontend UI Loading**:
-   ```bash
-   curl -I https://www.mark2.in/erp/
-   # Expected: HTTP 200 OK
-   ```
-3. **SPA Deep Route & Browser Refresh (No 404)**:
-   ```bash
-   curl -I https://www.mark2.in/erp/login
-   curl -I https://www.mark2.in/erp/dashboard
-   curl -I https://www.mark2.in/erp/accounts
-   # Expected: HTTP 200 OK (Served from /erp/index.html)
-   ```
-4. **Static JS/CSS Assets**:
-   ```bash
-   curl -I https://www.mark2.in/erp/assets/index.js
-   # Expected: HTTP 200 OK with Cache-Control headers
-   ```
-5. **API Gateway Connectivity (No /api/api duplication)**:
-   ```bash
-   curl -i https://www.mark2.in/api/sso/auth/login
-   # Expected: 200/400/401 HTTP response from Auth Service through Gateway
-   ```
-6. **Main Website Unaffected**:
-   ```bash
-   curl -I https://www.mark2.in/
-   # Expected: Serves existing main website as before
-   ```
-
----
-
-## 5. Daily Operations
-
-* **Check Status**: `./status.sh`
-* **Real-time Logs**: `./logs.sh` (or `./logs.sh auth-service`)
-* **Stop Services**: `./stop.sh` (Database data in `db-data` is strictly preserved)
-* **Start Services**: `./start.sh`
-* **Restart Services**: `./restart.sh`
-* **Update Code**: `./update.sh`
-* **Rollback**: `./rollback.sh` (Reverts containers without touching database volume)
+* PostgreSQL stores all database files in the Docker named volume **`db-data`**.
+* The following commands are **STRICTLY FORBIDDEN** in production:
+  * `docker compose down -v` *(Deletes database volumes)*
+  * `docker volume rm cloudERP_db-data` *(Destroys data)*
+  * `DROP DATABASE` *(Destroys data)*
+* Our scripts (`deploy.sh`, `rollback.sh`, `stop.sh`, `update.sh`) execute only non-destructive updates (`docker compose up -d`). Database state is permanently preserved across deployments and rollbacks.

@@ -2,13 +2,16 @@
 # ==============================================================================
 # Cloud ERP - Production Deployment Automation Script (deploy-project)
 # ==============================================================================
-# Idempotent: safe to run multiple times. Tags previous images for rollback.
-# Persistent database volume (db-data) is permanently preserved.
+# Idempotent: pulls prebuilt images from Docker Hub (mohit950/clouderp).
+# Never drops database volumes or runs destructive commands.
+# Returns non-zero exit code if deployment fails.
 # ==============================================================================
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
+
 ENV_FILE="${SCRIPT_DIR}/.env"
 COMPOSE_FILE="${SCRIPT_DIR}/docker-compose.yml"
 STATE_FILE="${SCRIPT_DIR}/.last_release"
@@ -21,17 +24,22 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_info()    { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 
 echo -e "${CYAN}=================================================================${NC}"
 echo -e "${CYAN}             Cloud ERP - Production Deployment                  ${NC}"
 echo -e "${CYAN}=================================================================${NC}"
 
+# Target image tag (defaults to $1, then $TAG, then 'latest')
+TARGET_TAG="${1:-${TAG:-latest}}"
+export TAG="${TARGET_TAG}"
+log_info "Target deployment tag: ${TAG}"
+
 # 1. System prerequisites
-log_info "Step 1/6: Verifying Docker engine & Compose..."
+log_info "Step 1/7: Verifying Docker engine & Compose..."
 if ! command -v docker &> /dev/null; then
     log_error "Docker is not installed or not in PATH. Please install Docker."
     exit 1
@@ -53,68 +61,103 @@ fi
 log_success "Docker environment verified: $($DOCKER_COMPOSE version | head -n 1)"
 
 # 2. Environment file check
-log_info "Step 2/6: Validating environment configuration..."
+log_info "Step 2/7: Validating environment configuration..."
 if [ ! -f "$ENV_FILE" ]; then
     log_warn ".env file not found in ${SCRIPT_DIR}."
     if [ -f "${SCRIPT_DIR}/.env.example" ]; then
         log_info "Creating initial .env from .env.example..."
         cp "${SCRIPT_DIR}/.env.example" "$ENV_FILE"
         chmod 600 "$ENV_FILE"
-        log_warn "Created ${ENV_FILE}. Please edit it and set your production POSTGRES_PASSWORD and JWT_SECRET!"
+        log_warn "Created ${ENV_FILE}. Please edit it with your production secrets!"
     else
         log_error "No .env or .env.example found in ${SCRIPT_DIR}."
         exit 1
     fi
 fi
 
-# Ensure POSTGRES_PASSWORD and JWT_SECRET are set
+# Ensure critical secrets are not at default placeholder values
 if grep -q "change_this_to_a_strong_database_password" "$ENV_FILE" 2>/dev/null; then
-    log_warn "POSTGRES_PASSWORD is still set to placeholder value in .env. Please update it!"
+    log_warn "POSTGRES_PASSWORD is still set to placeholder in .env. Please update it!"
 fi
 
-# 3. Backup current images for rollback before building new ones
-log_info "Step 3/6: Backing up current container images for safe rollback..."
-SERVICES=(
-    "deploy-project-auth-service"
-    "deploy-project-account-service"
-    "deploy-project-gateway-service"
-    "deploy-project-workflow-service"
-    "deploy-project-inventory-service"
-    "deploy-project-frontend"
-)
+# Load environment variables for script use (without leaking secrets)
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +a
+# Re-ensure TAG is preserved even if .env had a different one
+export TAG="${TARGET_TAG}"
 
-for img in "${SERVICES[@]}"; do
-    if docker image inspect "${img}:latest" &>/dev/null; then
-        docker tag "${img}:latest" "${img}:previous" 2>/dev/null || true
+# 3. Docker Hub authentication (if credentials provided)
+log_info "Step 3/7: Authenticating with Docker Hub (if configured)..."
+DOCKER_USER="${DOCKERHUB_USERNAME:-}"
+DOCKER_TOKEN="${DOCKERHUB_TOKEN:-}"
+
+if [ -n "$DOCKER_USER" ] && [ -n "$DOCKER_TOKEN" ]; then
+    log_info "Logging in to Docker Hub as ${DOCKER_USER}..."
+    if echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin &> /dev/null; then
+        log_success "Docker Hub authenticated successfully."
+    else
+        log_warn "Docker Hub login failed. Proceeding with anonymous pull..."
     fi
-done
+else
+    log_info "No Docker Hub credentials provided in environment; proceeding with public access / existing session."
+fi
+
+# 4. Save state for rollback
+log_info "Step 4/7: Recording release state for rollback tracking..."
+CURRENT_PREV="latest"
+if [ -f "$STATE_FILE" ]; then
+    # shellcheck disable=SC1090
+    source "$STATE_FILE" 2>/dev/null || true
+    CURRENT_PREV="${DEPLOYED_TAG:-latest}"
+fi
 
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-echo "RELEASE_TIMESTAMP=${TIMESTAMP}" > "$STATE_FILE"
-if [ -d "${SCRIPT_DIR}/.git" ] && command -v git &> /dev/null; then
-    echo "RELEASE_COMMIT=$(git -C "$SCRIPT_DIR" rev-parse --short HEAD 2>/dev/null || echo 'none')" >> "$STATE_FILE"
-else
-    echo "RELEASE_COMMIT=standalone" >> "$STATE_FILE"
-fi
+cat <<EOF > "$STATE_FILE"
+PREVIOUS_TAG=${CURRENT_PREV}
+DEPLOYED_TAG=${TAG}
+RELEASE_TIMESTAMP=${TIMESTAMP}
+EOF
 
-# 4. Database initialization script check
-log_info "Step 4/6: Ensuring database bootstrap scripts are in place..."
+# 5. Pull new CloudERP images from Docker Hub
+log_info "Step 5/7: Pulling prebuilt images from Docker Hub (mohit950/clouderp)..."
+if ! $DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" pull; then
+    log_error "Failed to pull Docker images for tag: ${TAG}."
+    exit 1
+fi
+log_success "Images successfully pulled."
+
+# 6. Database bootstrap check
 if [ ! -f "${SCRIPT_DIR}/db/init.sql" ]; then
     log_error "db/init.sql not found in ${SCRIPT_DIR}. Cannot bootstrap database."
     exit 1
 fi
 
-# 5. Build and launch services safely (NEVER uses down -v or drops volumes)
-log_info "Step 5/6: Building and starting microservices stack (Persistent data preserved)..."
-$DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --build --remove-orphans
+# 7. Start/recreate services non-destructively (NEVER uses down -v or drops volumes)
+log_info "Step 6/7: Deploying updated containers (Preserving persistent database volume)..."
+if ! $DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --remove-orphans; then
+    log_error "Docker Compose up failed!"
+    exit 1
+fi
 
-# 6. Verify health
-log_info "Step 6/6: Verifying database and service health..."
-MAX_ATTEMPTS=25
+# 8. Verification and health checks
+log_info "Step 7/7: Verifying container health..."
+REQUIRED_CONTAINERS=(
+    "erp-db"
+    "erp-auth-service"
+    "erp-account-service"
+    "erp-gateway-service"
+    "erp-workflow-service"
+    "erp-inventory-service"
+    "erp-frontend"
+)
+
+# Wait for PostgreSQL container to become healthy
+echo -n "Waiting for PostgreSQL database container to report healthy"
+MAX_ATTEMPTS=30
 ATTEMPT=0
 DB_HEALTHY=false
-
-echo -n "Waiting for PostgreSQL database container"
 while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
     STATUS=$(docker inspect --format='{{json .State.Health.Status}}' erp-db 2>/dev/null || echo "\"starting\"")
     if [ "$STATUS" = "\"healthy\"" ]; then
@@ -127,30 +170,48 @@ while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
 done
 echo ""
 
-if [ "$DB_HEALTHY" = true ]; then
-    log_success "PostgreSQL Database is healthy."
-else
-    log_warn "Database healthcheck timed out. Containers may still be initializing Spring contexts."
+if [ "$DB_HEALTHY" != true ]; then
+    log_warn "Database health check timed out. Microservices may take extra time initializing."
 fi
 
-# Allow services a moment to initialize
+# Give services a brief stabilization period
 sleep 5
+
+# Check that all 7 required containers are in 'running' state
+FAILED_CONTAINERS=()
+for c in "${REQUIRED_CONTAINERS[@]}"; do
+    C_STATUS=$(docker inspect --format='{{json .State.Status}}' "$c" 2>/dev/null || echo "\"missing\"")
+    if [ "$C_STATUS" != "\"running\"" ]; then
+        FAILED_CONTAINERS+=("$c ($C_STATUS)")
+    fi
+done
+
+if [ ${#FAILED_CONTAINERS[@]} -gt 0 ]; then
+    log_error "Deployment failed! The following container(s) are not running:"
+    for fc in "${FAILED_CONTAINERS[@]}"; do
+        echo -e "  - ${RED}${fc}${NC}"
+        docker logs --tail 20 "${fc%% *}" 2>/dev/null || true
+    done
+    exit 1
+fi
+
+# Print formatted status matrix
+if [ -f "${SCRIPT_DIR}/status.sh" ]; then
+    chmod +x "${SCRIPT_DIR}/status.sh"
+    "${SCRIPT_DIR}/status.sh" || true
+fi
 
 echo ""
 echo -e "${GREEN}=================================================================${NC}"
 echo -e "${GREEN}       Cloud ERP Deployment Completed Successfully!             ${NC}"
 echo -e "${GREEN}=================================================================${NC}"
-echo "Release Version: ${TIMESTAMP}"
+echo "Deployed Image Tag: ${TAG}"
+echo "Release Version:    ${TIMESTAMP}"
 echo ""
-echo "Active Services & Endpoints:"
-echo "  * Public Frontend:   ${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/"
-echo "  * Public API Proxy:  ${PUBLIC_BASE_URL:-https://www.mark2.in}/api/"
-echo "  * Local Nginx Port:  127.0.0.1:${FRONTEND_PORT:-3001} (Reverse-proxied by Host Nginx)"
-echo "  * Isolated Services: PostgreSQL (5432), Gateway (8080), Auth (8090), Account (8081), Workflow (8083), Inventory (8082)"
-echo ""
-echo "Helpful commands:"
-echo "  ./status.sh          - Check service health status"
-echo "  ./logs.sh            - Tail aggregated logs"
-echo "  ./stop.sh            - Safely stop services"
-echo "  ./rollback.sh        - Rollback to previous release"
+echo "Active Endpoints:"
+echo "  * Frontend UI:    ${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/"
+echo "  * Backend API:    ${PUBLIC_BASE_URL:-https://www.mark2.in}/api/"
+echo "  * Main Website:   https://www.mark2.in/ (Untouched)"
+echo "  * Local Proxy:    127.0.0.1:${FRONTEND_PORT:-3001}"
 echo "================================================================="
+exit 0

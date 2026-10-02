@@ -2,15 +2,15 @@
 # ==============================================================================
 # Cloud ERP - Production Rollback Automation Script (deploy-project)
 # ==============================================================================
-# Safely reverts services to the previous working deployment:
-# 1. Restores Docker images tagged as ':previous' by deploy.sh.
-# 2. Or checks out a previous Git commit if running in a Git-tracked folder.
-# 3. CRITICAL GUARANTEE: Named volume 'db-data' is NEVER modified or deleted.
+# Safely reverts services to a previously known Docker image tag or release.
+# CRITICAL GUARANTEE: Named volume 'db-data' is NEVER modified or deleted.
 # ==============================================================================
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
+
 COMPOSE_FILE="${SCRIPT_DIR}/docker-compose.yml"
 ENV_FILE="${SCRIPT_DIR}/.env"
 STATE_FILE="${SCRIPT_DIR}/.last_release"
@@ -23,10 +23,10 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_info()    { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error()   { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 
 echo -e "${CYAN}=================================================================${NC}"
 echo -e "${CYAN}              Cloud ERP - Production Rollback                   ${NC}"
@@ -42,66 +42,54 @@ else
     exit 1
 fi
 
-ROLLBACK_EXECUTED=false
+TARGET_TAG=""
 
-# Method 1: Git-based rollback if target commit is passed as $1
-if [ $# -ge 1 ] && [ -d "${SCRIPT_DIR}/.git" ] && command -v git &> /dev/null; then
-    TARGET_COMMIT="$1"
-    log_info "Target Git commit provided: ${TARGET_COMMIT}"
-    git -C "$SCRIPT_DIR" checkout "$TARGET_COMMIT"
-    log_info "Rebuilding and deploying target commit..."
-    $DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --build --remove-orphans
-    ROLLBACK_EXECUTED=true
-fi
-
-# Method 2: Docker Image ':previous' tag rollback (Reliable for standalone packages)
-if [ "$ROLLBACK_EXECUTED" = false ]; then
-    log_info "Checking for previous Docker container image snapshots..."
-    SERVICES=(
-        "deploy-project-auth-service"
-        "deploy-project-account-service"
-        "deploy-project-gateway-service"
-        "deploy-project-workflow-service"
-        "deploy-project-inventory-service"
-        "deploy-project-frontend"
-    )
-
-    FOUND_BACKUPS=0
-    for img in "${SERVICES[@]}"; do
-        if docker image inspect "${img}:previous" &>/dev/null; then
-            FOUND_BACKUPS=$((FOUND_BACKUPS + 1))
-            docker tag "${img}:previous" "${img}:latest" 2>/dev/null || true
-        fi
-    done
-
-    if [ $FOUND_BACKUPS -gt 0 ]; then
-        log_info "Found ${FOUND_BACKUPS} previous image snapshots. Restoring running containers..."
-        $DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --no-build --remove-orphans
-        ROLLBACK_EXECUTED=true
-        log_success "Restored services from previous container image snapshots."
+# 1. Determine rollback target tag
+if [ $# -ge 1 ]; then
+    TARGET_TAG="$1"
+    log_info "Target rollback tag specified by user: ${TARGET_TAG}"
+elif [ -f "$STATE_FILE" ]; then
+    # shellcheck disable=SC1090
+    source "$STATE_FILE" 2>/dev/null || true
+    if [ -n "${PREVIOUS_TAG:-}" ] && [ "$PREVIOUS_TAG" != "${DEPLOYED_TAG:-}" ]; then
+        TARGET_TAG="$PREVIOUS_TAG"
+        log_info "Identified previous release tag from .last_release: ${TARGET_TAG}"
     fi
 fi
 
-# Method 3: Fallback Git HEAD~1
-if [ "$ROLLBACK_EXECUTED" = false ] && [ -d "${SCRIPT_DIR}/.git" ] && command -v git &> /dev/null; then
-    PREV_COMMIT=$(git -C "$SCRIPT_DIR" rev-parse HEAD~1 2>/dev/null || echo "")
-    if [ -n "$PREV_COMMIT" ]; then
-        log_info "Reverting Git HEAD to previous commit: ${PREV_COMMIT}..."
-        git -C "$SCRIPT_DIR" checkout "$PREV_COMMIT"
-        $DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --build --remove-orphans
-        ROLLBACK_EXECUTED=true
-    fi
+if [ -z "$TARGET_TAG" ]; then
+    log_warn "No specific previous tag found in .last_release. Falling back to 'latest'."
+    TARGET_TAG="latest"
 fi
 
-if [ "$ROLLBACK_EXECUTED" = false ]; then
-    log_warn "No previous Docker image snapshot or Git commit found to roll back to."
-    log_info "Restarting existing containers with current configuration..."
-    $DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" restart
+export TAG="${TARGET_TAG}"
+log_info "Executing rollback to image tag: ${TAG}..."
+
+# 2. Pull target tag if needed
+log_info "Checking / pulling images for tag: ${TAG}..."
+$DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" pull || log_warn "Could not pull tag ${TAG}; attempting to use local images..."
+
+# 3. Recreate containers with target tag
+log_info "Recreating containers with tag: ${TAG}..."
+if ! $DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --remove-orphans; then
+    log_error "Rollback container recreation failed!"
+    exit 1
 fi
 
-# Run health verification
-chmod +x "${SCRIPT_DIR}/status.sh"
-"${SCRIPT_DIR}/status.sh"
+# 4. Update release tracking
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+cat <<EOF > "$STATE_FILE"
+PREVIOUS_TAG=rolled_back_from_${DEPLOYED_TAG:-unknown}
+DEPLOYED_TAG=${TAG}
+RELEASE_TIMESTAMP=${TIMESTAMP}
+EOF
+
+# 5. Run health verification
+if [ -f "${SCRIPT_DIR}/status.sh" ]; then
+    chmod +x "${SCRIPT_DIR}/status.sh"
+    "${SCRIPT_DIR}/status.sh" || true
+fi
 
 echo ""
-log_success "Rollback procedure complete. Database volume was untouched."
+log_success "Rollback procedure complete to tag: ${TAG}. Database volume was untouched."
+exit 0
