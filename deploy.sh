@@ -80,11 +80,30 @@ if grep -q "change_this_to_a_strong_database_password" "$ENV_FILE" 2>/dev/null; 
     log_warn "POSTGRES_PASSWORD is still set to placeholder in .env. Please update it!"
 fi
 
-# Load environment variables for script use (without leaking secrets)
-set -a
-# shellcheck disable=SC1090
-source "$ENV_FILE"
-set +a
+# Load environment variables safely for script use (without shell evaluation/expansion of '$')
+while IFS= read -r line || [ -n "$line" ]; do
+    # Trim leading whitespace
+    line="${line#"${line%%[![:space:]]*}"}"
+    case "$line" in
+        \#*|"") continue ;;
+    esac
+    if [[ "$line" == *"="* ]]; then
+        key="${line%%=*}"
+        val="${line#*=}"
+        # Trim trailing whitespace from key
+        key="${key%"${key##*[![:space:]]}"}"
+        # Strip matching surrounding single or double quotes
+        if [[ "$val" =~ ^\"(.*)\"$ ]]; then
+            val="${BASH_REMATCH[1]}"
+        elif [[ "$val" =~ ^\'(.*)\'$ ]]; then
+            val="${BASH_REMATCH[1]}"
+        fi
+        if [[ "$key" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+            export "$key"="$val"
+        fi
+    fi
+done < "$ENV_FILE"
+
 # Re-ensure TAG is preserved even if .env had a different one
 export TAG="${TARGET_TAG}"
 
