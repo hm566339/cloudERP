@@ -4,9 +4,10 @@ import store from '../app/store'
 import { addAlert } from '../features/notifications/notificationSlice'
 import { attachInterceptors } from '../api/common/interceptors'
 
-// Normalize: if VITE_API_BASE_URL is '/api' or ends with '/api', strip trailing '/api' because endpoints in the codebase already include '/api' prefix (e.g. '/api/companies', '/api/sso')
+import { normalizeApiBaseUrl } from '../api/common/client'
+
 const rawBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '/api';
-const BASE_URL = rawBaseUrl.endsWith('/api') ? rawBaseUrl.slice(0, -4) : rawBaseUrl;
+const BASE_URL = normalizeApiBaseUrl(rawBaseUrl);
 
 const API = axios.create({
   baseURL: BASE_URL,

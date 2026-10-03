@@ -24,9 +24,20 @@ import { attachInterceptors } from './interceptors';
 // Client Instance
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Normalize: if VITE_API_BASE_URL is '/api' or ends with '/api', strip trailing '/api' because endpoints in the codebase already include '/api' prefix (e.g. '/api/companies', '/api/sso')
+// Normalize: if VITE_API_BASE_URL is '/api' or ends with '/api' (with or without trailing slash),
+// strip trailing '/api' because endpoints in the codebase already include '/api' prefix (e.g. '/api/companies', '/api/sso')
+export const normalizeApiBaseUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim().replace(/\/+$/, '');
+  if (trimmed === '/api' || trimmed === '') return '';
+  if (trimmed.endsWith('/api')) {
+    return trimmed.slice(0, -4);
+  }
+  return trimmed;
+};
+
 const rawBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '/api';
-const BASE_URL = rawBaseUrl.endsWith('/api') ? rawBaseUrl.slice(0, -4) : rawBaseUrl;
+const BASE_URL = normalizeApiBaseUrl(rawBaseUrl);
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

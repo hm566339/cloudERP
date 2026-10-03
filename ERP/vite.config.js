@@ -8,6 +8,9 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  const rawProxyTarget = env.VITE_SSO_BASE_URL || env.VITE_API_BASE_URL || "https://www.mark2.in";
+  const proxyTarget = rawProxyTarget.trim().replace(/\/+$/, '').replace(/\/api$/, '') || "https://www.mark2.in";
+
   return {
     base: env.VITE_BASE_PATH || "/erp/",
     plugins: [react()],
@@ -39,7 +42,7 @@ export default defineConfig(({ mode }) => {
       // Proxy API requests to backend
       proxy: {
         "/api": {
-          target: env.VITE_SSO_BASE_URL,
+          target: proxyTarget,
           changeOrigin: true,
           secure: false, // Don't verify SSL certs for proxy
           cookieDomainRewrite: {
@@ -108,7 +111,7 @@ export default defineConfig(({ mode }) => {
       host: true,
       proxy: {
         "/api": {
-          target: env.VITE_SSO_BASE_URL,
+          target: proxyTarget,
           changeOrigin: true,
           secure: false, // Don't verify SSL certs for proxy
           cookieDomainRewrite: {
