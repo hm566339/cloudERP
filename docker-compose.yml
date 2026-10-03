@@ -55,21 +55,28 @@ services:
       - path: ./.env
         required: false
     environment:
+      # --- Database ---
       DB_URL: jdbc:postgresql://db:5432/sso
       DB_USERNAME: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
+      # --- Auth / SSO ---
       STRAPI_SERVER: http://auth-service:8090
+      STRAPI_TOKEN: ${STRAPI_TOKEN:-}
       SSO_BASE_URL: ${AUTH_SERVICE_EXTERNAL_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/api/sso}
       APP_FRONTEND_URL: ${FRONTEND_EXTERNAL_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/}
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+      CREATE_ADMIN_COMPANY: ${CREATE_ADMIN_COMPANY:-true}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin@mark2.in}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      # --- Mail ---
       MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       MAIL_AUTH: ${MAIL_AUTH:-true}
       MAIL_STARTTLS_ENABLE: ${MAIL_STARTTLS_ENABLE:-true}
+      # --- Cloudinary ---
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}

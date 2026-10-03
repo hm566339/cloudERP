@@ -169,7 +169,7 @@ git clone https://github.com/hm566339/cloudERP.git /opt/cloudERP
 cd /opt/cloudERP
 
 # 3. Create production .env file
-cp .env.example .env
+cp .example .env
 chmod 600 .env
 nano .env
 # Set secure values for POSTGRES_PASSWORD, JWT_SECRET, and ADMIN_PASSWORD

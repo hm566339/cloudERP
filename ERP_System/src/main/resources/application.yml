@@ -2,7 +2,7 @@ spring:
   config:
     import: optional:file:.env[.properties]
   application:
-    name: ${NAME}
+    name: ${NAME:erp-auth-service}
 
   datasource:
     url: ${DB_URL}
@@ -32,18 +32,18 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: ${JPA_HIBERNATE_DDL_AUTO}
-    show-sql: ${JPA_SHOW_SQL}
+      ddl-auto: ${JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:false}
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
-        format_sql: ${JPA_FORMAT_SQL}
+        format_sql: ${JPA_FORMAT_SQL:false}
         jdbc:
           time_zone: UTC
 
 server:
-  port: ${PORT}
-  address: ${SERVER_ADDRESS}
+  port: ${PORT:8090}
+  address: ${SERVER_ADDRESS:0.0.0.0}
 
 springdoc:
   api-docs:
@@ -52,7 +52,7 @@ springdoc:
     path: /swagger-ui.html
     operationsSorter: method
     tagsSorter: alpha
-    enabled: ${SWAGGER_ENABLED}
+    enabled: ${SWAGGER_ENABLED:false}
 
 management:
   endpoints:
@@ -73,11 +73,11 @@ management:
 
 info:
   app:
-    name: ${NAME}
-    description: ${DESCRIPTION}
-    version: ${VERSION}
-    developer: ${DEVELOPER}
-    organization: ${ORGANIZATION}
+    name: ${NAME:erp-auth-service}
+    description: ${DESCRIPTION:Cloud ERP Authentication and SSO Service}
+    version: ${VERSION:1.0.0}
+    developer: ${DEVELOPER:CloudERP Team}
+    organization: ${ORGANIZATION:Mark2}
 
 logging:
   level:
@@ -94,7 +94,7 @@ logging:
 api:
   frontend: ${APP_FRONTEND_URL}
   base: ${SSO_BASE_URL}
-  createCompany: ${CREATE_ADMIN_COMPANY}
+  createCompany: ${CREATE_ADMIN_COMPANY:true}
   cookie:
     secure: ${COOKIE_SECURE:false}
     same-site: ${COOKIE_SAME_SITE:Lax}
@@ -109,8 +109,8 @@ system:
     password: ${ADMIN_PASSWORD}
 
 strapi:
-  server: ${STRAPI_SERVER}
-  token: ${STRAPI_TOKEN}
+  server: ${STRAPI_SERVER:http://localhost:8090}
+  token: ${STRAPI_TOKEN:}
 
 sso:
   trial-days: ${SSO_TRIAL_DAYS:30}
