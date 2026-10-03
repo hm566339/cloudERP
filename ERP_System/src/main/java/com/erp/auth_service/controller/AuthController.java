@@ -347,7 +347,8 @@ public class AuthController {
         if (request != null && request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("ACCESS_TOKEN".equalsIgnoreCase(cookie.getName())
-                        || "access_token".equalsIgnoreCase(cookie.getName())) {
+                        || "access_token".equalsIgnoreCase(cookie.getName())
+                        || "accessToken".equalsIgnoreCase(cookie.getName())) {
                     if (StringUtils.hasText(cookie.getValue())) {
                         return cookie.getValue().trim();
                     }

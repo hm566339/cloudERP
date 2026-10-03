@@ -12,6 +12,7 @@ import com.erp.auth_service.utility.MembershipStatus;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -91,9 +93,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String path = request.getServletPath();
-            String authHeader = request.getHeader("Authorization");
+            String token = extractToken(request);
 
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            if (!StringUtils.hasText(token)) {
                 if (path.startsWith("/api/admin/")) {
                     rejectUnauthorized(response, "Platform admin authorization required");
                     return;
@@ -101,8 +103,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
-
-            String token = authHeader.substring(7).trim();
 
             if (!jwtService.isTokenValid(token)) {
                 rejectUnauthorized(response, "Invalid token");
@@ -304,6 +304,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             rejectForbidden(response, "Organization is read-only");
                             return;
                         }
+                    } else {
+                        RequestContext.set(
+                                session.getUser().getId(),
+                                null,
+                                session.getCompany() != null ? session.getCompany().getId() : null,
+                                session.getModule() != null ? session.getModule().getClientId() : null,
+                                AccessMode.FULL);
                     }
 
                     List<SimpleGrantedAuthority> authorities = jwtService.extractRoles(token)
@@ -356,6 +363,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || HttpMethod.PUT.matches(request.getMethod())
                 || HttpMethod.PATCH.matches(request.getMethod())
                 || HttpMethod.DELETE.matches(request.getMethod());
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7).trim();
+        }
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("ACCESS_TOKEN".equalsIgnoreCase(cookie.getName())
+                        || "access_token".equalsIgnoreCase(cookie.getName())
+                        || "accessToken".equalsIgnoreCase(cookie.getName())) {
+                    if (StringUtils.hasText(cookie.getValue())) {
+                        return cookie.getValue().trim();
+                    }
+                }
+            }
+        }
+        return null;
     }
 
 }

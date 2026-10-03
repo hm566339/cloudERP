@@ -1740,7 +1740,9 @@ public class AuthServiceImpl implements AuthService {
 
                         for (Cookie cookie : cookies) {
 
-                                if ("accessToken".equals(cookie.getName())
+                                if (("ACCESS_TOKEN".equalsIgnoreCase(cookie.getName())
+                                                || "access_token".equalsIgnoreCase(cookie.getName())
+                                                || "accessToken".equalsIgnoreCase(cookie.getName()))
                                                 && cookie.getValue() != null
                                                 && !cookie.getValue().isBlank()) {
 
