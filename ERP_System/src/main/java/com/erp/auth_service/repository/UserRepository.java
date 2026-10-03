@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,8 +33,11 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
     // ================= LOGIN =================
 
-    @EntityGraph(attributePaths = { "userRoles", "userRoles.role" })
+    @EntityGraph(attributePaths = { "userRoles", "userRoles.role", "company" })
     Optional<User> findByUsernameIgnoreCaseOrEmailIgnoreCase(String username, String email);
+
+    @EntityGraph(attributePaths = { "userRoles", "userRoles.role", "company" })
+    List<User> findAllByUsernameIgnoreCaseOrEmailIgnoreCase(String username, String email);
 
     @Query("""
                 SELECT DISTINCT u FROM User u

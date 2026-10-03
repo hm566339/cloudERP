@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
@@ -20,9 +22,18 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String usernameOrEmail)
             throws UsernameNotFoundException {
-        User user = userRepository
-                .findByUsernameIgnoreCaseOrEmailIgnoreCase(usernameOrEmail.trim(), usernameOrEmail.trim())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        List<User> users = userRepository
+                .findAllByUsernameIgnoreCaseOrEmailIgnoreCase(usernameOrEmail.trim(), usernameOrEmail.trim());
+
+        if (users == null || users.isEmpty()) {
+            throw new UsernameNotFoundException("User not found");
+        }
+
+        // Prioritize root company (000000) or active account if multiple exist across tenants
+        User user = users.stream()
+                .filter(u -> u.getCompany() != null && "000000".equals(u.getCompany().getCompanyCode()))
+                .findFirst()
+                .orElse(users.get(0));
 
         return new CustomUserDetails(user);
     }

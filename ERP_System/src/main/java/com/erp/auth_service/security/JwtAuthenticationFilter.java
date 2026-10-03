@@ -279,7 +279,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (username != null
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                var userDetails = userDetailsService.loadUserByUsername(username);
+                CustomUserDetails userDetails = new CustomUserDetails(session.getUser());
 
                 if (jwtService.isTokenValid(token, userDetails.getUsername())) {
 
