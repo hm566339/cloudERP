@@ -94,6 +94,7 @@ logging:
 api:
   frontend: ${APP_FRONTEND_URL}
   base: ${SSO_BASE_URL}
+  internal-base: ${SSO_INTERNAL_URL:http://auth-service:8090}
   createCompany: ${CREATE_ADMIN_COMPANY:true}
   cookie:
     secure: ${COOKIE_SECURE:false}

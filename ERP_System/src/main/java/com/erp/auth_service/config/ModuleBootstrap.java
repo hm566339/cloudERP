@@ -22,8 +22,8 @@ public class ModuleBootstrap implements CommandLineRunner {
         private final ModuleRepository moduleRepository;
         private final ModuleRouteRepository moduleRouteRepository;
 
-        @Value("${api.base}")
-        private String BASE_URL;
+        @Value("${api.internal-base:http://auth-service:8090}")
+        private String INTERNAL_BASE_URL;
 
         @Override
         public void run(String... args) {
@@ -45,21 +45,24 @@ public class ModuleBootstrap implements CommandLineRunner {
 
                 String routePattern = "/api/sso/**";
 
-                moduleRouteRepository.findByApiPattern(routePattern)
-                                .orElseGet(() -> moduleRouteRepository.save(
-                                                ModuleRoute.builder()
-                                                                .module(systemAdminModule)
-                                                                .apiPattern(routePattern)
-                                                                .serviceUrl(BASE_URL)
-                                                                .routeOrder(1)
-                                                                .active(true)
-                                                                .build()));
+                ModuleRoute moduleRoute = moduleRouteRepository.findByApiPattern(routePattern)
+                                .orElseGet(() -> ModuleRoute.builder()
+                                                .module(systemAdminModule)
+                                                .apiPattern(routePattern)
+                                                .routeOrder(1)
+                                                .build());
+
+                // Ensure the route always points to the internal Docker service URL and is active
+                moduleRoute.setModule(systemAdminModule);
+                moduleRoute.setServiceUrl(INTERNAL_BASE_URL);
+                moduleRoute.setActive(true);
+                moduleRouteRepository.save(moduleRoute);
 
                 System.out.println("==============================================");
                 System.out.println("SYSTEM ADMIN MODULE REGISTERED");
                 System.out.println("MODULE : SYSTEM_ADMIN");
                 System.out.println("ROUTE  : " + routePattern);
-                System.out.println("TARGET : " + BASE_URL);
+                System.out.println("TARGET : " + INTERNAL_BASE_URL);
                 System.out.println("==============================================");
         }
 }

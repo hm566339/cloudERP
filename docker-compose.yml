@@ -63,6 +63,7 @@ services:
       STRAPI_SERVER: http://auth-service:8090
       STRAPI_TOKEN: ${STRAPI_TOKEN:-}
       SSO_BASE_URL: ${AUTH_SERVICE_EXTERNAL_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/api/sso}
+      SSO_INTERNAL_URL: ${SSO_INTERNAL_URL:-http://auth-service:8090}
       APP_FRONTEND_URL: ${FRONTEND_EXTERNAL_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}

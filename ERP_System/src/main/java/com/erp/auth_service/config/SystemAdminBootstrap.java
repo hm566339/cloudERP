@@ -34,7 +34,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SystemAdminBootstrap implements CommandLineRunner {
 
-        @Value("${api.base}")
+        @Value("${api.internal-base:http://auth-service:8090}")
         private String hostname;
 
         private final CompanyRepository companyRepository;
@@ -141,14 +141,17 @@ public class SystemAdminBootstrap implements CommandLineRunner {
                                                                 .build()));
 
                 ModuleRoute moduleRoute = moduleRouteRepository.findByModule_Id(adminModule.getId())
-                                .orElseGet(() -> moduleRouteRepository.save(
-                                                ModuleRoute.builder()
-                                                                .module(adminModule)
-                                                                .apiPattern("/api/sso/**")
-                                                                .serviceUrl(hostname)
-                                                                .routeOrder(0)
-                                                                .active(true)
-                                                                .build()));
+                                .orElseGet(() -> ModuleRoute.builder()
+                                                .module(adminModule)
+                                                .apiPattern("/api/sso/**")
+                                                .routeOrder(0)
+                                                .build());
+
+                moduleRoute.setModule(adminModule);
+                moduleRoute.setApiPattern("/api/sso/**");
+                moduleRoute.setServiceUrl(hostname);
+                moduleRoute.setActive(true);
+                moduleRouteRepository.save(moduleRoute);
 
                 // Ensure company-module mapping exists for system company
                 CompanyModule companyModule = companyModuleRepository

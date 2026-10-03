@@ -4,6 +4,7 @@ import com.erp.gateway_service.dto.ModuleRouteResponse;
 import com.erp.gateway_service.service.RouteProviderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +24,9 @@ public class GatewayConfig {
     private static final Logger log = LoggerFactory.getLogger(GatewayConfig.class);
 
     private final RouteProviderService routeProviderService;
+
+    @Value("${auth.service.base-url:${auth.server.base-uri:http://auth-service:8090}}")
+    private String authServiceBaseUrl;
 
     public GatewayConfig(RouteProviderService routeProviderService) {
         this.routeProviderService = routeProviderService;
@@ -113,28 +117,28 @@ public class GatewayConfig {
                             return;
                         }
 
-                        log.info("Registering route: id={}, apiPattern={}, serviceUrl={}, order={}",
-                                route.getId(), pattern, serviceUrl, route.getRouteOrder());
                         if (!pattern.startsWith("/")) {
                             pattern = "/" + pattern;
                         }
 
-                        // log.info("""
+                        // Remove trailing slashes to prevent malformed double-slash target URIs
+                        while (serviceUrl.endsWith("/")) {
+                            serviceUrl = serviceUrl.substring(0, serviceUrl.length() - 1);
+                        }
 
-                        // ==========================================
-                        // Registering Dynamic Route
-                        // ID : {}
-                        // Pattern : {}
-                        // Target URL : {}
-                        // Order : {}
-                        // Active : {}
-                        // ==========================================
-                        // """,
-                        // route.getId(),
-                        // pattern,
-                        // serviceUrl,
-                        // route.getRouteOrder(),
-                        // route.getActive());
+                        // Prevent routing loop if auth route was registered with public external URL or duplicate /api/sso path
+                        if (pattern.startsWith("/api/sso") && (serviceUrl.contains("mark2.in") || serviceUrl.endsWith("/api/sso"))) {
+                            String internalTarget = StringUtils.hasText(authServiceBaseUrl) ? authServiceBaseUrl.trim() : "http://auth-service:8090";
+                            while (internalTarget.endsWith("/")) {
+                                internalTarget = internalTarget.substring(0, internalTarget.length() - 1);
+                            }
+                            log.warn("Overriding external/public serviceUrl '{}' for auth route {} with internal service URL: {}",
+                                    serviceUrl, pattern, internalTarget);
+                            serviceUrl = internalTarget;
+                        }
+
+                        log.info("Registering route: id={}, apiPattern={}, serviceUrl={}, order={}",
+                                route.getId(), pattern, serviceUrl, route.getRouteOrder());
 
                         final String finalPattern = pattern;
                         final String finalServiceUrl = serviceUrl;
