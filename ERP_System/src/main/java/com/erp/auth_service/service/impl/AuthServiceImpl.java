@@ -2056,11 +2056,18 @@ public class AuthServiceImpl implements AuthService {
 
                 String input = request.getUsername().trim();
 
-                User user = userRepository
-                                .findByUsernameIgnoreCaseOrEmailIgnoreCaseWithRoles(input, input)
+                Company rootCompany = companyRepository
+                                .findByCompanyCode("000000")
                                 .orElseThrow(() -> {
-                                        log.warn("Admin login failed - user not found | username={} | ip={}", input, ip);
-                                        return new ResourceNotFoundException("User not found");
+                                        log.error("Admin login failed - root company 000000 not found | ip={}", ip);
+                                        return new ResourceNotFoundException("Root company not found");
+                                });
+
+                User user = userRepository
+                                .findUserWithRoles(rootCompany.getId(), input)
+                                .orElseThrow(() -> {
+                                        log.warn("Admin login failed - user not found in root company 000000 | input={} | ip={}", input, ip);
+                                        return new BadCredentialsException("You are not authorized for admin login");
                                 });
 
                 boolean isSystemAdmin = user.getUserRoles() != null

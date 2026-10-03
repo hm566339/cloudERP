@@ -96,18 +96,28 @@ public class SystemAdminBootstrap implements CommandLineRunner {
                                         email);
                 }
 
-                User systemAdmin = existingUser.orElseGet(() -> userRepository.save(
-                                User.builder()
-                                                .company(systemCompany)
-                                                .empId("00.00.00.00.00")
-                                                .username("System001")
-                                                .email(email)
-                                                .fullName("System Admin")
-                                                .password(passwordEncoder.encode(password))
-                                                .accountStatus(AccountStatus.ACTIVE)
-                                                .emailStatus(Status.VERIFIED)
-                                                .failedLoginCount(0)
-                                                .build()));
+                User systemAdmin;
+                if (existingUser.isPresent()) {
+                        systemAdmin = existingUser.get();
+                        systemAdmin.setEmail(email);
+                        systemAdmin.setPassword(passwordEncoder.encode(password));
+                        systemAdmin.setAccountStatus(AccountStatus.ACTIVE);
+                        systemAdmin.setEmailStatus(Status.VERIFIED);
+                        userRepository.save(systemAdmin);
+                } else {
+                        systemAdmin = userRepository.save(
+                                        User.builder()
+                                                        .company(systemCompany)
+                                                        .empId("00.00.00.00.00")
+                                                        .username("System001")
+                                                        .email(email)
+                                                        .fullName("System Admin")
+                                                        .password(passwordEncoder.encode(password))
+                                                        .accountStatus(AccountStatus.ACTIVE)
+                                                        .emailStatus(Status.VERIFIED)
+                                                        .failedLoginCount(0)
+                                                        .build());
+                }
 
                 /*
                  * ASSIGN ROLE
