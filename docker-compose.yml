@@ -237,9 +237,34 @@ services:
       DB_URL: jdbc:postgresql://db:5432/inventory
       DB_USERNAME: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
+      SSO_BACKEND: http://auth-service:8090
+      COOKIE_PATH: ${COOKIE_PATH:-/}
+      SSO_CLIENT_ID: ${INVENTORY_SSO_CLIENT_ID:-}
+      SSO_CLIENT_SECRET: ${INVENTORY_SSO_CLIENT_SECRET:-}
+      FRONTEND_URL: ${INVENTORY_FRONTEND_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/inventory}
+      SSO_FRONTEND: ${INVENTORY_SSO_FRONTEND:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/inventory}
+      BASE_URL: ${INVENTORY_BASE_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/api/inventory}
+      SSO_LOGIN_URL: ${INVENTORY_SSO_LOGIN_URL:-${PUBLIC_BASE_URL:-https://www.mark2.in}/erp/login}
+      SSO_TRANSPORT: ${INVENTORY_SSO_TRANSPORT:-cookie}
+      SSO_CALLBACK_PATH: ${INVENTORY_SSO_CALLBACK_PATH:-/auth/callback}
+      SSO_COOKIE_NAME: ${INVENTORY_SSO_COOKIE_NAME:-ACCESS_TOKEN}
+      SSO_COOKIE_PATH: ${INVENTORY_SSO_COOKIE_PATH:-/}
+      SSO_COOKIE_SECURE: ${INVENTORY_SSO_COOKIE_SECURE:-false}
+      SSO_COOKIE_HTTP_ONLY: ${INVENTORY_SSO_COOKIE_HTTP_ONLY:-true}
+      SSO_COOKIE_SAME_SITE: ${INVENTORY_SSO_COOKIE_SAME_SITE:-Lax}
+      SSO_MODULE_NAME: ${INVENTORY_SSO_MODULE_NAME:-INVENTORY}
+      CORE_SERVICE_URL: http://account-service:8081
     depends_on:
       db:
         condition: service_healthy
+      auth-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8082/actuator/health || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
