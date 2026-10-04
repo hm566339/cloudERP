@@ -85,41 +85,41 @@ springdoc:
     enabled: true
 
 frontend:
-  base: ${FRONTEND_BASE}
-  url: ${FRONTEND_URL}
+  base: ${FRONTEND_BASE:}
+  url: ${FRONTEND_URL:}
 
 sso:
-  frontend: ${SSO_FRONTEND}
-  backend: ${SSO_BACKEND}
-  cookie: ${COOKIE_PATH}
+  frontend: ${SSO_FRONTEND:}
+  backend: ${SSO_BACKEND:http://auth-service:8090}
+  cookie: ${COOKIE_PATH:/}
 
-  base-url: ${BASE_URL}
-  login-url: ${SSO_LOGIN_URL}
+  base-url: ${BASE_URL:}
+  login-url: ${SSO_LOGIN_URL:}
 
-  client-id: ${SSO_CLIENT_ID}
-  client-secret: ${SSO_CLIENT_SECRET}
+  client-id: ${SSO_CLIENT_ID:}
+  client-secret: ${SSO_CLIENT_SECRET:}
 
-  transport: ${SSO_TRANSPORT}
-  callback-path: ${SSO_CALLBACK_PATH}
+  transport: ${SSO_TRANSPORT:cookie}
+  callback-path: ${SSO_CALLBACK_PATH:/auth/callback}
 
-  cookie-name: ${SSO_COOKIE_NAME}
-  cookie-path: ${SSO_COOKIE_PATH}
-  cookie-secure: ${SSO_COOKIE_SECURE}
-  cookie-http-only: ${SSO_COOKIE_HTTP_ONLY}
-  cookie-same-site: ${SSO_COOKIE_SAME_SITE}
+  cookie-name: ${SSO_COOKIE_NAME:ACCESS_TOKEN}
+  cookie-path: ${SSO_COOKIE_PATH:/}
+  cookie-secure: ${SSO_COOKIE_SECURE:false}
+  cookie-http-only: ${SSO_COOKIE_HTTP_ONLY:true}
+  cookie-same-site: ${SSO_COOKIE_SAME_SITE:Lax}
 
-  module-name: ${SSO_MODULE_NAME}
+  module-name: ${SSO_MODULE_NAME:ACCOUNT}
 
 core:
   service:
-    url: ${CORE_SERVICE_URL}
+    url: ${CORE_SERVICE_URL:http://account-service:8081}
 
 service:
   api:
-    inventory: ${INVENTORY_API_URL}
+    inventory: ${INVENTORY_API_URL:http://inventory-service:8082}
 inventory:
   integration:
-    token: ${CORE_SERVICE_TOKEN}
+    token: ${CORE_SERVICE_TOKEN:}
 
 expense:
   attachment:
