@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useAppSelector } from '../../app/hooks';
 import { selectIsAuthenticated, selectCurrentUser } from '../../features/auth/authSlice';
+import MarkLogo from '../../components/common/MarkLogo';
 
 // ERP Modules Data based on real system capabilities
 const ERP_MODULES = [
@@ -184,8 +185,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* LEFT: Existing ERP Logo & Product Name */}
           <Link to="/" className="flex items-center gap-3">
-            <img
-              src="/ChatGPT Image Sep 11, 2026, 03_03_31 AM.png"
+            <MarkLogo
+              variant="light"
               alt="Mark2 ERP Logo"
               className="h-9 w-auto object-contain"
             />
@@ -856,8 +857,8 @@ export default function LandingPage() {
       <footer className="border-t border-zinc-200 bg-white py-12 text-xs text-zinc-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img
-              src="/ChatGPT Image Sep 11, 2026, 03_03_31 AM.png"
+            <MarkLogo
+              variant="light"
               alt="Mark2 ERP Logo"
               className="h-7 w-auto object-contain"
             />

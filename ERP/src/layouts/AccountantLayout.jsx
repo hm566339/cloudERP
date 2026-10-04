@@ -23,6 +23,7 @@ import { hasPermission } from '../utils/rbacUtils'
 import { useAccessMode } from '../hooks/useAccessMode'
 import WorkspaceCard from '../features/account/components/WorkspaceCard'
 import CompanyDetailsPopup from '../features/account/components/CompanyDetailsPopup'
+import MarkLogo from '../components/common/MarkLogo'
 import { fetchAccountCompanies, selectAccountCompanies, clearAccountCompany } from '../features/account/store/accountCompanySlice'
 import SearchAccount from '../components/common/SearchAccount'
 import SubscriptionNoticeBanner from '../components/common/SubscriptionNoticeBanner'
@@ -192,7 +193,7 @@ export default function AccountantLayout() {
       {/* Brand */}
       <div className="h-[56px] px-6 flex items-center gap-3 shrink-0 bg-transparent border-b border-zinc-100/50">
         <div className="w-24 h-10 flex items-center justify-start transform transition-transform hover:scale-105">
-          <img src="/ChatGPT Image Sep 11, 2026, 03_03_31 AM.png" alt="Mark Logo" className="w-full h-full object-contain object-left" />
+          <MarkLogo variant="light" className="w-full h-full object-contain object-left" />
         </div>
         <span className="ml-auto text-[8px] font-bold bg-zinc-100 text-zinc-800 px-2.5 py-1 rounded-md border border-zinc-200/50 uppercase tracking-wider">
           Accountant

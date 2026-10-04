@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Shield, X, AlertCircle, CheckCircle, Info, AlertTriangle, Blocks, Zap, Sparkles } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { removeAlert } from '../features/notifications/notificationSlice'
+import MarkLogo from '../components/common/MarkLogo'
 
 // Single Toast Alert Item
 export function ToastAlert({ alert, onClose }) {
@@ -82,7 +83,7 @@ export default function AuthLayout() {
 
         {/* Top Logo */}
         <div className="relative z-10 mb-2 lg:mb-4">
-          <img src="/ChatGPT Image Sep 11, 2026, 03_03_31 AM.png" alt="Mark Logo" className="w-48 lg:w-[280px] h-auto object-contain object-left" />
+          <MarkLogo variant="dark" className="w-48 lg:w-[280px] h-auto object-contain object-left" />
         </div>
 
         {/* Middle Content */}
@@ -138,7 +139,7 @@ export default function AuthLayout() {
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative z-10 w-full min-h-full">
           {/* Mobile Logo */}
           <div className="lg:hidden mb-8 animate-fade-in-up">
-            <img src="/ChatGPT Image Sep 11, 2026, 03_03_31 AM.png" alt="Mark Logo" className="w-48 h-auto object-contain object-center" />
+            <MarkLogo variant="light" className="w-48 h-auto object-contain object-center" />
           </div>
 
           <div className="w-full flex justify-center px-2 sm:px-0 mx-auto">

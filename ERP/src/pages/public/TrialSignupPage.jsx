@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { organizationSignup } from '../../api/sso/auth';
 import { getSafeErrorMessage } from '../../utils/apiErrorHelper';
+import MarkLogo from '../../components/common/MarkLogo';
 
 const signupSchema = yup.object().shape({
   fullName: yup
@@ -223,8 +224,8 @@ export default function TrialSignupPage() {
       <header className="relative z-10 w-full border-b border-zinc-200/80 bg-white/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <img
-              src="/ChatGPT Image Sep 11, 2026, 03_03_31 AM.png"
+            <MarkLogo
+              variant="light"
               alt="Mark2 ERP"
               className="h-9 w-auto object-contain"
             />

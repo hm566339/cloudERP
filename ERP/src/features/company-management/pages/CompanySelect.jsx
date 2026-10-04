@@ -14,6 +14,7 @@ import { setCredentials } from '../../auth/authSlice'
 import { addAlert } from '../../notifications/notificationSlice'
 import { useLogoutApiMutation } from '../../auth/services/authApi'
 import { useRoutePath } from "../../../hooks/useRoutePath";
+import MarkLogo from '../../../components/common/MarkLogo';
 
 export default function CompanySelect() {
   const { buildPath } = useRoutePath();
@@ -179,7 +180,7 @@ export default function CompanySelect() {
 
         {/* Logo Area */}
         <div className="relative z-10 mb-2 lg:mb-4">
-          <img src="/ChatGPT Image Sep 11, 2026, 03_03_31 AM.png" alt="Mark Logo" className="w-48 lg:w-[280px] h-auto object-contain object-left" />
+          <MarkLogo variant="dark" className="w-48 lg:w-[280px] h-auto object-contain object-left" />
         </div>
 
         {/* Hero Text */}
@@ -229,7 +230,7 @@ export default function CompanySelect() {
         {/* Top Bar for Mobile & Logout */}
         <div className="flex items-center justify-between p-6 lg:p-8 shrink-0">
           <div className="lg:hidden">
-            <img src="/ChatGPT Image Sep 11, 2026, 03_03_31 AM.png" alt="Mark Logo" className="w-40 h-auto object-contain object-left" />
+            <MarkLogo variant="light" className="w-40 h-auto object-contain object-left" />
           </div>
 
           <div className="ml-auto">
