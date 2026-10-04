@@ -30,7 +30,7 @@ public class Subscription {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plan_id")
-    private Plan plan;
+    private SubscriptionPlan plan;
 
     @Column(name = "plan_code", nullable = false, length = 80)
     @Builder.Default

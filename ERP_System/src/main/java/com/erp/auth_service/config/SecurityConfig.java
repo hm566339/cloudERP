@@ -129,6 +129,18 @@ public class SecurityConfig {
                                                 .authenticated()
                                                 .requestMatchers(HttpMethod.GET, "/api/sso/user/**")
                                                 .authenticated()
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/api/sso/subscription-plans",
+                                                                "/api/sso/subscription-plans/**")
+                                                .authenticated()
+                                                .requestMatchers(
+                                                                "/api/sso/company-subscriptions",
+                                                                "/api/sso/company-subscriptions/**")
+                                                .authenticated()
+                                                .requestMatchers(
+                                                                "/api/sso/subscription-plans",
+                                                                "/api/sso/subscription-plans/**")
+                                                .hasAnyAuthority("SYSTEM_ADMIN", "ROLE_SUPER_ADMIN", "ROLE_PLATFORM_SUPPORT", "OWNER")
 
                                                 // ================= ADMIN ONLY =================
                                                 .anyRequest()

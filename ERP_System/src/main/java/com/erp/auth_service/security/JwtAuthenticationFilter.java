@@ -96,7 +96,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = extractToken(request);
 
             if (!StringUtils.hasText(token)) {
-                if (path.startsWith("/api/admin/")) {
+                if (path.startsWith("/api/admin/") || path.startsWith("/api/sso/admin/")) {
                     rejectUnauthorized(response, "Platform admin authorization required");
                     return;
                 }
@@ -121,7 +121,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // ==================== PLATFORM ADMIN REQUESTS (/api/admin/**)
             // ====================
-            if (path.startsWith("/api/admin/")) {
+            if (path.startsWith("/api/admin/") || path.startsWith("/api/sso/admin/")) {
                 if (!"PLATFORM_ADMIN".equals(principalType)) {
                     rejectForbidden(response,
                             "Access denied: Customer tokens are not authorized for platform administration");

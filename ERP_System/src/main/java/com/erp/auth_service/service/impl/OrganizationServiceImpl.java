@@ -42,6 +42,9 @@ public class OrganizationServiceImpl implements OrganizationService {
         private final PasswordEncoder passwordEncoder;
         private final com.erp.auth_service.service.PermissionService permissionService;
         private final EmailService emailService;
+        private final SubscriptionPlanRepository subscriptionPlanRepository;
+        private final SubscriptionPlanModuleRepository subscriptionPlanModuleRepository;
+        private final CompanySubscriptionRepository companySubscriptionRepository;
 
         @Value("${api.frontend}")
         private String frontendBaseUrl;
@@ -111,10 +114,51 @@ public class OrganizationServiceImpl implements OrganizationService {
                 User savedUser = user;
                 Company savedCompany = company;
                 Organization savedOrganization = organization;
-                List<Module> activeModules = moduleRepository.findByModuleStatus(true).stream()
-                                .filter(m -> !"SYSTEM_ADMIN".equalsIgnoreCase(m.getName()))
-                                .toList();
-                for (Module module : activeModules) {
+
+                // 1. Find configured trial plan dynamically from database
+                SubscriptionPlan trialPlan = subscriptionPlanRepository.findFirstByIsTrialTrueAndActiveTrue()
+                                .or(() -> subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("30_DAY_FREE_TRIAL"))
+                                .or(() -> subscriptionPlanRepository.findByActiveTrue().stream().findFirst())
+                                .orElse(null);
+
+                int effectiveTrialDays = (trialPlan != null && trialPlan.getDurationDays() != null && trialPlan.getDurationDays() > 0)
+                                ? trialPlan.getDurationDays()
+                                : trialDays;
+
+                LocalDateTime startedAt = LocalDateTime.now();
+                LocalDateTime trialEndsAt = startedAt.plusDays(effectiveTrialDays);
+
+                // 2. Create company_subscription for primary company
+                if (trialPlan != null) {
+                        companySubscriptionRepository.save(CompanySubscription.builder()
+                                        .company(savedCompany)
+                                        .plan(trialPlan)
+                                        .startAt(startedAt)
+                                        .endAt(trialEndsAt)
+                                        .status(CompanySubscriptionStatus.TRIALING)
+                                        .autoRenew(false)
+                                        .build());
+                }
+
+                // 3. Read modules assigned to that plan from database (NO HARDCODING)
+                List<Module> provisionedModules = new java.util.ArrayList<>();
+                if (trialPlan != null) {
+                        List<SubscriptionPlanModule> planModules = subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(trialPlan.getId());
+                        for (SubscriptionPlanModule spm : planModules) {
+                                Module mod = spm.getModule();
+                                if (mod != null && Boolean.TRUE.equals(mod.getModuleStatus()) && !"SYSTEM_ADMIN".equalsIgnoreCase(mod.getName())) {
+                                        provisionedModules.add(mod);
+                                }
+                        }
+                } else {
+                        // Fallback only if no subscription plan has been configured in the database yet
+                        provisionedModules = moduleRepository.findByModuleStatus(true).stream()
+                                        .filter(m -> !"SYSTEM_ADMIN".equalsIgnoreCase(m.getName()))
+                                        .toList();
+                }
+
+                // 4. Provision company_module and user_portal_access for only the plan modules
+                for (Module module : provisionedModules) {
                         CompanyModule companyModule = companyModuleRepository.save(CompanyModule.builder()
                                         .company(savedCompany)
                                         .module(module)
@@ -134,7 +178,7 @@ public class OrganizationServiceImpl implements OrganizationService {
                                                 .status(true).build()));
                 userRoleRepository.save(UserRole.builder().user(user).role(ownerRole).build());
                 permissionService.assignOwnerRolePermissions(ownerRole,
-                                activeModules.stream().map(Module::getName).toList(),
+                                provisionedModules.stream().map(Module::getName).toList(),
                                 user.getId());
 
                 OrganizationMember member = memberRepository.save(OrganizationMember.builder()
@@ -150,15 +194,16 @@ public class OrganizationServiceImpl implements OrganizationService {
                                 .active(true)
                                 .build());
 
-                LocalDateTime startedAt = LocalDateTime.now();
                 Subscription subscription = subscriptionRepository.save(Subscription.builder()
                                 .organization(organization)
+                                .plan(trialPlan)
+                                .planCode(trialPlan != null ? trialPlan.getCode() : "TRIAL")
                                 .status(SubscriptionStatus.TRIALING)
                                 .accessMode(AccessMode.FULL)
                                 .trialStartedAt(startedAt)
-                                .trialEndsAt(startedAt.plusDays(trialDays))
+                                .trialEndsAt(trialEndsAt)
                                 .currentPeriodStart(startedAt)
-                                .currentPeriodEnd(startedAt.plusDays(trialDays))
+                                .currentPeriodEnd(trialEndsAt)
                                 .build());
 
                 String loginUrl = loginUrl(organization.getOrganizationCode());

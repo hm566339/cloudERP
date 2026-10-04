@@ -25,6 +25,14 @@ export const SETTINGS_MENU_ITEMS = [
     category: 'Security',
   },
   {
+    id: 'subscription_plans',
+    title: 'Subscription Plans',
+    description: 'Plans & module entitlements',
+    icon: Boxes,
+    route: '/settings/plans',
+    category: 'System',
+  },
+  {
     id: 'notifications',
     title: 'Notifications',
     description: 'Email & system alerts',

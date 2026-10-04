@@ -415,6 +415,7 @@ const NotificationsSettings = lazy(() => import("../pages/settings/Notifications
 const IntegrationsSettings = lazy(() => import("../pages/settings/IntegrationsSettings"));
 const AuditLogsSettings = lazy(() => import("../pages/settings/AuditLogsSettings"));
 const PreferencesSettings = lazy(() => import("../pages/settings/PreferencesSettings"));
+const SubscriptionPlansSettings = lazy(() => import("../pages/settings/SubscriptionPlansSettings"));
 
 export default function AppRoutes() {
   const isRehydrated = useAppSelector(selectIsRehydrated);
@@ -858,6 +859,7 @@ export default function AppRoutes() {
           <Route path="settings/notifications" element={<NotificationsSettings />} />
           <Route path="settings/security/roles" element={<RolePermissionsSettings />} />
           <Route path="settings/security/users" element={<UserPermissionsSettings />} />
+          <Route path="settings/plans" element={<SubscriptionPlansSettings />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="*" element={<CompanyEntryRedirect />} />
         </Route>
@@ -926,6 +928,7 @@ export default function AppRoutes() {
           <Route path="integrations" element={<IntegrationsSettings />} />
           <Route path="audit-logs" element={<AuditLogsSettings />} />
           <Route path="preferences" element={<PreferencesSettings />} />
+          <Route path="plans" element={<SubscriptionPlansSettings />} />
         </Route>
 
         {/* ── Fallback ── */}
