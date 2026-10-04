@@ -29,6 +29,10 @@ public interface AuthService {
 
     TokenResponse exchangeCodeForToken(String codeValue, UUID clientId);
 
+    TokenResponse exchangeCodeForToken(String codeValue, String clientId);
+
+    TokenResponse exchangeCodeForToken(String codeValue, String clientId, String clientSecret);
+
     String sendTokenForPassword(
             String companyCode,
             String email);
@@ -38,6 +42,8 @@ public interface AuthService {
     String resetPassword(PasswordReset passwordReset, String code);
 
     void validateClient(UUID clientId, String clientSecret);
+
+    void validateClient(String clientId, String clientSecret);
 
     TokenVerifyResponse verifyToken(String accessToken);
 

@@ -113,7 +113,14 @@ public class AuthController {
 
                         // Route to the Common ERP Shell workspace after successful authentication.
                         // The workspace is the new landing page for all ERP users after login.
-                        String redirectUrl = frontendUrl + "/workspace";
+                        String base = frontendUrl;
+                        if (base != null && base.endsWith("/accounts")) {
+                                base = base.substring(0, base.length() - "/accounts".length());
+                        }
+                        if (base != null && base.endsWith("/")) {
+                                base = base.substring(0, base.length() - 1);
+                        }
+                        String redirectUrl = (base != null && !base.isBlank()) ? base + "/workspace" : "/erp/workspace";
 
                         log.info(
                                         "Token exchange successful, redirecting to: {}",
@@ -127,6 +134,19 @@ public class AuthController {
                                         "Token exchange failed: {}",
                                         ex.getMessage(),
                                         ex);
+
+                        if (!response.isCommitted()) {
+                                String base = frontendUrl;
+                                if (base != null && base.endsWith("/accounts")) {
+                                        base = base.substring(0, base.length() - "/accounts".length());
+                                }
+                                if (base != null && base.endsWith("/")) {
+                                        base = base.substring(0, base.length() - 1);
+                                }
+                                String loginUrl = (base != null && !base.isBlank()) ? base + "/login?error=token_exchange_failed" : "/erp/login?error=token_exchange_failed";
+                                response.sendRedirect(loginUrl);
+                                return;
+                        }
 
                         throw new InternalServerException(
                                         "Token exchange failed", ex);

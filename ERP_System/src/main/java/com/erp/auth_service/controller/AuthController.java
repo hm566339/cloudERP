@@ -230,11 +230,13 @@ public class AuthController {
     public ResponseEntity<TokenResponse> exchange(
             @Valid @RequestBody RequestWrapper<TokenExchangeRequest> request) {
 
-        authService.validateClient(request.getData().getClientId(), request.getData().getClientSecret());
+        TokenExchangeRequest data = request.getData();
+        authService.validateClient(data.getClientId(), data.getClientSecret());
 
         return ResponseEntity.ok(authService.exchangeCodeForToken(
-                request.getData().getCode(),
-                request.getData().getClientId()));
+                data.getCode(),
+                data.getClientId(),
+                data.getClientSecret()));
     }
 
     // ================= REFRESH TOKEN =================

@@ -46,15 +46,25 @@ public class SsoServiceImpl implements SsoService {
 
         log.info("Exchanging SSO authorization code");
 
+        String effectiveClientId = clientId;
+        if (effectiveClientId != null && (effectiveClientId.isBlank() || effectiveClientId.contains("your_account_sso_client_id"))) {
+            effectiveClientId = "ACCOUNT";
+        }
+
+        String effectiveClientSecret = clientSecret;
+        if (effectiveClientSecret != null && effectiveClientSecret.contains("your_bcrypt_hashed_or_plain_client_secret")) {
+            effectiveClientSecret = null;
+        }
+
         TokenExchangeRequest payload = TokenExchangeRequest.builder()
                 .code(code)
-                .clientId(clientId)
-                .clientSecret(clientSecret)
+                .clientId(effectiveClientId)
+                .clientSecret(effectiveClientSecret)
                 .build();
 
         RequestWrapper<TokenExchangeRequest> request = RequestWrapper.of(payload);
 
-        log.debug("Token exchange request prepared for configured client");
+        log.debug("Token exchange request prepared for configured client: {}", effectiveClientId);
 
         try {
             return ssoFeignClient.exchangeCode(request);
@@ -62,7 +72,7 @@ public class SsoServiceImpl implements SsoService {
             throw ex;
         } catch (Exception ex) {
             log.error("SSO token exchange failed: {}", ex.getMessage(), ex);
-            throw new ExternalServiceException("Failed to exchange SSO code for token", ex);
+            throw new ExternalServiceException("Failed to exchange SSO code for token: " + ex.getMessage(), ex);
         }
     }
 

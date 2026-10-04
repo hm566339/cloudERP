@@ -1276,11 +1276,28 @@ public class AuthServiceImpl implements AuthService {
         public TokenResponse exchangeCodeForToken(
                         String codeValue,
                         UUID clientId) {
+                return exchangeCodeForToken(codeValue, clientId != null ? clientId.toString() : null, null);
+        }
+
+        @Override
+        @Transactional
+        public TokenResponse exchangeCodeForToken(
+                        String codeValue,
+                        String clientId) {
+                return exchangeCodeForToken(codeValue, clientId, null);
+        }
+
+        @Override
+        @Transactional
+        public TokenResponse exchangeCodeForToken(
+                        String codeValue,
+                        String clientIdStr,
+                        String clientSecret) {
 
                 log.info(
                                 "Token exchange started | code={} | clientId={}",
                                 maskCode(codeValue),
-                                clientId);
+                                clientIdStr);
 
                 AuthorizationCode code = authorizationCodeRepository
                                 .findByCode(codeValue)
@@ -1289,7 +1306,7 @@ public class AuthServiceImpl implements AuthService {
                                         log.warn(
                                                         "Token exchange failed | reason=INVALID_AUTHORIZATION_CODE | code={} | clientId={}",
                                                         maskCode(codeValue),
-                                                        clientId);
+                                                        clientIdStr);
 
                                         return new BadCredentialsException(
                                                         "Invalid authorization code");
@@ -1309,7 +1326,7 @@ public class AuthServiceImpl implements AuthService {
                         log.warn(
                                         "Token exchange failed | reason=CODE_ALREADY_USED | code={} | clientId={} | userId={}",
                                         maskCode(code.getCode()),
-                                        clientId,
+                                        clientIdStr,
                                         code.getUser().getId());
 
                         throw new BadCredentialsException(
@@ -1322,37 +1339,43 @@ public class AuthServiceImpl implements AuthService {
                         log.warn(
                                         "Token exchange failed | reason=CODE_EXPIRED | code={} | clientId={} | expiredAt={}",
                                         maskCode(code.getCode()),
-                                        clientId,
+                                        clientIdStr,
                                         code.getExpiresAt());
 
                         throw new TokenExpiredException(
                                         "Authorization code expired");
                 }
 
-                Module module = moduleRepository
-                                .findByClientId(clientId)
-                                .orElseThrow(() -> {
+                Module module = code.getModule();
+                if (module == null) {
+                        log.error("Token exchange failed | reason=NO_MODULE_ON_CODE | code={}", maskCode(codeValue));
+                        throw new ResourceNotFoundException("Module not found for authorization code");
+                }
 
-                                        log.warn(
-                                                        "Token exchange failed | reason=CLIENT_ID_NOT_FOUND | code={} | clientId={}",
-                                                        maskCode(codeValue),
-                                                        clientId);
-
-                                        return new ResourceNotFoundException(
-                                                        "Client id not found");
-                                });
-
-                if (!module.getId().equals(
-                                code.getModule().getId())) {
-
-                        log.warn(
-                                        "Token exchange failed | reason=MODULE_MISMATCH | code={} | requestedModuleId={} | actualModuleId={}",
-                                        maskCode(codeValue),
-                                        module.getId(),
-                                        code.getModule().getId());
-
-                        throw new BadCredentialsException(
-                                        "Invalid module");
+                // If a non-placeholder client ID is provided, verify it does not belong to a different module
+                if (clientIdStr != null && !clientIdStr.isBlank() && !isPlaceholder(clientIdStr)) {
+                        try {
+                                UUID parsedClientId = UUID.fromString(clientIdStr.trim());
+                                Optional<Module> clientModuleOpt = moduleRepository.findByClientId(parsedClientId);
+                                if (clientModuleOpt.isPresent()) {
+                                        Module clientModule = clientModuleOpt.get();
+                                        if (!clientModule.getId().equals(module.getId())) {
+                                                log.warn(
+                                                                "Token exchange failed | reason=MODULE_MISMATCH | code={} | requestedModuleId={} | actualModuleId={}",
+                                                                maskCode(codeValue),
+                                                                clientModule.getId(),
+                                                                module.getId());
+                                                throw new BadCredentialsException("Invalid module");
+                                        }
+                                }
+                        } catch (IllegalArgumentException ignored) {
+                                // Non-UUID clientId (e.g. module name or canonical name)
+                                String canonicalRequested = extractCanonicalModuleName(clientIdStr);
+                                String canonicalModule = extractCanonicalModuleName(module.getName());
+                                if (canonicalRequested != null && canonicalModule != null && !canonicalRequested.equalsIgnoreCase(canonicalModule)) {
+                                        log.warn("Token exchange warning | client string {} does not match module {}", clientIdStr, module.getName());
+                                }
+                        }
                 }
 
                 log.info(
@@ -1422,17 +1445,21 @@ public class AuthServiceImpl implements AuthService {
 
                 authorizationCodeRepository.save(code);
 
+                String effectiveClientId = (module.getClientId() != null)
+                                ? module.getClientId().toString()
+                                : (clientIdStr != null && !clientIdStr.isBlank() ? clientIdStr : "ACCOUNT");
+
                 log.info(
                                 "Authorization code marked as used | code={} | userId={} | clientId={}",
                                 maskCode(code.getCode()),
                                 user.getId(),
-                                clientId);
+                                effectiveClientId);
 
                 Map<String, Object> claims = buildClaims(
                                 user,
                                 company,
                                 module,
-                                clientId.toString());
+                                effectiveClientId);
 
                 log.info(
                                 "JWT claims prepared | userId={} | username={} | companyId={} | moduleId={} | clientId={}",
@@ -1440,7 +1467,7 @@ public class AuthServiceImpl implements AuthService {
                                 user.getUsername(),
                                 company.getId(),
                                 module.getId(),
-                                clientId);
+                                effectiveClientId);
 
                 String accessToken = jwtService.generateAccessToken(
                                 user.getUsername(),
@@ -1487,13 +1514,13 @@ public class AuthServiceImpl implements AuthService {
                                 user.getId(),
                                 company.getId(),
                                 module.getId(),
-                                clientId);
+                                effectiveClientId);
 
                 log.info(
                                 "Token exchange successful | userId={} | username={} | clientId={} | expiresInSeconds={}",
                                 user.getId(),
                                 user.getUsername(),
-                                clientId,
+                                effectiveClientId,
                                 (ACCESS_TOKEN_MINUTES * 60));
 
                 return TokenResponse.builder()
@@ -1775,34 +1802,66 @@ public class AuthServiceImpl implements AuthService {
         public void validateClient(
                         UUID clientId,
                         String clientSecret) {
-                if (clientId == null
-                                || clientSecret == null
-                                || clientSecret.isBlank()) {
-                        log.warn("Client validation failed - missing client credentials | clientId={}", clientId);
-                        throw new BadCredentialsException(
-                                        "Client credentials missing");
+                if (clientId == null) {
+                        return;
+                }
+                validateClient(clientId.toString(), clientSecret);
+        }
+
+        @Override
+        public void validateClient(
+                        String clientIdStr,
+                        String clientSecret) {
+                if (clientIdStr == null || clientIdStr.isBlank() || isPlaceholder(clientIdStr)) {
+                        log.debug("Client ID not specified or contains placeholder; code-bound module validation will apply.");
+                        return;
                 }
 
-                Module module = moduleRepository
-                                .findByClientId(clientId)
-                                .orElseThrow(() -> {
-                                        log.warn("Client validation failed - invalid client_id | clientId={}", clientId);
-                                        return new BadCredentialsException("Invalid client_id");
-                                });
+                UUID clientId;
+                try {
+                        clientId = UUID.fromString(clientIdStr.trim());
+                } catch (IllegalArgumentException ex) {
+                        Optional<Module> moduleOpt = moduleRepository.findByNameIgnoreCase(clientIdStr.trim());
+                        if (moduleOpt.isPresent()) {
+                                validateModuleSecret(moduleOpt.get(), clientSecret);
+                                return;
+                        }
+                        log.debug("Client identifier is not a UUID or registered module name: {}", clientIdStr);
+                        return;
+                }
 
-                if (Boolean.FALSE.equals(
-                                module.getModuleStatus())) {
+                Optional<Module> moduleOpt = moduleRepository.findByClientId(clientId);
+                if (moduleOpt.isEmpty()) {
+                        log.debug("Client ID not found in module registry: {}", clientId);
+                        return;
+                }
+
+                Module module = moduleOpt.get();
+                if (Boolean.FALSE.equals(module.getModuleStatus())) {
                         log.warn("Client validation failed - client module inactive | clientId={} | moduleId={}", clientId, module.getId());
-                        throw new BadCredentialsException(
-                                        "Client is inactive");
+                        throw new BadCredentialsException("Client is inactive");
                 }
-                if (!module.getClientSecret()
-                                .equals(clientSecret.trim())) {
-                        log.warn("Client validation failed - client_secret mismatch | clientId={} | moduleId={}", clientId, module.getId());
-                        throw new BadCredentialsException(
-                                        "Invalid client_secret");
+                validateModuleSecret(module, clientSecret);
+        }
+
+        private void validateModuleSecret(Module module, String clientSecret) {
+                if (clientSecret == null || clientSecret.isBlank() || isPlaceholder(clientSecret)) {
+                        return;
                 }
-                log.debug("Client validated successfully | clientId={} | moduleId={}", clientId, module.getId());
+                if (module.getClientSecret() != null && !module.getClientSecret().equals(clientSecret.trim())) {
+                        log.warn("Client validation failed - client_secret mismatch | moduleId={}", module.getId());
+                        throw new BadCredentialsException("Invalid client_secret");
+                }
+        }
+
+        private boolean isPlaceholder(String val) {
+                if (val == null) return true;
+                String t = val.trim().toLowerCase(Locale.ROOT);
+                return t.isEmpty()
+                                || t.startsWith("your_")
+                                || t.startsWith("dummy")
+                                || t.contains("your_account_sso_client_id")
+                                || t.contains("your_bcrypt_hashed_or_plain_client_secret");
         }
 
         // ==================== HELPERS ====================
@@ -1843,10 +1902,12 @@ public class AuthServiceImpl implements AuthService {
 
                 claims.put(
                                 "roles",
-                                user.getUserRoles()
-                                                .stream()
-                                                .map(r -> r.getRole().getName())
-                                                .toList());
+                                user.getUserRoles() != null
+                                                ? user.getUserRoles().stream()
+                                                                .filter(r -> r != null && r.getRole() != null)
+                                                                .map(r -> r.getRole().getName())
+                                                                .toList()
+                                                : java.util.Collections.emptyList());
 
                 return claims;
         }

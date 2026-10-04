@@ -64,5 +64,37 @@ public class ModuleBootstrap implements CommandLineRunner {
                 System.out.println("ROUTE  : " + routePattern);
                 System.out.println("TARGET : " + INTERNAL_BASE_URL);
                 System.out.println("==============================================");
+
+                // Ensure canonical standard ERP modules exist (idempotent)
+                bootstrapModuleIfMissing("ACCOUNT", "account-service.local", "/api/account/**", "http://account-service:8081");
+                bootstrapModuleIfMissing("INVENTORY", "inventory-service.local", "/api/inventory/**", "http://inventory-service:8082");
+                bootstrapModuleIfMissing("WORKFLOW", "workflow-service.local", "/api/workflow/**", "http://workflow-service:8083");
+        }
+
+        private void bootstrapModuleIfMissing(String moduleName, String host, String routePattern, String serviceUrl) {
+                Module module = moduleRepository.findByNameIgnoreCase(moduleName)
+                                .orElseGet(() -> {
+                                        Module newModule = Module.builder()
+                                                        .name(moduleName)
+                                                        .clientId(UUID.randomUUID())
+                                                        .clientSecret(UUID.randomUUID().toString())
+                                                        .host(host)
+                                                        .moduleStatus(true)
+                                                        .build();
+                                        return moduleRepository.save(newModule);
+                                });
+
+                if (routePattern != null && serviceUrl != null) {
+                        ModuleRoute moduleRoute = moduleRouteRepository.findByApiPattern(routePattern)
+                                        .orElseGet(() -> ModuleRoute.builder()
+                                                        .module(module)
+                                                        .apiPattern(routePattern)
+                                                        .routeOrder(10)
+                                                        .build());
+                        moduleRoute.setModule(module);
+                        moduleRoute.setServiceUrl(serviceUrl);
+                        moduleRoute.setActive(true);
+                        moduleRouteRepository.save(moduleRoute);
+                }
         }
 }
