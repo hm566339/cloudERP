@@ -98,6 +98,9 @@ const AccountDashboard = lazy(
 const AdminDashboard = lazy(
   () => import("../features/admin/pages/AdminDashboard"),
 );
+const OwnerDashboard = lazy(
+  () => import("../features/dashboard/pages/OwnerDashboard"),
+);
 const SystemLogsPage = lazy(
   () => import("../features/admin/pages/SystemLogsPage"),
 );
@@ -462,6 +465,8 @@ export default function AppRoutes() {
       window.location.pathname.startsWith('/company') ||
       window.location.pathname.startsWith('/super-admin') ||
       window.location.pathname.startsWith('/workspace') ||
+      window.location.pathname.startsWith('/owner') ||
+      window.location.pathname.startsWith('/organization') ||
       window.location.pathname.startsWith('/inventory') ||
       window.location.pathname.startsWith('/crm') ||
       window.location.pathname.startsWith('/dashboard') ||
@@ -666,6 +671,20 @@ export default function AppRoutes() {
               <WorkspaceLandingRedirect />
             </ProtectedRoute>
           }
+        />
+
+        {/* ── ORGANIZATION OWNER DASHBOARD ───────────────────────────────── */}
+        <Route
+          path="/owner/dashboard"
+          element={
+            <ProtectedRoute requireCompany={false}>
+              <OwnerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/organization/dashboard"
+          element={<Navigate to="/owner/dashboard" replace />}
         />
 
         {/* ── ACCOUNTANT / USER ROUTES (Module Guard: ACCOUNT) ── */}

@@ -202,6 +202,14 @@ export function getPostLoginRedirectPath({ user = {}, role, dashboardPath } = {}
     return '/super-admin/dashboard'
   }
 
+  if (
+    userRole === 'owner' ||
+    user?.membership?.memberType === 'OWNER' ||
+    (Array.isArray(user?.roles) && user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER'))
+  ) {
+    return '/owner/dashboard'
+  }
+
   if (userRole === 'company_admin') {
     return companyId ? `/company/${companyId}` : '/company-select'
   }

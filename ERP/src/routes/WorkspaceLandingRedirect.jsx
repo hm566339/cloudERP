@@ -26,6 +26,20 @@ export default function WorkspaceLandingRedirect() {
     );
   }
 
+  // Priority 1: Organization Owner detection
+  const isOwner =
+    authContext?.membership?.memberType === 'OWNER' ||
+    authContext?.user?.role === 'owner' ||
+    authContext?.user?.membership?.memberType === 'OWNER' ||
+    (Array.isArray(authContext?.user?.roles) &&
+      authContext.user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
+    (Array.isArray(authContext?.roles) &&
+      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER'));
+
+  if (isOwner) {
+    return <Navigate to="/owner/dashboard" replace />;
+  }
+
   const entitledModules = getEntitledModules(authContext);
 
   if (entitledModules.length === 0) {

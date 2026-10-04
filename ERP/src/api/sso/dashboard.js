@@ -11,17 +11,25 @@ export const getDashboard = async (companyId) => {
   return response.data?.data || response.data;
 };
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 export const useGetDashboardMetricsQuery = (companyId, options = {}) => {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  useEffect(() => {
+
+  const fetchMetrics = useCallback(() => {
     if (options.skip || !companyId) return;
     setIsLoading(true);
-    getDashboard(companyId).then(res => {
-      setData(res);
-      setIsLoading(false);
-    }).catch(() => setIsLoading(false));
+    getDashboard(companyId)
+      .then((res) => {
+        setData(res);
+        setIsLoading(false);
+      })
+      .catch(() => setIsLoading(false));
   }, [companyId, options.skip]);
-  return { data, isLoading };
+
+  useEffect(() => {
+    fetchMetrics();
+  }, [fetchMetrics]);
+
+  return { data, isLoading, refetch: fetchMetrics };
 };

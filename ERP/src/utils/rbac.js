@@ -21,6 +21,7 @@ export {
 
 export const ROLES = {
   SUPER_ADMIN: 'super_admin',
+  OWNER: 'owner',
   COMPANY_ADMIN: 'company_admin',
   FINANCE_MANAGER: 'finance_manager',
   ACCOUNTANT: 'accountant',
@@ -41,6 +42,11 @@ export const rolePermissions = {
   [ROLES.SUPER_ADMIN]: {
     permissions: ['CREATE', 'READ', 'UPDATE', 'DELETE', 'APPROVE', 'EXPORT', 'PRINT'],
     modules: ['ALL_MODULES']
+  },
+  [ROLES.OWNER]: {
+    canCreate: true, canEdit: true, canDelete: true, canApprove: true,
+    permissions: ['CREATE', 'READ', 'UPDATE', 'DELETE', 'APPROVE', 'EXPORT', 'PRINT'],
+    modules: ['ALL_MODULES', 'ORGANIZATION', 'COMPANIES', 'DASHBOARD', 'REPORTS']
   },
   [ROLES.COMPANY_ADMIN]: {
     canCreate: true, canEdit: true, canDelete: true, canApprove: false,
@@ -187,6 +193,7 @@ export function normalizeRole(roleName) {
   const stripped = lower.replace(/[\s_]/g, '');
 
   if (stripped.includes('superadmin') || stripped === 'systemadmin') return ROLES.SUPER_ADMIN;
+  if (stripped === 'owner' || stripped === 'organizationowner') return ROLES.OWNER;
   if (stripped.includes('companyadmin')) return ROLES.COMPANY_ADMIN;
   if (stripped.includes('financemanager')) return ROLES.FINANCE_MANAGER;
   if (stripped.includes('glaccountant')) return ROLES.GL_ACCOUNTANT;
@@ -303,6 +310,7 @@ export function useRBAC() {
     canDeleteAction: (feat, mod) => checkCanDelete(authContext, feat, mod),
 
     isSuperAdmin,
+    isOwner: roleName === ROLES.OWNER || authContext?.membership?.memberType === 'OWNER',
     isCompanyAdmin: roleName === ROLES.COMPANY_ADMIN,
     isFinanceManager: roleName === ROLES.FINANCE_MANAGER,
     isAccountant: roleName === ROLES.ACCOUNTANT,
