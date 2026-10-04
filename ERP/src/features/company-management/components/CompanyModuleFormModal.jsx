@@ -98,7 +98,7 @@ export default function CompanyModuleFormModal({
           <CustomSelect
             options={companyOptions}
             value={formData.company}
-            onChange={(val) => setFormData({ ...formData, company: val })}
+            onChange={(e) => setFormData({ ...formData, company: e?.target?.value ?? e })}
             placeholder="Select a company"
             isLoading={loadingCompanies}
             disabled={isEdit || isSubmitting}
@@ -111,7 +111,7 @@ export default function CompanyModuleFormModal({
           <CustomSelect
             options={moduleOptions}
             value={formData.module}
-            onChange={(val) => setFormData({ ...formData, module: val })}
+            onChange={(e) => setFormData({ ...formData, module: e?.target?.value ?? e })}
             placeholder="Select a module"
             isLoading={loadingModules}
             disabled={isEdit || isSubmitting}
