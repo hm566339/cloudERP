@@ -47,6 +47,7 @@ public class SecurityConfig {
                                                 // ================= PUBLIC APIs =================
                                                 .requestMatchers(
                                                                 "/api/admin/auth/login",
+                                                                "/api/sso/admin/auth/login",
                                                                 "/api/sso/auth/login",
                                                                 "/api/billing/webhook/**",
                                                                 "/api/sso/auth/select-company",
@@ -87,28 +88,31 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/api/sso/user")
                                                 .permitAll()
 
-                                                // ================= PLATFORM ADMIN APIs =================
-                                                .requestMatchers("/api/admin/admins/**")
-                                                .hasAuthority("PERM_PLATFORM_ADMIN_MANAGE")
-                                                .requestMatchers("/api/admin/support-sessions/**")
-                                                .hasAuthority("PERM_PLATFORM_SUPPORT_ACCESS")
-                                                .requestMatchers("/api/admin/dashboard")
-                                                .hasAuthority("PERM_PLATFORM_DASHBOARD_READ")
-                                                .requestMatchers("/api/admin/organizations/*/subscription")
-                                                .hasAuthority("PERM_PLATFORM_SUBSCRIPTION_READ")
+                                                // ================= PLATFORM & SYSTEM ADMIN APIs =================
+                                                .requestMatchers("/api/admin/admins/**", "/api/sso/platform/admins/**")
+                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_ADMIN_MANAGE")
+                                                .requestMatchers("/api/admin/support-sessions/**", "/api/sso/admin/support-sessions/**")
+                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_SUPPORT_ACCESS")
+                                                .requestMatchers("/api/admin/dashboard", "/api/sso/admin/dashboard")
+                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_DASHBOARD_READ")
+                                                .requestMatchers("/api/admin/organizations/*/subscription", "/api/sso/admin/organizations/*/subscription")
+                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_SUBSCRIPTION_READ")
                                                 .requestMatchers("/api/admin/organizations/*/payments",
-                                                                "/api/admin/organizations/*/invoices")
-                                                .hasAnyAuthority("PERM_PLATFORM_PAYMENT_READ",
+                                                                "/api/admin/organizations/*/invoices",
+                                                                "/api/sso/admin/organizations/*/payments",
+                                                                "/api/sso/admin/organizations/*/invoices")
+                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_PAYMENT_READ",
                                                                 "PERM_PLATFORM_SUBSCRIPTION_READ")
-                                                .requestMatchers("/api/admin/organizations/*/members")
-                                                .hasAuthority("PERM_PLATFORM_USER_READ")
-                                                .requestMatchers("/api/admin/organizations/*/companies")
-                                                .hasAuthority("PERM_PLATFORM_COMPANY_READ")
-                                                .requestMatchers("/api/admin/organizations/**")
-                                                .hasAuthority("PERM_PLATFORM_ORGANIZATION_READ")
-                                                .requestMatchers("/api/admin/audit-logs/**")
-                                                .hasAuthority("PERM_PLATFORM_AUDIT_READ")
-                                                .requestMatchers("/api/admin/**").authenticated()
+                                                .requestMatchers("/api/admin/organizations/*/members", "/api/sso/admin/organizations/*/members")
+                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_USER_READ")
+                                                .requestMatchers("/api/admin/organizations/*/companies", "/api/sso/admin/organizations/*/companies")
+                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_COMPANY_READ")
+                                                .requestMatchers("/api/admin/organizations/**", "/api/sso/admin/organizations/**")
+                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_ORGANIZATION_READ")
+                                                .requestMatchers("/api/admin/audit-logs/**", "/api/sso/admin/audit-logs/**")
+                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_AUDIT_READ")
+                                                .requestMatchers("/api/admin/**", "/api/sso/admin/**", "/api/sso/platform/**")
+                                                .hasAnyAuthority("SYSTEM_ADMIN", "ROLE_PLATFORM_ADMIN")
 
                                                 // ================= AUTHENTICATED USER =================
                                                 .requestMatchers(

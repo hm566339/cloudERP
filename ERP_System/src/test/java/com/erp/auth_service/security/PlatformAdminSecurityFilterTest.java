@@ -129,4 +129,29 @@ class PlatformAdminSecurityFilterTest {
         assertTrue(response.getContentAsString().contains("Platform admin is inactive or disabled"));
         verifyNoInteractions(filterChain);
     }
+
+    @Test
+    @DisplayName("Filter: System Admin JWT calling /api/sso/admin/dashboard bypasses platform admin check")
+    void filter_SystemAdminOnAdminRoute_BypassesPlatformAdminRejection() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setServletPath("/api/sso/admin/dashboard");
+        request.addHeader("Authorization", "Bearer system.admin.jwt.token");
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        when(jwtDecoder.isTokenValid("system.admin.jwt.token")).thenReturn(true);
+        Claims claims = new DefaultClaims(Map.of(
+                "sub", "System001",
+                "userId", UUID.randomUUID().toString(),
+                "roles", List.of("SYSTEM_ADMIN"),
+                "loginType", "ADMIN",
+                "iss", "ADMIN_PANEL"
+        ));
+        when(jwtDecoder.extractClaims("system.admin.jwt.token")).thenReturn(claims);
+
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        // Should NOT be rejected with 403 Forbidden platform administration error
+        assertNotEquals(HttpServletResponse.SC_FORBIDDEN, response.getStatus());
+    }
 }

@@ -58,6 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
 
         return path.equals("/api/admin/auth/login")
+                || path.equals("/api/sso/admin/auth/login")
                 || path.equals("/api/sso/auth/login")
                 || path.startsWith("/api/billing/webhook/")
                 || path.equals("/api/sso/auth/select-company")
@@ -96,7 +97,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = extractToken(request);
 
             if (!StringUtils.hasText(token)) {
-                if (path.startsWith("/api/admin/") || path.startsWith("/api/sso/admin/")) {
+                if (path.startsWith("/api/admin/") || path.startsWith("/api/sso/admin/") || path.startsWith("/api/sso/platform/")) {
                     rejectUnauthorized(response, "Platform admin authorization required");
                     return;
                 }
@@ -118,57 +119,69 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             String principalType = claims.get("principalType", String.class);
+            boolean isPlatformAdmin = "PLATFORM_ADMIN".equals(principalType);
 
-            // ==================== PLATFORM ADMIN REQUESTS (/api/admin/**)
+            Object rolesObj = claims.get("roles");
+            boolean hasSystemAdminRole = false;
+            if (rolesObj instanceof List<?> rList) {
+                hasSystemAdminRole = rList.stream().anyMatch(r -> "SYSTEM_ADMIN".equals(String.valueOf(r)) || "ROLE_SYSTEM_ADMIN".equals(String.valueOf(r)));
+            }
+            boolean isSystemAdmin = hasSystemAdminRole
+                    || "SYSTEM_ADMIN".equals(claims.get("scope"))
+                    || "ADMIN".equals(claims.get("loginType"))
+                    || "ADMIN_PANEL".equals(claims.get("iss"));
+
+            // ==================== PLATFORM / SYSTEM ADMIN REQUESTS (/api/admin/**, /api/sso/admin/**, /api/sso/platform/**)
             // ====================
-            if (path.startsWith("/api/admin/") || path.startsWith("/api/sso/admin/")) {
-                if (!"PLATFORM_ADMIN".equals(principalType)) {
+            if (path.startsWith("/api/admin/") || path.startsWith("/api/sso/admin/") || path.startsWith("/api/sso/platform/")) {
+                if (!isPlatformAdmin && !isSystemAdmin) {
                     rejectForbidden(response,
                             "Access denied: Customer tokens are not authorized for platform administration");
                     return;
                 }
 
-                String adminIdStr = claims.get("adminId", String.class);
-                if (adminIdStr == null) {
-                    rejectUnauthorized(response, "Invalid admin token");
+                if (isPlatformAdmin) {
+                    String adminIdStr = claims.get("adminId", String.class);
+                    if (adminIdStr == null) {
+                        rejectUnauthorized(response, "Invalid admin token");
+                        return;
+                    }
+
+                    var adminOpt = platformAdminRepository.findById(UUID.fromString(adminIdStr));
+                    if (adminOpt.isEmpty() || adminOpt.get().getStatus() != PlatformAdminStatus.ACTIVE) {
+                        rejectForbidden(response, "Platform admin is inactive or disabled");
+                        return;
+                    }
+
+                    List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                    if (rolesObj instanceof List<?> rList) {
+                        for (Object r : rList) {
+                            authorities.add(new SimpleGrantedAuthority(String.valueOf(r)));
+                        }
+                    }
+                    Object permsObj = claims.get("permissions");
+                    if (permsObj instanceof List<?> pList) {
+                        for (Object p : pList) {
+                            authorities.add(new SimpleGrantedAuthority("PERM_" + p));
+                            authorities.add(new SimpleGrantedAuthority(String.valueOf(p)));
+                        }
+                    }
+
+                    PlatformAdminPrincipal principal = PlatformAdminPrincipal.builder()
+                            .adminId(adminOpt.get().getId())
+                            .email(adminOpt.get().getEmail())
+                            .fullName(adminOpt.get().getFullName())
+                            .authorities(authorities)
+                            .build();
+
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            principal, null, authorities);
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                    filterChain.doFilter(request, response);
                     return;
                 }
-
-                var adminOpt = platformAdminRepository.findById(UUID.fromString(adminIdStr));
-                if (adminOpt.isEmpty() || adminOpt.get().getStatus() != PlatformAdminStatus.ACTIVE) {
-                    rejectForbidden(response, "Platform admin is inactive or disabled");
-                    return;
-                }
-
-                List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-                Object rolesObj = claims.get("roles");
-                if (rolesObj instanceof List<?> rList) {
-                    for (Object r : rList) {
-                        authorities.add(new SimpleGrantedAuthority(String.valueOf(r)));
-                    }
-                }
-                Object permsObj = claims.get("permissions");
-                if (permsObj instanceof List<?> pList) {
-                    for (Object p : pList) {
-                        authorities.add(new SimpleGrantedAuthority("PERM_" + p));
-                        authorities.add(new SimpleGrantedAuthority(String.valueOf(p)));
-                    }
-                }
-
-                PlatformAdminPrincipal principal = PlatformAdminPrincipal.builder()
-                        .adminId(adminOpt.get().getId())
-                        .email(adminOpt.get().getEmail())
-                        .fullName(adminOpt.get().getFullName())
-                        .authorities(authorities)
-                        .build();
-
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        principal, null, authorities);
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-
-                filterChain.doFilter(request, response);
-                return;
             }
 
             // ==================== CUSTOMER ENDPOINTS ====================
@@ -313,10 +326,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 AccessMode.FULL);
                     }
 
-                    List<SimpleGrantedAuthority> authorities = jwtService.extractRoles(token)
+                    List<SimpleGrantedAuthority> authorities = new ArrayList<>(jwtService.extractRoles(token)
                             .stream()
                             .map(SimpleGrantedAuthority::new)
-                            .collect(Collectors.toList());
+                            .toList());
+                    if (isSystemAdmin && authorities.stream().noneMatch(a -> "SYSTEM_ADMIN".equals(a.getAuthority()))) {
+                        authorities.add(new SimpleGrantedAuthority("SYSTEM_ADMIN"));
+                    }
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
