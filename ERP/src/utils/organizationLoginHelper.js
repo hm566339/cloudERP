@@ -5,7 +5,7 @@
 /**
  * Builds login payload conforming strictly to backend LoginRequest contract
  */
-export function buildLoginPayload({ username, password, organizationCode, companyCode, host, companyId }) {
+export function buildLoginPayload({ username, password, organizationCode, companyCode, host, companyId, moduleCode }) {
   const trimmedUser = (username || '').trim();
   const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedUser);
 
@@ -29,6 +29,10 @@ export function buildLoginPayload({ username, password, organizationCode, compan
 
   if (host) {
     payload.host = host.trim();
+  }
+
+  if (moduleCode) {
+    payload.moduleCode = moduleCode.trim();
   }
 
   return payload;

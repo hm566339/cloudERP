@@ -23,6 +23,7 @@ import { extractRoleFromToken, parseJwt } from '../../../utils/rbac';
 import { getCookie } from '../../../utils/cookieHelper';
 import { useRoutePath } from '../../../hooks/useRoutePath';
 import { getSafeErrorMessage } from '../../../utils/apiErrorHelper';
+import { normalizeModuleName } from '../../../utils/moduleNormalization';
 
 const getModuleName = (code) => {
   if (!code) return 'Portal';
@@ -133,9 +134,11 @@ export default function Login() {
       sessionStorage.setItem('auth_redirect', destinationUrl);
 
       // Build payload matching backend LoginRequest contract
+      const targetModuleCode = moduleCode ? normalizeModuleName(moduleCode) : 'ACCOUNT';
       const loginPayload = {
         username: username.trim(),
         password,
+        moduleCode: targetModuleCode,
         ...(isOrgMode
           ? {
             organizationCode: (orgData?.code || organizationCode).toLowerCase(),

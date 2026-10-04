@@ -34,10 +34,25 @@ class OrganizationResolverServiceImplTest {
                 .build();
         when(organizationRepository.findByOrganizationCodeIgnoreCaseAndStatusNot("abc-group", OrganizationStatus.DELETED))
                 .thenReturn(Optional.of(organization));
-
         Organization result = new OrganizationResolverServiceImpl(organizationRepository).resolveByCode("abc-group");
-
         assertEquals("ABC Group", result.getDisplayName());
+    }
+
+    @Test
+    void resolvesUppercaseOrganizationCode() {
+        Organization organization = Organization.builder()
+                .id(UUID.randomUUID())
+                .organizationCode("mohit")
+                .displayName("Mohit")
+                .legalName("Mohit Enterprises")
+                .status(OrganizationStatus.ACTIVE)
+                .build();
+        when(organizationRepository.findByOrganizationCodeIgnoreCaseAndStatusNot("mohit", OrganizationStatus.DELETED))
+                .thenReturn(Optional.of(organization));
+
+        Organization result = new OrganizationResolverServiceImpl(organizationRepository).resolveByCode("MOHIT");
+
+        assertEquals("Mohit", result.getDisplayName());
     }
 
     @Test

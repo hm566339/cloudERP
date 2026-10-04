@@ -27,8 +27,12 @@ public class LoginRequest {
         private String companyCode;
 
         @Size(max = 120)
-        @Pattern(regexp = "^[a-z0-9]+(?:-[a-z0-9]+)*$", message = "Invalid organization code")
+        @Pattern(regexp = "^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$", message = "Invalid organization code")
         private String organizationCode;
 
         private java.util.UUID companyId;
+
+        private String moduleCode;
+
+        private String module;
 }

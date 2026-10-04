@@ -20,11 +20,15 @@ public class OrganizationResolverServiceImpl implements OrganizationResolverServ
     @Override
     @Transactional(readOnly = true)
     public Organization resolveByCode(String organizationCode) {
-        if (organizationCode == null || !organizationCode.matches("[a-z0-9]+(?:-[a-z0-9]+)*")) {
+        if (organizationCode == null || organizationCode.isBlank()) {
+            throw new BadRequestException("Invalid organization code");
+        }
+        String cleanCode = organizationCode.trim();
+        if (!cleanCode.matches("^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$")) {
             throw new BadRequestException("Invalid organization code");
         }
         return organizationRepository
-                .findByOrganizationCodeIgnoreCaseAndStatusNot(organizationCode.toLowerCase(Locale.ROOT), OrganizationStatus.DELETED)
+                .findByOrganizationCodeIgnoreCaseAndStatusNot(cleanCode.toLowerCase(Locale.ROOT), OrganizationStatus.DELETED)
                 .filter(organization -> organization.getStatus() == OrganizationStatus.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException("Organization not found"));
     }

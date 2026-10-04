@@ -400,18 +400,34 @@ public class AuthServiceImpl implements AuthService {
 
                 final String requestedHost = rawHost;
                 String resolvedHost = rawHost;
-
                 Module module;
                 CompanyModule companyModule;
 
-                if (requestedHost != null && !requestedHost.isBlank()) {
+                String targetModuleCode = request.getModuleCode() != null && !request.getModuleCode().isBlank()
+                                ? request.getModuleCode().trim()
+                                : (request.getModule() != null && !request.getModule().isBlank() ? request.getModule().trim() : null);
 
-                        Module foundModule = moduleRepository
-                                        .findByHost(requestedHost)
-                                        .orElseThrow(() -> {
-                                                log.warn("Login failed - module not found by host | host={} | userId={}", requestedHost, user.getId());
-                                                return new ResourceNotFoundException("Module not found");
-                                        });
+                if (targetModuleCode != null || (requestedHost != null && !requestedHost.isBlank())) {
+                        Module foundModule = null;
+                        if (targetModuleCode != null) {
+                                String canonical = extractCanonicalModuleName(targetModuleCode);
+                                foundModule = moduleRepository.findByNameIgnoreCase(canonical)
+                                                .orElseGet(() -> moduleRepository.findByNameIgnoreCase(targetModuleCode).orElse(null));
+                        }
+                        if (foundModule == null && requestedHost != null && !requestedHost.isBlank()) {
+                                foundModule = moduleRepository.findByHost(requestedHost.trim()).orElse(null);
+                                if (foundModule == null) {
+                                        String extracted = extractCanonicalModuleName(requestedHost);
+                                        if (extracted != null) {
+                                                foundModule = moduleRepository.findByNameIgnoreCase(extracted).orElse(null);
+                                        }
+                                }
+                        }
+                        if (foundModule == null) {
+                                log.warn("Login failed - module not found | moduleCode={} | host={} | userId={}",
+                                                targetModuleCode, requestedHost, user.getId());
+                                throw new ResourceNotFoundException("Module not found");
+                        }
 
                         final Module selectedModule = foundModule;
                         CompanyModule foundCompanyModule = companyModuleRepository
@@ -439,6 +455,9 @@ public class AuthServiceImpl implements AuthService {
                         module = portalAccess
                                         .getCompanyModule()
                                         .getModule();
+                        if (resolvedHost == null || resolvedHost.isBlank()) {
+                                resolvedHost = module.getHost();
+                        }
 
                 } else {
 
@@ -471,9 +490,16 @@ public class AuthServiceImpl implements AuthService {
 
                 authorizationCodeRepository.save(code);
 
-                String redirectUrl = resolvedHost
-                                + "/auth/callback?code="
-                                + codeValue;
+                String redirectBase = (resolvedHost != null && !resolvedHost.isBlank())
+                                ? resolvedHost.trim()
+                                : (module.getHost() != null ? module.getHost().trim() : "");
+                String redirectUrl;
+                if (redirectBase.isEmpty()) {
+                        redirectUrl = "/auth/callback?code=" + codeValue;
+                } else {
+                        String cleanBase = redirectBase.endsWith("/") ? redirectBase.substring(0, redirectBase.length() - 1) : redirectBase;
+                        redirectUrl = cleanBase + "/auth/callback?code=" + codeValue;
+                }
 
                 log.info("Login successful - authorization code issued | userId={} | companyId={} | moduleId={} | code={} | ip={}",
                                 user.getId(), company.getId(), module.getId(), maskCode(codeValue), ip);
@@ -599,30 +625,136 @@ public class AuthServiceImpl implements AuthService {
                 log.info("Organization login successful - authorization code issued | orgCode={} | companyId={} | userId={} | moduleId={} | code={}",
                                 organization.getOrganizationCode(), company.getId(), user.getId(), module.getId(), maskCode(codeValue));
 
+                String redirectBase = (request.getHost() != null && !request.getHost().isBlank())
+                                ? request.getHost().trim()
+                                : (module.getHost() != null ? module.getHost().trim() : "");
+                String redirectUrl;
+                if (redirectBase.isEmpty()) {
+                        redirectUrl = "/auth/callback?code=" + codeValue;
+                } else {
+                        String cleanBase = redirectBase.endsWith("/") ? redirectBase.substring(0, redirectBase.length() - 1) : redirectBase;
+                        redirectUrl = cleanBase + "/auth/callback?code=" + codeValue;
+                }
+
                 return LoginResponse.builder()
                                 .requiresCompanySelection(false)
                                 .organization(LoginResponse.OrganizationContext.builder()
                                                 .id(organization.getId()).name(organization.getDisplayName())
                                                 .code(organization.getOrganizationCode()).build())
-                                .redirectUrl(module.getHost() + "/auth/callback?code=" + codeValue)
+                                .redirectUrl(redirectUrl)
                                 .build();
         }
 
         private Module resolveOrganizationModule(LoginRequest request, Company company) {
-                if (request.getHost() != null && !request.getHost().isBlank()) {
-                        return moduleRepository.findByHost(request.getHost().trim())
-                                        .orElseThrow(() -> new ResourceNotFoundException("Module not found"));
+                String requestedModuleInput = request.getModuleCode() != null && !request.getModuleCode().isBlank()
+                                ? request.getModuleCode().trim()
+                                : (request.getModule() != null && !request.getModule().isBlank() ? request.getModule().trim() : null);
+
+                // If host is provided and no moduleCode, check if host matches exact DB host or has module path/slug
+                if (requestedModuleInput == null && request.getHost() != null && !request.getHost().isBlank()) {
+                        Optional<Module> hostModule = moduleRepository.findByHost(request.getHost().trim());
+                        if (hostModule.isPresent()) {
+                                return hostModule.get();
+                        }
+                        String extracted = extractCanonicalModuleName(request.getHost());
+                        if (extracted != null) {
+                                requestedModuleInput = extracted;
+                        }
                 }
-                return companyModuleRepository.findByCompany_IdAndActiveTrue(company.getId()).stream()
-                                .map(CompanyModule::getModule)
-                                .filter(m -> !"SYSTEM_ADMIN".equalsIgnoreCase(m.getName()))
-                                .findFirst()
-                                .orElseGet(() -> companyModuleRepository.findByCompany_IdAndActiveTrue(company.getId())
-                                                .stream()
-                                                .map(CompanyModule::getModule)
-                                                .findFirst()
-                                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                                "No module enabled for company")));
+
+                // If a module was specifically requested (either directly or extracted from host)
+                final String finalRequestedModule = requestedModuleInput;
+                if (finalRequestedModule != null) {
+                        String canonical = extractCanonicalModuleName(finalRequestedModule);
+                        return moduleRepository.findByNameIgnoreCase(canonical)
+                                        .orElseGet(() -> moduleRepository.findByNameIgnoreCase(finalRequestedModule)
+                                                        .orElseThrow(() -> new ResourceNotFoundException("Module not found")));
+                }
+
+                // If no specific module was requested, default canonical module for organization login is ACCOUNT
+                Optional<Module> accountModuleOpt = moduleRepository.findByNameIgnoreCase("ACCOUNT");
+                if (accountModuleOpt.isPresent()) {
+                        Module accountModule = accountModuleOpt.get();
+                        if (companyModuleRepository.existsByCompany_IdAndModule_Id(company.getId(), accountModule.getId())) {
+                                return accountModule;
+                        }
+                        // If company does not have ACCOUNT mapped at all, fall back to any active non-admin company module
+                        return companyModuleRepository.findByCompany_IdAndActiveTrue(company.getId()).stream()
+                                        .map(CompanyModule::getModule)
+                                        .filter(m -> !"SYSTEM_ADMIN".equalsIgnoreCase(m.getName()))
+                                        .findFirst()
+                                        .orElse(accountModule);
+                } else {
+                        // Canonical ACCOUNT module does not exist in system
+                        throw new ResourceNotFoundException("Module not found");
+                }
+        }
+
+        private String extractCanonicalModuleName(String input) {
+                if (input == null || input.isBlank()) {
+                        return null;
+                }
+                String text = input.trim();
+                if (text.contains("/") || text.startsWith("http://") || text.startsWith("https://")) {
+                        try {
+                                String path = text;
+                                if (text.startsWith("http://") || text.startsWith("https://")) {
+                                        java.net.URI uri = java.net.URI.create(text);
+                                        path = uri.getPath();
+                                }
+                                if (path != null) {
+                                        String[] segments = path.split("/");
+                                        for (int i = segments.length - 1; i >= 0; i--) {
+                                                String seg = segments[i].trim().toLowerCase(Locale.ROOT);
+                                                if (seg.isEmpty() || seg.equals("api") || seg.equals("dashboard") || seg.equals("login") || seg.equals("auth") || seg.equals("callback")) {
+                                                        continue;
+                                                }
+                                                String mapped = mapStringToCanonical(seg);
+                                                if (mapped != null) {
+                                                        return mapped;
+                                                }
+                                        }
+                                }
+                        } catch (Exception ignored) {
+                        }
+                }
+
+                String mapped = mapStringToCanonical(text);
+                if (mapped != null) {
+                        return mapped;
+                }
+
+                return text.trim().toUpperCase(Locale.ROOT);
+        }
+
+        private String mapStringToCanonical(String raw) {
+                if (raw == null) return null;
+                String lower = raw.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+                if (lower.startsWith("account") || lower.startsWith("finance") || lower.startsWith("accounting")) {
+                        return "ACCOUNT";
+                }
+                if (lower.startsWith("inventor") || lower.equals("inv")) {
+                        return "INVENTORY";
+                }
+                if (lower.startsWith("workflow") || lower.equals("wf")) {
+                        return "WORKFLOW";
+                }
+                if (lower.equals("crm") || lower.contains("salescrm") || lower.equals("sales")) {
+                        return "CRM";
+                }
+                if (lower.startsWith("purchase") || lower.startsWith("procure")) {
+                        return "PURCHASE";
+                }
+                if (lower.equals("hr") || lower.startsWith("payroll")) {
+                        return "HR";
+                }
+                if (lower.startsWith("manufactur") || lower.equals("mfg")) {
+                        return "MANUFACTURING";
+                }
+                if (lower.equals("systemadmin") || lower.equals("admin")) {
+                        return "SYSTEM_ADMIN";
+                }
+                return null;
         }
 
         // ==================== REFRESH ====================
