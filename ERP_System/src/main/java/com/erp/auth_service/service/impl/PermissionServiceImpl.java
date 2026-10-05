@@ -219,6 +219,9 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     @Transactional(readOnly = true)
     public List<FeaturePermissionResponse> getRolePermissions(UUID roleId) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with ID: " + roleId));
+        assertCompanyOwnership(role.getCompany());
         return rolePermissionRepository.findByRole_Id(roleId).stream()
                 .map(rp -> mapToPermissionResponse(rp.getPermission()))
                 .toList();
@@ -230,30 +233,58 @@ public class PermissionServiceImpl implements PermissionService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with ID: " + roleId));
 
+        assertCompanyOwnership(role.getCompany());
+
+        // Group actions by feature to enforce permission dependencies (WRITE/DELETE requires READ)
+        Map<String, Map<String, Boolean>> featureActions = new LinkedHashMap<>();
         for (SyncPermissionsRequest.PermissionSyncItem item : request.getPermissions()) {
             String action = normalizeAction(item.getAction());
             String featureCode = item.getFeatureCode().trim().toUpperCase();
+            featureActions.computeIfAbsent(featureCode, k -> new HashMap<>()).put(action, item.isEnabled());
+        }
 
-            FeaturePermission permission = featurePermissionRepository
-                    .findByFeature_CodeIgnoreCaseAndActionIgnoreCase(featureCode, action)
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Permission not found for feature [" + featureCode + "] and action [" + action + "]"));
+        // Dependency validation: WRITE or DELETE implies READ; disabling READ disables WRITE and DELETE
+        for (Map.Entry<String, Map<String, Boolean>> entry : featureActions.entrySet()) {
+            Map<String, Boolean> actions = entry.getValue();
+            boolean writeEnabled = Boolean.TRUE.equals(actions.get("WRITE"));
+            boolean deleteEnabled = Boolean.TRUE.equals(actions.get("DELETE"));
+            boolean readExplicitlyFalse = Boolean.FALSE.equals(actions.get("READ"));
 
-            Optional<RolePermission> existing = rolePermissionRepository.findById(
-                    new com.erp.auth_service.utility.RolePermissionId(role.getId(), permission.getId())
-            );
+            if (writeEnabled || deleteEnabled) {
+                actions.put("READ", true);
+            } else if (readExplicitlyFalse) {
+                actions.put("WRITE", false);
+                actions.put("DELETE", false);
+            }
+        }
 
-            if (item.isEnabled()) {
-                if (!existing.isPresent()) {
-                    RolePermission rp = RolePermission.builder()
-                            .role(role)
-                            .permission(permission)
-                            .grantedBy(adminUserId)
-                            .build();
-                    rolePermissionRepository.save(rp);
+        for (Map.Entry<String, Map<String, Boolean>> entry : featureActions.entrySet()) {
+            String featureCode = entry.getKey();
+            for (Map.Entry<String, Boolean> actionEntry : entry.getValue().entrySet()) {
+                String action = actionEntry.getKey();
+                boolean isEnabled = Boolean.TRUE.equals(actionEntry.getValue());
+
+                FeaturePermission permission = featurePermissionRepository
+                        .findByFeature_CodeIgnoreCaseAndActionIgnoreCase(featureCode, action)
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Permission not found for feature [" + featureCode + "] and action [" + action + "]"));
+
+                Optional<RolePermission> existing = rolePermissionRepository.findById(
+                        new com.erp.auth_service.utility.RolePermissionId(role.getId(), permission.getId())
+                );
+
+                if (isEnabled) {
+                    if (!existing.isPresent()) {
+                        RolePermission rp = RolePermission.builder()
+                                .role(role)
+                                .permission(permission)
+                                .grantedBy(adminUserId)
+                                .build();
+                        rolePermissionRepository.save(rp);
+                    }
+                } else {
+                    existing.ifPresent(rolePermissionRepository::delete);
                 }
-            } else {
-                existing.ifPresent(rolePermissionRepository::delete);
             }
         }
         return getRolePermissions(roleId);
@@ -545,5 +576,25 @@ public class PermissionServiceImpl implements PermissionService {
                 .grantedAt(up.getGrantedAt())
                 .revokedAt(up.getRevokedAt())
                 .build();
+    }
+
+    private void assertCompanyOwnership(com.erp.auth_service.model.Company company) {
+        if (com.erp.auth_service.security.PlatformSecurityUtil.isElevatedAdmin()) {
+            return;
+        }
+        if (company == null) {
+            throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Role is not associated with any company");
+        }
+        com.erp.auth_service.security.RequestContext.Context context = com.erp.auth_service.security.RequestContext.get();
+        if (context != null) {
+            if (context.organizationId() != null) {
+                if (company.getOrganization() == null || !company.getOrganization().getId().equals(context.organizationId())) {
+                    throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Role does not belong to authorized organization");
+                }
+            }
+            if (context.companyId() != null && !context.companyId().equals(company.getId())) {
+                throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Role does not belong to authorized company context");
+            }
+        }
     }
 }

@@ -57,7 +57,9 @@ public class FeatureController {
      */
     @PostMapping
     public ResponseEntity<ResponseWrapper<FeatureResponse>> createFeature(
-            @Valid @RequestBody RequestWrapper<CreateFeatureRequest> request) {
+            @Valid @RequestBody RequestWrapper<CreateFeatureRequest> request,
+            Authentication authentication) {
+        assertSystemAdmin(authentication);
         return ResponseEntity.ok(ResponseWrapper.success("Feature created successfully", featureService.createFeature(request.getData())));
     }
 
@@ -68,7 +70,9 @@ public class FeatureController {
     @PutMapping("/{id}")
     public ResponseEntity<ResponseWrapper<FeatureResponse>> updateFeature(
             @PathVariable UUID id,
-            @Valid @RequestBody RequestWrapper<UpdateFeatureRequest> request) {
+            @Valid @RequestBody RequestWrapper<UpdateFeatureRequest> request,
+            Authentication authentication) {
+        assertSystemAdmin(authentication);
         return ResponseEntity.ok(ResponseWrapper.success("Feature updated successfully", featureService.updateFeature(id, request.getData())));
     }
 
@@ -77,7 +81,10 @@ public class FeatureController {
      * Delete a catalog feature by ID.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseWrapper<MessageResponse>> deleteFeature(@PathVariable UUID id) {
+    public ResponseEntity<ResponseWrapper<MessageResponse>> deleteFeature(
+            @PathVariable UUID id,
+            Authentication authentication) {
+        assertSystemAdmin(authentication);
         return ResponseEntity.ok(ResponseWrapper.success(featureService.deleteFeature(id)));
     }
 
@@ -180,6 +187,23 @@ public class FeatureController {
                 throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Cannot access data for another user");
             }
         }
+    }
+
+    private void assertSystemAdmin(Authentication authentication) {
+        if (com.erp.auth_service.security.PlatformSecurityUtil.isElevatedAdmin()) {
+            return;
+        }
+        if (authentication != null && authentication.getAuthorities() != null) {
+            boolean isAdmin = authentication.getAuthorities().stream().anyMatch(a ->
+                    "SYSTEM_ADMIN".equalsIgnoreCase(a.getAuthority())
+                    || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(a.getAuthority())
+                    || "ROLE_SUPER_ADMIN".equalsIgnoreCase(a.getAuthority())
+                    || "ROLE_PLATFORM_ADMIN".equalsIgnoreCase(a.getAuthority()));
+            if (isAdmin) {
+                return;
+            }
+        }
+        throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Only SYSTEM_ADMIN is authorized to manage features");
     }
 
     private UUID resolveCurrentUserId(Authentication authentication, String authHeader) {

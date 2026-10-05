@@ -33,4 +33,6 @@ public interface UserPermissionRepository extends JpaRepository<UserPermission, 
            "AND up.permission.active = true " +
            "AND up.permission.feature.active = true")
     boolean hasActivePermission(@Param("userId") UUID userId, @Param("permissionCode") String permissionCode);
+
+    long countByPermission_Feature_Id(UUID featureId);
 }

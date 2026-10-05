@@ -38,7 +38,9 @@ public class PermissionController {
      */
     @PostMapping("/api/sso/permissions")
     public ResponseEntity<ResponseWrapper<FeaturePermissionResponse>> createPermission(
-            @Valid @RequestBody RequestWrapper<com.erp.auth_service.dto.request.CreatePermissionRequest> request) {
+            @Valid @RequestBody RequestWrapper<com.erp.auth_service.dto.request.CreatePermissionRequest> request,
+            Authentication authentication) {
+        assertSystemAdmin(authentication);
         return ResponseEntity.ok(ResponseWrapper.success("Permission created successfully", permissionService.createPermission(request.getData())));
     }
 
@@ -204,6 +206,23 @@ public class PermissionController {
                 throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Cannot access data for another user");
             }
         }
+    }
+
+    private void assertSystemAdmin(Authentication authentication) {
+        if (com.erp.auth_service.security.PlatformSecurityUtil.isElevatedAdmin()) {
+            return;
+        }
+        if (authentication != null && authentication.getAuthorities() != null) {
+            boolean isAdmin = authentication.getAuthorities().stream().anyMatch(a ->
+                    "SYSTEM_ADMIN".equalsIgnoreCase(a.getAuthority())
+                    || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(a.getAuthority())
+                    || "ROLE_SUPER_ADMIN".equalsIgnoreCase(a.getAuthority())
+                    || "ROLE_PLATFORM_ADMIN".equalsIgnoreCase(a.getAuthority()));
+            if (isAdmin) {
+                return;
+            }
+        }
+        throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Only SYSTEM_ADMIN is authorized to manage catalog permissions");
     }
 
     private UUID resolveCurrentUserId(Authentication authentication, String authHeader) {

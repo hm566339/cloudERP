@@ -253,8 +253,18 @@ export default function RolePermissionsSettings() {
   const toggleFeatureAction = (featureCode, action) => {
     const key = `${featureCode}:${action}`;
     const newSet = new Set(selectedPerms);
-    if (newSet.has(key)) newSet.delete(key);
-    else newSet.add(key);
+    if (newSet.has(key)) {
+      newSet.delete(key);
+      if (action === 'READ') {
+        newSet.delete(`${featureCode}:WRITE`);
+        newSet.delete(`${featureCode}:DELETE`);
+      }
+    } else {
+      newSet.add(key);
+      if (action === 'WRITE' || action === 'DELETE') {
+        newSet.add(`${featureCode}:READ`);
+      }
+    }
     setSelectedPerms(newSet);
   };
 
@@ -273,8 +283,18 @@ export default function RolePermissionsSettings() {
     const modFeatures = features.filter(f => f.moduleName === moduleName);
     modFeatures.forEach(f => {
       const key = `${f.code}:${action}`;
-      if (isChecked) newSet.add(key);
-      else newSet.delete(key);
+      if (isChecked) {
+        newSet.add(key);
+        if (action === 'WRITE' || action === 'DELETE') {
+          newSet.add(`${f.code}:READ`);
+        }
+      } else {
+        newSet.delete(key);
+        if (action === 'READ') {
+          newSet.delete(`${f.code}:WRITE`);
+          newSet.delete(`${f.code}:DELETE`);
+        }
+      }
     });
     setSelectedPerms(newSet);
   };

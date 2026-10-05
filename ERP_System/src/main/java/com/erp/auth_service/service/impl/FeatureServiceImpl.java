@@ -36,6 +36,8 @@ public class FeatureServiceImpl implements FeatureService {
     private final FeatureRepository featureRepository;
     private final UserFeatureRepository userFeatureRepository;
     private final UserRepository userRepository;
+    private final com.erp.auth_service.repository.RolePermissionRepository rolePermissionRepository;
+    private final com.erp.auth_service.repository.UserPermissionRepository userPermissionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -122,7 +124,20 @@ public class FeatureServiceImpl implements FeatureService {
         Feature feature = featureRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Feature not found with id: " + id));
 
-        log.info("Deleting feature with id: {} and code: {}", feature.getId(), feature.getCode());
+        long rolePermCount = rolePermissionRepository != null ? rolePermissionRepository.countByPermission_Feature_Id(id) : 0;
+        long userPermCount = userPermissionRepository != null ? userPermissionRepository.countByPermission_Feature_Id(id) : 0;
+        long userFeatureCount = userFeatureRepository != null ? userFeatureRepository.countByFeature_Id(id) : 0;
+
+        if (rolePermCount > 0 || userPermCount > 0 || userFeatureCount > 0) {
+            // Dependency validation: Do not physically delete when referenced by roles or users. Soft-deactivate instead.
+            feature.setActive(false);
+            featureRepository.save(feature);
+            log.info("Feature [{}] (id={}) is referenced by {} role permissions, {} user permissions, and {} user features. Deactivated (soft-deleted).",
+                    feature.getCode(), feature.getId(), rolePermCount, userPermCount, userFeatureCount);
+            return new MessageResponse("Feature is referenced by role or user assignments and was deactivated (soft-deleted) to preserve data integrity.");
+        }
+
+        log.info("Deleting unreferenced feature with id: {} and code: {}", feature.getId(), feature.getCode());
         featureRepository.delete(feature);
         return new MessageResponse("Feature deleted successfully");
     }

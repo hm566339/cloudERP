@@ -180,6 +180,13 @@ public class ModuleServiceImpl implements ModuleService {
 
         Module module = moduleRepository.findById(moduleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Module not found"));
+
+        if ("SYSTEM_ADMIN".equalsIgnoreCase(module.getName())
+                || "SSO".equalsIgnoreCase(module.getName())
+                || "CORE".equalsIgnoreCase(module.getName())) {
+            throw new BadRequestException("Core platform module [" + module.getName() + "] cannot be deactivated or deleted");
+        }
+
         module.setModuleStatus(false);
         moduleRepository.save(module);
         return new MessageResponse("Module disabled successfully");

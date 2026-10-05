@@ -38,4 +38,6 @@ public interface UserFeatureRepository extends JpaRepository<UserFeature, UUID> 
           AND uf.feature.id = :featureId
     """)
     boolean existsByUserIdAndFeatureId(@Param("userId") UUID userId, @Param("featureId") UUID featureId);
+
+    long countByFeature_Id(UUID featureId);
 }

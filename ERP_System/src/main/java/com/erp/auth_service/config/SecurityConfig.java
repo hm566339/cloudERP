@@ -121,14 +121,32 @@ public class SecurityConfig {
                                                                 "/api/sso/portal-access",
                                                                 "/api/sso/token/revoke",
                                                                 "/api/sso/session/my",
-                                                                "/api/sso/company/company-verify")
+                                                                "/api/sso/company/company-verify",
+                                                                "/api/sso/role",
+                                                                "/api/sso/role/**")
                                                 .authenticated()
                                                 .requestMatchers(HttpMethod.GET, "/api/sso/features",
                                                                 "/api/sso/features/**")
                                                 .authenticated()
+                                                .requestMatchers(HttpMethod.POST, "/api/sso/features", "/api/sso/features/**")
+                                                .hasAuthority("SYSTEM_ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, "/api/sso/features", "/api/sso/features/**")
+                                                .hasAuthority("SYSTEM_ADMIN")
+                                                .requestMatchers(HttpMethod.DELETE, "/api/sso/features", "/api/sso/features/**")
+                                                .hasAuthority("SYSTEM_ADMIN")
+                                                .requestMatchers(HttpMethod.POST, "/api/sso/module", "/api/sso/module/**")
+                                                .hasAuthority("SYSTEM_ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, "/api/sso/module", "/api/sso/module/**")
+                                                .hasAuthority("SYSTEM_ADMIN")
+                                                .requestMatchers(HttpMethod.PATCH, "/api/sso/module", "/api/sso/module/**")
+                                                .hasAuthority("SYSTEM_ADMIN")
+                                                .requestMatchers(HttpMethod.DELETE, "/api/sso/module", "/api/sso/module/**")
+                                                .hasAuthority("SYSTEM_ADMIN")
                                                 .requestMatchers(HttpMethod.GET, "/api/sso/permissions",
                                                                 "/api/sso/permissions/**")
                                                 .authenticated()
+                                                .requestMatchers(HttpMethod.POST, "/api/sso/permissions", "/api/sso/permissions/**")
+                                                .hasAuthority("SYSTEM_ADMIN")
                                                 .requestMatchers(HttpMethod.POST, "/internal/authorization/check")
                                                 .authenticated()
                                                 .requestMatchers(HttpMethod.GET, "/api/sso/user/**")

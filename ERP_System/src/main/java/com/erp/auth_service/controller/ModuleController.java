@@ -31,7 +31,9 @@ public class ModuleController {
 
         @PostMapping
         public ResponseEntity<ResponseWrapper<ModuleCreateResponse>> createModule(
-                @Valid @RequestBody RequestWrapper<CreateModuleRequest> request) {
+                @Valid @RequestBody RequestWrapper<CreateModuleRequest> request,
+                org.springframework.security.core.Authentication authentication) {
+                assertSystemAdmin(authentication);
                 return ResponseEntity.status(HttpStatus.CREATED)
                                 .body(ResponseWrapper.success(moduleService.createModule(request.getData())));
         }
@@ -56,24 +58,51 @@ public class ModuleController {
         @PutMapping("/{id}")
         public ResponseEntity<ResponseWrapper<ModuleResponse>> updateModule(
                         @PathVariable UUID id,
-                        @Valid @RequestBody RequestWrapper<UpdateModuleRequest> request) {
+                        @Valid @RequestBody RequestWrapper<UpdateModuleRequest> request,
+                        org.springframework.security.core.Authentication authentication) {
+                assertSystemAdmin(authentication);
                 return ResponseEntity.ok(ResponseWrapper.success(moduleService.updateModule(id, request.getData())));
         }
 
         @PatchMapping("/{id}/status")
         public ResponseEntity<ResponseWrapper<ModuleStatusResponse>> updateModuleStatus(
                         @PathVariable UUID id,
-                        @Valid @RequestBody RequestWrapper<UpdateModuleStatusRequest> request) {
+                        @Valid @RequestBody RequestWrapper<UpdateModuleStatusRequest> request,
+                        org.springframework.security.core.Authentication authentication) {
+                assertSystemAdmin(authentication);
                 return ResponseEntity.ok(ResponseWrapper.success(moduleService.updateModuleStatus(id, request.getData())));
         }
 
         @PostMapping("/{id}/rotatesecret")
-        public ResponseEntity<ResponseWrapper<RotateSecretResponse>> rotateSecret(@PathVariable UUID id) {
+        public ResponseEntity<ResponseWrapper<RotateSecretResponse>> rotateSecret(
+                        @PathVariable UUID id,
+                        org.springframework.security.core.Authentication authentication) {
+                assertSystemAdmin(authentication);
                 return ResponseEntity.ok(ResponseWrapper.success(moduleService.rotateSecret(id)));
         }
 
         @DeleteMapping("/{id}")
-        public ResponseEntity<ResponseWrapper<MessageResponse>> deleteModule(@PathVariable UUID id) {
+        public ResponseEntity<ResponseWrapper<MessageResponse>> deleteModule(
+                        @PathVariable UUID id,
+                        org.springframework.security.core.Authentication authentication) {
+                assertSystemAdmin(authentication);
                 return ResponseEntity.ok(ResponseWrapper.success(moduleService.deleteModule(id)));
+        }
+
+        private void assertSystemAdmin(org.springframework.security.core.Authentication authentication) {
+                if (com.erp.auth_service.security.PlatformSecurityUtil.isElevatedAdmin()) {
+                        return;
+                }
+                if (authentication != null && authentication.getAuthorities() != null) {
+                        boolean isAdmin = authentication.getAuthorities().stream().anyMatch(a ->
+                                "SYSTEM_ADMIN".equalsIgnoreCase(a.getAuthority())
+                                || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(a.getAuthority())
+                                || "ROLE_SUPER_ADMIN".equalsIgnoreCase(a.getAuthority())
+                                || "ROLE_PLATFORM_ADMIN".equalsIgnoreCase(a.getAuthority()));
+                        if (isAdmin) {
+                                return;
+                        }
+                }
+                throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Only SYSTEM_ADMIN is authorized to manage modules");
         }
 }

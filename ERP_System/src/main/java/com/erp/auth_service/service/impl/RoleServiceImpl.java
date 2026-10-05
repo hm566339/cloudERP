@@ -67,6 +67,8 @@ public class RoleServiceImpl implements RoleService {
                         )
                 );
 
+        assertCompanyOwnership(company);
+
         String roleName = request.getName().trim();
 
         if (roleRepository.existsByCompany_IdAndNameIgnoreCase(
@@ -114,6 +116,8 @@ public class RoleServiceImpl implements RoleService {
                                 "Company not found"
                         )
                 );
+
+        assertCompanyOwnership(company);
 
         int validatedPage = Math.max(page, 1);
 
@@ -170,6 +174,8 @@ public class RoleServiceImpl implements RoleService {
                         )
                 );
 
+        assertCompanyOwnership(role.getCompany());
+
         int validatedPage = Math.max(page, 1);
         int validatedPageSize = Math.min(Math.max(pageSize, 1), 100);
 
@@ -220,6 +226,8 @@ public class RoleServiceImpl implements RoleService {
                                 "Role not found"
                         )
                 );
+
+        assertCompanyOwnership(role.getCompany());
 
         if ("SYSTEM_ADMIN".equalsIgnoreCase(role.getName())) {
 
@@ -283,6 +291,8 @@ public class RoleServiceImpl implements RoleService {
                         )
                 );
 
+        assertCompanyOwnership(role.getCompany());
+
         if ("SYSTEM_ADMIN".equalsIgnoreCase(role.getName())) {
 
             throw new BadRequestException(
@@ -310,6 +320,8 @@ public class RoleServiceImpl implements RoleService {
                         )
                 );
 
+        assertCompanyOwnership(role.getCompany());
+
         if ("SYSTEM_ADMIN".equalsIgnoreCase(role.getName())) {
 
             throw new BadRequestException(
@@ -331,5 +343,25 @@ public class RoleServiceImpl implements RoleService {
         role.setStatus(false);
 
         roleRepository.save(role);
+    }
+
+    private void assertCompanyOwnership(Company company) {
+        if (com.erp.auth_service.security.PlatformSecurityUtil.isElevatedAdmin()) {
+            return;
+        }
+        if (company == null) {
+            throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Role is not associated with any company");
+        }
+        com.erp.auth_service.security.RequestContext.Context context = com.erp.auth_service.security.RequestContext.get();
+        if (context != null) {
+            if (context.organizationId() != null) {
+                if (company.getOrganization() == null || !company.getOrganization().getId().equals(context.organizationId())) {
+                    throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Role does not belong to authorized organization");
+                }
+            }
+            if (context.companyId() != null && !context.companyId().equals(company.getId())) {
+                throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Role does not belong to authorized company context");
+            }
+        }
     }
 }

@@ -226,7 +226,12 @@ class FeatureControllerTest {
 
         when(featureService.updateFeature(eq(featureId), any())).thenReturn(resp);
 
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken sysAdminAuth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "admin", null, List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("SYSTEM_ADMIN")));
+
         mockMvc.perform(put("/api/sso/features/{id}", featureId)
+                        .principal(sysAdminAuth)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(reqWrapper)))
                 .andExpect(status().isOk())
@@ -235,13 +240,52 @@ class FeatureControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/sso/features/{id} deletes feature")
+    @DisplayName("PUT /api/sso/features/{id} by Company Admin returns 403 Forbidden")
+    void testUpdateFeature_CompanyAdmin_ThrowsForbidden() {
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken companyAdminAuth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "company_admin", null, List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("OWNER")));
+
+        com.erp.auth_service.dto.request.UpdateFeatureRequest updateReq = com.erp.auth_service.dto.request.UpdateFeatureRequest.builder()
+                .name("Hacked Feature")
+                .build();
+
+        RequestWrapper<com.erp.auth_service.dto.request.UpdateFeatureRequest> reqWrapper = RequestWrapper.<com.erp.auth_service.dto.request.UpdateFeatureRequest>builder()
+                .data(updateReq)
+                .build();
+
+        org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () ->
+                mockMvc.perform(put("/api/sso/features/{id}", featureId)
+                        .principal(companyAdminAuth)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(reqWrapper))));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/sso/features/{id} deletes feature when SYSTEM_ADMIN")
     void testDeleteFeature_ReturnsOk() throws Exception {
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken sysAdminAuth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "admin", null, List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("SYSTEM_ADMIN")));
+
         when(featureService.deleteFeature(featureId)).thenReturn(new com.erp.auth_service.dto.response.MessageResponse("Feature deleted successfully"));
 
-        mockMvc.perform(delete("/api/sso/features/{id}", featureId))
+        mockMvc.perform(delete("/api/sso/features/{id}", featureId)
+                        .principal(sysAdminAuth))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.message").value("Feature deleted successfully"));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/sso/features/{id} by Company Admin returns 403 Forbidden")
+    void testDeleteFeature_CompanyAdmin_ThrowsForbidden() {
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken companyAdminAuth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "company_admin", null, List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("OWNER")));
+
+        org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () ->
+                mockMvc.perform(delete("/api/sso/features/{id}", featureId)
+                        .principal(companyAdminAuth)));
     }
 }

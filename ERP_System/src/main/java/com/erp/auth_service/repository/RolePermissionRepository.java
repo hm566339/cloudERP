@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface RolePermissionRepository extends JpaRepository<RolePermission, RolePermissionId> {
     List<RolePermission> findByRole_Id(UUID roleId);
     void deleteByRole_Id(UUID roleId);
+    long countByPermission_Feature_Id(UUID featureId);
 }
