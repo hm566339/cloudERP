@@ -39,10 +39,10 @@ import com.erp.auth_service.model.UserPortalAccess;
 import com.erp.auth_service.repository.OrganizationModuleRepository;
 import com.erp.auth_service.repository.UserRepository;
 import com.erp.auth_service.repository.UserPortalAccessRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class CompanyModuleServiceImpl implements CompanyModuleService {
 
         private final CompanyModuleRepository companyModuleRepository;
@@ -51,6 +51,22 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
         private final OrganizationModuleRepository organizationModuleRepository;
         private final UserRepository userRepository;
         private final UserPortalAccessRepository userPortalAccessRepository;
+
+        @Autowired
+        public CompanyModuleServiceImpl(
+                        CompanyModuleRepository companyModuleRepository,
+                        CompanyRepository companyRepository,
+                        ModuleRepository moduleRepository,
+                        OrganizationModuleRepository organizationModuleRepository,
+                        UserRepository userRepository,
+                        UserPortalAccessRepository userPortalAccessRepository) {
+                this.companyModuleRepository = companyModuleRepository;
+                this.companyRepository = companyRepository;
+                this.moduleRepository = moduleRepository;
+                this.organizationModuleRepository = organizationModuleRepository;
+                this.userRepository = userRepository;
+                this.userPortalAccessRepository = userPortalAccessRepository;
+        }
 
         public CompanyModuleServiceImpl(
                         CompanyModuleRepository companyModuleRepository,
