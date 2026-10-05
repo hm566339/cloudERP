@@ -77,6 +77,69 @@ class FeatureControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/sso/features by SYSTEM_ADMIN creates global feature record")
+    void testCreateFeature_SystemAdmin_ReturnsOk() throws Exception {
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken sysAdminAuth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "admin", null, List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("SYSTEM_ADMIN")));
+
+        FeatureResponse resp = FeatureResponse.builder()
+                .id(UUID.randomUUID())
+                .code("PAYMENTS")
+                .name("Payment Operations")
+                .moduleName("ACCOUNT")
+                .active(true)
+                .build();
+
+        when(featureService.createFeature(any())).thenReturn(resp);
+
+        String jsonPayload = """
+                {
+                    "data": {
+                        "name": "Payment Operations",
+                        "code": "PAYMENTS",
+                        "module": "ACCOUNT",
+                        "active": true
+                    }
+                }
+                """;
+
+        mockMvc.perform(post("/api/sso/features")
+                        .principal(sysAdminAuth)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.code").value("PAYMENTS"))
+                .andExpect(jsonPath("$.data.moduleName").value("ACCOUNT"));
+    }
+
+    @Test
+    @DisplayName("POST /api/sso/features by Company Admin returns 403 Forbidden")
+    void testCreateFeature_CompanyAdmin_ThrowsForbidden() {
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken companyAdminAuth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "company_admin", null, List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("OWNER")));
+
+        String jsonPayload = """
+                {
+                    "data": {
+                        "name": "Unauthorized Feature",
+                        "code": "UNAUTH",
+                        "module": "ACCOUNT",
+                        "active": true
+                    }
+                }
+                """;
+
+        org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () ->
+                mockMvc.perform(post("/api/sso/features")
+                        .principal(companyAdminAuth)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonPayload)));
+    }
+
+    @Test
     @DisplayName("GET /api/sso/features/user/{userId}/active returns active feature codes")
     void testGetActiveFeatures_ReturnsOk() throws Exception {
         UserActiveFeaturesResponse activeResp = UserActiveFeaturesResponse.builder()

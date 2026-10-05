@@ -46,6 +46,9 @@ class FeatureServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private com.erp.auth_service.repository.FeaturePermissionRepository featurePermissionRepository;
+
     @InjectMocks
     private FeatureServiceImpl featureService;
 
@@ -277,5 +280,36 @@ class FeatureServiceImplTest {
         verify(userFeatureRepository, times(1)).saveAll(any());
         assertTrue(existingPayments.isRevoked());
         assertFalse(existingPayments.isActive());
+    }
+
+    @Test
+    @DisplayName("createFeature should create global feature and auto-provision standard action permissions")
+    void testCreateFeature_Success_WithDefaultActionPermissions() {
+        when(featureRepository.findByCodeIgnoreCase("PAYMENTS")).thenReturn(Optional.empty());
+        when(featureRepository.save(any(Feature.class))).thenAnswer(invocation -> {
+            Feature f = invocation.getArgument(0);
+            f.setId(UUID.randomUUID());
+            return f;
+        });
+        when(featurePermissionRepository.findByPermissionCodeIgnoreCase(anyString())).thenReturn(Optional.empty());
+
+        com.erp.auth_service.dto.request.CreateFeatureRequest request = com.erp.auth_service.dto.request.CreateFeatureRequest.builder()
+                .code("PAYMENTS")
+                .name("Payment Operations")
+                .moduleName("ACCOUNT")
+                .active(true)
+                .build();
+
+        FeatureResponse response = featureService.createFeature(request);
+
+        assertNotNull(response);
+        assertEquals("PAYMENTS", response.getCode());
+        assertEquals("Payment Operations", response.getName());
+        assertEquals("ACCOUNT", response.getModuleName());
+        assertTrue(response.isActive());
+
+        verify(featureRepository, times(1)).save(any(Feature.class));
+        // Verify auto-provisioning of READ, WRITE, and DELETE permissions
+        verify(featurePermissionRepository, times(3)).save(any(com.erp.auth_service.model.FeaturePermission.class));
     }
 }

@@ -38,6 +38,7 @@ public class FeatureServiceImpl implements FeatureService {
     private final UserRepository userRepository;
     private final com.erp.auth_service.repository.RolePermissionRepository rolePermissionRepository;
     private final com.erp.auth_service.repository.UserPermissionRepository userPermissionRepository;
+    private final com.erp.auth_service.repository.FeaturePermissionRepository featurePermissionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -72,6 +73,25 @@ public class FeatureServiceImpl implements FeatureService {
                 .build();
 
         Feature saved = featureRepository.save(feature);
+
+        // Auto-provision standard READ, WRITE, and DELETE permissions in global catalog
+        if (featurePermissionRepository != null) {
+            for (String action : List.of("READ", "WRITE", "DELETE")) {
+                String permCode = saved.getCode() + ":" + action;
+                if (featurePermissionRepository.findByPermissionCodeIgnoreCase(permCode).isEmpty()) {
+                    com.erp.auth_service.model.FeaturePermission fp = com.erp.auth_service.model.FeaturePermission.builder()
+                            .feature(saved)
+                            .action(action)
+                            .permissionCode(permCode)
+                            .description(action + " access for feature " + saved.getName())
+                            .active(true)
+                            .build();
+                    featurePermissionRepository.save(fp);
+                    log.info("Auto-registered standard Feature Permission: [{}]", permCode);
+                }
+            }
+        }
+
         return mapToFeatureResponse(saved);
     }
 

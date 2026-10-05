@@ -17,6 +17,7 @@ public class UpdateFeatureRequest {
 
     private String description;
 
+    @com.fasterxml.jackson.annotation.JsonAlias({"module", "module_name", "moduleName"})
     private String moduleName;
 
     private Boolean active;

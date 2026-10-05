@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Plus, Edit2, Trash2, Box, ShieldCheck, Tag, Info } from 'lucide-react';
+import { Plus, Edit2, Trash2, Box, ShieldCheck, Tag, Info, Globe } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { featuresApi } from '../../../api/sso/feature';
 import { getAllPermissions, createPermission } from '../../../api/sso/permission';
@@ -16,10 +16,10 @@ import ExportModal from '../../../components/common/ExportModal';
 import FeatureFormModal from '../components/FeatureFormModal';
 
 const DEFAULT_COLUMNS = [
-  'code',
-  'name',
-  'description',
   'moduleName',
+  'name',
+  'code',
+  'actions',
   'status',
   'createdAt'
 ];
@@ -388,6 +388,32 @@ export default function FeatureList() {
   const columns = useMemo(
     () => [
       {
+        id: 'moduleName',
+        label: 'Module',
+        sortable: true,
+        render: (val, row) => (
+          <div className="flex items-center gap-1.5 text-zinc-800 text-xs font-semibold">
+            <Box size={13} className="text-indigo-500 shrink-0" />
+            <span>{row.moduleName || '-'}</span>
+          </div>
+        )
+      },
+      {
+        id: 'name',
+        label: 'Feature Name',
+        sortable: true,
+        render: (val, row) => (
+          <div>
+            <span className="font-semibold text-zinc-900 block">{row.name || '-'}</span>
+            {row.description && (
+              <span className="text-[11px] text-zinc-500 truncate max-w-xs block" title={row.description}>
+                {row.description}
+              </span>
+            )}
+          </div>
+        )
+      },
+      {
         id: 'code',
         label: 'Feature Code',
         sortable: true,
@@ -398,40 +424,26 @@ export default function FeatureList() {
         )
       },
       {
-        id: 'name',
-        label: 'Feature Name',
-        sortable: true,
-        render: (val, row) => (
-          <span className="font-semibold text-zinc-900">{row.name || '-'}</span>
-        )
-      },
-      {
-        id: 'description',
-        label: 'Description',
+        id: 'actions',
+        label: 'Actions',
         sortable: false,
-        render: (val, row) => (
-          <span
-            className="text-zinc-600 text-xs truncate max-w-xs block"
-            title={row.description || '-'}
-          >
-            {row.description || '-'}
-          </span>
-        )
-      },
-      {
-        id: 'moduleName',
-        label: 'Module Name',
-        sortable: true,
-        render: (val, row) => (
-          <div className="flex items-center gap-1.5 text-zinc-700 text-xs font-medium">
-            <Box size={13} className="text-zinc-400 shrink-0" />
-            <span>{row.moduleName || '-'}</span>
+        render: () => (
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-blue-50 text-blue-700 border border-blue-200">
+              READ
+            </span>
+            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+              WRITE
+            </span>
+            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-rose-50 text-rose-700 border border-rose-200">
+              DELETE
+            </span>
           </div>
         )
       },
       {
         id: 'status',
-        label: 'Status',
+        label: 'Active',
         sortable: true,
         sortKey: 'active',
         align: 'center',
@@ -565,21 +577,36 @@ export default function FeatureList() {
     <div className="flex flex-col h-full bg-zinc-50/50 relative">
       <PageHeader
         title="Feature Permissions"
-        description="Manage system features and their module associations."
+        description="Global system features and module permissions master catalog."
       >
-        <button
-          onClick={() => handleCreate()}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={16} />
-          <span>Create Feature</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-medium">
+            <Globe size={14} className="text-indigo-600" />
+            <span>Global System Feature — Available to all organizations and companies</span>
+          </div>
+          <button
+            onClick={() => handleCreate()}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={16} />
+            <span>Create Feature</span>
+          </button>
+        </div>
       </PageHeader>
 
       <ModuleTabs tabs={currentTabs} activeKey={currentActiveKey} />
 
       {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
+        <div className="mb-4 p-3 bg-gradient-to-r from-indigo-50/90 via-blue-50/60 to-transparent border border-indigo-100 rounded-xl flex items-center justify-between gap-3 text-xs text-indigo-950">
+          <div className="flex items-center gap-2">
+            <Globe size={16} className="text-indigo-600 shrink-0" />
+            <span className="font-semibold">Global System Feature — Available to all organizations and companies</span>
+          </div>
+          <span className="text-[11px] text-zinc-500 hidden md:inline">
+            Platform master data definition • Tenant isolation maintained through company roles
+          </span>
+        </div>
         <DataTable
           showIndex
           selectable

@@ -21,6 +21,7 @@ public class CreateFeatureRequest {
     private String description;
 
     @NotBlank(message = "Module name is required")
+    @com.fasterxml.jackson.annotation.JsonAlias({"module", "module_name", "moduleName"})
     private String moduleName;
 
     @Builder.Default

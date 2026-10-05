@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, AlertTriangle, Box, ShieldCheck } from 'lucide-react';
+import { X, Save, AlertTriangle, Box, ShieldCheck, Globe } from 'lucide-react';
 
 export default function FeatureFormModal({
   isOpen,
@@ -52,18 +52,18 @@ export default function FeatureFormModal({
     const trimmedName = (formData.name || '').trim();
     const trimmedModuleName = (formData.moduleName || '').trim();
 
-    if (!trimmedCode) {
-      newErrors.code = 'Feature Code is required';
-    } else if (!/^[A-Za-z0-9_]+$/.test(trimmedCode)) {
-      newErrors.code = 'Code must contain only letters, numbers, and underscores (e.g. INVOICE_CREATE)';
+    if (!trimmedModuleName) {
+      newErrors.moduleName = 'Module Name is required';
     }
 
     if (!trimmedName) {
       newErrors.name = 'Feature Name is required';
     }
 
-    if (!trimmedModuleName) {
-      newErrors.moduleName = 'Module Name is required';
+    if (!trimmedCode) {
+      newErrors.code = 'Feature Code is required';
+    } else if (!/^[A-Za-z0-9_]+$/.test(trimmedCode)) {
+      newErrors.code = 'Code must contain only letters, numbers, and underscores (e.g. PAYMENTS)';
     }
 
     setErrors(newErrors);
@@ -130,12 +130,12 @@ export default function FeatureFormModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 bg-zinc-50/50">
           <div>
             <h2 className="text-base font-semibold text-zinc-900">
-              {isEditMode ? 'Edit Feature' : 'Create New Feature'}
+              {isEditMode ? 'Edit Global Feature' : 'Create Global Feature'}
             </h2>
             <p className="text-xs text-zinc-500 mt-0.5">
               {isEditMode
-                ? 'Update system feature definition and properties.'
-                : 'Define a new system feature and allocate it to a module.'}
+                ? 'Update global feature definition and catalog properties.'
+                : 'Define a platform-level feature accessible across all tenants.'}
             </p>
           </div>
           <button
@@ -149,14 +149,76 @@ export default function FeatureFormModal({
           </button>
         </div>
 
+        {/* Global Master Data Banner */}
+        <div className="mx-6 mt-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center gap-2.5 text-xs font-medium text-indigo-900">
+          <Globe size={16} className="text-indigo-600 shrink-0" />
+          <span>Global System Feature — Available to all organizations and companies</span>
+        </div>
+
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 pt-4 space-y-4">
           {submitError && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2.5 text-xs text-rose-700">
               <AlertTriangle size={15} className="shrink-0 mt-0.5" />
               <div className="flex-1">{submitError}</div>
             </div>
           )}
+
+          {/* Module */}
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
+              Module <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                name="moduleName"
+                list="feature-module-options"
+                value={formData.moduleName}
+                onChange={handleChange}
+                placeholder="e.g. ACCOUNT, CORE, SSO..."
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors ${
+                  errors.moduleName ? 'border-rose-300 bg-rose-50/50' : 'border-zinc-300'
+                }`}
+              />
+              <datalist id="feature-module-options">
+                {availableModules.map((mod) => (
+                  <option key={mod} value={mod} />
+                ))}
+              </datalist>
+            </div>
+            {errors.moduleName ? (
+              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+                <AlertTriangle size={12} /> {errors.moduleName}
+              </p>
+            ) : availableModules.length > 0 ? (
+              <p className="mt-1 text-[11px] text-zinc-400">
+                Select an existing module or specify a new module name.
+              </p>
+            ) : null}
+          </div>
+
+          {/* Feature Name */}
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
+              Feature Name <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="e.g. Payment Operations"
+              className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors ${
+                errors.name ? 'border-rose-300 bg-rose-50/50' : 'border-zinc-300'
+              }`}
+            />
+            {errors.name && (
+              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+                <AlertTriangle size={12} /> {errors.name}
+              </p>
+            )}
+          </div>
 
           {/* Feature Code */}
           <div>
@@ -175,7 +237,7 @@ export default function FeatureFormModal({
                   }
                 })
               }
-              placeholder="e.g. INVOICE_CREATE"
+              placeholder="e.g. PAYMENTS"
               disabled={isEditMode}
               className={`w-full px-3 py-2 text-sm border rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors ${
                 isEditMode
@@ -196,60 +258,25 @@ export default function FeatureFormModal({
             ) : null}
           </div>
 
-          {/* Feature Name */}
+          {/* Defined Actions */}
           <div>
             <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
-              Feature Name <span className="text-rose-500">*</span>
+              Actions
             </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="e.g. Create Sales Invoice"
-              className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors ${
-                errors.name ? 'border-rose-300 bg-rose-50/50' : 'border-zinc-300'
-              }`}
-            />
-            {errors.name && (
-              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
-                <AlertTriangle size={12} /> {errors.name}
-              </p>
-            )}
-          </div>
-
-          {/* Module Name */}
-          <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
-              Module Name <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                name="moduleName"
-                list="feature-module-options"
-                value={formData.moduleName}
-                onChange={handleChange}
-                placeholder="e.g. ACCOUNTS, INVENTORY, HR..."
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors ${
-                  errors.moduleName ? 'border-rose-300 bg-rose-50/50' : 'border-zinc-300'
-                }`}
-              />
-              <datalist id="feature-module-options">
-                {availableModules.map((mod) => (
-                  <option key={mod} value={mod} />
-                ))}
-              </datalist>
+            <div className="flex items-center gap-2 p-2.5 bg-zinc-50 border border-zinc-200 rounded-lg">
+              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 text-blue-700 border border-blue-200">
+                READ
+              </span>
+              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-100 text-emerald-700 border border-emerald-200">
+                WRITE
+              </span>
+              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-rose-100 text-rose-700 border border-rose-200">
+                DELETE
+              </span>
+              <span className="text-[11px] text-zinc-500 ml-auto">
+                Standard platform actions
+              </span>
             </div>
-            {errors.moduleName ? (
-              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
-                <AlertTriangle size={12} /> {errors.moduleName}
-              </p>
-            ) : availableModules.length > 0 ? (
-              <p className="mt-1 text-[11px] text-zinc-400">
-                Select an existing module or type a new module name.
-              </p>
-            ) : null}
           </div>
 
           {/* Description */}
