@@ -6,6 +6,7 @@
 export const CANONICAL_MODULES = {
   ACCOUNT: 'ACCOUNT',
   INVENTORY: 'INVENTORY',
+  WORKFLOW: 'WORKFLOW',
   CRM: 'CRM',
   CORE: 'CORE',
   HR: 'HR',
@@ -34,6 +35,9 @@ export function normalizeModuleName(input) {
   }
   if (lower.startsWith('inventor') || lower === 'inv') {
     return CANONICAL_MODULES.INVENTORY;
+  }
+  if (lower.startsWith('workflow') || lower === 'wf') {
+    return CANONICAL_MODULES.WORKFLOW;
   }
   if (lower === 'crm' || lower.includes('salescrm') || lower === 'sales') {
     return CANONICAL_MODULES.CRM;

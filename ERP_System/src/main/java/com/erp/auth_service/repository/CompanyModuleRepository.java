@@ -27,6 +27,9 @@ public interface CompanyModuleRepository extends JpaRepository<CompanyModule, UU
     // All ACTIVE modules for a specific company
     List<CompanyModule> findByCompany_IdAndActiveTrue(UUID companyId);
 
+    // All INACTIVE modules for a specific company
+    List<CompanyModule> findByCompany_IdAndActiveFalse(UUID companyId);
+
     // All modules for a specific company (both active and inactive)
     List<CompanyModule> findAllByCompany_Id(UUID companyId);
 

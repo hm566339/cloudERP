@@ -33,6 +33,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.erp.auth_service.model.OrganizationModule;
+import com.erp.auth_service.model.User;
+import com.erp.auth_service.model.UserPortalAccess;
+import com.erp.auth_service.repository.OrganizationModuleRepository;
+import com.erp.auth_service.repository.UserRepository;
+import com.erp.auth_service.repository.UserPortalAccessRepository;
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 @RequiredArgsConstructor
 public class CompanyModuleServiceImpl implements CompanyModuleService {
@@ -40,6 +48,16 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
         private final CompanyModuleRepository companyModuleRepository;
         private final CompanyRepository companyRepository;
         private final ModuleRepository moduleRepository;
+        private final OrganizationModuleRepository organizationModuleRepository;
+        private final UserRepository userRepository;
+        private final UserPortalAccessRepository userPortalAccessRepository;
+
+        public CompanyModuleServiceImpl(
+                        CompanyModuleRepository companyModuleRepository,
+                        CompanyRepository companyRepository,
+                        ModuleRepository moduleRepository) {
+                this(companyModuleRepository, companyRepository, moduleRepository, null, null, null);
+        }
 
         private void assertCompanyOwnership(Company company) {
                 if (PlatformSecurityUtil.isElevatedAdmin()) {
@@ -59,28 +77,91 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
         }
 
         /*
-         * CREATE COMPANY MODULE
+         * CREATE COMPANY MODULE (With reactivation and access sync)
          */
         @Override
+        @Transactional
         public Map<String, String> createCompanyModule(CompanyModuleRequest companyModule) {
                 Company company = companyRepository.findById(companyModule.getCompany())
                                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
                 assertCompanyOwnership(company);
 
-                if (companyModuleRepository.existsByCompany_IdAndModule_Id(companyModule.getCompany(),
-                                companyModule.getModule())) {
-                        throw new DuplicateResourceException("Company Module already exists");
-                }
-
                 Module module = moduleRepository.findById(companyModule.getModule())
                                 .orElseThrow(() -> new ResourceNotFoundException("Module not found"));
 
-                CompanyModule newCompanyModule = new CompanyModule();
-                newCompanyModule.setCompany(company);
-                newCompanyModule.setModule(module);
-                newCompanyModule.setActive(true);
-                companyModuleRepository.save(newCompanyModule);
-                return Map.of("message", "Company Module created successfully");
+                Optional<CompanyModule> existingOpt = companyModuleRepository.findByCompany_IdAndModule_Id(
+                                companyModule.getCompany(), companyModule.getModule());
+
+                CompanyModule savedCm;
+                boolean wasReactivated = false;
+                if (existingOpt.isPresent()) {
+                        CompanyModule existing = existingOpt.get();
+                        if (Boolean.TRUE.equals(existing.getActive())) {
+                                throw new DuplicateResourceException(module.getName() + " module is already assigned to this company.");
+                        } else {
+                                existing.setActive(true);
+                                savedCm = companyModuleRepository.save(existing);
+                                wasReactivated = true;
+                        }
+                } else {
+                        CompanyModule newCompanyModule = CompanyModule.builder()
+                                        .company(company)
+                                        .module(module)
+                                        .active(true)
+                                        .build();
+                        savedCm = companyModuleRepository.save(newCompanyModule);
+                }
+
+                syncAccessOnModuleAssignment(company, savedCm);
+
+                return Map.of("message", wasReactivated
+                                ? module.getName() + " module reactivated successfully for this company"
+                                : "Company Module created successfully");
+        }
+
+        private void syncAccessOnModuleAssignment(Company company, CompanyModule companyModule) {
+                if (company == null || companyModule == null || companyModule.getModule() == null) {
+                        return;
+                }
+                Module module = companyModule.getModule();
+
+                // 1. Organization module sync
+                if (organizationModuleRepository != null && company.getOrganization() != null) {
+                        UUID orgId = company.getOrganization().getId();
+                        UUID modId = module.getId();
+                        if (!organizationModuleRepository.existsByOrganization_IdAndModule_IdAndEnabledTrue(orgId, modId)) {
+                                organizationModuleRepository.findByOrganization_IdAndModule_Id(orgId, modId)
+                                                .ifPresentOrElse(
+                                                                om -> {
+                                                                        om.setEnabled(true);
+                                                                        organizationModuleRepository.save(om);
+                                                                },
+                                                                () -> {
+                                                                        organizationModuleRepository.save(OrganizationModule.builder()
+                                                                                        .organization(company.getOrganization())
+                                                                                        .module(module)
+                                                                                        .enabled(true)
+                                                                                        .build());
+                                                                }
+                                                );
+                        }
+                }
+
+                // 2. User portal access sync for company users
+                if (userRepository != null && userPortalAccessRepository != null) {
+                        List<User> companyUsers = userRepository.findByCompany_Id(company.getId());
+                        if (companyUsers != null) {
+                                for (User user : companyUsers) {
+                                        if (!userPortalAccessRepository.existsByUser_IdAndCompanyModule_Id(user.getId(), companyModule.getId())) {
+                                                userPortalAccessRepository.save(UserPortalAccess.builder()
+                                                                .user(user)
+                                                                .companyModule(companyModule)
+                                                                .status(true)
+                                                                .build());
+                                        }
+                                }
+                        }
+                }
         }
 
         /*
@@ -177,7 +258,9 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
                 List<CompanyModule> companyModules;
 
                 if (active != null) {
-                        companyModules = companyModuleRepository.findByCompany_IdAndActiveTrue(companyId);
+                        companyModules = Boolean.TRUE.equals(active)
+                                        ? companyModuleRepository.findByCompany_IdAndActiveTrue(companyId)
+                                        : companyModuleRepository.findByCompany_IdAndActiveFalse(companyId);
                 } else {
                         companyModules = companyModuleRepository.findAllByCompany_Id(companyId);
                 }

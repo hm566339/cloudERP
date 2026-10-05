@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
 import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { 
   Building2, Users, Box, ShoppingCart, 
   Briefcase, Banknote, Factory, Shield,
-  Layers, Lock, Globe
+  Layers, Lock, Globe, GitBranch
 } from 'lucide-react';
 import { normalizeModuleKey, getCompanyModuleAssignments } from '../../../utils/moduleAccess';
 
@@ -13,6 +14,8 @@ const MODULES_MAP = {
   'account': { name: 'Finance & Accounts', icon: Banknote, color: 'text-emerald-600', bg: 'bg-emerald-50', path: 'accounts/dashboard' },
   'crm': { name: 'Sales & CRM', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50', path: 'sales' },
   'inventory': { name: 'Inventory Management', icon: Box, color: 'text-amber-600', bg: 'bg-amber-50', path: 'inventory' },
+  'workflow': { name: 'Workflow Management', icon: GitBranch, color: 'text-teal-600', bg: 'bg-teal-50', path: 'workflows' },
+  'workflows': { name: 'Workflow Management', icon: GitBranch, color: 'text-teal-600', bg: 'bg-teal-50', path: 'workflows' },
   'sales': { name: 'Sales & CRM', icon: ShoppingCart, color: 'text-indigo-600', bg: 'bg-indigo-50', path: 'sales' },
   'purchase': { name: 'Purchase Management', icon: Briefcase, color: 'text-rose-600', bg: 'bg-rose-50', path: 'purchases' },
   'purchases': { name: 'Purchase Management', icon: Briefcase, color: 'text-rose-600', bg: 'bg-rose-50', path: 'purchases' },
@@ -27,6 +30,7 @@ export default function CompanyModules() {
   const companyId = useParams().companyId || JSON.parse(localStorage.getItem("selected_company"))?.id || JSON.parse(localStorage.getItem("auth_user"))?.companyCode;
   
   const { accessibleModuleKeys = [], accessLoading = false, companyModulesData } = useOutletContext() || {};
+  const authModules = useSelector((state) => state.auth?.modules);
 
   const handleModuleClick = (path, active) => {
     if (!active) return;
@@ -51,7 +55,15 @@ export default function CompanyModules() {
       active: true
     }];
 
-    const activeAssignments = getCompanyModuleAssignments(companyModulesData, companyId, { activeOnly: false });
+    const rawCompanyAssignments = getCompanyModuleAssignments(companyModulesData, companyId, { activeOnly: false });
+    const activeAssignments = (rawCompanyAssignments && rawCompanyAssignments.length > 0)
+      ? rawCompanyAssignments
+      : (authModules || []).map(m => ({
+          id: m.id,
+          name: m.name,
+          module: { name: m.name, id: m.id },
+          active: m.active !== false
+        }));
 
     // If we have actual company module data from the API, map it dynamically
     if (activeAssignments && activeAssignments.length > 0) {
@@ -85,7 +97,7 @@ export default function CompanyModules() {
     }
 
     return modules;
-  }, [companyModulesData, accessibleModuleKeys, companyId]);
+  }, [companyModulesData, authModules, accessibleModuleKeys, companyId]);
 
   if (accessLoading) {
     return (

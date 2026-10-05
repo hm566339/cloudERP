@@ -807,31 +807,37 @@ public class UserServiceImpl implements UserService {
         List<SsoMeResponse.ModuleContext> authorizedModules = new java.util.ArrayList<>();
 
         if (currentCompany != null) {
-            // Modules activated for this company with user portal access
-            List<UserPortalAccess> userAccess = userPortalAccessRepository.findAllByUser_Id(userId);
-            java.util.Set<UUID> allowedCompanyModuleIds = userAccess.stream()
-                    .filter(UserPortalAccess::isStatus)
-                    .filter(upa -> upa.getCompanyModule() != null
-                            && upa.getCompanyModule().getCompany() != null
-                            && upa.getCompanyModule().getCompany().getId().equals(currentCompany.getId()))
-                    .map(upa -> upa.getCompanyModule().getId())
-                    .collect(java.util.stream.Collectors.toSet());
+            // Organization/subscription module entitlement check (if organization has enabled modules configured)
+            java.util.Set<UUID> orgAllowedModuleIds = null;
+            if (organization != null) {
+                List<OrganizationModule> orgModules = organizationModuleRepository.findByOrganization_IdAndEnabledTrue(organization.getId());
+                if (orgModules != null && !orgModules.isEmpty()) {
+                    orgAllowedModuleIds = orgModules.stream()
+                            .filter(om -> om.getModule() != null)
+                            .map(om -> om.getModule().getId())
+                            .collect(java.util.stream.Collectors.toSet());
+                }
+            }
+
+            final java.util.Set<UUID> finalOrgAllowed = orgAllowedModuleIds;
 
             companyModuleRepository.findByCompany_IdAndActiveTrue(currentCompany.getId()).stream()
-                    .filter(cm -> allowedCompanyModuleIds.contains(cm.getId())
-                            || allowedCompanyModuleIds.isEmpty()) // if no portal-access rows, show all active
                     .filter(cm -> cm.getModule() != null
                             && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
                             && !"SYSTEM_ADMIN".equalsIgnoreCase(cm.getModule().getName()))
-                    .forEach(cm -> authorizedModules.add(
+                    .filter(cm -> finalOrgAllowed == null || finalOrgAllowed.contains(cm.getModule().getId()))
+                    .forEach(cm -> {
+                        String modName = cm.getModule().getName();
+                        String modCode = modName.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "_");
+                        authorizedModules.add(
                             SsoMeResponse.ModuleContext.builder()
                                     .id(cm.getModule().getId())
-                                    .name(cm.getModule().getName())
-                                    .code(cm.getModule().getName().toLowerCase(java.util.Locale.ROOT)
-                                            .replaceAll("[^a-z0-9]+", "_"))
+                                    .name(modName.toUpperCase(java.util.Locale.ROOT))
+                                    .code(modCode)
                                     .host(cm.getModule().getHost())
                                     .active(Boolean.TRUE.equals(cm.getActive()))
-                                    .build()));
+                                    .build());
+                    });
         }
 
         // ── Roles ─────────────────────────────────────────────────────────

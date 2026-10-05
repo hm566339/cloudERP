@@ -145,4 +145,6 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
     Optional<User> findByCompany_IdAndUsernameIgnoreCase(UUID id, String string);
 
+    List<User> findByCompany_Id(UUID companyId);
+
 }

@@ -52,7 +52,8 @@ public class ModuleBootstrap implements CommandLineRunner {
                                                 .routeOrder(1)
                                                 .build());
 
-                // Ensure the route always points to the internal Docker service URL and is active
+                // Ensure the route always points to the internal Docker service URL and is
+                // active
                 moduleRoute.setModule(systemAdminModule);
                 moduleRoute.setServiceUrl(INTERNAL_BASE_URL);
                 moduleRoute.setActive(true);
@@ -66,9 +67,12 @@ public class ModuleBootstrap implements CommandLineRunner {
                 System.out.println("==============================================");
 
                 // Ensure canonical standard ERP modules exist (idempotent)
-                bootstrapModuleIfMissing("ACCOUNT", "account-service.local", "/api/account/**", "http://account-service:8081");
-                bootstrapModuleIfMissing("INVENTORY", "inventory-service.local", "/api/inventory/**", "http://inventory-service:8082");
-                bootstrapModuleIfMissing("WORKFLOW", "workflow-service.local", "/api/workflow/**", "http://workflow-service:8083");
+                bootstrapModuleIfMissing("ACCOUNT", "account-service.local", "/api/account/**",
+                                "http://account-service:8081");
+                bootstrapModuleIfMissing("INVENTORY", "inventory-service.local", "/api/inventory/**",
+                                "http://inventory-service:8082");
+                bootstrapModuleIfMissing("WORKFLOW", "workflow-service.local", "/api/workflow/**",
+                                "http://workflow-service:8083");
         }
 
         private void bootstrapModuleIfMissing(String moduleName, String host, String routePattern, String serviceUrl) {
