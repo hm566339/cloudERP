@@ -23,6 +23,8 @@ public interface SubscriptionPlanRepository extends JpaRepository<SubscriptionPl
 
     boolean existsByCodeIgnoreCase(String code);
 
+    Optional<SubscriptionPlan> findByRazorpayPlanId(String razorpayPlanId);
+
     @Query("SELECT p FROM SubscriptionPlan p WHERE " +
            "(:active IS NULL OR p.active = :active) AND " +
            "(:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.code) LIKE LOWER(CONCAT('%', :search, '%')))")

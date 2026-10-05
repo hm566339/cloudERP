@@ -8,7 +8,14 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "payment_event", uniqueConstraints = @UniqueConstraint(name = "uk_payment_event_provider_id", columnNames = {"provider", "provider_event_id"}))
+@Table(name = "payment_event",
+    uniqueConstraints = @UniqueConstraint(name = "uk_payment_event_provider_id", columnNames = {"provider", "provider_event_id"}),
+    indexes = {
+        @Index(name = "idx_payment_event_provider_event", columnList = "provider,provider_event_id"),
+        @Index(name = "idx_payment_event_status", columnList = "processing_status"),
+        @Index(name = "idx_payment_event_created_at", columnList = "created_at")
+    }
+)
 @Getter
 @Setter
 @NoArgsConstructor

@@ -50,6 +50,7 @@ public class SecurityConfig {
                                                                 "/api/sso/admin/auth/login",
                                                                 "/api/sso/auth/login",
                                                                 "/api/billing/webhook/**",
+                                                                "/api/sso/billing/webhook/**",
                                                                 "/api/sso/auth/select-company",
                                                                 "/api/sso/auth/admin-login",
                                                                 "/api/sso/auth/register",
@@ -157,7 +158,9 @@ public class SecurityConfig {
                                                 .authenticated()
                                                 .requestMatchers(
                                                                 "/api/sso/company-subscriptions",
-                                                                "/api/sso/company-subscriptions/**")
+                                                                "/api/sso/company-subscriptions/**",
+                                                                "/api/sso/subscriptions",
+                                                                "/api/sso/subscriptions/**")
                                                 .authenticated()
                                                 .requestMatchers(
                                                                 "/api/sso/subscription-plans",

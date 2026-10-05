@@ -77,6 +77,63 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
         List<String> businessModuleNames = List.of("ACCOUNT", "INVENTORY", "WORKFLOW", "SALES", "PURCHASE", "CRM");
         attachModulesToPlanIfMissing(businessPlan, businessModuleNames);
 
+        // 3. Bootstrap Basic Plan (₹999/month)
+        SubscriptionPlan basicPlan = subscriptionPlanRepository.findByCodeIgnoreCase("BASIC")
+                .orElseGet(() -> {
+                    SubscriptionPlan plan = SubscriptionPlan.builder()
+                            .code("BASIC")
+                            .name("Basic Plan")
+                            .description("Essential cloud ERP financial and account tools for small teams.")
+                            .durationDays(30)
+                            .price(new BigDecimal("999.00"))
+                            .currency("INR")
+                            .active(true)
+                            .isTrial(false)
+                            .build();
+                    SubscriptionPlan saved = subscriptionPlanRepository.save(plan);
+                    log.info("Created default Basic plan [BASIC]");
+                    return saved;
+                });
+        attachModulesToPlanIfMissing(basicPlan, List.of("ACCOUNT"));
+
+        // 4. Bootstrap Pro Plan (₹2,999/month)
+        SubscriptionPlan proPlan = subscriptionPlanRepository.findByCodeIgnoreCase("PRO")
+                .orElseGet(() -> {
+                    SubscriptionPlan plan = SubscriptionPlan.builder()
+                            .code("PRO")
+                            .name("Pro Plan")
+                            .description("Complete business automation with accounts, inventory, and workflows.")
+                            .durationDays(30)
+                            .price(new BigDecimal("2999.00"))
+                            .currency("INR")
+                            .active(true)
+                            .isTrial(false)
+                            .build();
+                    SubscriptionPlan saved = subscriptionPlanRepository.save(plan);
+                    log.info("Created default Pro plan [PRO]");
+                    return saved;
+                });
+        attachModulesToPlanIfMissing(proPlan, List.of("ACCOUNT", "INVENTORY", "WORKFLOW"));
+
+        // 5. Bootstrap Enterprise Plan (₹9,999/month)
+        SubscriptionPlan enterprisePlan = subscriptionPlanRepository.findByCodeIgnoreCase("ENTERPRISE")
+                .orElseGet(() -> {
+                    SubscriptionPlan plan = SubscriptionPlan.builder()
+                            .code("ENTERPRISE")
+                            .name("Enterprise Plan")
+                            .description("Unlimited enterprise suite with multi-company, CRM, and dedicated priority support.")
+                            .durationDays(30)
+                            .price(new BigDecimal("9999.00"))
+                            .currency("INR")
+                            .active(true)
+                            .isTrial(false)
+                            .build();
+                    SubscriptionPlan saved = subscriptionPlanRepository.save(plan);
+                    log.info("Created default Enterprise plan [ENTERPRISE]");
+                    return saved;
+                });
+        attachModulesToPlanIfMissing(enterprisePlan, List.of("ACCOUNT", "INVENTORY", "WORKFLOW", "CRM", "SALES", "PURCHASE"));
+
         // 3. Existing Companies Backward Compatibility
         // Ensure any existing company has a CompanySubscription so access checks pass seamlessly
         List<Company> allCompanies = companyRepository.findAll();

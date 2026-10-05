@@ -258,20 +258,4 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
 
                 return Map.of("message", "Company module status updated successfully");
         }
-
-}companyModuleRepository.delete(companyModule);}
-
-        @Override
-        public Map<String, String> changeStatus(UUID id, Boolean status) {
-
-                CompanyModule companyModule = companyModuleRepository.findById(id)
-                                .orElseThrow(() -> new ResourceNotFoundException("Company Module not found"));
-                assertCompanyOwnership(companyModule.getCompany());
-
-                companyModule.setActive(status);
-
-                companyModuleRepository.save(companyModule);
-
-                return Map.of("message", "Company module status updated successfully");
-        }
 }

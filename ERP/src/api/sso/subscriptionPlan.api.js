@@ -54,3 +54,19 @@ export const getCompanySubscription = async (companyId) => {
   const response = await apiClient.get(`/api/sso/company-subscriptions/company/${companyId}`);
   return response.data?.data || response.data;
 };
+
+export const createSubscriptionCheckout = async (organizationId, checkoutData) => {
+  const response = await apiClient.post(`/api/sso/subscriptions/${organizationId}/checkout`, checkoutData);
+  return response.data?.data || response.data;
+};
+
+export const cancelSubscription = async (subscriptionId) => {
+  const response = await apiClient.post(`/api/sso/subscriptions/${subscriptionId}/cancel`);
+  return response.data?.data || response.data;
+};
+
+export const getOrganizationSubscription = async (organizationId) => {
+  const response = await apiClient.get(`/api/sso/subscriptions/${organizationId}/current`);
+  return response.data?.data || response.data;
+};
+

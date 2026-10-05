@@ -19,7 +19,8 @@ import java.util.UUID;
     },
     indexes = {
         @Index(name = "idx_subscription_plan_active", columnList = "active"),
-        @Index(name = "idx_subscription_plan_is_trial", columnList = "is_trial")
+        @Index(name = "idx_subscription_plan_is_trial", columnList = "is_trial"),
+        @Index(name = "idx_subscription_plan_razorpay", columnList = "razorpay_plan_id")
     }
 )
 @Getter
@@ -72,6 +73,23 @@ public class SubscriptionPlan {
     @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<SubscriptionPlanModule> planModules = new ArrayList<>();
+
+    /**
+     * Razorpay Plan ID linked to this ERP plan + price combination.
+     * IMPORTANT: If the price is changed, this field MUST be cleared so a new
+     * Razorpay Plan is created for new subscribers. Existing subscriptions retain
+     * their original priceAtSubscription value and are unaffected.
+     */
+    @Column(name = "razorpay_plan_id", length = 100)
+    private String razorpayPlanId;
+
+    /**
+     * Optional version label for audit purposes (e.g. "v1", "v2").
+     * Populated automatically when razorpayPlanId is regenerated.
+     */
+    @Column(name = "plan_version", length = 50)
+    @Builder.Default
+    private String planVersion = "v1";
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

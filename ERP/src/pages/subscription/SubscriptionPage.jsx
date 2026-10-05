@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useAccessMode } from '../../hooks/useAccessMode';
 import { useRoutePath } from '../../hooks/useRoutePath';
+import { createSubscriptionCheckout } from '../../api/sso/subscriptionPlan.api';
 
 export default function SubscriptionPage() {
   const {
@@ -48,9 +49,93 @@ export default function SubscriptionPage() {
 
   const { buildPath } = useRoutePath();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [billingCycle, setBillingCycle] = useState('annual'); // 'monthly' | 'annual'
+  const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'annual'
   const [selectedTier, setSelectedTier] = useState('professional');
   const [copiedField, setCopiedField] = useState(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState(null);
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+
+  // Dynamically load Razorpay checkout script
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleRazorpayCheckout = async (tierId) => {
+    const orgId = organization?.id;
+    if (!orgId) {
+      setCheckoutError('Organization context is missing. Please refresh and try again.');
+      return;
+    }
+    setCheckoutLoading(true);
+    setCheckoutError(null);
+
+    try {
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        throw new Error('Unable to load Razorpay Checkout SDK. Please verify internet connectivity.');
+      }
+
+      const tierMap = {
+        starter: 'BASIC',
+        professional: 'PRO',
+        enterprise: 'ENTERPRISE',
+      };
+      const planCode = tierMap[tierId] || 'PRO';
+
+      const checkoutData = await createSubscriptionCheckout(orgId, {
+        planId: planCode,
+        totalCount: billingCycle === 'annual' ? 1 : 12,
+      });
+
+      if (!checkoutData || !checkoutData.subscriptionId) {
+        throw new Error('Server did not return a valid Razorpay subscription ID.');
+      }
+
+      const options = {
+        key: checkoutData.keyId,
+        subscription_id: checkoutData.subscriptionId,
+        name: 'Cloud ERP',
+        description: `${checkoutData.planName || 'ERP'} Recurring Subscription`,
+        currency: checkoutData.currency || 'INR',
+        handler: function () {
+          setCheckoutSuccess(true);
+          setShowUpgradeModal(false);
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        },
+        prefill: {
+          name: organization?.name || organization?.displayName || '',
+        },
+        theme: {
+          color: '#4f46e5',
+        },
+      };
+
+      const rzpInstance = new window.Razorpay(options);
+      rzpInstance.on('payment.failed', function (resp) {
+        setCheckoutError(resp.error?.description || 'Payment authorization failed');
+      });
+      rzpInstance.open();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to initiate Razorpay checkout';
+      setCheckoutError(msg);
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
 
   // Manage body scroll lock and escape listener for modal
   useEffect(() => {
@@ -94,10 +179,11 @@ export default function SubscriptionPage() {
   const plans = [
     {
       id: 'starter',
-      name: 'Starter',
+      code: 'BASIC',
+      name: 'Basic',
       badge: 'Small Business',
-      monthlyPrice: 29,
-      annualPrice: 24,
+      monthlyPrice: 999,
+      annualPrice: 799,
       description: 'Essential accounting, invoicing, and single-entity financial ledger.',
       features: [
         'Up to 3 Team Members',
@@ -107,15 +193,16 @@ export default function SubscriptionPage() {
         'Standard Financial Statements',
         'Standard Email Support',
       ],
-      cta: 'Select Starter',
+      cta: 'Select Basic',
       featured: false,
     },
     {
       id: 'professional',
-      name: 'Professional',
+      code: 'PRO',
+      name: 'Pro',
       badge: 'Most Popular',
-      monthlyPrice: 79,
-      annualPrice: 64,
+      monthlyPrice: 2999,
+      annualPrice: 2399,
       description: 'Comprehensive ERP for growing companies needing inventory and workflows.',
       features: [
         'Up to 15 Team Members',
@@ -126,15 +213,16 @@ export default function SubscriptionPage() {
         'Audit Trails & Change History',
         'Priority 24/7 Assistance',
       ],
-      cta: 'Upgrade to Professional',
+      cta: 'Upgrade to Pro',
       featured: true,
     },
     {
       id: 'enterprise',
-      name: 'Enterprise Suite',
+      code: 'ENTERPRISE',
+      name: 'Enterprise',
       badge: 'Custom Scale',
-      monthlyPrice: 199,
-      annualPrice: 159,
+      monthlyPrice: 9999,
+      annualPrice: 7999,
       description: 'Full-scale enterprise resource planning with dedicated infra and SLA.',
       features: [
         'Unlimited Team Members',
@@ -145,7 +233,7 @@ export default function SubscriptionPage() {
         'Dedicated Enterprise Account Manager',
         '99.99% Uptime Guarantee & SLA',
       ],
-      cta: 'Contact Enterprise Sales',
+      cta: 'Select Enterprise',
       featured: false,
     },
   ];
@@ -593,7 +681,7 @@ export default function SubscriptionPage() {
 
                   <div className="pt-2 pb-1 border-b border-zinc-100">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-black text-zinc-900">${price}</span>
+                      <span className="text-3xl font-black text-zinc-900">₹{price}</span>
                       <span className="text-xs text-zinc-400 font-medium">/ month</span>
                     </div>
                     <p className="text-[10.5px] text-zinc-400 mt-0.5">
@@ -755,7 +843,7 @@ export default function SubscriptionPage() {
                         {isSelected && <CheckCircle2 size={15} className="text-indigo-600" />}
                       </div>
                       <div className="mt-2">
-                        <span className="text-xl font-black text-zinc-900">${price}</span>
+                        <span className="text-xl font-black text-zinc-900">₹{price}</span>
                         <span className="text-[10px] text-zinc-400">/mo</span>
                       </div>
                       <p className="text-[10.5px] text-zinc-500 mt-1 line-clamp-2">{p.description}</p>
@@ -768,6 +856,21 @@ export default function SubscriptionPage() {
                 );
               })}
             </div>
+
+            {/* Checkout Feedback Alerts */}
+            {checkoutError && (
+              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-700 text-xs flex items-center gap-2.5 animate-shake">
+                <AlertTriangle size={16} className="text-rose-600 shrink-0" />
+                <span className="font-medium">{checkoutError}</span>
+              </div>
+            )}
+
+            {checkoutSuccess && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs flex items-center gap-2.5">
+                <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                <span className="font-medium">Subscription authenticated! Activating your account...</span>
+              </div>
+            )}
 
             {/* Enterprise Support Contact Card */}
             <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-3">
@@ -807,14 +910,16 @@ export default function SubscriptionPage() {
               >
                 Close
               </button>
-              <a
-                href={`mailto:sales@mark2erp.com?subject=Upgrade%20to%20${encodeURIComponent(selectedTier.toUpperCase())}%20Plan%20for%20${encodeURIComponent(organization?.name || 'Organization')}&body=Hello%20Mark2%20Sales%20Team%2C%0A%0AWe%20would%20like%20to%20upgrade%20our%20subscription%20to%20the%20${encodeURIComponent(selectedTier.toUpperCase())}%20tier%20(${encodeURIComponent(billingCycle)}%20billing)%20for%20organization%3A%0A-%20Organization%20Name%3A%20${encodeURIComponent(organization?.name || '')}%0A-%20Organization%20Code%3A%20${encodeURIComponent(organization?.code || '')}%0A-%20Company%3A%20${encodeURIComponent(company?.name || '')}%20(${encodeURIComponent(company?.code || '')})%0A%0APlease%20provide%20the%20activation%20details.%0A%0AThank%20you.`}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all inline-flex items-center justify-center gap-2 text-center"
+              <button
+                type="button"
+                disabled={checkoutLoading}
+                onClick={() => handleRazorpayCheckout(selectedTier)}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all inline-flex items-center justify-center gap-2 text-center disabled:opacity-50"
               >
-                <Mail size={14} />
-                <span>Contact Sales to Activate</span>
+                <CreditCard size={14} />
+                <span>{checkoutLoading ? 'Preparing Checkout...' : 'Pay with Razorpay (Auto-Renew)'}</span>
                 <ArrowRight size={13} />
-              </a>
+              </button>
             </div>
           </div>
         </div>,
