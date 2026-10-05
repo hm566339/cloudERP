@@ -67,7 +67,10 @@ export default function WorkspaceLandingRedirect() {
     if (single === 'CRM') {
       return <Navigate to="/crm/dashboard" replace />;
     }
-    return <Navigate to="/accounts/dashboard" replace />;
+    if (single === 'ACCOUNT') {
+      return <Navigate to="/accounts/dashboard" replace />;
+    }
+    return <NoModuleAccessView />;
   }
 
   // Multiple modules exist: render common ERP shell by navigating to the first authorized module
@@ -81,5 +84,5 @@ export default function WorkspaceLandingRedirect() {
     return <Navigate to="/crm/dashboard" replace />;
   }
 
-  return <Navigate to="/accounts/dashboard" replace />;
+  return <NoModuleAccessView />;
 }

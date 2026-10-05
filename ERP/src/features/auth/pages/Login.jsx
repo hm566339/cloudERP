@@ -113,32 +113,33 @@ export default function Login() {
       }
 
       // Store intended destination in sessionStorage for AuthCallback to use later
-      let destinationUrl = moduleCode ? '/' + moduleCode : '/accounts/dashboard';
+      let destinationUrl = moduleCode ? '/' + moduleCode : '/workspace';
       if (gotoUrl) {
         try {
           const parsed = new URL(gotoUrl);
           destinationUrl = parsed.pathname + parsed.search + parsed.hash;
         } catch {
-          destinationUrl = gotoUrl.startsWith('/') ? gotoUrl : '/accounts/dashboard';
+          destinationUrl = gotoUrl.startsWith('/') ? gotoUrl : '/workspace';
         }
       }
       sessionStorage.setItem('auth_redirect', destinationUrl);
 
       // Build payload matching backend LoginRequest contract
-      const targetModuleCode = moduleCode ? normalizeModuleName(moduleCode) : 'ACCOUNT';
+      // Global ERP login sends generic ERP frontend host, NOT module-specific backend API
+      const genericErpHost = window.location.origin + '/erp';
       const loginPayload = {
         username: username.trim(),
         password,
-        moduleCode: targetModuleCode,
+        ...(moduleCode ? { moduleCode: normalizeModuleName(moduleCode) } : {}),
         ...(isOrgMode
           ? {
             organizationCode: (orgData?.code || organizationCode).toLowerCase(),
             email: username.trim().includes('@') ? username.trim().toLowerCase() : undefined,
-            host: gotoUrl || window.location.origin + (moduleCode ? '/api/' + moduleCode : '/api/account'),
+            host: gotoUrl || genericErpHost,
           }
           : {
             companyCode: queryCompanyCode || companyCode || '',
-            host: gotoUrl || window.location.origin + (moduleCode ? '/api/' + moduleCode : '/api/account'),
+            host: gotoUrl || genericErpHost,
           }
         ),
       };
@@ -182,18 +183,16 @@ export default function Login() {
           if (targetPath.startsWith('/erp/')) {
             targetPath = targetPath.replace(/^\/erp/, '');
           }
+          // Never forward generic ERP login flow to module backend endpoints (e.g. /api/account/auth/callback)
           if (targetPath.startsWith('/api/')) {
-            // Backend endpoint proxy (e.g. /api/account/auth/callback)
-            const proxiedUrl = window.location.origin + targetPath + urlObj.search + urlObj.hash;
-            console.log('[Login] Routing OAuth callback through backend module proxy:', proxiedUrl);
-            window.location.href = proxiedUrl;
-          } else {
-            // Frontend SPA route (e.g. /auth/callback)
-            console.log('[Login] Navigating to SPA auth callback:', targetPath + urlObj.search + urlObj.hash);
-            navigate(targetPath + urlObj.search + urlObj.hash, { replace: true });
+            console.warn('[Login] Normalizing backend callback path to generic SPA callback:', targetPath);
+            targetPath = '/auth/callback';
           }
+          console.log('[Login] Navigating to SPA auth callback:', targetPath + urlObj.search + urlObj.hash);
+          navigate(targetPath + urlObj.search + urlObj.hash, { replace: true });
         } catch {
-          window.location.href = loginData.redirectUrl;
+          const codeQuery = loginData.redirectUrl.includes('?') ? loginData.redirectUrl.substring(loginData.redirectUrl.indexOf('?')) : '';
+          navigate(`/auth/callback${codeQuery}`, { replace: true });
         }
         return;
       }

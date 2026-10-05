@@ -80,11 +80,13 @@ export const getAccountOAuthLoginUrl = (companyCode) => {
   return `/api/account/auth/login?companyCode=${encodeURIComponent(companyCode)}`;
 };
 
-/** GET /api/account/auth/callback?code=... — Process OAuth callback */
+/** 
+ * @deprecated Legacy module-specific callback. 
+ * Global ERP uses generic SSO callback /erp/auth/callback via exchangeToken()
+ */
 export const accountCallback = async (code) => {
-  const response = await apiClient.get('/api/account/auth/callback', {
-    params: { code },
-  });
+  console.warn('[DEPRECATED] accountCallback called. Global ERP uses generic exchangeToken.');
+  const response = await apiClient.post('/api/sso/token/exchange', { data: { code } });
   return response.data;
 };
 

@@ -493,13 +493,7 @@ public class AuthServiceImpl implements AuthService {
                 String redirectBase = (resolvedHost != null && !resolvedHost.isBlank())
                                 ? resolvedHost.trim()
                                 : (module.getHost() != null ? module.getHost().trim() : "");
-                String redirectUrl;
-                if (redirectBase.isEmpty()) {
-                        redirectUrl = "/auth/callback?code=" + codeValue;
-                } else {
-                        String cleanBase = redirectBase.endsWith("/") ? redirectBase.substring(0, redirectBase.length() - 1) : redirectBase;
-                        redirectUrl = cleanBase + "/auth/callback?code=" + codeValue;
-                }
+                String redirectUrl = resolveGenericErpCallbackUrl(redirectBase, codeValue);
 
                 log.info("Login successful - authorization code issued | userId={} | companyId={} | moduleId={} | code={} | ip={}",
                                 user.getId(), company.getId(), module.getId(), maskCode(codeValue), ip);
@@ -628,13 +622,7 @@ public class AuthServiceImpl implements AuthService {
                 String redirectBase = (request.getHost() != null && !request.getHost().isBlank())
                                 ? request.getHost().trim()
                                 : (module.getHost() != null ? module.getHost().trim() : "");
-                String redirectUrl;
-                if (redirectBase.isEmpty()) {
-                        redirectUrl = "/auth/callback?code=" + codeValue;
-                } else {
-                        String cleanBase = redirectBase.endsWith("/") ? redirectBase.substring(0, redirectBase.length() - 1) : redirectBase;
-                        redirectUrl = cleanBase + "/auth/callback?code=" + codeValue;
-                }
+                String redirectUrl = resolveGenericErpCallbackUrl(redirectBase, codeValue);
 
                 return LoginResponse.builder()
                                 .requiresCompanySelection(false)
@@ -643,6 +631,44 @@ public class AuthServiceImpl implements AuthService {
                                                 .code(organization.getOrganizationCode()).build())
                                 .redirectUrl(redirectUrl)
                                 .build();
+        }
+
+        private String resolveGenericErpCallbackUrl(String host, String codeValue) {
+                if (host == null || host.isBlank()) {
+                        return "/erp/auth/callback?code=" + codeValue;
+                }
+                String clean = host.trim();
+                while (clean.endsWith("/")) {
+                        clean = clean.substring(0, clean.length() - 1);
+                }
+                // Normalize any module-specific API or UI paths to generic ERP frontend
+                if (clean.endsWith("/api/account") || clean.endsWith("/api/accounts")) {
+                        clean = clean.replaceAll("/api/accounts?$", "/erp");
+                } else if (clean.endsWith("/api/inventory")) {
+                        clean = clean.replaceAll("/api/inventory$", "/erp");
+                } else if (clean.endsWith("/api/crm")) {
+                        clean = clean.replaceAll("/api/crm$", "/erp");
+                } else if (clean.contains("/api/")) {
+                        clean = clean.substring(0, clean.indexOf("/api/")) + "/erp";
+                }
+                if (clean.endsWith("/accounts")) {
+                        clean = clean.substring(0, clean.length() - "/accounts".length()) + "/erp";
+                } else if (clean.endsWith("/inventory")) {
+                        clean = clean.substring(0, clean.length() - "/inventory".length()) + "/erp";
+                } else if (clean.endsWith("/crm")) {
+                        clean = clean.substring(0, clean.length() - "/crm".length()) + "/erp";
+                }
+
+                // If internal container hostname like account-service.local or inventory-service.local, fallback to relative path
+                if (clean.contains(".local") || clean.contains("account-service") || clean.contains("inventory-service")
+                                || clean.contains("workflow-service")) {
+                        return "/erp/auth/callback?code=" + codeValue;
+                }
+
+                if (!clean.endsWith("/erp") && !clean.contains("/erp/")) {
+                        clean = clean + "/erp";
+                }
+                return clean + "/auth/callback?code=" + codeValue;
         }
 
         private Module resolveOrganizationModule(LoginRequest request, Company company) {

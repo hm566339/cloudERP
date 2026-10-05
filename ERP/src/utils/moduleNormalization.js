@@ -6,7 +6,6 @@
 export const CANONICAL_MODULES = {
   ACCOUNT: 'ACCOUNT',
   INVENTORY: 'INVENTORY',
-  WORKFLOW: 'WORKFLOW',
   CRM: 'CRM',
   CORE: 'CORE',
   HR: 'HR',
@@ -24,8 +23,8 @@ export const CANONICAL_MODULES = {
  */
 export function normalizeModuleName(input) {
   if (!input && input !== 0) return '';
-  const name = typeof input === 'object' 
-    ? (input.canonical || input.name || input.code || input.moduleName || '') 
+  const name = typeof input === 'object'
+    ? (input.canonical || input.name || input.code || input.moduleName || '')
     : input;
   const raw = String(name).trim();
   const lower = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -35,9 +34,6 @@ export function normalizeModuleName(input) {
   }
   if (lower.startsWith('inventor') || lower === 'inv') {
     return CANONICAL_MODULES.INVENTORY;
-  }
-  if (lower.startsWith('workflow') || lower === 'wf') {
-    return CANONICAL_MODULES.WORKFLOW;
   }
   if (lower === 'crm' || lower.includes('salescrm') || lower === 'sales') {
     return CANONICAL_MODULES.CRM;
@@ -304,8 +300,8 @@ export function hasPermission(authContext, featureName, action, moduleName) {
       if (upper === 'ALL' || upper === 'ALL_MODULES') return true;
       if (targetAction) {
         return upper === `${targetFeature}:${targetAction}` ||
-               upper === `${targetAction}_${targetFeature}` ||
-               upper === targetFeature;
+          upper === `${targetAction}_${targetFeature}` ||
+          upper === targetFeature;
       }
       return upper === targetFeature || upper.startsWith(`${targetFeature}:`);
     }
@@ -326,8 +322,8 @@ export function hasPermission(authContext, featureName, action, moduleName) {
 
       if (targetAction) {
         const isActionMatch = act === targetAction ||
-                              permCode === `${targetFeature}:${targetAction}` ||
-                              permCode === `${targetAction}_${targetFeature}`;
+          permCode === `${targetFeature}:${targetAction}` ||
+          permCode === `${targetAction}_${targetFeature}`;
         const isFeatureMatch = feat === targetFeature || permCode.startsWith(`${targetFeature}:`);
         return isFeatureMatch && isActionMatch;
       }
@@ -348,8 +344,8 @@ export function canRead(authContext, featureName, moduleName) {
 
 export function canWrite(authContext, featureName, moduleName) {
   return hasPermission(authContext, featureName, 'WRITE', moduleName) ||
-         hasPermission(authContext, featureName, 'CREATE', moduleName) ||
-         hasPermission(authContext, featureName, 'UPDATE', moduleName);
+    hasPermission(authContext, featureName, 'CREATE', moduleName) ||
+    hasPermission(authContext, featureName, 'UPDATE', moduleName);
 }
 
 export function canDelete(authContext, featureName, moduleName) {

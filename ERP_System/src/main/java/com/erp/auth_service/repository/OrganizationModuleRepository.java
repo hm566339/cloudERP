@@ -6,6 +6,6 @@ import java.util.UUID;
 
 public interface OrganizationModuleRepository extends JpaRepository<OrganizationModule, UUID> {
     boolean existsByOrganization_IdAndModule_IdAndEnabledTrue(UUID organizationId, UUID moduleId);
+
     java.util.List<OrganizationModule> findByOrganization_IdAndEnabledTrue(UUID organizationId);
-    java.util.Optional<OrganizationModule> findByOrganization_IdAndModule_Id(UUID organizationId, UUID moduleId);
 }

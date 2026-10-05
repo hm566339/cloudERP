@@ -131,7 +131,7 @@ public class AuthController {
                 } catch (Exception ex) {
 
                         log.error(
-                                        "Token exchange failed: {}",
+                                        "Legacy account token exchange failed: {}",
                                         ex.getMessage(),
                                         ex);
 
@@ -144,12 +144,15 @@ public class AuthController {
                                         base = base.substring(0, base.length() - 1);
                                 }
                                 String loginUrl = (base != null && !base.isBlank()) ? base + "/login?error=token_exchange_failed" : "/erp/login?error=token_exchange_failed";
-                                response.sendRedirect(loginUrl);
-                                return;
+                                try {
+                                        response.sendRedirect(loginUrl);
+                                        return;
+                                } catch (IOException ioEx) {
+                                        log.warn("Failed to redirect to login after exchange failure: {}", ioEx.getMessage());
+                                }
                         }
-
-                        throw new InternalServerException(
-                                        "Token exchange failed", ex);
+                        response.setStatus(HttpServletResponse.SC_FOUND);
+                        response.setHeader("Location", "/erp/login?error=token_exchange_failed");
                 }
         }
 

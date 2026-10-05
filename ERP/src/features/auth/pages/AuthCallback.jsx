@@ -42,26 +42,29 @@ export default function AuthCallback() {
         if (code && !activeToken) {
           const customClientId = searchParams.get('clientId');
           const customClientSecret = searchParams.get('clientSecret');
-          if (customClientId && customClientSecret) {
-            try {
-              const exchangeResult = await exchangeToken({ code, clientId: customClientId, clientSecret: customClientSecret });
-              const tokenData = exchangeResult?.data || exchangeResult;
-              const newAccessToken = tokenData?.access_token || tokenData?.accessToken;
-              const newRefreshToken = tokenData?.refresh_token || tokenData?.refreshToken;
-              if (newAccessToken) {
-                document.cookie = `ACCESS_TOKEN=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
-                document.cookie = `auth_token=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
-                activeToken = newAccessToken;
-              }
-              if (newRefreshToken) {
-                document.cookie = `ACCESS_TOKEN_REFRESH=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
-              }
-            } catch (exchangeErr) {
-              console.warn('OAuth code exchange failed:', exchangeErr);
+          try {
+            // Generic ERP Callback exchanges authorization code directly with SSO service
+            const exchangePayload = { code };
+            if (customClientId) exchangePayload.clientId = customClientId;
+            if (customClientSecret) exchangePayload.clientSecret = customClientSecret;
+
+            const exchangeResult = await exchangeToken(exchangePayload);
+            const tokenData = exchangeResult?.data || exchangeResult;
+            const newAccessToken = tokenData?.access_token || tokenData?.accessToken;
+            const newRefreshToken = tokenData?.refresh_token || tokenData?.refreshToken;
+            if (newAccessToken) {
+              document.cookie = `ACCESS_TOKEN=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
+              document.cookie = `auth_token=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
+              activeToken = newAccessToken;
             }
-          } else {
-            // Forward authorization code to the backend callback handler to exchange securely
-            window.location.href = `/api/account/auth/callback?code=${encodeURIComponent(code)}`;
+            if (newRefreshToken) {
+              document.cookie = `ACCESS_TOKEN_REFRESH=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
+            }
+          } catch (exchangeErr) {
+            console.error('[AuthCallback] SSO authorization code exchange failed:', exchangeErr);
+            const msg = exchangeErr?.response?.data?.message || exchangeErr?.message || 'Failed to exchange authorization code';
+            setError(msg);
+            setTimeout(() => navigate(buildPath('/login')), 3000);
             return;
           }
         }
@@ -146,7 +149,7 @@ export default function AuthCallback() {
           if (path.startsWith('/erp/')) {
             path = path.replace(/^\/erp/, '');
           }
-          if (!path || path === '/' || path === '/login') {
+          if (!path || path === '/' || path === '/login' || path === '/accounts/dashboard' || path === '/account/dashboard') {
             path = isAdminContext ? '/super-admin/dashboard' : '/workspace';
           }
           navigate(path, { replace: true });

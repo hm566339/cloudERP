@@ -72,14 +72,15 @@ function resolveWorkspaceDestination(authContext) {
     const single = entitledModules[0];
     if (single === 'INVENTORY') return '/inventory/dashboard';
     if (single === 'CRM') return '/crm/dashboard';
-    return '/accounts/dashboard';
+    if (single === 'ACCOUNT') return '/accounts/dashboard';
+    return 'NO_ACCESS';
   }
 
   if (entitledModules.includes('ACCOUNT')) return '/accounts/dashboard';
   if (entitledModules.includes('INVENTORY')) return '/inventory/dashboard';
   if (entitledModules.includes('CRM')) return '/crm/dashboard';
 
-  return '/accounts/dashboard';
+  return 'NO_ACCESS';
 }
 
 describe('Phase 12 — Login Flow, Route Protection & Workspace Navigation Tests', () => {

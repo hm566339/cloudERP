@@ -220,8 +220,7 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
       <Route path={`${prefix}manufacturing/production`} element={<ProductionPage />} />
       <Route path={`${prefix}manufacturing/batches`} element={<BatchesPage />} />
 
-      {/* Administration & Workflow */}
-      <Route path={`${prefix}workflow`} element={<Navigate to={`${prefix}workflows`} replace />} />
+      {/* Administration */}
       <Route path={`${prefix}workflows`} element={<WorkflowManagementPage />} />
       <Route path={`${prefix}workflows/approvals`} element={<ApprovalRequestsPage />} />
     </>
