@@ -18,6 +18,7 @@ import com.erp.auth_service.service.CompanyService;
 import com.erp.auth_service.service.AuthorizationService;
 import com.erp.auth_service.repository.OrganizationRepository;
 import com.erp.auth_service.repository.SubscriptionRepository;
+import com.erp.auth_service.security.PlatformSecurityUtil;
 import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.model.Organization;
 import com.erp.auth_service.model.Subscription;
@@ -61,6 +62,9 @@ public class CompanyServiceImpl implements CompanyService {
         private String strapiToken;
 
         private void assertCompanyOwnership(Company company) {
+                if (PlatformSecurityUtil.isElevatedAdmin()) {
+                        return;
+                }
                 RequestContext.Context context = RequestContext.get();
                 if (context != null) {
                         if (context.organizationId() != null) {

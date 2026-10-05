@@ -305,7 +305,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
 
                     TenantContext.set(companyCode);
-                    if (session.getOrganization() != null) {
+                    if (session.getOrganization() != null && !isSystemAdmin) {
                         RequestContext.set(
                                 session.getUser().getId(),
                                 session.getOrganization().getId(),
@@ -321,7 +321,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         RequestContext.set(
                                 session.getUser().getId(),
                                 null,
-                                session.getCompany() != null ? session.getCompany().getId() : null,
+                                isSystemAdmin ? null : (session.getCompany() != null ? session.getCompany().getId() : null),
                                 session.getModule() != null ? session.getModule().getClientId() : null,
                                 AccessMode.FULL);
                     }

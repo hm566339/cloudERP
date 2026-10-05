@@ -19,6 +19,7 @@ import com.erp.auth_service.repository.SessionRepository;
 import com.erp.auth_service.repository.UserPortalAccessRepository;
 import com.erp.auth_service.repository.UserRepository;
 import com.erp.auth_service.repository.UserRoleRepository;
+import com.erp.auth_service.security.PlatformSecurityUtil;
 import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.service.UserAccessService;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +53,9 @@ public class UserAccessServiceImpl implements UserAccessService {
         private final UserPortalAccessMapper userPortalAccessMapper;
 
         private void assertCompanyOwnership(Company company) {
+                if (PlatformSecurityUtil.isElevatedAdmin()) {
+                        return;
+                }
                 RequestContext.Context context = RequestContext.get();
                 if (context != null) {
                         if (context.organizationId() != null) {
@@ -287,7 +291,7 @@ public class UserAccessServiceImpl implements UserAccessService {
                         Boolean status) {
 
                 RequestContext.Context context = RequestContext.get();
-                if (context != null && context.companyId() != null && !context.companyId().equals(companyId)) {
+                if (!PlatformSecurityUtil.isElevatedAdmin() && context != null && context.companyId() != null && !context.companyId().equals(companyId)) {
                         throw new ForbiddenException("Access denied: Company does not match authorized company context");
                 }
 

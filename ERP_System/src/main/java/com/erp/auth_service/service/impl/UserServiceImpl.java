@@ -18,6 +18,7 @@ import com.erp.auth_service.model.Module;
 import com.erp.auth_service.repository.*;
 import com.erp.auth_service.security.JwtDecoder;
 import com.erp.auth_service.security.JwtService;
+import com.erp.auth_service.security.PlatformSecurityUtil;
 import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.service.UserService;
 import com.erp.auth_service.utility.AccessMode;
@@ -86,6 +87,9 @@ public class UserServiceImpl implements UserService {
     private String emailBaseUrl;
 
     private void assertCompanyOwnership(Company company) {
+        if (PlatformSecurityUtil.isElevatedAdmin()) {
+            return;
+        }
         RequestContext.Context context = RequestContext.get();
         if (context != null) {
             if (context.organizationId() != null) {

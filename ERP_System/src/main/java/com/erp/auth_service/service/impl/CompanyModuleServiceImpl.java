@@ -16,6 +16,7 @@ import com.erp.auth_service.model.CompanyModule;
 import com.erp.auth_service.repository.CompanyModuleRepository;
 import com.erp.auth_service.repository.CompanyRepository;
 import com.erp.auth_service.repository.ModuleRepository;
+import com.erp.auth_service.security.PlatformSecurityUtil;
 import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.service.CompanyModuleService;
 import com.erp.auth_service.model.Module;
@@ -41,6 +42,9 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
         private final ModuleRepository moduleRepository;
 
         private void assertCompanyOwnership(Company company) {
+                if (PlatformSecurityUtil.isElevatedAdmin()) {
+                        return;
+                }
                 RequestContext.Context context = RequestContext.get();
                 if (context != null) {
                         if (context.organizationId() != null) {
