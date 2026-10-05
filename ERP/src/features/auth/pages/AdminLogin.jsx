@@ -66,6 +66,7 @@ export default function AdminLogin() {
 
       if (accessToken) {
         document.cookie = `ACCESS_TOKEN=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
+        document.cookie = `auth_token=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
       }
       if (refreshTokenValue) {
         document.cookie = `ACCESS_TOKEN_REFRESH=${refreshTokenValue}; path=/; max-age=604800; SameSite=Lax`;
@@ -98,6 +99,7 @@ export default function AdminLogin() {
       }));
 
       dispatch(addAlert({ type: 'success', message: `Welcome back, Super Admin!` }))
+      navigate('/super-admin/dashboard', { replace: true });
 
     } catch (error) {
       console.error("API Admin Login failed.", error)

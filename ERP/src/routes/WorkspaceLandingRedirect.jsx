@@ -26,6 +26,18 @@ export default function WorkspaceLandingRedirect() {
     );
   }
 
+  // Priority 0: Super Administrator detection
+  const isSuperAdmin =
+    authContext?.user?.role === 'super_admin' ||
+    (Array.isArray(authContext?.user?.roles) &&
+      authContext.user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'SUPER_ADMIN')) ||
+    (Array.isArray(authContext?.roles) &&
+      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'SUPER_ADMIN'));
+
+  if (isSuperAdmin) {
+    return <Navigate to="/super-admin/dashboard" replace />;
+  }
+
   // Priority 1: Organization Owner detection
   const isOwner =
     authContext?.membership?.memberType === 'OWNER' ||

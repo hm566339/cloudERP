@@ -89,6 +89,9 @@ export const store = configureStore({
 })
 
 export const persistor = persistStore(store)
+if (typeof window !== 'undefined') {
+  window.__REDUX_STORE__ = store;
+}
 export const resetStore = () => ({ type: 'RESET_STORE' })
 export const logout = () => ({ type: 'auth/logout' })
 export default store

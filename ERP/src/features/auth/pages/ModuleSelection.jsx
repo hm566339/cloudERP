@@ -32,7 +32,7 @@ export default function ModuleSelection() {
 
   useEffect(() => {
     let activeUser = currentUser;
-    const cookieToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token');
+    const cookieToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token');
 
     if (!activeUser && cookieToken) {
       const decoded = parseJwt(cookieToken);
@@ -56,11 +56,8 @@ export default function ModuleSelection() {
     if (activeUser) {
       if (activeUser.role === 'super_admin') {
         navigate('/super-admin/dashboard', { replace: true });
-      } else if (activeUser.companyCode || activeUser.companyId) {
-        const compId = activeUser.companyCode || activeUser.companyId;
-        navigate(`/company/${compId}/accounts/dashboard`, { replace: true });
       } else {
-        navigate('/company-select', { replace: true });
+        navigate('/workspace', { replace: true });
       }
     }
   }, [currentUser, isAuthenticated, navigate, dispatch]);
@@ -69,16 +66,11 @@ export default function ModuleSelection() {
     if (mod.path) {
       navigate(mod.path);
     } else {
-      const cookieToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token');
+      const cookieToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token');
       if (currentUser || cookieToken) {
-        const compId = currentUser?.companyCode || currentUser?.companyId;
-        if (compId) {
-          navigate(`/company/${compId}/accounts/dashboard`);
-        } else {
-          navigate(buildPath('/dashboard'));
-        }
+        navigate('/workspace');
       } else {
-        navigate(`/company-select?module=${mod.id}`);
+        navigate(`/${mod.id}/login`);
       }
     }
   };

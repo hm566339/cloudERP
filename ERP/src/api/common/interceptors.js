@@ -80,6 +80,20 @@ export const attachRequestInterceptor = (instance) => {
           }
         }
 
+        // Attach Authorization header from cookie if not already explicitly present
+        if (config.headers && !config.headers['Authorization'] && !config.headers['authorization']) {
+          let token = null;
+          if (typeof document !== 'undefined') {
+            const match = document.cookie.match(/(^| )ACCESS_TOKEN=([^;]+)/) ||
+                          document.cookie.match(/(^| )auth_token=([^;]+)/) ||
+                          document.cookie.match(/(^| )access_token=([^;]+)/);
+            if (match) token = match[2];
+          }
+          if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+          }
+        }
+
         console.log(
           `[API REQUEST] ${config.method?.toUpperCase()} ${config.url}`,
           config.data || config.params || '(no data)',
@@ -177,11 +191,12 @@ export const attachResponseInterceptor = (instance) => {
       // EXCEPT when the request is a '/me' probe. We want '/me' to attempt a refresh
       // so the user can be automatically logged back in if they have a valid refresh cookie.
       try {
-        const store = require('../../app/store').default;
-        const state = store.getState();
+        const store = (typeof window !== 'undefined' && window.__REDUX_STORE__) || require('../../app/store').default;
+        const state = store?.getState?.();
         const isMeProbe = requestUrl.includes('/me');
 
         if (
+          state &&
           !isMeProbe &&
           (state.auth?.sessionStatus === 'unauthenticated' || !state.auth?.user)
         ) {
@@ -285,7 +300,7 @@ export const attachResponseInterceptor = (instance) => {
         if (status === 500 || status === 502) {
           processQueue(moduleName, refreshError);
           if (typeof window !== 'undefined') {
-            window.location.href = '/mdoles';
+            window.location.href = '/modules';
           }
           return Promise.reject(refreshError);
         }

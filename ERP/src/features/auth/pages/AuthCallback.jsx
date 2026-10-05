@@ -32,9 +32,10 @@ export default function AuthCallback() {
       // If we got a token in the query params, save it to cookies so the proxy can attach it
       if (queryToken) {
         document.cookie = `ACCESS_TOKEN=${queryToken}; path=/; max-age=86400; SameSite=Lax`;
+        document.cookie = `auth_token=${queryToken}; path=/; max-age=86400; SameSite=Lax`;
       }
       
-      const cookieToken = queryToken || getCookie('ACCESS_TOKEN') || getCookie('auth_token');
+      const cookieToken = queryToken || getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token');
       
       try {
         let activeToken = cookieToken;
@@ -49,6 +50,7 @@ export default function AuthCallback() {
               const newRefreshToken = tokenData?.refresh_token || tokenData?.refreshToken;
               if (newAccessToken) {
                 document.cookie = `ACCESS_TOKEN=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
+                document.cookie = `auth_token=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
                 activeToken = newAccessToken;
               }
               if (newRefreshToken) {
@@ -141,10 +143,13 @@ export default function AuthCallback() {
           if (path.startsWith(window.location.origin)) {
             path = path.replace(window.location.origin, '');
           }
-          if (!path || path === '/' || path === '/login') {
-            path = '/workspace';
+          if (path.startsWith('/erp/')) {
+            path = path.replace(/^\/erp/, '');
           }
-          navigate(path);
+          if (!path || path === '/' || path === '/login') {
+            path = isAdminContext ? '/super-admin/dashboard' : '/workspace';
+          }
+          navigate(path, { replace: true });
         }
       } catch (err) {
         console.error("SSO Callback failed", err);

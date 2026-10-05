@@ -78,7 +78,9 @@ export const authApi = baseApi.injectEndpoints({
       query: () => {
         let token = '';
         if (typeof document !== 'undefined') {
-          const match = document.cookie.match(new RegExp('(^| )ACCESS_TOKEN=([^;]+)'));
+          const match = document.cookie.match(new RegExp('(^| )ACCESS_TOKEN=([^;]+)')) ||
+                        document.cookie.match(new RegExp('(^| )auth_token=([^;]+)')) ||
+                        document.cookie.match(new RegExp('(^| )access_token=([^;]+)'));
           if (match) token = match[2];
         }
         return {

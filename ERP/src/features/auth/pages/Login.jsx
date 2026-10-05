@@ -46,12 +46,6 @@ export default function Login() {
 
   const isOrgMode = Boolean(organizationCode);
 
-  // Enforce module selection for normal users if neither moduleCode nor organizationCode is present
-  useEffect(() => {
-    if (!moduleCode && !organizationCode) {
-      navigate('/modules', { replace: true });
-    }
-  }, [moduleCode, organizationCode, navigate]);
 
   // Query organization lookup if in organization mode
   const {
@@ -95,11 +89,8 @@ export default function Login() {
     if (isAuthenticated && currentUser) {
       if (currentUser.role === 'super_admin') {
         navigate('/super-admin/dashboard', { replace: true });
-      } else if (currentUser.companyCode || currentUser.companyId) {
-        // Route to the Common ERP Shell workspace — it will pick the right module dashboard
-        navigate('/workspace', { replace: true });
       } else {
-        navigate('/company-select', { replace: true });
+        navigate('/workspace', { replace: true });
       }
     }
   }, [isAuthenticated, currentUser, navigate, moduleCode]);
@@ -174,6 +165,7 @@ export default function Login() {
       try {
         if (accessToken) {
           document.cookie = `ACCESS_TOKEN=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
+          document.cookie = `auth_token=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
         }
         if (refreshTokenValue) {
           document.cookie = `ACCESS_TOKEN_REFRESH=${refreshTokenValue}; path=/; max-age=604800; SameSite=Lax`;
@@ -186,16 +178,19 @@ export default function Login() {
       if (loginData?.redirectUrl) {
         try {
           const urlObj = new URL(loginData.redirectUrl.startsWith('http') ? loginData.redirectUrl : `http://${loginData.redirectUrl}`);
-          // If the redirect URL points to a backend callback endpoint (e.g. /api/account/auth/callback)
-          // or external host, perform full browser navigation to window.location.origin + pathname + search
-          // so the backend module exchanges the code and sets HTTP auth cookies!
-          if (urlObj.pathname.startsWith('/api/') || urlObj.origin !== window.location.origin) {
-            const proxiedUrl = window.location.origin + urlObj.pathname + urlObj.search + urlObj.hash;
+          let targetPath = urlObj.pathname;
+          if (targetPath.startsWith('/erp/')) {
+            targetPath = targetPath.replace(/^\/erp/, '');
+          }
+          if (targetPath.startsWith('/api/')) {
+            // Backend endpoint proxy (e.g. /api/account/auth/callback)
+            const proxiedUrl = window.location.origin + targetPath + urlObj.search + urlObj.hash;
             console.log('[Login] Routing OAuth callback through backend module proxy:', proxiedUrl);
             window.location.href = proxiedUrl;
           } else {
             // Frontend SPA route (e.g. /auth/callback)
-            navigate(urlObj.pathname + urlObj.search + urlObj.hash, { replace: true });
+            console.log('[Login] Navigating to SPA auth callback:', targetPath + urlObj.search + urlObj.hash);
+            navigate(targetPath + urlObj.search + urlObj.hash, { replace: true });
           }
         } catch {
           window.location.href = loginData.redirectUrl;
@@ -269,9 +264,25 @@ export default function Login() {
           name: mergedUser.companyName || 'Assigned Company',
           code: mergedUser.companyCode,
         }));
+      } else if (ssoData?.currentCompany) {
+        dispatch(setSelectedCompany({
+          id: ssoData.currentCompany.id || ssoData.currentCompany.code,
+          name: ssoData.currentCompany.name || ssoData.currentCompany.legalName || 'Assigned Company',
+          code: ssoData.currentCompany.code,
+        }));
+      } else if (ssoData?.companies && ssoData.companies.length === 1) {
+        dispatch(setSelectedCompany({
+          id: ssoData.companies[0].id || ssoData.companies[0].code,
+          name: ssoData.companies[0].name || 'Assigned Company',
+          code: ssoData.companies[0].code,
+        }));
       }
 
-      navigate('/workspace', { replace: true });
+      if (userRole === 'super_admin') {
+        navigate('/super-admin/dashboard', { replace: true });
+      } else {
+        navigate('/workspace', { replace: true });
+      }
 
     } catch (err) {
       console.error('Login failed', err);

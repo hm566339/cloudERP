@@ -61,7 +61,7 @@ export default function ProtectedRoute({ children, requireCompany = true, module
   if (!authenticated) {
     const searchParams = new URLSearchParams(location.search);
     const queryToken = searchParams.get('token') || searchParams.get('accessToken') || searchParams.get('access_token') || searchParams.get('jwt');
-    const cookieToken = queryToken || getCookie('ACCESS_TOKEN') || getCookie('auth_token');
+    const cookieToken = queryToken || getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token');
     
     if (cookieToken) {
       const decoded = parseJwt(cookieToken);
@@ -91,7 +91,7 @@ export default function ProtectedRoute({ children, requireCompany = true, module
         );
       }
     }
-    return <Navigate to="/modules" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Super admins have cross-company access, regular users are locked

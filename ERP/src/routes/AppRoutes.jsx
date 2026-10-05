@@ -427,7 +427,7 @@ export default function AppRoutes() {
   const dispatch = useAppDispatch();
 
   // Trigger getMe when rehydrated to validate httpOnly session
-  const cookieToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token');
+  const cookieToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token');
 
   // Decode credentials from ACCESS_TOKEN cookie on startup if currentUser is null
   React.useEffect(() => {
@@ -450,32 +450,32 @@ export default function AppRoutes() {
     }
   }, [isRehydrated, currentUser, cookieToken, dispatch]);
 
-  const isOnProtectedPage = typeof window !== 'undefined' &&
-    !window.location.pathname.includes('/login') &&
-    !window.location.pathname.includes('/modules') &&
-    !window.location.pathname.includes('/register') &&
-    !window.location.pathname.includes('/forgot-password') &&
-    !window.location.pathname.includes('/reset-password') &&
-    !window.location.pathname.includes('/verify-email') &&
-    !window.location.pathname.includes('/try-free') &&
-    !window.location.pathname.includes('/landing') &&
-    window.location.pathname !== '/' &&
-    (window.location.pathname.startsWith('/account') ||
-      window.location.pathname.startsWith('/accounts') ||
-      window.location.pathname.startsWith('/company') ||
-      window.location.pathname.startsWith('/super-admin') ||
-      window.location.pathname.startsWith('/workspace') ||
-      window.location.pathname.startsWith('/owner') ||
-      window.location.pathname.startsWith('/organization') ||
-      window.location.pathname.startsWith('/inventory') ||
-      window.location.pathname.startsWith('/crm') ||
-      window.location.pathname.startsWith('/dashboard') ||
-      window.location.pathname.startsWith('/purchase-requisitions') ||
-      window.location.pathname.startsWith('/transactions'));
+  const location = useLocation();
+  // Normalize current pathname relative to router basename (/erp)
+  const rawPath = location.pathname || (typeof window !== 'undefined' ? window.location.pathname : '');
+  const currentPath = rawPath.replace(/^\/erp(\/|$)/, '/$1');
+
+  // Any route that is not explicitly public is treated as protected
+  const isPublicPage =
+    currentPath === '/' ||
+    currentPath === '/landing' ||
+    currentPath === '/try-free' ||
+    currentPath === '/modules' ||
+    currentPath === '/admin-login' ||
+    currentPath === '/403' ||
+    currentPath.includes('/login') ||
+    currentPath.includes('/callback') ||
+    currentPath.startsWith('/forgot-password') ||
+    currentPath.startsWith('/reset-password') ||
+    currentPath.startsWith('/verify-email') ||
+    currentPath.startsWith('/register') ||
+    currentPath.startsWith('/quotation/accept');
+
+  const isOnProtectedPage = !isPublicPage;
 
   // Global ERP Shell auth: always use SSO /me as the single canonical auth source.
   const hasAuthToken = !!cookieToken || !!currentUser;
-  const shouldSkipSso = !isRehydrated || (!hasAuthToken && !isOnProtectedPage && sessionStatus === 'unauthenticated');
+  const shouldSkipSso = !isRehydrated || (isPublicPage && !hasAuthToken && sessionStatus === 'unauthenticated');
 
   const { isLoading: isSsoLoading, isFetching: isSsoFetching } = useSsoGetMeQuery(undefined, {
     skip: shouldSkipSso,

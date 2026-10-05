@@ -65,8 +65,10 @@ export const dispatchLogout = (options = {}) => {
     // 1. Dispatch Redux logout action
     if (dispatchAction) {
       try {
-        const store = require('../../app/store').default;
-        store.dispatch({ type: 'auth/logout' });
+        const store = (typeof window !== 'undefined' && window.__REDUX_STORE__) || require('../../app/store').default;
+        if (store?.dispatch) {
+          store.dispatch({ type: 'auth/logout' });
+        }
       } catch (e) {
         // Store may not be available during SSR or early init
         console.warn('[Auth] Could not dispatch logout action:', e.message);
