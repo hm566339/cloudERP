@@ -14,13 +14,13 @@ import Tooltip from '../components/common/Tooltip';
 import { getOwnerSidebarNavGroups } from './ownerSidebarConfig';
 
 /**
- * Professional Owner Sidebar Navigation Component.
+ * Enterprise Owner Sidebar Navigation Component matching Company Dashboard visual system.
  * Supports:
- * - Desktop expanded state (~260px)
- * - Desktop collapsed state (~72px) with portal-based Tooltips
- * - Mobile / tablet off-canvas drawer with smooth backdrop
- * - Dynamic module provisioning / lock states
- * - Organization logo, name, and Owner badge
+ * - Desktop expanded state (260px)
+ * - Desktop collapsed state (72px) with tooltips
+ * - Mobile / tablet off-canvas drawer
+ * - Section groupings: Dashboard, My Company, Modules, Settings
+ * - Active / Locked / Entitled states
  */
 export default function OwnerSidebar({
   organization,
@@ -68,7 +68,7 @@ export default function OwnerSidebar({
   const renderHeader = (collapsedMode = false) => {
     if (collapsedMode) {
       return (
-        <div className="h-16 flex items-center justify-center border-b border-zinc-200/80 px-2 shrink-0">
+        <div className="h-[56px] sm:h-16 flex items-center justify-center border-b border-zinc-200/80 px-2 shrink-0">
           <Tooltip content={`${orgName} (${orgCode || 'OWNER'})`}>
             <button
               type="button"
@@ -84,30 +84,17 @@ export default function OwnerSidebar({
     }
 
     return (
-      <div className="h-16 flex items-center justify-between border-b border-zinc-200/80 px-4 shrink-0">
+      <div className="h-[56px] sm:h-16 flex items-center justify-between border-b border-zinc-200/80 px-4 shrink-0">
         <div
-          className="flex items-center gap-3 min-w-0 cursor-pointer group"
+          className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
           onClick={() => navigate('/owner/dashboard')}
         >
-          <MarkLogo className="h-7 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform" />
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs font-display font-black text-zinc-900 tracking-tight truncate capitalize">
-                {orgName}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {orgCode && (
-                <span className="font-mono text-[9px] font-bold px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-600 border border-zinc-200 uppercase">
-                  {orgCode}
-                </span>
-              )}
-              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <ShieldCheck size={9} className="text-emerald-600 shrink-0" />
-                <span>Owner</span>
-              </span>
-            </div>
+          <div className="w-24 h-9 flex items-center justify-start transform transition-transform group-hover:scale-102">
+            <MarkLogo variant="light" className="w-full h-full object-contain object-left" />
           </div>
+          <span className="text-[9px] font-bold bg-zinc-100 text-zinc-800 px-2 py-0.5 rounded-md border border-zinc-200/60 uppercase tracking-wider shrink-0">
+            Owner
+          </span>
         </div>
 
         {mobileOpen && (
@@ -157,7 +144,7 @@ export default function OwnerSidebar({
                       <NavLink
                         to="/subscription"
                         onClick={mobileOpen ? onMobileClose : undefined}
-                        className={`group flex items-center rounded-xl text-xs font-medium transition-all duration-150 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100/70 ${
+                        className={`group flex items-center rounded-xl text-xs font-medium transition-all duration-150 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 ${
                           collapsedMode
                             ? 'justify-center p-2.5'
                             : 'px-3 py-2 justify-between gap-2.5'
@@ -206,7 +193,7 @@ export default function OwnerSidebar({
                           : 'px-3 py-2 justify-between gap-2.5'
                       } ${
                         active
-                          ? 'bg-zinc-900 text-white font-bold shadow-xs'
+                          ? 'bg-zinc-900 text-white font-bold shadow-2xs'
                           : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/80 font-medium'
                       }`}
                     >
@@ -224,7 +211,7 @@ export default function OwnerSidebar({
 
                       {!collapsedMode && item.badge && (
                         <span
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
                             item.badgeColor || 'bg-zinc-100 text-zinc-600'
                           }`}
                         >
