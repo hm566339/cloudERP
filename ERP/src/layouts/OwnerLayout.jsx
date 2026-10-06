@@ -5,6 +5,7 @@ import { selectAuthContext } from '../features/auth/authSlice';
 import { selectSelectedCompany } from '../features/company-management/companySlice';
 import { useAccessMode } from '../hooks/useAccessMode';
 import { getEntitledModules } from '../utils/moduleNormalization';
+import DashboardLayout from './DashboardLayout';
 import SubscriptionNoticeBanner from '../components/common/SubscriptionNoticeBanner';
 import OwnerSidebar from './OwnerSidebar';
 import OwnerTopHeader from './OwnerTopHeader';
@@ -17,14 +18,10 @@ export function useIsOwnerLayout() {
 
 /**
  * Standard Layout wrapper for the Owner Workspace & Dashboard.
- * Implements:
- * <OwnerLayout>
- *   <Sidebar />
- *   <main>
- *     <TopHeader />
- *     <PageContent />
- *   </main>
- * </OwnerLayout>
+ * Reuses and composes the project's DashboardLayout shell:
+ * <DashboardLayout sidebar={<OwnerSidebar />} header={<OwnerTopHeader />} banner={<SubscriptionNoticeBanner />}>
+ *   <PageContent />
+ * </DashboardLayout>
  */
 export default function OwnerLayout({ children }) {
   const authContext = useAppSelector(selectAuthContext);
@@ -111,31 +108,26 @@ export default function OwnerLayout({ children }) {
 
   return (
     <OwnerLayoutContext.Provider value={true}>
-      <div className="min-h-screen bg-zinc-50/60 flex font-sans text-zinc-900 selection:bg-zinc-900 selection:text-white">
-        {/* ── Fixed Left Sidebar ── */}
-        <OwnerSidebar
-          organization={organization}
-          membership={membership}
-          user={user}
-          entitledModules={entitledModules}
-          activeCompanyId={activeCompanyId}
-          companies={companies}
-          isTrial={isTrial}
-          daysRemaining={daysRemaining}
-          isActive={isActive}
-          isCollapsed={isCollapsed}
-          onToggleCollapse={toggleCollapse}
-          mobileOpen={mobileOpen}
-          onMobileClose={() => setMobileOpen(false)}
-        />
-
-        {/* ── Main Layout Shell ── */}
-        <div
-          className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-300 ease-in-out ${
-            isCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[260px]'
-          }`}
-        >
-          {/* Top Header */}
+      <DashboardLayout
+        isCollapsed={isCollapsed}
+        sidebar={
+          <OwnerSidebar
+            organization={organization}
+            membership={membership}
+            user={user}
+            entitledModules={entitledModules}
+            activeCompanyId={activeCompanyId}
+            companies={companies}
+            isTrial={isTrial}
+            daysRemaining={daysRemaining}
+            isActive={isActive}
+            isCollapsed={isCollapsed}
+            onToggleCollapse={toggleCollapse}
+            mobileOpen={mobileOpen}
+            onMobileClose={() => setMobileOpen(false)}
+          />
+        }
+        header={
           <OwnerTopHeader
             organization={organization}
             user={user}
@@ -151,16 +143,11 @@ export default function OwnerLayout({ children }) {
             onToggleCollapse={toggleCollapse}
             onMobileOpen={() => setMobileOpen(true)}
           />
-
-          {/* Global Subscription Notice Banner */}
-          <SubscriptionNoticeBanner />
-
-          {/* Page Content Viewport */}
-          <main className="flex-1 min-w-0 overflow-y-auto">
-            {children || <Outlet />}
-          </main>
-        </div>
-      </div>
+        }
+        banner={<SubscriptionNoticeBanner />}
+      >
+        {children || <Outlet />}
+      </DashboardLayout>
     </OwnerLayoutContext.Provider>
   );
 }
