@@ -73,6 +73,8 @@ public class ModuleBootstrap implements CommandLineRunner {
                                 "http://inventory-service:8082");
                 bootstrapModuleIfMissing("WORKFLOW", "workflow-service.local", "/api/workflow/**",
                                 "http://workflow-service:8083");
+                bootstrapModuleIfMissing("CRM", "crm-service.local", "/api/crm/**",
+                                "http://crm-service:8084");
         }
 
         private void bootstrapModuleIfMissing(String moduleName, String host, String routePattern, String serviceUrl) {

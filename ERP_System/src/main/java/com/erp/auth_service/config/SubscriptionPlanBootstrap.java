@@ -33,6 +33,7 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        relaxAuthorizationCodeModuleConstraintIfPresent();
         log.info("Checking and bootstrapping default SaaS subscription plans...");
 
         // 1. Bootstrap 30-Day Free Trial Plan
@@ -211,7 +212,19 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                 log.debug("Synchronized plan [{}] to legacy table 'plan'", plan.getCode());
             }
         } catch (Exception ex) {
-            log.debug("Legacy plan table sync check: {}", ex.getMessage());
+            log.warn("Could not sync plan [{}] to legacy table 'plan': {}", plan.getCode(), ex.getMessage());
+        }
+    }
+
+    private void relaxAuthorizationCodeModuleConstraintIfPresent() {
+        if (jdbcTemplate == null) {
+            return;
+        }
+        try {
+            jdbcTemplate.execute("ALTER TABLE authorization_code ALTER COLUMN module_id DROP NOT NULL");
+            log.debug("Successfully verified/relaxed authorization_code.module_id nullability");
+        } catch (Exception ex) {
+            log.debug("authorization_code.module_id nullability check: {}", ex.getMessage());
         }
     }
 

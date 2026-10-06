@@ -244,6 +244,7 @@ class OrganizationTenantLoginTest {
         request.setOrganizationCode("mohit");
         request.setUsername("mohit@example.com");
         request.setPassword("Password123@");
+        request.setModuleCode("ACCOUNT");
 
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () ->
                 authService.login(request, "127.0.0.1", "test-agent")

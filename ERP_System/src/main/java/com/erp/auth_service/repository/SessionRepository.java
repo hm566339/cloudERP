@@ -28,6 +28,10 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
                         UUID companyId,
                         UUID moduleId);
 
+        List<Session> findAllByUser_IdAndCompany_Id(
+                        UUID userId,
+                        UUID companyId);
+
         List<Session> findAllByUser_IdAndAccessTokenValidTillAfter(UUID userId, LocalDateTime now);
 
         @Modifying(clearAutomatically = true)

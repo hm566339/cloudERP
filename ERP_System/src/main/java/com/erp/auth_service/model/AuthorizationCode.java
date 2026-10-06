@@ -40,7 +40,7 @@ public class AuthorizationCode {
     private Organization organization;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "module_id", nullable = false)
+    @JoinColumn(name = "module_id")
     private Module module;
 
     @Column(length = 500)

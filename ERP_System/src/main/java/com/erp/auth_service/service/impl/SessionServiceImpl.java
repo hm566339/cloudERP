@@ -122,10 +122,14 @@ public class SessionServiceImpl implements SessionService {
         Session currentSession = sessionRepository.findByAccessToken(accessToken)
                 .orElseThrow(() -> new ResourceNotFoundException("Current session not found"));
 
-        List<Session> sessions = sessionRepository.findAllByUser_IdAndCompany_IdAndModule_Id(
-                currentSession.getUser().getId(),
-                currentSession.getCompany().getId(),
-                currentSession.getModule().getId());
+        List<Session> sessions = (currentSession.getModule() != null)
+                ? sessionRepository.findAllByUser_IdAndCompany_IdAndModule_Id(
+                        currentSession.getUser().getId(),
+                        currentSession.getCompany().getId(),
+                        currentSession.getModule().getId())
+                : sessionRepository.findAllByUser_IdAndCompany_Id(
+                        currentSession.getUser().getId(),
+                        currentSession.getCompany().getId());
 
         long count = 0;
 
@@ -163,27 +167,27 @@ public class SessionServiceImpl implements SessionService {
                 return;
             }
 
-            if (authcode.getModule() == null) {
-                log.warn("Module missing in authorization code");
-                response.sendRedirect("/login?error=module_not_found");
-                return;
-            }
-
             if (authcode.getCompany() == null) {
                 log.warn("Company missing in authorization code");
                 response.sendRedirect("/login?error=company_not_found");
                 return;
             }
             // ================= GET CLIENT =================
-            var moduleId = authcode.getModule().getId();
-            Module module = moduleRepository.findById(moduleId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Module not found"));
+            UUID clientId = null;
+            String clientSecret = null;
+            if (authcode.getModule() != null) {
+                var moduleId = authcode.getModule().getId();
+                Module module = moduleRepository.findById(moduleId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Module not found"));
+                clientId = module.getClientId();
+                clientSecret = module.getClientSecret();
+            }
 
             // ================= PREPARE REQUEST =================
             TokenExchangeRequest request = new TokenExchangeRequest();
             request.setCode(authcode.getCode());
-            request.setClientId(module.getClientId());
-            request.setClientSecret(module.getClientSecret());
+            request.setClientId(clientId);
+            request.setClientSecret(clientSecret);
 
             HttpEntity<TokenExchangeRequest> entity = new HttpEntity<>(request, getHeaders());
 
@@ -249,14 +253,11 @@ public class SessionServiceImpl implements SessionService {
         }
 
         Module module = authCode.getModule();
-        if (module == null) {
-            throw new ResourceNotFoundException("Module not found");
-        }
 
         return AuthorizationCodeResponseForSession.builder()
                 .code(authCode.getCode())
-                .clientId(module.getClientId())
-                .clientSecret(module.getClientSecret())
+                .clientId(module != null ? module.getClientId() : null)
+                .clientSecret(module != null ? module.getClientSecret() : null)
                 .build();
     }
 

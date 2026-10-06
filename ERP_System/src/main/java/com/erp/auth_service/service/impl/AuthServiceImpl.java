@@ -407,14 +407,17 @@ public class AuthServiceImpl implements AuthService {
                                 ? request.getModuleCode().trim()
                                 : (request.getModule() != null && !request.getModule().isBlank() ? request.getModule().trim() : null);
 
-                if (targetModuleCode != null || (requestedHost != null && !requestedHost.isBlank())) {
+                boolean isGenericHost = isGenericErpHost(requestedHost);
+                if (targetModuleCode != null || (requestedHost != null && !requestedHost.isBlank() && !isGenericHost)) {
                         Module foundModule = null;
                         if (targetModuleCode != null) {
                                 String canonical = extractCanonicalModuleName(targetModuleCode);
-                                foundModule = moduleRepository.findByNameIgnoreCase(canonical)
-                                                .orElseGet(() -> moduleRepository.findByNameIgnoreCase(targetModuleCode).orElse(null));
+                                foundModule = (canonical != null) ? moduleRepository.findByNameIgnoreCase(canonical).orElse(null) : null;
+                                if (foundModule == null) {
+                                        foundModule = moduleRepository.findByNameIgnoreCase(targetModuleCode).orElse(null);
+                                }
                         }
-                        if (foundModule == null && requestedHost != null && !requestedHost.isBlank()) {
+                        if (foundModule == null && requestedHost != null && !requestedHost.isBlank() && !isGenericHost) {
                                 foundModule = moduleRepository.findByHost(requestedHost.trim()).orElse(null);
                                 if (foundModule == null) {
                                         String extracted = extractCanonicalModuleName(requestedHost);
@@ -584,44 +587,54 @@ public class AuthServiceImpl implements AuthService {
                         throw new InvalidOperationException("Organization access is blocked");
                 }
 
-                Module module = resolveOrganizationModule(request, company);
-                if (!organizationModuleRepository.existsByOrganization_IdAndModule_IdAndEnabledTrue(
-                                organization.getId(), module.getId())) {
-                        log.warn("Organization login failed - module not entitled for org | orgId={} | moduleId={}",
-                                        organization.getId(), module.getId());
-                        throw new InvalidOperationException("Module is not entitled for organization");
+                Optional<Module> moduleOpt = resolveOrganizationModule(request, company);
+                Module module = moduleOpt.orElse(null);
+
+                if (module != null) {
+                        log.info("Organization login for specific module | orgCode={} | companyId={} | userId={} | moduleName={}",
+                                        organization.getOrganizationCode(), company.getId(), user.getId(), module.getName());
+
+                        if (!organizationModuleRepository.existsByOrganization_IdAndModule_IdAndEnabledTrue(
+                                        organization.getId(), module.getId())) {
+                                log.warn("Organization login failed - module not entitled for org | orgId={} | moduleId={}",
+                                                organization.getId(), module.getId());
+                                throw new InvalidOperationException("Module is not entitled for organization");
+                        }
+
+                        CompanyModule companyModule = companyModuleRepository
+                                        .findByCompany_IdAndModule_IdAndActiveTrue(company.getId(), module.getId())
+                                        .orElseThrow(() -> {
+                                                log.warn("Organization login failed - module not enabled for company | companyId={} | moduleId={}",
+                                                                company.getId(), module.getId());
+                                                return new ResourceNotFoundException("Module not enabled for company");
+                                        });
+
+                        userPortalAccessRepository
+                                        .findByUser_IdAndCompanyModule_IdAndStatusTrue(user.getId(), companyModule.getId())
+                                        .orElseThrow(() -> {
+                                                log.warn("Organization login failed - user lacks portal access | userId={} | companyModuleId={}",
+                                                                user.getId(), companyModule.getId());
+                                                return new ResourceNotFoundException(
+                                                                "You do not have access to this portal");
+                                        });
+                } else {
+                        log.info("Organization login for generic ERP workspace (module-independent) | orgCode={} | companyId={} | userId={} | subscriptionStatus={} | accessMode={}",
+                                        organization.getOrganizationCode(), company.getId(), user.getId(), subscription.getStatus(), subscription.getAccessMode());
                 }
-
-                CompanyModule companyModule = companyModuleRepository
-                                .findByCompany_IdAndModule_IdAndActiveTrue(company.getId(), module.getId())
-                                .orElseThrow(() -> {
-                                        log.warn("Organization login failed - module not enabled for company | companyId={} | moduleId={}",
-                                                        company.getId(), module.getId());
-                                        return new ResourceNotFoundException("Module not enabled for company");
-                                });
-
-                userPortalAccessRepository
-                                .findByUser_IdAndCompanyModule_IdAndStatusTrue(user.getId(), companyModule.getId())
-                                .orElseThrow(() -> {
-                                        log.warn("Organization login failed - user lacks portal access | userId={} | companyModuleId={}",
-                                                        user.getId(), companyModule.getId());
-                                        return new ResourceNotFoundException(
-                                                        "You do not have access to this portal");
-                                });
 
                 String codeValue = UUID.randomUUID().toString();
                 AuthorizationCode code = AuthorizationCode.builder()
                                 .code(codeValue).used(false).expiresAt(LocalDateTime.now().plusMinutes(5))
                                 .user(user).company(company).organization(organization).module(module)
-                                .gotoUrl(module.getHost()).build();
+                                .gotoUrl(module != null ? module.getHost() : (request.getHost() != null ? request.getHost().trim() : "/erp")).build();
                 authorizationCodeRepository.save(code);
 
-                log.info("Organization login successful - authorization code issued | orgCode={} | companyId={} | userId={} | moduleId={} | code={}",
-                                organization.getOrganizationCode(), company.getId(), user.getId(), module.getId(), maskCode(codeValue));
+                log.info("Organization login successful - authorization code issued | orgCode={} | companyId={} | userId={} | module={} | code={}",
+                                organization.getOrganizationCode(), company.getId(), user.getId(), module != null ? module.getName() : "NONE", maskCode(codeValue));
 
                 String redirectBase = (request.getHost() != null && !request.getHost().isBlank())
                                 ? request.getHost().trim()
-                                : (module.getHost() != null ? module.getHost().trim() : "");
+                                : (module != null && module.getHost() != null ? module.getHost().trim() : "/erp");
                 String redirectUrl = resolveGenericErpCallbackUrl(redirectBase, codeValue);
 
                 return LoginResponse.builder()
@@ -671,49 +684,82 @@ public class AuthServiceImpl implements AuthService {
                 return clean + "/auth/callback?code=" + codeValue;
         }
 
-        private Module resolveOrganizationModule(LoginRequest request, Company company) {
-                String requestedModuleInput = request.getModuleCode() != null && !request.getModuleCode().isBlank()
+        private boolean isGenericErpHost(String input) {
+                if (input == null || input.isBlank()) {
+                        return true;
+                }
+                String text = input.trim().toLowerCase(Locale.ROOT);
+                while (text.endsWith("/")) {
+                        text = text.substring(0, text.length() - 1);
+                }
+                if (text.endsWith("/erp") || text.endsWith("/workspace") || text.endsWith("/dashboard")
+                                || text.contains("/erp/workspace") || text.contains("/erp/o/") || text.contains("/erp/login")
+                                || text.equals("erp") || text.equals("workspace")) {
+                        return true;
+                }
+                try {
+                        if (text.startsWith("http://") || text.startsWith("https://")) {
+                                java.net.URI uri = java.net.URI.create(text);
+                                String path = uri.getPath();
+                                if (path == null || path.isBlank() || path.equals("/") || path.equals("/erp")
+                                                || path.equals("/workspace") || path.startsWith("/erp/o/")
+                                                || path.startsWith("/erp/workspace") || path.equals("/erp/login")) {
+                                        return true;
+                                }
+                        }
+                } catch (Exception ignored) {
+                }
+                return false;
+        }
+
+        private Optional<Module> resolveOrganizationModule(LoginRequest request, Company company) {
+                String explicitModuleInput = request.getModuleCode() != null && !request.getModuleCode().isBlank()
                                 ? request.getModuleCode().trim()
                                 : (request.getModule() != null && !request.getModule().isBlank() ? request.getModule().trim() : null);
 
-                // If host is provided and no moduleCode, check if host matches exact DB host or has module path/slug
-                if (requestedModuleInput == null && request.getHost() != null && !request.getHost().isBlank()) {
-                        Optional<Module> hostModule = moduleRepository.findByHost(request.getHost().trim());
+                // CASE 2, 3, 4, 6: Explicit module was requested
+                if (explicitModuleInput != null) {
+                        String canonical = extractCanonicalModuleName(explicitModuleInput);
+                        Optional<Module> found = (canonical != null)
+                                        ? moduleRepository.findByNameIgnoreCase(canonical)
+                                        : Optional.empty();
+                        if (found.isEmpty()) {
+                                found = moduleRepository.findByNameIgnoreCase(explicitModuleInput);
+                        }
+                        if (found.isEmpty()) {
+                                log.warn("Organization login failed - explicit module not found | moduleCode={}", explicitModuleInput);
+                                throw new ResourceNotFoundException("Module not found");
+                        }
+                        return found;
+                }
+
+                // CASE 1 & 5: No explicit module code was requested. Check host.
+                String host = request.getHost();
+                if (host != null && !host.isBlank()) {
+                        String cleanHost = host.trim();
+                        // Recognize generic ERP host as module-independent (CASE 1 & CASE 5)
+                        if (isGenericErpHost(cleanHost)) {
+                                log.info("Recognized generic ERP workspace host [{}], proceeding with module-independent organization login", cleanHost);
+                                return Optional.empty();
+                        }
+
+                        // Preserved module-specific host check (CASE 5)
+                        Optional<Module> hostModule = moduleRepository.findByHost(cleanHost);
                         if (hostModule.isPresent()) {
-                                return hostModule.get();
+                                return hostModule;
                         }
-                        String extracted = extractCanonicalModuleName(request.getHost());
+
+                        String extracted = extractCanonicalModuleName(cleanHost);
                         if (extracted != null) {
-                                requestedModuleInput = extracted;
+                                Optional<Module> extractedModule = moduleRepository.findByNameIgnoreCase(extracted);
+                                if (extractedModule.isPresent()) {
+                                        return extractedModule;
+                                }
                         }
                 }
 
-                // If a module was specifically requested (either directly or extracted from host)
-                final String finalRequestedModule = requestedModuleInput;
-                if (finalRequestedModule != null) {
-                        String canonical = extractCanonicalModuleName(finalRequestedModule);
-                        return moduleRepository.findByNameIgnoreCase(canonical)
-                                        .orElseGet(() -> moduleRepository.findByNameIgnoreCase(finalRequestedModule)
-                                                        .orElseThrow(() -> new ResourceNotFoundException("Module not found")));
-                }
-
-                // If no specific module was requested, default canonical module for organization login is ACCOUNT
-                Optional<Module> accountModuleOpt = moduleRepository.findByNameIgnoreCase("ACCOUNT");
-                if (accountModuleOpt.isPresent()) {
-                        Module accountModule = accountModuleOpt.get();
-                        if (companyModuleRepository.existsByCompany_IdAndModule_Id(company.getId(), accountModule.getId())) {
-                                return accountModule;
-                        }
-                        // If company does not have ACCOUNT mapped at all, fall back to any active non-admin company module
-                        return companyModuleRepository.findByCompany_IdAndActiveTrue(company.getId()).stream()
-                                        .map(CompanyModule::getModule)
-                                        .filter(m -> !"SYSTEM_ADMIN".equalsIgnoreCase(m.getName()))
-                                        .findFirst()
-                                        .orElse(accountModule);
-                } else {
-                        // Canonical ACCOUNT module does not exist in system
-                        throw new ResourceNotFoundException("Module not found");
-                }
+                // Generic ERP login defaults to no business module (CASE 1)
+                return Optional.empty();
         }
 
         private String extractCanonicalModuleName(String input) {
@@ -732,7 +778,10 @@ public class AuthServiceImpl implements AuthService {
                                         String[] segments = path.split("/");
                                         for (int i = segments.length - 1; i >= 0; i--) {
                                                 String seg = segments[i].trim().toLowerCase(Locale.ROOT);
-                                                if (seg.isEmpty() || seg.equals("api") || seg.equals("dashboard") || seg.equals("login") || seg.equals("auth") || seg.equals("callback")) {
+                                                if (seg.isEmpty() || seg.equals("api") || seg.equals("dashboard") || seg.equals("login")
+                                                                || seg.equals("auth") || seg.equals("callback") || seg.equals("erp")
+                                                                || seg.equals("workspace") || seg.equals("o") || seg.equals("company-select")
+                                                                || seg.equals("org")) {
                                                         continue;
                                                 }
                                                 String mapped = mapStringToCanonical(seg);
@@ -750,7 +799,7 @@ public class AuthServiceImpl implements AuthService {
                         return mapped;
                 }
 
-                return text.trim().toUpperCase(Locale.ROOT);
+                return null;
         }
 
         private String mapStringToCanonical(String raw) {
@@ -846,39 +895,55 @@ public class AuthServiceImpl implements AuthService {
                                         "Invalid company session");
                 }
 
-                Module module = moduleRepository
-                                .findByClientId(
-                                                request.getClientId())
-                                .orElseThrow(() -> {
-                                        log.warn("Token refresh failed - module not found for clientId | clientId={}", request.getClientId());
-                                        return new ResourceNotFoundException("Module does not exist");
-                                });
+                Module resolvedModule = null;
+                if (request.getClientId() != null) {
+                        resolvedModule = moduleRepository.findByClientId(request.getClientId()).orElse(null);
+                }
+                if (resolvedModule == null) {
+                        resolvedModule = session.getModule();
+                }
+                final Module module = resolvedModule;
 
-                CompanyModule companyModule = companyModuleRepository
-                                .findByCompany_IdAndModule_IdAndActiveTrue(
-                                                company.getId(),
-                                                module.getId())
-                                .orElseThrow(() -> {
-                                        log.warn("Token refresh failed - module not enabled for company | companyId={} | moduleId={}",
-                                                        company.getId(), module.getId());
-                                        return new InvalidOperationException("Module not enabled for company");
-                                });
+                if (module != null) {
+                        CompanyModule companyModule = companyModuleRepository
+                                        .findByCompany_IdAndModule_IdAndActiveTrue(
+                                                        company.getId(),
+                                                        module.getId())
+                                        .orElseThrow(() -> {
+                                                log.warn("Token refresh failed - module not enabled for company | companyId={} | moduleId={}",
+                                                                company.getId(), module.getId());
+                                                return new InvalidOperationException("Module not enabled for company");
+                                        });
 
-                userPortalAccessRepository
-                                .findByUser_IdAndCompanyModule_IdAndStatusTrue(
-                                                user.getId(),
-                                                companyModule.getId())
-                                .orElseThrow(() -> {
-                                        log.warn("Token refresh failed - user does not have portal access | userId={} | companyModuleId={}",
-                                                        user.getId(), companyModule.getId());
-                                        return new InvalidOperationException("User does not have portal access");
-                                });
+                        userPortalAccessRepository
+                                        .findByUser_IdAndCompanyModule_IdAndStatusTrue(
+                                                        user.getId(),
+                                                        companyModule.getId())
+                                        .orElseThrow(() -> {
+                                                log.warn("Token refresh failed - user does not have portal access | userId={} | companyModuleId={}",
+                                                                user.getId(), companyModule.getId());
+                                                return new InvalidOperationException("User does not have portal access");
+                                        });
+                }
+
+                if (session.getOrganization() != null) {
+                        organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                        session.getOrganization().getId(), user.getId(), MembershipStatus.ACTIVE)
+                                        .orElseThrow(() -> new BadCredentialsException("Organization membership revoked"));
+                        if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
+                                throw new InvalidOperationException("Organization access is blocked");
+                        }
+                }
+
+                String effectiveClientId = (module != null && module.getClientId() != null)
+                                ? module.getClientId().toString()
+                                : (request.getClientId() != null ? request.getClientId().toString() : "ERP_WORKSPACE");
 
                 Map<String, Object> claims = buildClaims(
                                 user,
                                 company,
                                 module,
-                                request.getClientId().toString());
+                                effectiveClientId);
 
                 String newAccessToken = jwtService.generateAccessToken(
                                 user.getUsername(),
@@ -908,7 +973,7 @@ public class AuthServiceImpl implements AuthService {
                                 .build());
 
                 log.info("Token refresh successful | sessionId={} | userId={} | companyId={} | moduleId={} | clientId={}",
-                                session.getId(), user.getId(), company.getId(), module.getId(), request.getClientId());
+                                session.getId(), user.getId(), company.getId(), (module != null ? module.getId() : "NONE"), effectiveClientId);
 
                 RefreshTokenResponse response = ssoSessionMapper
                                 .toRefreshTokenResponse(session);
@@ -946,29 +1011,48 @@ public class AuthServiceImpl implements AuthService {
                         throw new InvalidOperationException("Your account is inactive");
                 }
                 Company company = session.getCompany();
-                Module module = moduleRepository.findByClientId(clientId)
-                                .orElseThrow(() -> {
-                                        log.warn("Hashed refresh failed - module not found for clientId | clientId={}", clientId);
-                                        return new ResourceNotFoundException("Module does not exist");
-                                });
-                CompanyModule companyModule = companyModuleRepository
-                                .findByCompany_IdAndModule_IdAndActiveTrue(company.getId(), module.getId())
-                                .orElseThrow(() -> {
-                                        log.warn("Hashed refresh failed - module not enabled for company | companyId={} | moduleId={}",
-                                                        company.getId(), module.getId());
-                                        return new InvalidOperationException("Module not enabled for company");
-                                });
-                userPortalAccessRepository
-                                .findByUser_IdAndCompanyModule_IdAndStatusTrue(user.getId(), companyModule.getId())
-                                .orElseThrow(() -> {
-                                        log.warn("Hashed refresh failed - portal access denied | userId={} | companyModuleId={}",
-                                                        user.getId(), companyModule.getId());
-                                        return new InvalidOperationException("User does not have portal access");
-                                });
+
+                Module resolvedModule = null;
+                if (clientId != null) {
+                        resolvedModule = moduleRepository.findByClientId(clientId).orElse(null);
+                }
+                if (resolvedModule == null) {
+                        resolvedModule = session.getModule();
+                }
+                final Module module = resolvedModule;
+
+                if (module != null) {
+                        CompanyModule companyModule = companyModuleRepository
+                                        .findByCompany_IdAndModule_IdAndActiveTrue(company.getId(), module.getId())
+                                        .orElseThrow(() -> {
+                                                log.warn("Hashed refresh failed - module not enabled for company | companyId={} | moduleId={}",
+                                                                company.getId(), module.getId());
+                                                return new InvalidOperationException("Module not enabled for company");
+                                        });
+                        userPortalAccessRepository
+                                        .findByUser_IdAndCompanyModule_IdAndStatusTrue(user.getId(), companyModule.getId())
+                                        .orElseThrow(() -> {
+                                                log.warn("Hashed refresh failed - portal access denied | userId={} | companyModuleId={}",
+                                                                user.getId(), companyModule.getId());
+                                                return new InvalidOperationException("User does not have portal access");
+                                        });
+                }
+
+                if (session.getOrganization() != null) {
+                        organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                        session.getOrganization().getId(), user.getId(), MembershipStatus.ACTIVE)
+                                        .orElseThrow(() -> new BadCredentialsException("Organization membership revoked"));
+                        if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
+                                throw new InvalidOperationException("Organization access is blocked");
+                        }
+                }
 
                 record.setUsedAt(now);
                 refreshTokenRecordRepository.save(record);
-                Map<String, Object> claims = buildClaims(user, company, module, clientId.toString());
+                String effectiveClientId = (module != null && module.getClientId() != null)
+                                ? module.getClientId().toString()
+                                : (clientId != null ? clientId.toString() : "ERP_WORKSPACE");
+                Map<String, Object> claims = buildClaims(user, company, module, effectiveClientId);
                 String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
                 String refreshToken = jwtService.generateRefreshToken(user.getUsername(), company.getCompanyCode());
                 session.setAccessToken(accessToken);
@@ -986,7 +1070,7 @@ public class AuthServiceImpl implements AuthService {
                                 .build());
 
                 log.info("Hashed refresh token rotated successfully | familyId={} | userId={} | clientId={}",
-                                record.getFamilyId(), user.getId(), clientId);
+                                record.getFamilyId(), user.getId(), effectiveClientId);
 
                 return RefreshTokenResponse.builder()
                                 .accessToken(accessToken)
@@ -1343,7 +1427,7 @@ public class AuthServiceImpl implements AuthService {
                                 maskCode(code.getCode()),
                                 code.getUser().getId(),
                                 code.getCompany().getId(),
-                                code.getModule().getId(),
+                                (code.getModule() != null ? code.getModule().getId() : "NONE"),
                                 code.getExpiresAt(),
                                 code.getUsed());
 
@@ -1373,13 +1457,10 @@ public class AuthServiceImpl implements AuthService {
                 }
 
                 Module module = code.getModule();
-                if (module == null) {
-                        log.error("Token exchange failed | reason=NO_MODULE_ON_CODE | code={}", maskCode(codeValue));
-                        throw new ResourceNotFoundException("Module not found for authorization code");
-                }
+                boolean isGenericErp = (module == null);
 
                 // If a non-placeholder client ID is provided, verify it does not belong to a different module
-                if (clientIdStr != null && !clientIdStr.isBlank() && !isPlaceholder(clientIdStr)) {
+                if (!isGenericErp && clientIdStr != null && !clientIdStr.isBlank() && !isPlaceholder(clientIdStr)) {
                         try {
                                 UUID parsedClientId = UUID.fromString(clientIdStr.trim());
                                 Optional<Module> clientModuleOpt = moduleRepository.findByClientId(parsedClientId);
@@ -1404,12 +1485,16 @@ public class AuthServiceImpl implements AuthService {
                         }
                 }
 
-                log.info(
-                                "Module validated | moduleId={} | moduleName={} | clientId={} | host={}",
-                                module.getId(),
-                                module.getName(),
-                                module.getClientId(),
-                                module.getHost());
+                if (module != null) {
+                        log.info(
+                                        "Module validated | moduleId={} | moduleName={} | clientId={} | host={}",
+                                        module.getId(),
+                                        module.getName(),
+                                        module.getClientId(),
+                                        module.getHost());
+                } else {
+                        log.info("Generic ERP authorization code exchange | clientId={}", clientIdStr);
+                }
 
                 User user = code.getUser();
 
@@ -1433,11 +1518,13 @@ public class AuthServiceImpl implements AuthService {
                                                                 code.getOrganization().getId(), company.getId());
                                                 return new BadCredentialsException("Company access revoked");
                                         });
-                        if (!organizationModuleRepository.existsByOrganization_IdAndModule_IdAndEnabledTrue(
-                                        code.getOrganization().getId(), module.getId())) {
-                                log.warn("Token exchange failed | reason=MODULE_ENTITLEMENT_REVOKED | orgId={} | moduleId={}",
-                                                code.getOrganization().getId(), module.getId());
-                                throw new InvalidOperationException("Module entitlement revoked");
+                        if (module != null) {
+                                if (!organizationModuleRepository.existsByOrganization_IdAndModule_IdAndEnabledTrue(
+                                                code.getOrganization().getId(), module.getId())) {
+                                        log.warn("Token exchange failed | reason=MODULE_ENTITLEMENT_REVOKED | orgId={} | moduleId={}",
+                                                        code.getOrganization().getId(), module.getId());
+                                        throw new InvalidOperationException("Module entitlement revoked");
+                                }
                         }
                         if (code.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
                                 log.warn("Token exchange failed | reason=ORG_ACCESS_BLOCKED | orgId={}", code.getOrganization().getId());
@@ -1452,28 +1539,35 @@ public class AuthServiceImpl implements AuthService {
                                 user.getEmail(),
                                 company.getId());
 
-                companyModuleRepository
-                                .findByCompany_IdAndModule_IdAndActiveTrue(
-                                                company.getId(),
-                                                module.getId())
-                                .orElseThrow(() -> {
-
-                                        log.warn(
-                                                        "Token exchange failed | reason=COMPANY_MODULE_DISABLED | companyId={} | moduleId={}",
+                if (module != null) {
+                        companyModuleRepository
+                                        .findByCompany_IdAndModule_IdAndActiveTrue(
                                                         company.getId(),
-                                                        module.getId());
+                                                        module.getId())
+                                        .orElseThrow(() -> {
 
-                                        return new InvalidOperationException(
-                                                        "Module is not enabled for company");
-                                });
+                                                log.warn(
+                                                                "Token exchange failed | reason=COMPANY_MODULE_DISABLED | companyId={} | moduleId={}",
+                                                                company.getId(),
+                                                                module.getId());
+
+                                                return new InvalidOperationException(
+                                                                "Module is not enabled for company");
+                                        });
+                }
 
                 code.setUsed(true);
 
                 authorizationCodeRepository.save(code);
 
-                String effectiveClientId = (module.getClientId() != null)
-                                ? module.getClientId().toString()
-                                : (clientIdStr != null && !clientIdStr.isBlank() ? clientIdStr : "ACCOUNT");
+                String effectiveClientId;
+                if (module != null && module.getClientId() != null) {
+                        effectiveClientId = module.getClientId().toString();
+                } else if (clientIdStr != null && !clientIdStr.isBlank() && !isPlaceholder(clientIdStr)) {
+                        effectiveClientId = clientIdStr;
+                } else {
+                        effectiveClientId = (module != null) ? "ACCOUNT" : "ERP_WORKSPACE";
+                }
 
                 log.info(
                                 "Authorization code marked as used | code={} | userId={} | clientId={}",
@@ -1492,7 +1586,7 @@ public class AuthServiceImpl implements AuthService {
                                 user.getId(),
                                 user.getUsername(),
                                 company.getId(),
-                                module.getId(),
+                                (module != null ? module.getId() : "NONE"),
                                 effectiveClientId);
 
                 String accessToken = jwtService.generateAccessToken(
@@ -1539,7 +1633,7 @@ public class AuthServiceImpl implements AuthService {
                                 session.getId(),
                                 user.getId(),
                                 company.getId(),
-                                module.getId(),
+                                (module != null ? module.getId() : "NONE"),
                                 effectiveClientId);
 
                 log.info(
@@ -1924,7 +2018,7 @@ public class AuthServiceImpl implements AuthService {
 
                 claims.put(
                                 "moduleName",
-                                module.getName());
+                                module != null ? module.getName() : "ERP_WORKSPACE");
 
                 claims.put(
                                 "roles",
@@ -2033,44 +2127,6 @@ public class AuthServiceImpl implements AuthService {
                                         .build();
                 }
 
-                Module module = session.getModule();
-                if (module == null) {
-                        log.warn(
-                                        "Module missing in session -> sessionId: {}",
-                                        session.getId());
-                        return TokenVerifyResponse.builder()
-                                        .valid(false)
-                                        .build();
-                }
-
-                if (Boolean.FALSE.equals(
-                                module.getModuleStatus())) {
-
-                        log.warn(
-                                        "Module inactive -> moduleId: {}",
-                                        module.getId());
-
-                        return TokenVerifyResponse.builder()
-                                        .valid(false)
-                                        .build();
-                }
-
-                Optional<CompanyModule> optionalCompanyModule = companyModuleRepository
-                                .findByCompany_IdAndModule_IdAndActiveTrue(
-                                                company.getId(),
-                                                module.getId());
-
-                if (optionalCompanyModule.isEmpty()) {
-
-                        log.warn(
-                                        "Module not enabled for company -> companyId={} | moduleId={}",
-                                        company.getId(),
-                                        module.getId());
-
-                        return TokenVerifyResponse.builder()
-                                        .valid(false)
-                                        .build();
-                }
                 User user = userRepository
                                 .findByIdWithRoles(
                                                 session.getUser().getId())
@@ -2099,21 +2155,62 @@ public class AuthServiceImpl implements AuthService {
                                         .build();
                 }
 
-                Optional<UserPortalAccess> optionalAccess = userPortalAccessRepository
-                                .findByUser_IdAndCompanyModule_IdAndStatusTrue(
+                Module module = session.getModule();
+                if (module != null) {
+                        if (Boolean.FALSE.equals(
+                                        module.getModuleStatus())) {
+
+                                log.warn(
+                                                "Module inactive -> moduleId: {}",
+                                                module.getId());
+
+                                return TokenVerifyResponse.builder()
+                                                .valid(false)
+                                                .build();
+                        }
+
+                        Optional<CompanyModule> optionalCompanyModule = companyModuleRepository
+                                        .findByCompany_IdAndModule_IdAndActiveTrue(
+                                                        company.getId(),
+                                                        module.getId());
+
+                        if (optionalCompanyModule.isEmpty()) {
+
+                                log.warn(
+                                                "Module not enabled for company -> companyId={} | moduleId={}",
+                                                company.getId(),
+                                                module.getId());
+
+                                return TokenVerifyResponse.builder()
+                                                .valid(false)
+                                                .build();
+                        }
+
+                        Optional<UserPortalAccess> optionalAccess = userPortalAccessRepository
+                                        .findByUser_IdAndCompanyModule_IdAndStatusTrue(
+                                                        user.getId(),
+                                                        optionalCompanyModule.get().getId());
+
+                        if (optionalAccess.isEmpty()) {
+
+                                log.warn(
+                                                "Portal access denied -> userId={} | companyModuleId={}",
                                                 user.getId(),
                                                 optionalCompanyModule.get().getId());
 
-                if (optionalAccess.isEmpty()) {
+                                return TokenVerifyResponse.builder()
+                                                .valid(false)
+                                                .build();
+                        }
+                }
 
-                        log.warn(
-                                        "Portal access denied -> userId={} | companyModuleId={}",
-                                        user.getId(),
-                                        optionalCompanyModule.get().getId());
-
-                        return TokenVerifyResponse.builder()
-                                        .valid(false)
-                                        .build();
+                if (session.getOrganization() != null) {
+                        if (organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                        session.getOrganization().getId(), user.getId(), MembershipStatus.ACTIVE).isEmpty()) {
+                                log.warn("Token verification failed - inactive organization membership | userId={} | orgId={}",
+                                                user.getId(), session.getOrganization().getId());
+                                return TokenVerifyResponse.builder().valid(false).build();
+                        }
                 }
 
                 if (session.getOrganization() != null && company.getOrganization() != null
@@ -2127,7 +2224,7 @@ public class AuthServiceImpl implements AuthService {
                                 "Token verified successfully -> userId={} | companyId={} | moduleId={}",
                                 user.getId(),
                                 company.getId(),
-                                module.getId());
+                                (module != null ? module.getId() : "NONE"));
 
                 try {
                         UserResponse userResponse = userMapper.toResponse(user);
