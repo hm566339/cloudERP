@@ -5,6 +5,7 @@ import RoleRoute from "./RoleRoute";
 import AuthLayout from "../layouts/AuthLayout";
 import CompanyLayout from "../layouts/CompanyLayout";
 import AccountantLayout from "../layouts/AccountantLayout";
+import OwnerLayout from "../layouts/OwnerLayout";
 import PurchaseModuleLayout from "../components/common/PurchaseModuleLayout";
 import { SharedAccountsRoutes } from "./SharedAccountsRoutes";
 import { SharedInventoryRoutes } from "./SharedInventoryRoutes";
@@ -673,15 +674,30 @@ export default function AppRoutes() {
           }
         />
 
-        {/* ── ORGANIZATION OWNER DASHBOARD ───────────────────────────────── */}
+        {/* ── ORGANIZATION OWNER WORKSPACE & DASHBOARD ─────────────────── */}
         <Route
-          path="/owner/dashboard"
+          path="/owner"
           element={
             <ProtectedRoute requireCompany={false}>
-              <OwnerDashboard />
+              <OwnerLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Navigate to="/owner/dashboard" replace />} />
+          <Route path="dashboard" element={<OwnerDashboard />} />
+          <Route path="companies" element={<Navigate to="/company-select" replace />} />
+          <Route path="companies/:companyId" element={<CompanyEntryRedirect />} />
+          <Route path="users" element={<Navigate to="/users" replace />} />
+          <Route path="modules" element={<Navigate to="/owner/dashboard" replace />} />
+          <Route path="modules/finance" element={<Navigate to="/accounts/dashboard" replace />} />
+          <Route path="modules/inventory" element={<Navigate to="/inventory/dashboard" replace />} />
+          <Route path="modules/sales" element={<Navigate to="/crm/dashboard" replace />} />
+          <Route path="modules/purchasing" element={<Navigate to="/purchase-requisitions" replace />} />
+          <Route path="settings" element={<Navigate to="/accounts/settings" replace />} />
+          <Route path="settings/organization" element={<Navigate to="/accounts/settings" replace />} />
+          <Route path="settings/subscription" element={<Navigate to="/subscription" replace />} />
+          <Route path="profile" element={<Navigate to="/profile" replace />} />
+        </Route>
         <Route
           path="/organization/dashboard"
           element={<Navigate to="/owner/dashboard" replace />}

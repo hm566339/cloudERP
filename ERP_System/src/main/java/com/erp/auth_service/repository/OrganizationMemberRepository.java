@@ -11,11 +11,15 @@ import java.util.UUID;
 
 public interface OrganizationMemberRepository extends JpaRepository<OrganizationMember, UUID> {
     boolean existsByOrganization_IdAndUser_EmailIgnoreCase(UUID organizationId, String email);
-    Optional<OrganizationMember> findByOrganization_IdAndUser_IdAndMembershipStatus(UUID organizationId, UUID userId, MembershipStatus status);
+
+    Optional<OrganizationMember> findByOrganization_IdAndUser_IdAndMembershipStatus(UUID organizationId, UUID userId,
+            MembershipStatus status);
+
     java.util.List<OrganizationMember> findByOrganization_Id(UUID organizationId);
+
     long countByOrganization_Id(UUID organizationId);
 
-        @Query("""
+    @Query("""
             select m from OrganizationMember m
             join fetch m.user u
             join fetch m.organization o
@@ -24,7 +28,7 @@ public interface OrganizationMemberRepository extends JpaRepository<Organization
               and m.membershipStatus = :status
               and m.deletedAt is null
             """)
-        Optional<OrganizationMember> findActiveByOrganizationAndEmail(
+    Optional<OrganizationMember> findActiveByOrganizationAndEmail(
             @Param("organizationId") UUID organizationId,
             @Param("email") String email,
             @Param("status") MembershipStatus status);

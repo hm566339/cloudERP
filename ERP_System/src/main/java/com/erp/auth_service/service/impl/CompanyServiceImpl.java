@@ -68,12 +68,15 @@ public class CompanyServiceImpl implements CompanyService {
                 RequestContext.Context context = RequestContext.get();
                 if (context != null) {
                         if (context.organizationId() != null) {
-                                if (company.getOrganization() == null || !company.getOrganization().getId().equals(context.organizationId())) {
-                                        throw new ForbiddenException("Access denied: Company does not belong to authorized organization");
+                                if (company.getOrganization() == null || !company.getOrganization().getId()
+                                                .equals(context.organizationId())) {
+                                        throw new ForbiddenException(
+                                                        "Access denied: Company does not belong to authorized organization");
                                 }
                         }
                         if (context.companyId() != null && !context.companyId().equals(company.getId())) {
-                                throw new ForbiddenException("Access denied: Company does not match authorized company context");
+                                throw new ForbiddenException(
+                                                "Access denied: Company does not match authorized company context");
                         }
                 }
         }
@@ -86,11 +89,16 @@ public class CompanyServiceImpl implements CompanyService {
                 authorizationService.requireWriteAccess();
 
                 RequestContext.Context context = RequestContext.get();
-                Organization organization = context == null ? null : organizationRepository.findById(context.organizationId()).orElse(null);
+                Organization organization = context == null ? null
+                                : organizationRepository.findById(context.organizationId()).orElse(null);
                 if (organization != null) {
-                        Subscription subscription = subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId()).orElse(null);
-                        Integer maxCompanies = subscription == null || subscription.getPlan() == null ? null : subscription.getPlan().getMaxCompanies();
-                        if (maxCompanies != null && companyRepository.countByOrganization_IdAndActiveTrue(organization.getId()) >= maxCompanies) {
+                        Subscription subscription = subscriptionRepository
+                                        .findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId())
+                                        .orElse(null);
+                        Integer maxCompanies = subscription == null || subscription.getPlan() == null ? null
+                                        : subscription.getPlan().getMaxCompanies();
+                        if (maxCompanies != null && companyRepository
+                                        .countByOrganization_IdAndActiveTrue(organization.getId()) >= maxCompanies) {
                                 throw new BadRequestException("Company limit for the current plan has been reached");
                         }
                 }

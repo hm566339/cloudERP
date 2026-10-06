@@ -19,19 +19,24 @@ import java.util.UUID;
 /**
  * Global SSO authorization context response for the Common ERP Shell.
  *
- * <p>This is the canonical source of truth for:
+ * <p>
+ * This is the canonical source of truth for:
  * <ul>
- *   <li>User identity</li>
- *   <li>Organization context</li>
- *   <li>Current company and accessible companies</li>
- *   <li>Subscription and trial state</li>
- *   <li>Authorized modules, features, and permissions</li>
+ * <li>User identity</li>
+ * <li>Organization context</li>
+ * <li>Current company and accessible companies</li>
+ * <li>Subscription and trial state</li>
+ * <li>Authorized modules, features, and permissions</li>
  * </ul>
  *
- * <p>Returned by {@code GET /api/sso/auth/me}.
- * The common ERP shell MUST use this endpoint for all global authorization decisions.
+ * <p>
+ * Returned by {@code GET /api/sso/auth/me}.
+ * The common ERP shell MUST use this endpoint for all global authorization
+ * decisions.
  *
- * <p>NOTE: {@code GET /api/account/auth/me} is preserved for backward compatibility
+ * <p>
+ * NOTE: {@code GET /api/account/auth/me} is preserved for backward
+ * compatibility
  * and Account-module-specific enrichment only.
  */
 @Data
@@ -59,7 +64,10 @@ public class SsoMeResponse {
     /** The company the current session is scoped to. */
     private CompanyContext currentCompany;
 
-    /** All companies this member is authorized to access in the current organization. */
+    /**
+     * All companies this member is authorized to access in the current
+     * organization.
+     */
     private List<CompanyContext> companies;
 
     // ──────────────────────────────────────────────────────────────
@@ -130,7 +138,10 @@ public class SsoMeResponse {
         private String code;
         private String name;
         private OrganizationStatus status;
-        /** Organization-level access mode (may differ from subscription if manually overridden). */
+        /**
+         * Organization-level access mode (may differ from subscription if manually
+         * overridden).
+         */
         private AccessMode accessMode;
         private String timezone;
         private String currency;
@@ -167,7 +178,9 @@ public class SsoMeResponse {
         private UUID id;
         private String planCode;
         private SubscriptionStatus status;
-        /** Subscription-level access mode (FULL during trial, READ_ONLY after expiry). */
+        /**
+         * Subscription-level access mode (FULL during trial, READ_ONLY after expiry).
+         */
         private AccessMode accessMode;
         private LocalDateTime trialStartedAt;
         private LocalDateTime trialEndsAt;
@@ -188,7 +201,9 @@ public class SsoMeResponse {
         private String name;
         private String code;
         private String host;
-        /** Whether the user has FULL or READ_ONLY access to this module specifically. */
+        /**
+         * Whether the user has FULL or READ_ONLY access to this module specifically.
+         */
         private boolean active;
     }
 }
