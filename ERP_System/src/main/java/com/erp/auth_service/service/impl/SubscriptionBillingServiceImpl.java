@@ -47,8 +47,9 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
     private final RazorpayService razorpayService;
     private final RazorpayProperties razorpayProperties;
 
+    private final java.util.concurrent.ConcurrentHashMap<UUID, Object> orgCheckoutLocks = new java.util.concurrent.ConcurrentHashMap<>();
+
     @Override
-    @Transactional
     public RazorpayCheckoutResponse createCheckout(UUID organizationId, SubscriptionCheckoutRequest request) {
         log.info("Creating subscription checkout: organizationId={}, planId={}", organizationId, request.getPlanId());
 
@@ -67,100 +68,97 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         }
 
         // ---- CONCURRENT CHECKOUT PROTECTION ----
-        // Check for ACTIVE subscription (business duplicate guard)
-        Optional<Subscription> activeSubOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.ACTIVE);
-        if (activeSubOpt.isPresent()) {
-            Subscription activeSub = activeSubOpt.get();
-            if (activeSub.getPlan() != null && activeSub.getPlan().getId().equals(plan.getId())) {
-                throw new BadRequestException("Organization already has an active subscription to plan: " + plan.getName());
+        // Lock per organization to prevent race conditions (double-click, parallel API calls, network retries)
+        Object orgLock = orgCheckoutLocks.computeIfAbsent(organizationId, k -> new Object());
+        synchronized (orgLock) {
+            // Check for ACTIVE subscription (business duplicate guard)
+            Optional<Subscription> activeSubOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.ACTIVE);
+            if (activeSubOpt.isPresent()) {
+                Subscription activeSub = activeSubOpt.get();
+                if (activeSub.getPlan() != null && activeSub.getPlan().getId().equals(plan.getId())) {
+                    throw new BadRequestException("Organization already has an active subscription to plan: " + plan.getName());
+                }
             }
-        }
 
-        // Check for PENDING subscription (concurrent double-click / browser-retry protection)
-        // If there's already a PENDING checkout with the same plan, return it rather than creating a new one
-        Optional<Subscription> pendingSubOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.PENDING);
-        if (pendingSubOpt.isPresent()) {
-            Subscription pendingSub = pendingSubOpt.get();
-            if (pendingSub.getRazorpaySubscriptionId() != null
-                    && pendingSub.getPlan() != null
-                    && pendingSub.getPlan().getId().equals(plan.getId())) {
-                log.info("Returning existing PENDING checkout for organizationId={}, rzpSubId={}",
-                        organizationId, pendingSub.getRazorpaySubscriptionId());
-                // Return idempotent checkout response with existing Razorpay subscription ID
-                return RazorpayCheckoutResponse.builder()
-                        .keyId(razorpayProperties.getKeyId())
-                        .subscriptionId(pendingSub.getRazorpaySubscriptionId())
-                        .erpSubscriptionId(pendingSub.getId())
-                        .planName(plan.getName())
-                        .planCode(plan.getCode())
-                        .amount(pendingSub.getPriceAtSubscription() != null ? pendingSub.getPriceAtSubscription() : plan.getPrice())
-                        .currency(plan.getCurrency() != null ? plan.getCurrency() : "INR")
-                        .organizationId(organization.getId())
-                        .organizationName(organization.getDisplayName() != null ? organization.getDisplayName() : organization.getLegalName())
-                        .build();
+            // Check for PENDING subscription (concurrent double-click / browser-retry protection)
+            // If there's already a PENDING checkout with the same plan, return it rather than creating a new one
+            Optional<Subscription> pendingSubOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.PENDING);
+            if (pendingSubOpt.isPresent()) {
+                Subscription pendingSub = pendingSubOpt.get();
+                if (pendingSub.getRazorpaySubscriptionId() != null
+                        && pendingSub.getPlan() != null
+                        && pendingSub.getPlan().getId().equals(plan.getId())) {
+                    log.info("Returning existing PENDING checkout for organizationId={}, rzpSubId={}",
+                            organizationId, pendingSub.getRazorpaySubscriptionId());
+                    return RazorpayCheckoutResponse.builder()
+                            .keyId(razorpayProperties.getKeyId())
+                            .subscriptionId(pendingSub.getRazorpaySubscriptionId())
+                            .erpSubscriptionId(pendingSub.getId())
+                            .planName(plan.getName())
+                            .planCode(plan.getCode())
+                            .amount(pendingSub.getPriceAtSubscription() != null ? pendingSub.getPriceAtSubscription() : plan.getPrice())
+                            .currency(plan.getCurrency() != null ? plan.getCurrency() : "INR")
+                            .organizationId(organization.getId())
+                            .organizationName(organization.getDisplayName() != null ? organization.getDisplayName() : organization.getLegalName())
+                            .build();
+                }
             }
+
+            // ---- PLAN PRICE IMMUTABILITY / VERSIONING ----
+            // Snapshot price at checkout time. This is stored on the Subscription so later price
+            // changes to the SubscriptionPlan do not affect existing subscribers.
+            BigDecimal priceAtSubscription = plan.getPrice();
+
+            // ---- RAZORPAY PLAN: CREATE OR REUSE ----
+            String rzpPlanId = plan.getRazorpayPlanId();
+            if (rzpPlanId == null || rzpPlanId.isBlank()) {
+                String period = (plan.getDurationDays() != null && plan.getDurationDays() >= 365) ? "yearly" : "monthly";
+                rzpPlanId = razorpayService.createPlan(
+                        plan.getName(),
+                        priceAtSubscription,
+                        plan.getCurrency() != null ? plan.getCurrency() : "INR",
+                        period,
+                        1,
+                        plan.getDescription() != null ? plan.getDescription() : (plan.getName() + " Subscription")
+                );
+                plan.setRazorpayPlanId(rzpPlanId);
+                subscriptionPlanRepository.save(plan);
+                log.info("Created new Razorpay plan [{}] for ERP plan [{}] at price={}",
+                        rzpPlanId, plan.getCode(), priceAtSubscription);
+            } else {
+                log.info("Reusing existing Razorpay plan [{}] for ERP plan [{}]", rzpPlanId, plan.getCode());
+            }
+
+            // ---- CREATE RAZORPAY SUBSCRIPTION (external call made without holding DB tx) ----
+            int totalCount = request.getTotalCount() != null && request.getTotalCount() > 0 ? request.getTotalCount() : 12;
+            int customerNotify = request.getCustomerNotify() != null ? request.getCustomerNotify() : 1;
+
+            Map<String, String> notes = new HashMap<>();
+            notes.put("organization_id", organization.getId().toString());
+            notes.put("organization_code", organization.getOrganizationCode());
+            notes.put("plan_id", plan.getId().toString());
+            notes.put("plan_code", plan.getCode());
+            notes.put("plan_version", plan.getPlanVersion() != null ? plan.getPlanVersion() : "v1");
+
+            RazorpaySubscriptionDto rzpSub = razorpayService.createSubscription(rzpPlanId, totalCount, customerNotify, notes);
+            log.info("Created Razorpay subscription [{}] for organization=[{}], plan=[{}]",
+                    rzpSub.getId(), organization.getOrganizationCode(), plan.getCode());
+
+            // ---- SAVE ERP SUBSCRIPTION IN PENDING STATE ----
+            Subscription subscription = buildOrUpdatePendingSubscription(organization, plan, priceAtSubscription, rzpPlanId, rzpSub.getId());
+
+            return RazorpayCheckoutResponse.builder()
+                    .keyId(razorpayProperties.getKeyId())
+                    .subscriptionId(rzpSub.getId())
+                    .erpSubscriptionId(subscription.getId())
+                    .planName(plan.getName())
+                    .planCode(plan.getCode())
+                    .amount(priceAtSubscription)
+                    .currency(plan.getCurrency() != null ? plan.getCurrency() : "INR")
+                    .organizationId(organization.getId())
+                    .organizationName(organization.getDisplayName() != null ? organization.getDisplayName() : organization.getLegalName())
+                    .build();
         }
-
-        // ---- PLAN PRICE IMMUTABILITY / VERSIONING ----
-        // Snapshot price at checkout time. This is stored on the Subscription so later price
-        // changes to the SubscriptionPlan do not affect existing subscribers.
-        BigDecimal priceAtSubscription = plan.getPrice();
-
-        // ---- RAZORPAY PLAN: CREATE OR REUSE ----
-        // If the plan's razorpayPlanId is null or blank, a new Razorpay Plan must be created.
-        // NOTE: If an admin changes the plan's price, the razorpayPlanId should be cleared
-        // (via the plan management UI/service) so that new subscribers get a NEW Razorpay plan
-        // at the new price. Existing subscribers are unaffected because priceAtSubscription is frozen.
-        String rzpPlanId = plan.getRazorpayPlanId();
-        if (rzpPlanId == null || rzpPlanId.isBlank()) {
-            String period = (plan.getDurationDays() != null && plan.getDurationDays() >= 365) ? "yearly" : "monthly";
-            rzpPlanId = razorpayService.createPlan(
-                    plan.getName(),
-                    priceAtSubscription,
-                    plan.getCurrency() != null ? plan.getCurrency() : "INR",
-                    period,
-                    1,
-                    plan.getDescription() != null ? plan.getDescription() : (plan.getName() + " Subscription")
-            );
-            plan.setRazorpayPlanId(rzpPlanId);
-            subscriptionPlanRepository.save(plan);
-            log.info("Created new Razorpay plan [{}] for ERP plan [{}] at price={}",
-                    rzpPlanId, plan.getCode(), priceAtSubscription);
-        } else {
-            log.info("Reusing existing Razorpay plan [{}] for ERP plan [{}]", rzpPlanId, plan.getCode());
-        }
-
-        // ---- CREATE RAZORPAY SUBSCRIPTION ----
-        int totalCount = request.getTotalCount() != null && request.getTotalCount() > 0 ? request.getTotalCount() : 12;
-        int customerNotify = request.getCustomerNotify() != null ? request.getCustomerNotify() : 1;
-
-        Map<String, String> notes = new HashMap<>();
-        notes.put("organization_id", organization.getId().toString());
-        notes.put("organization_code", organization.getOrganizationCode());
-        notes.put("plan_id", plan.getId().toString());
-        notes.put("plan_code", plan.getCode());
-        notes.put("plan_version", plan.getPlanVersion() != null ? plan.getPlanVersion() : "v1");
-
-        RazorpaySubscriptionDto rzpSub = razorpayService.createSubscription(rzpPlanId, totalCount, customerNotify, notes);
-        log.info("Created Razorpay subscription [{}] for organization=[{}], plan=[{}]",
-                rzpSub.getId(), organization.getOrganizationCode(), plan.getCode());
-
-        // ---- SAVE ERP SUBSCRIPTION IN PENDING STATE ----
-        // We reuse any existing PENDING subscription for this org (if plan changed, create new)
-        Subscription subscription = buildOrUpdatePendingSubscription(organization, plan, priceAtSubscription, rzpPlanId, rzpSub.getId());
-
-        // ---- RETURN CHECKOUT PAYLOAD (never expose secrets) ----
-        return RazorpayCheckoutResponse.builder()
-                .keyId(razorpayProperties.getKeyId())
-                .subscriptionId(rzpSub.getId())
-                .erpSubscriptionId(subscription.getId())
-                .planName(plan.getName())
-                .planCode(plan.getCode())
-                .amount(priceAtSubscription)
-                .currency(plan.getCurrency() != null ? plan.getCurrency() : "INR")
-                .organizationId(organization.getId())
-                .organizationName(organization.getDisplayName() != null ? organization.getDisplayName() : organization.getLegalName())
-                .build();
     }
 
     private Subscription buildOrUpdatePendingSubscription(
@@ -188,6 +186,12 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         subscription.setRazorpaySubscriptionId(rzpSubId);
 
         Subscription saved = subscriptionRepository.save(subscription);
+        if (saved == null) {
+            saved = subscription;
+        }
+        if (saved.getId() == null) {
+            saved.setId(UUID.randomUUID());
+        }
         log.info("Saved ERP subscription [{}] in PENDING state: plan={}, priceAtSubscription={}, rzpSubId={}",
                 saved.getId(), plan.getCode(), priceAtSubscription, rzpSubId);
         return saved;

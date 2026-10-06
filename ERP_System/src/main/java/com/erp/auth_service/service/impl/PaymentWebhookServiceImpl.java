@@ -219,6 +219,11 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
         } catch (BadRequestException exception) {
             throw exception;
+        } catch (org.springframework.dao.DataIntegrityViolationException dive) {
+            log.warn("Database unique constraint triggered during webhook processing (concurrent duplicate): provider={}, error={}",
+                    provider, dive.getMessage());
+            // Idempotent recovery: return gracefully (HTTP 200) to stop provider webhook retries
+            return;
         } catch (Exception exception) {
             log.error("Failed to parse or process webhook payload: provider={}", provider, exception);
             throw new BadRequestException("Invalid webhook payload: " + exception.getMessage());
@@ -388,7 +393,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
     // ========================================================================================
     // PAYMENT FAILURE: payment.failed
-    // Records failure, moves subscription to PAST_DUE only if not already ACTIVE.
+    // Records failure, moves subscription to PAST_DUE where appropriate.
+    // Protects against stale out-of-order failures following a successful retry.
     // ========================================================================================
     private void handlePaymentFailed(String provider, PaymentProvider paymentProvider, JsonNode root, PaymentEvent event) {
         Subscription subscription = resolveSubscription(paymentProvider, root);
@@ -397,20 +403,45 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         log.warn("payment.failed: erpSubId={}, paymentId={}, currentStatus={}",
                 subscription.getId(), paymentId, subscription.getStatus());
 
-        // Out-of-order guard: do NOT downgrade an ACTIVE subscription based on a stale failure event
-        // (This handles: failure webhook arrives late after a successful retry)
-        if (subscription.getStatus() == SubscriptionStatus.ACTIVE) {
-            log.warn("payment.failed ignored: subscription erpSubId={} is already ACTIVE " +
-                    "(likely a stale failure for a payment that was later retried successfully)", subscription.getId());
+        // Out-of-order guard: do not downgrade a terminal status (CANCELLED, EXPIRED)
+        if (isTerminalStatus(subscription.getStatus())) {
+            log.warn("payment.failed ignored: subscription erpSubId={} is in terminal status {}",
+                    subscription.getId(), subscription.getStatus());
             markEventProcessed(event);
             return;
         }
 
-        // Move to PAST_DUE only from PENDING/TRIALING states
-        if (!isTerminalStatus(subscription.getStatus())) {
-            subscription.setStatus(SubscriptionStatus.PAST_DUE);
-            subscriptionRepository.save(subscription);
+        // Out-of-order guard for retried payments:
+        // If the subscription is ACTIVE and already has an active billing period extending into the future,
+        // check if this failure attempt was created BEFORE the current period started (i.e. stale prior attempt).
+        boolean isStaleFailure = false;
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE && subscription.getCurrentPeriodStart() != null) {
+            long paymentCreatedAtEpoch = 0;
+            JsonNode payEntity = root.path("payload").path("payment").path("entity");
+            if (payEntity.hasNonNull("created_at")) {
+                paymentCreatedAtEpoch = payEntity.get("created_at").asLong();
+            } else if (root.hasNonNull("created_at")) {
+                paymentCreatedAtEpoch = root.get("created_at").asLong();
+            }
+            if (paymentCreatedAtEpoch > 0) {
+                LocalDateTime paymentCreatedTime = LocalDateTime.ofInstant(
+                        java.time.Instant.ofEpochSecond(paymentCreatedAtEpoch), java.time.ZoneId.systemDefault());
+                if (paymentCreatedTime.isBefore(subscription.getCurrentPeriodStart())) {
+                    isStaleFailure = true;
+                }
+            }
         }
+
+        if (isStaleFailure) {
+            log.warn("payment.failed ignored: subscription erpSubId={} is ACTIVE and failure attempt is older than currentPeriodStart ({}) — stale out-of-order event",
+                    subscription.getId(), subscription.getCurrentPeriodStart());
+            markEventProcessed(event);
+            return;
+        }
+
+        // Move to PAST_DUE (from ACTIVE, PENDING, or TRIALING)
+        subscription.setStatus(SubscriptionStatus.PAST_DUE);
+        subscriptionRepository.save(subscription);
 
         // Record failed payment (avoid duplicate)
         if (paymentId != null && !paymentRepository.existsByProviderAndProviderPaymentId(provider, paymentId)) {

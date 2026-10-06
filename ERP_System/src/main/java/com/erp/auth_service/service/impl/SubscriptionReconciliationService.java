@@ -54,11 +54,11 @@ public class SubscriptionReconciliationService {
 
     /** Minimum age (minutes) before a PENDING subscription is eligible for reconciliation */
     @Value("${razorpay.reconciliation.pending-threshold-minutes:30}")
-    private int pendingThresholdMinutes;
+    private int pendingThresholdMinutes = 30;
 
     /** Maximum number of subscriptions to reconcile per run (prevents overloading Razorpay API) */
     @Value("${razorpay.reconciliation.batch-size:50}")
-    private int batchSize;
+    private int batchSize = 50;
 
     @Scheduled(cron = "${razorpay.reconciliation.cron:0 */15 * * * *}")
     @Transactional
@@ -160,9 +160,12 @@ public class SubscriptionReconciliationService {
 
         sub.setStatus(SubscriptionStatus.ACTIVE);
         sub.setAccessMode(AccessMode.FULL);
-        sub.setCurrentPeriodStart(periodStart);
-        sub.setCurrentPeriodEnd(periodEnd);
-        sub.setNextBillingDate(periodEnd);
+        boolean periodNeedsUpdate = sub.getCurrentPeriodEnd() == null || periodEnd.isAfter(sub.getCurrentPeriodEnd());
+        if (periodNeedsUpdate) {
+            sub.setCurrentPeriodStart(periodStart);
+            sub.setCurrentPeriodEnd(periodEnd);
+            sub.setNextBillingDate(periodEnd);
+        }
 
         if (rzpSub.getCustomerId() != null) {
             sub.setRazorpayCustomerId(rzpSub.getCustomerId());
@@ -174,9 +177,10 @@ public class SubscriptionReconciliationService {
         }
         subscriptionRepository.save(sub);
 
-        // Create a reconciliation Payment record ONLY if none exists yet
+        // Create a reconciliation Payment record ONLY if none exists yet for this subscription
         String providerPaymentId = "reconciled_" + sub.getRazorpaySubscriptionId() + "_" + rzpSub.getPaidCount();
-        boolean paymentExists = paymentRepository.existsByProviderAndProviderPaymentId("razorpay", providerPaymentId);
+        boolean paymentExists = paymentRepository.existsByProviderAndProviderPaymentId("razorpay", providerPaymentId)
+                || paymentRepository.existsBySubscription_IdAndStatus(sub.getId(), "SUCCEEDED");
         if (!paymentExists) {
             BigDecimal amount = sub.getPriceAtSubscription() != null
                     ? sub.getPriceAtSubscription()

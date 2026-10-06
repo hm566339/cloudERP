@@ -7,7 +7,10 @@ import java.util.UUID;
 
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     boolean existsByProviderAndProviderPaymentId(String provider, String providerPaymentId);
+    boolean existsBySubscription_IdAndStatus(UUID subscriptionId, String status);
     java.util.Optional<Payment> findByProviderPaymentId(String providerPaymentId);
     java.util.Optional<Payment> findByRazorpayPaymentId(String razorpayPaymentId);
     java.util.List<Payment> findBySubscription_Organization_IdOrderByCreatedAtDesc(UUID organizationId);
+    java.util.List<Payment> findBySubscription_IdOrderByCreatedAtDesc(UUID subscriptionId);
+    java.util.Optional<Payment> findTopBySubscription_IdAndStatusOrderByPaidAtDesc(UUID subscriptionId, String status);
 }

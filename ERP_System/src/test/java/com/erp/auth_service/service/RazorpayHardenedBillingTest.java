@@ -18,6 +18,8 @@ import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
 import com.erp.auth_service.utility.SubscriptionStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.erp.auth_service.service.impl.SubscriptionReconciliationService;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -225,9 +227,12 @@ public class RazorpayHardenedBillingTest {
     }
 
     @Test
-    @DisplayName("A6. payment.failed is IGNORED when subscription is already ACTIVE (stale event)")
+    @DisplayName("A6. payment.failed is IGNORED when subscription is already ACTIVE and failure is older than currentPeriodStart (stale event)")
     void testA6_paymentFailedIgnoredWhenAlreadyActive() {
         Subscription sub = buildSubscription("sub_rzp_active_456", SubscriptionStatus.ACTIVE);
+        // Simulate that subscription was successfully renewed/charged at current time
+        sub.setCurrentPeriodStart(LocalDateTime.now());
+        sub.setCurrentPeriodEnd(LocalDateTime.now().plusMonths(1));
 
         when(razorpayService.verifyWebhookSignature(eq("valid_sig"), anyString())).thenReturn(true);
         when(paymentEventRepository.findByProviderAndProviderEventId("razorpay", "evt_stale_fail")).thenReturn(Optional.empty());
@@ -712,6 +717,203 @@ public class RazorpayHardenedBillingTest {
     }
 
     // ========================================================================
+    // SECTION E: Concurrent Webhook & DB Uniqueness Protection
+    // ========================================================================
+
+    @Test
+    @DisplayName("E1. Concurrent webhook race condition triggering DB unique constraint is caught and handled idempotently")
+    void testE1_concurrentWebhookDatabaseUniqueConstraintHandled() {
+        when(razorpayService.verifyWebhookSignature(anyString(), anyString())).thenReturn(true);
+        when(paymentEventRepository.findByProviderAndProviderEventId("razorpay", "evt_concurrent_race"))
+                .thenReturn(Optional.empty());
+        // Simulate concurrent insert race: another thread inserted first, so saving this event throws unique constraint error
+        when(paymentEventRepository.save(any(PaymentEvent.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key value violates unique constraint uk_payment_event_provider_id"));
+
+        // Must NOT throw 500 / error; must complete cleanly so Razorpay receives 200 OK
+        assertDoesNotThrow(() ->
+                webhookService.process("razorpay", "valid_sig",
+                        subscriptionChargedPayload("evt_concurrent_race", "sub_rzp_race", "pay_race_1")));
+    }
+
+    // ========================================================================
+    // SECTION F: Multi-Threaded Concurrent Checkout Protection
+    // ========================================================================
+
+    @Test
+    @DisplayName("F3. Multi-threaded concurrent checkout — two simultaneous requests result in ONE Razorpay subscription")
+    void testF3_concurrentMultiThreadedCheckout_onlyOneRazorpaySubscription() throws Exception {
+        proPlan.setRazorpayPlanId("plan_rzp_concurrent");
+
+        when(organizationRepository.findById(organizationId)).thenReturn(Optional.of(organization));
+        when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("PRO")).thenReturn(Optional.of(proPlan));
+        when(subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.ACTIVE)).thenReturn(Optional.empty());
+
+        // First call finds no pending; after saving, subsequent call finds the pending subscription
+        Subscription createdSub = buildSubscription("sub_rzp_concurrent_123", SubscriptionStatus.PENDING);
+        createdSub.setPlan(proPlan);
+        when(subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.PENDING))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(createdSub));
+
+        when(razorpayService.createSubscription(anyString(), anyInt(), anyInt(), anyMap()))
+                .thenReturn(RazorpaySubscriptionDto.builder().id("sub_rzp_concurrent_123").build());
+        when(subscriptionRepository.save(any(Subscription.class))).thenReturn(createdSub);
+
+        int threads = 2;
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        CountDownLatch latch = new CountDownLatch(1);
+        List<Future<RazorpayCheckoutResponse>> futures = new ArrayList<>();
+
+        for (int i = 0; i < threads; i++) {
+            futures.add(executor.submit(() -> {
+                RequestContext.set(userId, organizationId, null, null, AccessMode.FULL);
+                try {
+                    latch.await();
+                    return billingService.createCheckout(organizationId,
+                            SubscriptionCheckoutRequest.builder().planId("PRO").build());
+                } finally {
+                    RequestContext.clear();
+                }
+            }));
+        }
+
+        // Release all threads simultaneously
+        latch.countDown();
+        executor.shutdown();
+        assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+
+        for (Future<RazorpayCheckoutResponse> f : futures) {
+            RazorpayCheckoutResponse resp = f.get();
+            assertNotNull(resp);
+            assertEquals("sub_rzp_concurrent_123", resp.getSubscriptionId());
+        }
+
+        // Razorpay API must be invoked EXACTLY ONCE
+        verify(razorpayService, times(1)).createSubscription(anyString(), anyInt(), anyInt(), anyMap());
+    }
+
+    // ========================================================================
+    // SECTION I & J: Reconciliation Service
+    // ========================================================================
+
+    @Test
+    @DisplayName("I1. Reconciliation detects stale PENDING subscription and activates it if Razorpay status is active")
+    void testI1_reconciliationActivatesPendingSubscription() {
+        SubscriptionReconciliationService reconciliationService = new SubscriptionReconciliationService(
+                subscriptionRepository,
+                paymentRepository,
+                invoiceRepository,
+                organizationRepository,
+                razorpayService
+        );
+
+        Subscription stalePending = buildSubscription("sub_rzp_stale_1", SubscriptionStatus.PENDING);
+        stalePending.setCurrentPeriodEnd(null);
+
+        when(subscriptionRepository.findStaleByStatusAndCreatedAtBefore(eq(SubscriptionStatus.PENDING), any(), any()))
+                .thenReturn(List.of(stalePending));
+
+        when(razorpayService.getSubscription("sub_rzp_stale_1")).thenReturn(
+                RazorpaySubscriptionDto.builder()
+                        .id("sub_rzp_stale_1")
+                        .status("active")
+                        .currentStart(1700000000L)
+                        .currentEnd(1702592000L)
+                        .paidCount(1)
+                        .customerId("cust_rzp_recon_1")
+                        .build()
+        );
+
+        when(paymentRepository.existsByProviderAndProviderPaymentId(eq("razorpay"), anyString())).thenReturn(false);
+        when(paymentRepository.existsBySubscription_IdAndStatus(stalePending.getId(), "SUCCEEDED")).thenReturn(false);
+
+        reconciliationService.reconcile();
+
+        assertEquals(SubscriptionStatus.ACTIVE, stalePending.getStatus());
+        assertEquals(AccessMode.FULL, stalePending.getAccessMode());
+        assertEquals("cust_rzp_recon_1", stalePending.getRazorpayCustomerId());
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+        verify(invoiceRepository, times(1)).save(any(Invoice.class));
+    }
+
+    @Test
+    @DisplayName("I2. Reconciliation idempotency — second run does not duplicate Payment record or period")
+    void testI2_reconciliationIdempotency_neverDuplicatesPayment() {
+        SubscriptionReconciliationService reconciliationService = new SubscriptionReconciliationService(
+                subscriptionRepository,
+                paymentRepository,
+                invoiceRepository,
+                organizationRepository,
+                razorpayService
+        );
+
+        Subscription alreadyReconciled = buildSubscription("sub_rzp_stale_2", SubscriptionStatus.PENDING);
+
+        when(subscriptionRepository.findStaleByStatusAndCreatedAtBefore(eq(SubscriptionStatus.PENDING), any(), any()))
+                .thenReturn(List.of(alreadyReconciled));
+
+        when(razorpayService.getSubscription("sub_rzp_stale_2")).thenReturn(
+                RazorpaySubscriptionDto.builder()
+                        .id("sub_rzp_stale_2")
+                        .status("active")
+                        .currentStart(1700000000L)
+                        .currentEnd(1702592000L)
+                        .paidCount(1)
+                        .build()
+        );
+
+        // Payment already exists
+        when(paymentRepository.existsByProviderAndProviderPaymentId(eq("razorpay"), anyString())).thenReturn(true);
+
+        reconciliationService.reconcile();
+
+        // Must NOT create a second Payment record
+        verify(paymentRepository, never()).save(any(Payment.class));
+    }
+
+    @Test
+    @DisplayName("J1. Failed webhook followed by scheduled reconciliation successfully heals the subscription")
+    void testJ1_failedWebhookFollowedByReconciliation() {
+        SubscriptionReconciliationService reconciliationService = new SubscriptionReconciliationService(
+                subscriptionRepository,
+                paymentRepository,
+                invoiceRepository,
+                organizationRepository,
+                razorpayService
+        );
+
+        // 1. Checkout succeeded, customer paid on Razorpay, but webhook failed to reach ERP
+        Subscription unconfirmedSub = buildSubscription("sub_rzp_healed_1", SubscriptionStatus.PENDING);
+        unconfirmedSub.setPriceAtSubscription(new BigDecimal("2999.00"));
+
+        // 2. Reconciliation background worker runs
+        when(subscriptionRepository.findStaleByStatusAndCreatedAtBefore(eq(SubscriptionStatus.PENDING), any(), any()))
+                .thenReturn(List.of(unconfirmedSub));
+
+        when(razorpayService.getSubscription("sub_rzp_healed_1")).thenReturn(
+                RazorpaySubscriptionDto.builder()
+                        .id("sub_rzp_healed_1")
+                        .status("active")
+                        .currentStart(1700000000L)
+                        .currentEnd(1702592000L)
+                        .paidCount(1)
+                        .customerId("cust_healed")
+                        .build()
+        );
+        when(paymentRepository.existsByProviderAndProviderPaymentId(eq("razorpay"), anyString())).thenReturn(false);
+        when(paymentRepository.existsBySubscription_IdAndStatus(unconfirmedSub.getId(), "SUCCEEDED")).thenReturn(false);
+
+        reconciliationService.reconcile();
+
+        // 3. ERP state is repaired
+        assertEquals(SubscriptionStatus.ACTIVE, unconfirmedSub.getStatus());
+        assertNotNull(unconfirmedSub.getNextBillingDate());
+        verify(paymentRepository).save(argThat(p -> "SUCCEEDED".equals(((Payment) p).getStatus())
+                && new BigDecimal("2999.00").equals(((Payment) p).getAmount())));
+    }
+
+    // ========================================================================
     // HELPERS
     // ========================================================================
 
@@ -804,11 +1006,13 @@ public class RazorpayHardenedBillingTest {
         {
           "event_id": "%s",
           "event": "payment.failed",
+          "created_at": 1600000000,
           "payload": {
             "payment": {
               "entity": {
                 "id": "pay_fail_99",
                 "subscription_id": "%s",
+                "created_at": 1600000000,
                 "amount": 299900
               }
             }

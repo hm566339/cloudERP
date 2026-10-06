@@ -139,7 +139,17 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
             plan.setDurationDays(request.getDurationDays());
         }
         if (request.getPrice() != null) {
-            plan.setPrice(request.getPrice());
+            BigDecimal oldPrice = plan.getPrice();
+            BigDecimal newPrice = request.getPrice();
+            if (oldPrice == null || oldPrice.compareTo(newPrice) != 0) {
+                plan.setPrice(newPrice);
+                if (plan.getRazorpayPlanId() != null) {
+                    log.info("Plan price changed from {} to {} for plan [{}]. Clearing razorpayPlanId [{}] and bumping version",
+                            oldPrice, newPrice, plan.getCode(), plan.getRazorpayPlanId());
+                    plan.setRazorpayPlanId(null);
+                    plan.setPlanVersion(bumpPlanVersion(plan.getPlanVersion()));
+                }
+            }
         }
         if (request.getCurrency() != null && !request.getCurrency().isBlank()) {
             plan.setCurrency(request.getCurrency().trim().toUpperCase(Locale.ROOT));
@@ -405,5 +415,19 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
                 .createdAt(plan.getCreatedAt())
                 .updatedAt(plan.getUpdatedAt())
                 .build();
+    }
+
+    private String bumpPlanVersion(String currentVersion) {
+        if (currentVersion == null || currentVersion.isBlank()) {
+            return "v2";
+        }
+        try {
+            String clean = currentVersion.trim().toLowerCase(Locale.ROOT);
+            if (clean.startsWith("v")) {
+                int ver = Integer.parseInt(clean.substring(1));
+                return "v" + (ver + 1);
+            }
+        } catch (NumberFormatException ignored) {}
+        return currentVersion + "-v2";
     }
 }
