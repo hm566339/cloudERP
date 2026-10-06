@@ -12,17 +12,13 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(
-    name = "subscription_plan",
-    uniqueConstraints = {
+@Table(name = "subscription_plan", uniqueConstraints = {
         @UniqueConstraint(name = "uk_subscription_plan_code", columnNames = "code")
-    },
-    indexes = {
+}, indexes = {
         @Index(name = "idx_subscription_plan_active", columnList = "active"),
         @Index(name = "idx_subscription_plan_is_trial", columnList = "is_trial"),
         @Index(name = "idx_subscription_plan_razorpay", columnList = "razorpay_plan_id")
-    }
-)
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -53,6 +49,20 @@ public class SubscriptionPlan {
 
     @Column(name = "max_companies")
     private Integer maxCompanies;
+
+    @Column(name = "max_users_per_company")
+    private Integer maxUsersPerCompany;
+
+    public Integer getMaxUsersPerCompany() {
+        return maxUsersPerCompany != null ? maxUsersPerCompany : maxUsers;
+    }
+
+    public void setMaxUsersPerCompany(Integer maxUsersPerCompany) {
+        this.maxUsersPerCompany = maxUsersPerCompany;
+        if (this.maxUsers == null) {
+            this.maxUsers = maxUsersPerCompany;
+        }
+    }
 
     @Column(precision = 19, scale = 4)
     @Builder.Default

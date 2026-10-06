@@ -42,6 +42,26 @@ public interface CompanyRepository
             @Param("active") Boolean active,
             Pageable pageable);
 
+    @Query("""
+            SELECT c
+            FROM Company c
+            WHERE c.organization.id = :organizationId
+            AND (
+                :search IS NULL
+                OR LOWER(c.companyName) LIKE %:search%
+                OR LOWER(c.companyCode) LIKE %:search%
+            )
+            AND (
+                :active IS NULL
+                OR c.active = :active
+            )
+            """)
+    Page<Company> findCompaniesByOrganization(
+            @Param("organizationId") UUID organizationId,
+            @Param("search") String search,
+            @Param("active") Boolean active,
+            Pageable pageable);
+
     @Query(value = """
             SELECT *
             FROM company

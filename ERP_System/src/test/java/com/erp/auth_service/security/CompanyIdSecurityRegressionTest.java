@@ -41,9 +41,14 @@ class CompanyIdSecurityRegressionTest {
     @Mock private AuthorizationService authorizationService;
     @Mock private OrganizationRepository organizationRepository;
     @Mock private SubscriptionRepository subscriptionRepository;
+    @Mock private OrganizationMemberRepository organizationMemberRepository;
+    @Mock private MemberCompanyAccessRepository memberCompanyAccessRepository;
+    @Mock private RoleRepository roleRepository;
+    @Mock private UserRoleRepository userRoleRepository;
 
     @Mock private CompanyModuleRepository companyModuleRepository;
     @Mock private ModuleRepository moduleRepository;
+    @Mock private SubscriptionPlanModuleRepository subscriptionPlanModuleRepository;
 
     @Mock private UserRepository userRepository;
     @Mock private UserMapper userMapper;
@@ -69,10 +74,13 @@ class CompanyIdSecurityRegressionTest {
     void setUp() {
         companyService = new CompanyServiceImpl(
                 companyRepository, companyMapper, restClientBuilder, cloudinaryService,
-                authorizationService, organizationRepository, subscriptionRepository);
+                authorizationService, organizationRepository, subscriptionRepository,
+                organizationMemberRepository, memberCompanyAccessRepository, roleRepository, userRoleRepository);
 
         companyModuleService = new CompanyModuleServiceImpl(
-                companyModuleRepository, companyRepository, moduleRepository);
+                companyModuleRepository, companyRepository, moduleRepository,
+                subscriptionRepository, subscriptionPlanModuleRepository,
+                organizationMemberRepository, authorizationService);
 
         userService = new UserServiceImpl(
                 userRepository, userMapper, null, null, null, null,

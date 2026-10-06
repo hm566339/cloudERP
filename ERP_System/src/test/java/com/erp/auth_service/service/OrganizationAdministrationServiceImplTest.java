@@ -27,6 +27,7 @@ class OrganizationAdministrationServiceImplTest {
     @Mock private MemberCompanyAccessRepository accessRepository;
     @Mock private CompanyRepository companyRepository;
     @Mock private AuthorizationService authorizationService;
+    @Mock private SubscriptionRepository subscriptionRepository;
 
     @AfterEach
     void clearContext() {
@@ -48,7 +49,7 @@ class OrganizationAdministrationServiceImplTest {
         when(memberRepository.findById(memberId)).thenReturn(Optional.of(owner));
 
         OrganizationAdministrationService service = new OrganizationAdministrationServiceImpl(
-                memberRepository, accessRepository, companyRepository, authorizationService);
+                memberRepository, accessRepository, companyRepository, authorizationService, subscriptionRepository);
 
         assertThrows(ForbiddenException.class, () -> service.revokeCompanyAccess(memberId, companyId));
     }
@@ -70,7 +71,7 @@ class OrganizationAdministrationServiceImplTest {
                 .thenReturn(Optional.empty());
 
         OrganizationAdministrationService service = new OrganizationAdministrationServiceImpl(
-                memberRepository, accessRepository, companyRepository, authorizationService);
+                memberRepository, accessRepository, companyRepository, authorizationService, subscriptionRepository);
 
         assertThrows(ResourceNotFoundException.class, () -> service.grantCompanyAccess(memberId, otherCompanyId));
     }

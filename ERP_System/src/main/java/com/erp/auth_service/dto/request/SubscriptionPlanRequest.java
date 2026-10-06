@@ -36,5 +36,11 @@ public class SubscriptionPlanRequest {
 
     private Boolean isTrial;
 
+    private Integer maxCompanies;
+
+    private Integer maxUsersPerCompany;
+
+    private Integer maxUsers;
+
     private List<UUID> moduleIds;
 }

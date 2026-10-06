@@ -8,18 +8,30 @@ import com.erp.auth_service.dto.response.CompanyModulesResposnse;
 import com.erp.auth_service.dto.response.CompanyResponse;
 import com.erp.auth_service.dto.response.ModuleResponse;
 import com.erp.auth_service.dto.response.PaginationResponse;
+import com.erp.auth_service.exception.BadRequestException;
 import com.erp.auth_service.exception.DuplicateResourceException;
 import com.erp.auth_service.exception.ForbiddenException;
 import com.erp.auth_service.exception.ResourceNotFoundException;
 import com.erp.auth_service.model.Company;
 import com.erp.auth_service.model.CompanyModule;
+import com.erp.auth_service.model.OrganizationMember;
+import com.erp.auth_service.model.Subscription;
+import com.erp.auth_service.model.SubscriptionPlan;
 import com.erp.auth_service.repository.CompanyModuleRepository;
 import com.erp.auth_service.repository.CompanyRepository;
 import com.erp.auth_service.repository.ModuleRepository;
+import com.erp.auth_service.repository.OrganizationMemberRepository;
+import com.erp.auth_service.repository.SubscriptionPlanModuleRepository;
+import com.erp.auth_service.repository.SubscriptionRepository;
 import com.erp.auth_service.security.PlatformSecurityUtil;
 import com.erp.auth_service.security.RequestContext;
+import com.erp.auth_service.service.AuthorizationService;
 import com.erp.auth_service.service.CompanyModuleService;
 import com.erp.auth_service.model.Module;
+import com.erp.auth_service.utility.AccessMode;
+import com.erp.auth_service.utility.MemberType;
+import com.erp.auth_service.utility.MembershipStatus;
+import com.erp.auth_service.utility.SubscriptionStatus;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +39,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -40,6 +53,10 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
         private final CompanyModuleRepository companyModuleRepository;
         private final CompanyRepository companyRepository;
         private final ModuleRepository moduleRepository;
+        private final SubscriptionRepository subscriptionRepository;
+        private final SubscriptionPlanModuleRepository subscriptionPlanModuleRepository;
+        private final OrganizationMemberRepository organizationMemberRepository;
+        private final AuthorizationService authorizationService;
 
         private void assertCompanyOwnership(Company company) {
                 if (PlatformSecurityUtil.isElevatedAdmin()) {
@@ -61,22 +78,90 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
                 }
         }
 
+        private void assertOwnerOrAdmin(UUID organizationId) {
+                if (PlatformSecurityUtil.isElevatedAdmin()) {
+                        return;
+                }
+                RequestContext.Context context = RequestContext.get();
+                if (context == null || context.userId() == null) {
+                        throw new ForbiddenException("Authentication context required");
+                }
+                if (organizationId == null) {
+                        throw new ForbiddenException("Organization context required");
+                }
+                OrganizationMember member = organizationMemberRepository
+                                .findByOrganization_IdAndUser_Id(organizationId, context.userId())
+                                .orElseThrow(() -> new ForbiddenException("Access denied: You are not a member of this organization"));
+                if (member.getMembershipStatus() != MembershipStatus.ACTIVE || member.getDeletedAt() != null) {
+                        throw new ForbiddenException("Access denied: Organization membership is inactive");
+                }
+                if (member.getMemberType() != MemberType.OWNER && member.getMemberType() != MemberType.ADMIN) {
+                        throw new ForbiddenException("Access denied: Only organization owners or admins can manage company modules");
+                }
+        }
+
+        private void assertModuleEntitledInPlan(UUID organizationId, UUID moduleId) {
+                if (PlatformSecurityUtil.isElevatedAdmin()) {
+                        return;
+                }
+                Subscription subscription = subscriptionRepository
+                                .findTopByOrganization_IdOrderByCreatedAtDesc(organizationId)
+                                .orElseThrow(() -> new ForbiddenException("No active subscription found for organization"));
+                if (subscription.getStatus() == SubscriptionStatus.EXPIRED ||
+                                subscription.getStatus() == SubscriptionStatus.CANCELLED ||
+                                subscription.getStatus() == SubscriptionStatus.SUSPENDED) {
+                        throw new ForbiddenException("Organization subscription is not active (" + subscription.getStatus() + ")");
+                }
+                if (subscription.getAccessMode() != AccessMode.FULL) {
+                        throw new ForbiddenException("Subscription access mode does not allow module assignment: " + subscription.getAccessMode());
+                }
+                SubscriptionPlan plan = subscription.getPlan();
+                if (plan == null) {
+                        throw new ForbiddenException("No subscription plan assigned to active subscription");
+                }
+                boolean entitled = subscriptionPlanModuleRepository.existsByPlan_IdAndModule_IdAndActiveTrue(plan.getId(), moduleId);
+                if (!entitled) {
+                        throw new ForbiddenException("Module is not included in the organization's subscription plan (" + plan.getName() + ")");
+                }
+        }
+
         /*
          * CREATE COMPANY MODULE
          */
         @Override
+        @Transactional
         public Map<String, String> createCompanyModule(CompanyModuleRequest companyModule) {
+                authorizationService.requireWriteAccess();
+
                 Company company = companyRepository.findById(companyModule.getCompany())
                                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
                 assertCompanyOwnership(company);
 
-                if (companyModuleRepository.existsByCompany_IdAndModule_Id(companyModule.getCompany(),
-                                companyModule.getModule())) {
-                        throw new DuplicateResourceException("Company Module already exists");
+                if (company.getOrganization() == null) {
+                        throw new BadRequestException("Company does not belong to an organization");
                 }
+                UUID organizationId = company.getOrganization().getId();
+                assertOwnerOrAdmin(organizationId);
 
                 Module module = moduleRepository.findById(companyModule.getModule())
                                 .orElseThrow(() -> new ResourceNotFoundException("Module not found"));
+                if (Boolean.FALSE.equals(module.getModuleStatus())) {
+                        throw new BadRequestException("Module is inactive in the system");
+                }
+
+                assertModuleEntitledInPlan(organizationId, module.getId());
+
+                Optional<CompanyModule> existingOpt = companyModuleRepository.findByCompany_IdAndModule_Id(
+                                company.getId(), module.getId());
+                if (existingOpt.isPresent()) {
+                        CompanyModule existing = existingOpt.get();
+                        if (Boolean.TRUE.equals(existing.getActive())) {
+                                throw new DuplicateResourceException("Company Module is already enabled for this company");
+                        }
+                        existing.setActive(true);
+                        companyModuleRepository.save(existing);
+                        return Map.of("message", "Company Module enabled successfully");
+                }
 
                 CompanyModule newCompanyModule = new CompanyModule();
                 newCompanyModule.setCompany(company);
@@ -90,25 +175,27 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
          * UPDATE COMPANY MODULE
          */
         @Override
+        @Transactional
         public Map<String, String> updateCompanyModule(
                         UUID id,
                         UpdateComapnyModule updatedCompanyModule) {
+
+                authorizationService.requireWriteAccess();
 
                 CompanyModule companyModule = companyModuleRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("Company Module not found"));
                 assertCompanyOwnership(companyModule.getCompany());
 
-                Company company = companyRepository.findById(updatedCompanyModule.getCompany())
-                                .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
-                assertCompanyOwnership(company);
+                UUID organizationId = companyModule.getCompany().getOrganization() != null
+                                ? companyModule.getCompany().getOrganization().getId() : null;
+                if (organizationId != null) {
+                        assertOwnerOrAdmin(organizationId);
+                        if (Boolean.TRUE.equals(updatedCompanyModule.getActive())) {
+                                assertModuleEntitledInPlan(organizationId, companyModule.getModule().getId());
+                        }
+                }
 
-                Module module = moduleRepository.findById(updatedCompanyModule.getModule())
-                                .orElseThrow(() -> new ResourceNotFoundException("Module not found"));
-
-                companyModule.setCompany(company);
-                companyModule.setModule(module);
                 companyModule.setActive(updatedCompanyModule.getActive());
-
                 companyModuleRepository.save(companyModule);
                 return Map.of("message", "Company Module updated successfully");
         }
@@ -236,24 +323,42 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
         }
 
         @Override
+        @Transactional
         public void deleteCompanyModule(UUID id) {
+                authorizationService.requireWriteAccess();
 
                 CompanyModule companyModule = companyModuleRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("Company Module not found"));
                 assertCompanyOwnership(companyModule.getCompany());
 
-                companyModuleRepository.delete(companyModule);
+                if (companyModule.getCompany().getOrganization() != null) {
+                        assertOwnerOrAdmin(companyModule.getCompany().getOrganization().getId());
+                }
+
+                // Non-destructive soft-disable to preserve existing business data and audit records
+                companyModule.setActive(false);
+                companyModuleRepository.save(companyModule);
         }
 
         @Override
+        @Transactional
         public Map<String, String> changeStatus(UUID id, Boolean status) {
+                authorizationService.requireWriteAccess();
 
                 CompanyModule companyModule = companyModuleRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("Company Module not found"));
                 assertCompanyOwnership(companyModule.getCompany());
 
-                companyModule.setActive(status);
+                UUID organizationId = companyModule.getCompany().getOrganization() != null
+                                ? companyModule.getCompany().getOrganization().getId() : null;
+                if (organizationId != null) {
+                        assertOwnerOrAdmin(organizationId);
+                        if (Boolean.TRUE.equals(status)) {
+                                assertModuleEntitledInPlan(organizationId, companyModule.getModule().getId());
+                        }
+                }
 
+                companyModule.setActive(status);
                 companyModuleRepository.save(companyModule);
 
                 return Map.of("message", "Company module status updated successfully");

@@ -1,6 +1,7 @@
 package com.erp.auth_service.service.impl;
 
 import com.erp.auth_service.dto.response.AccessibleCompanyResponse;
+import com.erp.auth_service.exception.BadRequestException;
 import com.erp.auth_service.exception.ForbiddenException;
 import com.erp.auth_service.exception.ResourceNotFoundException;
 import com.erp.auth_service.model.*;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service @RequiredArgsConstructor
@@ -21,18 +23,40 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
     private final OrganizationMemberRepository memberRepository;
     private final MemberCompanyAccessRepository accessRepository;
     private final CompanyRepository companyRepository;
-        private final AuthorizationService authorizationService;
+    private final AuthorizationService authorizationService;
+    private final SubscriptionRepository subscriptionRepository;
 
     @Override @Transactional
     public void grantCompanyAccess(UUID memberId, UUID companyId) {
-                authorizationService.requireWriteAccess();
+        authorizationService.requireWriteAccess();
         OrganizationMember actor = actor();
         OrganizationMember target = target(memberId, actor.getOrganization().getId());
         Company company = companyRepository.findByIdAndOrganization_IdAndActiveTrue(companyId, actor.getOrganization().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+
         if (accessRepository.findActiveCompany(target.getId(), actor.getOrganization().getId(), company.getId()).isEmpty()) {
-            accessRepository.save(MemberCompanyAccess.builder().organizationMember(target)
-                    .organization(actor.getOrganization()).company(company).active(true).build());
+            Subscription subscription = subscriptionRepository
+                    .findTopByOrganization_IdOrderByCreatedAtDesc(actor.getOrganization().getId())
+                    .orElse(null);
+            if (subscription != null && subscription.getPlan() != null) {
+                Integer maxUsersPerCompany = subscription.getPlan().getMaxUsersPerCompany();
+                if (maxUsersPerCompany != null) {
+                    long currentUsers = accessRepository.countByCompany_IdAndActiveTrue(company.getId());
+                    if (currentUsers >= maxUsersPerCompany) {
+                        throw new BadRequestException("Maximum users limit per company (" + maxUsersPerCompany + ") reached for plan");
+                    }
+                }
+            }
+
+            Optional<MemberCompanyAccess> existing = accessRepository.findByOrganizationMember_IdAndCompany_Id(target.getId(), company.getId());
+            if (existing.isPresent()) {
+                MemberCompanyAccess mca = existing.get();
+                mca.setActive(true);
+                accessRepository.save(mca);
+            } else {
+                accessRepository.save(MemberCompanyAccess.builder().organizationMember(target)
+                        .organization(actor.getOrganization()).company(company).active(true).build());
+            }
         }
     }
 

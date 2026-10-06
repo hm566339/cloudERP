@@ -28,6 +28,8 @@ import { useRoutePath } from '../hooks/useRoutePath'
 import { useAccessMode } from '../hooks/useAccessMode'
 
 import AccountantLayout from './AccountantLayout'
+import OwnerLayout from './OwnerLayout'
+import { selectAuthContext } from '../features/auth/authSlice'
 
 import SidebarNavItem from './SidebarNavItem'
 import { buildSidebarLinks } from './SidebarConfig'
@@ -244,6 +246,24 @@ export default function CompanyLayout() {
 
   if (isAccountant) {
     return <AccountantLayout />
+  }
+
+  const authContext = useAppSelector(selectAuthContext);
+  const isOwner =
+    authContext?.membership?.memberType === 'OWNER' ||
+    authContext?.user?.role === 'owner' ||
+    authContext?.user?.membership?.memberType === 'OWNER' ||
+    (Array.isArray(authContext?.user?.roles) &&
+      authContext.user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
+    (Array.isArray(authContext?.roles) &&
+      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER'));
+
+  if (isOwner && location.pathname === '/subscription') {
+    return (
+      <OwnerLayout>
+        <Outlet />
+      </OwnerLayout>
+    );
   }
 
   const sidebarContent = useMemo(() => (

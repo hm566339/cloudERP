@@ -38,6 +38,18 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
         // 1. Bootstrap 30-Day Free Trial Plan
         SubscriptionPlan trialPlan = subscriptionPlanRepository.findByCodeIgnoreCase("30_DAY_FREE_TRIAL")
                 .map(existing -> {
+                    boolean changed = false;
+                    if (existing.getMaxCompanies() == null || !existing.getMaxCompanies().equals(4)) {
+                        existing.setMaxCompanies(4);
+                        changed = true;
+                    }
+                    if (existing.getMaxUsersPerCompany() == null || !existing.getMaxUsersPerCompany().equals(10)) {
+                        existing.setMaxUsersPerCompany(10);
+                        changed = true;
+                    }
+                    if (changed) {
+                        subscriptionPlanRepository.save(existing);
+                    }
                     syncToLegacyPlanTableIfPresent(existing);
                     return existing;
                 })
@@ -45,8 +57,10 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                     SubscriptionPlan plan = SubscriptionPlan.builder()
                             .code("30_DAY_FREE_TRIAL")
                             .name("30-Day Free Trial")
-                            .description("30-day free trial with standard financial, inventory, and workflow modules.")
+                            .description("30-day free trial with standard financial, CRM, inventory, and workflow modules.")
                             .durationDays(30)
+                            .maxCompanies(4)
+                            .maxUsersPerCompany(10)
                             .price(BigDecimal.ZERO)
                             .currency("INR")
                             .active(true)
@@ -58,13 +72,25 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                     return saved;
                 });
 
-        // Ensure default modules for 30-Day Free Trial: ACCOUNT, INVENTORY, WORKFLOW
-        List<String> trialModuleNames = List.of("ACCOUNT", "INVENTORY", "WORKFLOW");
+        // Ensure default modules for 30-Day Free Trial: ACCOUNT, CRM, INVENTORY, WORKFLOW
+        List<String> trialModuleNames = List.of("ACCOUNT", "CRM", "INVENTORY", "WORKFLOW");
         attachModulesToPlanIfMissing(trialPlan, trialModuleNames);
 
         // 2. Bootstrap Business Plan
         SubscriptionPlan businessPlan = subscriptionPlanRepository.findByCodeIgnoreCase("BUSINESS_PLAN")
                 .map(existing -> {
+                    boolean changed = false;
+                    if (existing.getMaxCompanies() == null) {
+                        existing.setMaxCompanies(10);
+                        changed = true;
+                    }
+                    if (existing.getMaxUsersPerCompany() == null) {
+                        existing.setMaxUsersPerCompany(50);
+                        changed = true;
+                    }
+                    if (changed) {
+                        subscriptionPlanRepository.save(existing);
+                    }
                     syncToLegacyPlanTableIfPresent(existing);
                     return existing;
                 })
@@ -74,6 +100,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                             .name("Business Plan")
                             .description("Annual full ERP suite for growing businesses.")
                             .durationDays(365)
+                            .maxCompanies(10)
+                            .maxUsersPerCompany(50)
                             .price(new BigDecimal("19999.00"))
                             .currency("INR")
                             .active(true)
@@ -89,9 +117,21 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
         List<String> businessModuleNames = List.of("ACCOUNT", "INVENTORY", "WORKFLOW", "SALES", "PURCHASE", "CRM");
         attachModulesToPlanIfMissing(businessPlan, businessModuleNames);
 
-        // 3. Bootstrap Basic Plan (₹999/month)
+        // 3. Bootstrap Basic Plan (₹999/month, maxCompanies=1, maxUsersPerCompany=5)
         SubscriptionPlan basicPlan = subscriptionPlanRepository.findByCodeIgnoreCase("BASIC")
                 .map(existing -> {
+                    boolean changed = false;
+                    if (existing.getMaxCompanies() == null || !existing.getMaxCompanies().equals(1)) {
+                        existing.setMaxCompanies(1);
+                        changed = true;
+                    }
+                    if (existing.getMaxUsersPerCompany() == null || !existing.getMaxUsersPerCompany().equals(5)) {
+                        existing.setMaxUsersPerCompany(5);
+                        changed = true;
+                    }
+                    if (changed) {
+                        subscriptionPlanRepository.save(existing);
+                    }
                     syncToLegacyPlanTableIfPresent(existing);
                     return existing;
                 })
@@ -101,6 +141,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                             .name("Basic Plan")
                             .description("Essential cloud ERP financial and account tools for small teams.")
                             .durationDays(30)
+                            .maxCompanies(1)
+                            .maxUsersPerCompany(5)
                             .price(new BigDecimal("999.00"))
                             .currency("INR")
                             .active(true)
@@ -113,9 +155,21 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                 });
         attachModulesToPlanIfMissing(basicPlan, List.of("ACCOUNT"));
 
-        // 4. Bootstrap Pro Plan (₹2,999/month)
+        // 4. Bootstrap Pro Plan (₹2,999/month, maxCompanies=5, maxUsersPerCompany=25)
         SubscriptionPlan proPlan = subscriptionPlanRepository.findByCodeIgnoreCase("PRO")
                 .map(existing -> {
+                    boolean changed = false;
+                    if (existing.getMaxCompanies() == null || !existing.getMaxCompanies().equals(5)) {
+                        existing.setMaxCompanies(5);
+                        changed = true;
+                    }
+                    if (existing.getMaxUsersPerCompany() == null || !existing.getMaxUsersPerCompany().equals(25)) {
+                        existing.setMaxUsersPerCompany(25);
+                        changed = true;
+                    }
+                    if (changed) {
+                        subscriptionPlanRepository.save(existing);
+                    }
                     syncToLegacyPlanTableIfPresent(existing);
                     return existing;
                 })
@@ -125,6 +179,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                             .name("Pro Plan")
                             .description("Complete business automation with accounts, inventory, and workflows.")
                             .durationDays(30)
+                            .maxCompanies(5)
+                            .maxUsersPerCompany(25)
                             .price(new BigDecimal("2999.00"))
                             .currency("INR")
                             .active(true)
@@ -137,7 +193,7 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                 });
         attachModulesToPlanIfMissing(proPlan, List.of("ACCOUNT", "INVENTORY", "WORKFLOW"));
 
-        // 5. Bootstrap Enterprise Plan (₹9,999/month)
+        // 5. Bootstrap Enterprise Plan (₹9,999/month, maxCompanies=null unlimited, maxUsersPerCompany=null unlimited)
         SubscriptionPlan enterprisePlan = subscriptionPlanRepository.findByCodeIgnoreCase("ENTERPRISE")
                 .map(existing -> {
                     syncToLegacyPlanTableIfPresent(existing);
@@ -149,6 +205,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                             .name("Enterprise Plan")
                             .description("Unlimited enterprise suite with multi-company, CRM, and dedicated priority support.")
                             .durationDays(30)
+                            .maxCompanies(null)
+                            .maxUsersPerCompany(null)
                             .price(new BigDecimal("9999.00"))
                             .currency("INR")
                             .active(true)

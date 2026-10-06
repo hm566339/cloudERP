@@ -12,6 +12,8 @@ import java.util.UUID;
 public interface MemberCompanyAccessRepository extends JpaRepository<MemberCompanyAccess, UUID> {
     boolean existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(UUID memberId, UUID companyId);
     java.util.List<MemberCompanyAccess> findByOrganizationMember_IdAndActiveTrue(UUID memberId);
+    long countByCompany_IdAndActiveTrue(UUID companyId);
+    Optional<MemberCompanyAccess> findByOrganizationMember_IdAndCompany_Id(UUID memberId, UUID companyId);
 
         @Query("""
             select a from MemberCompanyAccess a

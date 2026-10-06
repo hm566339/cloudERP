@@ -695,6 +695,7 @@ export default function AppRoutes() {
           <Route path="modules/purchasing" element={<Navigate to="/purchase-requisitions" replace />} />
           <Route path="settings" element={<Navigate to="/accounts/settings" replace />} />
           <Route path="settings/organization" element={<Navigate to="/accounts/settings" replace />} />
+          <Route path="subscription" element={<SubscriptionPage />} />
           <Route path="settings/subscription" element={<Navigate to="/subscription" replace />} />
           <Route path="profile" element={<Navigate to="/profile" replace />} />
         </Route>

@@ -48,6 +48,9 @@ public class PermissionServiceImpl implements PermissionService {
     private final com.erp.auth_service.repository.FeatureRepository featureRepository;
     private final com.erp.auth_service.repository.CompanyModuleRepository companyModuleRepository;
     private final com.erp.auth_service.repository.UserPortalAccessRepository userPortalAccessRepository;
+    private final com.erp.auth_service.repository.CompanyRepository companyRepository;
+    private final com.erp.auth_service.repository.SubscriptionRepository subscriptionRepository;
+    private final com.erp.auth_service.repository.SubscriptionPlanModuleRepository subscriptionPlanModuleRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -351,7 +354,20 @@ public class PermissionServiceImpl implements PermissionService {
                     ? companyModuleRepository.findByCompany_IdAndActiveTrue(companyId)
                     : Collections.emptyList();
 
+            com.erp.auth_service.model.Company currentCompany = companyRepository != null
+                    ? companyRepository.findById(companyId).orElse(null) : null;
+            com.erp.auth_service.model.Subscription activeSubscription = (currentCompany != null && currentCompany.getOrganization() != null && subscriptionRepository != null)
+                    ? subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(currentCompany.getOrganization().getId()).orElse(null)
+                    : null;
+            com.erp.auth_service.model.SubscriptionPlan plan = (activeSubscription != null) ? activeSubscription.getPlan() : null;
+
             for (com.erp.auth_service.model.CompanyModule cm : companyModules) {
+                if (plan != null && subscriptionPlanModuleRepository != null && cm.getModule() != null) {
+                    boolean planEntitled = subscriptionPlanModuleRepository.existsByPlan_IdAndModule_IdAndActiveTrue(plan.getId(), cm.getModule().getId());
+                    if (!planEntitled) {
+                        continue;
+                    }
+                }
                 if ((allowedCompanyModuleIds.isEmpty() || allowedCompanyModuleIds.contains(cm.getId()))
                         && cm.getModule() != null && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
                         && !"SYSTEM_ADMIN".equalsIgnoreCase(cm.getModule().getName())) {

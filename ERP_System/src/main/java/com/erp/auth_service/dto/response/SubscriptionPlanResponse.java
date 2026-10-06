@@ -22,6 +22,9 @@ public class SubscriptionPlanResponse {
     private String currency;
     private Boolean active;
     private Boolean isTrial;
+    private Integer maxCompanies;
+    private Integer maxUsersPerCompany;
+    private Integer maxUsers;
     private List<SubscriptionPlanModuleResponse> modules;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -19,6 +19,8 @@ public interface SubscriptionPlanModuleRepository extends JpaRepository<Subscrip
 
     boolean existsByPlan_IdAndModule_Id(UUID planId, UUID moduleId);
 
+    boolean existsByPlan_IdAndModule_IdAndActiveTrue(UUID planId, UUID moduleId);
+
     void deleteByPlan_IdAndModule_Id(UUID planId, UUID moduleId);
 
     @Query("SELECT spm FROM SubscriptionPlanModule spm JOIN FETCH spm.module WHERE spm.plan.id = :planId")

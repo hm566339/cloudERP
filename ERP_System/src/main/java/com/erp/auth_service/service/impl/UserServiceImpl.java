@@ -127,6 +127,21 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Company is inactive");
         }
 
+        if (company.getOrganization() != null) {
+            Subscription subscription = subscriptionRepository
+                    .findTopByOrganization_IdOrderByCreatedAtDesc(company.getOrganization().getId())
+                    .orElse(null);
+            if (subscription != null && subscription.getPlan() != null) {
+                Integer maxUsersPerCompany = subscription.getPlan().getMaxUsersPerCompany();
+                if (maxUsersPerCompany != null) {
+                    long currentUsers = userRepository.countByCompanyId(companyId);
+                    if (currentUsers >= maxUsersPerCompany) {
+                        throw new BadRequestException("Maximum users limit per company (" + maxUsersPerCompany + ") reached for plan");
+                    }
+                }
+            }
+        }
+
         String username = request.getUsername().trim();
         String email = request.getEmail()
                 .trim()

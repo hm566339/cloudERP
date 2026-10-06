@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Menu,
@@ -47,8 +47,16 @@ export default function OwnerTopHeader({
   onToggleCollapse,
   onMobileOpen,
 }) {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const location = useLocation();
+
+  const getBreadcrumbLabel = () => {
+    if (location.pathname.includes('subscription')) return 'Subscription';
+    if (location.pathname.includes('settings')) return 'Settings';
+    if (location.pathname.includes('profile')) return 'Profile';
+    if (location.pathname.includes('companies')) return 'Companies';
+    if (location.pathname.includes('users')) return 'Users';
+    return 'Dashboard';
+  };
 
   const [companyDropdownOpen, setCompanyDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -128,7 +136,7 @@ export default function OwnerTopHeader({
           </Link>
           <ChevronRight size={14} className="text-zinc-300 shrink-0" />
           <span className="text-zinc-900 font-bold bg-zinc-100/70 px-2 py-0.5 rounded-md">
-            Dashboard
+            {getBreadcrumbLabel()}
           </span>
         </nav>
       </div>

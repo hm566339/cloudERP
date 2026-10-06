@@ -87,6 +87,9 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
                 .name(request.getName().trim())
                 .description(request.getDescription())
                 .durationDays(request.getDurationDays() != null ? request.getDurationDays() : 30)
+                .maxCompanies(request.getMaxCompanies())
+                .maxUsersPerCompany(request.getMaxUsersPerCompany() != null ? request.getMaxUsersPerCompany() : request.getMaxUsers())
+                .maxUsers(request.getMaxUsersPerCompany() != null ? request.getMaxUsersPerCompany() : request.getMaxUsers())
                 .price(request.getPrice() != null ? request.getPrice() : BigDecimal.ZERO)
                 .currency(request.getCurrency() != null && !request.getCurrency().isBlank()
                         ? request.getCurrency().trim().toUpperCase(Locale.ROOT)
@@ -159,6 +162,14 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
         }
         if (request.getIsTrial() != null) {
             plan.setIsTrial(request.getIsTrial());
+        }
+        if (request.getMaxCompanies() != null) {
+            plan.setMaxCompanies(request.getMaxCompanies());
+        }
+        if (request.getMaxUsersPerCompany() != null) {
+            plan.setMaxUsersPerCompany(request.getMaxUsersPerCompany());
+        } else if (request.getMaxUsers() != null) {
+            plan.setMaxUsersPerCompany(request.getMaxUsers());
         }
 
         SubscriptionPlan updatedPlan = subscriptionPlanRepository.save(plan);
@@ -407,6 +418,9 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
                 .name(plan.getName())
                 .description(plan.getDescription())
                 .durationDays(plan.getDurationDays())
+                .maxCompanies(plan.getMaxCompanies())
+                .maxUsersPerCompany(plan.getMaxUsersPerCompany())
+                .maxUsers(plan.getMaxUsersPerCompany())
                 .price(plan.getPrice())
                 .currency(plan.getCurrency())
                 .active(plan.getActive())

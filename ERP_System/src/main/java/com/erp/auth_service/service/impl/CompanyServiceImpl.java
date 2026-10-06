@@ -21,7 +21,20 @@ import com.erp.auth_service.repository.SubscriptionRepository;
 import com.erp.auth_service.security.PlatformSecurityUtil;
 import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.model.Organization;
+import com.erp.auth_service.model.OrganizationMember;
+import com.erp.auth_service.model.MemberCompanyAccess;
+import com.erp.auth_service.model.Role;
+import com.erp.auth_service.model.UserRole;
 import com.erp.auth_service.model.Subscription;
+import com.erp.auth_service.model.SubscriptionPlan;
+import com.erp.auth_service.repository.OrganizationMemberRepository;
+import com.erp.auth_service.repository.MemberCompanyAccessRepository;
+import com.erp.auth_service.repository.RoleRepository;
+import com.erp.auth_service.repository.UserRoleRepository;
+import com.erp.auth_service.utility.MemberType;
+import com.erp.auth_service.utility.MembershipStatus;
+import com.erp.auth_service.utility.SubscriptionStatus;
+import com.erp.auth_service.utility.AccessMode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +50,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -54,6 +68,10 @@ public class CompanyServiceImpl implements CompanyService {
         private final AuthorizationService authorizationService;
         private final OrganizationRepository organizationRepository;
         private final SubscriptionRepository subscriptionRepository;
+        private final OrganizationMemberRepository organizationMemberRepository;
+        private final MemberCompanyAccessRepository memberCompanyAccessRepository;
+        private final RoleRepository roleRepository;
+        private final UserRoleRepository userRoleRepository;
 
         @Value("${strapi.server}")
         private String coreServerUrl;
@@ -81,6 +99,28 @@ public class CompanyServiceImpl implements CompanyService {
                 }
         }
 
+        private void assertOwnerOrAdmin(UUID organizationId) {
+                if (PlatformSecurityUtil.isElevatedAdmin()) {
+                        return;
+                }
+                RequestContext.Context context = RequestContext.get();
+                if (context == null || context.userId() == null) {
+                        throw new ForbiddenException("Authentication context required");
+                }
+                if (organizationId == null) {
+                        throw new ForbiddenException("Organization context required");
+                }
+                OrganizationMember member = organizationMemberRepository
+                                .findByOrganization_IdAndUser_Id(organizationId, context.userId())
+                                .orElseThrow(() -> new ForbiddenException("Access denied: You are not a member of this organization"));
+                if (member.getMembershipStatus() != MembershipStatus.ACTIVE || member.getDeletedAt() != null) {
+                        throw new ForbiddenException("Access denied: Organization membership is inactive");
+                }
+                if (member.getMemberType() != MemberType.OWNER && member.getMemberType() != MemberType.ADMIN) {
+                        throw new ForbiddenException("Access denied: Only organization owners or admins can perform this operation");
+                }
+        }
+
         @Override
         @Transactional
         public Map<String, String> createCompany(CompanyRequest company,
@@ -89,21 +129,38 @@ public class CompanyServiceImpl implements CompanyService {
                 authorizationService.requireWriteAccess();
 
                 RequestContext.Context context = RequestContext.get();
-                Organization organization = context == null ? null
-                                : organizationRepository.findById(context.organizationId()).orElse(null);
-                if (organization != null) {
-                        Subscription subscription = subscriptionRepository
-                                        .findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId())
-                                        .orElse(null);
-                        Integer maxCompanies = subscription == null || subscription.getPlan() == null ? null
-                                        : subscription.getPlan().getMaxCompanies();
-                        if (maxCompanies != null && companyRepository
-                                        .countByOrganization_IdAndActiveTrue(organization.getId()) >= maxCompanies) {
-                                throw new BadRequestException("Company limit for the current plan has been reached");
+                if (context == null || context.organizationId() == null) {
+                        throw new ForbiddenException("Organization context is required to create a company");
+                }
+                UUID organizationId = context.organizationId();
+                assertOwnerOrAdmin(organizationId);
+
+                Organization organization = organizationRepository.findById(organizationId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Organization not found"));
+
+                Subscription subscription = subscriptionRepository
+                                .findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId())
+                                .orElseThrow(() -> new BadRequestException("No subscription found for this organization"));
+
+                if (subscription.getStatus() == SubscriptionStatus.EXPIRED ||
+                                subscription.getStatus() == SubscriptionStatus.CANCELLED ||
+                                subscription.getStatus() == SubscriptionStatus.SUSPENDED) {
+                        throw new BadRequestException("Subscription is not active (" + subscription.getStatus() + ")");
+                }
+
+                if (subscription.getAccessMode() != AccessMode.FULL) {
+                        throw new BadRequestException("Subscription access mode does not allow company creation: " + subscription.getAccessMode());
+                }
+
+                SubscriptionPlan plan = subscription.getPlan();
+                if (plan != null && plan.getMaxCompanies() != null) {
+                        long currentCount = companyRepository.countByOrganization_IdAndActiveTrue(organization.getId());
+                        if (currentCount >= plan.getMaxCompanies()) {
+                                throw new BadRequestException("Company limit for current plan has been reached (" + currentCount + "/" + plan.getMaxCompanies() + ")");
                         }
                 }
 
-                log.info("Creating company with code: {}", company.getCompanyCode());
+                log.info("Creating company with code: {} for organization: {}", company.getCompanyCode(), organizationId);
 
                 if (companyRepository.existsByCompanyName(company.getCompanyName())) {
                         throw new DuplicateResourceException(
@@ -112,6 +169,7 @@ public class CompanyServiceImpl implements CompanyService {
 
                 Company createdCompany = companyMapper.toCompany(company);
                 createdCompany.setOrganization(organization);
+                createdCompany.setActive(true);
                 String companyCode = resolveOrGenerateCompanyCode(company.getCompanyCode());
                 createdCompany.setCompanyCode(companyCode);
 
@@ -127,6 +185,21 @@ public class CompanyServiceImpl implements CompanyService {
 
                 Company savedCompany = companyRepository.save(createdCompany);
 
+                // Auto-provision company access for the owner/creator
+                if (context.userId() != null) {
+                        organizationMemberRepository.findByOrganization_IdAndUser_Id(organizationId, context.userId())
+                                        .ifPresent(member -> {
+                                                if (memberCompanyAccessRepository.findActiveCompany(member.getId(), organizationId, savedCompany.getId()).isEmpty()) {
+                                                        memberCompanyAccessRepository.save(MemberCompanyAccess.builder()
+                                                                        .organizationMember(member)
+                                                                        .organization(organization)
+                                                                        .company(savedCompany)
+                                                                        .active(true)
+                                                                        .build());
+                                                }
+                                        });
+                }
+
                 log.info("Company saved successfully with code: {}", savedCompany.getCompanyCode());
 
                 return Map.of(
@@ -135,6 +208,7 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         @Override
+        @Transactional
         public Map<String, String> updateCompany(UUID id, CompanyRequest updatedCompany, MultipartFile logo) {
 
                 authorizationService.requireWriteAccess();
@@ -143,9 +217,18 @@ public class CompanyServiceImpl implements CompanyService {
                                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
                 assertCompanyOwnership(existingCompany);
 
+                if (existingCompany.getOrganization() != null) {
+                        assertOwnerOrAdmin(existingCompany.getOrganization().getId());
+                }
+
+                Organization existingOrg = existingCompany.getOrganization();
+
                 companyMapper.updateCompanyFromRequest(
                                 updatedCompany,
                                 existingCompany);
+
+                // Preserve organization relationship
+                existingCompany.setOrganization(existingOrg);
 
                 if (logo != null && !logo.isEmpty()) {
                         try {
@@ -195,16 +278,20 @@ public class CompanyServiceImpl implements CompanyService {
                                 pageSize,
                                 Sort.by("createdAt").descending());
 
-                Page<Company> companyPage = companyRepository.findCompanies(
-                                search,
-                                active,
-                                pageable);
-
-                System.out.println("TOTAL DB = " +
-                                companyRepository.count());
-
-                System.out.println("PAGE COUNT = " +
-                                companyPage.getTotalElements());
+                RequestContext.Context context = RequestContext.get();
+                Page<Company> companyPage;
+                if (!PlatformSecurityUtil.isElevatedAdmin() && context != null && context.organizationId() != null) {
+                        companyPage = companyRepository.findCompaniesByOrganization(
+                                        context.organizationId(),
+                                        search,
+                                        active,
+                                        pageable);
+                } else {
+                        companyPage = companyRepository.findCompanies(
+                                        search,
+                                        active,
+                                        pageable);
+                }
 
                 List<CompanyResponse> companies = companyMapper.toCompanyResponseList(
                                 companyPage.getContent());
@@ -223,6 +310,7 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         @Override
+        @Transactional
         public void deleteCompany(UUID id) {
 
                 authorizationService.requireWriteAccess();
@@ -231,10 +319,17 @@ public class CompanyServiceImpl implements CompanyService {
                                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
                 assertCompanyOwnership(company);
 
-                companyRepository.delete(company);
+                if (company.getOrganization() != null) {
+                        assertOwnerOrAdmin(company.getOrganization().getId());
+                }
+
+                // Non-destructive soft delete
+                company.setActive(false);
+                companyRepository.save(company);
         }
 
         @Override
+        @Transactional
         public Map<String, String> changeStatus(UUID id, Boolean active) {
 
                 authorizationService.requireWriteAccess();
@@ -243,7 +338,25 @@ public class CompanyServiceImpl implements CompanyService {
                                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
                 assertCompanyOwnership(company);
 
+                if (company.getOrganization() != null) {
+                        assertOwnerOrAdmin(company.getOrganization().getId());
+
+                        // If reactivating, verify plan limit isn't exceeded
+                        if (Boolean.TRUE.equals(active) && !Boolean.TRUE.equals(company.getActive())) {
+                                Subscription subscription = subscriptionRepository
+                                                .findTopByOrganization_IdOrderByCreatedAtDesc(company.getOrganization().getId())
+                                                .orElse(null);
+                                if (subscription != null && subscription.getPlan() != null && subscription.getPlan().getMaxCompanies() != null) {
+                                        long currentCount = companyRepository.countByOrganization_IdAndActiveTrue(company.getOrganization().getId());
+                                        if (currentCount >= subscription.getPlan().getMaxCompanies()) {
+                                                throw new BadRequestException("Cannot activate company: maximum companies limit (" + subscription.getPlan().getMaxCompanies() + ") reached for plan");
+                                        }
+                                }
+                        }
+                }
+
                 company.setActive(active);
+                companyRepository.save(company);
 
                 return Map.of("message", "Company status updated successfully");
         }
