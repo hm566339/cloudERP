@@ -126,9 +126,16 @@ export default function AuthCallback() {
           permissions: mappedPermissions,
         }));
 
-        if (mergedUser.companyCode || mergedUser.companyId) {
+        const currentComp = meData?.currentCompany;
+        if (currentComp) {
           dispatch(setSelectedCompany({
-            id: mergedUser.companyCode || mergedUser.companyId,
+            id: currentComp.id || currentComp.code,
+            name: currentComp.name || currentComp.legalName || 'Assigned Company',
+            code: currentComp.code
+          }));
+        } else if (mergedUser.companyId || mergedUser.companyCode) {
+          dispatch(setSelectedCompany({
+            id: mergedUser.companyId || mergedUser.companyCode,
             name: mergedUser.companyName || 'Assigned Company',
             code: mergedUser.companyCode
           }));

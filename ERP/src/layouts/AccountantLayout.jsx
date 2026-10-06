@@ -4,7 +4,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Building2, PieChart,
   LogOut, Menu, X, ChevronDown, ChevronRight, User, Bell,
-  ArrowLeftRight, BadgeCheck, Settings, Clock, AlertTriangle, ShieldAlert, Sparkles, CreditCard
+  ArrowLeftRight, BadgeCheck, Settings, Clock, AlertTriangle, ShieldAlert, Sparkles, CreditCard, ShieldCheck
 } from 'lucide-react'
 import { SettingsSidebar } from '../components/settings'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
@@ -434,6 +434,17 @@ export default function AccountantLayout() {
                         <CreditCard size={15} />
                         Subscription & Plan
                       </Link>
+
+                      {(authContext?.membership?.memberType === 'OWNER' || currentUser?.role === 'owner') && (
+                        <Link
+                          to="/owner/dashboard"
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2 text-[10.4px] font-semibold text-zinc-700 hover:bg-zinc-50 hover:text-primary transition-colors mx-1 rounded-lg"
+                        >
+                          <ShieldCheck size={15} className="text-emerald-600" />
+                          Organization Control Center
+                        </Link>
+                      )}
 
                       <div className="border-t border-zinc-100 mt-2 pt-2 px-1">
                         <button

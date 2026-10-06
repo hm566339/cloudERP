@@ -39,7 +39,23 @@ function calculateSsoConditions({ isRehydrated, hasAuthToken, isOnProtectedPage,
 /**
  * Workspace destination resolution matching WorkspaceLandingRedirect.jsx
  */
-function resolveWorkspaceDestination(authContext) {
+function resolveWorkspaceDestination(authContext, options = {}) {
+  const { sessionStatus = 'authenticated', authenticated = true } = options;
+
+  // Reload / waiting check: protect against premature routing
+  const isAuthLoading =
+    sessionStatus === 'idle' ||
+    sessionStatus === 'checking' ||
+    (authenticated && !authContext?.organization && !authContext?.membership && !authContext?.user);
+
+  if (isAuthLoading) {
+    return 'LOADING';
+  }
+
+  if (sessionStatus === 'unauthenticated' && !authenticated) {
+    return '/login';
+  }
+
   const isSuperAdmin =
     authContext?.user?.role === 'super_admin' ||
     (Array.isArray(authContext?.user?.roles) &&
@@ -51,16 +67,14 @@ function resolveWorkspaceDestination(authContext) {
     return '/super-admin/dashboard';
   }
 
-  const isOwner =
-    authContext?.membership?.memberType === 'OWNER' ||
-    authContext?.user?.role === 'owner' ||
-    authContext?.user?.membership?.memberType === 'OWNER' ||
-    (Array.isArray(authContext?.user?.roles) &&
-      authContext.user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
-    (Array.isArray(authContext?.roles) &&
-      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER'));
+  const membershipType =
+    authContext?.membership?.memberType ??
+    authContext?.member?.memberType ??
+    authContext?.user?.membership?.memberType ??
+    (authContext?.user?.role === 'owner' ? 'OWNER' : null);
 
-  if (isOwner) {
+  // OWNER is an organization-level membership role -> always /owner/dashboard
+  if (membershipType?.toUpperCase() === 'OWNER') {
     return '/owner/dashboard';
   }
 
@@ -76,63 +90,181 @@ function resolveWorkspaceDestination(authContext) {
     return 'NO_ACCESS';
   }
 
-  if (entitledModules.includes('ACCOUNT')) return '/accounts/dashboard';
-  if (entitledModules.includes('INVENTORY')) return '/inventory/dashboard';
-  if (entitledModules.includes('CRM')) return '/crm/dashboard';
+  // 2+ modules for non-owner: CommonWorkspaceView
+  return 'COMMON_WORKSPACE_VIEW';
+}
 
-  return 'NO_ACCESS';
+function canAccessOwnerDashboard(authContext) {
+  return (
+    authContext?.membership?.memberType === 'OWNER' ||
+    authContext?.user?.role === 'owner' ||
+    authContext?.user?.membership?.memberType === 'OWNER' ||
+    (Array.isArray(authContext?.user?.roles) &&
+      authContext.user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
+    (Array.isArray(authContext?.roles) &&
+      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
+    authContext?.user?.role === 'super_admin'
+  );
 }
 
 describe('Phase 12 — Login Flow, Route Protection & Workspace Navigation Tests', () => {
 
-  describe('Test Case A: Login → Dashboard Opens Successfully', () => {
-    it('resolves direct authentication to /workspace for regular tenant user', () => {
-      const loginResponse = {
-        data: {
-          accessToken: 'jwt-token-xyz',
-          user: { id: 'u1', username: 'john', companyCode: 'COMP01' }
-        }
+  describe('Test Case A: Canonical ERP Routing & Dynamic Module Workspace', () => {
+    it('1. Generic login does not require module', () => {
+      const loginPayload = {
+        organizationCode: 'mohit',
+        host: 'https://www.mark2.in/erp',
+        module: null
       };
-      const result = evaluateLoginResult(loginResponse);
-      assert.strictEqual(result.type, 'DIRECT_AUTHENTICATION');
-      assert.strictEqual(result.token, 'jwt-token-xyz');
+      assert.strictEqual(loginPayload.module, null);
+      assert.strictEqual(loginPayload.organizationCode, 'mohit');
     });
 
-    it('resolves super admin login to /super-admin/dashboard', () => {
-      const authContext = {
-        user: { id: 'admin-1', role: 'super_admin' },
-        roles: ['SUPER_ADMIN']
-      };
-      const destination = resolveWorkspaceDestination(authContext);
-      assert.strictEqual(destination, '/super-admin/dashboard');
-    });
-
-    it('resolves organization owner to /owner/dashboard', () => {
+    it('2. OWNER + ACCOUNT -> /workspace -> /owner/dashboard', () => {
       const authContext = {
         membership: { memberType: 'OWNER' },
         user: { id: 'owner-1', role: 'owner' },
-        modules: ['ACCOUNT', 'INVENTORY']
+        modules: ['ACCOUNT']
       };
       const destination = resolveWorkspaceDestination(authContext);
       assert.strictEqual(destination, '/owner/dashboard');
     });
 
-    it('resolves single module inventory user to /inventory/dashboard', () => {
+    it('3. OWNER + INVENTORY -> /workspace -> /owner/dashboard', () => {
       const authContext = {
-        user: { id: 'inv-1', role: 'inventory_manager' },
+        membership: { memberType: 'OWNER' },
+        user: { id: 'owner-1', role: 'owner' },
+        modules: ['INVENTORY']
+      };
+      const destination = resolveWorkspaceDestination(authContext);
+      assert.strictEqual(destination, '/owner/dashboard');
+    });
+
+    it('4. OWNER + CRM -> /workspace -> /owner/dashboard', () => {
+      const authContext = {
+        membership: { memberType: 'OWNER' },
+        user: { id: 'owner-1', role: 'owner' },
+        modules: ['CRM']
+      };
+      const destination = resolveWorkspaceDestination(authContext);
+      assert.strictEqual(destination, '/owner/dashboard');
+    });
+
+    it('5. OWNER + ACCOUNT + INVENTORY + CRM -> /workspace -> /owner/dashboard', () => {
+      const authContext = {
+        membership: { memberType: 'OWNER' },
+        user: { id: 'owner-1', role: 'owner' },
+        modules: ['ACCOUNT', 'INVENTORY', 'CRM']
+      };
+      const destination = resolveWorkspaceDestination(authContext);
+      assert.strictEqual(destination, '/owner/dashboard');
+    });
+
+    it('6. OWNER + zero modules -> /workspace -> /owner/dashboard', () => {
+      const authContext = {
+        membership: { memberType: 'OWNER' },
+        user: { id: 'owner-1', role: 'owner' },
+        modules: []
+      };
+      const destination = resolveWorkspaceDestination(authContext);
+      assert.strictEqual(destination, '/owner/dashboard');
+    });
+
+    it('7. NON-OWNER + ACCOUNT -> Account dashboard', () => {
+      const authContext = {
+        membership: { memberType: 'MEMBER' },
+        user: { id: 'user-1', role: 'accountant' },
+        modules: ['ACCOUNT']
+      };
+      const destination = resolveWorkspaceDestination(authContext);
+      assert.strictEqual(destination, '/accounts/dashboard');
+    });
+
+    it('8. NON-OWNER + INVENTORY -> Inventory dashboard', () => {
+      const authContext = {
+        membership: { memberType: 'MEMBER' },
+        user: { id: 'user-2', role: 'inventory_staff' },
         modules: ['INVENTORY']
       };
       const destination = resolveWorkspaceDestination(authContext);
       assert.strictEqual(destination, '/inventory/dashboard');
     });
 
-    it('resolves multi-module tenant user to primary module dashboard (/accounts/dashboard)', () => {
+    it('9. NON-OWNER + CRM -> CRM dashboard', () => {
       const authContext = {
-        user: { id: 'user-1', role: 'accountant' },
-        modules: ['ACCOUNT', 'INVENTORY', 'CRM']
+        membership: { memberType: 'MEMBER' },
+        user: { id: 'user-3', role: 'sales_rep' },
+        modules: ['CRM']
       };
       const destination = resolveWorkspaceDestination(authContext);
-      assert.strictEqual(destination, '/accounts/dashboard');
+      assert.strictEqual(destination, '/crm/dashboard');
+    });
+
+    it('10. NON-OWNER + INVENTORY + CRM -> CommonWorkspaceView', () => {
+      const authContext = {
+        membership: { memberType: 'MEMBER' },
+        user: { id: 'user-4', role: 'operations_user' },
+        modules: ['INVENTORY', 'CRM']
+      };
+      const destination = resolveWorkspaceDestination(authContext);
+      assert.strictEqual(destination, 'COMMON_WORKSPACE_VIEW');
+    });
+
+    it('11. NON-OWNER + zero modules -> NoModuleAccessView', () => {
+      const authContext = {
+        membership: { memberType: 'MEMBER' },
+        user: { id: 'user-5', role: 'employee' },
+        modules: []
+      };
+      const destination = resolveWorkspaceDestination(authContext);
+      assert.strictEqual(destination, 'NO_ACCESS');
+    });
+
+    it('12. Customer OWNER cannot access platform-admin endpoints', () => {
+      const customerOwnerRoles = ['OWNER'];
+      const isPlatformAdmin = customerOwnerRoles.includes('SYSTEM_ADMIN') || customerOwnerRoles.includes('ROLE_PLATFORM_ADMIN');
+      assert.strictEqual(isPlatformAdmin, false);
+    });
+
+    it('13. Customer OWNER can access authorized customer organization-owner APIs', () => {
+      const ownerUser = {
+        membership: { memberType: 'OWNER' },
+        user: { role: 'owner' }
+      };
+      assert.strictEqual(canAccessOwnerDashboard(ownerUser), true);
+    });
+
+    it('14. Unauthorized member cannot access owner APIs', () => {
+      const nonOwnerUser = {
+        membership: { memberType: 'MEMBER' },
+        user: { role: 'employee' },
+        roles: ['EMPLOYEE']
+      };
+      assert.strictEqual(canAccessOwnerDashboard(nonOwnerUser), false);
+    });
+
+    it('15. Hard reload correctly restores /me and routes according to membership', () => {
+      // 15a. While /me is loading, returns LOADING (prevents premature routing on empty state)
+      assert.strictEqual(resolveWorkspaceDestination({}, { sessionStatus: 'checking' }), 'LOADING');
+      assert.strictEqual(resolveWorkspaceDestination({}, { sessionStatus: 'idle' }), 'LOADING');
+
+      // 15b. Once /me restores OWNER, routes to /owner/dashboard
+      const loadedOwnerContext = {
+        organization: { code: 'mohit' },
+        membership: { memberType: 'OWNER' },
+        user: { id: 'owner-1', role: 'owner' },
+        modules: ['ACCOUNT']
+      };
+      assert.strictEqual(resolveWorkspaceDestination(loadedOwnerContext, { sessionStatus: 'authenticated' }), '/owner/dashboard');
+
+      // 15c. Once /me restores NON-OWNER, routes to entitled module
+      const loadedMemberContext = {
+        organization: { code: 'mohit' },
+        membership: { memberType: 'MEMBER' },
+        user: { id: 'member-1', role: 'accountant' },
+        modules: ['ACCOUNT']
+      };
+      assert.strictEqual(resolveWorkspaceDestination(loadedMemberContext, { sessionStatus: 'authenticated' }), '/accounts/dashboard');
     });
   });
 

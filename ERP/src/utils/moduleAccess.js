@@ -196,32 +196,17 @@ export function normalizeAppRedirectPath(path) {
 
 export function getPostLoginRedirectPath({ user = {}, role, dashboardPath } = {}) {
   const userRole = role || user.role
-  const companyId = user.companyCode || user.companyId
 
   if (userRole === 'super_admin') {
     return '/super-admin/dashboard'
   }
 
-  if (
-    userRole === 'owner' ||
-    user?.membership?.memberType === 'OWNER' ||
-    (Array.isArray(user?.roles) && user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER'))
-  ) {
-    return '/owner/dashboard'
-  }
-
-  if (userRole === 'company_admin') {
-    return companyId ? `/company/${companyId}` : '/company-select'
-  }
-
+  // Canonical ERP entry point for all tenant members (including OWNER) is /workspace.
+  // /workspace dynamically evaluates entitled business modules from GET /api/sso/auth/me.
   const backendPath = normalizeAppRedirectPath(dashboardPath)
-  if (backendPath && backendPath !== '/company-select') {
+  if (backendPath && backendPath !== '/company-select' && backendPath !== '/owner/dashboard') {
     return backendPath
   }
 
-  if (companyId) {
-    return `/accounts/dashboard`
-  }
-
-  return '/company-select'
+  return '/workspace'
 }

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import {
   Building2, Globe, Users, ShieldCheck, CreditCard,
   Layers, ArrowRight, Sparkles, Clock, CheckCircle2,
@@ -11,12 +11,9 @@ import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { selectAuthContext, logout as logoutAction } from '../../auth/authSlice';
 import { setSelectedCompany, selectSelectedCompany } from '../../company-management/companySlice';
 import { useLogoutApiMutation } from '../../auth/services/authApi';
-import { useGetDashboardMetricsQuery } from '../../../api/sso/dashboard';
 import { removeCookie } from '../../../utils/cookieHelper';
 import MarkLogo from '../../../components/common/MarkLogo';
 import SubscriptionNoticeBanner from '../../../components/common/SubscriptionNoticeBanner';
-import StatsCard from '../components/StatsCard';
-import { RoleTable, PortalAccessTable } from '../components/DashboardTables';
 import { useAccessMode } from '../../../hooks/useAccessMode';
 import { getEntitledModules } from '../../../utils/moduleNormalization';
 
@@ -53,11 +50,19 @@ export default function OwnerDashboard() {
 
   const [logoutApi] = useLogoutApiMutation();
 
-  // Load live company dashboard metrics from existing backend SSO dashboard API
-  const { data: metricsData, isLoading: metricsLoading, refetch: refetchMetrics } = useGetDashboardMetricsQuery(
-    activeCompanyId,
-    { skip: !activeCompanyId }
-  );
+  const isOwner =
+    authContext?.membership?.memberType === 'OWNER' ||
+    authContext?.user?.role === 'owner' ||
+    authContext?.user?.membership?.memberType === 'OWNER' ||
+    (Array.isArray(authContext?.user?.roles) &&
+      authContext.user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
+    (Array.isArray(authContext?.roles) &&
+      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
+    authContext?.user?.role === 'super_admin';
+
+  if (!isOwner) {
+    return <Navigate to="/403" replace />;
+  }
 
   const entitledModules = useMemo(() => getEntitledModules(authContext), [authContext]);
 
@@ -335,11 +340,11 @@ export default function OwnerDashboard() {
                 <span>Manage Plan</span>
               </Link>
               <button
-                onClick={() => refetchMetrics && refetchMetrics()}
+                onClick={() => window.location.reload()}
                 title="Refresh metrics"
                 className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/10 transition-colors backdrop-blur-md"
               >
-                <RefreshCw size={13} className={metricsLoading ? 'animate-spin' : ''} />
+                <RefreshCw size={13} />
                 <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
@@ -594,49 +599,7 @@ export default function OwnerDashboard() {
           </div>
         </section>
 
-        {/* ── Operational Metrics (Users, Roles & Portal Access Distribution) ── */}
-        {metricsData && (
-          <section className="space-y-4">
-            <h2 className="text-base font-display font-black text-zinc-900">
-              Company Operations & Security Context ({activeCompanyName})
-            </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              <StatsCard
-                title="Total Users"
-                icon={Users}
-                total={metricsData?.users?.total}
-                active={metricsData?.users?.active}
-                inactive={metricsData?.users?.inactive}
-                blocked={metricsData?.users?.blocked}
-                unverified={metricsData?.users?.unverified}
-                colorClass="text-blue-500"
-                bgClass="bg-blue-50"
-              />
-              <StatsCard
-                title="Active Sessions"
-                icon={KeyRound}
-                total={metricsData?.sessions?.total}
-                active={metricsData?.sessions?.active}
-                activeLabel="Live"
-                colorClass="text-emerald-500"
-                bgClass="bg-emerald-50"
-              />
-              <StatsCard
-                title="Configured Roles"
-                icon={ShieldCheck}
-                total={metricsData?.roles?.total}
-                colorClass="text-purple-500"
-                bgClass="bg-purple-50"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-2">
-              <RoleTable roles={metricsData?.roles} />
-              <PortalAccessTable portalAccess={metricsData?.portalAccess} />
-            </div>
-          </section>
-        )}
 
       </main>
 
