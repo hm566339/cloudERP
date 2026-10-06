@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
     private final ModuleRepository moduleRepository;
     private final CompanyRepository companyRepository;
     private final CompanySubscriptionRepository companySubscriptionRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     @Transactional
@@ -35,6 +37,10 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
 
         // 1. Bootstrap 30-Day Free Trial Plan
         SubscriptionPlan trialPlan = subscriptionPlanRepository.findByCodeIgnoreCase("30_DAY_FREE_TRIAL")
+                .map(existing -> {
+                    syncToLegacyPlanTableIfPresent(existing);
+                    return existing;
+                })
                 .orElseGet(() -> {
                     SubscriptionPlan plan = SubscriptionPlan.builder()
                             .code("30_DAY_FREE_TRIAL")
@@ -46,7 +52,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                             .active(true)
                             .isTrial(true)
                             .build();
-                    SubscriptionPlan saved = subscriptionPlanRepository.save(plan);
+                    SubscriptionPlan saved = subscriptionPlanRepository.saveAndFlush(plan);
+                    syncToLegacyPlanTableIfPresent(saved);
                     log.info("Created default 30-Day Free Trial plan [30_DAY_FREE_TRIAL]");
                     return saved;
                 });
@@ -57,6 +64,10 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
 
         // 2. Bootstrap Business Plan
         SubscriptionPlan businessPlan = subscriptionPlanRepository.findByCodeIgnoreCase("BUSINESS_PLAN")
+                .map(existing -> {
+                    syncToLegacyPlanTableIfPresent(existing);
+                    return existing;
+                })
                 .orElseGet(() -> {
                     SubscriptionPlan plan = SubscriptionPlan.builder()
                             .code("BUSINESS_PLAN")
@@ -68,7 +79,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                             .active(true)
                             .isTrial(false)
                             .build();
-                    SubscriptionPlan saved = subscriptionPlanRepository.save(plan);
+                    SubscriptionPlan saved = subscriptionPlanRepository.saveAndFlush(plan);
+                    syncToLegacyPlanTableIfPresent(saved);
                     log.info("Created default Business plan [BUSINESS_PLAN]");
                     return saved;
                 });
@@ -79,6 +91,10 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
 
         // 3. Bootstrap Basic Plan (₹999/month)
         SubscriptionPlan basicPlan = subscriptionPlanRepository.findByCodeIgnoreCase("BASIC")
+                .map(existing -> {
+                    syncToLegacyPlanTableIfPresent(existing);
+                    return existing;
+                })
                 .orElseGet(() -> {
                     SubscriptionPlan plan = SubscriptionPlan.builder()
                             .code("BASIC")
@@ -90,7 +106,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                             .active(true)
                             .isTrial(false)
                             .build();
-                    SubscriptionPlan saved = subscriptionPlanRepository.save(plan);
+                    SubscriptionPlan saved = subscriptionPlanRepository.saveAndFlush(plan);
+                    syncToLegacyPlanTableIfPresent(saved);
                     log.info("Created default Basic plan [BASIC]");
                     return saved;
                 });
@@ -98,6 +115,10 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
 
         // 4. Bootstrap Pro Plan (₹2,999/month)
         SubscriptionPlan proPlan = subscriptionPlanRepository.findByCodeIgnoreCase("PRO")
+                .map(existing -> {
+                    syncToLegacyPlanTableIfPresent(existing);
+                    return existing;
+                })
                 .orElseGet(() -> {
                     SubscriptionPlan plan = SubscriptionPlan.builder()
                             .code("PRO")
@@ -109,7 +130,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                             .active(true)
                             .isTrial(false)
                             .build();
-                    SubscriptionPlan saved = subscriptionPlanRepository.save(plan);
+                    SubscriptionPlan saved = subscriptionPlanRepository.saveAndFlush(plan);
+                    syncToLegacyPlanTableIfPresent(saved);
                     log.info("Created default Pro plan [PRO]");
                     return saved;
                 });
@@ -117,6 +139,10 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
 
         // 5. Bootstrap Enterprise Plan (₹9,999/month)
         SubscriptionPlan enterprisePlan = subscriptionPlanRepository.findByCodeIgnoreCase("ENTERPRISE")
+                .map(existing -> {
+                    syncToLegacyPlanTableIfPresent(existing);
+                    return existing;
+                })
                 .orElseGet(() -> {
                     SubscriptionPlan plan = SubscriptionPlan.builder()
                             .code("ENTERPRISE")
@@ -128,7 +154,8 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
                             .active(true)
                             .isTrial(false)
                             .build();
-                    SubscriptionPlan saved = subscriptionPlanRepository.save(plan);
+                    SubscriptionPlan saved = subscriptionPlanRepository.saveAndFlush(plan);
+                    syncToLegacyPlanTableIfPresent(saved);
                     log.info("Created default Enterprise plan [ENTERPRISE]");
                     return saved;
                 });
@@ -157,6 +184,35 @@ public class SubscriptionPlanBootstrap implements CommandLineRunner {
         }
 
         log.info("Subscription plan bootstrap completed successfully.");
+    }
+
+    private void syncToLegacyPlanTableIfPresent(SubscriptionPlan plan) {
+        if (plan == null || plan.getId() == null || jdbcTemplate == null) {
+            return;
+        }
+        try {
+            Integer tableCount = jdbcTemplate.queryForObject(
+                    "SELECT count(*) FROM information_schema.tables WHERE table_name = 'plan'", Integer.class);
+            if (tableCount != null && tableCount > 0) {
+                jdbcTemplate.update("""
+                    INSERT INTO plan (id, code, name, trial_days, active, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT (id) DO UPDATE SET
+                        code = EXCLUDED.code,
+                        name = EXCLUDED.name,
+                        trial_days = EXCLUDED.trial_days,
+                        active = EXCLUDED.active,
+                        updated_at = EXCLUDED.updated_at
+                """, plan.getId(), plan.getCode(), plan.getName(),
+                    plan.getDurationDays() != null ? plan.getDurationDays() : 30,
+                    Boolean.TRUE.equals(plan.getActive()),
+                    plan.getCreatedAt() != null ? plan.getCreatedAt() : LocalDateTime.now(),
+                    LocalDateTime.now());
+                log.debug("Synchronized plan [{}] to legacy table 'plan'", plan.getCode());
+            }
+        } catch (Exception ex) {
+            log.debug("Legacy plan table sync check: {}", ex.getMessage());
+        }
     }
 
     private void attachModulesToPlanIfMissing(SubscriptionPlan plan, List<String> moduleNames) {

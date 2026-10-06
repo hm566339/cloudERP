@@ -52,6 +52,9 @@ public class OrganizationServiceImpl implements OrganizationService {
         @Value("${sso.trial-days:30}")
         private int trialDays;
 
+        @Value("${sso.default-plan-code:30_DAY_FREE_TRIAL}")
+        private String defaultPlanCode = "30_DAY_FREE_TRIAL";
+
         @Override
         @Transactional
         public OrganizationSignupResponse signup(OrganizationSignupRequest request) {
@@ -115,43 +118,51 @@ public class OrganizationServiceImpl implements OrganizationService {
                 Company savedCompany = company;
                 Organization savedOrganization = organization;
 
-                // 1. Find configured trial plan dynamically from database
-                SubscriptionPlan trialPlan = subscriptionPlanRepository.findFirstByIsTrialTrueAndActiveTrue()
-                                .or(() -> subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("30_DAY_FREE_TRIAL"))
-                                .or(() -> subscriptionPlanRepository.findByActiveTrue().stream().findFirst())
-                                .orElse(null);
+                // 1. Resolve configured default subscription plan from persistent storage (fail-fast if missing)
+                String planCodeToResolve = (defaultPlanCode != null && !defaultPlanCode.isBlank())
+                                ? defaultPlanCode.trim()
+                                : "30_DAY_FREE_TRIAL";
 
-                int effectiveTrialDays = (trialPlan != null && trialPlan.getDurationDays() != null && trialPlan.getDurationDays() > 0)
+                SubscriptionPlan trialPlan = subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue(planCodeToResolve)
+                                .or(() -> subscriptionPlanRepository.findByCodeIgnoreCase(planCodeToResolve))
+                                .or(() -> subscriptionPlanRepository.findFirstByIsTrialTrueAndActiveTrue())
+                                .or(() -> subscriptionPlanRepository.findByActiveTrue().stream().findFirst())
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "Default subscription plan not found: " + planCodeToResolve
+                                ));
+
+                if (trialPlan.getId() == null) {
+                        throw new IllegalStateException("Resolved default subscription plan has no persistent identifier");
+                }
+
+                int effectiveTrialDays = (trialPlan.getDurationDays() != null && trialPlan.getDurationDays() > 0)
                                 ? trialPlan.getDurationDays()
                                 : trialDays;
 
                 LocalDateTime startedAt = LocalDateTime.now();
                 LocalDateTime trialEndsAt = startedAt.plusDays(effectiveTrialDays);
 
-                // 2. Create company_subscription for primary company
-                if (trialPlan != null) {
-                        companySubscriptionRepository.save(CompanySubscription.builder()
-                                        .company(savedCompany)
-                                        .plan(trialPlan)
-                                        .startAt(startedAt)
-                                        .endAt(trialEndsAt)
-                                        .status(CompanySubscriptionStatus.TRIALING)
-                                        .autoRenew(false)
-                                        .build());
-                }
+                // 2. Create company_subscription for primary company using the persistent plan record
+                companySubscriptionRepository.save(CompanySubscription.builder()
+                                .company(savedCompany)
+                                .plan(trialPlan)
+                                .startAt(startedAt)
+                                .endAt(trialEndsAt)
+                                .status(CompanySubscriptionStatus.TRIALING)
+                                .autoRenew(false)
+                                .build());
 
                 // 3. Read modules assigned to that plan from database (NO HARDCODING)
                 List<Module> provisionedModules = new java.util.ArrayList<>();
-                if (trialPlan != null) {
-                        List<SubscriptionPlanModule> planModules = subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(trialPlan.getId());
-                        for (SubscriptionPlanModule spm : planModules) {
-                                Module mod = spm.getModule();
-                                if (mod != null && Boolean.TRUE.equals(mod.getModuleStatus()) && !"SYSTEM_ADMIN".equalsIgnoreCase(mod.getName())) {
-                                        provisionedModules.add(mod);
-                                }
+                List<SubscriptionPlanModule> planModules = subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(trialPlan.getId());
+                for (SubscriptionPlanModule spm : planModules) {
+                        Module mod = spm.getModule();
+                        if (mod != null && Boolean.TRUE.equals(mod.getModuleStatus()) && !"SYSTEM_ADMIN".equalsIgnoreCase(mod.getName())) {
+                                provisionedModules.add(mod);
                         }
-                } else {
-                        // Fallback only if no subscription plan has been configured in the database yet
+                }
+                if (provisionedModules.isEmpty()) {
+                        // Fallback only if no specific modules have been mapped to the plan yet
                         provisionedModules = moduleRepository.findByModuleStatus(true).stream()
                                         .filter(m -> !"SYSTEM_ADMIN".equalsIgnoreCase(m.getName()))
                                         .toList();
@@ -194,10 +205,18 @@ public class OrganizationServiceImpl implements OrganizationService {
                                 .active(true)
                                 .build());
 
+                String planVersionCode = (trialPlan.getPlanVersion() != null && !trialPlan.getPlanVersion().isBlank())
+                                ? trialPlan.getPlanVersion()
+                                : "v1";
+
                 Subscription subscription = subscriptionRepository.save(Subscription.builder()
                                 .organization(organization)
                                 .plan(trialPlan)
-                                .planCode(trialPlan != null ? trialPlan.getCode() : "TRIAL")
+                                .planCode(trialPlan.getCode())
+                                .planVersionCode(planVersionCode)
+                                .price(trialPlan.getPrice())
+                                .priceAtSubscription(trialPlan.getPrice())
+                                .currency(trialPlan.getCurrency() != null ? trialPlan.getCurrency() : "INR")
                                 .status(SubscriptionStatus.TRIALING)
                                 .accessMode(AccessMode.FULL)
                                 .trialStartedAt(startedAt)

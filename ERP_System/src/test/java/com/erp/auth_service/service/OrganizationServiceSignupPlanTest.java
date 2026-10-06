@@ -10,6 +10,7 @@ import com.erp.auth_service.repository.*;
 import com.erp.auth_service.service.impl.OrganizationServiceImpl;
 import com.erp.auth_service.utility.AccountStatus;
 import com.erp.auth_service.utility.CompanySubscriptionStatus;
+import com.erp.auth_service.utility.SubscriptionStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -236,5 +237,171 @@ public class OrganizationServiceSignupPlanTest {
         // Now exactly 5 modules should have been provisioned automatically!
         verify(companyModuleRepository, times(5)).save(any(CompanyModule.class));
         verify(userPortalAccessRepository, times(5)).save(any(UserPortalAccess.class));
+    }
+
+    @Test
+    @DisplayName("1 & 4. Default plan exists -> signup creates subscription referencing existing persistent plan.id")
+    void testDefaultPlanExists_SignupCreatesSubscriptionSuccessfully() {
+        OrganizationSignupRequest request = createSignupRequest();
+
+        when(userRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false);
+        when(companyRepository.existsByCompanyCode(anyString())).thenReturn(false);
+        when(organizationRepository.save(any(Organization.class))).thenAnswer(i -> {
+            Organization o = i.getArgument(0);
+            o.setId(UUID.randomUUID());
+            return o;
+        });
+        when(companyRepository.save(any(Company.class))).thenAnswer(i -> {
+            Company c = i.getArgument(0);
+            c.setId(UUID.randomUUID());
+            return c;
+        });
+        when(userRepository.save(any(User.class))).thenAnswer(i -> {
+            User u = i.getArgument(0);
+            u.setId(UUID.randomUUID());
+            return u;
+        });
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed_pass");
+
+        when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("30_DAY_FREE_TRIAL"))
+                .thenReturn(Optional.of(trialPlan));
+        when(subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(trialPlan.getId()))
+                .thenReturn(Collections.emptyList());
+        when(moduleRepository.findByModuleStatus(true))
+                .thenReturn(List.of(accountModule));
+
+        when(companyModuleRepository.save(any(CompanyModule.class))).thenAnswer(i -> i.getArgument(0));
+        when(roleRepository.findByCompany_IdAndNameIgnoreCase(any(), eq("OWNER"))).thenReturn(Optional.empty());
+        when(roleRepository.save(any(Role.class))).thenAnswer(i -> i.getArgument(0));
+        when(memberRepository.save(any(OrganizationMember.class))).thenAnswer(i -> i.getArgument(0));
+        when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(i -> {
+            Subscription s = i.getArgument(0);
+            s.setId(UUID.randomUUID());
+            return s;
+        });
+
+        OrganizationSignupResponse response = organizationService.signup(request);
+
+        assertNotNull(response);
+
+        ArgumentCaptor<Subscription> subCaptor = ArgumentCaptor.forClass(Subscription.class);
+        verify(subscriptionRepository, times(1)).save(subCaptor.capture());
+        Subscription savedSub = subCaptor.getValue();
+
+        assertNotNull(savedSub.getPlan(), "Subscription must reference an existing persistent Plan record");
+        assertEquals(trialPlan.getId(), savedSub.getPlan().getId(), "Subscription plan_id must match the persistent trial plan id");
+        assertEquals("30_DAY_FREE_TRIAL", savedSub.getPlanCode());
+        assertEquals(SubscriptionStatus.TRIALING, savedSub.getStatus());
+        assertEquals(BigDecimal.ZERO, savedSub.getPrice());
+    }
+
+    @Test
+    @DisplayName("2. Default plan does not exist -> signup fails with clear business exception, not FK error")
+    void testDefaultPlanDoesNotExist_FailsWithClearBusinessException() {
+        OrganizationSignupRequest request = createSignupRequest();
+
+        when(userRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false);
+        when(companyRepository.existsByCompanyCode(anyString())).thenReturn(false);
+        when(organizationRepository.save(any(Organization.class))).thenAnswer(i -> {
+            Organization o = i.getArgument(0);
+            o.setId(UUID.randomUUID());
+            return o;
+        });
+        when(companyRepository.save(any(Company.class))).thenAnswer(i -> {
+            Company c = i.getArgument(0);
+            c.setId(UUID.randomUUID());
+            return c;
+        });
+        when(userRepository.save(any(User.class))).thenAnswer(i -> {
+            User u = i.getArgument(0);
+            u.setId(UUID.randomUUID());
+            return u;
+        });
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed_pass");
+
+        // When all lookups for default plan return empty
+        when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue(anyString())).thenReturn(Optional.empty());
+        when(subscriptionPlanRepository.findByCodeIgnoreCase(anyString())).thenReturn(Optional.empty());
+        when(subscriptionPlanRepository.findFirstByIsTrialTrueAndActiveTrue()).thenReturn(Optional.empty());
+        when(subscriptionPlanRepository.findByActiveTrue()).thenReturn(Collections.emptyList());
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+            organizationService.signup(request);
+        });
+
+        assertTrue(ex.getMessage().contains("Default subscription plan not found"),
+                "Exception must be a clear business exception about missing default subscription plan: " + ex.getMessage());
+
+        // Crucial: subscriptionRepository.save must never have been called with an unresolvable plan
+        verify(subscriptionRepository, never()).save(any());
+        verify(companySubscriptionRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("6 & 7. Multiple organizations signing up reuse the exact same persistent default plan without generating random UUIDs")
+    void testMultipleOrganizationsSignup_UseSameExistingDefaultPlanWithoutRandomUuids() {
+        when(userRepository.existsByEmailIgnoreCase(anyString())).thenReturn(false);
+        when(companyRepository.existsByCompanyCode(anyString())).thenReturn(false);
+        when(organizationRepository.save(any(Organization.class))).thenAnswer(i -> {
+            Organization o = i.getArgument(0);
+            o.setId(UUID.randomUUID());
+            return o;
+        });
+        when(companyRepository.save(any(Company.class))).thenAnswer(i -> {
+            Company c = i.getArgument(0);
+            c.setId(UUID.randomUUID());
+            return c;
+        });
+        when(userRepository.save(any(User.class))).thenAnswer(i -> {
+            User u = i.getArgument(0);
+            u.setId(UUID.randomUUID());
+            return u;
+        });
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed_pass");
+
+        when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("30_DAY_FREE_TRIAL"))
+                .thenReturn(Optional.of(trialPlan));
+        when(subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(trialPlan.getId()))
+                .thenReturn(Collections.emptyList());
+        when(moduleRepository.findByModuleStatus(true)).thenReturn(List.of(accountModule));
+        when(companyModuleRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(roleRepository.findByCompany_IdAndNameIgnoreCase(any(), eq("OWNER"))).thenReturn(Optional.empty());
+        when(roleRepository.save(any(Role.class))).thenAnswer(i -> i.getArgument(0));
+        when(memberRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(i -> {
+            Subscription s = i.getArgument(0);
+            s.setId(UUID.randomUUID());
+            return s;
+        });
+
+        // Signup 1: Org A
+        OrganizationSignupRequest req1 = createSignupRequest();
+        req1.setEmail("admin1@orga.com");
+        organizationService.signup(req1);
+
+        // Signup 2: Org B
+        OrganizationSignupRequest req2 = createSignupRequest();
+        req2.setEmail("admin2@orgb.com");
+        req2.setOrganizationName("Org B");
+        req2.getCompany().setCompanyCode("ORGB01");
+        organizationService.signup(req2);
+
+        // Verify both subscriptions reference the exact same persistent trialPlan.id
+        ArgumentCaptor<Subscription> subCaptor = ArgumentCaptor.forClass(Subscription.class);
+        verify(subscriptionRepository, times(2)).save(subCaptor.capture());
+
+        List<Subscription> savedSubs = subCaptor.getAllValues();
+        assertEquals(2, savedSubs.size());
+
+        Subscription sub1 = savedSubs.get(0);
+        Subscription sub2 = savedSubs.get(1);
+
+        assertEquals(trialPlan.getId(), sub1.getPlan().getId(), "Org 1 subscription must reference existing trialPlan");
+        assertEquals(trialPlan.getId(), sub2.getPlan().getId(), "Org 2 subscription must reference existing trialPlan");
+        assertEquals(sub1.getPlan().getId(), sub2.getPlan().getId(), "Both organizations must reuse the same existing plan ID");
+
+        // Never called any plan creation method during signup
+        verify(subscriptionPlanRepository, never()).save(any());
+        verify(subscriptionPlanRepository, never()).saveAndFlush(any());
     }
 }

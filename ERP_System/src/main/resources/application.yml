@@ -127,6 +127,7 @@ strapi:
 
 sso:
   trial-days: ${SSO_TRIAL_DAYS:30}
+  default-plan-code: ${SSO_DEFAULT_PLAN_CODE:30_DAY_FREE_TRIAL}
   trial-expiry-cron: ${SSO_TRIAL_EXPIRY_CRON:0 0 * * * *}
   cookies:
     secure: ${COOKIE_SECURE:false}
