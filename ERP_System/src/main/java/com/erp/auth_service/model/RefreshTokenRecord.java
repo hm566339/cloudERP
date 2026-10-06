@@ -3,6 +3,9 @@ package com.erp.auth_service.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -24,6 +27,7 @@ public class RefreshTokenRecord {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "session_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Session session;
 
     @Column(name = "token_hash", nullable = false, length = 64, unique = true)

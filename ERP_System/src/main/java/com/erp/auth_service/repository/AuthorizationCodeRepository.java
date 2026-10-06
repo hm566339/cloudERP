@@ -3,6 +3,7 @@ package com.erp.auth_service.repository;
 import com.erp.auth_service.model.AuthorizationCode;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -21,8 +22,12 @@ public interface AuthorizationCodeRepository
     /*
      * CLEANUP
      */
-    int deleteByExpiresAtBefore(LocalDateTime now);
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM AuthorizationCode a WHERE a.expiresAt <= :now")
+    int deleteByExpiresAtBefore(@Param("now") LocalDateTime now);
 
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM AuthorizationCode a WHERE a.used = true")
     int deleteByUsedTrue();
 
     /*

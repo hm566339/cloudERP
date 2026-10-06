@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -29,13 +30,21 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
 
         List<Session> findAllByUser_IdAndAccessTokenValidTillAfter(UUID userId, LocalDateTime now);
 
-        int deleteByAccessTokenValidTillBefore(LocalDateTime now);
+        @Modifying(clearAutomatically = true)
+        @Query("DELETE FROM Session s WHERE s.accessTokenValidTill <= :now")
+        int deleteByAccessTokenValidTillBefore(@Param("now") LocalDateTime now);
 
-        int deleteByRefreshTokenValidTillBefore(LocalDateTime now);
+        @Modifying(clearAutomatically = true)
+        @Query("DELETE FROM Session s WHERE s.refreshTokenValidTill <= :now")
+        int deleteByRefreshTokenValidTillBefore(@Param("now") LocalDateTime now);
 
-        void deleteByAccessToken(String accessToken);
+        @Modifying(clearAutomatically = true)
+        @Query("DELETE FROM Session s WHERE s.accessToken = :accessToken")
+        void deleteByAccessToken(@Param("accessToken") String accessToken);
 
-        void deleteByUser_Id(UUID userId);
+        @Modifying(clearAutomatically = true)
+        @Query("DELETE FROM Session s WHERE s.user.id = :userId")
+        void deleteByUser_Id(@Param("userId") UUID userId);
 
         // ================= DASHBOARD =================
 
