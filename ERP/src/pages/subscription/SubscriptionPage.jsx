@@ -38,6 +38,7 @@ import { useSubscriptionPlans } from '../../hooks/useSubscriptionPlans';
 import { useAppSelector } from '../../app/hooks';
 import { selectAuthContext } from '../../features/auth/authSlice';
 import { createSubscriptionCheckout } from '../../api/sso/subscriptionPlan.api';
+import { formatPlanLimit } from '../../utils/subscriptionPlanHelper';
 import OwnerLayout, { useIsOwnerLayout } from '../../layouts/OwnerLayout';
 
 /**
@@ -714,6 +715,22 @@ function SubscriptionContent() {
                         <p className="text-[10.5px] text-zinc-400 mt-0.5">
                           {p.durationDays ? `${p.durationDays} days duration` : 'Standard cycle'}
                         </p>
+                      </div>
+
+                      {/* Plan Limits / Rules Quota */}
+                      <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 text-xs">
+                        <div>
+                          <span className="text-[9.5px] font-bold text-zinc-400 uppercase tracking-wider block">Companies</span>
+                          <span className="font-bold text-zinc-800">
+                            {formatPlanLimit(p.maxCompanies, 'companies')}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[9.5px] font-bold text-zinc-400 uppercase tracking-wider block">Users / Co.</span>
+                          <span className="font-bold text-zinc-800">
+                            {formatPlanLimit(p.maxUsersPerCompany, 'users')}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Included Modules Section */}
