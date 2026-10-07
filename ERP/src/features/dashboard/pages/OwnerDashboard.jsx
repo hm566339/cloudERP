@@ -29,6 +29,7 @@ import { setSelectedCompany, selectSelectedCompany } from '../../company-managem
 import { useAccessMode } from '../../../hooks/useAccessMode';
 import { getEntitledModules } from '../../../utils/moduleNormalization';
 import OwnerLayout, { useIsOwnerLayout } from '../../../layouts/OwnerLayout';
+import { useRBAC } from '../../../utils/rbac';
 
 /**
  * Redesigned OwnerDashboardContent.
@@ -634,16 +635,23 @@ function OwnerDashboardContent() {
 export default function OwnerDashboard() {
   const isInsideLayout = useIsOwnerLayout();
   const authContext = useAppSelector(selectAuthContext);
+  const { isOwner: rbacIsOwner, isSuperAdmin } = useRBAC();
+
+  const rawRole = (authContext?.user?.role || authContext?.role || '').toLowerCase();
+  const memberType = (authContext?.membership?.memberType || authContext?.user?.membership?.memberType || '').toUpperCase();
+  const allRoles = [
+    ...(Array.isArray(authContext?.user?.roles) ? authContext.user.roles : []),
+    ...(Array.isArray(authContext?.roles) ? authContext.roles : [])
+  ].map(r => (typeof r === 'string' ? r : r?.name || '').toUpperCase());
 
   const isOwner =
-    authContext?.membership?.memberType === 'OWNER' ||
-    authContext?.user?.role === 'owner' ||
-    authContext?.user?.membership?.memberType === 'OWNER' ||
-    (Array.isArray(authContext?.user?.roles) &&
-      authContext.user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
-    (Array.isArray(authContext?.roles) &&
-      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
-    authContext?.user?.role === 'super_admin';
+    rbacIsOwner ||
+    isSuperAdmin ||
+    memberType === 'OWNER' ||
+    memberType === 'ADMIN' ||
+    rawRole.includes('owner') ||
+    rawRole.includes('admin') ||
+    allRoles.some(r => r.includes('OWNER') || r.includes('ADMIN'));
 
   if (!isOwner) {
     return <Navigate to="/403" replace />;

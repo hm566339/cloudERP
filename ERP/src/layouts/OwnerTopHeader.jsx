@@ -48,6 +48,8 @@ export default function OwnerTopHeader({
   onMobileOpen,
 }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const getBreadcrumbLabel = () => {
     if (location.pathname.includes('subscription')) return 'Subscription';
