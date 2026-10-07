@@ -1,8 +1,6 @@
 import {
   LayoutDashboard,
   Building2,
-  Building,
-  Users,
   Calculator,
   Boxes,
   ShoppingCart,
@@ -67,24 +65,6 @@ export function getOwnerSidebarNavGroups({
           icon: Building2,
           badge: companiesCount > 0 ? `${companiesCount}` : null,
           badgeColor: 'bg-zinc-100 text-zinc-600',
-          isEntitled: true,
-        },
-        {
-          id: 'company-profile',
-          label: 'Company Profile',
-          path: activeCompanyId
-            ? `/company/${activeCompanyId}/settings`
-            : '/accounts/settings',
-          icon: Building,
-          isEntitled: true,
-        },
-        {
-          id: 'company-users',
-          label: 'Company Users',
-          path: activeCompanyId
-            ? `/company/${activeCompanyId}/users`
-            : '/users',
-          icon: Users,
           isEntitled: true,
         },
       ],
