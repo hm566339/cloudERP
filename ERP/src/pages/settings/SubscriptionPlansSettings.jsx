@@ -40,7 +40,6 @@ import {
   validatePlanFormData,
   preparePlanPayload
 } from '../../utils/subscriptionPlanHelper';
-import { useRBAC } from '../../utils/rbac';
 
 /**
  * Standard fallback module icons/colors mapping.
@@ -91,8 +90,6 @@ function formatPlanPrice(plan) {
 
 export default function SubscriptionPlansSettings() {
   const dispatch = useDispatch();
-  const { hasRole } = useRBAC();
-  const isSuperAdmin = hasRole('super_admin') || hasRole('SUPER_ADMIN') || hasRole('system_admin');
 
   // Page state
   const [plans, setPlans] = useState([]);
