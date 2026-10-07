@@ -65,9 +65,9 @@ public class CompanyController {
         @GetMapping
         public ResponseEntity<ResponseWrapper<CompanyListResponse>> getAllCompanies(
 
-                        @RequestParam int page,
+                        @RequestParam(defaultValue = "1") int page,
 
-                        @RequestParam int pageSize,
+                        @RequestParam(defaultValue = "10") int pageSize,
 
                         @RequestParam(required = false) String search,
 

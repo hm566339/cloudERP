@@ -42,6 +42,9 @@ public class CompanyModuleSecurityTest {
     @Mock
     private ModuleRepository moduleRepository;
 
+    @Mock
+    private com.erp.auth_service.service.AuthorizationService authorizationService;
+
     @InjectMocks
     private CompanyModuleServiceImpl companyModuleService;
 

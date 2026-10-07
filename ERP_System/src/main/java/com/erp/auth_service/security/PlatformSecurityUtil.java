@@ -50,4 +50,17 @@ public final class PlatformSecurityUtil {
         }
         return false;
     }
+
+    public static boolean isOwner() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getAuthorities() != null) {
+            return auth.getAuthorities().stream().anyMatch(a -> {
+                String authStr = a.getAuthority();
+                return "OWNER".equalsIgnoreCase(authStr)
+                        || "ROLE_OWNER".equalsIgnoreCase(authStr);
+            });
+        }
+        return false;
+    }
 }
+

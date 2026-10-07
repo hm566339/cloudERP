@@ -2,6 +2,7 @@ package com.erp.auth_service.config;
 
 import com.erp.auth_service.security.CustomUserDetailsService;
 import com.erp.auth_service.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +42,17 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                                .exceptionHandling(ex -> ex
+                                                .authenticationEntryPoint((request, response, authException) -> {
+                                                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                                        response.setContentType("application/json");
+                                                        response.getWriter().write("{\"message\":\"Authentication required\"}");
+                                                })
+                                                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                                                        response.setContentType("application/json");
+                                                        response.getWriter().write("{\"message\":\"Access denied\"}");
+                                                }))
 
                                 .authorizeHttpRequests(auth -> auth
 
@@ -166,6 +178,20 @@ public class SecurityConfig {
                                                                 "/api/sso/subscription-plans",
                                                                 "/api/sso/subscription-plans/**")
                                                 .hasAnyAuthority("SYSTEM_ADMIN", "ROLE_SUPER_ADMIN", "ROLE_PLATFORM_SUPPORT", "OWNER")
+
+                                                // ================= COMPANY MANAGEMENT =================
+                                                .requestMatchers(
+                                                                "/api/sso/company",
+                                                                "/api/sso/company/**")
+                                                .hasAnyAuthority(
+                                                                "SYSTEM_ADMIN",
+                                                                "ROLE_SYSTEM_ADMIN",
+                                                                "SUPER_ADMIN",
+                                                                "ROLE_SUPER_ADMIN",
+                                                                "ROLE_PLATFORM_SUPPORT",
+                                                                "ROLE_PLATFORM_ADMIN",
+                                                                "OWNER",
+                                                                "ROLE_OWNER")
 
                                                 // ================= ADMIN ONLY =================
                                                 .anyRequest()

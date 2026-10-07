@@ -79,6 +79,20 @@ public class CompanyServiceImpl implements CompanyService {
         @Value("${strapi.token}")
         private String strapiToken;
 
+        private boolean isOwner(RequestContext.Context context) {
+                if (PlatformSecurityUtil.isOwner()) {
+                        return true;
+                }
+                if (context != null && context.organizationId() != null && context.userId() != null) {
+                        return organizationMemberRepository
+                                        .findByOrganization_IdAndUser_Id(context.organizationId(), context.userId())
+                                        .filter(m -> m.getMembershipStatus() == MembershipStatus.ACTIVE && m.getDeletedAt() == null)
+                                        .map(m -> m.getMemberType() == MemberType.OWNER)
+                                        .orElse(false);
+                }
+                return false;
+        }
+
         private void assertCompanyOwnership(Company company) {
                 if (PlatformSecurityUtil.isElevatedAdmin()) {
                         return;
@@ -92,7 +106,8 @@ public class CompanyServiceImpl implements CompanyService {
                                                         "Access denied: Company does not belong to authorized organization");
                                 }
                         }
-                        if (context.companyId() != null && !context.companyId().equals(company.getId())) {
+                        boolean isOwnerUser = isOwner(context);
+                        if (!isOwnerUser && context.companyId() != null && !context.companyId().equals(company.getId())) {
                                 throw new ForbiddenException(
                                                 "Access denied: Company does not match authorized company context");
                         }
@@ -258,6 +273,7 @@ public class CompanyServiceImpl implements CompanyService {
         public CompanyResponse getCompanyByCode(String companyCode) {
                 Company company = companyRepository.findByCompanyCode(companyCode)
                                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+                assertCompanyOwnership(company);
 
                 return companyMapper.toCompanyResponse(company);
         }
@@ -269,6 +285,14 @@ public class CompanyServiceImpl implements CompanyService {
                         String search,
                         Boolean active) {
 
+                boolean isElevated = PlatformSecurityUtil.isElevatedAdmin();
+                RequestContext.Context context = RequestContext.get();
+                boolean isOwnerUser = isOwner(context);
+
+                if (!isElevated && !isOwnerUser) {
+                        throw new ForbiddenException("Access denied: Insufficient permissions to view companies");
+                }
+
                 search = (search == null || search.trim().isEmpty())
                                 ? null
                                 : search.trim();
@@ -278,9 +302,11 @@ public class CompanyServiceImpl implements CompanyService {
                                 pageSize,
                                 Sort.by("createdAt").descending());
 
-                RequestContext.Context context = RequestContext.get();
                 Page<Company> companyPage;
-                if (!PlatformSecurityUtil.isElevatedAdmin() && context != null && context.organizationId() != null) {
+                if (!isElevated) {
+                        if (context == null || context.organizationId() == null) {
+                                throw new ForbiddenException("Access denied: Organization context required");
+                        }
                         companyPage = companyRepository.findCompaniesByOrganization(
                                         context.organizationId(),
                                         search,
