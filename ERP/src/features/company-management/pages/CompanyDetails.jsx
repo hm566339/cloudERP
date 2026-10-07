@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, Building2, Edit, Trash2, ShieldAlert, CheckCircle, XCircle, 
   Users, Info, Mail, Phone, MapPin, Shield, Calendar, Loader2, Plus, Layers,
@@ -31,6 +31,8 @@ import { useRoutePath } from "../../../hooks/useRoutePath";
 export default function CompanyDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOwnerPortal = location.pathname.startsWith('/owner');
   const { buildPath } = useRoutePath();
   const dispatch = useAppDispatch();
   
@@ -125,7 +127,7 @@ export default function CompanyDetails() {
       await deleteCompany(tenant.id).unwrap();
       dispatch(addAlert({ type: "success", message: `Company deleted permanently.` }));
       setDeleteConfirmOpen(false);
-      navigate(buildPath("/super-admin/companies"));
+      navigate(isOwnerPortal ? '/owner/companies' : buildPath("/super-admin/companies"));
     } catch (error) {
       dispatch(addAlert({ type: "error", message: error?.data?.message || "Failed to delete company" }));
       setIsDeletingCompany(false);
@@ -325,7 +327,7 @@ export default function CompanyDetails() {
         {/* Back Link */}
         <div>
           <button 
-            onClick={() => navigate(buildPath("/super-admin/companies"))} 
+            onClick={() => navigate(isOwnerPortal ? '/owner/companies' : buildPath("/super-admin/companies"))} 
             className="inline-flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors py-1 px-2 -ml-2 rounded-md hover:bg-zinc-100 cursor-pointer"
           >
             <ArrowLeft size={15} /> Back to Companies

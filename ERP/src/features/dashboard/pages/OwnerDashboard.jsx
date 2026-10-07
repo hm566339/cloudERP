@@ -447,7 +447,7 @@ function OwnerDashboardContent() {
 
             <div className="flex items-center gap-2">
               <Link
-                to="/company-select"
+                to="/owner/companies"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 transition-colors shadow-2xs"
               >
                 <span>Company Directory</span>

@@ -61,7 +61,7 @@ export function getOwnerSidebarNavGroups({
         {
           id: 'companies',
           label: 'Companies',
-          path: '/company-select',
+          path: '/owner/companies',
           icon: Building2,
           badge: companiesCount > 0 ? `${companiesCount}` : null,
           badgeColor: 'bg-zinc-100 text-zinc-600',

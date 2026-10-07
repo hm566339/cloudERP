@@ -685,8 +685,8 @@ export default function AppRoutes() {
         >
           <Route index element={<Navigate to="/owner/dashboard" replace />} />
           <Route path="dashboard" element={<OwnerDashboard />} />
-          <Route path="companies" element={<Navigate to="/company-select" replace />} />
-          <Route path="companies/:companyId" element={<CompanyEntryRedirect />} />
+          <Route path="companies" element={<CompanyList />} />
+          <Route path="companies/:id" element={<CompanyDetails />} />
           <Route path="users" element={<Navigate to="/users" replace />} />
           <Route path="modules" element={<Navigate to="/owner/dashboard" replace />} />
           <Route path="modules/finance" element={<Navigate to="/accounts/dashboard" replace />} />

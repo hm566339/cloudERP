@@ -19,7 +19,8 @@ import {
 import { useAppDispatch } from "../../../app/hooks";
 import { addAlert } from "../../notifications/notificationSlice";
 import { setSelectedCompany } from "../../company-management/companySlice";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useRBAC } from '../../../utils/rbac';
 import { 
   useGetCompaniesQuery, 
   useCreateCompanyMutation, 
@@ -43,6 +44,11 @@ import ConfirmModal from '../../../components/common/ConfirmModal';
 export default function CompanyList() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isSuperAdmin, isOwner, canDelete } = useRBAC();
+  const isOwnerPortal = location.pathname.startsWith('/owner') || (isOwner && !isSuperAdmin);
+
+  const [visibleColumns, setVisibleColumns] = useState(['code', 'name', 'contact', 'domain', 'taxInfo', 'city', 'active']);
   const { 
     apiParams, 
     paginationProps, 
@@ -421,43 +427,51 @@ export default function CompanyList() {
   ], []);
 
   // Row actions
-  const rowActions = useMemo(() => [
-    {
-      key: 'view',
-      label: 'View Details',
-      icon: Eye,
-      onClick: (row) => navigate(`/super-admin/companies/${row.id}`),
-      tooltip: 'View Details',
-      className: 'hover:text-indigo-600 hover:bg-indigo-50'
-    },
-    {
-      key: 'edit',
-      label: 'Edit',
-      icon: Edit,
-      onClick: (row) => handleOpenEdit(row),
-      tooltip: 'Edit Company',
-      className: 'hover:text-indigo-600 hover:bg-indigo-50'
-    },
-    {
-      key: 'manage-users',
-      label: 'Manage Users',
-      icon: Users,
-      onClick: (row) => {
-        dispatch(setSelectedCompany(row));
-        navigate(`/company/${row.id}/users`);
+  const rowActions = useMemo(() => {
+    const actions = [
+      {
+        key: 'view',
+        label: 'View Details',
+        icon: Eye,
+        onClick: (row) => navigate(isOwnerPortal ? `/owner/companies/${row.id}` : `/super-admin/companies/${row.id}`),
+        tooltip: 'View Details',
+        className: 'hover:text-indigo-600 hover:bg-indigo-50'
       },
-      tooltip: 'Manage Users',
-      className: 'hover:text-blue-600 hover:bg-blue-50'
-    },
-    {
-      key: 'manage-access',
-      label: 'Manage Access',
-      icon: ShieldAlert,
-      onClick: (row) => setAssignTenant(row),
-      tooltip: 'Manage Access',
-      className: 'hover:text-emerald-600 hover:bg-emerald-50'
-    },
-    {
+      {
+        key: 'edit',
+        label: 'Edit',
+        icon: Edit,
+        onClick: (row) => handleOpenEdit(row),
+        tooltip: 'Edit Company',
+        className: 'hover:text-indigo-600 hover:bg-indigo-50'
+      },
+      {
+        key: 'manage-users',
+        label: 'Manage Users',
+        icon: Users,
+        onClick: (row) => {
+          dispatch(setSelectedCompany(row));
+          navigate(`/company/${row.id}/users`);
+        },
+        tooltip: 'Manage Users',
+        className: 'hover:text-blue-600 hover:bg-blue-50'
+      },
+    ];
+
+    // Only expose Super Admin-only operations (system module assignment) to Super Admin
+    if (isSuperAdmin) {
+      actions.push({
+        key: 'manage-access',
+        label: 'Manage Access',
+        icon: ShieldAlert,
+        onClick: (row) => setAssignTenant(row),
+        tooltip: 'Manage Access',
+        className: 'hover:text-emerald-600 hover:bg-emerald-50'
+      });
+    }
+
+    // Toggle status (Active / Suspend)
+    actions.push({
       key: 'toggle-status',
       label: (row) => (row.active ? 'Suspend' : 'Activate'),
       icon: (row) => (row.active ? AlertCircle : CheckCircle),
@@ -466,16 +480,22 @@ export default function CompanyList() {
       className: (row) => row.active 
         ? 'hover:text-amber-600 hover:bg-amber-50' 
         : 'hover:text-emerald-600 hover:bg-emerald-50'
-    },
-    {
-      key: 'delete',
-      label: 'Delete',
-      icon: Trash2,
-      danger: true,
-      onClick: (row) => handleOpenDelete(row.id, row.name),
-      tooltip: 'Delete Company'
+    });
+
+    // Delete company - allowed for Super Admin and Owners (or users with explicit delete capability)
+    if (isSuperAdmin || isOwner || canDelete?.('COMPANIES')) {
+      actions.push({
+        key: 'delete',
+        label: 'Delete',
+        icon: Trash2,
+        danger: true,
+        onClick: (row) => handleOpenDelete(row.id, row.name),
+        tooltip: 'Delete Company'
+      });
     }
-  ], [navigate, dispatch, handleOpenEdit, handleToggle]);
+
+    return actions;
+  }, [navigate, dispatch, handleOpenEdit, handleToggle, isOwnerPortal, isSuperAdmin, isOwner, canDelete]);
 
   // Expanded Row
   const renderExpandedRow = (company) => {
@@ -534,6 +554,8 @@ export default function CompanyList() {
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}
           columns={columns}
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={setVisibleColumns}
           data={tenants}
           rowKey="id"
           loading={isLoading}
@@ -652,3 +674,5 @@ export default function CompanyList() {
     </div>
   );
 }
+
+export { CompanyList as CompanyManagement };
