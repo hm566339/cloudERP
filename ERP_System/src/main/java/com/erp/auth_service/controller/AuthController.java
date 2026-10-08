@@ -216,25 +216,13 @@ public class AuthController {
     @GetMapping("/auth/me")
     public ResponseEntity<ResponseWrapper<SsoMeResponse>> me(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestHeader(value = "X-Company-Id", required = false) String xCompanyIdHeader,
-            @RequestParam(value = "companyId", required = false) UUID companyIdParam,
             HttpServletRequest request) {
 
         String token = extractToken(authHeader, request);
         if (!StringUtils.hasText(token)) {
             throw new BadCredentialsException("Authentication required: token missing");
         }
-
-        UUID requestedCompanyId = companyIdParam;
-        if (requestedCompanyId == null && StringUtils.hasText(xCompanyIdHeader)) {
-            try {
-                requestedCompanyId = UUID.fromString(xCompanyIdHeader.trim());
-            } catch (Exception ignored) {
-                // Ignore invalid UUID header format
-            }
-        }
-
-        return ResponseEntity.ok(ResponseWrapper.success(userService.getSsoMe(token, requestedCompanyId)));
+        return ResponseEntity.ok(ResponseWrapper.success(userService.getSsoMe(token)));
     }
 
     // ================= TOKEN EXCHANGE =================
