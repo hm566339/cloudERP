@@ -84,18 +84,31 @@ public class AuthorizationProperties {
             }
         }
 
-        // Validate customActionSuffixes
+        // Validate and normalize customActionSuffixes
         if (customActionSuffixes != null) {
+            Map<String, String> normalizedSuffixes = new LinkedHashMap<>();
             for (Map.Entry<String, String> entry : customActionSuffixes.entrySet()) {
                 String suffix = entry.getKey();
-                if (suffix == null || !suffix.startsWith("/") || suffix.trim().length() <= 1) {
-                    throw new IllegalStateException("Invalid authorization configuration: custom suffix '" + suffix + "' must start with '/' and not be empty");
+                if (suffix == null || suffix.trim().isEmpty()) {
+                    throw new IllegalStateException("Invalid authorization configuration: custom suffix must not be empty");
+                }
+                String cleanSuffix = suffix.trim();
+                if (cleanSuffix.startsWith("[") && cleanSuffix.endsWith("]")) {
+                    cleanSuffix = cleanSuffix.substring(1, cleanSuffix.length() - 1).trim();
+                }
+                if (!cleanSuffix.startsWith("/")) {
+                    cleanSuffix = "/" + cleanSuffix;
+                }
+                if (cleanSuffix.length() <= 1) {
+                    throw new IllegalStateException("Invalid authorization configuration: custom suffix '" + suffix + "' is invalid");
                 }
                 String action = entry.getValue();
                 if (action == null || action.trim().isEmpty()) {
                     throw new IllegalStateException("Invalid authorization configuration: custom suffix '" + suffix + "' has an empty action");
                 }
+                normalizedSuffixes.put(cleanSuffix, action.trim());
             }
+            this.customActionSuffixes = normalizedSuffixes;
         }
     }
 }

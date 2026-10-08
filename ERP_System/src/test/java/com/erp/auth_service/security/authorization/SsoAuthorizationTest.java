@@ -315,6 +315,23 @@ class SsoAuthorizationTest {
             assertEquals(List.of("UPDATE"), actions);
             assertFalse(actions.contains("CREATE"), "Should NOT contain CREATE");
         }
+
+        @Test
+        @DisplayName("Suffix without leading slash or with bracket notation normalizes properly")
+        void suffixNormalizesProperly() {
+            AuthorizationProperties testProps = new AuthorizationProperties();
+            testProps.setModules(Map.of("TEST", List.of("/api/sso/test/**")));
+            testProps.setCustomActionSuffixes(Map.of(
+                    "approve", "APPROVE",
+                    "[/verify]", "UPDATE",
+                    "/cancel", "CANCEL"
+            ));
+            testProps.validate();
+
+            assertEquals("APPROVE", testProps.getCustomActionSuffixes().get("/approve"));
+            assertEquals("UPDATE", testProps.getCustomActionSuffixes().get("/verify"));
+            assertEquals("CANCEL", testProps.getCustomActionSuffixes().get("/cancel"));
+        }
     }
 
     // =========================================================================
