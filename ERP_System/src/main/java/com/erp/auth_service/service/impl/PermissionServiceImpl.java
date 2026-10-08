@@ -22,6 +22,7 @@ import com.erp.auth_service.model.Role;
 import com.erp.auth_service.model.RolePermission;
 import com.erp.auth_service.model.UserRole;
 import com.erp.auth_service.model.UserPortalAccess;
+import com.erp.auth_service.model.SubscriptionPlanModule;
 import com.erp.auth_service.dto.response.EffectivePermissionsResponse;
 import com.erp.auth_service.dto.response.UserPermissionDetailDto;
 import com.erp.auth_service.service.PermissionService;
@@ -51,6 +52,8 @@ public class PermissionServiceImpl implements PermissionService {
     private final com.erp.auth_service.repository.CompanyRepository companyRepository;
     private final com.erp.auth_service.repository.SubscriptionRepository subscriptionRepository;
     private final com.erp.auth_service.repository.SubscriptionPlanModuleRepository subscriptionPlanModuleRepository;
+    private final com.erp.auth_service.repository.CompanySubscriptionRepository companySubscriptionRepository;
+    private final com.erp.auth_service.repository.SubscriptionPlanRepository subscriptionPlanRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -356,30 +359,69 @@ public class PermissionServiceImpl implements PermissionService {
 
             com.erp.auth_service.model.Company currentCompany = companyRepository != null
                     ? companyRepository.findById(companyId).orElse(null) : null;
-            com.erp.auth_service.model.Subscription activeSubscription = (currentCompany != null && currentCompany.getOrganization() != null && subscriptionRepository != null)
-                    ? subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(currentCompany.getOrganization().getId()).orElse(null)
-                    : null;
-            com.erp.auth_service.model.SubscriptionPlan plan = (activeSubscription != null) ? activeSubscription.getPlan() : null;
 
-            for (com.erp.auth_service.model.CompanyModule cm : companyModules) {
-                if (plan != null && subscriptionPlanModuleRepository != null && cm.getModule() != null) {
-                    boolean planEntitled = subscriptionPlanModuleRepository.existsByPlan_IdAndModule_IdAndActiveTrue(plan.getId(), cm.getModule().getId());
-                    if (!planEntitled) {
-                        continue;
+            com.erp.auth_service.model.SubscriptionPlan plan = null;
+            if (currentCompany != null) {
+                if (companySubscriptionRepository != null) {
+                    com.erp.auth_service.model.CompanySubscription compSub = companySubscriptionRepository
+                            .findTopByCompany_IdAndStatusInOrderByCreatedAtDesc(
+                                    companyId,
+                                    List.of(com.erp.auth_service.utility.CompanySubscriptionStatus.ACTIVE, com.erp.auth_service.utility.CompanySubscriptionStatus.TRIALING))
+                            .orElse(null);
+                    if (compSub != null && (compSub.getEndAt() == null || compSub.getEndAt().isAfter(LocalDateTime.now()))) {
+                        plan = compSub.getPlan();
                     }
                 }
-                if ((allowedCompanyModuleIds.isEmpty() || allowedCompanyModuleIds.contains(cm.getId()))
-                        && cm.getModule() != null && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
-                        && !"SYSTEM_ADMIN".equalsIgnoreCase(cm.getModule().getName())) {
-                    String modName = cm.getModule().getName().toUpperCase(Locale.ROOT);
-                    if (modName.startsWith("ACCOUNT")) {
-                        entitledFeatureModules.add("ACCOUNT");
-                    } else if (modName.startsWith("INVENTORY")) {
-                        entitledFeatureModules.add("INVENTORY");
-                    } else if (modName.startsWith("CRM")) {
-                        entitledFeatureModules.add("CRM");
-                    } else {
+                if (plan == null && currentCompany.getOrganization() != null && subscriptionRepository != null) {
+                    com.erp.auth_service.model.Subscription activeSubscription = subscriptionRepository
+                            .findTopByOrganization_IdOrderByCreatedAtDesc(currentCompany.getOrganization().getId()).orElse(null);
+                    if (activeSubscription != null && activeSubscription.getStatus() != com.erp.auth_service.utility.SubscriptionStatus.EXPIRED) {
+                        plan = activeSubscription.getPlan();
+                        if (plan == null && activeSubscription.getPlanCode() != null && subscriptionPlanRepository != null) {
+                            plan = subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue(activeSubscription.getPlanCode())
+                                    .or(() -> subscriptionPlanRepository.findByCodeIgnoreCase(activeSubscription.getPlanCode()))
+                                    .orElse(null);
+                        }
+                    }
+                }
+            }
+
+            boolean isOwner = (user.getUserRoles() != null && user.getUserRoles().stream().anyMatch(ur -> ur.getRole() != null
+                    && ("OWNER".equalsIgnoreCase(ur.getRole().getName()) || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
+
+            if (isOwner && plan != null && subscriptionPlanModuleRepository != null) {
+                List<SubscriptionPlanModule> spms = subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(plan.getId());
+                for (SubscriptionPlanModule spm : spms) {
+                    if (spm.getModule() != null && Boolean.TRUE.equals(spm.getModule().getModuleStatus())
+                            && !"SYSTEM_ADMIN".equalsIgnoreCase(spm.getModule().getName())) {
+                        String modName = spm.getModule().getName().toUpperCase(Locale.ROOT);
                         entitledFeatureModules.add(modName);
+                        if (modName.startsWith("ACCOUNT")) entitledFeatureModules.add("ACCOUNT");
+                        if (modName.startsWith("INVENTORY")) entitledFeatureModules.add("INVENTORY");
+                        if (modName.startsWith("CRM")) entitledFeatureModules.add("CRM");
+                    }
+                }
+            } else {
+                for (com.erp.auth_service.model.CompanyModule cm : companyModules) {
+                    if (plan != null && subscriptionPlanModuleRepository != null && cm.getModule() != null) {
+                        boolean planEntitled = subscriptionPlanModuleRepository.existsByPlan_IdAndModule_IdAndActiveTrue(plan.getId(), cm.getModule().getId());
+                        if (!planEntitled) {
+                            continue;
+                        }
+                    }
+                    if ((allowedCompanyModuleIds.isEmpty() || allowedCompanyModuleIds.contains(cm.getId()))
+                            && cm.getModule() != null && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
+                            && !"SYSTEM_ADMIN".equalsIgnoreCase(cm.getModule().getName())) {
+                        String modName = cm.getModule().getName().toUpperCase(Locale.ROOT);
+                        if (modName.startsWith("ACCOUNT")) {
+                            entitledFeatureModules.add("ACCOUNT");
+                        } else if (modName.startsWith("INVENTORY")) {
+                            entitledFeatureModules.add("INVENTORY");
+                        } else if (modName.startsWith("CRM")) {
+                            entitledFeatureModules.add("CRM");
+                        } else {
+                            entitledFeatureModules.add(modName);
+                        }
                     }
                 }
             }

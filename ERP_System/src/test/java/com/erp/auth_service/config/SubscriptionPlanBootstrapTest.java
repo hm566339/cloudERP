@@ -46,6 +46,8 @@ public class SubscriptionPlanBootstrapTest {
                 .code("30_DAY_FREE_TRIAL")
                 .name("30-Day Free Trial")
                 .durationDays(30)
+                .maxCompanies(4)
+                .maxUsersPerCompany(10)
                 .price(BigDecimal.ZERO)
                 .currency("INR")
                 .active(true)
@@ -60,11 +62,11 @@ public class SubscriptionPlanBootstrapTest {
         when(subscriptionPlanRepository.findByCodeIgnoreCase("30_DAY_FREE_TRIAL"))
                 .thenReturn(Optional.of(existingTrialPlan));
         when(subscriptionPlanRepository.findByCodeIgnoreCase("BUSINESS_PLAN"))
-                .thenReturn(Optional.of(SubscriptionPlan.builder().id(UUID.randomUUID()).code("BUSINESS_PLAN").build()));
+                .thenReturn(Optional.of(SubscriptionPlan.builder().id(UUID.randomUUID()).code("BUSINESS_PLAN").maxCompanies(10).maxUsersPerCompany(50).build()));
         when(subscriptionPlanRepository.findByCodeIgnoreCase("BASIC"))
-                .thenReturn(Optional.of(SubscriptionPlan.builder().id(UUID.randomUUID()).code("BASIC").build()));
+                .thenReturn(Optional.of(SubscriptionPlan.builder().id(UUID.randomUUID()).code("BASIC").maxCompanies(1).maxUsersPerCompany(5).build()));
         when(subscriptionPlanRepository.findByCodeIgnoreCase("PRO"))
-                .thenReturn(Optional.of(SubscriptionPlan.builder().id(UUID.randomUUID()).code("PRO").build()));
+                .thenReturn(Optional.of(SubscriptionPlan.builder().id(UUID.randomUUID()).code("PRO").maxCompanies(5).maxUsersPerCompany(25).build()));
         when(subscriptionPlanRepository.findByCodeIgnoreCase("ENTERPRISE"))
                 .thenReturn(Optional.of(SubscriptionPlan.builder().id(UUID.randomUUID()).code("ENTERPRISE").build()));
 

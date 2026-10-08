@@ -75,7 +75,7 @@ export const authApi = baseApi.injectEndpoints({
 
     /** GET /api/sso/auth/me — Get current SSO user profile (Authorization header) */
     ssoGetMe: builder.query({
-      query: () => {
+      query: (arg) => {
         let token = '';
         if (typeof document !== 'undefined') {
           const match = document.cookie.match(new RegExp('(^| )ACCESS_TOKEN=([^;]+)')) ||
@@ -83,9 +83,28 @@ export const authApi = baseApi.injectEndpoints({
                         document.cookie.match(new RegExp('(^| )access_token=([^;]+)'));
           if (match) token = match[2];
         }
+        let requestedCompanyId = null;
+        if (typeof arg === 'string' || typeof arg === 'number') {
+          requestedCompanyId = arg;
+        } else if (arg && typeof arg === 'object') {
+          requestedCompanyId = arg.companyId || arg.id;
+        }
+        if (!requestedCompanyId && typeof window !== 'undefined') {
+          try {
+            const saved = localStorage.getItem('selected_company');
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              const id = parsed?.id || parsed?.companyId;
+              if (id && id !== 'undefined' && id !== 'null') {
+                requestedCompanyId = id;
+              }
+            }
+          } catch (e) {}
+        }
         return {
           url: '/api/sso/auth/me',
           method: 'GET',
+          params: requestedCompanyId ? { companyId: requestedCompanyId } : undefined,
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         };
       },

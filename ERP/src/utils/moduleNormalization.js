@@ -11,6 +11,7 @@ export const CANONICAL_MODULES = {
   HR: 'HR',
   MANUFACTURING: 'MANUFACTURING',
   PURCHASES: 'PURCHASES',
+  WORKFLOW: 'WORKFLOW',
 };
 
 /**
@@ -19,6 +20,7 @@ export const CANONICAL_MODULES = {
  *   'accountDev', 'account', 'accounts', 'finance', 'accounting' -> 'ACCOUNT'
  *   'inventory', 'inv' -> 'INVENTORY'
  *   'crm', 'sales-crm', 'salescrm', 'sales' -> 'CRM'
+ *   'workflow', 'workflows', 'wf' -> 'WORKFLOW'
  *   'core' -> 'CORE'
  */
 export function normalizeModuleName(input) {
@@ -37,6 +39,9 @@ export function normalizeModuleName(input) {
   }
   if (lower === 'crm' || lower.includes('salescrm') || lower === 'sales') {
     return CANONICAL_MODULES.CRM;
+  }
+  if (lower.startsWith('workflow') || lower === 'wf') {
+    return CANONICAL_MODULES.WORKFLOW;
   }
   if (lower === 'hr') {
     return CANONICAL_MODULES.HR;
@@ -204,6 +209,9 @@ export function getEntitledModules(authContextOrModules) {
   for (const p of permissions) {
     const code = typeof p === 'string' ? p.toUpperCase() : (p.permissionCode || p.featureCode || '').toUpperCase();
     if (code === 'ALL' || code === 'ALL_MODULES') {
+      if (entitled.size > 0) {
+        return Array.from(entitled);
+      }
       return Object.values(CANONICAL_MODULES);
     }
   }
@@ -414,6 +422,8 @@ export function canViewModule(authContext, moduleOrFeature) {
     inventory: ['INVENTORY'],
     crm: ['CRM'],
     sales: ['CRM'],
+    workflow: ['WORKFLOW'],
+    workflows: ['WORKFLOW'],
     banking: ['ACCOUNT'],
     expenses: ['ACCOUNT'],
   };

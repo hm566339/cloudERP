@@ -8,6 +8,7 @@ import {
   Settings,
   CreditCard,
   ShieldCheck,
+  Workflow,
 } from 'lucide-react';
 
 /**
@@ -39,6 +40,7 @@ export function getOwnerSidebarNavGroups({
   const isCrmEntitled = entitledModules.includes('CRM');
   const isPurchasesEntitled =
     entitledModules.includes('PURCHASES') || entitledModules.includes('ACCOUNT');
+  const isWorkflowEntitled = entitledModules.includes('WORKFLOW');
 
   return [
     {
@@ -108,6 +110,15 @@ export function getOwnerSidebarNavGroups({
           isEntitled: isPurchasesEntitled,
           moduleKey: 'PURCHASES',
           accentColor: 'text-rose-600',
+        },
+        {
+          id: 'workflow',
+          label: 'Workflow Automation',
+          path: '/workflows',
+          icon: Workflow,
+          isEntitled: isWorkflowEntitled,
+          moduleKey: 'WORKFLOW',
+          accentColor: 'text-purple-600',
         },
       ],
     },

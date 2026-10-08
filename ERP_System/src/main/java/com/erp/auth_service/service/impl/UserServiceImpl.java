@@ -23,6 +23,8 @@ import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.service.UserService;
 import com.erp.auth_service.utility.AccessMode;
 import com.erp.auth_service.utility.AccountStatus;
+import com.erp.auth_service.utility.MemberType;
+import com.erp.auth_service.utility.CompanySubscriptionStatus;
 import com.erp.auth_service.utility.MembershipStatus;
 import com.erp.auth_service.utility.Status;
 import com.erp.auth_service.utility.SubscriptionStatus;
@@ -79,9 +81,38 @@ public class UserServiceImpl implements UserService {
     private final OrganizationModuleRepository organizationModuleRepository;
     private final CompanyModuleRepository companyModuleRepository;
     private final UserPortalAccessRepository userPortalAccessRepository;
+    private final com.erp.auth_service.repository.CompanySubscriptionRepository companySubscriptionRepository;
+    private final com.erp.auth_service.repository.SubscriptionPlanRepository subscriptionPlanRepository;
+    private final com.erp.auth_service.repository.SubscriptionPlanModuleRepository subscriptionPlanModuleRepository;
+    private final com.erp.auth_service.repository.RoleRepository roleRepository;
 
     @org.springframework.context.annotation.Lazy
     private final com.erp.auth_service.service.PermissionService permissionService;
+
+    public UserServiceImpl(
+            UserRepository userRepository,
+            UserMapper userMapper,
+            PasswordEncoder passwordEncoder,
+            UserTokenRepository userTokenRepository,
+            EmailService emailService,
+            JwtService jwtService,
+            SessionRepository sessionRepository,
+            CompanyRepository companyRepository,
+            ModuleRepository moduleRepository,
+            JwtDecoder jwtDecoder,
+            OrganizationMemberRepository organizationMemberRepository,
+            MemberCompanyAccessRepository memberCompanyAccessRepository,
+            SubscriptionRepository subscriptionRepository,
+            OrganizationModuleRepository organizationModuleRepository,
+            CompanyModuleRepository companyModuleRepository,
+            UserPortalAccessRepository userPortalAccessRepository,
+            com.erp.auth_service.service.PermissionService permissionService) {
+        this(userRepository, userMapper, passwordEncoder, userTokenRepository, emailService,
+             jwtService, sessionRepository, companyRepository, moduleRepository, jwtDecoder,
+             organizationMemberRepository, memberCompanyAccessRepository, subscriptionRepository,
+             organizationModuleRepository, companyModuleRepository, userPortalAccessRepository,
+             null, null, null, null, permissionService);
+    }
 
     @Value("${api.frontend}")
     private String emailBaseUrl;
@@ -698,6 +729,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public SsoMeResponse getSsoMe(String accessToken) {
+        return getSsoMe(accessToken, null);
+    }
+
+    @Override
+    @Transactional
+    public SsoMeResponse getSsoMe(String accessToken, UUID requestedCompanyId) {
 
         if (accessToken == null || accessToken.isBlank()) {
             throw new BadCredentialsException("Access token is required");
@@ -734,9 +771,6 @@ public class UserServiceImpl implements UserService {
             organization = session.getCompany().getOrganization();
         }
 
-        // ── Company context ────────────────────────────────────────────────
-        Company currentCompany = session.getCompany();
-
         // ── Membership ────────────────────────────────────────────────────
         SsoMeResponse.MembershipContext membershipCtx = null;
         List<SsoMeResponse.CompanyContext> accessibleCompanies = new java.util.ArrayList<>();
@@ -770,89 +804,266 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        // ── Subscription ──────────────────────────────────────────────────
+        // ── Company context ────────────────────────────────────────────────
+        Company currentCompany = null;
+        if (requestedCompanyId != null && companyRepository != null) {
+            java.util.Optional<Company> reqCompOpt = companyRepository.findById(requestedCompanyId);
+            if (reqCompOpt.isPresent()) {
+                Company candidate = reqCompOpt.get();
+                boolean orgMatches = (organization == null || candidate.getOrganization() == null
+                        || candidate.getOrganization().getId().equals(organization.getId()));
+                boolean isOwnerOrAdmin = (membershipCtx != null && (membershipCtx.getMemberType() == MemberType.OWNER || membershipCtx.getMemberType() == MemberType.ADMIN))
+                        || (user.getUserRoles() != null && user.getUserRoles().stream().anyMatch(ur -> ur.getRole() != null && ("OWNER".equalsIgnoreCase(ur.getRole().getName()) || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
+                boolean hasAccess = isOwnerOrAdmin
+                        || accessibleCompanies.stream().anyMatch(c -> c.getId().equals(candidate.getId()));
+                if (orgMatches && hasAccess) {
+                    currentCompany = candidate;
+                }
+            }
+        }
+
+        if (currentCompany == null) {
+            currentCompany = session.getCompany();
+        }
+
+        if (currentCompany == null && !accessibleCompanies.isEmpty() && companyRepository != null) {
+            currentCompany = companyRepository.findById(accessibleCompanies.get(0).getId()).orElse(null);
+        }
+
+        if (currentCompany != null && organization == null && currentCompany.getOrganization() != null) {
+            organization = currentCompany.getOrganization();
+        }
+
+        final Company effectiveCompany = currentCompany;
+        final UUID effectiveCompanyId = effectiveCompany != null ? effectiveCompany.getId() : null;
+
+        // ── Subscription & Plan Context ───────────────────────────────────
         SsoMeResponse.SubscriptionContext subscriptionCtx = null;
         AccessMode effectiveAccessMode = AccessMode.FULL;
+        SubscriptionPlan effectivePlan = null;
 
-        if (organization != null) {
-            java.util.Optional<Subscription> subOpt = subscriptionRepository
-                    .findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId());
+        // 1. Check Company-specific subscription first
+        if (effectiveCompany != null && companySubscriptionRepository != null) {
+            java.util.Optional<CompanySubscription> compSubOpt = companySubscriptionRepository
+                    .findTopByCompany_IdAndStatusInOrderByCreatedAtDesc(
+                            effectiveCompanyId,
+                            java.util.List.of(CompanySubscriptionStatus.ACTIVE, CompanySubscriptionStatus.TRIALING));
+            if (compSubOpt.isEmpty()) {
+                compSubOpt = companySubscriptionRepository.findTopByCompany_IdOrderByCreatedAtDesc(effectiveCompanyId);
+            }
 
-            if (subOpt.isPresent()) {
-                Subscription sub = subOpt.get();
-                boolean isTrialing = sub.getStatus() == SubscriptionStatus.TRIALING
-                        && sub.getTrialEndsAt() != null
-                        && sub.getTrialEndsAt().isAfter(LocalDateTime.now());
+            if (compSubOpt.isPresent()) {
+                CompanySubscription compSub = compSubOpt.get();
+                boolean isTrialing = compSub.getStatus() == CompanySubscriptionStatus.TRIALING;
+                boolean isExpired = compSub.getStatus() == CompanySubscriptionStatus.EXPIRED
+                        || (compSub.getEndAt() != null && compSub.getEndAt().isBefore(LocalDateTime.now()));
+
+                if (!isExpired && compSub.getPlan() != null) {
+                    effectivePlan = compSub.getPlan();
+                }
 
                 long daysRemaining = 0L;
-                if (sub.getTrialEndsAt() != null) {
-                    daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
-                            LocalDateTime.now(), sub.getTrialEndsAt());
-                    if (daysRemaining < 0)
-                        daysRemaining = 0L;
-                } else if (sub.getCurrentPeriodEnd() != null) {
-                    daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
-                            LocalDateTime.now(), sub.getCurrentPeriodEnd());
-                    if (daysRemaining < 0)
-                        daysRemaining = 0L;
+                if (compSub.getEndAt() != null) {
+                    daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), compSub.getEndAt());
+                    if (daysRemaining < 0) daysRemaining = 0L;
                 }
 
                 subscriptionCtx = SsoMeResponse.SubscriptionContext.builder()
-                        .id(sub.getId())
-                        .planCode(sub.getPlanCode())
-                        .status(sub.getStatus())
-                        .accessMode(sub.getAccessMode())
-                        .trialStartedAt(sub.getTrialStartedAt())
-                        .trialEndsAt(sub.getTrialEndsAt())
-                        .currentPeriodStart(sub.getCurrentPeriodStart())
-                        .currentPeriodEnd(sub.getCurrentPeriodEnd())
-                        .trialing(isTrialing)
+                        .id(compSub.getId())
+                        .planCode(compSub.getPlan() != null ? compSub.getPlan().getCode() : "CUSTOM")
+                        .status(isTrialing ? SubscriptionStatus.TRIALING : (isExpired ? SubscriptionStatus.EXPIRED : SubscriptionStatus.ACTIVE))
+                        .accessMode(isExpired ? AccessMode.READ_ONLY : AccessMode.FULL)
+                        .trialStartedAt(compSub.getStartAt())
+                        .trialEndsAt(isTrialing ? compSub.getEndAt() : null)
+                        .currentPeriodStart(compSub.getStartAt())
+                        .currentPeriodEnd(compSub.getEndAt())
+                        .trialing(isTrialing && !isExpired)
                         .daysRemaining(daysRemaining)
                         .build();
 
-                effectiveAccessMode = sub.getAccessMode();
-                if (sub.getStatus() == SubscriptionStatus.EXPIRED
-                        || (sub.getStatus() == SubscriptionStatus.TRIALING && sub.getTrialEndsAt() != null
-                                && !sub.getTrialEndsAt().isAfter(LocalDateTime.now()))) {
+                if (isExpired) {
                     effectiveAccessMode = AccessMode.READ_ONLY;
                 }
             }
+        }
 
-            // Organization-level override (e.g., manual block)
+        // 2. Organization-level subscription fallback / merge
+        if (organization != null && subscriptionRepository != null) {
+            java.util.Optional<Subscription> orgSubOpt = subscriptionRepository
+                    .findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId());
+
+            if (orgSubOpt.isPresent()) {
+                Subscription orgSub = orgSubOpt.get();
+                boolean isTrialing = orgSub.getStatus() == SubscriptionStatus.TRIALING
+                        && orgSub.getTrialEndsAt() != null
+                        && orgSub.getTrialEndsAt().isAfter(LocalDateTime.now());
+
+                long daysRemaining = 0L;
+                if (orgSub.getTrialEndsAt() != null) {
+                    daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
+                            LocalDateTime.now(), orgSub.getTrialEndsAt());
+                    if (daysRemaining < 0) daysRemaining = 0L;
+                } else if (orgSub.getCurrentPeriodEnd() != null) {
+                    daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
+                            LocalDateTime.now(), orgSub.getCurrentPeriodEnd());
+                    if (daysRemaining < 0) daysRemaining = 0L;
+                }
+
+                if (subscriptionCtx == null) {
+                    subscriptionCtx = SsoMeResponse.SubscriptionContext.builder()
+                            .id(orgSub.getId())
+                            .planCode(orgSub.getPlanCode())
+                            .status(orgSub.getStatus())
+                            .accessMode(orgSub.getAccessMode())
+                            .trialStartedAt(orgSub.getTrialStartedAt())
+                            .trialEndsAt(orgSub.getTrialEndsAt())
+                            .currentPeriodStart(orgSub.getCurrentPeriodStart())
+                            .currentPeriodEnd(orgSub.getCurrentPeriodEnd())
+                            .trialing(isTrialing)
+                            .daysRemaining(daysRemaining)
+                            .build();
+
+                    effectiveAccessMode = orgSub.getAccessMode();
+                    if (orgSub.getStatus() == SubscriptionStatus.EXPIRED
+                            || (orgSub.getStatus() == SubscriptionStatus.TRIALING && orgSub.getTrialEndsAt() != null
+                                    && !orgSub.getTrialEndsAt().isAfter(LocalDateTime.now()))) {
+                        effectiveAccessMode = AccessMode.READ_ONLY;
+                    }
+                }
+
+                if (effectivePlan == null && orgSub.getStatus() != SubscriptionStatus.EXPIRED
+                        && orgSub.getAccessMode() != AccessMode.BLOCKED) {
+                    if (orgSub.getPlan() != null) {
+                        effectivePlan = orgSub.getPlan();
+                    } else if (orgSub.getPlanCode() != null && subscriptionPlanRepository != null) {
+                        effectivePlan = subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue(orgSub.getPlanCode())
+                                .or(() -> subscriptionPlanRepository.findByCodeIgnoreCase(orgSub.getPlanCode()))
+                                .orElse(null);
+                    }
+                }
+            }
+
             if (organization.getAccessMode() != null && organization.getAccessMode() != AccessMode.FULL) {
                 effectiveAccessMode = organization.getAccessMode();
+            }
+        }
+
+        // 3. Fallback to default trial plan if still null
+        if (effectivePlan == null && subscriptionPlanRepository != null) {
+            effectivePlan = subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("30_DAY_FREE_TRIAL")
+                    .or(() -> subscriptionPlanRepository.findFirstByIsTrialTrueAndActiveTrue())
+                    .orElse(null);
+        }
+
+        // ── Active Plan Modules ────────────────────────────────────────────
+        List<Module> planActiveModules = new java.util.ArrayList<>();
+        if (effectivePlan != null && Boolean.TRUE.equals(effectivePlan.getActive())
+                && subscriptionPlanModuleRepository != null) {
+            List<SubscriptionPlanModule> spms = subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(effectivePlan.getId());
+            for (SubscriptionPlanModule spm : spms) {
+                Module m = spm.getModule();
+                if (m != null && Boolean.TRUE.equals(m.getModuleStatus()) && !"SYSTEM_ADMIN".equalsIgnoreCase(m.getName())) {
+                    planActiveModules.add(m);
+                }
+            }
+        }
+
+        // Provision/sync CompanyModule records for currentCompany for all planActiveModules
+        if (effectiveCompany != null && companyModuleRepository != null && !planActiveModules.isEmpty()) {
+            for (Module m : planActiveModules) {
+                java.util.Optional<CompanyModule> cmOpt = companyModuleRepository.findByCompany_IdAndModule_Id(effectiveCompanyId, m.getId());
+                if (cmOpt.isEmpty()) {
+                    companyModuleRepository.save(CompanyModule.builder()
+                            .company(effectiveCompany)
+                            .module(m)
+                            .active(true)
+                            .build());
+                } else if (!Boolean.TRUE.equals(cmOpt.get().getActive())) {
+                    CompanyModule cm = cmOpt.get();
+                    cm.setActive(true);
+                    companyModuleRepository.save(cm);
+                }
             }
         }
 
         // ── Authorized modules ────────────────────────────────────────────
         List<SsoMeResponse.ModuleContext> authorizedModules = new java.util.ArrayList<>();
 
-        if (currentCompany != null) {
-            // Modules activated for this company with user portal access
-            List<UserPortalAccess> userAccess = userPortalAccessRepository.findAllByUser_Id(userId);
-            java.util.Set<UUID> allowedCompanyModuleIds = userAccess.stream()
-                    .filter(UserPortalAccess::isStatus)
-                    .filter(upa -> upa.getCompanyModule() != null
-                            && upa.getCompanyModule().getCompany() != null
-                            && upa.getCompanyModule().getCompany().getId().equals(currentCompany.getId()))
-                    .map(upa -> upa.getCompanyModule().getId())
-                    .collect(java.util.stream.Collectors.toSet());
+        if (effectiveCompany != null) {
+            boolean isOwner = (membershipCtx != null && (membershipCtx.getMemberType() == MemberType.OWNER || membershipCtx.getMemberType() == MemberType.ADMIN))
+                    || (user.getUserRoles() != null && user.getUserRoles().stream().anyMatch(ur -> ur.getRole() != null && ("OWNER".equalsIgnoreCase(ur.getRole().getName()) || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
 
-            companyModuleRepository.findByCompany_IdAndActiveTrue(currentCompany.getId()).stream()
-                    .filter(cm -> allowedCompanyModuleIds.contains(cm.getId())
-                            || allowedCompanyModuleIds.isEmpty()) // if no portal-access rows, show all active
-                    .filter(cm -> cm.getModule() != null
-                            && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
-                            && !"SYSTEM_ADMIN".equalsIgnoreCase(cm.getModule().getName()))
-                    .forEach(cm -> authorizedModules.add(
-                            SsoMeResponse.ModuleContext.builder()
-                                    .id(cm.getModule().getId())
-                                    .name(cm.getModule().getName())
-                                    .code(cm.getModule().getName().toLowerCase(java.util.Locale.ROOT)
-                                            .replaceAll("[^a-z0-9]+", "_"))
-                                    .host(cm.getModule().getHost())
-                                    .active(Boolean.TRUE.equals(cm.getActive()))
-                                    .build()));
+            if (isOwner) {
+                // Owner gets ALL active modules from the company's active subscription plan
+                if (!planActiveModules.isEmpty()) {
+                    for (Module m : planActiveModules) {
+                        authorizedModules.add(
+                                SsoMeResponse.ModuleContext.builder()
+                                        .id(m.getId())
+                                        .name(m.getName())
+                                        .code(m.getName().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "_"))
+                                        .host(m.getHost())
+                                        .active(true)
+                                        .build());
+                    }
+
+                    // Ensure Owner role has permissions for all plan modules
+                    if (roleRepository != null && permissionService != null) {
+                        java.util.Optional<Role> ownerRoleOpt = roleRepository.findByCompany_IdAndNameIgnoreCase(effectiveCompanyId, "OWNER");
+                        if (ownerRoleOpt.isPresent()) {
+                            List<String> modNames = planActiveModules.stream().map(Module::getName).toList();
+                            permissionService.assignOwnerRolePermissions(ownerRoleOpt.get(), modNames, userId);
+                        }
+                    }
+                } else if (companyModuleRepository != null) {
+                    // Fallback if no plan modules mapped (e.g. legacy/mock tests)
+                    companyModuleRepository.findByCompany_IdAndActiveTrue(effectiveCompanyId).stream()
+                            .filter(cm -> cm.getModule() != null
+                                    && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
+                                    && !"SYSTEM_ADMIN".equalsIgnoreCase(cm.getModule().getName()))
+                            .forEach(cm -> authorizedModules.add(
+                                    SsoMeResponse.ModuleContext.builder()
+                                            .id(cm.getModule().getId())
+                                            .name(cm.getModule().getName())
+                                            .code(cm.getModule().getName().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "_"))
+                                            .host(cm.getModule().getHost())
+                                            .active(Boolean.TRUE.equals(cm.getActive()))
+                                            .build()));
+                }
+            } else {
+                // Normal employee: respect user portal access + company modules + plan modules
+                List<UserPortalAccess> userAccess = userPortalAccessRepository != null
+                        ? userPortalAccessRepository.findAllByUser_Id(userId)
+                        : java.util.Collections.emptyList();
+                java.util.Set<UUID> allowedCompanyModuleIds = userAccess.stream()
+                        .filter(UserPortalAccess::isStatus)
+                        .filter(upa -> upa.getCompanyModule() != null
+                                && upa.getCompanyModule().getCompany() != null
+                                && upa.getCompanyModule().getCompany().getId().equals(effectiveCompanyId))
+                        .map(upa -> upa.getCompanyModule().getId())
+                        .collect(java.util.stream.Collectors.toSet());
+
+                java.util.Set<UUID> planModuleIds = planActiveModules.stream()
+                        .map(Module::getId)
+                        .collect(java.util.stream.Collectors.toSet());
+
+                if (companyModuleRepository != null) {
+                    companyModuleRepository.findByCompany_IdAndActiveTrue(effectiveCompanyId).stream()
+                            .filter(cm -> planModuleIds.isEmpty() || planModuleIds.contains(cm.getModule().getId())) // must be in plan!
+                            .filter(cm -> allowedCompanyModuleIds.isEmpty() || allowedCompanyModuleIds.contains(cm.getId())) // must be granted to user!
+                            .filter(cm -> cm.getModule() != null
+                                    && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
+                                    && !"SYSTEM_ADMIN".equalsIgnoreCase(cm.getModule().getName()))
+                            .forEach(cm -> authorizedModules.add(
+                                    SsoMeResponse.ModuleContext.builder()
+                                            .id(cm.getModule().getId())
+                                            .name(cm.getModule().getName())
+                                            .code(cm.getModule().getName().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "_"))
+                                            .host(cm.getModule().getHost())
+                                            .active(Boolean.TRUE.equals(cm.getActive()))
+                                            .build()));
+                }
+            }
         }
 
         // ── Roles ─────────────────────────────────────────────────────────
@@ -860,8 +1071,8 @@ public class UserServiceImpl implements UserService {
                 ? java.util.Collections.<com.erp.auth_service.dto.response.RoleResponse>emptyList()
                 : user.getUserRoles().stream()
                         .filter(ur -> ur.getRole() != null)
-                        .filter(ur -> currentCompany == null || ur.getRole().getCompany() == null
-                                || currentCompany.getId().equals(ur.getRole().getCompany().getId()))
+                        .filter(ur -> effectiveCompanyId == null || ur.getRole().getCompany() == null
+                                || effectiveCompanyId.equals(ur.getRole().getCompany().getId()))
                         .map(ur -> com.erp.auth_service.dto.response.RoleResponse.builder()
                                 .id(ur.getRole().getId())
                                 .name(ur.getRole().getName())
@@ -871,7 +1082,7 @@ public class UserServiceImpl implements UserService {
 
         // ── Permissions / Features ─────────────────────────────────────────
         com.erp.auth_service.dto.response.EffectivePermissionsResponse effective = permissionService
-                .getEffectivePermissions(userId, currentCompany != null ? currentCompany.getId() : null);
+                .getEffectivePermissions(userId, effectiveCompanyId);
 
         // ── Build response ─────────────────────────────────────────────────
         return SsoMeResponse.builder()
@@ -895,13 +1106,13 @@ public class UserServiceImpl implements UserService {
                                 .timezone(organization.getTimezone())
                                 .currency(organization.getCurrency())
                                 .build())
-                .currentCompany(currentCompany == null ? null
+                .currentCompany(effectiveCompany == null ? null
                         : SsoMeResponse.CompanyContext.builder()
-                                .id(currentCompany.getId())
-                                .code(currentCompany.getCompanyCode())
-                                .name(currentCompany.getCompanyName())
-                                .legalName(currentCompany.getLegalName())
-                                .active(currentCompany.getActive())
+                                .id(effectiveCompany.getId())
+                                .code(effectiveCompany.getCompanyCode())
+                                .name(effectiveCompany.getCompanyName())
+                                .legalName(effectiveCompany.getLegalName())
+                                .active(effectiveCompany.getActive())
                                 .build())
                 .companies(accessibleCompanies)
                 .membership(membershipCtx)

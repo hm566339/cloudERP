@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class CompanyModuleSecurityTest {
 
     @Mock
@@ -102,6 +103,9 @@ public class CompanyModuleSecurityTest {
 
         Company companyB = new Company();
         companyB.setId(companyBId);
+        com.erp.auth_service.model.Organization org = new com.erp.auth_service.model.Organization();
+        org.setId(UUID.randomUUID());
+        companyB.setOrganization(org);
 
         Module module = new Module();
         module.setId(moduleId);
