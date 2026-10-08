@@ -1,0 +1,89 @@
+sso:
+  authorization:
+    write-implies-create-update: false
+
+    modules:
+      AUTH:
+        - "/api/sso/auth/**"
+
+      USER:
+        - "/api/sso/user/**"
+
+      ROLE:
+        - "/api/sso/role/**"
+
+      PERMISSION:
+        - "/api/sso/permissions/**"
+
+      FEATURE:
+        - "/api/sso/features/**"
+
+      MODULE:
+        - "/api/sso/module/**"
+
+      MODULE_ROUTE:
+        - "/api/sso/module-routes/**"
+
+      COMPANY:
+        - "/api/sso/company/**"
+        - "/api/sso/company-modules/**"
+
+      COMPANY_SUBSCRIPTION:
+        - "/api/sso/company-subscriptions/**"
+
+      SUBSCRIPTION:
+        - "/api/sso/subscriptions/**"
+
+      SUBSCRIPTION_PLAN:
+        - "/api/sso/subscription-plans/**"
+
+      SESSION:
+        - "/api/sso/session/**"
+
+      ORGANIZATION:
+        - "/api/sso/organization/**"
+
+      PORTAL_ACCESS:
+        - "/api/sso/portal-access/**"
+
+      DASHBOARD:
+        - "/api/sso/dashboard/**"
+
+      PLATFORM_ADMIN:
+        - "/api/sso/platform/**"
+        - "/api/sso/admin/**"
+        - "/api/admin/**"
+
+      BILLING:
+        - "/api/billing/**"
+        - "/api/sso/billing/**"
+
+    method-actions:
+      GET:
+        - READ
+      POST:
+        - CREATE
+        - WRITE
+      PUT:
+        - UPDATE
+        - WRITE
+      PATCH:
+        - UPDATE
+        - WRITE
+      DELETE:
+        - DELETE
+
+    custom-action-suffixes:
+      "/approve": APPROVE
+      "/award": AWARD
+      "/reject": REJECT
+      "/cancel": CANCEL
+      "/send": SEND
+      "/reverse": REVERSE
+      "/close": CLOSE
+      "/post": POST
+      "/confirm": POST
+      "/verify": UPDATE
+      "/export": EXPORT
+
+    feature-groups: {}

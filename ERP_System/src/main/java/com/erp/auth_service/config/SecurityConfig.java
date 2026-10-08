@@ -2,6 +2,8 @@ package com.erp.auth_service.config;
 
 import com.erp.auth_service.security.CustomUserDetailsService;
 import com.erp.auth_service.security.JwtAuthenticationFilter;
+import com.erp.auth_service.security.authorization.SsoPublicEndpoints;
+import com.erp.auth_service.security.authorization.YamlAuthorizationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +25,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final YamlAuthorizationFilter yamlAuthorizationFilter;
         private final CustomUserDetailsService userDetailsService;
 
         @Bean
@@ -57,150 +60,25 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
 
                                                 // ================= PUBLIC APIs =================
-                                                .requestMatchers(
-                                                                "/api/admin/auth/login",
-                                                                "/api/sso/admin/auth/login",
-                                                                "/api/sso/auth/login",
-                                                                "/api/billing/webhook/**",
-                                                                "/api/sso/billing/webhook/**",
-                                                                "/api/sso/auth/select-company",
-                                                                "/api/sso/auth/admin-login",
-                                                                "/api/sso/auth/register",
-                                                                "/api/sso/signup",
-                                                                "/api/sso/organization/*",
-                                                                "/api/sso/authorize",
-                                                                "/api/sso/token/exchange",
-                                                                "/api/sso/token/refresh",
-                                                                "/api/sso/company/open",
-                                                                "/api/sso/admin/token/refresh",
-                                                                "/api/sso/token/verify",
-                                                                "/api/sso/auth/logout",
-
-                                                                "/api/sso/user/verify-email",
-                                                                "/api/sso/user/forgot-password",
-                                                                "/api/sso/user/reset-password",
-
-                                                                "/api/sso/session/sso/callback",
-                                                                "/api/sso/session/sso/refresh",
-                                                                "/api/sso/session/sso/logout",
-
-                                                                "/api/sso/module-routes/internal/routes",
-
-                                                                // Swagger
-                                                                "/swagger-ui/**",
-                                                                "/swagger-ui.html",
-                                                                "/api-docs/**",
-                                                                "/api-docs",
-                                                                "/v3/api-docs/**",
-
-                                                                // Actuator
-                                                                "/actuator/**")
+                                                .requestMatchers(SsoPublicEndpoints.PUBLIC_ENDPOINTS)
                                                 .permitAll()
 
                                                 // Public Registration
-                                                .requestMatchers(HttpMethod.POST, "/api/sso/user")
+                                                .requestMatchers(HttpMethod.POST, SsoPublicEndpoints.PUBLIC_POST_ENDPOINTS)
                                                 .permitAll()
 
-                                                // ================= PLATFORM & SYSTEM ADMIN APIs =================
-                                                .requestMatchers("/api/admin/admins/**", "/api/sso/platform/admins/**")
-                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_ADMIN_MANAGE")
-                                                .requestMatchers("/api/admin/support-sessions/**", "/api/sso/admin/support-sessions/**")
-                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_SUPPORT_ACCESS")
-                                                .requestMatchers("/api/admin/dashboard", "/api/sso/admin/dashboard")
-                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_DASHBOARD_READ")
-                                                .requestMatchers("/api/admin/organizations/*/subscription", "/api/sso/admin/organizations/*/subscription")
-                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_SUBSCRIPTION_READ")
-                                                .requestMatchers("/api/admin/organizations/*/payments",
-                                                                "/api/admin/organizations/*/invoices",
-                                                                "/api/sso/admin/organizations/*/payments",
-                                                                "/api/sso/admin/organizations/*/invoices")
-                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_PAYMENT_READ",
-                                                                "PERM_PLATFORM_SUBSCRIPTION_READ")
-                                                .requestMatchers("/api/admin/organizations/*/members", "/api/sso/admin/organizations/*/members")
-                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_USER_READ")
-                                                .requestMatchers("/api/admin/organizations/*/companies", "/api/sso/admin/organizations/*/companies")
-                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_COMPANY_READ")
-                                                .requestMatchers("/api/admin/organizations/**", "/api/sso/admin/organizations/**")
-                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_ORGANIZATION_READ")
-                                                .requestMatchers("/api/admin/audit-logs/**", "/api/sso/admin/audit-logs/**")
-                                                .hasAnyAuthority("SYSTEM_ADMIN", "PERM_PLATFORM_AUDIT_READ")
-                                                .requestMatchers("/api/admin/**", "/api/sso/admin/**", "/api/sso/platform/**")
-                                                .hasAnyAuthority("SYSTEM_ADMIN", "ROLE_PLATFORM_ADMIN")
-
-                                                // ================= AUTHENTICATED USER =================
-                                                .requestMatchers(
-                                                                "/api/sso/auth/me",
-                                                                "/api/sso/organization/members/**",
-                                                                "/api/sso/portal-access",
-                                                                "/api/sso/token/revoke",
-                                                                "/api/sso/session/my",
-                                                                "/api/sso/company/company-verify",
-                                                                "/api/sso/role",
-                                                                "/api/sso/role/**")
-                                                .authenticated()
-                                                .requestMatchers(HttpMethod.GET, "/api/sso/features",
-                                                                "/api/sso/features/**")
-                                                .authenticated()
-                                                .requestMatchers(HttpMethod.POST, "/api/sso/features", "/api/sso/features/**")
-                                                .hasAuthority("SYSTEM_ADMIN")
-                                                .requestMatchers(HttpMethod.PUT, "/api/sso/features", "/api/sso/features/**")
-                                                .hasAuthority("SYSTEM_ADMIN")
-                                                .requestMatchers(HttpMethod.DELETE, "/api/sso/features", "/api/sso/features/**")
-                                                .hasAuthority("SYSTEM_ADMIN")
-                                                .requestMatchers(HttpMethod.POST, "/api/sso/module", "/api/sso/module/**")
-                                                .hasAuthority("SYSTEM_ADMIN")
-                                                .requestMatchers(HttpMethod.PUT, "/api/sso/module", "/api/sso/module/**")
-                                                .hasAuthority("SYSTEM_ADMIN")
-                                                .requestMatchers(HttpMethod.PATCH, "/api/sso/module", "/api/sso/module/**")
-                                                .hasAuthority("SYSTEM_ADMIN")
-                                                .requestMatchers(HttpMethod.DELETE, "/api/sso/module", "/api/sso/module/**")
-                                                .hasAuthority("SYSTEM_ADMIN")
-                                                .requestMatchers(HttpMethod.GET, "/api/sso/permissions",
-                                                                "/api/sso/permissions/**")
-                                                .authenticated()
-                                                .requestMatchers(HttpMethod.POST, "/api/sso/permissions", "/api/sso/permissions/**")
-                                                .hasAuthority("SYSTEM_ADMIN")
-                                                .requestMatchers(HttpMethod.POST, "/internal/authorization/check")
-                                                .authenticated()
-                                                .requestMatchers(HttpMethod.GET, "/api/sso/user/**")
-                                                .authenticated()
-                                                .requestMatchers(HttpMethod.GET,
-                                                                "/api/sso/subscription-plans",
-                                                                "/api/sso/subscription-plans/**")
-                                                .authenticated()
-                                                .requestMatchers(
-                                                                "/api/sso/company-subscriptions",
-                                                                "/api/sso/company-subscriptions/**",
-                                                                "/api/sso/subscriptions",
-                                                                "/api/sso/subscriptions/**")
-                                                .authenticated()
-                                                .requestMatchers(
-                                                                "/api/sso/subscription-plans",
-                                                                "/api/sso/subscription-plans/**")
-                                                .hasAnyAuthority("SYSTEM_ADMIN", "ROLE_SUPER_ADMIN", "ROLE_PLATFORM_SUPPORT", "OWNER")
-
-                                                // ================= COMPANY MANAGEMENT =================
-                                                .requestMatchers(
-                                                                "/api/sso/company",
-                                                                "/api/sso/company/**")
-                                                .hasAnyAuthority(
-                                                                "SYSTEM_ADMIN",
-                                                                "ROLE_SYSTEM_ADMIN",
-                                                                "SUPER_ADMIN",
-                                                                "ROLE_SUPER_ADMIN",
-                                                                "ROLE_PLATFORM_SUPPORT",
-                                                                "ROLE_PLATFORM_ADMIN",
-                                                                "OWNER",
-                                                                "ROLE_OWNER")
-
-                                                // ================= ADMIN ONLY =================
+                                                // Everything else must at least be authenticated.
+                                                // Business authorization is resolved dynamically via YamlAuthorizationFilter.
                                                 .anyRequest()
-                                                .hasAuthority("SYSTEM_ADMIN"))
+                                                .authenticated())
 
                                 .authenticationProvider(authenticationProvider())
                                 .addFilterBefore(
                                                 jwtAuthenticationFilter,
-                                                UsernamePasswordAuthenticationFilter.class);
+                                                UsernamePasswordAuthenticationFilter.class)
+                                .addFilterAfter(
+                                                yamlAuthorizationFilter,
+                                                JwtAuthenticationFilter.class);
 
                 return http.build();
         }
