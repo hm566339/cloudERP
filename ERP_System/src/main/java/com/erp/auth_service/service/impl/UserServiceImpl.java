@@ -30,8 +30,8 @@ import com.erp.auth_service.utility.Status;
 import com.erp.auth_service.utility.SubscriptionStatus;
 import com.erp.auth_service.utility.TokenType;
 import com.erp.auth_service.utility.UserSpecification;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -50,7 +50,6 @@ import java.util.UUID;
 import java.security.SecureRandom;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class UserServiceImpl implements UserService {
@@ -88,6 +87,52 @@ public class UserServiceImpl implements UserService {
 
     @org.springframework.context.annotation.Lazy
     private final com.erp.auth_service.service.PermissionService permissionService;
+
+    @Autowired
+    public UserServiceImpl(
+            UserRepository userRepository,
+            UserMapper userMapper,
+            PasswordEncoder passwordEncoder,
+            UserTokenRepository userTokenRepository,
+            EmailService emailService,
+            JwtService jwtService,
+            SessionRepository sessionRepository,
+            CompanyRepository companyRepository,
+            ModuleRepository moduleRepository,
+            JwtDecoder jwtDecoder,
+            OrganizationMemberRepository organizationMemberRepository,
+            MemberCompanyAccessRepository memberCompanyAccessRepository,
+            SubscriptionRepository subscriptionRepository,
+            OrganizationModuleRepository organizationModuleRepository,
+            CompanyModuleRepository companyModuleRepository,
+            UserPortalAccessRepository userPortalAccessRepository,
+            com.erp.auth_service.repository.CompanySubscriptionRepository companySubscriptionRepository,
+            com.erp.auth_service.repository.SubscriptionPlanRepository subscriptionPlanRepository,
+            com.erp.auth_service.repository.SubscriptionPlanModuleRepository subscriptionPlanModuleRepository,
+            com.erp.auth_service.repository.RoleRepository roleRepository,
+            @org.springframework.context.annotation.Lazy com.erp.auth_service.service.PermissionService permissionService) {
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.userTokenRepository = userTokenRepository;
+        this.emailService = emailService;
+        this.jwtService = jwtService;
+        this.sessionRepository = sessionRepository;
+        this.companyRepository = companyRepository;
+        this.moduleRepository = moduleRepository;
+        this.jwtDecoder = jwtDecoder;
+        this.organizationMemberRepository = organizationMemberRepository;
+        this.memberCompanyAccessRepository = memberCompanyAccessRepository;
+        this.subscriptionRepository = subscriptionRepository;
+        this.organizationModuleRepository = organizationModuleRepository;
+        this.companyModuleRepository = companyModuleRepository;
+        this.userPortalAccessRepository = userPortalAccessRepository;
+        this.companySubscriptionRepository = companySubscriptionRepository;
+        this.subscriptionPlanRepository = subscriptionPlanRepository;
+        this.subscriptionPlanModuleRepository = subscriptionPlanModuleRepository;
+        this.roleRepository = roleRepository;
+        this.permissionService = permissionService;
+    }
 
     public UserServiceImpl(
             UserRepository userRepository,
