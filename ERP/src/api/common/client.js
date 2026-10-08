@@ -18,7 +18,7 @@
  */
 
 import axios from 'axios';
-import { attachInterceptors } from './interceptors';
+import { attachInterceptors } from './interceptors.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Client Instance

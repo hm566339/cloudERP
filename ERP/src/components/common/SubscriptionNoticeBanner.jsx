@@ -1,15 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, Clock, Sparkles, ShieldAlert, ArrowRight } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, ArrowRight } from 'lucide-react';
 import { useAccessMode } from '../../hooks/useAccessMode';
 
 export default function SubscriptionNoticeBanner() {
   const {
     isBlocked,
     isReadOnly,
-    isTrial,
-    isActive,
-    daysRemaining,
   } = useAccessMode();
 
   // 1. BLOCKED State: Account Access Restricted
@@ -61,40 +58,7 @@ export default function SubscriptionNoticeBanner() {
     );
   }
 
-  // 3. TRIALING State: Subtle trial banner with countdown and View Subscription action
-  if (isTrial) {
-    const daysText =
-      daysRemaining !== null
-        ? `You have ${daysRemaining} day${daysRemaining === 1 ? '' : 's'} remaining.`
-        : 'Your 30-day free trial is currently active.';
-
-    return (
-      <div className="w-full bg-zinc-900 text-white px-4 py-1.5 text-[11px] font-medium transition-all flex items-center justify-between border-b border-zinc-800 z-40">
-        <div className="flex items-center gap-3 max-w-7xl mx-auto w-full justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold text-[10px] tracking-wide uppercase">
-              <Sparkles size={11} /> Free Trial
-            </span>
-            <span className="text-zinc-300 hidden sm:inline">{daysText}</span>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="text-zinc-400 text-[10px] flex items-center gap-1">
-              <Clock size={12} />
-              {daysRemaining !== null ? `${daysRemaining} days left` : 'Trial Active'}
-            </span>
-            <Link
-              to="/subscription"
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-white/10 hover:bg-white/20 text-zinc-200 hover:text-white text-[10px] font-semibold transition-colors"
-            >
-              <span>View Subscription</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 4. ACTIVE State: Do NOT show a trial countdown after organization becomes ACTIVE
+  // Free trial subscription banner removed from UI. ACTIVE / TRIALING render null.
   return null;
 }
+

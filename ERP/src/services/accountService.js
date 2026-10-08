@@ -1,4 +1,5 @@
 import API from './api'
+import { getActiveCompanyId } from '../api/common/interceptors'
 
 const cleanAccountPayload = (payload = {}) => {
   const {
@@ -33,11 +34,14 @@ const cleanAccountPayload = (payload = {}) => {
   return data
 }
 
-const companyRequestConfig = (companyId, extra = {}) => ({
-  ...extra,
-  params: companyId ? { ...(extra.params || {}), companyId } : extra.params,
-  headers: companyId ? { ...(extra.headers || {}), 'X-Company-Id': companyId } : extra.headers,
-})
+const companyRequestConfig = (companyId, extra = {}) => {
+  const resolvedCompanyId = companyId || getActiveCompanyId();
+  return {
+    ...extra,
+    params: resolvedCompanyId ? { ...(extra.params || {}), companyId: resolvedCompanyId } : extra.params,
+    headers: resolvedCompanyId ? { ...(extra.headers || {}), 'X-Company-Id': resolvedCompanyId } : extra.headers,
+  };
+};
 
 const buildParams = ({
   companyId,
@@ -48,12 +52,13 @@ const buildParams = ({
   sortField = 'accountName',
   sortDirection = 'asc',
 } = {}) => {
-  if (!companyId) {
-    throw new Error('companyId is required')
+  const resolvedCompanyId = companyId || getActiveCompanyId();
+  if (!resolvedCompanyId) {
+    throw new Error('companyId is required');
   }
 
   const params = {
-    companyId,
+    companyId: resolvedCompanyId,
     page: Math.max(0, page - 1),
     size: pageSize,
     sort: `${sortField},${sortDirection}`,

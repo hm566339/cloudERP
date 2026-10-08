@@ -78,6 +78,27 @@ const persistConfig = {
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
 
+const companyChangeMiddleware = (storeApi) => (next) => (action) => {
+  const result = next(action);
+  if (
+    action.type === 'company/setSelectedCompany' ||
+    action.type === 'company/clearSelectedCompany'
+  ) {
+    // Invalidate and reset RTK Query state so queries refetch for the new selected company
+    storeApi.dispatch(baseApi.util.resetApiState());
+
+    // Notify listeners (useApiQuery, etc.) that the company context changed
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('app:company-changed', {
+          detail: action.payload,
+        })
+      );
+    }
+  }
+  return result;
+};
+
 export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
@@ -85,7 +106,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(baseApi.middleware, rtkQueryErrorLogger),
+    }).concat(baseApi.middleware, companyChangeMiddleware, rtkQueryErrorLogger),
 })
 
 export const persistor = persistStore(store)

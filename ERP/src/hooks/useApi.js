@@ -33,7 +33,20 @@ export function useApiQuery(apiFunction, params = null, options = { skip: false 
     fetchData();
   }, [fetchData]);
 
-  return { data, isLoading, error, refetch: fetchData, mutateLocal: setData };
+  // When company context changes, invalidate previous company data and refetch
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleCompanyChange = () => {
+      setData(null);
+      fetchData();
+    };
+    window.addEventListener('app:company-changed', handleCompanyChange);
+    return () => {
+      window.removeEventListener('app:company-changed', handleCompanyChange);
+    };
+  }, [fetchData]);
+
+  return { data, isLoading, isFetching: isLoading, error, refetch: fetchData, mutateLocal: setData };
 }
 
 export function useApiMutation(apiFunction) {

@@ -5,7 +5,7 @@
  * Guards against multiple concurrent logout calls and redirect loops.
  */
 
-import { clearAllQueues } from './refreshQueue';
+import { clearAllQueues } from './refreshQueue.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State

@@ -8,7 +8,8 @@ import { useRoutePath } from '../../../hooks/useRoutePath';
 import { useApiQuery, useApiMutation } from '../../../hooks/useApi';
 import { fiscalYearsApi } from '../../../api/account';
 import useUrlFilters from '../../../hooks/useUrlFilters';
-import { useAppDispatch } from '../../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+import { selectSelectedCompany } from '../../company-management/companySlice';
 import { addAlert } from '../../notifications/notificationSlice';
 import Modal from '../../../components/common/Modal';
 import RequirePermission from '../../../components/common/RequirePermission';
@@ -29,7 +30,8 @@ export default function FiscalYears() {
   const { buildPath } = useRoutePath();
 
   const dispatch = useAppDispatch();
-  const companyId = JSON.parse(localStorage.getItem('selected_company'))?.id || JSON.parse(localStorage.getItem('auth_user'))?.companyCode;
+  const selectedCompany = useAppSelector(selectSelectedCompany);
+  const companyId = selectedCompany?.id || selectedCompany?.companyId || JSON.parse(localStorage.getItem('selected_company') || '{}')?.id || JSON.parse(localStorage.getItem('auth_user') || '{}')?.companyCode;
 
   const [visibleColumns, setVisibleColumns] = useState(() => {
     const saved = localStorage.getItem('fiscalYears_visible_columns');

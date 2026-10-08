@@ -1,4 +1,5 @@
 import API from './api'
+import { getActiveCompanyId } from '../api/common/interceptors.js'
 
 const buildParams = ({
   companyId,
@@ -12,12 +13,13 @@ const buildParams = ({
   sortField = 'vendorName',
   sortDirection = 'asc',
 } = {}) => {
-  if (!companyId) {
+  const effectiveCompanyId = companyId || getActiveCompanyId();
+  if (!effectiveCompanyId) {
     throw new Error('companyId is required')
   }
 
   const params = {
-    companyId,
+    companyId: effectiveCompanyId,
     page: Math.max(0, page - 1),
     size: pageSize,
     sort: `${sortField},${sortDirection}`,

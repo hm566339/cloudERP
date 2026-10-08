@@ -292,18 +292,18 @@ export const accountingApiSlice = baseApi.injectEndpoints({
 
     // Account Groups  /api/account/account-groups
     getAccountGroups: builder.query({
-      query: (arg) => {
+      query: (arg = {}) => {
         if (typeof arg === 'string') {
           return {
             url: '/api/account/account-groups',
+            params: { companyId: arg },
             headers: { 'X-Company-Id': arg }
           };
         }
-        const { companyId, ...params } = arg;
         return {
           url: '/api/account/account-groups',
-          params,
-          headers: { 'X-Company-Id': companyId }
+          params: arg || {},
+          headers: arg?.companyId ? { 'X-Company-Id': arg.companyId } : undefined
         };
       },
       providesTags: ['Accounting'],
@@ -448,12 +448,12 @@ export const accountingApiSlice = baseApi.injectEndpoints({
 
     // Chart of Accounts
     getChartOfAccounts: builder.query({
-      query: (arg) => {
-        const { companyId, ...params } = typeof arg === 'string' ? { companyId: arg } : arg;
+      query: (arg = {}) => {
+        const params = typeof arg === 'string' ? { companyId: arg } : { ...(arg || {}) };
         return {
           url: '/api/account/chart-of-accounts',
           params,
-          headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+          headers: params?.companyId ? { 'X-Company-Id': params.companyId } : undefined,
         };
       },
       providesTags: ['Accounting'],

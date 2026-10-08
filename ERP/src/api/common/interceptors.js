@@ -16,9 +16,9 @@
  */
 
 import axios from 'axios';
-import { detectModule, getRefreshEndpoint, isRefreshEndpoint } from './moduleRegistry';
-import { isModuleRefreshing, setRefreshing, enqueue, processQueue } from './refreshQueue';
-import { dispatchLogout, isAuthPage } from './logout';
+import { detectModule, getRefreshEndpoint, isRefreshEndpoint } from './moduleRegistry.js';
+import { isModuleRefreshing, setRefreshing, enqueue, processQueue } from './refreshQueue.js';
+import { dispatchLogout, isAuthPage } from './logout.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Request Interceptor
@@ -63,13 +63,311 @@ const isUserSystemAdmin = () => {
   return isSystemAdmin;
 };
 
+/**
+ * Resolves the active company ID.
+ * Follows the fiscal-years reference:
+ * 1. selected_company in localStorage / Redux (single source of truth for Owner & SystemAdmin)
+ * 2. auth_user fallback (for normal tenant-assigned users)
+ */
+export const getActiveCompanyId = () => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const saved = localStorage.getItem('selected_company');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const id = parsed?.id || parsed?.companyId;
+      if (id && id !== 'undefined' && id !== 'null') {
+        return String(id);
+      }
+    }
+  } catch (e) { }
+
+  try {
+    if (window.__REDUX_STORE__?.getState) {
+      const state = window.__REDUX_STORE__.getState();
+      const comp = state.company?.selectedCompany || state.auth?.currentCompany;
+      const id = comp?.id || comp?.companyId;
+      if (id && id !== 'undefined' && id !== 'null') {
+        return String(id);
+      }
+    }
+  } catch (e) { }
+
+  try {
+    const authUserStr = localStorage.getItem('auth_user');
+    if (authUserStr) {
+      const authUser = JSON.parse(authUserStr);
+      const id = authUser?.companyId || authUser?.companyCode;
+      if (id && id !== 'undefined' && id !== 'null') {
+        return String(id);
+      }
+    }
+  } catch (e) { }
+
+  return null;
+};
+
+/**
+ * Checks if the user is an Owner or SystemAdmin who can operate across multiple companies.
+ */
+export const isOwnerOrAdminUser = () => {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    if (window.__REDUX_STORE__?.getState) {
+      const state = window.__REDUX_STORE__.getState();
+      const user = state.auth?.user;
+      const membership = state.auth?.membership;
+      if (membership?.memberType === 'OWNER' || membership?.memberType === 'ADMIN') return true;
+      if (user) {
+        const rawRole = (user.role || '').toLowerCase();
+        if (rawRole.includes('owner') || rawRole.includes('superadmin') || rawRole.includes('systemadmin') || rawRole.includes('admin')) return true;
+        const roles = Array.isArray(user.roles) ? user.roles : [];
+        if (roles.some((r) => {
+          const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
+          const upper = String(name).toUpperCase();
+          return upper.includes('OWNER') || upper.includes('SUPER_ADMIN') || upper.includes('SYSTEM_ADMIN');
+        })) return true;
+      }
+    }
+  } catch (e) { }
+
+  try {
+    const authUserStr = localStorage.getItem('auth_user');
+    if (authUserStr) {
+      const authUser = JSON.parse(authUserStr);
+      if (authUser?.membership?.memberType === 'OWNER' || authUser?.membership?.memberType === 'ADMIN') return true;
+      const rawRole = (authUser.role || '').toLowerCase();
+      if (rawRole.includes('owner') || rawRole.includes('superadmin') || rawRole.includes('systemadmin') || rawRole.includes('admin')) return true;
+      const roles = Array.isArray(authUser.roles) ? authUser.roles : [];
+      if (roles.some((r) => {
+        const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
+        const upper = String(name).toUpperCase();
+        return upper.includes('OWNER') || upper.includes('SUPER_ADMIN') || upper.includes('SYSTEM_ADMIN');
+      })) return true;
+    }
+  } catch (e) { }
+
+  if (isUserSystemAdmin()) return true;
+
+  return false;
+};
+
+/**
+ * Determines whether a given pathname is a truly global/system endpoint.
+ * Global endpoints must NEVER have companyId attached.
+ */
+export const isGlobalEndpoint = (pathname) => {
+  if (!pathname || typeof pathname !== 'string') return true;
+
+  // 1. Authentication, Sessions & SSO microservice (/api/sso/*)
+  if (
+    pathname.startsWith('/api/sso/') ||
+    pathname === '/api/sso' ||
+    pathname.startsWith('/api/auth/') ||
+    pathname.includes('/auth/') ||
+    pathname.startsWith('/api/legacy/token/')
+  ) {
+    return true;
+  }
+
+  // 2. Platform Administration & Health
+  if (
+    pathname.startsWith('/api/sso/platform') ||
+    pathname === '/api/health' ||
+    pathname.startsWith('/api/health/')
+  ) {
+    return true;
+  }
+
+  // 3. Subscriptions & Billing
+  if (
+    pathname.startsWith('/api/sso/subscription-plans') ||
+    pathname.startsWith('/api/sso/company-subscriptions') ||
+    pathname.startsWith('/api/sso/subscriptions') ||
+    pathname.startsWith('/api/subscription') ||
+    pathname.startsWith('/api/billing') ||
+    pathname.startsWith('/api/sso/billing')
+  ) {
+    return true;
+  }
+
+  // 4. System-level Feature & Route Catalog
+  if (
+    pathname.startsWith('/api/sso/features') ||
+    pathname.startsWith('/api/sso/module') ||
+    pathname.startsWith('/api/sso/module-routes') ||
+    pathname.startsWith('/api/sso/company-modules') ||
+    pathname.startsWith('/api/sso/permissions') ||
+    pathname.startsWith('/api/sso/role')
+  ) {
+    return true;
+  }
+
+  // 5. Multi-Tenant Organization & Global Company Management / Selection
+  if (
+    pathname === '/api/companies' ||
+    pathname.startsWith('/api/companies/') ||
+    pathname === '/api/account/companies' ||
+    pathname.startsWith('/api/account/companies/') ||
+    pathname === '/api/sso/company' ||
+    pathname.startsWith('/api/sso/company/') ||
+    pathname.startsWith('/api/sso/organization') ||
+    pathname.startsWith('/api/organization')
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+/**
+ * Determines whether an endpoint URL is company-scoped across the ENTIRE ERP.
+ * Matches all business modules (account, inventory, sales, crm, purchase, hr, workflows, etc.)
+ * and any non-global /api/ endpoint.
+ */
+export const isCompanySpecificEndpoint = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  let path = url;
+  try {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      const parsed = new URL(url);
+      path = parsed.pathname;
+    }
+  } catch (e) { }
+
+  const cleanUrl = path.split('?')[0].split('#')[0];
+  const pathname = cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
+
+  // If it's a known global/system endpoint, it is NOT company-specific
+  if (isGlobalEndpoint(pathname)) {
+    return false;
+  }
+
+  // Explicit known business module prefixes across the entire ERP
+  const businessModulePrefixes = [
+    '/api/account',
+    '/api/finance',
+    '/api/inventory',
+    '/api/purchase',
+    '/api/sales',
+    '/api/sales-crm',
+    '/api/crm',
+    '/api/leads',
+    '/api/hr',
+    '/api/payroll',
+    '/api/workflows',
+    '/api/workflow',
+    '/api/v1/workflow',
+    '/api/dashboard',
+    '/api/reports',
+    '/api/fleet',
+    '/api/manufacturing',
+    '/api/boms',
+    '/api/expenses',
+    '/api/gst',
+    '/api/settings',
+    // Relative endpoints (without leading /api)
+    '/account',
+    '/finance',
+    '/inventory',
+    '/purchase',
+    '/sales',
+    '/crm',
+    '/leads',
+    '/hr',
+    '/payroll',
+    '/workflows',
+    '/dashboard',
+    '/reports'
+  ];
+
+  if (businessModulePrefixes.some((prefix) => pathname.startsWith(prefix))) {
+    return true;
+  }
+
+  // Centralized fallback: any endpoint under /api/ that is not an excluded global endpoint
+  // is company-scoped business data in this multi-tenant ERP.
+  if (pathname.startsWith('/api/')) {
+    return true;
+  }
+
+  return false;
+};
+
 export const attachRequestInterceptor = (instance) => {
   return instance.interceptors.request.use(
     (config) => {
       try {
         // Clean up any legacy companyCode params from all requests to prevent backend confusion
-        if (config.params && config.params.companyCode) {
-          delete config.params.companyCode;
+        if (config.params) {
+          if (typeof URLSearchParams !== 'undefined' && config.params instanceof URLSearchParams) {
+            config.params.delete('companyCode');
+          } else {
+            delete config.params.companyCode;
+          }
+        }
+
+        // Global ERP Company Data Isolation:
+        // Automatically attach selected companyId to all company-specific APIs across all modules
+        if (isCompanySpecificEndpoint(config.url)) {
+          const activeCompanyId = getActiveCompanyId();
+          const isPrivileged = isOwnerOrAdminUser();
+
+          if (activeCompanyId) {
+            config.params = config.params || {};
+            const isSearchParams = typeof URLSearchParams !== 'undefined' && config.params instanceof URLSearchParams;
+
+            // 1. Query parameter injection (?companyId=<activeCompanyId>)
+            if (isSearchParams) {
+              const currentVal = config.params.get('companyId');
+              if (isPrivileged || !currentVal || currentVal === 'undefined' || currentVal === 'null') {
+                config.params.set('companyId', activeCompanyId);
+              }
+            } else {
+              // Selected company is the single source of truth for Owner / SystemAdmin
+              if (isPrivileged || !config.params.companyId || config.params.companyId === 'undefined' || config.params.companyId === 'null') {
+                config.params.companyId = activeCompanyId;
+              }
+            }
+
+            // 2. Request header injection (X-Company-Id: <activeCompanyId>)
+            if (!config.headers) config.headers = {};
+            const finalCompanyId = isSearchParams
+              ? config.params.get('companyId')
+              : config.params.companyId;
+            if (finalCompanyId) {
+              config.headers['X-Company-Id'] = finalCompanyId;
+            }
+
+            // 3. For Owner / SystemAdmin: synchronize path parameters if URL contains /company/:id or /settings/:id
+            if (isPrivileged && config.url && typeof config.url === 'string') {
+              if (config.url.includes('/company/')) {
+                config.url = config.url.replace(/\/company\/[^/?#]+/g, `/company/${activeCompanyId}`);
+              } else if (config.url.startsWith('/api/settings/') || config.url.includes('/settings/')) {
+                config.url = config.url.replace(/\/settings\/[^/?#]+/g, `/settings/${activeCompanyId}`);
+              }
+            }
+          } else {
+            // Guard: Never send undefined or null if company selection is still loading
+            if (config.params) {
+              const isSearchParams = typeof URLSearchParams !== 'undefined' && config.params instanceof URLSearchParams;
+              if (isSearchParams) {
+                const currentVal = config.params.get('companyId');
+                if (!currentVal || currentVal === 'undefined' || currentVal === 'null') {
+                  config.params.delete('companyId');
+                }
+              } else if (
+                config.params.companyId === undefined ||
+                config.params.companyId === null ||
+                config.params.companyId === 'undefined' ||
+                config.params.companyId === 'null'
+              ) {
+                delete config.params.companyId;
+              }
+            }
+          }
         }
 
         // Let Axios and the browser handle multipart/form-data boundary automatically
