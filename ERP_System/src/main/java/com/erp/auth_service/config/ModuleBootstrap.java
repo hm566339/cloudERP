@@ -71,10 +71,28 @@ public class ModuleBootstrap implements CommandLineRunner {
                                 "http://account-service:8081");
                 bootstrapModuleIfMissing("INVENTORY", "inventory-service.local", "/api/inventory/**",
                                 "http://inventory-service:8082");
-                bootstrapModuleIfMissing("WORKFLOW", "workflow-service.local", "/api/workflow/**",
+                bootstrapModuleIfMissing("WORKFLOW", "workflow-service.local", "/api/v1/workflow/**",
+                                "http://workflow-service:8083");
+                bootstrapRouteIfMissing("WORKFLOW", "/api/workflow/**",
                                 "http://workflow-service:8083");
                 bootstrapModuleIfMissing("CRM", "crm-service.local", "/api/crm/**",
                                 "http://crm-service:8084");
+        }
+
+        private void bootstrapRouteIfMissing(String moduleName, String routePattern, String serviceUrl) {
+                Module module = moduleRepository.findByNameIgnoreCase(moduleName).orElse(null);
+                if (module != null && routePattern != null && serviceUrl != null) {
+                        ModuleRoute moduleRoute = moduleRouteRepository.findByApiPattern(routePattern)
+                                        .orElseGet(() -> ModuleRoute.builder()
+                                                        .module(module)
+                                                        .apiPattern(routePattern)
+                                                        .routeOrder(10)
+                                                        .build());
+                        moduleRoute.setModule(module);
+                        moduleRoute.setServiceUrl(serviceUrl);
+                        moduleRoute.setActive(true);
+                        moduleRouteRepository.save(moduleRoute);
+                }
         }
 
         private void bootstrapModuleIfMissing(String moduleName, String host, String routePattern, String serviceUrl) {

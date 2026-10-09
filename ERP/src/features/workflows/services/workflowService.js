@@ -1,34 +1,25 @@
 /**
  * Workflow & Approvals data service.
  *
- * This module wires the page to the backend contract documented in
- * account.json. The workflow-definition endpoints are real and live at:
+ * This module wires the page to the workflow-service endpoints:
  *
- * - GET /api/account/workflow/definitions?documentType={...}&companyId={...}
- * - POST /api/account/workflow/definitions
- * - POST /api/account/workflow/definitions/{definitionId}/stages
- * - POST /api/account/workflow/definitions/{definitionId}/activate
+ * - GET /api/v1/workflow/definitions?companyId={...}&moduleName={...}&documentType={...}
+ * - GET /api/v1/workflow/definitions/{id}?companyId={...}
+ * - GET /api/v1/workflow/definitions/active?documentType={...}&companyId={...}&moduleName={...}
+ * - POST /api/v1/workflow/definitions (with { data: payload })
+ * - PATCH /api/v1/workflow/definitions/{id}/activate?companyId={...}
+ * - PATCH /api/v1/workflow/definitions/{id}/deactivate?companyId={...}
  *
  * The missing contract pieces are reported explicitly instead of faked:
- * - PUT/PATCH /api/account/workflow/definitions/{definitionId}
- * - DELETE /api/account/workflow/definitions/{definitionId}
- * - GET /api/account/workflow/definitions/{definitionId}
- * - workflow-definition deactivation and stage reorder/update/delete
+ * - PUT/PATCH /api/v1/workflow/definitions/{definitionId}
+ * - DELETE /api/v1/workflow/definitions/{definitionId}
+ * - POST /api/v1/workflow/definitions/{definitionId}/stages
  *
  * Transaction actions documented in apiFormet.md are delegated to the existing
  * account modules without inventing new URLs.
  */
 
-import apiClient from '../../../api/common/client';
-import { auditLogsApi } from '../../../api/account/auditLogs';
-import { salesInvoicesApi } from '../../../api/account/salesInvoices';
-import { apInvoicesApi } from '../../../api/account/apInvoices';
-import { receiptVouchersApi } from '../../../api/account/receiptVouchers';
-import { paymentVouchersApi } from '../../../api/account/paymentVouchers';
-import { creditNotesApi } from '../../../api/account/creditNotes';
-import { debitNotesApi } from '../../../api/account/debitNotes';
-import { expenseRequestsApi } from '../../../api/account/expenseRequests';
-import { reimbursementsApi } from '../../../api/account/reimbursements';
+import apiClient from '../../../api/common/client.js';
 
 export const WORKFLOW_STORAGE_KEY = 'erp_workflow_configurations';
 export const WORKFLOW_DATA_SOURCES = Object.freeze({
@@ -58,6 +49,9 @@ const unwrapApiData = (response) => {
 const normalizeDocumentType = (moduleName = 'GENERAL') => {
   const value = String(moduleName || 'GENERAL').trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
   if (!value || value === '_') return 'GENERAL';
+  if (value === 'EXPENSES') return 'EXPENSE';
+  if (value === 'INVOICES') return 'INVOICE';
+  if (value === 'REIMBURSEMENTS') return 'REIMBURSEMENT';
   return value;
 };
 
@@ -90,37 +84,111 @@ const normalizeWorkflowDefinition = (item = {}) => ({
   status: item.isActive ?? item.active ? 'active' : 'inactive',
   initiatedBy: item.initiatedBy || '',
   approvalRequired: item.approvalRequired ?? true,
-  approverRole: item.approverRole || '',
+  approverRole: item.approverRole || (item.stages?.[0]?.approvers?.[0]?.roleName || ''),
   threshold: item.threshold || '',
   customerScope: item.customerScope || 'all',
   customerAcceptance: item.customerAcceptance ?? false,
   autoCreateOrder: item.autoCreateOrder ?? false,
   emailNotifications: item.emailNotifications ?? true,
   notes: item.notes || '',
-  steps: Array.isArray(item.steps) ? item.steps : [],
+  stages: Array.isArray(item.stages) ? item.stages : [],
+  steps: Array.isArray(item.steps) && item.steps.length
+    ? item.steps
+    : Array.isArray(item.stages)
+      ? item.stages.map((stage, idx) => ({
+          id: stage.id || `stage-${idx + 1}`,
+          title: stage.stageName || `Stage ${idx + 1}`,
+          role: stage.approvers?.[0]?.roleName || stage.approvers?.[0]?.userName || '',
+          type: 'approval',
+          active: stage.isActive !== false,
+        }))
+      : [],
 });
 
 export const workflowDefinitionApi = {
   available: true,
   missingEndpoints: [
-    'PUT/PATCH /api/account/workflow/definitions/{definitionId}',
-    'DELETE /api/account/workflow/definitions/{definitionId}',
-    'GET /api/account/workflow/definitions/{definitionId}',
-    'DELETE /api/account/workflow/definitions/{definitionId}/stages/{stageId}',
-    'POST /api/account/workflow/definitions/{definitionId}/deactivate',
+    'PUT/PATCH /api/v1/workflow/definitions/{definitionId}',
+    'DELETE /api/v1/workflow/definitions/{definitionId}',
+    'POST /api/v1/workflow/definitions/{definitionId}/stages',
   ],
-  list: async (companyId, documentType = 'GENERAL') => {
-    const params = { documentType: documentType || 'GENERAL' };
+  list: async (companyId, documentType = 'GENERAL', options = {}) => {
+    const params = {};
     if (companyId) params.companyId = companyId;
+    if (documentType) params.documentType = documentType;
+    if (options.moduleName) params.moduleName = options.moduleName;
+    if (options.page !== undefined) params.page = options.page;
+    if (options.size !== undefined) params.size = options.size;
+    if (options.sort) params.sort = options.sort;
 
-    const response = await apiClient.get('/api/account/workflow/definitions', { params });
+    const response = await apiClient.get('/api/v1/workflow/definitions', { params });
     const payload = unwrapApiData(response);
-    const items = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
+    const items = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.content)
+        ? payload.content
+        : Array.isArray(payload?.data)
+          ? payload.data
+          : [];
     return items.map(normalizeWorkflowDefinition);
   },
-  get: async () => { throw new WorkflowApiNotImplementedError('GET /api/account/workflow/definitions/{definitionId}'); },
+  get: async (definitionId, companyId) => {
+    if (!definitionId) throw new Error('Workflow definition ID is required.');
+    const params = companyId ? { companyId } : undefined;
+    const response = await apiClient.get(`/api/v1/workflow/definitions/${definitionId}`, { params });
+    const data = unwrapApiData(response);
+    return normalizeWorkflowDefinition(data);
+  },
+  getActive: async (documentType, companyId, moduleName) => {
+    if (!documentType) throw new Error('Document type is required.');
+    const params = { documentType };
+    if (companyId) params.companyId = companyId;
+    if (moduleName) params.moduleName = moduleName;
+    const response = await apiClient.get('/api/v1/workflow/definitions/active', { params });
+    const data = unwrapApiData(response);
+    return normalizeWorkflowDefinition(data);
+  },
   create: async (definitionPayload) => {
     const source = definitionPayload && typeof definitionPayload === 'object' && 'data' in definitionPayload ? definitionPayload.data : definitionPayload;
+
+    const stages = (Array.isArray(source.stages) && source.stages.length > 0)
+      ? source.stages
+      : (Array.isArray(source.steps) && source.steps.length > 0)
+        ? source.steps.filter((s) => s.active !== false).map((step, idx) => ({
+            stageCode: `STAGE_${idx + 1}`,
+            stageName: step.title || `Stage ${idx + 1}`,
+            stageOrder: idx + 1,
+            sequenceNo: idx + 1,
+            executionType: 'SEQUENTIAL',
+            minimumApprovalsRequired: 1,
+            rejectionAction: 'REJECT_DOCUMENT',
+            isMandatory: true,
+            approvers: (step.role || source.approverRole) ? [{
+              approverType: 'ROLE',
+              roleName: step.role || source.approverRole,
+              approvalOrder: 1,
+              isRequired: true,
+              canDelegate: true,
+            }] : [],
+          }))
+        : [{
+            stageCode: 'STAGE_1',
+            stageName: 'Initial Approval',
+            stageOrder: 1,
+            sequenceNo: 1,
+            executionType: 'SEQUENTIAL',
+            minimumApprovalsRequired: 1,
+            rejectionAction: 'REJECT_DOCUMENT',
+            isMandatory: true,
+            approvers: source.approverRole ? [{
+              approverType: 'ROLE',
+              roleName: source.approverRole,
+              approvalOrder: 1,
+              isRequired: true,
+              canDelegate: true,
+            }] : [],
+          }];
+
     const payload = {
       companyId: source.companyId,
       workflowCode: source.workflowCode || source.code || `${normalizeDocumentType(source.moduleName || source.module)}-${Date.now()}`,
@@ -129,28 +197,35 @@ export const workflowDefinitionApi = {
       documentType: source.documentType || normalizeDocumentType(source.moduleName || source.module),
       description: source.description || '',
       version: source.version ?? 1,
+      isActive: source.isActive ?? source.active ?? true,
       isDefault: Boolean(source.isDefault ?? false),
+      stages,
+      transitions: Array.isArray(source.transitions) ? source.transitions : [],
     };
 
     if (!payload.workflowName) {
       throw new Error('Workflow name is required to create a workflow definition.');
     }
 
-    const response = await apiClient.post('/api/account/workflow/definitions', payload);
+    const response = await apiClient.post('/api/v1/workflow/definitions', { data: payload });
     const data = unwrapApiData(response);
     return normalizeWorkflowDefinition(data);
   },
-  update: async () => { throw new WorkflowApiNotImplementedError('PUT/PATCH /api/account/workflow/definitions/{definitionId}'); },
-  remove: async () => { throw new WorkflowApiNotImplementedError('DELETE /api/account/workflow/definitions/{definitionId}'); },
-  addStage: async (definitionId, stagePayload) => {
+  update: async () => { throw new WorkflowApiNotImplementedError('PUT/PATCH /api/v1/workflow/definitions/{definitionId}'); },
+  remove: async () => { throw new WorkflowApiNotImplementedError('DELETE /api/v1/workflow/definitions/{definitionId}'); },
+  addStage: async () => {
+    throw new WorkflowApiNotImplementedError('POST /api/v1/workflow/definitions/{definitionId}/stages');
+  },
+  setActive: async (definitionId, companyId) => {
     if (!definitionId) throw new Error('Workflow definition ID is required.');
-    const payload = stagePayload && typeof stagePayload === 'object' && 'data' in stagePayload ? stagePayload.data : stagePayload;
-    const response = await apiClient.post(`/api/account/workflow/definitions/${definitionId}/stages`, payload || {});
+    const params = companyId ? { companyId } : undefined;
+    const response = await apiClient.patch(`/api/v1/workflow/definitions/${definitionId}/activate`, null, { params });
     return unwrapApiData(response);
   },
-  setActive: async (definitionId) => {
+  deactivate: async (definitionId, companyId) => {
     if (!definitionId) throw new Error('Workflow definition ID is required.');
-    const response = await apiClient.post(`/api/account/workflow/definitions/${definitionId}/activate`);
+    const params = companyId ? { companyId } : undefined;
+    const response = await apiClient.patch(`/api/v1/workflow/definitions/${definitionId}/deactivate`, null, { params });
     return unwrapApiData(response);
   },
 };
@@ -171,12 +246,11 @@ export const writeWorkflowDraft = (companyId, definitions) => {
   localStorage.setItem(draftKey(companyId), JSON.stringify(definitions));
 };
 
-export async function loadWorkflowDefinitions(companyId, documentType = 'GENERAL', seed = []) {
-  if (workflowDefinitionApi.available) {
-    const definition = await workflowDefinitionApi.list(companyId, documentType);
-    return { definitions: definition || [], source: WORKFLOW_DATA_SOURCES.API };
-  }
-  return { definitions: readWorkflowDraft(companyId, seed), source: WORKFLOW_DATA_SOURCES.DRAFT };
+export async function loadWorkflowDefinitions(companyId, documentType = 'GENERAL') {
+  // Always query backend workflow-service directly.
+  // Never silently fall back to localStorage drafts as server-persisted definitions.
+  const definitions = await workflowDefinitionApi.list(companyId, documentType);
+  return { definitions: definitions || [], source: WORKFLOW_DATA_SOURCES.API };
 }
 
 export async function saveWorkflowDefinitions(companyId, definitions, options = {}) {
@@ -184,7 +258,7 @@ export async function saveWorkflowDefinitions(companyId, definitions, options = 
 
   if (Array.isArray(definitions)) {
     if (mode === 'update') {
-      throw new WorkflowApiNotImplementedError('PUT/PATCH /api/account/workflow/definitions/{definitionId}');
+      throw new WorkflowApiNotImplementedError('PUT/PATCH /api/v1/workflow/definitions/{definitionId}');
     }
 
     const created = [];
@@ -200,7 +274,7 @@ export async function saveWorkflowDefinitions(companyId, definitions, options = 
   }
 
   if (mode === 'update') {
-    throw new WorkflowApiNotImplementedError('PUT/PATCH /api/account/workflow/definitions/{definitionId}');
+    throw new WorkflowApiNotImplementedError('PUT/PATCH /api/v1/workflow/definitions/{definitionId}');
   }
 
   const created = await workflowDefinitionApi.create({ ...definitions, companyId });
@@ -208,12 +282,8 @@ export async function saveWorkflowDefinitions(companyId, definitions, options = 
 }
 
 export async function deleteWorkflowDefinition(companyId, definitions, id) {
-  const next = definitions.filter((item) => item.id !== id);
-  if (workflowDefinitionApi.available) {
-    throw new WorkflowApiNotImplementedError('DELETE /api/account/workflow/definitions/{definitionId}');
-  }
-  writeWorkflowDraft(companyId, next);
-  return { definitions: next, source: WORKFLOW_DATA_SOURCES.DRAFT };
+  // Never silently write to localStorage pretending server delete succeeded.
+  throw new WorkflowApiNotImplementedError('DELETE /api/v1/workflow/definitions/{definitionId}');
 }
 
 const normalizeAuditEntries = (payload) => {
@@ -263,7 +333,7 @@ export const workflowAuditApi = {
     if (fromDate) params['filter.fromDate'] = fromDate;
     if (toDate) params['filter.toDate'] = toDate;
 
-    const response = await auditLogsApi.getAuditLogs(params);
+    const response = await apiClient.get('/api/account/audit-logs', { params });
     const body = response?.data ?? response;
     return {
       entries: normalizeAuditEntries(body),
@@ -274,69 +344,69 @@ export const workflowAuditApi = {
 
 export const workflowActionsApi = {
   salesInvoices: {
-    approve: (id) => salesInvoicesApi.approve(id),
-    reject: (id) => salesInvoicesApi.reject(id),
-    post: (id) => salesInvoicesApi.postToGL(id),
-    partialPayment: (id, paymentAmount) => salesInvoicesApi.partialPayment(id, paymentAmount),
-    markPaid: (id, paymentAmount) => salesInvoicesApi.markPaid(id, paymentAmount),
-    cancel: (id) => salesInvoicesApi.cancel(id),
+    approve: (id) => apiClient.post(`/api/account/sales/invoices/${id}/approve`),
+    reject: (id) => apiClient.post(`/api/account/sales/invoices/${id}/reject`),
+    post: (id) => apiClient.post(`/api/account/sales/invoices/${id}/post`),
+    partialPayment: (id, paymentAmount) => apiClient.post(`/api/account/sales/invoices/${id}/partial-payment`, null, { params: { paymentAmount } }),
+    markPaid: (id, paymentAmount) => apiClient.post(`/api/account/sales/invoices/${id}/mark-paid`, null, { params: { paymentAmount } }),
+    cancel: (id) => apiClient.post(`/api/account/sales/invoices/${id}/cancel`),
   },
   apInvoices: {
-    submit: (id) => apInvoicesApi.submitForApproval(id),
-    approve: (id) => apInvoicesApi.approve(id),
-    reject: (id) => apInvoicesApi.reject(id),
-    post: (id) => apInvoicesApi.postToGL(id),
-    partialPayment: (id, amount) => apInvoicesApi.partialPayment(id, amount),
-    cancel: (id) => apInvoicesApi.cancel(id),
+    submit: (id) => apiClient.post(`/api/account/ap/invoices/${id}/submit`),
+    approve: (id) => apiClient.post(`/api/account/ap/invoices/${id}/approve`),
+    reject: (id) => apiClient.post(`/api/account/ap/invoices/${id}/reject`),
+    post: (id) => apiClient.post(`/api/account/ap/invoices/${id}/post`),
+    partialPayment: (id, amount) => apiClient.post(`/api/account/ap/invoices/${id}/partial-payment`, null, { params: { amount } }),
+    cancel: (id) => apiClient.post(`/api/account/ap/invoices/${id}/cancel`),
   },
   receipts: {
-    submit: (id) => receiptVouchersApi.submitReceipt(id),
-    approve: (id) => receiptVouchersApi.approveReceipt(id),
-    reject: (id) => receiptVouchersApi.rejectReceipt(id),
-    post: (id) => receiptVouchersApi.postReceipt(id),
-    reverse: (id) => receiptVouchersApi.reverseReceipt(id),
-    cancel: (id) => receiptVouchersApi.cancelReceipt(id),
+    submit: (id) => apiClient.post(`/api/account/receipts/${id}/submit`),
+    approve: (id) => apiClient.post(`/api/account/receipts/${id}/approve`),
+    reject: (id) => apiClient.post(`/api/account/receipts/${id}/reject`),
+    post: (id) => apiClient.post(`/api/account/receipts/${id}/post`),
+    reverse: (id) => apiClient.post(`/api/account/receipts/${id}/reverse`),
+    cancel: (id) => apiClient.post(`/api/account/receipts/${id}/cancel`),
   },
   paymentVouchers: {
-    submit: (id) => paymentVouchersApi.submitPaymentVoucher(id),
-    approve: (id) => paymentVouchersApi.approvePaymentVoucher(id),
-    reject: (id) => paymentVouchersApi.rejectPaymentVoucher(id),
-    post: (id) => paymentVouchersApi.postPaymentVoucher(id),
-    reverse: (id) => paymentVouchersApi.reversePaymentVoucher(id),
-    cancel: (id) => paymentVouchersApi.cancelPaymentVoucher(id),
+    submit: (id) => apiClient.post(`/api/account/payment-vouchers/${id}/submit`),
+    approve: (id) => apiClient.post(`/api/account/payment-vouchers/${id}/approve`),
+    reject: (id) => apiClient.post(`/api/account/payment-vouchers/${id}/reject`),
+    post: (id) => apiClient.post(`/api/account/payment-vouchers/${id}/post`),
+    reverse: (id) => apiClient.post(`/api/account/payment-vouchers/${id}/reverse`),
+    cancel: (id) => apiClient.post(`/api/account/payment-vouchers/${id}/cancel`),
   },
   creditNotes: {
-    submit: (id) => creditNotesApi.submit(id),
-    approve: (id) => creditNotesApi.approve(id),
-    reject: (id) => creditNotesApi.reject(id),
-    post: (id) => creditNotesApi.post(id),
-    reverse: (id) => creditNotesApi.reverse(id),
-    cancel: (id) => creditNotesApi.cancel(id),
+    submit: (id) => apiClient.post(`/api/account/credit-notes/${id}/submit`),
+    approve: (id) => apiClient.post(`/api/account/credit-notes/${id}/approve`),
+    reject: (id) => apiClient.post(`/api/account/credit-notes/${id}/reject`),
+    post: (id) => apiClient.post(`/api/account/credit-notes/${id}/post`),
+    reverse: (id) => apiClient.post(`/api/account/credit-notes/${id}/reverse`),
+    cancel: (id) => apiClient.post(`/api/account/credit-notes/${id}/cancel`),
   },
   debitNotes: {
-    submit: (id) => debitNotesApi.submitDebitNote(id),
-    approve: (id) => debitNotesApi.approveDebitNote(id),
-    reject: (id) => debitNotesApi.rejectDebitNote(id),
-    post: (id) => debitNotesApi.postDebitNote(id),
-    reverse: (id) => debitNotesApi.reverseDebitNote(id),
-    cancel: (id) => debitNotesApi.cancelDebitNote(id),
+    submit: (id) => apiClient.post(`/api/account/debit-notes/${id}/submit`),
+    approve: (id) => apiClient.post(`/api/account/debit-notes/${id}/approve`),
+    reject: (id) => apiClient.post(`/api/account/debit-notes/${id}/reject`),
+    post: (id) => apiClient.post(`/api/account/debit-notes/${id}/post`),
+    reverse: (id) => apiClient.post(`/api/account/debit-notes/${id}/reverse`),
+    cancel: (id) => apiClient.post(`/api/account/debit-notes/${id}/cancel`),
   },
 };
 
 export const workflowActionsSupplemental = {
   specConfirmed: false,
   expenseRequests: {
-    submit: (id) => expenseRequestsApi.submit(id),
-    approve: (id, payload = {}) => expenseRequestsApi.approve(id, payload),
-    reject: (id, payload = {}) => expenseRequestsApi.reject(id, payload),
-    cancel: (id) => expenseRequestsApi.cancel(id),
+    submit: (id) => apiClient.post(`/api/account/expense-requests/${id}/submit`),
+    approve: (id, payload = {}) => apiClient.post(`/api/account/expense-requests/${id}/approve`, payload),
+    reject: (id, payload = {}) => apiClient.post(`/api/account/expense-requests/${id}/reject`, payload),
+    cancel: (id) => apiClient.post(`/api/account/expense-requests/${id}/cancel`),
   },
   reimbursements: {
-    submit: (id) => reimbursementsApi.submit(id),
-    approve: (id, payload = {}) => reimbursementsApi.approve(id, payload),
-    reject: (id, payload = {}) => reimbursementsApi.reject(id, payload),
-    pay: (id, payload = {}) => reimbursementsApi.pay(id, payload),
-    cancel: (id) => reimbursementsApi.cancel(id),
+    submit: (id) => apiClient.post(`/api/account/reimbursements/${id}/submit`),
+    approve: (id, payload = {}) => apiClient.post(`/api/account/reimbursements/${id}/approve`, payload),
+    reject: (id, payload = {}) => apiClient.post(`/api/account/reimbursements/${id}/reject`, payload),
+    pay: (id, payload = {}) => apiClient.post(`/api/account/reimbursements/${id}/pay`, payload),
+    cancel: (id) => apiClient.post(`/api/account/reimbursements/${id}/cancel`),
   },
 };
 

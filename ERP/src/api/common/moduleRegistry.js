@@ -39,6 +39,7 @@ const KNOWN_MODULES = [
   'purchase',
   'sales-crm',
   'sso',
+  'workflow',
 ];
 
 KNOWN_MODULES.forEach((name) => {
@@ -46,6 +47,12 @@ KNOWN_MODULES.forEach((name) => {
     registry.set(name, {
       name,
       pathPrefix: '/api/sso',
+      refreshEndpoint: '/api/sso/token/refresh',
+    });
+  } else if (name === 'workflow') {
+    registry.set(name, {
+      name,
+      pathPrefix: '/api/v1/workflow',
       refreshEndpoint: '/api/sso/token/refresh',
     });
   } else {
@@ -60,24 +67,23 @@ KNOWN_MODULES.forEach((name) => {
 /**
  * Detect the module name from a request URL.
  *
- * Extracts the first path segment after `/api/` and matches it against the
- * registry. If the module is not pre-registered, it is auto-registered with
- * default conventions so the system scales without code changes.
+ * Extracts the first path segment after `/api/` (accounting for optional `/v1/`, etc.)
+ * and matches it against the registry. If the module is not pre-registered, it is
+ * auto-registered with default conventions so the system scales without code changes.
  *
  * @param {string} url - The request URL (absolute or relative).
  * @returns {string | null} Module name, or null if the URL doesn't match `/api/{module}/...`.
  *
  * @example
  * detectModule('/api/inventory/stocks/company/abc')  // → 'inventory'
- * detectModule('/api/hr/employees')                   // → 'hr'
- * detectModule('/api/sales-crm/orders')               // → 'sales-crm'
+ * detectModule('/api/v1/workflow/definitions')        // → 'workflow'
  * detectModule('/health')                             // → null
  */
 export const detectModule = (url) => {
   if (!url || typeof url !== 'string') return null;
 
-  // Match /api/{module-name}/ — supports hyphenated names like "sales-crm"
-  const match = url.match(/^\/api\/([a-zA-Z0-9_-]+)/);
+  // Match /api/{module-name}/ or /api/v{N}/{module-name}/ — supports hyphenated names like "sales-crm"
+  const match = url.match(/^\/api\/(?:v\d+\/)?([a-zA-Z0-9_-]+)/);
   if (!match) return null;
 
   const moduleName = match[1].toLowerCase();
