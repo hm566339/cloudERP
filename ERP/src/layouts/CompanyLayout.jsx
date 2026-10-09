@@ -170,7 +170,7 @@ export default function CompanyLayout() {
     const globalCompanyRoutes = [
       'dashboard', 'company-dashboard', 'settings', 'profile', 'modules', 'module-routes',
       'admin', 'users', 'roles', 'portal-access', 'sessions', 'reports', 'accounts',
-      'sales-crm'
+      'sales-crm', 'workflows', 'workflow', 'approvals'
     ]
     if (globalCompanyRoutes.includes(modulePathStr)) return
 

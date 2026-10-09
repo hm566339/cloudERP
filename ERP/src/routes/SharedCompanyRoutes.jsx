@@ -223,6 +223,8 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
       {/* Administration */}
       <Route path={`${prefix}workflows`} element={<WorkflowManagementPage />} />
       <Route path={`${prefix}workflows/approvals`} element={<ApprovalRequestsPage />} />
+      <Route path={`${prefix}workflow`} element={<Navigate to={`${prefix}workflows`} replace />} />
+      <Route path={`${prefix}workflow/approvals`} element={<Navigate to={`${prefix}workflows/approvals`} replace />} />
     </>
   );
 }

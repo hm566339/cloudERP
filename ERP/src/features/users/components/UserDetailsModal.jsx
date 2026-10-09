@@ -51,8 +51,16 @@ export default function UserDetailsModal({
       setName(user.name || "");
       setEmpId(user.empId || "");
       setUsername(user.username || "");
-      setEmail(user.email || "");
-      setRole(user.role || "employee");
+      const rawRole = (user.role !== undefined && user.role !== null) ? user.role : user.roles;
+      let initialRole = "employee";
+      if (typeof rawRole === 'string' && rawRole.trim()) {
+        initialRole = rawRole.trim();
+      } else if (Array.isArray(rawRole) && rawRole.length > 0) {
+        initialRole = typeof rawRole[0] === 'string' ? rawRole[0] : (rawRole[0]?.name || rawRole[0]?.roleName || "employee");
+      } else if (rawRole && typeof rawRole === 'object') {
+        initialRole = rawRole.name || rawRole.roleName || "employee";
+      }
+      setRole(initialRole);
       setPermissions(initialPermissions || []);
       setNewPassword("");
       setActiveTab("general");

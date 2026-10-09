@@ -7,6 +7,7 @@ import {
   Factory,
   Building2,
   Workflow,
+  ClipboardCheck,
   ShieldCheck,
   Layers,
   Globe,
@@ -21,6 +22,7 @@ export const MODULE_DEFINITIONS = [
   { key: 'hr', label: 'HR & Employees', dashboardPath: 'hr' },
   { key: 'crm', label: 'Sales & CRM', dashboardPath: 'sales-crm' },
   { key: 'sso', label: 'SSO & Administration', dashboardPath: 'admin' },
+  { key: 'workflow', label: 'Workflow & Approvals', dashboardPath: 'workflows' },
 ]
 
 const MODULE_ALIASES = {
@@ -61,6 +63,11 @@ const MODULE_ALIASES = {
   production: 'manufacturing',
   crm: 'crm',
   customerrelationshipmanagement: 'crm',
+  workflow: 'workflow',
+  workflows: 'workflow',
+  wf: 'workflow',
+  approval: 'workflow',
+  approvals: 'workflow',
   sso: 'sso',
   auth: 'sso',
   authentication: 'sso',
@@ -347,6 +354,24 @@ export const MODULES_UI_METADATA = {
     bg: 'bg-indigo-50',
     path: 'company-dashboard',
     description: 'Overview of company performance, operations, and quick shortcuts.',
+  },
+  workflow: {
+    key: 'workflow',
+    name: 'Workflow & Approvals',
+    icon: ClipboardCheck,
+    color: 'text-purple-600',
+    bg: 'bg-purple-50',
+    path: 'workflows',
+    description: 'Transaction approvals, multistep workflows, rules, and audit trails.',
+  },
+  workflows: {
+    key: 'workflow',
+    name: 'Workflow & Approvals',
+    icon: ClipboardCheck,
+    color: 'text-purple-600',
+    bg: 'bg-purple-50',
+    path: 'workflows',
+    description: 'Transaction approvals, multistep workflows, rules, and audit trails.',
   },
 };
 

@@ -11,7 +11,7 @@ import {
   canDelete as checkCanDelete,
   canViewModule as checkCanViewModule,
   CANONICAL_MODULES,
-} from './moduleNormalization';
+} from './moduleNormalization.js';
 
 export {
   normalizeModuleName,
@@ -46,11 +46,11 @@ export const rolePermissions = {
   [ROLES.OWNER]: {
     canCreate: true, canEdit: true, canDelete: true, canApprove: true,
     permissions: ['CREATE', 'READ', 'UPDATE', 'DELETE', 'APPROVE', 'EXPORT', 'PRINT'],
-    modules: ['ALL_MODULES', 'ORGANIZATION', 'COMPANIES', 'DASHBOARD', 'REPORTS']
+    modules: ['ALL_MODULES', 'ORGANIZATION', 'COMPANIES', 'DASHBOARD', 'REPORTS', 'WORKFLOW', 'workflows', 'workflow', 'APPROVALS', 'approvals']
   },
   [ROLES.COMPANY_ADMIN]: {
-    canCreate: true, canEdit: true, canDelete: true, canApprove: false,
-    modules: ['companies', 'fiscal_years', 'accounting_periods', 'account_groups', 'account_categories', 'chart_of_accounts', 'dashboard', 'ACCOUNTS_RECEIVABLE', 'CUSTOMERS', 'VENDORS', 'BANK_ACCOUNTS', 'BANK_TRANSACTIONS', 'GL_JOURNALS', 'GENERAL_LEDGER', 'EXPENSES', 'expenses']
+    canCreate: true, canEdit: true, canDelete: true, canApprove: true,
+    modules: ['companies', 'fiscal_years', 'accounting_periods', 'account_groups', 'account_categories', 'chart_of_accounts', 'dashboard', 'ACCOUNTS_RECEIVABLE', 'CUSTOMERS', 'VENDORS', 'BANK_ACCOUNTS', 'BANK_TRANSACTIONS', 'GL_JOURNALS', 'GENERAL_LEDGER', 'EXPENSES', 'expenses', 'WORKFLOW', 'workflows', 'workflow', 'APPROVALS', 'approvals']
   },
   [ROLES.FINANCE_MANAGER]: {
     permissions: ['CREATE', 'READ', 'UPDATE', 'DELETE', 'APPROVE', 'EXPORT', 'PRINT'],

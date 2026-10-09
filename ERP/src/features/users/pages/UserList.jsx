@@ -194,11 +194,21 @@ export default function UserList() {
   const apiUsers = data?.users || [];
   const users = React.useMemo(() => {
     return apiUsers.map((u) => {
-      let roleStr = u.role;
-      if (Array.isArray(u.role) && u.role.length > 0) {
-        roleStr = u.role[0].name || u.role[0].roleName || "USER";
-      } else if (u.role && typeof u.role === 'object' && u.role.name) {
-        roleStr = u.role.name;
+      let roleStr = "USER";
+      const rawRole = (u.role !== undefined && u.role !== null) ? u.role : u.roles;
+      if (typeof rawRole === 'string' && rawRole.trim()) {
+        roleStr = rawRole.trim();
+      } else if (Array.isArray(rawRole)) {
+        if (rawRole.length > 0) {
+          const first = rawRole[0];
+          if (typeof first === 'string' && first.trim()) {
+            roleStr = first.trim();
+          } else if (first && typeof first === 'object') {
+            roleStr = first.name || first.roleName || first.code || first.label || "USER";
+          }
+        }
+      } else if (rawRole && typeof rawRole === 'object') {
+        roleStr = rawRole.name || rawRole.roleName || rawRole.code || rawRole.label || "USER";
       }
       return {
         ...u,
@@ -404,9 +414,32 @@ export default function UserList() {
       label: 'Role',
       sortable: false,
       render: (val, row) => {
-        const role = row.role;
-        const color = role === 'company_admin' || role === 'Admin' || role === 'super_admin' ? 'indigo' : role === 'Manager' || role === 'FINANCE_MANAGER' ? 'purple' : role === 'ACCOUNTANT' || role === 'Accountant' ? 'emerald' : 'zinc';
-        const displayRole = role === 'company_admin' ? 'Company Admin' : role === 'employee' ? 'Employee' : (role || 'User').replace(/_/g, ' ');
+        const rawRole = row?.role || val;
+        let role = typeof rawRole === 'string' ? rawRole : '';
+        if (!role && Array.isArray(rawRole) && rawRole.length > 0) {
+          role = typeof rawRole[0] === 'string' ? rawRole[0] : (rawRole[0]?.name || rawRole[0]?.roleName || rawRole[0]?.code || '');
+        } else if (!role && rawRole && typeof rawRole === 'object') {
+          role = rawRole.name || rawRole.roleName || rawRole.code || '';
+        }
+        if (!role && row?.roles) {
+          const rawRoles = row.roles;
+          if (Array.isArray(rawRoles) && rawRoles.length > 0) {
+            role = typeof rawRoles[0] === 'string' ? rawRoles[0] : (rawRoles[0]?.name || rawRoles[0]?.roleName || rawRoles[0]?.code || '');
+          }
+        }
+        const safeRole = String(role || 'User');
+        const color = safeRole === 'company_admin' || safeRole === 'Admin' || safeRole === 'super_admin'
+          ? 'indigo'
+          : safeRole === 'Manager' || safeRole === 'FINANCE_MANAGER'
+          ? 'purple'
+          : safeRole === 'ACCOUNTANT' || safeRole === 'Accountant'
+          ? 'emerald'
+          : 'zinc';
+        const displayRole = safeRole === 'company_admin'
+          ? 'Company Admin'
+          : safeRole === 'employee'
+          ? 'Employee'
+          : safeRole.replace(/_/g, ' ');
         return (
           <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-1 rounded-md border bg-${color}-50 text-${color}-700 border-${color}-200/60 uppercase`}>
              {displayRole}

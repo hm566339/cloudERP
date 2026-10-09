@@ -565,9 +565,9 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
         adminChildren.push({ id: 'system-logs', label: 'System Logs', path: `${base}/admin/system-logs`, icon: ScrollText })
       }
     }
-    if (isOwnerUser || userRole === 'company_admin' || userRole === 'super_admin' || canViewModule('workflow')) {
-      adminChildren.push({ id: 'workflow-approval-requests', label: 'Approval Requests', path: `${base}/workflows/approvals`, icon: ClipboardCheck })
-      adminChildren.push({ id: 'workflow-approvals', label: 'Workflow & Approvals', path: `${base}/workflows`, icon: ClipboardCheck })
+    if (isOwnerUser || userRole === 'company_admin' || userRole === 'super_admin' || canViewModule('workflow') || canViewModule('WORKFLOW')) {
+      adminChildren.push({ id: 'workflow-approval-requests', label: 'Approval Requests', path: `/workflows/approvals`, icon: ClipboardCheck })
+      adminChildren.push({ id: 'workflow-approvals', label: 'Workflow & Approvals', path: `/workflows`, icon: ClipboardCheck })
     }
 
     if (adminChildren.length > 0) {

@@ -274,6 +274,14 @@ const ShiftScheduling = lazy(
 
 
 
+// ─── Workflow & Approvals ─────────────────────────────────────────────────────
+const WorkflowManagementPage = lazy(
+  () => import("../features/workflows/pages/WorkflowManagementPage"),
+);
+const ApprovalRequestsPage = lazy(
+  () => import("../features/workflows/pages/ApprovalRequestsPage"),
+);
+
 // ─── Inventory Management ─────────────────────────────────────────────────────
 // All inventory routes are registered in SharedCompanyRoutes.jsx and rendered
 // under both the tenant ("/") and super-admin ("/company/:companyId") layouts.
@@ -693,6 +701,9 @@ export default function AppRoutes() {
           <Route path="modules/inventory" element={<Navigate to="/inventory/dashboard" replace />} />
           <Route path="modules/sales" element={<Navigate to="/crm/dashboard" replace />} />
           <Route path="modules/purchasing" element={<Navigate to="/purchase-requisitions" replace />} />
+          <Route path="workflows" element={<Navigate to="/workflows" replace />} />
+          <Route path="workflow" element={<Navigate to="/workflows" replace />} />
+          <Route path="workflows/approvals" element={<Navigate to="/workflows/approvals" replace />} />
           <Route path="settings" element={<Navigate to="/accounts/settings" replace />} />
           <Route path="settings/organization" element={<Navigate to="/accounts/settings" replace />} />
           <Route path="subscription" element={<SubscriptionPage />} />
@@ -801,6 +812,20 @@ export default function AppRoutes() {
           </Route>
         </Route>
 
+        {/* ── DIRECT WORKFLOW & APPROVALS ROUTES ── */}
+        <Route
+          element={
+            <ProtectedRoute requireCompany={false}>
+              <CompanyLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/workflows" element={<WorkflowManagementPage />} />
+          <Route path="/workflows/approvals" element={<ApprovalRequestsPage />} />
+          <Route path="/workflow" element={<Navigate to="/workflows" replace />} />
+          <Route path="/workflow/approvals" element={<Navigate to="/workflows/approvals" replace />} />
+        </Route>
+
 
         {/* ── COMPANY TENANT ROUTES (NO COMPANY ID IN URL) ── */}
         <Route
@@ -821,6 +846,12 @@ export default function AppRoutes() {
 
           {/* All other modules (HR, Inventory, Sales, etc.) */}
           {SharedCompanyRoutes({ prefix: "" })}
+
+          {/* Workflow & Approvals Module (Tenant) */}
+          <Route path="workflows" element={<WorkflowManagementPage />} />
+          <Route path="workflows/approvals" element={<ApprovalRequestsPage />} />
+          <Route path="workflow" element={<Navigate to="/workflows" replace />} />
+          <Route path="workflow/approvals" element={<Navigate to="/workflows/approvals" replace />} />
 
           {/* SSO & Administration Module (Tenant) */}
           <Route path="admin" element={<AdminDashboard />} />
@@ -874,6 +905,10 @@ export default function AppRoutes() {
           <Route path="accounting/sales-orders" element={<SalesOrders />} />
 
           {SharedCompanyRoutes({ prefix: "" })}
+          <Route path="workflows" element={<WorkflowManagementPage />} />
+          <Route path="workflows/approvals" element={<ApprovalRequestsPage />} />
+          <Route path="workflow" element={<Navigate to="workflows" replace />} />
+          <Route path="workflow/approvals" element={<Navigate to="workflows/approvals" replace />} />
           <Route
             path="manufacturing/audit"
             element={<AuditLogsPage moduleFilter="Manufacturing" />}

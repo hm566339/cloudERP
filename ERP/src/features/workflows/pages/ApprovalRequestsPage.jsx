@@ -3,7 +3,7 @@ import { Check, RefreshCw, X } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 
 import { workflowTasksApi } from '../../../api/account';
-import { useAppDispatch } from '../../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import PageHeader from '../../../components/common/PageHeader';
 import DataTableStatusBadge from '../../../components/data-table/DataTableStatusBadge';
 import { confirmDialog } from '../../../utils/confirmDialog';
@@ -33,7 +33,17 @@ const formatDate = (value) => {
 export default function ApprovalRequestsPage() {
   const dispatch = useAppDispatch();
   const { companyId: routeCompanyId } = useParams();
-  const companyId = routeCompanyId || JSON.parse(localStorage.getItem('selected_company') || '{}')?.id || JSON.parse(localStorage.getItem('auth_user') || '{}')?.companyCode;
+  const selectedCompany = useAppSelector((state) => state.company?.selectedCompany);
+  const currentUser = useAppSelector((state) => state.auth?.user);
+  const companyId =
+    routeCompanyId ||
+    selectedCompany?.id ||
+    selectedCompany?.code ||
+    currentUser?.companyId ||
+    currentUser?.companyCode ||
+    JSON.parse(localStorage.getItem('selected_company') || '{}')?.id ||
+    JSON.parse(localStorage.getItem('auth_user') || '{}')?.companyCode ||
+    null;
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);

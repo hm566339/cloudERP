@@ -20,8 +20,11 @@ export default function UserAssignRoleModal({ isOpen, onClose, user, availableRo
 
   useEffect(() => {
     if (isOpen && user) {
-      const userRoles = Array.isArray(user.role) ? user.role : [user.role];
-      const userRoleStrs = userRoles.map(r => (typeof r === 'string' ? r : r?.name)?.toLowerCase()).filter(Boolean);
+      const rawRoles = (user.role !== undefined && user.role !== null) ? user.role : user.roles;
+      const userRoles = Array.isArray(rawRoles) ? rawRoles : [rawRoles].filter(Boolean);
+      const userRoleStrs = userRoles
+        .map(r => (typeof r === 'string' ? r : (r?.name || r?.roleName || r?.code))?.toLowerCase())
+        .filter(Boolean);
       
       const currentRoleObj = (Array.isArray(availableRoles) ? availableRoles : []).find(r => 
         userRoleStrs.includes(r.name?.toLowerCase()) || 
