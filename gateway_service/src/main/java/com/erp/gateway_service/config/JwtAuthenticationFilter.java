@@ -16,6 +16,7 @@ import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
@@ -32,17 +33,25 @@ public class JwtAuthenticationFilter
 
         private PublicKey publicKey;
 
-        private static final List<String> PUBLIC_APIS = List.of(
+        private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+
+        private static final List<String> PUBLIC_PATTERNS = List.of(
+                        // Auth & SSO public endpoints
+                        "/api/admin/auth/login",
+                        "/api/sso/admin/auth/login",
                         "/api/sso/auth/login",
+                        "/api/sso/auth/select-company",
                         "/api/sso/auth/admin-login",
                         "/api/sso/auth/register",
+                        "/api/sso/signup",
+                        "/api/sso/organization/*",
                         "/api/sso/authorize",
                         "/api/sso/token/exchange",
                         "/api/sso/token/refresh",
+                        "/api/sso/company/open",
                         "/api/sso/admin/token/refresh",
                         "/api/sso/token/verify",
                         "/api/sso/auth/logout",
-                        "/api/sso/company/open",
                         "/api/sso/user/verify-email",
                         "/api/sso/user/forgot-password",
                         "/api/sso/user/reset-password",
@@ -51,13 +60,21 @@ public class JwtAuthenticationFilter
                         "/api/sso/session/sso/logout",
                         "/api/sso/module-routes/internal/routes",
 
-                        // Swagger
+                        // Billing webhooks
+                        "/api/billing/webhook/**",
+                        "/api/sso/billing/webhook/**",
+
+                        // Swagger / OpenAPI
+                        "/swagger-ui/**",
                         "/swagger-ui",
                         "/swagger-ui.html",
+                        "/api-docs/**",
                         "/api-docs",
+                        "/v3/api-docs/**",
                         "/v3/api-docs",
 
                         // Actuator
+                        "/actuator/**",
                         "/actuator");
 
         public JwtAuthenticationFilter() {
@@ -100,16 +117,38 @@ public class JwtAuthenticationFilter
                 return (exchange, chain) -> authenticateAndExecute(exchange, chain);
         }
 
+        public static boolean isPublicEndpoint(String method, String path) {
+                if (!StringUtils.hasText(path)) {
+                        return false;
+                }
+
+                // Public user registration (POST /api/sso/user)
+                if ("POST".equalsIgnoreCase(method) && ("/api/sso/user".equals(path) || "/api/sso/user/".equals(path))) {
+                        return true;
+                }
+
+                String normalizedPath = path.endsWith("/") && path.length() > 1
+                                ? path.substring(0, path.length() - 1)
+                                : path;
+
+                for (String pattern : PUBLIC_PATTERNS) {
+                        if (PATH_MATCHER.match(pattern, path) || PATH_MATCHER.match(pattern, normalizedPath)) {
+                                return true;
+                        }
+                }
+
+                return false;
+        }
+
         private Mono<Void> authenticateAndExecute(ServerWebExchange exchange, GatewayFilterChain chain) {
                 String path = exchange.getRequest()
                                 .getPath()
                                 .value();
+                String method = exchange.getRequest()
+                                .getMethod() != null ? exchange.getRequest().getMethod().name() : "";
 
                 // Public APIs skip JWT validation
-                boolean isPublic = PUBLIC_APIS.stream()
-                                .anyMatch(path::startsWith);
-
-                if (isPublic) {
+                if (isPublicEndpoint(method, path)) {
                         return chain.filter(exchange);
                 }
 
