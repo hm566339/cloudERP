@@ -1,4 +1,4 @@
-import apiClient from '../common/client';
+import apiClient from '../common/client.js';
 import { useState, useEffect } from 'react';
 
 export const getRoles = async (params = {}) => {

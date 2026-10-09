@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Activity, ArrowDown, ArrowUp, Bell, Building2, ChevronDown, Clock3, Copy,
   GitBranch, HelpCircle, Mail, Plus, Save, Search, ShieldCheck, Trash2, User,
@@ -14,16 +14,21 @@ import ExistingEmptyState from '../../../components/common/EmptyState';
 import ConfirmModal from '../../../components/common/ConfirmModal';
 import ErrorState from '../../../components/common/ErrorState';
 import { ListSkeleton } from '../../../components/common/SkeletonLoader';
+import { getRoles } from '../../../api/sso/role';
 import {
   WORKFLOW_DATA_SOURCES,
   deleteWorkflowDefinition,
+  extractRoles,
   loadWorkflowDefinitions,
+  resolveRoleId,
+  resolveRoleName,
   saveWorkflowDefinitions,
   workflowAuditApi,
 } from '../services/workflowService';
 
+export { extractRoles, resolveRoleId, resolveRoleName };
+
 const MODULES = ['Sales', 'Purchase', 'Expenses', 'Invoices', 'Reimbursements', 'Inventory', 'Others'];
-const ROLES = ['Sales Executive', 'Sales Manager', 'Finance Manager', 'Accountant', 'Purchase Manager', 'Authorized Sales Role', 'System Admin'];
 
 const moduleToDocumentType = (value) => {
   switch ((value || '').toLowerCase()) {
@@ -92,7 +97,7 @@ function StatusBadge({ active }) {
   );
 }
 
-function WorkflowDiagram({ workflow, canEdit, onUpdateStep, onRemoveStep, onMoveStep, onAddStep }) {
+function WorkflowDiagram({ workflow, canEdit, onUpdateStep, onRemoveStep, onMoveStep, onAddStep, roles = [] }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-3.5 sm:p-4">
       <div className="mb-4 flex items-center justify-between">
@@ -137,7 +142,7 @@ function WorkflowDiagram({ workflow, canEdit, onUpdateStep, onRemoveStep, onMove
                   <div className="mt-1.5 flex items-center gap-2 text-[11px] text-zinc-500 flex-wrap">
                     <span className="inline-flex items-center gap-1 bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-md font-medium">
                       <User size={11} className="text-zinc-500" />
-                      {step.role || 'Role not assigned'}
+                      {resolveRoleName(step.role, roles) || 'Role not assigned'}
                     </span>
                     <span className="text-zinc-300">•</span>
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-zinc-50 border border-zinc-200 text-zinc-600 font-medium capitalize">
@@ -191,8 +196,20 @@ function WorkflowDiagram({ workflow, canEdit, onUpdateStep, onRemoveStep, onMove
   );
 }
 
-function ConfigurationForm({ workflow, setWorkflow, canEdit, errors }) {
+function ConfigurationForm({
+  workflow,
+  setWorkflow,
+  canEdit,
+  errors,
+  roles = [],
+  rolesLoading = false,
+  rolesError = null,
+  onRetryRoles,
+}) {
   const update = (key, value) => setWorkflow((current) => ({ ...current, [key]: value }));
+
+  const currentInitiatedBy = resolveRoleId(workflow.initiatedBy, roles);
+  const currentApproverRole = resolveRoleId(workflow.approverRole, roles);
 
   return (
     <div className="space-y-4">
@@ -214,14 +231,45 @@ function ConfigurationForm({ workflow, setWorkflow, canEdit, errors }) {
             className={`w-full h-8 px-2.5 rounded-lg border bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 ${
               errors.initiatedBy ? 'border-red-400' : 'border-zinc-200'
             }`}
-            disabled={!canEdit}
-            value={workflow.initiatedBy}
+            disabled={!canEdit || rolesLoading}
+            value={currentInitiatedBy}
             onChange={(e) => update('initiatedBy', e.target.value)}
           >
-            <option value="">Select role</option>
-            {ROLES.map((role) => <option key={role} value={role}>{role}</option>)}
+            {rolesLoading ? (
+              <option value="" disabled>Loading roles...</option>
+            ) : rolesError ? (
+              <option value="" disabled>Failed to load roles</option>
+            ) : roles.length === 0 ? (
+              <option value="" disabled>No roles available</option>
+            ) : (
+              <>
+                <option value="">Select role</option>
+                {roles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name}
+                  </option>
+                ))}
+              </>
+            )}
           </select>
           {errors.initiatedBy && <p className="text-[11px] text-red-600 font-medium mt-1">{errors.initiatedBy}</p>}
+          {rolesError && (
+            <p className="text-[11px] text-red-600 font-medium mt-1 flex items-center justify-between">
+              <span>Could not load roles.</span>
+              {onRetryRoles && (
+                <button
+                  type="button"
+                  onClick={onRetryRoles}
+                  className="text-zinc-800 underline hover:text-zinc-950 font-semibold"
+                >
+                  Retry
+                </button>
+              )}
+            </p>
+          )}
+          {!rolesLoading && !rolesError && roles.length === 0 && (
+            <p className="text-[10px] text-amber-600 mt-1">No roles found for this company.</p>
+          )}
         </Field>
       </div>
 
@@ -273,15 +321,40 @@ function ConfigurationForm({ workflow, setWorkflow, canEdit, errors }) {
         </SettingRow>
 
         <SettingRow label="Approver role" description="Default role responsible for approval">
-          <select
-            className="w-36 sm:w-44 h-7.5 px-2 rounded-lg border border-zinc-200 bg-white text-[11px] text-zinc-900 focus:outline-none focus:border-zinc-900 transition-colors disabled:bg-zinc-50 disabled:text-zinc-400 shrink-0"
-            disabled={!canEdit || !workflow.approvalRequired}
-            value={workflow.approverRole}
-            onChange={(e) => update('approverRole', e.target.value)}
-          >
-            <option value="">Select role</option>
-            {ROLES.map((role) => <option key={role} value={role}>{role}</option>)}
-          </select>
+          <div className="flex flex-col items-end gap-1">
+            <select
+              className="w-36 sm:w-44 h-7.5 px-2 rounded-lg border border-zinc-200 bg-white text-[11px] text-zinc-900 focus:outline-none focus:border-zinc-900 transition-colors disabled:bg-zinc-50 disabled:text-zinc-400 shrink-0"
+              disabled={!canEdit || !workflow.approvalRequired || rolesLoading}
+              value={currentApproverRole}
+              onChange={(e) => update('approverRole', e.target.value)}
+            >
+              {rolesLoading ? (
+                <option value="" disabled>Loading roles...</option>
+              ) : rolesError ? (
+                <option value="" disabled>Failed to load roles</option>
+              ) : roles.length === 0 ? (
+                <option value="" disabled>No roles available</option>
+              ) : (
+                <>
+                  <option value="">Select role</option>
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </>
+              )}
+            </select>
+            {rolesError && onRetryRoles && (
+              <button
+                type="button"
+                onClick={onRetryRoles}
+                className="text-[10px] text-red-600 underline hover:text-red-700"
+              >
+                Retry loading roles
+              </button>
+            )}
+          </div>
         </SettingRow>
 
         <SettingRow label="Allow customer acceptance" description="Expose acceptance action on customer portal">
@@ -344,6 +417,9 @@ export default function WorkflowManagementPage() {
   const canApprove = usePermission('WORKFLOW', 'APPROVE') || isOwnerOrAdmin;
   const [workflows, setWorkflows] = useState([]);
   const [definitionsStatus, setDefinitionsStatus] = useState('loading');
+  const [roles, setRoles] = useState([]);
+  const [rolesLoading, setRolesLoading] = useState(false);
+  const [rolesError, setRolesError] = useState(null);
   const [module, setModule] = useState('Sales');
   const [selectedId, setSelectedId] = useState('');
   const [activeTab, setActiveTab] = useState('diagram');
@@ -352,6 +428,43 @@ export default function WorkflowManagementPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const fetchRoles = useCallback(async (targetCompanyId) => {
+    if (!targetCompanyId) {
+      setRoles([]);
+      setRolesLoading(false);
+      setRolesError(null);
+      return [];
+    }
+
+    setRolesLoading(true);
+    setRolesError(null);
+
+    try {
+      const response = await getRoles({ companyId: targetCompanyId, page: 0, pageSize: 200 });
+      const extracted = extractRoles(response);
+      setRoles(extracted);
+      setRolesError(null);
+      return extracted;
+    } catch (err) {
+      console.error('Failed to fetch roles for company', err);
+      setRoles([]);
+      setRolesError(err?.response?.data?.message || err?.message || 'Failed to load roles');
+      return [];
+    } finally {
+      setRolesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    setRoles([]);
+    setRolesError(null);
+    if (companyId) {
+      fetchRoles(companyId);
+    } else {
+      setRolesLoading(false);
+    }
+  }, [companyId, fetchRoles]);
 
   useEffect(() => {
     let active = true;
@@ -425,8 +538,37 @@ export default function WorkflowManagementPage() {
     if (Object.keys(nextErrors).length) { dispatch(addAlert({ type: 'error', message: 'Please fix the workflow validation errors.' })); return; }
     setIsSaving(true);
     try {
-      await saveWorkflowDefinitions(companyId, selected, { mode: 'update' });
+      const initiatedByRoleId = resolveRoleId(selected.initiatedBy, roles);
+      const initiatedByRoleName = resolveRoleName(selected.initiatedBy, roles);
+      const approverRoleId = resolveRoleId(selected.approverRole, roles);
+      const approverRoleName = resolveRoleName(selected.approverRole, roles);
+
+      const payloadToSave = {
+        ...selected,
+        initiatedBy: initiatedByRoleId,
+        initiatedByRoleId,
+        initiatedByRoleName,
+        approverRole: approverRoleId,
+        approverRoleId,
+        approverRoleName,
+        steps: selected.steps.map((step) => ({
+          ...step,
+          role: resolveRoleId(step.role || approverRoleId, roles),
+          roleId: resolveRoleId(step.role || approverRoleId, roles),
+          roleName: resolveRoleName(step.role || approverRoleName, roles),
+        })),
+      };
+
+      const isNewDraft = !selected.id || String(selected.id).startsWith('workflow-');
+      const mode = isNewDraft ? 'create' : 'update';
+      const result = await saveWorkflowDefinitions(companyId, payloadToSave, { mode });
       dispatch(addAlert({ type: 'success', message: `${selected.name} saved for ${selectedCompany?.name || 'this company'}.` }));
+
+      if (isNewDraft && result?.definitions?.length) {
+        const createdDef = result.definitions[0];
+        setWorkflows((items) => items.map((w) => (w.id === selected.id ? createdDef : w)));
+        setSelectedId(createdDef.id);
+      }
     } catch (error) {
       console.error('Failed to save workflow definitions', error);
       dispatch(addAlert({ type: 'error', message: error?.message || `Could not save ${selected.name}.` }));
@@ -437,7 +579,24 @@ export default function WorkflowManagementPage() {
 
   const create = async () => {
     const id = `workflow-${Date.now()}`;
-    const item = { id, module, name: 'New workflow', description: '', active: false, customerScope: 'all', initiatedBy: '', approvalRequired: true, approverRole: '', threshold: '', customerAcceptance: false, autoCreateOrder: false, emailNotifications: true, notes: '', steps: [{ id: `${id}-1`, title: 'New approval step', role: '', type: 'approval', active: true }] };
+    const defaultRole = roles[0]?.id || '';
+    const item = {
+      id,
+      module,
+      name: 'New workflow',
+      description: '',
+      active: false,
+      customerScope: 'all',
+      initiatedBy: defaultRole,
+      approvalRequired: true,
+      approverRole: defaultRole,
+      threshold: '',
+      customerAcceptance: false,
+      autoCreateOrder: false,
+      emailNotifications: true,
+      notes: '',
+      steps: [{ id: `${id}-1`, title: 'New approval step', role: defaultRole, type: 'approval', active: true }],
+    };
     const next = [item, ...workflows];
     setWorkflows(next);
     setSelectedId(id);
@@ -456,7 +615,22 @@ export default function WorkflowManagementPage() {
   };
 
   const updateStep = (stepId, changes) => setSelected((item) => ({ ...item, steps: item.steps.map((step) => step.id === stepId ? { ...step, ...changes } : step) }));
-  const addStep = () => setSelected((item) => ({ ...item, steps: [...item.steps, { id: `${item.id}-${Date.now()}`, title: 'New approval step', role: 'Sales Manager', type: 'approval', active: true }] }));
+  const addStep = () => setSelected((item) => {
+    const defaultRole = item.approverRole || (roles[0]?.id || '');
+    return {
+      ...item,
+      steps: [
+        ...item.steps,
+        {
+          id: `${item.id}-${Date.now()}`,
+          title: 'New approval step',
+          role: defaultRole,
+          type: 'approval',
+          active: true,
+        },
+      ],
+    };
+  });
   const removeStep = (stepId) => setSelected((item) => ({ ...item, steps: item.steps.filter((step) => step.id !== stepId) }));
   const moveStep = (index, offset) => setSelected((item) => { const steps = [...item.steps];[steps[index], steps[index + offset]] = [steps[index + offset], steps[index]]; return { ...item, steps }; });
   const deleteWorkflow = () => { if (!selected) return; setDeleteTarget(selected); };
@@ -712,12 +886,13 @@ export default function WorkflowManagementPage() {
                     onRemoveStep={removeStep}
                     onMoveStep={moveStep}
                     onAddStep={addStep}
+                    roles={roles}
                   />
                 )}
                 {selected && activeTab === 'rules' && (
                   <div className="space-y-3">
                     <InfoRow icon={ShieldCheck} label="Approval threshold" value={`₹ ${selected.threshold || 'Not set'}`} />
-                    <InfoRow icon={Users} label="Approver" value={selected.approverRole || 'Not configured'} />
+                    <InfoRow icon={Users} label="Approver" value={resolveRoleName(selected.approverRole, roles) || 'Not configured'} />
                     <InfoRow icon={Clock3} label="Active approval steps" value={`${selected.steps.filter((step) => step.type === 'approval' && step.active).length} step(s)`} />
                     {errors.steps && <p className="rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200">{errors.steps}</p>}
                   </div>
@@ -775,6 +950,10 @@ export default function WorkflowManagementPage() {
                     setWorkflow={setSelected}
                     canEdit={canEdit}
                     errors={errors}
+                    roles={roles}
+                    rolesLoading={rolesLoading}
+                    rolesError={rolesError}
+                    onRetryRoles={() => fetchRoles(companyId)}
                   />
                 ) : (
                   <EmptyState onCreate={canCreate ? create : undefined} />

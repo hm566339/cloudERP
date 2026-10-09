@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test src/features/sales/components/__tests__/deliveryChallanModal.test.js src/features/auth/__tests__/trialSignup.test.js src/features/auth/__tests__/organizationLogin.test.js src/features/auth/__tests__/subscriptionUx.test.js src/features/auth/__tests__/dynamicAuthContext.test.js src/features/auth/__tests__/loginFlowNavigation.test.js src/features/auth/__tests__/genericErpSsoCallbackFlow.test.js src/features/auth/__tests__/subscriptionPlanRules.test.js src/features/company-management/__tests__/companyDataIsolation.test.js src/features/auth/__tests__/planModuleAccessFlow.test.js src/features/auth/__tests__/dynamicSsoVisibility.test.js src/features/workflows/__tests__/workflowNavigation.test.js src/features/workflows/__tests__/workflowService.test.js"
+    "test": "node --test src/features/sales/components/__tests__/deliveryChallanModal.test.js src/features/auth/__tests__/trialSignup.test.js src/features/auth/__tests__/organizationLogin.test.js src/features/auth/__tests__/subscriptionUx.test.js src/features/auth/__tests__/dynamicAuthContext.test.js src/features/auth/__tests__/loginFlowNavigation.test.js src/features/auth/__tests__/genericErpSsoCallbackFlow.test.js src/features/auth/__tests__/subscriptionPlanRules.test.js src/features/company-management/__tests__/companyDataIsolation.test.js src/features/auth/__tests__/planModuleAccessFlow.test.js src/features/auth/__tests__/dynamicSsoVisibility.test.js src/features/workflows/__tests__/workflowNavigation.test.js src/features/workflows/__tests__/workflowService.test.js src/features/workflows/__tests__/workflowRolesIntegration.test.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

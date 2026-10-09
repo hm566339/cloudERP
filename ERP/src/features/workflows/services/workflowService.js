@@ -67,6 +67,61 @@ const normalizeModuleName = (moduleName = 'GENERAL') => ({
   INVENTORY: 'Inventory',
 })[normalizeDocumentType(moduleName)] || 'Others';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const isUUID = (val) => typeof val === 'string' && UUID_REGEX.test(val);
+
+export const extractRoles = (res) => {
+  if (!res) return [];
+  let raw = [];
+  if (Array.isArray(res)) {
+    raw = res;
+  } else if (Array.isArray(res.roles)) {
+    raw = res.roles;
+  } else if (Array.isArray(res.items)) {
+    raw = res.items;
+  } else if (Array.isArray(res.content)) {
+    raw = res.content;
+  } else if (Array.isArray(res.results)) {
+    raw = res.results;
+  } else if (res.data) {
+    if (Array.isArray(res.data)) {
+      raw = res.data;
+    } else if (Array.isArray(res.data.roles)) {
+      raw = res.data.roles;
+    } else if (Array.isArray(res.data.items)) {
+      raw = res.data.items;
+    } else if (Array.isArray(res.data.content)) {
+      raw = res.data.content;
+    }
+  }
+  return raw
+    .filter((item) => item && (item.id || item.roleId || item.uuid))
+    .map((item) => ({
+      id: String(item.id || item.roleId || item.uuid),
+      name: item.name || item.roleName || item.title || item.displayName || 'Unnamed Role',
+      status: item.status !== false && item.active !== false,
+    }));
+};
+
+export const resolveRoleId = (val, rolesList = []) => {
+  if (!val) return '';
+  const str = String(val).trim();
+  const matchById = rolesList.find((r) => r.id === str);
+  if (matchById) return matchById.id;
+  const matchByName = rolesList.find((r) => r.name.toLowerCase() === str.toLowerCase());
+  if (matchByName) return matchByName.id;
+  return str;
+};
+
+export const resolveRoleName = (val, rolesList = []) => {
+  if (!val) return '';
+  const str = String(val).trim();
+  const match = rolesList.find(
+    (r) => r.id === str || r.name.toLowerCase() === str.toLowerCase()
+  );
+  return match ? match.name : str;
+};
+
 const normalizeWorkflowDefinition = (item = {}) => ({
   id: item.id || item.definitionId || item.workflowId,
   companyId: item.companyId,
@@ -83,8 +138,12 @@ const normalizeWorkflowDefinition = (item = {}) => ({
   isDefault: item.isDefault ?? false,
   status: item.isActive ?? item.active ? 'active' : 'inactive',
   initiatedBy: item.initiatedBy || '',
+  initiatedByRoleId: item.initiatedByRoleId || (isUUID(item.initiatedBy) ? item.initiatedBy : undefined),
+  initiatedByRoleName: item.initiatedByRoleName || (!isUUID(item.initiatedBy) ? item.initiatedBy : undefined),
   approvalRequired: item.approvalRequired ?? true,
-  approverRole: item.approverRole || (item.stages?.[0]?.approvers?.[0]?.roleName || ''),
+  approverRole: item.approverRole || (item.stages?.[0]?.approvers?.[0]?.roleId || item.stages?.[0]?.approvers?.[0]?.roleName || ''),
+  approverRoleId: item.approverRoleId || item.stages?.[0]?.approvers?.[0]?.roleId || (isUUID(item.approverRole) ? item.approverRole : undefined),
+  approverRoleName: item.approverRoleName || item.stages?.[0]?.approvers?.[0]?.roleName || (!isUUID(item.approverRole) ? item.approverRole : undefined),
   threshold: item.threshold || '',
   customerScope: item.customerScope || 'all',
   customerAcceptance: item.customerAcceptance ?? false,
@@ -98,7 +157,9 @@ const normalizeWorkflowDefinition = (item = {}) => ({
       ? item.stages.map((stage, idx) => ({
           id: stage.id || `stage-${idx + 1}`,
           title: stage.stageName || `Stage ${idx + 1}`,
-          role: stage.approvers?.[0]?.roleName || stage.approvers?.[0]?.userName || '',
+          role: stage.approvers?.[0]?.roleId || stage.approvers?.[0]?.roleName || stage.approvers?.[0]?.userName || '',
+          roleId: stage.approvers?.[0]?.roleId,
+          roleName: stage.approvers?.[0]?.roleName,
           type: 'approval',
           active: stage.isActive !== false,
         }))
@@ -151,26 +212,46 @@ export const workflowDefinitionApi = {
   create: async (definitionPayload) => {
     const source = definitionPayload && typeof definitionPayload === 'object' && 'data' in definitionPayload ? definitionPayload.data : definitionPayload;
 
+    const buildApprover = (roleValue, fallbackRoleId, fallbackRoleName) => {
+      const targetRole = roleValue || fallbackRoleId || fallbackRoleName;
+      if (!targetRole) return null;
+      const isRoleUUID = isUUID(targetRole);
+      const roleId = fallbackRoleId || (isRoleUUID ? targetRole : undefined);
+      const roleName = fallbackRoleName || (!isRoleUUID ? targetRole : undefined) || 'Approver Role';
+
+      const approver = {
+        approverType: 'ROLE',
+        approvalOrder: 1,
+        isRequired: true,
+        canDelegate: true,
+      };
+      if (roleId) approver.roleId = roleId;
+      if (roleName) approver.roleName = roleName;
+      return approver;
+    };
+
     const stages = (Array.isArray(source.stages) && source.stages.length > 0)
       ? source.stages
       : (Array.isArray(source.steps) && source.steps.length > 0)
-        ? source.steps.filter((s) => s.active !== false).map((step, idx) => ({
-            stageCode: `STAGE_${idx + 1}`,
-            stageName: step.title || `Stage ${idx + 1}`,
-            stageOrder: idx + 1,
-            sequenceNo: idx + 1,
-            executionType: 'SEQUENTIAL',
-            minimumApprovalsRequired: 1,
-            rejectionAction: 'REJECT_DOCUMENT',
-            isMandatory: true,
-            approvers: (step.role || source.approverRole) ? [{
-              approverType: 'ROLE',
-              roleName: step.role || source.approverRole,
-              approvalOrder: 1,
-              isRequired: true,
-              canDelegate: true,
-            }] : [],
-          }))
+        ? source.steps.filter((s) => s.active !== false).map((step, idx) => {
+            const approver = buildApprover(
+              step.role || source.approverRole,
+              step.roleId || source.approverRoleId,
+              step.roleName || source.approverRoleName
+            );
+
+            return {
+              stageCode: `STAGE_${idx + 1}`,
+              stageName: step.title || `Stage ${idx + 1}`,
+              stageOrder: idx + 1,
+              sequenceNo: idx + 1,
+              executionType: 'SEQUENTIAL',
+              minimumApprovalsRequired: 1,
+              rejectionAction: 'REJECT_DOCUMENT',
+              isMandatory: true,
+              approvers: approver ? [approver] : [],
+            };
+          })
         : [{
             stageCode: 'STAGE_1',
             stageName: 'Initial Approval',
@@ -180,13 +261,9 @@ export const workflowDefinitionApi = {
             minimumApprovalsRequired: 1,
             rejectionAction: 'REJECT_DOCUMENT',
             isMandatory: true,
-            approvers: source.approverRole ? [{
-              approverType: 'ROLE',
-              roleName: source.approverRole,
-              approvalOrder: 1,
-              isRequired: true,
-              canDelegate: true,
-            }] : [],
+            approvers: buildApprover(source.approverRole, source.approverRoleId, source.approverRoleName)
+              ? [buildApprover(source.approverRole, source.approverRoleId, source.approverRoleName)]
+              : [],
           }];
 
     const payload = {
@@ -254,7 +331,8 @@ export async function loadWorkflowDefinitions(companyId, documentType = 'GENERAL
 }
 
 export async function saveWorkflowDefinitions(companyId, definitions, options = {}) {
-  const mode = options.mode || 'create';
+  const isDraftItem = (item) => !item?.id || String(item.id).startsWith('workflow-');
+  const mode = options.mode || (isDraftItem(definitions) ? 'create' : 'update');
 
   if (Array.isArray(definitions)) {
     if (mode === 'update') {
@@ -273,7 +351,15 @@ export async function saveWorkflowDefinitions(companyId, definitions, options = 
     return { definitions: [], source: WORKFLOW_DATA_SOURCES.API };
   }
 
-  if (mode === 'update') {
+  if (mode === 'update' && !isDraftItem(definitions)) {
+    if (definitions.id) {
+      if (definitions.active || definitions.isActive) {
+        await workflowDefinitionApi.setActive(definitions.id, companyId);
+      } else {
+        await workflowDefinitionApi.deactivate(definitions.id, companyId);
+      }
+      return { definitions: [definitions], source: WORKFLOW_DATA_SOURCES.API };
+    }
     throw new WorkflowApiNotImplementedError('PUT/PATCH /api/v1/workflow/definitions/{definitionId}');
   }
 
