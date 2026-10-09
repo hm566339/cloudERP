@@ -73,9 +73,9 @@ export default function CompanyDetails() {
   const [postalCode, setPostalCode] = useState("");
   const [logo, setLogo] = useState("");
   const [moduleId, setModuleId] = useState("");
-  const [baseCurrency, setBaseCurrency] = useState("INR");
   const [status, setStatus] = useState("Active");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editFormError, setEditFormError] = useState("");
 
   // Always fetch modules and company modules for displaying in the new UI
   const { data: modulesData, isLoading: modulesLoading } = useGetModulesQuery(
@@ -141,6 +141,7 @@ export default function CompanyDetails() {
   };
 
   const handleOpenEdit = () => {
+    setEditFormError("");
     setEditingId(tenant.id);
     setName(tenant.name || "");
     setCode(tenant.code || "");
@@ -166,43 +167,98 @@ export default function CompanyDetails() {
   };
 
   const handleSaveEdit = async (e) => {
-    e.preventDefault();
-    if (!name || !code || !domain) {
-      dispatch(addAlert({ type: "warning", message: "Please complete all required fields (Name, Code, Domain)" }));
+    if (e && typeof e.preventDefault === "function") {
+      e.preventDefault();
+    }
+    setEditFormError("");
+
+    if (!name?.trim() || !code?.trim() || !domain?.trim()) {
+      const msg = "Please complete all required fields (Company Code, Company Name, Domain)";
+      setEditFormError(msg);
+      dispatch(addAlert({ type: "warning", message: msg }));
       return;
     }
-    
+
+    if (email && email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      const msg = "Please enter a valid email address";
+      setEditFormError(msg);
+      dispatch(addAlert({ type: "warning", message: msg }));
+      return;
+    }
+
+    const cleanPhone = phone ? phone.replace(/\D/g, "") : "";
+    if (phone && phone.trim()) {
+      if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+        const msg = "Phone number must contain 10 to 15 digits (e.g. 9876543210 or +91 98765 43210)";
+        setEditFormError(msg);
+        dispatch(addAlert({ type: "warning", message: msg }));
+        return;
+      }
+    }
+
+    if (gst && gst.trim() && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gst.trim().toUpperCase())) {
+      const msg = "Please enter a valid 15-character GSTIN (e.g. 07ABCDE1234F1Z5)";
+      setEditFormError(msg);
+      dispatch(addAlert({ type: "warning", message: msg }));
+      return;
+    }
+
+    if (pan && pan.trim() && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan.trim().toUpperCase())) {
+      const msg = "Please enter a valid PAN (e.g. ABCDE1234F)";
+      setEditFormError(msg);
+      dispatch(addAlert({ type: "warning", message: msg }));
+      return;
+    }
+
+    if (website && website.trim()) {
+      try {
+        const urlToTest = website.startsWith("http://") || website.startsWith("https://")
+          ? website.trim()
+          : `https://${website.trim()}`;
+        new URL(urlToTest);
+      } catch {
+        const msg = "Please enter a valid website URL (e.g. https://www.markenterprises.com)";
+        setEditFormError(msg);
+        dispatch(addAlert({ type: "warning", message: msg }));
+        return;
+      }
+    }
+
+    const cleanDomain = domain.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').trim().toLowerCase();
+
     setIsSubmitting(true);
     try {
       const payload = {
-        name,
-        code: code.toUpperCase(),
-        domain: domain.toLowerCase(),
-        legalName,
-        companyType,
-        gstin: gst.toUpperCase(),
-        pan: pan.toUpperCase(),
-        email,
-        phone,
-        website,
-        address,
-        addressLine2,
-        city,
-        state,
-        country,
-        postalCode,
-        logo,
+        name: name.trim(),
+        code: code.trim().toUpperCase(),
+        domain: cleanDomain,
+        legalName: legalName ? legalName.trim() : undefined,
+        companyType: companyType || undefined,
+        gstin: gst && gst.trim() ? gst.trim().toUpperCase() : undefined,
+        pan: pan && pan.trim() ? pan.trim().toUpperCase() : undefined,
+        email: email ? email.trim() : undefined,
+        phone: cleanPhone || undefined,
+        website: website ? website.trim() : undefined,
+        address: address ? address.trim() : undefined,
+        addressLine2: addressLine2 ? addressLine2.trim() : undefined,
+        city: city ? city.trim() : undefined,
+        state: state ? state.trim() : undefined,
+        country: country ? country.trim() : undefined,
+        postalCode: postalCode ? postalCode.trim() : undefined,
+        logo: logo || undefined,
         modulesid: moduleId || undefined,
-        baseCurrency,
+        baseCurrency: baseCurrency || "INR",
         active: status === "Active"
       };
-      
+
       await updateCompany({ id: editingId, ...payload }).unwrap();
       dispatch(addAlert({ type: "success", message: `Company "${name}" updated successfully` }));
       setIsEditModalOpen(false);
 
     } catch (error) {
-      dispatch(addAlert({ type: "error", message: error?.data?.message || "Failed to save company" }));
+      const errMessage = error?.data?.message || error?.message || "Failed to save company";
+      setEditFormError(errMessage);
+      dispatch(addAlert({ type: "error", message: errMessage }));
     } finally {
       setIsSubmitting(false);
     }
@@ -694,6 +750,7 @@ export default function CompanyDetails() {
           status={status} setStatus={setStatus}
           modulesLoading={modulesLoading}
           modulesData={modulesData}
+          formError={editFormError}
           handleSave={handleSaveEdit}
         />
       )}

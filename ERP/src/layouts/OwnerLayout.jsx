@@ -7,6 +7,7 @@ import { useAccessMode } from '../hooks/useAccessMode';
 import { getEntitledModules } from '../utils/moduleNormalization';
 import DashboardLayout from './DashboardLayout';
 import SubscriptionNoticeBanner from '../components/common/SubscriptionNoticeBanner';
+import { ToastNotification } from './AuthLayout';
 import OwnerSidebar from './OwnerSidebar';
 import OwnerTopHeader from './OwnerTopHeader';
 import { useRBAC } from '../utils/rbac';
@@ -154,6 +155,7 @@ export default function OwnerLayout({ children }) {
         }
         banner={<SubscriptionNoticeBanner />}
       >
+        <ToastNotification />
         {children || <Outlet />}
       </DashboardLayout>
     </OwnerLayoutContext.Provider>

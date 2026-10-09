@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, Check, Loader2, Building2, Paperclip, ExternalLink } from "lucide-react";
+import { X, Check, Loader2, Building2, Paperclip, ExternalLink, AlertTriangle } from "lucide-react";
 import CustomSelect from "../../../components/common/CustomSelect";
 
 export default function CompanyCreateEditModal({
@@ -8,6 +8,7 @@ export default function CompanyCreateEditModal({
   onClose,
   isSubmitting,
   editingId,
+  formError,
   name, setName,
   code, setCode,
   domain, setDomain,
@@ -124,8 +125,15 @@ export default function CompanyCreateEditModal({
 
         {/* ── Scrollable Form Body ── */}
         <div className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-[24px] py-5 custom-scrollbar bg-white">
-          <form id="company-form" onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form id="company-form" onSubmit={handleSave} noValidate className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
+            {formError && (
+              <div className="col-span-1 md:col-span-2 p-3.5 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2.5 text-rose-800 text-xs shadow-2xs">
+                <AlertTriangle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+                <span className="font-medium leading-relaxed">{formError}</span>
+              </div>
+            )}
+
             {/* ── LEFT COLUMN ── */}
             <div className="space-y-5">
               
