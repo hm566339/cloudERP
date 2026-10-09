@@ -50,7 +50,9 @@ export default function CompanyLayout() {
   const isFullHeightPage = location.pathname.includes('create-from-order') ||
     location.pathname.includes('/users') ||
     location.pathname.includes('/roles') ||
-    location.pathname.includes('/portal-access');
+    location.pathname.includes('/portal-access') ||
+    location.pathname.includes('/workflows') ||
+    location.pathname.includes('/workflow');
   const { companyId } = useParams()
 
   const currentUser = useAppSelector((s) => s.auth?.user ?? null)
@@ -290,7 +292,7 @@ export default function CompanyLayout() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
+      <nav className="flex-1 min-h-0 px-3 py-4 overflow-y-auto space-y-0.5 custom-scrollbar">
         {sidebarLinks.map((item) => (
           <SidebarNavItem key={item.id} item={item} location={location} onLinkClick={closeMobileSidebar} />
         ))}

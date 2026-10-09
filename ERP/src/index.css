@@ -269,10 +269,10 @@
     color: #52525b; /* zinc-600 */
   }
   .sidebar-child-active {
-    @apply text-zinc-900 font-semibold;
+    @apply text-zinc-950 font-semibold bg-zinc-200/60 shadow-sm;
   }
   .sidebar-child-inactive:hover {
-    @apply text-zinc-900 bg-zinc-50/80;
+    @apply text-zinc-900 bg-zinc-100/70;
   }
 }
 

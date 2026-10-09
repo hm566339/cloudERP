@@ -4,9 +4,12 @@ import { ChevronDown } from 'lucide-react'
 
 function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
   const hasChildren = Array.isArray(item.children) && item.children.length > 0
-  const isParentActive = location.pathname.startsWith(item.path) || (hasChildren && item.children.some(c => {
-    if (location.pathname.startsWith(c.path)) return true
+  const isParentActive = (item.path && location.pathname.startsWith(item.path)) || (hasChildren && item.children.some(c => {
+    if (!c.path) return false
+    if (location.pathname === c.path || location.pathname.startsWith(c.path)) return true
     if (c.path?.includes('/transactions/expenses') && location.pathname.includes('/transactions/expenses')) return true
+    if (c.path === '/workflows' && location.pathname.includes('/workflows')) return true
+    if (c.path === '/workflows/approvals' && location.pathname.includes('/workflows/approvals')) return true
     return false
   }))
 
@@ -21,11 +24,12 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
 
   if (!hasChildren) {
     const isExpenseMenu = item.id === 'expense' || item.id === 'txn-exp' || (typeof item.path === 'string' && item.path.includes('/transactions/expenses'))
+    const isWorkflowMenu = item.id === 'workflow-approvals' || item.id === 'workflow-approval-requests' || (typeof item.path === 'string' && item.path.includes('/workflows'))
     const isActive = location.pathname === item.path ||
       (item.path !== '/super-admin/dashboard' && item.path !== '/' &&
         location.pathname.startsWith(item.path + '/') && item.path.split('/').length > 3)
       || (isExpenseMenu && location.pathname.includes('/transactions/expenses'))
-      || location.pathname === item.path
+      || (isWorkflowMenu && (location.pathname === item.path || location.pathname.endsWith(item.path)))
 
     return (
       <Link
@@ -55,7 +59,7 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
       </button>
 
       {open && (
-        <div className={`mt-1 ${level === 0 ? 'ml-3 pl-4 border-l border-zinc-200 pb-1' : 'ml-4 pl-3 border-l border-zinc-100 pb-1'}`}>
+        <div className={`mt-0.5 space-y-0.5 ${level === 0 ? 'ml-3 pl-3 border-l border-zinc-200/80 pb-0.5' : 'ml-3 pl-2.5 border-l border-zinc-100 pb-0.5'}`}>
           {item.children.map((child) => (
             <SidebarNavItem
               key={child.id}
