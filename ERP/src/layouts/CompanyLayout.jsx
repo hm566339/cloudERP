@@ -99,10 +99,13 @@ export default function CompanyLayout() {
     return () => document.removeEventListener('mousedown', handle)
   }, [workspacePopupOpen])
 
-  const rawRole = effectiveUser?.role || 'employee'
-  const userRole = String(Array.isArray(rawRole) ? (rawRole[0]?.name || rawRole[0]) : (rawRole?.name || rawRole)).toLowerCase()
-  const isSuperAdminGlobal = userRole === 'super_admin' && location.pathname.startsWith('/super-admin')
-  const skipCompanyModules = isSuperAdminGlobal || !companyId || (userRole !== 'super_admin' && userRole !== 'company_admin');
+  const authContext = useAppSelector(selectAuthContext);
+  const membership = authContext?.membership;
+  const rawRole = effectiveUser?.role || 'employee';
+  const userRole = String(Array.isArray(rawRole) ? (rawRole[0]?.name || rawRole[0]) : (rawRole?.name || rawRole)).toLowerCase();
+  const isOwnerUser = membership?.memberType === 'OWNER' || userRole === 'owner' || membership?.membershipType === 'OWNER';
+  const isSuperAdminGlobal = userRole === 'super_admin' && location.pathname.startsWith('/super-admin');
+  const skipCompanyModules = isSuperAdminGlobal || !companyId || (userRole !== 'super_admin' && userRole !== 'company_admin' && !isOwnerUser);
   const {
     data: companyModulesData,
     isLoading: companyModulesLoading,
@@ -117,21 +120,23 @@ export default function CompanyLayout() {
 
   // Compute permission-derived module keys. If backend-provided permissions are empty,
   // fall back to RBAC checks (role + token) so we don't block navigation incorrectly.
-  const permissionKeysFromState = getPermissionModuleKeys(permissions, userRole)
+  const permissionKeysFromState = getPermissionModuleKeys(permissions, userRole, membership?.memberType)
   const effectivePermissionKeys = (permissionKeysFromState && permissionKeysFromState.length > 0)
     ? permissionKeysFromState
     : MODULE_DEFINITIONS.map(m => m.key).filter(k => canViewModule(k))
 
   const accessibleModuleKeys = getAccessibleModuleKeys({
     userRole,
+    memberType: membership?.memberType,
     permissions: effectivePermissionKeys,
     companyModulesData,
     companyId,
+    authModules: authContext?.modules,
   })
 
   const sidebarLinks = useMemo(() => {
-    return buildSidebarLinks(userRole, companyId, permissions, isSuperAdminGlobal, accessibleModuleKeys, canViewModule)
-  }, [userRole, companyId, permissions, isSuperAdminGlobal, accessibleModuleKeys, canViewModule]);
+    return buildSidebarLinks(userRole, companyId, permissions, isSuperAdminGlobal, accessibleModuleKeys, canViewModule, isOwnerUser)
+  }, [userRole, companyId, permissions, isSuperAdminGlobal, accessibleModuleKeys, canViewModule, isOwnerUser]);
 
   useEffect(() => {
     if (userRole === 'super_admin' && companyId === '000000' && !location.pathname.startsWith('/super-admin')) {
@@ -248,7 +253,6 @@ export default function CompanyLayout() {
     return <AccountantLayout />
   }
 
-  const authContext = useAppSelector(selectAuthContext);
   const isOwner =
     authContext?.membership?.memberType === 'OWNER' ||
     authContext?.user?.role === 'owner' ||
@@ -579,7 +583,7 @@ export default function CompanyLayout() {
 
           <main className={`flex-1 min-h-0 min-w-0 flex flex-col bg-zinc-50/30 ${isFullHeightPage ? 'overflow-hidden p-0' : 'overflow-x-hidden overflow-y-auto'}`} >
             <div className={`w-full flex-1 flex flex-col min-h-0 min-w-0 ${isFullHeightPage ? 'h-full' : ''}`}>
-              <Outlet context={{ accessibleModuleKeys, accessLoading, companyModulesData }} />
+              <Outlet context={{ accessibleModuleKeys, accessLoading, companyModulesData, authContext, isOwner: isOwnerUser }} />
             </div>
           </main>
 

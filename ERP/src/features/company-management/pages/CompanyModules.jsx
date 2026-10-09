@@ -3,9 +3,9 @@ import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import {
   Building2, Users, Box, ShoppingCart,
   Briefcase, Banknote, Factory, Shield,
-  Layers, Lock, Globe
+  Layers, Lock, Globe, ShieldCheck
 } from 'lucide-react';
-import { normalizeModuleKey, getCompanyModuleAssignments } from '../../../utils/moduleAccess';
+import { normalizeModuleKey, getCompanyModuleAssignments, getUnifiedNavigationModules } from '../../../utils/moduleAccess';
 
 const MODULES_MAP = {
   'finance': { name: 'Finance & Accounts', icon: Banknote, color: 'text-emerald-600', bg: 'bg-emerald-50', path: 'accounts/dashboard' },
@@ -18,7 +18,8 @@ const MODULES_MAP = {
   'purchases': { name: 'Purchase Management', icon: Briefcase, color: 'text-rose-600', bg: 'bg-rose-50', path: 'purchases' },
   'hr': { name: 'HR & Employees', icon: Building2, color: 'text-purple-600', bg: 'bg-purple-50', path: 'hr' },
   'manufacturing': { name: 'Manufacturing', icon: Factory, color: 'text-orange-600', bg: 'bg-orange-50', path: 'manufacturing' },
-  'admin': { name: 'Administration', icon: Shield, color: 'text-zinc-700', bg: 'bg-zinc-100', path: 'users' },
+  'admin': { name: 'SSO & Administration', icon: ShieldCheck, color: 'text-indigo-600', bg: 'bg-indigo-50', path: 'admin' },
+  'sso': { name: 'SSO & Administration', icon: ShieldCheck, color: 'text-indigo-600', bg: 'bg-indigo-50', path: 'admin' },
   'dashboard': { name: 'Company Dashboard', icon: Layers, color: 'text-indigo-600', bg: 'bg-indigo-50', path: 'company-dashboard' }
 };
 
@@ -26,7 +27,8 @@ export default function CompanyModules() {
   const navigate = useNavigate();
   const companyId = useParams().companyId || JSON.parse(localStorage.getItem("selected_company"))?.id || JSON.parse(localStorage.getItem("auth_user"))?.companyCode;
 
-  const { accessibleModuleKeys = [], accessLoading = false, companyModulesData } = useOutletContext() || {};
+  const outletCtx = useOutletContext() || {};
+  const { accessibleModuleKeys = [], accessLoading = false, companyModulesData, authContext, isOwner } = outletCtx;
 
   const handleModuleClick = (path, active) => {
     if (!active) return;
@@ -51,41 +53,42 @@ export default function CompanyModules() {
       active: true
     }];
 
-    const activeAssignments = getCompanyModuleAssignments(companyModulesData, companyId, { activeOnly: false });
+    const unified = getUnifiedNavigationModules({
+      authContext,
+      companyModulesData,
+      companyId,
+      userRole: isOwner ? 'owner' : undefined,
+    });
 
-    // If we have actual company module data from the API, map it dynamically
-    if (activeAssignments && activeAssignments.length > 0) {
-      activeAssignments.forEach((assignment, index) => {
-        const rawTechnicalKey = assignment.module?.name || assignment.moduleName || assignment.name || assignment.moduleType || assignment.moduleCode || '';
-        const modKey = normalizeModuleKey(rawTechnicalKey);
-        const isActive = assignment.active ?? assignment.status ?? assignment.module?.moduleStatus ?? true;
-        const isCurrentlyActive = isActive !== false && isActive !== 'INACTIVE' && isActive !== 'SUSPENDED';
+    const seenKeys = new Set(['dashboard']);
 
-        const config = MODULES_MAP[modKey] || {
-          name: assignment.displayName || assignment.module?.displayName || assignment.label || assignment.module?.label || rawTechnicalKey,
-          icon: Globe,
-          color: 'text-zinc-600',
-          bg: 'bg-zinc-100',
-          path: modKey || 'dashboard'
-        };
+    unified.forEach((mod) => {
+      const key = mod.key;
+      if (seenKeys.has(key)) return;
+      seenKeys.add(key);
 
-        const primaryName = assignment.displayName || assignment.module?.displayName || assignment.label || assignment.module?.label || config.name || rawTechnicalKey;
+      const config = MODULES_MAP[key] || {
+        name: mod.name,
+        icon: mod.icon || Globe,
+        color: mod.color || 'text-zinc-600',
+        bg: mod.bg || 'bg-zinc-100',
+        path: mod.path || key,
+      };
 
-        modules.push({
-          id: assignment.id || `${modKey}-${index}`,
-          name: primaryName,
-          technicalKey: rawTechnicalKey,
-          icon: config.icon,
-          color: config.color,
-          bg: config.bg,
-          path: config.path,
-          active: isCurrentlyActive
-        });
+      modules.push({
+        id: mod.id,
+        name: mod.name || config.name,
+        technicalKey: mod.technicalKey || key,
+        icon: config.icon || mod.icon || Globe,
+        color: config.color || mod.color,
+        bg: config.bg || mod.bg,
+        path: config.path || mod.path,
+        active: mod.active,
       });
-    }
+    });
 
     return modules;
-  }, [companyModulesData, accessibleModuleKeys, companyId]);
+  }, [companyModulesData, authContext, companyId, isOwner]);
 
   if (accessLoading) {
     return (

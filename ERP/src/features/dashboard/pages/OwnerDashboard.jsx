@@ -139,6 +139,19 @@ function OwnerDashboardContent() {
       path: '/purchase-requisitions',
       isEntitled: entitledModules.includes('PURCHASES') || entitledModules.includes('ACCOUNT'),
     },
+    {
+      id: 'SSO',
+      name: 'SSO & Administration',
+      code: 'sso',
+      shortName: 'SSO & Admin',
+      description: 'Single sign-on, identity management, user provisioning, role-based access control, and organization audit logs.',
+      icon: ShieldCheck,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'hover:border-indigo-300',
+      path: activeCompanyId ? `/company/${activeCompanyId}/admin` : '/admin',
+      isEntitled: entitledModules.includes('SSO'),
+    },
   ];
 
   return (

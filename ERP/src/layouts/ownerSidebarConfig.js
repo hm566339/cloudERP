@@ -41,6 +41,7 @@ export function getOwnerSidebarNavGroups({
   const isPurchasesEntitled =
     entitledModules.includes('PURCHASES') || entitledModules.includes('ACCOUNT');
   const isWorkflowEntitled = entitledModules.includes('WORKFLOW');
+  const isSsoEntitled = entitledModules.includes('SSO');
 
   return [
     {
@@ -119,6 +120,15 @@ export function getOwnerSidebarNavGroups({
           isEntitled: isWorkflowEntitled,
           moduleKey: 'WORKFLOW',
           accentColor: 'text-purple-600',
+        },
+        {
+          id: 'sso',
+          label: 'SSO & Administration',
+          path: activeCompanyId ? `/company/${activeCompanyId}/admin` : '/admin',
+          icon: ShieldCheck,
+          isEntitled: isSsoEntitled,
+          moduleKey: 'SSO',
+          accentColor: 'text-indigo-600',
         },
       ],
     },

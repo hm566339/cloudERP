@@ -821,6 +821,14 @@ export default function AppRoutes() {
 
           {/* All other modules (HR, Inventory, Sales, etc.) */}
           {SharedCompanyRoutes({ prefix: "" })}
+
+          {/* SSO & Administration Module (Tenant) */}
+          <Route path="admin" element={<AdminDashboard />} />
+          <Route path="admin/system-logs" element={<SystemLogsPage />} />
+          <Route path="users" element={<UserList />} />
+          <Route path="users/:id" element={<UserDetails />} />
+          <Route path="roles" element={<RoleList />} />
+          <Route path="portal-access" element={<PortalAccess />} />
         </Route>
 
         {/* ── SUPERADMIN COMPANY ROUTES ── */}

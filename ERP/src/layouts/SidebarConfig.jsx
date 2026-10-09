@@ -11,14 +11,14 @@ import {
 } from 'lucide-react'
 
 // Custom Icons
-export function ArrowUpRight(props) { return <TrendingUp {...props} /> }
-export function ArrowDownRight(props) { return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M7 7h10v10" /><path d="M7 17 17 7" /></svg> }
-export function CustomScanLine(props) { return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 7V5a2 2 0 0 1 2-2h2" /><path d="M17 3h2a2 2 0 0 1 2 2v2" /><path d="M21 17v2a2 2 0 0 1-2 2h-2" /><path d="M7 21H5a2 2 0 0 1-2-2v-2" /><path d="M7 8h8" /><path d="M7 12h10" /><path d="M7 16h6" /></svg> }
-export function CustomPackagePlus(props) { return <Package {...props} /> }
-export function CustomAlertTriangle(props) { return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg> }
-export function CustomMessageSquare(props) { return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg> }
+export function ArrowUpRight(props) { return React.createElement(TrendingUp, props) }
+export function ArrowDownRight(props) { return React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", ...props }, React.createElement('path', { d: "M7 7h10v10" }), React.createElement('path', { d: "M7 17 17 7" })) }
+export function CustomScanLine(props) { return React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", ...props }, React.createElement('path', { d: "M3 7V5a2 2 0 0 1 2-2h2" }), React.createElement('path', { d: "M17 3h2a2 2 0 0 1 2 2v2" }), React.createElement('path', { d: "M21 17v2a2 2 0 0 1-2 2h-2" }), React.createElement('path', { d: "M7 21H5a2 2 0 0 1-2-2v-2" }), React.createElement('path', { d: "M7 8h8" }), React.createElement('path', { d: "M7 12h10" }), React.createElement('path', { d: "M7 16h6" })) }
+export function CustomPackagePlus(props) { return React.createElement(Package, props) }
+export function CustomAlertTriangle(props) { return React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", ...props }, React.createElement('path', { d: "m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" }), React.createElement('path', { d: "M12 9v4" }), React.createElement('path', { d: "M12 17h.01" })) }
+export function CustomMessageSquare(props) { return React.createElement('svg', { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", ...props }, React.createElement('path', { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" })) }
 
-export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdminGlobal, accessibleModuleKeys, canViewModule) {
+export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdminGlobal, accessibleModuleKeys = [], canViewModule, isOwner = false) {
   const base = companyId ? `/company/${companyId}` : ``
 
   const hasGstExport = () =>
@@ -526,8 +526,19 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
     })
   }
 
-  // Admin-only sections
-  if (userRole === 'company_admin' || userRole === 'super_admin') {
+  // Admin & SSO sections
+  const isOwnerUser = isOwner || String(userRole).toLowerCase() === 'owner';
+  const hasSsoAccess =
+    isSuperAdminGlobal ||
+    isOwnerUser ||
+    userRole === 'company_admin' ||
+    userRole === 'super_admin' ||
+    (Array.isArray(accessibleModuleKeys) && (accessibleModuleKeys.includes('sso') || accessibleModuleKeys.includes('admin'))) ||
+    canViewModule('sso') ||
+    canViewModule('SSO') ||
+    canViewModule('admin');
+
+  if (hasSsoAccess) {
     const adminChildren = []
 
     if (isSuperAdminGlobal) {
@@ -538,19 +549,33 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
       adminChildren.push({ id: 'sessions', label: 'Sessions', path: `${base}/sessions`, icon: Activity })
     } else {
       adminChildren.push({ id: 'admin-dashboard', label: 'Admin Dashboard', path: `${base}/admin`, icon: LayoutDashboard })
-      adminChildren.push({ id: 'users', label: 'Users', path: `${base}/users`, icon: Users })
-      adminChildren.push({ id: 'roles', label: 'Roles', path: `${base}/roles`, icon: ShieldCheck })
-      adminChildren.push({ id: 'portal-access', label: 'Portal Access', path: `${base}/portal-access`, icon: Globe })
-      adminChildren.push({ id: 'sessions', label: 'Sessions', path: `${base}/sessions`, icon: Activity })
-      adminChildren.push({ id: 'system-logs', label: 'System Logs', path: `${base}/admin/system-logs`, icon: ScrollText })
+      if (isOwnerUser || userRole === 'company_admin' || userRole === 'super_admin' || canViewModule('sso_user') || canViewModule('user') || canViewModule('USER')) {
+        adminChildren.push({ id: 'users', label: 'Users', path: `${base}/users`, icon: Users })
+      }
+      if (isOwnerUser || userRole === 'company_admin' || userRole === 'super_admin' || canViewModule('sso_role') || canViewModule('role') || canViewModule('ROLE')) {
+        adminChildren.push({ id: 'roles', label: 'Roles', path: `${base}/roles`, icon: ShieldCheck })
+      }
+      if (isOwnerUser || userRole === 'company_admin' || userRole === 'super_admin' || canViewModule('sso_portal_access') || canViewModule('portal_access') || canViewModule('PORTAL_ACCESS')) {
+        adminChildren.push({ id: 'portal-access', label: 'Portal Access', path: `${base}/portal-access`, icon: Globe })
+      }
+      if (isOwnerUser || userRole === 'company_admin' || userRole === 'super_admin' || canViewModule('sso_session') || canViewModule('session') || canViewModule('SESSION')) {
+        adminChildren.push({ id: 'sessions', label: 'Sessions', path: `${base}/sessions`, icon: Activity })
+      }
+      if (isOwnerUser || userRole === 'company_admin' || userRole === 'super_admin' || canViewModule('sso_system_logs') || canViewModule('system_logs') || canViewModule('audit')) {
+        adminChildren.push({ id: 'system-logs', label: 'System Logs', path: `${base}/admin/system-logs`, icon: ScrollText })
+      }
     }
-    adminChildren.push({ id: 'workflow-approval-requests', label: 'Approval Requests', path: `${base}/workflows/approvals`, icon: ClipboardCheck })
-    adminChildren.push({ id: 'workflow-approvals', label: 'Workflow & Approvals', path: `${base}/workflows`, icon: ClipboardCheck })
+    if (isOwnerUser || userRole === 'company_admin' || userRole === 'super_admin' || canViewModule('workflow')) {
+      adminChildren.push({ id: 'workflow-approval-requests', label: 'Approval Requests', path: `${base}/workflows/approvals`, icon: ClipboardCheck })
+      adminChildren.push({ id: 'workflow-approvals', label: 'Workflow & Approvals', path: `${base}/workflows`, icon: ClipboardCheck })
+    }
 
-    links.push({
-      id: 'admin', label: 'Administration', icon: ShieldCheck, path: isSuperAdminGlobal ? `${base}/users` : `${base}/admin`,
-      children: adminChildren
-    })
+    if (adminChildren.length > 0) {
+      links.push({
+        id: 'admin', label: 'SSO & Administration', icon: ShieldCheck, path: isSuperAdminGlobal ? `${base}/users` : `${base}/admin`,
+        children: adminChildren
+      })
+    }
   }
 
   return links

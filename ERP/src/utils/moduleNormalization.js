@@ -12,7 +12,28 @@ export const CANONICAL_MODULES = {
   MANUFACTURING: 'MANUFACTURING',
   PURCHASES: 'PURCHASES',
   WORKFLOW: 'WORKFLOW',
+  SSO: 'SSO',
 };
+
+export const SSO_FEATURE_CODES = [
+  'AUTH',
+  'USER',
+  'ROLE',
+  'PERMISSION',
+  'FEATURE',
+  'MODULE',
+  'MODULE_ROUTE',
+  'COMPANY',
+  'COMPANY_SUBSCRIPTION',
+  'SUBSCRIPTION',
+  'SUBSCRIPTION_PLAN',
+  'SESSION',
+  'ORGANIZATION',
+  'PORTAL_ACCESS',
+  'DASHBOARD',
+  'PLATFORM_ADMIN',
+  'BILLING',
+];
 
 /**
  * Normalizes any module identifier (string or object) to its canonical module name.
@@ -22,6 +43,7 @@ export const CANONICAL_MODULES = {
  *   'crm', 'sales-crm', 'salescrm', 'sales' -> 'CRM'
  *   'workflow', 'workflows', 'wf' -> 'WORKFLOW'
  *   'core' -> 'CORE'
+ *   'sso', 'SSO', 'auth', 'admin' -> 'SSO'
  */
 export function normalizeModuleName(input) {
   if (!input && input !== 0) return '';
@@ -54,6 +76,9 @@ export function normalizeModuleName(input) {
   }
   if (lower === 'core') {
     return CANONICAL_MODULES.CORE;
+  }
+  if (lower === 'sso' || lower === 'auth' || lower === 'admin' || lower.includes('sso') || lower.includes('superadmin') || lower === 'systemadmin' || lower === 'portalaccess') {
+    return CANONICAL_MODULES.SSO;
   }
   return raw.toUpperCase();
 }
@@ -90,18 +115,23 @@ export function normalizeFeaturesList(rawFeatures) {
   if (!Array.isArray(rawFeatures)) return [];
   return rawFeatures.map((f) => {
     if (typeof f === 'string') {
+      const upper = f.toUpperCase();
+      const defaultMod = SSO_FEATURE_CODES.includes(upper) ? CANONICAL_MODULES.SSO : '';
       return {
-        featureCode: f.toUpperCase(),
+        featureCode: upper,
         featureName: f,
-        moduleName: '',
+        moduleName: defaultMod,
         active: true,
       };
     }
+    const feat = String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase();
+    const explicitMod = normalizeModuleName(f.moduleName);
+    const resolvedMod = explicitMod || (SSO_FEATURE_CODES.includes(feat) ? CANONICAL_MODULES.SSO : '');
     return {
       ...f,
-      featureCode: String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase(),
+      featureCode: feat,
       featureName: f.featureName || f.featureCode,
-      moduleName: normalizeModuleName(f.moduleName),
+      moduleName: resolvedMod,
       active: f.active !== false,
     };
   });
@@ -113,11 +143,13 @@ export function normalizePermissionsList(rawPermissions) {
     if (typeof p === 'string') {
       const upper = p.trim().toUpperCase();
       const parts = upper.split(':');
+      const feat = parts[0] || upper;
+      const defaultMod = SSO_FEATURE_CODES.includes(feat) ? CANONICAL_MODULES.SSO : '';
       return {
-        featureCode: parts[0] || upper,
+        featureCode: feat,
         action: parts[1] || '',
         permissionCode: upper,
-        moduleName: '',
+        moduleName: defaultMod,
         active: true,
         allowed: true,
       };
@@ -125,12 +157,14 @@ export function normalizePermissionsList(rawPermissions) {
     const feat = String(p.featureCode || p.feature || '').trim().toUpperCase();
     const act = String(p.action || '').trim().toUpperCase();
     const permCode = String(p.permissionCode || (act ? `${feat}:${act}` : feat)).trim().toUpperCase();
+    const explicitMod = normalizeModuleName(p.moduleName);
+    const resolvedMod = explicitMod || (SSO_FEATURE_CODES.includes(feat) ? CANONICAL_MODULES.SSO : '');
     return {
       ...p,
       featureCode: feat,
       action: act,
       permissionCode: permCode,
-      moduleName: normalizeModuleName(p.moduleName),
+      moduleName: resolvedMod,
       active: p.active !== false,
       allowed: p.allowed !== false,
     };
@@ -426,10 +460,35 @@ export function canViewModule(authContext, moduleOrFeature) {
     workflows: ['WORKFLOW'],
     banking: ['ACCOUNT'],
     expenses: ['ACCOUNT'],
+    sso: ['SSO'],
+    admin: ['SSO'],
+    auth: ['SSO'],
+    super_admin: ['SSO'],
   };
   const alias = moduleAliases[str.toLowerCase()];
   if (alias) {
     return alias.some((m) => entitled.includes(m));
+  }
+
+  // 4. If target is SSO and user is Owner or has any active SSO feature permissions
+  if (canonical === CANONICAL_MODULES.SSO) {
+    const isOwner =
+      authContext?.membership?.memberType === 'OWNER' ||
+      authContext?.user?.role === 'owner' ||
+      authContext?.user?.membership?.memberType === 'OWNER';
+    if (isOwner && authContext?.accessMode !== 'BLOCKED') {
+      return true;
+    }
+
+    return SSO_FEATURE_CODES.some((featCode) =>
+      permissions.some((p) => {
+        if (typeof p === 'string') {
+          return p.toUpperCase() === featCode || p.toUpperCase().startsWith(`${featCode}:`);
+        }
+        const fc = String(p.featureCode || p.feature || '').toUpperCase();
+        return fc === featCode && p.allowed !== false && p.active !== false;
+      })
+    );
   }
 
   return false;
