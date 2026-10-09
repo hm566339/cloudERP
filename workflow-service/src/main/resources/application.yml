@@ -1,6 +1,8 @@
 spring:
   config:
-    import: optional:file:.env[.properties]
+    import:
+      - optional:file:.env[.properties]
+      - optional:classpath:application-sso-auth.yml
 
   application:
     name: ${SPRING_APPLICATION_NAME:workflow-service}
@@ -83,3 +85,7 @@ app:
 auth:
   service:
     base-url: ${AUTH_SERVICE_BASE_URL:http://localhost:8090}
+
+sso:
+  backend: ${SSO_BACKEND_URL:http://localhost:8090}
+  cookie-name: ${SSO_COOKIE_NAME:access_token}

@@ -1,0 +1,99 @@
+sso:
+  cookie-name: access_token
+  cookie-secure: false
+  cookie-path: /
+  cookie-same-site: Lax
+  authorization:
+    # ------------------------------------------------------------------
+    # SSO-only authorization routing for workflow-service.
+    #
+    # THIS CONFIGURATION CONTAINS NO LOCAL ROLES OR LOCAL PERMISSION GRANTS.
+    # Roles, features and permissions are verified by SSO (POST /api/sso/token/verify).
+    # ------------------------------------------------------------------
+    modules:
+      WORKFLOW_DEFINITIONS:
+        - "/api/v1/workflow/definitions"
+        - "/api/v1/workflow/definitions/**"
+      WORKFLOW_TRANSACTIONS:
+        - "/api/v1/workflow/transactions"
+        - "/api/v1/workflow/transactions/**"
+      WORKFLOW_TASKS:
+        - "/api/v1/workflow/tasks"
+        - "/api/v1/workflow/tasks/**"
+      WORKFLOW_NOTIFICATIONS:
+        - "/api/v1/workflow/notifications"
+        - "/api/v1/workflow/notifications/**"
+      WORKFLOW_ATTACHMENTS:
+        - "/api/v1/workflow/attachments"
+        - "/api/v1/workflow/attachments/**"
+
+    method-actions:
+      GET:
+        - "READ"
+      POST:
+        - "CREATE"
+        - "WRITE"
+      PUT:
+        - "UPDATE"
+        - "WRITE"
+      PATCH:
+        - "UPDATE"
+        - "WRITE"
+      DELETE:
+        - "DELETE"
+
+    custom-action-suffixes:
+      "/approve": "APPROVE"
+      "/reject": "REJECT"
+      "/return": "RETURN"
+      "/delegate": "DELEGATE"
+      "/cancel": "CANCEL"
+      "/activate": "ACTIVATE"
+      "/deactivate": "DEACTIVATE"
+      "/read-all": "UPDATE"
+      "/read": "UPDATE"
+      "/upload": "CREATE"
+      "/export": "EXPORT"
+
+    feature-groups:
+      WORKFLOW_ADMIN:
+        WORKFLOW:
+          - READ
+          - CREATE
+          - UPDATE
+          - DELETE
+          - APPROVE
+          - REJECT
+          - RETURN
+          - DELEGATE
+          - CANCEL
+          - ACTIVATE
+          - DEACTIVATE
+        WORKFLOW_DEFINITIONS:
+          - READ
+          - CREATE
+          - UPDATE
+          - DELETE
+          - ACTIVATE
+          - DEACTIVATE
+        WORKFLOW_TRANSACTIONS:
+          - READ
+          - CREATE
+          - UPDATE
+          - DELETE
+          - CANCEL
+        WORKFLOW_TASKS:
+          - READ
+          - APPROVE
+          - REJECT
+          - RETURN
+          - DELEGATE
+        WORKFLOW_NOTIFICATIONS:
+          - READ
+          - UPDATE
+        WORKFLOW_ATTACHMENTS:
+          - READ
+          - CREATE
+          - DELETE
+
+    write-implies-create-update: false

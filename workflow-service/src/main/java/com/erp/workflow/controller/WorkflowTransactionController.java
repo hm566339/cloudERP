@@ -8,6 +8,7 @@ import com.erp.workflow.dto.request.SubmitWorkflowRequest;
 import com.erp.workflow.dto.response.WorkflowActionResponse;
 import com.erp.workflow.dto.response.WorkflowCommentResponse;
 import com.erp.workflow.dto.response.WorkflowTransactionResponse;
+import com.erp.workflow.exception.UnauthorizedWorkflowActionException;
 import com.erp.workflow.security.SecurityUtils;
 import com.erp.workflow.service.WorkflowExecutionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,8 +37,9 @@ public class WorkflowTransactionController {
     public ResponseEntity<ApiResponse<WorkflowTransactionResponse>> submitWorkflow(
             @Valid @RequestBody ApiRequest<SubmitWorkflowRequest> request) {
         SubmitWorkflowRequest data = request.getData();
-        if (data.getCompanyId() == null) {
-            data.setCompanyId(SecurityUtils.getCurrentCompanyId().orElse(null));
+        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
+        if (!isSystemAdmin || data.getCompanyId() == null) {
+            data.setCompanyId(SecurityUtils.getCurrentCompanyId().orElse(data.getCompanyId()));
         }
         if (data.getInitiatedBy() == null) {
             data.setInitiatedBy(SecurityUtils.getCurrentUserId().orElse(null));
@@ -55,7 +57,10 @@ public class WorkflowTransactionController {
     public ResponseEntity<ApiResponse<WorkflowTransactionResponse>> getTransaction(
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
-        UUID effectiveCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId().orElse(null);
+        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
+        UUID effectiveCompanyId = (isSystemAdmin && companyId != null)
+                ? companyId
+                : SecurityUtils.getCurrentCompanyId().orElse(companyId);
         WorkflowTransactionResponse response = executionService.getTransaction(id, effectiveCompanyId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -66,7 +71,10 @@ public class WorkflowTransactionController {
             @RequestParam(required = false) UUID companyId,
             @RequestParam String documentType,
             @RequestParam UUID documentId) {
-        UUID effectiveCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId().orElse(null);
+        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
+        UUID effectiveCompanyId = (isSystemAdmin && companyId != null)
+                ? companyId
+                : SecurityUtils.getCurrentCompanyId().orElse(companyId);
         WorkflowTransactionResponse response = executionService.getTransactionByDocument(effectiveCompanyId, documentType, documentId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -79,7 +87,10 @@ public class WorkflowTransactionController {
             @RequestParam(required = false) String documentType,
             @RequestParam(required = false) String status,
             Pageable pageable) {
-        UUID effectiveCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId().orElse(null);
+        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
+        UUID effectiveCompanyId = (isSystemAdmin && companyId != null)
+                ? companyId
+                : SecurityUtils.getCurrentCompanyId().orElse(companyId);
         Page<WorkflowTransactionResponse> page = executionService.searchTransactions(
                 effectiveCompanyId, moduleName, documentType, status, pageable);
         return ResponseEntity.ok(ApiResponse.success(page));
@@ -90,7 +101,8 @@ public class WorkflowTransactionController {
     public ResponseEntity<ApiResponse<WorkflowTransactionResponse>> cancelWorkflow(
             @PathVariable UUID id,
             @Valid @RequestBody ApiRequest<CancelWorkflowRequest> request) {
-        UUID userId = SecurityUtils.getCurrentUserId().orElse(UUID.fromString("00000000-0000-0000-0000-000000000000"));
+        UUID userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
         String username = SecurityUtils.getCurrentUsername();
         WorkflowTransactionResponse response = executionService.cancelWorkflow(id, request.getData(), userId, username);
         return ResponseEntity.ok(ApiResponse.success(response, "Workflow cancelled"));
@@ -101,7 +113,8 @@ public class WorkflowTransactionController {
     public ResponseEntity<ApiResponse<WorkflowCommentResponse>> addComment(
             @PathVariable UUID id,
             @Valid @RequestBody ApiRequest<AddCommentRequest> request) {
-        UUID userId = SecurityUtils.getCurrentUserId().orElse(UUID.fromString("00000000-0000-0000-0000-000000000000"));
+        UUID userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
         String username = SecurityUtils.getCurrentUsername();
         WorkflowCommentResponse response = executionService.addComment(id, request.getData(), userId, username);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response, "Comment added"));

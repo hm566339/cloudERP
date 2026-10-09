@@ -47,6 +47,13 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage(), "UNAUTHORIZED_ACTION"));
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnauthorizedException(UnauthorizedException ex) {
+        log.warn("Unauthorized error: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(ex.getMessage(), "UNAUTHORIZED"));
+    }
+
     @ExceptionHandler({ConcurrentWorkflowModificationException.class, OptimisticLockingFailureException.class})
     public ResponseEntity<ApiResponse<Void>> handleConcurrent(Exception ex) {
         log.warn("Concurrent modification detected: {}", ex.getMessage());

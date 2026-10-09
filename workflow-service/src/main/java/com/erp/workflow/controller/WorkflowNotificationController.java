@@ -29,8 +29,8 @@ public class WorkflowNotificationController {
             @RequestParam(required = false) UUID userId,
             @RequestParam(defaultValue = "false") boolean unreadOnly,
             Pageable pageable) {
-        UUID effectiveCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId().orElse(null);
-        UUID effectiveUserId = userId != null ? userId : SecurityUtils.getCurrentUserId().orElse(null);
+        UUID effectiveCompanyId = resolveCompanyId(companyId);
+        UUID effectiveUserId = resolveUserId(userId);
 
         Page<WorkflowNotificationResponse> page = notificationService.getUserNotifications(
                 effectiveCompanyId, effectiveUserId, unreadOnly, pageable);
@@ -49,8 +49,8 @@ public class WorkflowNotificationController {
     public ResponseEntity<ApiResponse<Void>> markAllAsRead(
             @RequestParam(required = false) UUID companyId,
             @RequestParam(required = false) UUID userId) {
-        UUID effectiveCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId().orElse(null);
-        UUID effectiveUserId = userId != null ? userId : SecurityUtils.getCurrentUserId().orElse(null);
+        UUID effectiveCompanyId = resolveCompanyId(companyId);
+        UUID effectiveUserId = resolveUserId(userId);
 
         notificationService.markAllAsRead(effectiveCompanyId, effectiveUserId);
         return ResponseEntity.ok(ApiResponse.success(null, "All notifications marked as read"));
@@ -61,10 +61,26 @@ public class WorkflowNotificationController {
     public ResponseEntity<ApiResponse<Long>> getUnreadCount(
             @RequestParam(required = false) UUID companyId,
             @RequestParam(required = false) UUID userId) {
-        UUID effectiveCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId().orElse(null);
-        UUID effectiveUserId = userId != null ? userId : SecurityUtils.getCurrentUserId().orElse(null);
+        UUID effectiveCompanyId = resolveCompanyId(companyId);
+        UUID effectiveUserId = resolveUserId(userId);
 
         long count = notificationService.getUnreadCount(effectiveCompanyId, effectiveUserId);
         return ResponseEntity.ok(ApiResponse.success(count));
+    }
+
+    private UUID resolveCompanyId(UUID requestCompanyId) {
+        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
+        if (isSystemAdmin && requestCompanyId != null) {
+            return requestCompanyId;
+        }
+        return SecurityUtils.getCurrentCompanyId().orElse(requestCompanyId);
+    }
+
+    private UUID resolveUserId(UUID requestUserId) {
+        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
+        if (isSystemAdmin && requestUserId != null) {
+            return requestUserId;
+        }
+        return SecurityUtils.getCurrentUserId().orElse(requestUserId);
     }
 }

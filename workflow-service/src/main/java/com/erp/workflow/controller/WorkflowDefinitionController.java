@@ -31,9 +31,7 @@ public class WorkflowDefinitionController {
     public ResponseEntity<ApiResponse<WorkflowDefinitionResponse>> createDefinition(
             @Valid @RequestBody ApiRequest<CreateWorkflowDefinitionRequest> request) {
         CreateWorkflowDefinitionRequest data = request.getData();
-        if (data.getCompanyId() == null) {
-            data.setCompanyId(SecurityUtils.getCurrentCompanyId().orElse(null));
-        }
+        data.setCompanyId(resolveCompanyId(data.getCompanyId()));
         WorkflowDefinitionResponse response = definitionService.createDefinition(data);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response, "Workflow definition created"));
     }
@@ -43,7 +41,7 @@ public class WorkflowDefinitionController {
     public ResponseEntity<ApiResponse<WorkflowDefinitionResponse>> getDefinition(
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
-        UUID effectiveCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId().orElse(null);
+        UUID effectiveCompanyId = resolveCompanyId(companyId);
         WorkflowDefinitionResponse response = definitionService.getDefinition(id, effectiveCompanyId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -54,7 +52,7 @@ public class WorkflowDefinitionController {
             @RequestParam(required = false) UUID companyId,
             @RequestParam(required = false) String moduleName,
             @RequestParam String documentType) {
-        UUID effectiveCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId().orElse(null);
+        UUID effectiveCompanyId = resolveCompanyId(companyId);
         WorkflowDefinitionResponse response = moduleName != null
                 ? definitionService.getActiveDefinitionByModuleAndDocumentType(effectiveCompanyId, moduleName, documentType)
                 : definitionService.getActiveDefinitionByDocumentType(effectiveCompanyId, documentType);
@@ -67,7 +65,7 @@ public class WorkflowDefinitionController {
             @RequestParam(required = false) UUID companyId,
             @RequestParam(required = false) String moduleName,
             Pageable pageable) {
-        UUID effectiveCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId().orElse(null);
+        UUID effectiveCompanyId = resolveCompanyId(companyId);
         Page<WorkflowDefinitionResponse> page = definitionService.listDefinitions(effectiveCompanyId, moduleName, pageable);
         return ResponseEntity.ok(ApiResponse.success(page));
     }
@@ -77,7 +75,7 @@ public class WorkflowDefinitionController {
     public ResponseEntity<ApiResponse<Void>> activateDefinition(
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
-        UUID effectiveCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId().orElse(null);
+        UUID effectiveCompanyId = resolveCompanyId(companyId);
         definitionService.activateDefinition(id, effectiveCompanyId);
         return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition activated"));
     }
@@ -87,8 +85,16 @@ public class WorkflowDefinitionController {
     public ResponseEntity<ApiResponse<Void>> deactivateDefinition(
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
-        UUID effectiveCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId().orElse(null);
+        UUID effectiveCompanyId = resolveCompanyId(companyId);
         definitionService.deactivateDefinition(id, effectiveCompanyId);
         return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition deactivated"));
+    }
+
+    private UUID resolveCompanyId(UUID requestCompanyId) {
+        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
+        if (isSystemAdmin && requestCompanyId != null) {
+            return requestCompanyId;
+        }
+        return SecurityUtils.getCurrentCompanyId().orElse(requestCompanyId);
     }
 }

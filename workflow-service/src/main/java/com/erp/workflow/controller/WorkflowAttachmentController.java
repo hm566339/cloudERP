@@ -2,6 +2,7 @@ package com.erp.workflow.controller;
 
 import com.erp.workflow.common.dto.ApiResponse;
 import com.erp.workflow.dto.response.WorkflowAttachmentResponse;
+import com.erp.workflow.exception.UnauthorizedWorkflowActionException;
 import com.erp.workflow.security.SecurityUtils;
 import com.erp.workflow.service.WorkflowAttachmentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +33,7 @@ public class WorkflowAttachmentController {
             @RequestParam("transactionId") UUID transactionId,
             @RequestParam(value = "taskId", required = false) UUID taskId,
             @RequestParam("file") MultipartFile file) {
-        UUID userId = SecurityUtils.getCurrentUserId().orElse(UUID.fromString("00000000-0000-0000-0000-000000000000"));
+        UUID userId = SecurityUtils.getCurrentUserId().orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
         String username = SecurityUtils.getCurrentUsername();
 
         WorkflowAttachmentResponse response = attachmentService.uploadAttachment(transactionId, taskId, file, userId, username);
@@ -59,7 +60,7 @@ public class WorkflowAttachmentController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete an attachment")
     public ResponseEntity<ApiResponse<Void>> deleteAttachment(@PathVariable UUID id) {
-        UUID userId = SecurityUtils.getCurrentUserId().orElse(UUID.fromString("00000000-0000-0000-0000-000000000000"));
+        UUID userId = SecurityUtils.getCurrentUserId().orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
         attachmentService.deleteAttachment(id, userId);
         return ResponseEntity.ok(ApiResponse.success(null, "Attachment deleted"));
     }

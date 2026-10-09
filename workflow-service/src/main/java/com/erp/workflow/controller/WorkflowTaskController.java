@@ -8,6 +8,7 @@ import com.erp.workflow.dto.request.RejectTaskRequest;
 import com.erp.workflow.dto.request.ReturnTaskRequest;
 import com.erp.workflow.dto.response.WorkflowTaskResponse;
 import com.erp.workflow.enums.WorkflowTaskStatus;
+import com.erp.workflow.exception.UnauthorizedWorkflowActionException;
 import com.erp.workflow.security.SecurityUtils;
 import com.erp.workflow.service.WorkflowExecutionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,7 +40,8 @@ public class WorkflowTaskController {
                 ? request.getData()
                 : ApproveTaskRequest.builder().taskId(id).build();
 
-        UUID userId = SecurityUtils.getCurrentUserId().orElse(UUID.fromString("00000000-0000-0000-0000-000000000000"));
+        UUID userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
         String username = SecurityUtils.getCurrentUsername();
 
         WorkflowTaskResponse response = executionService.approveTask(id, data, userId, username);
@@ -51,7 +53,8 @@ public class WorkflowTaskController {
     public ResponseEntity<ApiResponse<WorkflowTaskResponse>> rejectTask(
             @PathVariable UUID id,
             @Valid @RequestBody ApiRequest<RejectTaskRequest> request) {
-        UUID userId = SecurityUtils.getCurrentUserId().orElse(UUID.fromString("00000000-0000-0000-0000-000000000000"));
+        UUID userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
         String username = SecurityUtils.getCurrentUsername();
 
         WorkflowTaskResponse response = executionService.rejectTask(id, request.getData(), userId, username);
@@ -63,7 +66,8 @@ public class WorkflowTaskController {
     public ResponseEntity<ApiResponse<WorkflowTaskResponse>> returnTask(
             @PathVariable UUID id,
             @Valid @RequestBody ApiRequest<ReturnTaskRequest> request) {
-        UUID userId = SecurityUtils.getCurrentUserId().orElse(UUID.fromString("00000000-0000-0000-0000-000000000000"));
+        UUID userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
         String username = SecurityUtils.getCurrentUsername();
 
         WorkflowTaskResponse response = executionService.returnTask(id, request.getData(), userId, username);
@@ -75,7 +79,8 @@ public class WorkflowTaskController {
     public ResponseEntity<ApiResponse<WorkflowTaskResponse>> delegateTask(
             @PathVariable UUID id,
             @Valid @RequestBody ApiRequest<DelegateTaskRequest> request) {
-        UUID userId = SecurityUtils.getCurrentUserId().orElse(UUID.fromString("00000000-0000-0000-0000-000000000000"));
+        UUID userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
         String username = SecurityUtils.getCurrentUsername();
 
         WorkflowTaskResponse response = executionService.delegateTask(id, request.getData(), userId, username);
@@ -88,7 +93,10 @@ public class WorkflowTaskController {
             @RequestParam(required = false) UUID userId,
             @RequestParam(required = false) WorkflowTaskStatus status,
             Pageable pageable) {
-        UUID effectiveUserId = userId != null ? userId : SecurityUtils.getCurrentUserId().orElse(null);
+        UUID currentUserId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
+        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
+        UUID effectiveUserId = (isSystemAdmin && userId != null) ? userId : currentUserId;
         List<String> roles = SecurityUtils.getCurrentRoles();
 
         Page<WorkflowTaskResponse> page = executionService.getUserTasks(
