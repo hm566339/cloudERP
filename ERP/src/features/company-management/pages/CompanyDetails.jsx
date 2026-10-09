@@ -73,6 +73,7 @@ export default function CompanyDetails() {
   const [postalCode, setPostalCode] = useState("");
   const [logo, setLogo] = useState("");
   const [moduleId, setModuleId] = useState("");
+  const [baseCurrency, setBaseCurrency] = useState("INR");
   const [status, setStatus] = useState("Active");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editFormError, setEditFormError] = useState("");
