@@ -25,6 +25,23 @@ import { dispatchLogout, isAuthPage } from './logout.js';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * Helper to get the most up-to-date access token from cookies or localStorage
+ */
+const getFreshAccessToken = () => {
+  if (typeof document !== 'undefined') {
+    const match =
+      document.cookie.match(/(^| )ACCESS_TOKEN=([^;]+)/) ||
+      document.cookie.match(/(^| )auth_token=([^;]+)/) ||
+      document.cookie.match(/(^| )access_token=([^;]+)/);
+    if (match) return match[2];
+  }
+  if (typeof localStorage !== 'undefined') {
+    return localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('auth_token') || localStorage.getItem('token');
+  }
+  return null;
+};
+
+/**
  * Helper to determine if the user is a System Admin
  */
 const isUserSystemAdmin = () => {
@@ -378,15 +395,9 @@ export const attachRequestInterceptor = (instance) => {
           }
         }
 
-        // Attach Authorization header from cookie if not already explicitly present
+        // Attach Authorization header from cookie/storage if not already explicitly present
         if (config.headers && !config.headers['Authorization'] && !config.headers['authorization']) {
-          let token = null;
-          if (typeof document !== 'undefined') {
-            const match = document.cookie.match(/(^| )ACCESS_TOKEN=([^;]+)/) ||
-                          document.cookie.match(/(^| )auth_token=([^;]+)/) ||
-                          document.cookie.match(/(^| )access_token=([^;]+)/);
-            if (match) token = match[2];
-          }
+          const token = getFreshAccessToken();
           if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
           }
@@ -526,7 +537,11 @@ export const attachResponseInterceptor = (instance) => {
       // If a refresh is already in-flight for this module, queue this request
       if (isModuleRefreshing(moduleName)) {
         try {
-          await enqueue(moduleName);
+          const newToken = await enqueue(moduleName);
+          const freshToken = newToken || getFreshAccessToken();
+          if (freshToken && originalRequest?.headers) {
+            originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
+          }
           // Refresh succeeded — retry the original request
           return instance(originalRequest);
         } catch (queueError) {
@@ -540,23 +555,36 @@ export const attachResponseInterceptor = (instance) => {
       originalRequest._retry = true;
 
       const isSystemAdmin = isUserSystemAdmin();
-      let refreshEndpoint = getRefreshEndpoint(moduleName);
+      let refreshEndpoint = isSystemAdmin
+        ? '/api/sso/admin/token/refresh'
+        : getRefreshEndpoint(moduleName);
       let requestBody = {};
       let refreshToken = null;
 
-      if (isSystemAdmin && typeof document !== 'undefined') {
-        const match = document.cookie.match(/(^| )ACCESS_TOKEN_REFRESH=([^;]+)/);
+      // Extract refresh token from cookies first
+      if (typeof document !== 'undefined') {
+        const match =
+          document.cookie.match(/(^| )ACCESS_TOKEN_REFRESH=([^;]+)/) ||
+          document.cookie.match(/(^| )refresh_token=([^;]+)/) ||
+          document.cookie.match(/(^| )refreshToken=([^;]+)/);
         if (match) refreshToken = match[2];
       }
 
-      if (isSystemAdmin && refreshToken) {
-        refreshEndpoint = '/api/sso/admin/token/refresh';
+      // Fallback to localStorage
+      if (!refreshToken && typeof localStorage !== 'undefined') {
+        refreshToken =
+          localStorage.getItem('ACCESS_TOKEN_REFRESH') ||
+          localStorage.getItem('refreshToken') ||
+          localStorage.getItem('refresh_token');
+      }
+
+      if (refreshToken) {
         requestBody = { data: { refreshToken } };
       }
 
       try {
         // Use raw axios (NOT apiClient) to avoid interceptor recursion.
-        // withCredentials: true lets the browser send the HttpOnly refresh cookie.
+        // withCredentials: true lets the browser send the refresh cookie.
         const refreshResponse = await axios.post(
           refreshEndpoint,
           requestBody,
@@ -568,20 +596,34 @@ export const attachResponseInterceptor = (instance) => {
           },
         );
 
-        if (isSystemAdmin && refreshResponse.data?.data) {
-          const { access_token, refresh_token } = refreshResponse.data.data;
-          if (access_token) {
-            document.cookie = `ACCESS_TOKEN=${access_token}; path=/; max-age=86400; SameSite=Lax`;
+        let newAccessToken = null;
+        let newRefreshToken = null;
+
+        if (refreshResponse.data?.data) {
+          const data = refreshResponse.data.data;
+          newAccessToken = data.access_token || data.accessToken;
+          newRefreshToken = data.refresh_token || data.refreshToken;
+        }
+
+        if (typeof document !== 'undefined') {
+          if (newAccessToken) {
+            document.cookie = `ACCESS_TOKEN=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
+            document.cookie = `auth_token=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
           }
-          if (refresh_token) {
-            document.cookie = `ACCESS_TOKEN_REFRESH=${refresh_token}; path=/; max-age=604800; SameSite=Lax`;
+          if (newRefreshToken) {
+            document.cookie = `ACCESS_TOKEN_REFRESH=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
           }
+        }
+
+        const freshToken = newAccessToken || getFreshAccessToken();
+        if (freshToken && originalRequest?.headers) {
+          originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
         }
 
         console.log(`[Auth] Token refreshed successfully for module "${moduleName}".`);
 
-        // Resolve all queued requests for this module
-        processQueue(moduleName, null);
+        // Resolve all queued requests for this module with the new token
+        processQueue(moduleName, null, freshToken);
 
         // Retry the original request
         return instance(originalRequest);

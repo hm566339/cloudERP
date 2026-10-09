@@ -78,8 +78,9 @@ export const enqueue = (moduleName) => {
  * @param {string} moduleName - Module name.
  * @param {Error | null} error - If null, all queued requests are resolved.
  *                                If an Error, all queued requests are rejected with it.
+ * @param {string | null} [token=null] - Optional fresh access token to pass to resolved requests.
  */
-export const processQueue = (moduleName, error) => {
+export const processQueue = (moduleName, error, token = null) => {
   const state = getState(moduleName);
   const queue = [...state.queue]; // Snapshot to avoid mutation during iteration
   state.queue = [];
@@ -88,7 +89,7 @@ export const processQueue = (moduleName, error) => {
     if (error) {
       reject(error);
     } else {
-      resolve();
+      resolve(token);
     }
   });
 };

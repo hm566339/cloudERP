@@ -242,16 +242,165 @@ public class AuthController {
     // ================= REFRESH TOKEN =================
     @PostMapping("/token/refresh")
     public ResponseEntity<ResponseWrapper<RefreshTokenResponse>> refresh(
-            @Valid @RequestBody RequestWrapper<RefreshTokenRequest> request) {
+            @RequestBody(required = false) Map<String, Object> body,
+            @CookieValue(name = "ACCESS_TOKEN_REFRESH", required = false) String cookieRefreshToken,
+            @CookieValue(name = "refresh_token", required = false) String altCookieRefreshToken,
+            HttpServletRequest httpServletRequest) {
 
-        return ResponseEntity.ok(ResponseWrapper.success(authService.refreshToken(request.getData())));
+        String tokenToUse = null;
+        UUID clientId = null;
+
+        if (body != null) {
+            Object dataObj = body.get("data");
+            if (dataObj instanceof Map<?, ?> dataMap) {
+                Object rt = dataMap.get("refreshToken");
+                if (rt != null) {
+                    tokenToUse = rt.toString();
+                }
+                Object cid = dataMap.get("clientId");
+                if (cid != null) {
+                    try {
+                        clientId = UUID.fromString(cid.toString());
+                    } catch (Exception ignored) {}
+                }
+            } else if (dataObj instanceof String s && StringUtils.hasText(s)) {
+                tokenToUse = s;
+            }
+
+            if (!StringUtils.hasText(tokenToUse)) {
+                Object rt = body.get("refreshToken");
+                if (rt != null) {
+                    tokenToUse = rt.toString();
+                }
+            }
+            if (clientId == null) {
+                Object cid = body.get("clientId");
+                if (cid != null) {
+                    try {
+                        clientId = UUID.fromString(cid.toString());
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+
+        if (!StringUtils.hasText(tokenToUse)) {
+            tokenToUse = cookieRefreshToken;
+        }
+
+        if (!StringUtils.hasText(tokenToUse)) {
+            tokenToUse = altCookieRefreshToken;
+        }
+
+        if (!StringUtils.hasText(tokenToUse) && httpServletRequest.getCookies() != null) {
+            for (Cookie cookie : httpServletRequest.getCookies()) {
+                if ("ACCESS_TOKEN_REFRESH".equalsIgnoreCase(cookie.getName())
+                        || "refresh_token".equalsIgnoreCase(cookie.getName())
+                        || "refreshToken".equalsIgnoreCase(cookie.getName())) {
+                    tokenToUse = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (!StringUtils.hasText(tokenToUse)) {
+            log.warn("Token refresh rejected: No refresh token supplied in request body or cookies");
+            throw new BadCredentialsException("Refresh token is required");
+        }
+
+        RefreshTokenRequest refreshRequest = new RefreshTokenRequest(tokenToUse, clientId);
+        RefreshTokenResponse response = authService.refreshToken(refreshRequest);
+
+        String accessToken = response.getAccessToken();
+        String refreshToken = response.getRefreshToken();
+
+        long accessTokenMaxAge = getCookieMaxAgeSeconds(accessToken);
+        long refreshTokenMaxAge = getCookieMaxAgeSeconds(refreshToken);
+
+        ResponseCookie accessCookie = ResponseCookie.from("ACCESS_TOKEN", accessToken != null ? accessToken : "")
+                .httpOnly(false)
+                .secure(secure)
+                .sameSite(sameSite)
+                .path("/")
+                .maxAge(accessTokenMaxAge)
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("ACCESS_TOKEN_REFRESH", refreshToken != null ? refreshToken : "")
+                .httpOnly(false)
+                .secure(secure)
+                .sameSite(sameSite)
+                .path("/")
+                .maxAge(refreshTokenMaxAge)
+                .build();
+
+        ResponseCookie authTokenCookie = ResponseCookie.from("auth_token", accessToken != null ? accessToken : "")
+                .httpOnly(false)
+                .secure(secure)
+                .sameSite(sameSite)
+                .path("/")
+                .maxAge(accessTokenMaxAge)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, authTokenCookie.toString())
+                .body(ResponseWrapper.success(response));
     }
 
     @PostMapping("/admin/token/refresh")
     public ResponseEntity<ResponseWrapper<RefreshTokenResponse>> adminRefresh(
-            @Valid @RequestBody RequestWrapper<AdminRefreshToken> request) {
+            @RequestBody(required = false) Map<String, Object> body,
+            @CookieValue(name = "ACCESS_TOKEN_REFRESH", required = false) String cookieRefreshToken,
+            @CookieValue(name = "refresh_token", required = false) String altCookieRefreshToken,
+            HttpServletRequest httpServletRequest) {
 
-        RefreshTokenResponse response = authService.AdminrefreshToken(request.getData());
+        String tokenToUse = null;
+
+        if (body != null) {
+            Object dataObj = body.get("data");
+            if (dataObj instanceof Map<?, ?> dataMap) {
+                Object rt = dataMap.get("refreshToken");
+                if (rt != null) {
+                    tokenToUse = rt.toString();
+                }
+            } else if (dataObj instanceof String s && StringUtils.hasText(s)) {
+                tokenToUse = s;
+            }
+
+            if (!StringUtils.hasText(tokenToUse)) {
+                Object rt = body.get("refreshToken");
+                if (rt != null) {
+                    tokenToUse = rt.toString();
+                }
+            }
+        }
+
+        if (!StringUtils.hasText(tokenToUse)) {
+            tokenToUse = cookieRefreshToken;
+        }
+
+        if (!StringUtils.hasText(tokenToUse)) {
+            tokenToUse = altCookieRefreshToken;
+        }
+
+        if (!StringUtils.hasText(tokenToUse) && httpServletRequest.getCookies() != null) {
+            for (Cookie cookie : httpServletRequest.getCookies()) {
+                if ("ACCESS_TOKEN_REFRESH".equalsIgnoreCase(cookie.getName())
+                        || "refresh_token".equalsIgnoreCase(cookie.getName())
+                        || "refreshToken".equalsIgnoreCase(cookie.getName())) {
+                    tokenToUse = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (!StringUtils.hasText(tokenToUse)) {
+            log.warn("Admin token refresh rejected: No refresh token supplied in request body or cookies");
+            throw new BadCredentialsException("Refresh token is required");
+        }
+
+        AdminRefreshToken adminRefreshToken = new AdminRefreshToken(tokenToUse);
+        RefreshTokenResponse response = authService.AdminrefreshToken(adminRefreshToken);
 
         String accessToken = response.getAccessToken();
         String refreshToken = response.getRefreshToken();
