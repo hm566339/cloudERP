@@ -216,8 +216,8 @@ export function normalizeRole(roleName) {
  */
 export function useRBAC() {
   const authContext = useAppSelector(selectAuthContext);
-  const contextUser = authContext.user || useAppSelector(selectCurrentUser);
-  const user = contextUser;
+  const currentUser = useAppSelector(selectCurrentUser);
+  const user = authContext?.user || currentUser;
 
   let roleName = ROLES.VIEWER;
   if (user && user.role) {

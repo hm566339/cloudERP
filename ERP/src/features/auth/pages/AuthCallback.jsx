@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { exchangeToken } from '../../../api/sso/token';
-import { useLazyGetMeQuery, useLazySsoGetMeQuery } from '../../../features/auth/services/authApi';
+import { useLazySsoGetMeQuery } from '../../../features/auth/services/authApi';
 import { setCredentials } from '../authSlice';
 import { setSelectedCompany } from '../../company-management/companySlice';
 import { extractRoleFromToken, parseJwt } from '../../../utils/rbac';
@@ -14,7 +14,6 @@ export default function AuthCallback() {
   const navigate = useNavigate();
   const { buildPath } = useRoutePath();
   const dispatch = useDispatch();
-  const [triggerGetMe] = useLazyGetMeQuery();
   const [triggerSsoGetMe] = useLazySsoGetMeQuery();
   const [error, setError] = useState(null);
   
@@ -170,7 +169,7 @@ export default function AuthCallback() {
     };
 
     processCallback();
-  }, [searchParams, navigate, triggerGetMe, dispatch]);
+  }, [searchParams, navigate, triggerSsoGetMe, dispatch, buildPath]);
 
   if (error) {
     return (
