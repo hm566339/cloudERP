@@ -68,7 +68,7 @@ public class ModuleBootstrap implements CommandLineRunner {
 
                 // Ensure canonical standard ERP modules exist (idempotent)
                 bootstrapModuleIfMissing("ACCOUNT", "account-service.local", "/api/account/**",
-                                "http://account-service:8081");
+                                "http://account-service:8080");
                 bootstrapModuleIfMissing("INVENTORY", "inventory-service.local", "/api/inventory/**",
                                 "http://inventory-service:8082");
                 bootstrapModuleIfMissing("WORKFLOW", "workflow-service.local", "/api/v1/workflow/**",

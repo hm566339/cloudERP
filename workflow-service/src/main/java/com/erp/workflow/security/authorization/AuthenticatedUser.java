@@ -96,10 +96,15 @@ public class AuthenticatedUser implements Principal {
     }
 
     /**
-     * SYSTEM_ADMIN role is recognized ONLY when returned by SSO with status == true.
+     * SYSTEM_ADMIN role is recognized when active in the authenticated user context.
      */
     public boolean isSystemAdmin() {
-        return hasActiveRole(SsoAuthorities.SYSTEM_ADMIN_ROLE.substring("ROLE_".length()));
+        return hasActiveRole("SYSTEM_ADMIN")
+                || hasActiveRole("ROLE_SYSTEM_ADMIN")
+                || (roles != null && roles.stream().anyMatch(r -> {
+                    String n = normalize(r);
+                    return "SYSTEM_ADMIN".equals(n) || "ROLE_SYSTEM_ADMIN".equals(n);
+                }));
     }
 
     public boolean hasActiveRole(String roleName) {
@@ -107,7 +112,13 @@ public class AuthenticatedUser implements Principal {
             return false;
         }
         String target = normalize(roleName);
-        return roles.stream().anyMatch(r -> target.equals(normalize(r)));
+        String targetWithoutPrefix = target.startsWith("ROLE_") ? target.substring(5) : target;
+        return roles.stream().anyMatch(r -> {
+            String n = normalize(r);
+            if (n == null) return false;
+            String nWithoutPrefix = n.startsWith("ROLE_") ? n.substring(5) : n;
+            return target.equals(n) || targetWithoutPrefix.equals(nWithoutPrefix);
+        });
     }
 
     public boolean hasActiveFeature(String featureCode) {

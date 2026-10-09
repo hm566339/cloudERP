@@ -91,6 +91,7 @@ const BatchesPage = lazy(() => import('../features/manufacturing/pages/BatchesPa
 const AuditLogsPage = lazy(() => import('../features/audit/pages/AuditLogsPage'));
 const WorkflowManagementPage = lazy(() => import('../features/workflows/pages/WorkflowManagementPage'));
 const ApprovalRequestsPage = lazy(() => import('../features/workflows/pages/ApprovalRequestsPage'));
+const DynamicWorkflowPage = lazy(() => import('../features/workflows/pages/DynamicWorkflowPage'));
 
 export default function SharedCompanyRoutes({ prefix = "" }) {
   return (
@@ -223,6 +224,8 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
       {/* Administration */}
       <Route path={`${prefix}workflows`} element={<WorkflowManagementPage />} />
       <Route path={`${prefix}workflows/approvals`} element={<ApprovalRequestsPage />} />
+      <Route path={`${prefix}workflows/transactions/:transactionId`} element={<DynamicWorkflowPage />} />
+      <Route path={`${prefix}workflows/document/:documentType/:documentId`} element={<DynamicWorkflowPage />} />
       <Route path={`${prefix}workflow`} element={<Navigate to={`${prefix}workflows`} replace />} />
       <Route path={`${prefix}workflow/approvals`} element={<Navigate to={`${prefix}workflows/approvals`} replace />} />
     </>

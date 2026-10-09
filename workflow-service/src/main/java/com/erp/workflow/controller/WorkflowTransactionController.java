@@ -65,6 +65,22 @@ public class WorkflowTransactionController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/{id}/ui")
+    @Operation(summary = "Get aggregated UI details including definition, stages, permitted actions, form schema, tasks, and audit history")
+    public ResponseEntity<ApiResponse<com.erp.workflow.dto.response.WorkflowUiDetailsResponse>> getTransactionUi(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId) {
+        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
+        UUID effectiveCompanyId = (isSystemAdmin && companyId != null)
+                ? companyId
+                : SecurityUtils.getCurrentCompanyId().orElse(companyId);
+        UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
+        List<String> roles = SecurityUtils.getCurrentRoles();
+
+        com.erp.workflow.dto.response.WorkflowUiDetailsResponse response = executionService.getUiDetails(id, effectiveCompanyId, currentUserId, roles);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @GetMapping("/document")
     @Operation(summary = "Get workflow transaction by business document ID")
     public ResponseEntity<ApiResponse<WorkflowTransactionResponse>> getByDocument(
@@ -76,6 +92,23 @@ public class WorkflowTransactionController {
                 ? companyId
                 : SecurityUtils.getCurrentCompanyId().orElse(companyId);
         WorkflowTransactionResponse response = executionService.getTransactionByDocument(effectiveCompanyId, documentType, documentId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/document/ui")
+    @Operation(summary = "Get aggregated UI details by business document type and ID")
+    public ResponseEntity<ApiResponse<com.erp.workflow.dto.response.WorkflowUiDetailsResponse>> getDocumentUi(
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam String documentType,
+            @RequestParam UUID documentId) {
+        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
+        UUID effectiveCompanyId = (isSystemAdmin && companyId != null)
+                ? companyId
+                : SecurityUtils.getCurrentCompanyId().orElse(companyId);
+        UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
+        List<String> roles = SecurityUtils.getCurrentRoles();
+
+        com.erp.workflow.dto.response.WorkflowUiDetailsResponse response = executionService.getUiDetailsByDocument(effectiveCompanyId, documentType, documentId, currentUserId, roles);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

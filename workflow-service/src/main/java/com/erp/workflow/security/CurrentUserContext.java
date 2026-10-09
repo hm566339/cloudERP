@@ -95,6 +95,24 @@ public final class CurrentUserContext {
         accessModeHolder.set(accessMode);
     }
 
+    public static boolean isSystemAdmin() {
+        org.springframework.security.core.Authentication authentication =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream().anyMatch(a -> {
+            String auth = a.getAuthority();
+            return "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(auth) || "SYSTEM_ADMIN".equalsIgnoreCase(auth);
+        });
+    }
+
+    public static boolean isAuthenticated() {
+        org.springframework.security.core.Authentication authentication =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.isAuthenticated() && getUserId() != null;
+    }
+
     /**
      * Clears all ThreadLocal holders for the current thread.
      */
@@ -109,3 +127,4 @@ public final class CurrentUserContext {
         accessModeHolder.remove();
     }
 }
+

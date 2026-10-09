@@ -36,4 +36,8 @@ public interface WorkflowExecutionService {
     List<WorkflowCommentResponse> getComments(UUID transactionId);
 
     List<WorkflowActionResponse> getAuditHistory(UUID transactionId);
+
+    WorkflowUiDetailsResponse getUiDetails(UUID transactionId, UUID companyId, UUID currentUserId, List<String> roles);
+
+    WorkflowUiDetailsResponse getUiDetailsByDocument(UUID companyId, String documentType, UUID documentId, UUID currentUserId, List<String> roles);
 }

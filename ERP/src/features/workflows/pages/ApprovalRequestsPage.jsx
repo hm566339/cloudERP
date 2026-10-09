@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Check, RefreshCw, X } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { Check, RefreshCw, X, ExternalLink } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
 
 import { workflowTasksApi } from '../../../api/account';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
@@ -189,6 +189,12 @@ export default function ApprovalRequestsPage() {
                     </td>
                     <td className="px-4 py-3 align-top">
                       <div className="flex justify-end gap-2">
+                        <Link
+                          to={`/workflows/transactions/${task.transactionId || task.workflowTransactionId || task.id}`}
+                          className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100"
+                        >
+                          <ExternalLink size={14} /> Review
+                        </Link>
                         <button
                           type="button"
                           onClick={() => handleAction(task.id, 'approve')}

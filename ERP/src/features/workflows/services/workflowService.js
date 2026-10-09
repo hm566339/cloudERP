@@ -420,4 +420,120 @@ export const workflowApiStatus = {
   supplementalSources: Object.keys(workflowActionsSupplemental),
 };
 
+export const workflowExecutionApi = {
+  getUiDetails: async (transactionId, companyId) => {
+    if (!transactionId) throw new Error('Transaction ID is required.');
+    const params = companyId ? { companyId } : undefined;
+    const response = await apiClient.get(`/api/v1/workflow/transactions/${transactionId}/ui`, { params });
+    return unwrapApiData(response);
+  },
+
+  getUiDetailsByDocument: async (documentType, documentId, companyId) => {
+    if (!documentType || !documentId) throw new Error('documentType and documentId are required.');
+    const params = { documentType, documentId };
+    if (companyId) params.companyId = companyId;
+    const response = await apiClient.get('/api/v1/workflow/transactions/document/ui', { params });
+    return unwrapApiData(response);
+  },
+
+  getFormSchema: async (documentType = 'GENERAL') => {
+    const params = { documentType };
+    const response = await apiClient.get('/api/v1/workflow/definitions/schemas', { params });
+    return unwrapApiData(response);
+  },
+
+  getTransaction: async (transactionId, companyId) => {
+    const params = companyId ? { companyId } : undefined;
+    const response = await apiClient.get(`/api/v1/workflow/transactions/${transactionId}`, { params });
+    return unwrapApiData(response);
+  },
+
+  getTransactionByDocument: async (documentType, documentId, companyId) => {
+    const params = { documentType, documentId };
+    if (companyId) params.companyId = companyId;
+    const response = await apiClient.get('/api/v1/workflow/transactions/document', { params });
+    return unwrapApiData(response);
+  },
+
+  submitWorkflow: async (payload) => {
+    const response = await apiClient.post('/api/v1/workflow/transactions/submit', { data: payload });
+    return unwrapApiData(response);
+  },
+
+  cancelWorkflow: async (transactionId, reason = 'Cancelled by user') => {
+    const response = await apiClient.post(`/api/v1/workflow/transactions/${transactionId}/cancel`, {
+      data: { reason }
+    });
+    return unwrapApiData(response);
+  },
+
+  addComment: async (transactionId, commentText, isInternal = false) => {
+    const response = await apiClient.post(`/api/v1/workflow/transactions/${transactionId}/comments`, {
+      data: { commentText, isInternal }
+    });
+    return unwrapApiData(response);
+  },
+
+  getComments: async (transactionId) => {
+    const response = await apiClient.get(`/api/v1/workflow/transactions/${transactionId}/comments`);
+    return unwrapApiData(response);
+  },
+
+  uploadAttachment: async (transactionId, file, taskId = null) => {
+    const formData = new FormData();
+    formData.append('transactionId', transactionId);
+    if (taskId) formData.append('taskId', taskId);
+    formData.append('file', file);
+    const response = await apiClient.post('/api/v1/workflow/attachments/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return unwrapApiData(response);
+  },
+
+  getAttachments: async (transactionId) => {
+    const response = await apiClient.get(`/api/v1/workflow/attachments/transaction/${transactionId}`);
+    return unwrapApiData(response);
+  },
+
+  getAuditHistory: async (transactionId) => {
+    const response = await apiClient.get(`/api/v1/workflow/transactions/${transactionId}/audit-trail`);
+    return unwrapApiData(response);
+  },
+
+  approveTask: async (taskId, comments = 'Approved') => {
+    const response = await apiClient.post(`/api/v1/workflow/tasks/${taskId}/approve`, {
+      data: { taskId, comments }
+    });
+    return unwrapApiData(response);
+  },
+
+  rejectTask: async (taskId, reason = 'Rejected') => {
+    const response = await apiClient.post(`/api/v1/workflow/tasks/${taskId}/reject`, {
+      data: { taskId, reason }
+    });
+    return unwrapApiData(response);
+  },
+
+  returnTask: async (taskId, reason = 'Returned for revision') => {
+    const response = await apiClient.post(`/api/v1/workflow/tasks/${taskId}/return`, {
+      data: { taskId, reason }
+    });
+    return unwrapApiData(response);
+  },
+
+  delegateTask: async (taskId, targetUserId, reason = 'Delegated') => {
+    const response = await apiClient.post(`/api/v1/workflow/tasks/${taskId}/delegate`, {
+      data: { taskId, targetUserId, reason }
+    });
+    return unwrapApiData(response);
+  },
+
+  getMyTasks: async ({ companyId, page = 0, size = 20 } = {}) => {
+    const params = { status: 'PENDING', page, size };
+    if (companyId) params.companyId = companyId;
+    const response = await apiClient.get('/api/v1/workflow/tasks/my-tasks', { params });
+    return unwrapApiData(response);
+  },
+};
+
 export default workflowDefinitionApi;

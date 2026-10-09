@@ -94,6 +94,7 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
 
         // Active SYSTEM_ADMIN bypass
         boolean systemAdmin = (principal instanceof AuthenticatedUser authenticatedUser && authenticatedUser.isSystemAdmin())
+                || (principal instanceof com.erp.workflow.security.UserPrincipal userPrincipal && userPrincipal.isSystemAdmin())
                 || SsoAuthorities.isSystemAdmin(authorities);
         if (systemAdmin) {
             log.debug("Active SYSTEM_ADMIN access granted for URI: {}", uri);

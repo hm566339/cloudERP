@@ -2155,8 +2155,13 @@ public class AuthServiceImpl implements AuthService {
                                         .build();
                 }
 
+                boolean isSystemAdmin = (user.getUserRoles() != null && user.getUserRoles().stream()
+                                .anyMatch(ur -> ur.getRole() != null && ("SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                                || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName()))))
+                                || (session.getModule() != null && "SYSTEM_ADMIN".equalsIgnoreCase(session.getModule().getName()));
+
                 Module module = session.getModule();
-                if (module != null) {
+                if (module != null && !isSystemAdmin) {
                         if (Boolean.FALSE.equals(
                                         module.getModuleStatus())) {
 
@@ -2261,7 +2266,9 @@ public class AuthServiceImpl implements AuthService {
                                         List<com.erp.auth_service.dto.response.RoleResponse> scopedRoles = user.getUserRoles().stream()
                                                         .filter(ur -> ur.getRole() != null
                                                                         && (ur.getRole().getCompany() == null
-                                                                                        || company.getId().equals(ur.getRole().getCompany().getId())))
+                                                                                        || company.getId().equals(ur.getRole().getCompany().getId())
+                                                                                        || "SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                                                                        || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())))
                                                         .map(userMapper::toRoleResponse)
                                                         .toList();
                                         userResponse.setRole(scopedRoles);

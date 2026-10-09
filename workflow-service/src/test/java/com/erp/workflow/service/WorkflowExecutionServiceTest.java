@@ -45,6 +45,12 @@ class WorkflowExecutionServiceTest {
     private WorkflowNotificationService notificationService;
     @Mock
     private WorkflowSlaService slaService;
+    @Mock
+    private WorkflowAttachmentRepository attachmentRepository;
+    @Mock
+    private WorkflowDefinitionService definitionService;
+    @Mock
+    private WorkflowFormSchemaService formSchemaService;
 
     @InjectMocks
     private WorkflowExecutionServiceImpl executionService;
@@ -236,5 +242,126 @@ class WorkflowExecutionServiceTest {
         assertEquals(WorkflowTaskStatus.REJECTED, response.getTaskStatus());
         assertEquals("REJECTED", txn.getStatus());
         verify(callbackService, times(1)).triggerCallback(eq(txn), eq("WORKFLOW_REJECTED"), eq("Discrepancy found"), eq(userId), any());
+    }
+
+    @Test
+    void testGetUiDetails_ResolvesPermittedActionsAndFormSchema() {
+        UUID txnId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID stageId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+
+        WorkflowStage stage = WorkflowStage.builder().id(stageId).stageName("Manager Review").sequenceNo(1).build();
+        WorkflowDefinition def = WorkflowDefinition.builder().id(defId).companyId(companyId).workflowCode("EXP_WF").build();
+        WorkflowTransaction txn = WorkflowTransaction.builder()
+                .id(txnId)
+                .companyId(companyId)
+                .documentType("EXPENSE")
+                .documentId(UUID.randomUUID())
+                .documentNumber("EXP-101")
+                .status("PENDING")
+                .workflowDefinition(def)
+                .currentStage(stage)
+                .initiatedBy(userId)
+                .build();
+
+        WorkflowTask task = WorkflowTask.builder()
+                .id(UUID.randomUUID())
+                .workflowTransaction(txn)
+                .workflowStage(stage)
+                .assignedUserId(userId)
+                .taskStatus(WorkflowTaskStatus.PENDING)
+                .build();
+
+        when(transactionRepository.findByIdAndCompanyIdAndIsDeletedFalse(txnId, companyId))
+                .thenReturn(Optional.of(txn));
+        when(taskRepository.findByWorkflowTransactionIdAndIsDeletedFalseOrderByAssignedAtAsc(txnId))
+                .thenReturn(List.of(task));
+        when(actionRepository.findByWorkflowTransactionIdOrderByCreatedAtAsc(txnId))
+                .thenReturn(Collections.emptyList());
+        when(commentRepository.findByWorkflowTransactionIdAndIsDeletedFalseOrderByCreatedAtAsc(txnId))
+                .thenReturn(Collections.emptyList());
+        when(attachmentRepository.findByWorkflowTransactionIdAndIsDeletedFalseOrderByCreatedAtAsc(txnId))
+                .thenReturn(Collections.emptyList());
+        when(definitionService.getDefinition(defId, companyId))
+                .thenReturn(WorkflowDefinitionResponse.builder().id(defId).stages(Collections.emptyList()).transitions(Collections.emptyList()).build());
+        when(formSchemaService.getSchemaForDocumentType("EXPENSE"))
+                .thenReturn(WorkflowFormSchema.builder().documentType("EXPENSE").groups(Collections.emptyList()).build());
+        when(formSchemaService.populateSchemaWithTransaction(any(), eq(txn), anyBoolean()))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        WorkflowUiDetailsResponse ui = executionService.getUiDetails(txnId, companyId, userId, List.of("EMPLOYEE"));
+
+        assertNotNull(ui);
+        assertNotNull(ui.getTransaction());
+        assertEquals("EXP-101", ui.getTransaction().getDocumentNumber());
+        assertNotNull(ui.getPermittedActions());
+        assertTrue(ui.getPermittedActions().isApprover());
+        assertTrue(ui.getPermittedActions().isCanApprove());
+        assertTrue(ui.getPermittedActions().isCanReject());
+        assertTrue(ui.getPermittedActions().isCanCancel());
+        assertNotNull(ui.getFormSchema());
+        assertEquals("EXPENSE", ui.getFormSchema().getDocumentType());
+    }
+
+    @Test
+    void testGetUiDetails_SystemAdmin_HasFullAdminActions() {
+        UUID txnId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        UUID initiatorId = UUID.randomUUID();
+        UUID stageId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+
+        WorkflowStage stage = WorkflowStage.builder().id(stageId).stageName("Manager Review").sequenceNo(1).build();
+        WorkflowDefinition def = WorkflowDefinition.builder().id(defId).companyId(companyId).workflowCode("EXP_WF").build();
+        WorkflowTransaction txn = WorkflowTransaction.builder()
+                .id(txnId)
+                .companyId(companyId)
+                .documentType("EXPENSE")
+                .documentId(UUID.randomUUID())
+                .documentNumber("EXP-202")
+                .status("PENDING")
+                .workflowDefinition(def)
+                .currentStage(stage)
+                .initiatedBy(initiatorId)
+                .build();
+
+        WorkflowTask task = WorkflowTask.builder()
+                .id(UUID.randomUUID())
+                .workflowTransaction(txn)
+                .workflowStage(stage)
+                .assignedUserId(UUID.randomUUID())
+                .taskStatus(WorkflowTaskStatus.PENDING)
+                .build();
+
+        when(transactionRepository.findByIdAndCompanyIdAndIsDeletedFalse(txnId, companyId))
+                .thenReturn(Optional.of(txn));
+        when(taskRepository.findByWorkflowTransactionIdAndIsDeletedFalseOrderByAssignedAtAsc(txnId))
+                .thenReturn(List.of(task));
+        when(actionRepository.findByWorkflowTransactionIdOrderByCreatedAtAsc(txnId))
+                .thenReturn(Collections.emptyList());
+        when(commentRepository.findByWorkflowTransactionIdAndIsDeletedFalseOrderByCreatedAtAsc(txnId))
+                .thenReturn(Collections.emptyList());
+        when(attachmentRepository.findByWorkflowTransactionIdAndIsDeletedFalseOrderByCreatedAtAsc(txnId))
+                .thenReturn(Collections.emptyList());
+        when(definitionService.getDefinition(defId, companyId))
+                .thenReturn(WorkflowDefinitionResponse.builder().id(defId).stages(Collections.emptyList()).transitions(Collections.emptyList()).build());
+        when(formSchemaService.getSchemaForDocumentType("EXPENSE"))
+                .thenReturn(WorkflowFormSchema.builder().documentType("EXPENSE").groups(Collections.emptyList()).build());
+        when(formSchemaService.populateSchemaWithTransaction(any(), eq(txn), anyBoolean()))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        WorkflowUiDetailsResponse ui = executionService.getUiDetails(txnId, companyId, adminId, List.of("ROLE_SYSTEM_ADMIN"));
+
+        assertNotNull(ui);
+        assertNotNull(ui.getPermittedActions());
+        assertTrue(ui.getPermittedActions().isSystemAdmin());
+        assertTrue(ui.getPermittedActions().isCanApprove());
+        assertTrue(ui.getPermittedActions().isCanReject());
+        assertTrue(ui.getPermittedActions().isCanReturn());
+        assertTrue(ui.getPermittedActions().isCanDelegate());
+        assertTrue(ui.getPermittedActions().isCanCancel());
     }
 }

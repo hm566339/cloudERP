@@ -4,6 +4,7 @@ import com.erp.workflow.exception.UnauthorizedException;
 import com.erp.workflow.security.authorization.AuthenticatedUser;
 import com.erp.workflow.security.authorization.SsoAuthorities;
 import com.erp.workflow.security.dto.sso.AccountStatus;
+import com.erp.workflow.security.dto.sso.RoleResponse;
 import com.erp.workflow.security.dto.sso.TokenVerifyResponse;
 import com.erp.workflow.security.dto.sso.UserResponse;
 import com.erp.workflow.security.sso.SsoService;
@@ -12,8 +13,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,24 +24,34 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
- * SSO-based authentication filter for workflow-service.
+ * SSO-based authentication filter for workflow-service with local JWT signature validation fallback.
  * <p>
- * Extracts access token from Authorization header or cookie and verifies it against the
- * central SSO service. Does not trust spoofable Gateway headers for external authentication.
+ * Extracts access token from Authorization header or cookies and verifies it against the
+ * central SSO service. If SSO verification is unreachable or returns invalid for trusted JWTs
+ * (e.g., ADMIN_PANEL tokens), verifies JWT signature via public RSA key / HMAC secret.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class AuthenticationFilter extends OncePerRequestFilter {
 
     private final SsoService ssoService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Value("${sso.cookie-name:access_token}")
     private String cookieName;
+
+    @Autowired
+    public AuthenticationFilter(SsoService ssoService, @Autowired(required = false) JwtTokenProvider jwtTokenProvider) {
+        this.ssoService = ssoService;
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
+
+    public AuthenticationFilter(SsoService ssoService) {
+        this(ssoService, null);
+    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
@@ -66,19 +77,27 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (accessToken != null && !accessToken.isBlank()) {
+                boolean authenticated = false;
                 try {
                     log.debug("Verifying access token with SSO for path [{}]", path);
                     TokenVerifyResponse verifyResponse = ssoService.verifyToken(accessToken);
 
                     if (isVerificationResponseUsable(verifyResponse)) {
                         authenticateUser(request, verifyResponse);
+                        authenticated = true;
                     } else {
                         log.warn("SSO verification response rejected for path [{}] (invalid/empty/inactive account).", path);
                     }
                 } catch (UnauthorizedException ex) {
-                    log.warn("Access token expired or invalid for path [{}]: {}", path, ex.getMessage());
+                    log.warn("SSO token verification failed for path [{}]: {}", path, ex.getMessage());
                 } catch (Exception ex) {
-                    log.warn("Authentication failed for path [{}]: {}", path, ex.getMessage());
+                    log.warn("SSO verification error for path [{}]: {}", path, ex.getMessage());
+                }
+
+                // Fallback to local JWT verification with public key or HMAC if SSO did not authenticate
+                if (!authenticated && jwtTokenProvider != null && jwtTokenProvider.validateToken(accessToken)) {
+                    log.debug("SSO unavailable or rejected; authenticating via verified JWT token for path [{}]", path);
+                    authenticateUserFromJwt(request, accessToken);
                 }
             } else {
                 log.debug("No access token provided for path [{}]", path);
@@ -121,9 +140,14 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         if (user.getOrganizationId() != null) {
             CurrentUserContext.setOrganizationId(user.getOrganizationId());
             CurrentUserContext.setCompanyId(user.getOrganizationId());
+        } else if (user.getCompanyId() != null) {
+            CurrentUserContext.setCompanyId(user.getCompanyId());
+            CurrentUserContext.setOrganizationId(user.getCompanyId());
         }
         if (user.getOrganizationCode() != null) {
             CurrentUserContext.setOrganizationCode(user.getOrganizationCode());
+        } else if (user.getCompanyCode() != null) {
+            CurrentUserContext.setOrganizationCode(user.getCompanyCode());
         }
         if (user.getAccessMode() != null) {
             CurrentUserContext.setAccessMode(user.getAccessMode());
@@ -146,21 +170,103 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         log.debug("Authenticated user [{}] with {} authorities", username, authorities.size());
     }
 
+    private void authenticateUserFromJwt(HttpServletRequest request, String token) {
+        UserPrincipal userPrincipal = jwtTokenProvider.parseUserFromToken(token);
+        if (userPrincipal == null) {
+            return;
+        }
+
+        UUID userId = userPrincipal.getUserId();
+        String username = userPrincipal.getUsername();
+        UUID companyId = userPrincipal.getCompanyId();
+        String companyCode = userPrincipal.getCompanyCode();
+        List<String> roles = userPrincipal.getRoles() != null ? userPrincipal.getRoles() : Collections.emptyList();
+
+        CurrentUserContext.setUserId(userId);
+        CurrentUserContext.setUsername(username);
+        if (companyId != null) {
+            CurrentUserContext.setCompanyId(companyId);
+            CurrentUserContext.setOrganizationId(companyId);
+        }
+        if (companyCode != null) {
+            CurrentUserContext.setOrganizationCode(companyCode);
+        }
+        CurrentUserContext.setAccessMode(userPrincipal.getAccessMode() != null ? userPrincipal.getAccessMode() : "FULL");
+        if (!roles.isEmpty()) {
+            CurrentUserContext.setUserRole(roles.get(0));
+        }
+
+        List<RoleResponse> roleResponses = new ArrayList<>();
+        for (String r : roles) {
+            roleResponses.add(RoleResponse.builder().name(r).status(true).build());
+        }
+
+        UserResponse userResponse = UserResponse.builder()
+                .id(userId)
+                .username(username)
+                .companyCode(companyCode)
+                .organizationId(companyId)
+                .organizationCode(companyCode)
+                .accessMode(userPrincipal.getAccessMode() != null ? userPrincipal.getAccessMode() : "FULL")
+                .accountStatus(AccountStatus.ACTIVE)
+                .role(roleResponses)
+                .features(Collections.emptyList())
+                .permissions(Collections.emptyList())
+                .build();
+
+        TokenVerifyResponse syntheticVerifyResponse = TokenVerifyResponse.builder()
+                .valid(true)
+                .user(userResponse)
+                .features(Collections.emptyList())
+                .permissions(Collections.emptyList())
+                .build();
+
+        AuthenticatedUser authenticatedUser = AuthenticatedUser.from(syntheticVerifyResponse);
+        List<GrantedAuthority> authorities = SsoAuthorities.from(syntheticVerifyResponse);
+
+        Set<GrantedAuthority> allAuthorities = new LinkedHashSet<>(authorities);
+        allAuthorities.addAll(userPrincipal.getAuthorities());
+
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(authenticatedUser, null, new ArrayList<>(allAuthorities));
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        log.debug("Authenticated user [{}] from JWT with {} authorities", username, allAuthorities.size());
+    }
+
     private String extractAccessToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             return header.substring(7).trim();
         }
-        return extractCookieValue(request, cookieName);
+        String token = extractCookieValue(request, cookieName);
+        if (token != null && !token.isBlank()) {
+            return token.trim();
+        }
+        token = extractCookieValue(request, "ACCESS_TOKEN");
+        if (token != null && !token.isBlank()) {
+            return token.trim();
+        }
+        token = extractCookieValue(request, "access_token");
+        if (token != null && !token.isBlank()) {
+            return token.trim();
+        }
+        token = extractCookieValue(request, "auth_token");
+        if (token != null && !token.isBlank()) {
+            return token.trim();
+        }
+        return null;
     }
 
     private String extractCookieValue(HttpServletRequest request, String name) {
+        if (name == null) return null;
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
             return null;
         }
         for (Cookie cookie : cookies) {
-            if (name.equals(cookie.getName())) {
+            if (name.equalsIgnoreCase(cookie.getName())) {
                 return cookie.getValue();
             }
         }

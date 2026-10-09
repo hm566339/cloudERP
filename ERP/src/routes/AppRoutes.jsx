@@ -281,6 +281,9 @@ const WorkflowManagementPage = lazy(
 const ApprovalRequestsPage = lazy(
   () => import("../features/workflows/pages/ApprovalRequestsPage"),
 );
+const DynamicWorkflowPage = lazy(
+  () => import("../features/workflows/pages/DynamicWorkflowPage"),
+);
 
 // ─── Inventory Management ─────────────────────────────────────────────────────
 // All inventory routes are registered in SharedCompanyRoutes.jsx and rendered
@@ -822,6 +825,8 @@ export default function AppRoutes() {
         >
           <Route path="/workflows" element={<WorkflowManagementPage />} />
           <Route path="/workflows/approvals" element={<ApprovalRequestsPage />} />
+          <Route path="/workflows/transactions/:transactionId" element={<DynamicWorkflowPage />} />
+          <Route path="/workflows/document/:documentType/:documentId" element={<DynamicWorkflowPage />} />
           <Route path="/workflow" element={<Navigate to="/workflows" replace />} />
           <Route path="/workflow/approvals" element={<Navigate to="/workflows/approvals" replace />} />
         </Route>
@@ -850,6 +855,8 @@ export default function AppRoutes() {
           {/* Workflow & Approvals Module (Tenant) */}
           <Route path="workflows" element={<WorkflowManagementPage />} />
           <Route path="workflows/approvals" element={<ApprovalRequestsPage />} />
+          <Route path="workflows/transactions/:transactionId" element={<DynamicWorkflowPage />} />
+          <Route path="workflows/document/:documentType/:documentId" element={<DynamicWorkflowPage />} />
           <Route path="workflow" element={<Navigate to="/workflows" replace />} />
           <Route path="workflow/approvals" element={<Navigate to="/workflows/approvals" replace />} />
 

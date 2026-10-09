@@ -32,6 +32,10 @@ public class GatewayConfig {
         this.routeProviderService = routeProviderService;
     }
 
+    public void setAuthServiceBaseUrl(String authServiceBaseUrl) {
+        this.authServiceBaseUrl = authServiceBaseUrl;
+    }
+
     @Bean
     public RouteLocator routeLocator(RouteLocatorBuilder builder) {
 
@@ -50,22 +54,42 @@ public class GatewayConfig {
         log.info("Fetched {} route candidate(s) from auth service", candidateCount);
 
         if (fetchedRoutes == null || fetchedRoutes.isEmpty()) {
-            log.warn(
-                    "No dynamic routes were available from auth service; gateway will start with zero dynamic routes.");
+            log.warn("No dynamic routes were available from auth service; gateway will start with zero dynamic routes.");
+            fetchedRoutes = List.of();
         }
 
         AtomicInteger registeredRoutes = new AtomicInteger();
         Set<String> registeredRouteIds = new HashSet<>();
 
         fetchedRoutes.stream()
-                .peek(route -> log.debug("Evaluating route payload: {}", route))
+                .peek(route -> log.debug("Evaluating route candidate: {}", route))
                 .filter(route -> {
                     if (route == null) {
                         log.warn("Skipping null route payload");
                         return false;
                     }
+                    if (route.getId() == null) {
+                        log.warn("Skipping route with null id: {}", route);
+                        return false;
+                    }
                     if (!Boolean.TRUE.equals(route.getActive())) {
                         log.warn("Skipping inactive route: id={}, active={}", route.getId(), route.getActive());
+                        return false;
+                    }
+                    if (!StringUtils.hasText(route.getApiPattern())
+                            || !StringUtils.hasText(StringUtils.trimWhitespace(route.getApiPattern()))) {
+                        log.warn("Skipping route with blank apiPattern: id={}", route.getId());
+                        return false;
+                    }
+                    if (!StringUtils.hasText(route.getServiceUrl())
+                            || !StringUtils.hasText(StringUtils.trimWhitespace(route.getServiceUrl()))) {
+                        log.warn("Skipping route with blank serviceUrl: id={}", route.getId());
+                        return false;
+                    }
+                    String serviceUrl = StringUtils.trimWhitespace(route.getServiceUrl());
+                    if (!isValidUri(serviceUrl)) {
+                        log.warn("Skipping route with invalid serviceUrl format or scheme: id={}, serviceUrl={}",
+                                route.getId(), serviceUrl);
                         return false;
                     }
                     return true;
@@ -73,49 +97,15 @@ public class GatewayConfig {
                 .sorted(Comparator.comparing(
                         route -> route.getRouteOrder() == null ? 0 : route.getRouteOrder()))
                 .forEach(route -> {
-
                     try {
-
-                        if (route.getId() == null) {
-                            // log.warn("Skipping route because id is null");
-                            return;
-                        }
-
-                        if (!StringUtils.hasText(route.getApiPattern())) {
-                            // log.warn("Skipping route {} because apiPattern is empty", route.getId());
-                            return;
-                        }
-
-                        if (!StringUtils.hasText(route.getServiceUrl())) {
-                            // log.warn("Skipping route {} because serviceUrl is empty", route.getId());
+                        String routeIdStr = route.getId().toString();
+                        if (!registeredRouteIds.add(routeIdStr)) {
+                            log.warn("Skipping duplicate route id: {}", routeIdStr);
                             return;
                         }
 
                         String pattern = StringUtils.trimWhitespace(route.getApiPattern());
                         String serviceUrl = StringUtils.trimWhitespace(route.getServiceUrl());
-
-                        if (!StringUtils.hasText(pattern)) {
-                            log.warn("Skipping route with blank normalized apiPattern: id={}", route.getId());
-                            return;
-                        }
-                        if (!StringUtils.hasText(serviceUrl)) {
-                            log.warn("Skipping route with blank normalized serviceUrl: id={}", route.getId());
-                            return;
-                        }
-                        if (!serviceUrl.startsWith("http://") && !serviceUrl.startsWith("https://")) {
-                            log.warn("Skipping route with invalid serviceUrl scheme: id={}, serviceUrl={}",
-                                    route.getId(), serviceUrl);
-                            return;
-                        }
-                        if (!isValidUri(serviceUrl)) {
-                            log.warn("Skipping route with invalid serviceUrl format: id={}, serviceUrl={}",
-                                    route.getId(), serviceUrl);
-                            return;
-                        }
-                        if (!registeredRouteIds.add(route.getId().toString())) {
-                            log.warn("Skipping duplicate route id: {}", route.getId());
-                            return;
-                        }
 
                         if (!pattern.startsWith("/")) {
                             pattern = "/" + pattern;
@@ -144,14 +134,14 @@ public class GatewayConfig {
                         final String finalServiceUrl = serviceUrl;
 
                         routes.route(
-                                route.getId().toString(),
+                                routeIdStr,
                                 r -> r
                                         .path(finalPattern)
                                         .uri(finalServiceUrl));
                         registeredRoutes.incrementAndGet();
 
                     } catch (Exception ex) {
-                        log.error("Error while registering route {}", route.getId(), ex);
+                        log.error("Error while registering route id={}: {}", route.getId(), ex.getMessage(), ex);
                     }
                 });
 
@@ -160,10 +150,15 @@ public class GatewayConfig {
     }
 
     private boolean isValidUri(String uriString) {
+        if (!StringUtils.hasText(uriString)) {
+            return false;
+        }
         try {
-            URI uri = URI.create(uriString);
-            return uri.getScheme() != null
-                    && ("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()));
+            URI uri = URI.create(uriString.trim());
+            return uri.isAbsolute()
+                    && uri.getScheme() != null
+                    && ("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))
+                    && StringUtils.hasText(uri.getHost());
         } catch (Exception ex) {
             return false;
         }

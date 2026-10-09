@@ -115,7 +115,16 @@ public final class SsoAuthorities {
     }
 
     public static boolean isSystemAdmin(Collection<? extends GrantedAuthority> authorities) {
-        return hasRole(authorities, SYSTEM_ADMIN_ROLE);
+        if (authorities == null) {
+            return false;
+        }
+        return authorities.stream().anyMatch(a -> {
+            String auth = normalize(a.getAuthority());
+            if (auth == null) return false;
+            return "ROLE_SYSTEM_ADMIN".equals(auth)
+                    || "SYSTEM_ADMIN".equals(auth)
+                    || "SCOPE_SYSTEM_ADMIN".equals(auth);
+        });
     }
 
     public static boolean hasRole(Collection<? extends GrantedAuthority> authorities, String role) {
@@ -123,8 +132,15 @@ public final class SsoAuthorities {
             return false;
         }
         String target = normalize(role);
-        return authorities.stream().anyMatch(a -> target.equals(normalize(a.getAuthority())));
+        String targetWithoutPrefix = target.startsWith("ROLE_") ? target.substring(5) : target;
+        return authorities.stream().anyMatch(a -> {
+            String auth = normalize(a.getAuthority());
+            if (auth == null) return false;
+            String authWithoutPrefix = auth.startsWith("ROLE_") ? auth.substring(5) : auth;
+            return target.equals(auth) || targetWithoutPrefix.equals(authWithoutPrefix);
+        });
     }
+
 
     /**
      * Canonical module normalization:

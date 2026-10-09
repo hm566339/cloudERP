@@ -55,6 +55,10 @@ public class FeatureGroupPermissionResolver {
         Set<String> active = new LinkedHashSet<>();
 
         if (user != null) {
+            if (user.isSystemAdmin()) {
+                active.add("WORKFLOW_ADMIN");
+                active.add("SYSTEM_ADMIN");
+            }
             if (user.getActiveFeatures() != null) {
                 for (String featureCode : user.getActiveFeatures()) {
                     if (hasText(featureCode)) {
@@ -70,6 +74,10 @@ public class FeatureGroupPermissionResolver {
         }
 
         if (authorities != null) {
+            if (SsoAuthorities.isSystemAdmin(authorities)) {
+                active.add("WORKFLOW_ADMIN");
+                active.add("SYSTEM_ADMIN");
+            }
             for (GrantedAuthority authority : authorities) {
                 if (authority == null) {
                     continue;

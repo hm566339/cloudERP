@@ -19,7 +19,13 @@ import java.util.UUID;
 public class UserResponse {
     private UUID id;
     private String companyCode;
+
+    @JsonAlias({ "companyId", "company_id" })
+    private UUID companyId;
+
+    @JsonAlias({ "organizationId", "organization_id" })
     private UUID organizationId;
+
     private String organizationCode;
     private String accessMode;
     private String empId;
@@ -35,4 +41,8 @@ public class UserResponse {
     private List<FeatureResponse> features;
 
     private List<PermissionResponse> permissions;
+
+    public UUID getEffectiveCompanyId() {
+        return companyId != null ? companyId : organizationId;
+    }
 }

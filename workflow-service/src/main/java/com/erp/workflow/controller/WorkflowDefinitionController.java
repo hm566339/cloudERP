@@ -4,8 +4,10 @@ import com.erp.workflow.common.dto.ApiRequest;
 import com.erp.workflow.common.dto.ApiResponse;
 import com.erp.workflow.dto.request.CreateWorkflowDefinitionRequest;
 import com.erp.workflow.dto.response.WorkflowDefinitionResponse;
+import com.erp.workflow.dto.response.WorkflowFormSchema;
 import com.erp.workflow.security.SecurityUtils;
 import com.erp.workflow.service.WorkflowDefinitionService;
+import com.erp.workflow.service.WorkflowFormSchemaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,6 +27,7 @@ import java.util.UUID;
 public class WorkflowDefinitionController {
 
     private final WorkflowDefinitionService definitionService;
+    private final WorkflowFormSchemaService formSchemaService;
 
     @PostMapping
     @Operation(summary = "Create a workflow definition with stages, approvers, transitions and SLA")
@@ -88,6 +91,14 @@ public class WorkflowDefinitionController {
         UUID effectiveCompanyId = resolveCompanyId(companyId);
         definitionService.deactivateDefinition(id, effectiveCompanyId);
         return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition deactivated"));
+    }
+
+    @GetMapping("/schemas")
+    @Operation(summary = "Get dynamic form schema for ERP document type")
+    public ResponseEntity<ApiResponse<WorkflowFormSchema>> getFormSchema(
+            @RequestParam(defaultValue = "GENERAL") String documentType) {
+        WorkflowFormSchema schema = formSchemaService.getSchemaForDocumentType(documentType);
+        return ResponseEntity.ok(ApiResponse.success(schema));
     }
 
     private UUID resolveCompanyId(UUID requestCompanyId) {

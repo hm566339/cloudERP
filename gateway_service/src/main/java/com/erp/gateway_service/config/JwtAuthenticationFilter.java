@@ -7,13 +7,18 @@ import java.util.Base64;
 import java.util.List;
 
 import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.core.Ordered;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.ServerWebExchange;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -22,7 +27,8 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class JwtAuthenticationFilter
-                extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {
+                extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config>
+                implements GlobalFilter, Ordered {
 
         private PublicKey publicKey;
 
@@ -58,6 +64,11 @@ public class JwtAuthenticationFilter
                 super(Config.class);
         }
 
+        @Override
+        public int getOrder() {
+                return -100;
+        }
+
         @PostConstruct
         public void loadPublicKey() throws Exception {
 
@@ -80,112 +91,102 @@ public class JwtAuthenticationFilter
         }
 
         @Override
+        public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+                return authenticateAndExecute(exchange, chain);
+        }
+
+        @Override
         public GatewayFilter apply(Config config) {
+                return (exchange, chain) -> authenticateAndExecute(exchange, chain);
+        }
 
-                return (exchange, chain) -> {
+        private Mono<Void> authenticateAndExecute(ServerWebExchange exchange, GatewayFilterChain chain) {
+                String path = exchange.getRequest()
+                                .getPath()
+                                .value();
 
-                        String path = exchange.getRequest()
-                                        .getPath()
-                                        .value();
+                // Public APIs skip JWT validation
+                boolean isPublic = PUBLIC_APIS.stream()
+                                .anyMatch(path::startsWith);
 
-                        // Public APIs skip JWT validation
-                        boolean isPublic = PUBLIC_APIS.stream()
-                                        .anyMatch(path::startsWith);
+                if (isPublic) {
+                        return chain.filter(exchange);
+                }
 
-                        if (isPublic) {
-                                return chain.filter(exchange);
+                String token = extractToken(exchange);
+
+                if (token == null) {
+                        return Mono.error(
+                                        new ResponseStatusException(
+                                                        HttpStatus.UNAUTHORIZED,
+                                                        "Missing Authorization Header or Cookie"));
+                }
+
+                try {
+                        Claims claims = Jwts.parser()
+                                        .verifyWith(publicKey)
+                                        .build()
+                                        .parseSignedClaims(token)
+                                        .getPayload();
+
+                        String userId = claims.get("userId", String.class);
+                        String companyCode = claims.get("companyCode", String.class);
+                        String companyId = claims.get("companyId", String.class);
+                        String username = claims.getSubject();
+                        Object rolesObj = claims.get("roles");
+                        String roles = rolesObj != null ? rolesObj.toString() : "";
+                        String scope = claims.get("scope", String.class);
+
+                        final String finalToken = token;
+
+                        return chain.filter(
+                                        exchange.mutate()
+                                                        .request(
+                                                                        exchange.getRequest()
+                                                                                        .mutate()
+                                                                                        .headers(headers -> headers.set(
+                                                                                                        HttpHeaders.AUTHORIZATION,
+                                                                                                        "Bearer " + finalToken))
+                                                                                        .header("X-USER-ID", userId == null ? "" : userId)
+                                                                                        .header("X-COMPANY-CODE", companyCode == null ? "" : companyCode)
+                                                                                        .header("X-COMPANY-ID", companyId == null ? "" : companyId)
+                                                                                        .header("X-USERNAME", username == null ? "" : username)
+                                                                                        .header("X-ROLES", roles == null ? "" : roles)
+                                                                                        .header("X-SCOPE", scope == null ? "" : scope)
+                                                                                        .build())
+                                                        .build());
+
+                } catch (Exception ex) {
+                        System.out.println(
+                                        "❌ JWT Verification failed: "
+                                                        + ex.getMessage());
+
+                        return Mono.error(
+                                        new ResponseStatusException(
+                                                        HttpStatus.UNAUTHORIZED,
+                                                        "Invalid Token"));
+                }
+        }
+
+        private String extractToken(ServerWebExchange exchange) {
+                String authHeader = exchange.getRequest()
+                                .getHeaders()
+                                .getFirst(HttpHeaders.AUTHORIZATION);
+
+                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                        return authHeader.substring(7);
+                }
+
+                for (String cookieName : List.of("ACCESS_TOKEN", "access_token", "auth_token")) {
+                        HttpCookie cookie = exchange.getRequest()
+                                        .getCookies()
+                                        .getFirst(cookieName);
+                        if (cookie != null && StringUtils.hasText(cookie.getValue())) {
+                                return cookie.getValue();
                         }
+                }
 
-                        String authHeader = exchange.getRequest()
-                                        .getHeaders()
-                                        .getFirst(HttpHeaders.AUTHORIZATION);
-
-                        String token = null;
-
-                        // 1. Try to get token from Authorization header
-                        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                                token = authHeader.substring(7);
-                        } 
-                        // 2. Fallback to ACCESS_TOKEN cookie
-                        else {
-                                HttpCookie cookie = exchange.getRequest()
-                                                .getCookies()
-                                                .getFirst("ACCESS_TOKEN");
-                                if (cookie != null) {
-                                        token = cookie.getValue();
-                                }
-                        }
-
-                        if (token == null) {
-                                return Mono.error(
-                                                new ResponseStatusException(
-                                                                HttpStatus.UNAUTHORIZED,
-                                                                "Missing Authorization Header or Cookie"));
-                        }
-
-                        try {
-
-                                Claims claims = Jwts.parser()
-                                                .verifyWith(publicKey)
-                                                .build()
-                                                .parseSignedClaims(token)
-                                                .getPayload();
-
-                                String userId = claims.get("userId", String.class);
-
-                                String companyCode = claims.get("companyCode", String.class);
-
-                                String username = claims.getSubject();
-
-                                System.out.println("✅ User: " + username);
-                                System.out.println("✅ Company: " + companyCode);
-
-                                final String finalToken = token;
-
-                                return chain.filter(
-                                                exchange.mutate()
-                                                                .request(
-                                                                                exchange.getRequest()
-                                                                                                .mutate()
-
-                                                                                                // Ensure Authorization header is present (added if from cookie, kept if from header)
-                                                                                                // Using headers.set to replace existing if present
-                                                                                                .headers(headers -> headers.set(
-                                                                                                                HttpHeaders.AUTHORIZATION,
-                                                                                                                "Bearer " + finalToken))
-
-                                                                                                // Custom Headers
-                                                                                                .header(
-                                                                                                                "X-USER-ID",
-                                                                                                                userId == null ? ""
-                                                                                                                                : userId)
-
-                                                                                                .header(
-                                                                                                                "X-COMPANY-CODE",
-                                                                                                                companyCode == null
-                                                                                                                                ? ""
-                                                                                                                                : companyCode)
-
-                                                                                                .header(
-                                                                                                                "X-USERNAME",
-                                                                                                                username == null ? ""
-                                                                                                                                : username)
-
-                                                                                                .build())
-                                                                .build());
-
-                        } catch (Exception ex) {
-
-                                System.out.println(
-                                                "❌ JWT Verification failed: "
-                                                                + ex.getMessage());
-
-                                return Mono.error(
-                                                new ResponseStatusException(
-                                                                HttpStatus.UNAUTHORIZED,
-                                                                "Invalid Token"));
-                        }
-                };
+                return null;
         }
 
         public static class Config {

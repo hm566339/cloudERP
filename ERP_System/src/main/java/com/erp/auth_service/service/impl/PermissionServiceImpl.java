@@ -319,8 +319,11 @@ public class PermissionServiceImpl implements PermissionService {
         if (user.getUserRoles() != null) {
             for (UserRole ur : user.getUserRoles()) {
                 if (ur.getRole() != null && ur.getRole().isStatus()) {
+                    boolean isSysAdminRole = "SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                            || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName());
                     if (companyId != null && ur.getRole().getCompany() != null
-                            && !companyId.equals(ur.getRole().getCompany().getId())) {
+                            && !companyId.equals(ur.getRole().getCompany().getId())
+                            && !isSysAdminRole) {
                         continue;
                     }
                     userRoles.add(ur.getRole().getName());
@@ -335,8 +338,12 @@ public class PermissionServiceImpl implements PermissionService {
             }
         }
 
+        boolean isSystemAdminUser = user.getUserRoles() != null && user.getUserRoles().stream()
+                .anyMatch(ur -> ur.getRole() != null && ("SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                        || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())));
+
         Set<String> entitledFeatureModules = null;
-        if (companyId != null) {
+        if (companyId != null && !isSystemAdminUser) {
             entitledFeatureModules = new HashSet<>();
             entitledFeatureModules.add("CORE");
             entitledFeatureModules.add("SSO");

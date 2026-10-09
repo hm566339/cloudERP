@@ -7,7 +7,9 @@ import com.erp.workflow.entity.*;
 import com.erp.workflow.enums.*;
 import com.erp.workflow.exception.*;
 import com.erp.workflow.repository.*;
+import com.erp.workflow.service.WorkflowDefinitionService;
 import com.erp.workflow.service.WorkflowExecutionService;
+import com.erp.workflow.service.WorkflowFormSchemaService;
 import com.erp.workflow.service.WorkflowNotificationService;
 import com.erp.workflow.service.WorkflowSlaService;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +36,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     private final WorkflowTaskRepository taskRepository;
     private final WorkflowActionRepository actionRepository;
     private final WorkflowCommentRepository commentRepository;
+    private final WorkflowAttachmentRepository attachmentRepository;
     private final WorkflowCallbackService callbackService;
     private final WorkflowNotificationService notificationService;
     private final WorkflowSlaService slaService;
+    private final WorkflowDefinitionService definitionService;
+    private final WorkflowFormSchemaService formSchemaService;
 
     @Override
     @Transactional
@@ -744,6 +749,179 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 .completedByName(task.getCompletedByName())
                 .comments(task.getComments())
                 .version(task.getVersion())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public WorkflowUiDetailsResponse getUiDetails(UUID transactionId, UUID companyId, UUID currentUserId, List<String> roles) {
+        WorkflowTransaction txn = (companyId != null)
+                ? transactionRepository.findByIdAndCompanyIdAndIsDeletedFalse(transactionId, companyId)
+                        .orElseThrow(() -> new ResourceNotFoundException("WorkflowTransaction", "id", transactionId))
+                : transactionRepository.findById(transactionId)
+                        .orElseThrow(() -> new ResourceNotFoundException("WorkflowTransaction", "id", transactionId));
+        return buildUiDetails(txn, currentUserId, roles);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public WorkflowUiDetailsResponse getUiDetailsByDocument(UUID companyId, String documentType, UUID documentId, UUID currentUserId, List<String> roles) {
+        WorkflowTransaction txn = transactionRepository.findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(
+                companyId, documentType, documentId)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkflowTransaction for document " + documentType + " (" + documentId + ")"));
+        return buildUiDetails(txn, currentUserId, roles);
+    }
+
+    private WorkflowUiDetailsResponse buildUiDetails(WorkflowTransaction txn, UUID currentUserId, List<String> roles) {
+        WorkflowTransactionResponse txnResponse = mapToTransactionResponse(txn);
+
+        WorkflowDefinitionResponse defResponse = null;
+        if (txn.getWorkflowDefinition() != null) {
+            try {
+                defResponse = definitionService.getDefinition(txn.getWorkflowDefinition().getId(), txn.getCompanyId());
+            } catch (Exception ex) {
+                log.warn("Could not fetch full definition for transaction {}: {}", txn.getId(), ex.getMessage());
+            }
+        }
+
+        // Current Stage
+        WorkflowDefinitionResponse.StageResponse currentStageResponse = null;
+        if (defResponse != null && defResponse.getStages() != null && txn.getCurrentStage() != null) {
+            currentStageResponse = defResponse.getStages().stream()
+                    .filter(s -> s.getId().equals(txn.getCurrentStage().getId()))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        // Available transitions
+        List<WorkflowDefinitionResponse.TransitionResponse> availableTransitions = Collections.emptyList();
+        if (defResponse != null && defResponse.getTransitions() != null && txn.getCurrentStage() != null) {
+            UUID currentStageId = txn.getCurrentStage().getId();
+            availableTransitions = defResponse.getTransitions().stream()
+                    .filter(t -> t.getSourceStageId() == null || currentStageId.equals(t.getSourceStageId()))
+                    .collect(Collectors.toList());
+        }
+
+        // Tasks
+        List<WorkflowTask> taskEntities = taskRepository.findByWorkflowTransactionIdAndIsDeletedFalseOrderByAssignedAtAsc(txn.getId());
+        List<WorkflowTaskResponse> taskResponses = taskEntities.stream()
+                .map(this::mapToTaskResponse)
+                .collect(Collectors.toList());
+
+        // Find current pending task for current user
+        Set<String> userRolesSet = (roles != null)
+                ? roles.stream().map(r -> r.toUpperCase().replace("ROLE_", "")).collect(Collectors.toSet())
+                : Collections.emptySet();
+
+        boolean isSystemAdmin = (roles != null && roles.stream().anyMatch(r ->
+                "SYSTEM_ADMIN".equalsIgnoreCase(r) || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(r) || "SCOPE_SYSTEM_ADMIN".equalsIgnoreCase(r)));
+
+        WorkflowTask userPendingTask = null;
+        for (WorkflowTask t : taskEntities) {
+            if (t.getTaskStatus() == WorkflowTaskStatus.PENDING) {
+                boolean matchUser = currentUserId != null && currentUserId.equals(t.getAssignedUserId());
+                boolean matchRole = t.getAssignedRoleName() != null &&
+                        userRolesSet.contains(t.getAssignedRoleName().toUpperCase().replace("ROLE_", ""));
+                if (matchUser || matchRole) {
+                    userPendingTask = t;
+                    break;
+                }
+            }
+        }
+
+        if (userPendingTask == null && isSystemAdmin) {
+            userPendingTask = taskEntities.stream()
+                    .filter(t -> t.getTaskStatus() == WorkflowTaskStatus.PENDING)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        WorkflowTaskResponse currentTaskResponse = userPendingTask != null ? mapToTaskResponse(userPendingTask) : null;
+
+        // Permitted Actions
+        boolean isInitiator = currentUserId != null && currentUserId.equals(txn.getInitiatedBy());
+        boolean isApprover = currentTaskResponse != null;
+        boolean isPending = "PENDING".equalsIgnoreCase(txn.getStatus());
+        boolean isReturned = "RETURNED".equalsIgnoreCase(txn.getStatus());
+        boolean isDraft = "DRAFT".equalsIgnoreCase(txn.getStatus());
+        boolean isTerminal = "COMPLETED".equalsIgnoreCase(txn.getStatus()) ||
+                "REJECTED".equalsIgnoreCase(txn.getStatus()) ||
+                "CANCELLED".equalsIgnoreCase(txn.getStatus());
+
+        boolean canSubmit = (isDraft || isReturned) && (isInitiator || isSystemAdmin);
+        boolean canApprove = isPending && (isApprover || isSystemAdmin);
+        boolean canReject = isPending && (isApprover || isSystemAdmin);
+        boolean canReturn = isPending && (isApprover || isSystemAdmin);
+        boolean canDelegate = isPending && (isApprover || isSystemAdmin);
+        boolean canCancel = (isPending || isReturned) && (isInitiator || isSystemAdmin);
+        boolean canAddComment = !isTerminal;
+        boolean canUploadAttachment = !isTerminal;
+
+        List<String> actions = new ArrayList<>();
+        if (canApprove) actions.add("APPROVE");
+        if (canReject) actions.add("REJECT");
+        if (canReturn) actions.add("RETURN");
+        if (canDelegate) actions.add("DELEGATE");
+        if (canCancel) actions.add("CANCEL");
+        if (canSubmit) actions.add("SUBMIT");
+        if (canAddComment) actions.add("ADD_COMMENT");
+        if (canUploadAttachment) actions.add("UPLOAD_ATTACHMENT");
+
+        WorkflowPermittedActions permittedActions = WorkflowPermittedActions.builder()
+                .canSubmit(canSubmit)
+                .canApprove(canApprove)
+                .canReject(canReject)
+                .canReturn(canReturn)
+                .canDelegate(canDelegate)
+                .canCancel(canCancel)
+                .canAddComment(canAddComment)
+                .canUploadAttachment(canUploadAttachment)
+                .isApprover(isApprover)
+                .isInitiator(isInitiator)
+                .isSystemAdmin(isSystemAdmin)
+                .availableActions(actions)
+                .build();
+
+        // Comments
+        List<WorkflowCommentResponse> comments = getComments(txn.getId());
+
+        // Attachments
+        List<WorkflowAttachment> attachmentsList = attachmentRepository
+                .findByWorkflowTransactionIdAndIsDeletedFalseOrderByCreatedAtAsc(txn.getId());
+        List<WorkflowAttachmentResponse> attachmentResponses = attachmentsList.stream()
+                .map(att -> WorkflowAttachmentResponse.builder()
+                        .id(att.getId())
+                        .workflowTransactionId(txn.getId())
+                        .workflowTaskId(att.getWorkflowTask() != null ? att.getWorkflowTask().getId() : null)
+                        .fileName(att.getFileName())
+                        .fileUrl(att.getFileUrl())
+                        .contentType(att.getContentType())
+                        .fileSize(att.getFileSize())
+                        .uploadedBy(att.getUploadedBy())
+                        .uploadedByName(att.getUploadedByName())
+                        .createdAt(att.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Audit Trail
+        List<WorkflowActionResponse> auditTrail = getAuditHistory(txn.getId());
+
+        // Form Schema
+        WorkflowFormSchema formSchema = formSchemaService.getSchemaForDocumentType(txn.getDocumentType());
+        formSchema = formSchemaService.populateSchemaWithTransaction(formSchema, txn, isApprover || !canSubmit);
+
+        return WorkflowUiDetailsResponse.builder()
+                .transaction(txnResponse)
+                .definition(defResponse)
+                .currentStage(currentStageResponse)
+                .availableTransitions(availableTransitions)
+                .permittedActions(permittedActions)
+                .tasks(taskResponses)
+                .currentTask(currentTaskResponse)
+                .comments(comments)
+                .attachments(attachmentResponses)
+                .auditTrail(auditTrail)
+                .formSchema(formSchema)
                 .build();
     }
 }

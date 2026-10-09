@@ -80,15 +80,24 @@ public final class SecurityUtils {
         return getCurrentUser().map(UserPrincipal::getRoles).orElse(Collections.emptyList());
     }
 
+    public static boolean isSystemAdmin() {
+        return CurrentUserContext.isSystemAdmin() || hasRole("SYSTEM_ADMIN");
+    }
+
     public static boolean hasRole(String role) {
         if (role == null) {
             return false;
         }
+        String cleanRole = role.startsWith("ROLE_") ? role.substring(5) : role;
         Optional<AuthenticatedUser> authUser = getAuthenticatedUser();
         if (authUser.isPresent()) {
-            return authUser.get().hasActiveRole(role);
+            return authUser.get().hasActiveRole(cleanRole);
         }
         List<String> roles = getCurrentRoles();
-        return roles.contains(role) || roles.contains("ROLE_" + role);
+        return roles.stream().anyMatch(r -> {
+            String cr = r.startsWith("ROLE_") ? r.substring(5) : r;
+            return cleanRole.equalsIgnoreCase(cr);
+        });
     }
 }
+
