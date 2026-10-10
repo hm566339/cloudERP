@@ -76,12 +76,16 @@ export default function CompanySelect() {
     // no access token was issued yet. We must call POST /api/sso/auth/select-company to obtain
     // a real access token tied to the chosen company, then bootstrap the session.
     const pendingOrgCode = sessionStorage.getItem('pending_org_code');
+    const pendingOrgUser = sessionStorage.getItem('pending_org_user');
+    const pendingOrgPass = sessionStorage.getItem('pending_org_pass');
     if (pendingOrgCode) {
       setIsSelecting(true);
       try {
         const selectPayload = {
           organizationCode: pendingOrgCode,
           companyId: company.id,
+          ...(pendingOrgUser ? { username: pendingOrgUser, email: pendingOrgUser.includes('@') ? pendingOrgUser : undefined } : {}),
+          ...(pendingOrgPass ? { password: pendingOrgPass } : {}),
         };
 
         const selectResult = await selectCompany(selectPayload).unwrap();
@@ -112,8 +116,10 @@ export default function CompanySelect() {
           }
         }
 
-        // Clear the pending org code — selection is complete
+        // Clear the pending org code & credentials — selection is complete
         sessionStorage.removeItem('pending_org_code');
+        sessionStorage.removeItem('pending_org_user');
+        sessionStorage.removeItem('pending_org_pass');
 
         // Handle redirectUrl from select-company response (same pattern as Login.jsx)
         if (selectData?.redirectUrl) {
@@ -173,6 +179,8 @@ export default function CompanySelect() {
         const msg = err?.data?.message || err?.message || 'Company selection failed. Please log in again.';
         dispatch(addAlert({ type: 'error', message: msg }));
         sessionStorage.removeItem('pending_org_code');
+        sessionStorage.removeItem('pending_org_user');
+        sessionStorage.removeItem('pending_org_pass');
         navigate('/login', { replace: true });
         return;
       } finally {

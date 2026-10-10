@@ -152,11 +152,13 @@ export default function Login() {
         if (loginData.companies && loginData.companies.length > 0) {
           dispatch(setCompanyList(loginData.companies));
         }
-        // Save org code for CompanySelect to use when calling POST /api/sso/auth/select-company
+        // Save org code and credentials for CompanySelect to use when calling POST /api/sso/auth/select-company
         const orgCode = loginData.organization?.code || loginData.organization?.id || organizationCode;
         if (orgCode) {
           sessionStorage.setItem('pending_org_code', String(orgCode).toLowerCase());
         }
+        sessionStorage.setItem('pending_org_user', username.trim());
+        sessionStorage.setItem('pending_org_pass', password);
         navigate('/company-select', { replace: true });
         return;
       }

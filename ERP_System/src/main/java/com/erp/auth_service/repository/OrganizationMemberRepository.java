@@ -25,7 +25,7 @@ public interface OrganizationMemberRepository extends JpaRepository<Organization
             select m from OrganizationMember m
             join fetch m.user u
             join fetch m.organization o
-            where lower(u.email) = lower(:email)
+            where (lower(u.email) = lower(:email) or lower(u.username) = lower(:email))
               and o.id = :organizationId
               and m.membershipStatus = :status
               and m.deletedAt is null
