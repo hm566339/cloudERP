@@ -87,8 +87,15 @@ export default function Login() {
   // Redirect already-authenticated users
   useEffect(() => {
     if (isAuthenticated && currentUser) {
+      const isOwner =
+        currentUser.role === 'owner' ||
+        currentUser.membership?.memberType?.toUpperCase() === 'OWNER' ||
+        currentUser.memberType?.toUpperCase() === 'OWNER';
+
       if (currentUser.role === 'super_admin') {
         navigate('/super-admin/dashboard', { replace: true });
+      } else if (isOwner) {
+        navigate('/owner/dashboard', { replace: true });
       } else {
         navigate('/workspace', { replace: true });
       }
@@ -290,8 +297,15 @@ export default function Login() {
         }));
       }
 
+      const isOwnerRole =
+        userRole === 'owner' ||
+        ssoData?.membership?.memberType?.toUpperCase() === 'OWNER' ||
+        mergedUser?.membership?.memberType?.toUpperCase() === 'OWNER';
+
       if (userRole === 'super_admin') {
         navigate('/super-admin/dashboard', { replace: true });
+      } else if (isOwnerRole) {
+        navigate('/owner/dashboard', { replace: true });
       } else {
         navigate('/workspace', { replace: true });
       }
@@ -392,15 +406,15 @@ export default function Login() {
           {isOrgMode && (
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-100 mb-1">
               <Building2 size={12} className="text-emerald-600" />
-              <span>Organization Workspace</span>
+              <span>Organization Owner Portal</span>
             </div>
           )}
           <h2 className="text-3xl font-display font-black text-zinc-900 tracking-tight">
-            Welcome Back
+            {isOrgMode ? 'Owner Sign In' : 'Welcome Back'}
           </h2>
           <p className="text-sm text-zinc-500 font-medium">
             {isOrgMode ? (
-              <>Sign in to <span className="text-zinc-900 font-bold capitalize">{orgDisplayName}</span></>
+              <>Sign in to organization <span className="text-zinc-900 font-bold capitalize">{orgDisplayName}</span> control center</>
             ) : (
               `Please enter your details to sign in to ${moduleName}.`
             )}

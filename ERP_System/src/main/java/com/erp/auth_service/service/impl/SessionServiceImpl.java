@@ -167,8 +167,8 @@ public class SessionServiceImpl implements SessionService {
                 return;
             }
 
-            if (authcode.getCompany() == null) {
-                log.warn("Company missing in authorization code");
+            if (authcode.getCompany() == null && authcode.getOrganization() == null) {
+                log.warn("Company and organization missing in authorization code");
                 response.sendRedirect("/login?error=company_not_found");
                 return;
             }

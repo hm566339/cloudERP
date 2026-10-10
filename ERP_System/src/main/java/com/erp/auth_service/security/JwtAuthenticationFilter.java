@@ -8,6 +8,7 @@ import com.erp.auth_service.repository.platform.PlatformAdminRepository;
 import com.erp.auth_service.repository.platform.SupportAccessSessionRepository;
 import com.erp.auth_service.utility.AccessMode;
 import com.erp.auth_service.utility.AccountStatus;
+import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -265,6 +266,87 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            if (session.getAccessTokenValidTill() == null
+                    || session.getAccessTokenValidTill().isBefore(LocalDateTime.now())) {
+                rejectUnauthorized(response, "Session expired. Please login again.");
+                return;
+            }
+
+            boolean isOrgOwner = "ORGANIZATION_OWNER".equals(principalType);
+
+            // ==================== ORGANIZATION OWNER SESSION ====================
+            if (isOrgOwner) {
+                if (session.getOrganization() == null) {
+                    rejectUnauthorized(response, "Invalid session: Organization context missing");
+                    return;
+                }
+
+                var memberOpt = organizationMemberRepository
+                        .findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                session.getOrganization().getId(), session.getUser().getId(), MembershipStatus.ACTIVE);
+                if (memberOpt.isEmpty() || memberOpt.get().getMemberType() != MemberType.OWNER) {
+                    rejectForbidden(response, "Access denied: Verified organization owner privileges required");
+                    return;
+                }
+
+                if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
+                    rejectForbidden(response, "Organization access is blocked");
+                    return;
+                }
+
+                // Protect company-scoped business APIs from un-scoped owner sessions
+                if (isCompanyScopedPath(path)) {
+                    rejectForbidden(response, "Company-scoped session required for company business APIs");
+                    return;
+                }
+
+                String username = jwtService.extractUsername(token);
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    CustomUserDetails userDetails = new CustomUserDetails(session.getUser());
+                    if (jwtService.isTokenValid(token, userDetails.getUsername())) {
+                        TenantContext.set(session.getOrganization().getOrganizationCode());
+                        RequestContext.set(
+                                session.getUser().getId(),
+                                session.getOrganization().getId(),
+                                null,
+                                session.getModule() != null ? session.getModule().getClientId() : null,
+                                session.getOrganization().getAccessMode() != null ? session.getOrganization().getAccessMode() : AccessMode.FULL);
+
+                        if (session.getOrganization().getAccessMode() == AccessMode.READ_ONLY
+                                && isBusinessWrite(request)) {
+                            rejectForbidden(response, "Organization is read-only");
+                            return;
+                        }
+
+                        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                        authorities.add(new SimpleGrantedAuthority("ROLE_OWNER"));
+                        authorities.add(new SimpleGrantedAuthority("OWNER"));
+                        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+                        for (String r : jwtService.extractRoles(token)) {
+                            if (!"OWNER".equalsIgnoreCase(r) && !"ROLE_OWNER".equalsIgnoreCase(r)) {
+                                authorities.add(new SimpleGrantedAuthority(r));
+                            }
+                        }
+
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                authorities);
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
+                }
+
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // ==================== COMPANY EMPLOYEE SESSION ====================
+            if (session.getCompany() == null) {
+                rejectUnauthorized(response, "Invalid token. Company information missing.");
+                return;
+            }
+
             if (session.getOrganization() != null) {
                 var member = organizationMemberRepository
                         .findByOrganization_IdAndUser_IdAndMembershipStatus(
@@ -279,12 +361,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     rejectForbidden(response, "Organization access is blocked");
                     return;
                 }
-            }
-
-            if (session.getAccessTokenValidTill() == null
-                    || session.getAccessTokenValidTill().isBefore(LocalDateTime.now())) {
-                rejectUnauthorized(response, "Session expired. Please login again.");
-                return;
             }
 
             String username = jwtService.extractUsername(token);
@@ -326,8 +402,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 AccessMode.FULL);
                     }
 
+                    // Employees do not inherit organization-owner permissions
                     List<SimpleGrantedAuthority> authorities = new ArrayList<>(jwtService.extractRoles(token)
                             .stream()
+                            .filter(r -> !"OWNER".equalsIgnoreCase(r) && !"ROLE_OWNER".equalsIgnoreCase(r))
                             .map(SimpleGrantedAuthority::new)
                             .toList());
                     if (isSystemAdmin && authorities.stream().noneMatch(a -> "SYSTEM_ADMIN".equals(a.getAuthority()))) {
@@ -372,6 +450,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType("application/json");
         response.getWriter().write("{\"message\":\"" + message + "\"}");
+    }
+
+    private boolean isCompanyScopedPath(String path) {
+        if (path == null) {
+            return false;
+        }
+        return path.startsWith("/api/account/")
+                || path.startsWith("/api/accounts/")
+                || path.startsWith("/api/inventory/")
+                || path.startsWith("/api/crm/")
+                || path.startsWith("/api/purchase/")
+                || path.startsWith("/api/purchases/")
+                || path.startsWith("/api/workflow/")
+                || path.startsWith("/api/workflows/")
+                || path.startsWith("/api/manufacturing/")
+                || path.startsWith("/api/hr/");
     }
 
     private boolean isBusinessWrite(HttpServletRequest request) {

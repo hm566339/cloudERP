@@ -174,8 +174,20 @@ export default function AuthCallback() {
           if (path.startsWith('/erp/')) {
             path = path.replace(/^\/erp/, '');
           }
-          if (!path || path === '/' || path === '/login' || path === '/accounts/dashboard' || path === '/account/dashboard') {
-            path = isAdminContext ? '/super-admin/dashboard' : '/workspace';
+          const isOwnerUser =
+            userRole === 'owner' ||
+            meData?.membership?.memberType?.toUpperCase() === 'OWNER' ||
+            mergedUser?.membership?.memberType?.toUpperCase() === 'OWNER' ||
+            decodedToken?.principalType === 'ORGANIZATION_OWNER';
+
+          if (!path || path === '/' || path === '/login' || path === '/accounts/dashboard' || path === '/account/dashboard' || path === '/workspace') {
+            if (isAdminContext) {
+              path = '/super-admin/dashboard';
+            } else if (isOwnerUser) {
+              path = '/owner/dashboard';
+            } else {
+              path = '/workspace';
+            }
           }
           navigate(path, { replace: true });
         }

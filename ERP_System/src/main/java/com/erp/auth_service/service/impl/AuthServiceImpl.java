@@ -17,6 +17,7 @@ import com.erp.auth_service.service.OrganizationResolverService;
 import com.erp.auth_service.service.PermissionService;
 import com.erp.auth_service.utility.AccountStatus;
 import com.erp.auth_service.utility.AccessMode;
+import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
 import com.erp.auth_service.utility.Status;
 import com.erp.auth_service.utility.TokenType;
@@ -538,13 +539,23 @@ public class AuthServiceImpl implements AuthService {
                         throw new BadCredentialsException("Invalid credentials");
                 }
 
+                boolean isOwner = (member.getMemberType() == MemberType.OWNER);
+
+                Subscription subscription = subscriptionRepository
+                                .findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId())
+                                .orElseThrow(() -> {
+                                        log.warn("Organization login failed - subscription unavailable | orgId={}", organization.getId());
+                                        return new InvalidOperationException(
+                                                        "Organization subscription unavailable");
+                                });
+
+                if (subscription.getAccessMode() == AccessMode.BLOCKED) {
+                        log.warn("Organization login rejected - subscription access blocked | orgId={}", organization.getId());
+                        throw new InvalidOperationException("Organization access is blocked");
+                }
+
                 List<MemberCompanyAccess> access = memberCompanyAccessRepository.findActiveForMember(
                                 member.getId(), organization.getId());
-                if (access.isEmpty()) {
-                        log.warn("Organization login failed - no active company access | orgMemberId={} | userId={}",
-                                        member.getId(), user.getId());
-                        throw new BadCredentialsException("Invalid credentials");
-                }
 
                 List<LoginResponse.CompanyChoice> companies = access.stream()
                                 .map(item -> LoginResponse.CompanyChoice.builder()
@@ -553,6 +564,46 @@ public class AuthServiceImpl implements AuthService {
                                                 .code(item.getCompany().getCompanyCode())
                                                 .build())
                                 .toList();
+
+                // ==================== ORGANIZATION OWNER FLOW ====================
+                if (isOwner) {
+                        log.info("Organization owner login authenticated | orgCode={} | userId={}",
+                                        organization.getOrganizationCode(), user.getId());
+
+                        String codeValue = UUID.randomUUID().toString();
+                        AuthorizationCode code = AuthorizationCode.builder()
+                                        .code(codeValue)
+                                        .used(false)
+                                        .expiresAt(LocalDateTime.now().plusMinutes(5))
+                                        .user(user)
+                                        .company(null)
+                                        .organization(organization)
+                                        .module(null)
+                                        .gotoUrl("/erp/owner/dashboard")
+                                        .build();
+                        authorizationCodeRepository.save(code);
+
+                        LoginResponse.LoginResponseBuilder respBuilder = LoginResponse.builder()
+                                        .requiresCompanySelection(false)
+                                        .organization(LoginResponse.OrganizationContext.builder()
+                                                        .id(organization.getId())
+                                                        .name(organization.getDisplayName())
+                                                        .code(organization.getOrganizationCode())
+                                                        .build())
+                                        .companies(companies)
+                                        .redirectUrl("/erp/owner/dashboard");
+
+                        tryCreateOwnerSessionAndTokens(user, organization, ip, userAgent, respBuilder);
+
+                        return respBuilder.build();
+                }
+
+                // ==================== COMPANY EMPLOYEE FLOW ====================
+                if (access.isEmpty()) {
+                        log.warn("Organization login failed - no active company access | orgMemberId={} | userId={}",
+                                        member.getId(), user.getId());
+                        throw new BadCredentialsException("Invalid credentials");
+                }
 
                 if (request.getCompanyId() == null && companies.size() > 1) {
                         log.info("Organization login requires company selection | orgCode={} | userId={} | companyCount={}",
@@ -576,19 +627,6 @@ public class AuthServiceImpl implements AuthService {
                                                         member.getId(), companyId);
                                         return new BadCredentialsException("Invalid company access");
                                 });
-
-                Subscription subscription = subscriptionRepository
-                                .findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId())
-                                .orElseThrow(() -> {
-                                        log.warn("Organization login failed - subscription unavailable | orgId={}", organization.getId());
-                                        return new InvalidOperationException(
-                                                        "Organization subscription unavailable");
-                                });
-
-                if (subscription.getAccessMode() == AccessMode.BLOCKED) {
-                        log.warn("Organization login rejected - subscription access blocked | orgId={}", organization.getId());
-                        throw new InvalidOperationException("Organization access is blocked");
-                }
 
                 Optional<Module> moduleOpt = resolveOrganizationModule(request, company);
                 Module module = moduleOpt.orElse(null);
@@ -650,6 +688,73 @@ public class AuthServiceImpl implements AuthService {
                 tryCreateSessionAndTokens(user, company, organization, module, ip, userAgent, respBuilder);
 
                 return respBuilder.build();
+        }
+
+        private void tryCreateOwnerSessionAndTokens(
+                        User user,
+                        Organization organization,
+                        String ip,
+                        String userAgent,
+                        LoginResponse.LoginResponseBuilder respBuilder) {
+                if (jwtService == null || sessionRepository == null) {
+                        return;
+                }
+                try {
+                        Map<String, Object> claims = buildOwnerClaims(user, organization);
+                        String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
+                        String refreshToken = jwtService.generateRefreshToken(user.getUsername(), organization.getOrganizationCode());
+
+                        if (org.springframework.util.StringUtils.hasText(accessToken)) {
+                                Session session = Session.builder()
+                                                .user(user)
+                                                .company(null)
+                                                .organization(organization)
+                                                .module(null)
+                                                .accessToken(accessToken)
+                                                .accessTokenValidTill(LocalDateTime.now().plusMinutes(ACCESS_TOKEN_MINUTES))
+                                                .refreshTokenValidTill(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
+                                                .ipAddress(ip)
+                                                .userAgent(userAgent)
+                                                .build();
+
+                                sessionRepository.save(session);
+
+                                if (refreshTokenRecordRepository != null && org.springframework.util.StringUtils.hasText(refreshToken)) {
+                                        refreshTokenRecordRepository.save(RefreshTokenRecord.builder()
+                                                        .session(session)
+                                                        .tokenHash(hashRefreshToken(refreshToken))
+                                                        .familyId(UUID.randomUUID())
+                                                        .issuedAt(LocalDateTime.now())
+                                                        .expiresAt(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
+                                                        .build());
+                                }
+
+                                respBuilder.accessToken(accessToken).refreshToken(refreshToken);
+                                respBuilder.user(UserDto.builder()
+                                                .id(user.getId())
+                                                .username(user.getUsername())
+                                                .email(user.getEmail())
+                                                .fullName(user.getFullName())
+                                                .accountStatus(user.getAccountStatus() != null ? user.getAccountStatus().name() : null)
+                                                .build());
+                        }
+                } catch (Exception ex) {
+                        log.debug("Direct owner session creation on login bypassed: {}", ex.getMessage());
+                }
+        }
+
+        private Map<String, Object> buildOwnerClaims(User user, Organization organization) {
+                Map<String, Object> claims = new HashMap<>();
+                claims.put("userId", user.getId().toString());
+                claims.put("username", user.getUsername());
+                claims.put("principalType", "ORGANIZATION_OWNER");
+                claims.put("scope", "ORGANIZATION_OWNER");
+                claims.put("organizationId", organization.getId().toString());
+                claims.put("organizationCode", organization.getOrganizationCode());
+                claims.put("organizationName", organization.getDisplayName());
+                claims.put("roles", List.of("OWNER", "ROLE_OWNER"));
+                claims.put("moduleName", "ERP_WORKSPACE");
+                return claims;
         }
 
         private void tryCreateSessionAndTokens(
@@ -1491,7 +1596,7 @@ public class AuthServiceImpl implements AuthService {
                                 "Authorization code found | code={} | userId={} | companyId={} | moduleId={} | expiresAt={} | used={}",
                                 maskCode(code.getCode()),
                                 code.getUser().getId(),
-                                code.getCompany().getId(),
+                                (code.getCompany() != null ? code.getCompany().getId() : "NONE"),
                                 (code.getModule() != null ? code.getModule().getId() : "NONE"),
                                 code.getExpiresAt(),
                                 code.getUsed());
@@ -1576,13 +1681,23 @@ public class AuthServiceImpl implements AuthService {
                                                 return new BadCredentialsException(
                                                                 "Organization membership revoked");
                                         });
-                        memberCompanyAccessRepository.findActiveCompany(
-                                        member.getId(), code.getOrganization().getId(), company.getId())
-                                        .orElseThrow(() -> {
-                                                log.warn("Token exchange failed | reason=COMPANY_ACCESS_REVOKED | orgId={} | companyId={}",
-                                                                code.getOrganization().getId(), company.getId());
-                                                return new BadCredentialsException("Company access revoked");
-                                        });
+
+                        boolean isOwnerMember = (member.getMemberType() == MemberType.OWNER);
+
+                        if (company != null) {
+                                memberCompanyAccessRepository.findActiveCompany(
+                                                member.getId(), code.getOrganization().getId(), company.getId())
+                                                .orElseThrow(() -> {
+                                                        log.warn("Token exchange failed | reason=COMPANY_ACCESS_REVOKED | orgId={} | companyId={}",
+                                                                        code.getOrganization().getId(), company.getId());
+                                                        return new BadCredentialsException("Company access revoked");
+                                                });
+                        } else if (!isOwnerMember) {
+                                log.warn("Token exchange failed - company missing for non-owner member | orgId={} | userId={}",
+                                                code.getOrganization().getId(), user.getId());
+                                throw new BadCredentialsException("Company access required");
+                        }
+
                         if (module != null) {
                                 if (!organizationModuleRepository.existsByOrganization_IdAndModule_IdAndEnabledTrue(
                                                 code.getOrganization().getId(), module.getId())) {
@@ -1602,9 +1717,9 @@ public class AuthServiceImpl implements AuthService {
                                 user.getId(),
                                 user.getUsername(),
                                 user.getEmail(),
-                                company.getId());
+                                (company != null ? company.getId() : "NONE"));
 
-                if (module != null) {
+                if (module != null && company != null) {
                         companyModuleRepository
                                         .findByCompany_IdAndModule_IdAndActiveTrue(
                                                         company.getId(),
@@ -1640,27 +1755,35 @@ public class AuthServiceImpl implements AuthService {
                                 user.getId(),
                                 effectiveClientId);
 
-                Map<String, Object> claims = buildClaims(
-                                user,
-                                company,
-                                module,
-                                effectiveClientId);
+                Map<String, Object> claims;
+                String refreshToken;
+                if (company == null) {
+                        claims = buildOwnerClaims(user, code.getOrganization());
+                        refreshToken = jwtService.generateRefreshToken(
+                                        user.getUsername(),
+                                        code.getOrganization().getOrganizationCode());
+                } else {
+                        claims = buildClaims(
+                                        user,
+                                        company,
+                                        module,
+                                        effectiveClientId);
+                        refreshToken = jwtService.generateRefreshToken(
+                                        user.getUsername(),
+                                        company.getCompanyCode());
+                }
 
                 log.info(
                                 "JWT claims prepared | userId={} | username={} | companyId={} | moduleId={} | clientId={}",
                                 user.getId(),
                                 user.getUsername(),
-                                company.getId(),
+                                (company != null ? company.getId() : "NONE"),
                                 (module != null ? module.getId() : "NONE"),
                                 effectiveClientId);
 
                 String accessToken = jwtService.generateAccessToken(
                                 user.getUsername(),
                                 claims);
-
-                String refreshToken = jwtService.generateRefreshToken(
-                                user.getUsername(),
-                                company.getCompanyCode());
 
                 log.info(
                                 "Tokens generated | userId={} | username={} | accessTokenExpiresInMinutes={} | refreshTokenExpiresInDays={}",
@@ -1697,7 +1820,7 @@ public class AuthServiceImpl implements AuthService {
                                 "Session created from token exchange | sessionId={} | userId={} | companyId={} | moduleId={} | clientId={}",
                                 session.getId(),
                                 user.getId(),
-                                company.getId(),
+                                (company != null ? company.getId() : "NONE"),
                                 (module != null ? module.getId() : "NONE"),
                                 effectiveClientId);
 
@@ -2070,13 +2193,13 @@ public class AuthServiceImpl implements AuthService {
 
                 claims.put(
                                 "companyCode",
-                                company.getCompanyCode());
+                                company != null ? company.getCompanyCode() : null);
 
                 claims.put(
                                 "companyName",
-                                company.getCompanyName());
+                                company != null ? company.getCompanyName() : null);
 
-                if (company.getOrganization() != null) {
+                if (company != null && company.getOrganization() != null) {
                         claims.put("organizationId", company.getOrganization().getId().toString());
                         claims.put("organizationCode", company.getOrganization().getOrganizationCode());
                 }

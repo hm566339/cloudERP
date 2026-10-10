@@ -871,7 +871,9 @@ public class UserServiceImpl implements UserService {
             currentCompany = session.getCompany();
         }
 
-        if (currentCompany == null && !accessibleCompanies.isEmpty() && companyRepository != null) {
+        boolean isOwnerMember = (membershipCtx != null && membershipCtx.getMemberType() == MemberType.OWNER);
+
+        if (currentCompany == null && !isOwnerMember && !accessibleCompanies.isEmpty() && companyRepository != null) {
             currentCompany = companyRepository.findById(accessibleCompanies.get(0).getId()).orElse(null);
         }
 
@@ -1109,11 +1111,23 @@ public class UserServiceImpl implements UserService {
                                             .build()));
                 }
             }
+        } else if (membershipCtx != null && membershipCtx.getMemberType() == MemberType.OWNER) {
+            // Owner organization session: gets entitled modules from active subscription plan
+            for (Module m : planActiveModules) {
+                authorizedModules.add(
+                        SsoMeResponse.ModuleContext.builder()
+                                .id(m.getId())
+                                .name(m.getName())
+                                .code(m.getName().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "_"))
+                                .host(m.getHost())
+                                .active(true)
+                                .build());
+            }
         }
 
         // ── Roles ─────────────────────────────────────────────────────────
         List<com.erp.auth_service.dto.response.RoleResponse> roles = user.getUserRoles() == null
-                ? java.util.Collections.<com.erp.auth_service.dto.response.RoleResponse>emptyList()
+                ? new java.util.ArrayList<>()
                 : user.getUserRoles().stream()
                         .filter(ur -> ur.getRole() != null)
                         .filter(ur -> effectiveCompanyId == null || ur.getRole().getCompany() == null
@@ -1124,6 +1138,16 @@ public class UserServiceImpl implements UserService {
                                 .status(ur.getRole().isStatus())
                                 .build())
                         .collect(java.util.stream.Collectors.toList());
+
+        if (membershipCtx != null && membershipCtx.getMemberType() == MemberType.OWNER) {
+            boolean hasOwnerRole = roles.stream().anyMatch(r -> "OWNER".equalsIgnoreCase(r.getName()));
+            if (!hasOwnerRole) {
+                roles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
+                        .name("OWNER")
+                        .status(true)
+                        .build());
+            }
+        }
 
         // ── Permissions / Features ─────────────────────────────────────────
         com.erp.auth_service.dto.response.EffectivePermissionsResponse effective = permissionService
