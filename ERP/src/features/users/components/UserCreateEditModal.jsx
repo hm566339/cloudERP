@@ -224,8 +224,8 @@ export default function UserCreateEditModal({
                 value={empId}
                 onChange={(e) => setEmpId(e.target.value)}
                 className="input-field"
-                minLength={3}
-                maxLength={20}
+                minLength={1}
+                maxLength={100}
               />
               {validationErrors.empId && <p className="text-xs text-rose-600 mt-1">{validationErrors.empId}</p>}
             </div>
@@ -237,10 +237,8 @@ export default function UserCreateEditModal({
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="input-field"
-                minLength={4}
-                maxLength={20}
-                pattern="^[a-zA-Z0-9._]+$"
-                title="Letters, numbers, dots and underscores only"
+                minLength={3}
+                maxLength={100}
               />
               {validationErrors.username && <p className="text-xs text-rose-600 mt-1">{validationErrors.username}</p>}
             </div>
@@ -253,6 +251,7 @@ export default function UserCreateEditModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input-field"
+              maxLength={255}
             />
             {validationErrors.email && <p className="text-xs text-rose-600 mt-1">{validationErrors.email}</p>}
           </div>
