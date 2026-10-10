@@ -22,16 +22,23 @@ import {
   CheckCircle2,
   HelpCircle,
   ShieldAlert,
+  ShieldCheck,
+  Lock,
   ArrowRight
 } from 'lucide-react';
 import {
   getSubscriptionPlans,
   createSubscriptionPlan,
   updateSubscriptionPlan,
-  toggleSubscriptionPlanStatus
+  toggleSubscriptionPlanStatus,
+  getOrganizationSubscription,
+  getCompanySubscription
 } from '../../api/sso/subscriptionPlan.api';
 import { getModules } from '../../api/sso/module';
 import { useDispatch } from 'react-redux';
+import { useAppSelector } from '../../app/hooks';
+import { selectAuthContext } from '../../features/auth/authSlice';
+import { canWrite, canRead } from '../../utils/moduleNormalization';
 import { addAlert } from '../../features/notifications/notificationSlice';
 import { getSafeErrorMessage } from '../../utils/apiErrorHelper';
 import {
@@ -40,6 +47,7 @@ import {
   validatePlanFormData,
   preparePlanPayload
 } from '../../utils/subscriptionPlanHelper';
+import SubscriptionCheckoutModal from '../../components/subscription/SubscriptionCheckoutModal';
 
 /**
  * Standard fallback module icons/colors mapping.
@@ -88,8 +96,51 @@ function formatPlanPrice(plan) {
   return `${curr}${p.toLocaleString('en-IN')}`;
 }
 
+import { isCurrentPlan } from '../../utils/subscriptionCheckoutHelper.js';
+export { isCurrentPlan };
+
 export default function SubscriptionPlansSettings() {
   const dispatch = useDispatch();
+  const authContext = useAppSelector(selectAuthContext);
+  const { user, organization, currentCompany, membership, subscription: reduxSubscription } = authContext;
+
+  // Active Company / Organization Subscription state
+  const [activeSubData, setActiveSubData] = useState(reduxSubscription);
+  const [isSubLoading, setIsSubLoading] = useState(false);
+
+  // Selected plan for checkout / payment modal
+  const [checkoutPlan, setCheckoutPlan] = useState(null);
+
+  // ── Role & Permission Resolution ──
+  const isSuperAdmin =
+    user?.role === 'super_admin' ||
+    (Array.isArray(user?.roles) &&
+      user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toLowerCase() === 'super_admin'));
+
+  const isOwner =
+    membership?.memberType === 'OWNER' ||
+    user?.role === 'owner' ||
+    user?.membership?.memberType === 'OWNER' ||
+    (Array.isArray(user?.roles) &&
+      user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
+    (Array.isArray(authContext?.roles) &&
+      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER'));
+
+  // 1. Catalog Management Permissions (Plan Creation, Editing, Toggling Status)
+  // SuperAdmin or explicit WRITE permission on SUBSCRIPTION_PLAN
+  const canManageCatalog = isSuperAdmin || canWrite(authContext, 'SUBSCRIPTION_PLAN');
+
+  // 2. Company Subscription Upgrade Permissions
+  // Owner, Admin, or user with write permission on SUBSCRIPTION, COMPANY_SUBSCRIPTION, or BILLING
+  const canUpgradeSubscription =
+    isSuperAdmin ||
+    isOwner ||
+    canWrite(authContext, 'COMPANY_SUBSCRIPTION') ||
+    canWrite(authContext, 'SUBSCRIPTION') ||
+    canWrite(authContext, 'BILLING');
+
+  // Fallback to Redux store if async fetch not yet finished
+  const effectiveActiveSub = activeSubData || reduxSubscription;
 
   // Page state
   const [plans, setPlans] = useState([]);
@@ -130,6 +181,43 @@ export default function SubscriptionPlansSettings() {
   };
 
   const [formData, setFormData] = useState(initialFormState);
+
+  // Fetch active company / organization subscription
+  const fetchActiveSubscription = useCallback(async () => {
+    const orgId = organization?.id || user?.organizationId;
+    const compId = currentCompany?.id || user?.companyId;
+    if (!orgId && !compId) return;
+
+    setIsSubLoading(true);
+    try {
+      let sub = null;
+      if (orgId) {
+        try {
+          sub = await getOrganizationSubscription(orgId);
+        } catch {
+          // ignore fallback to company subscription
+        }
+      }
+      if (!sub && compId) {
+        try {
+          sub = await getCompanySubscription(compId);
+        } catch {
+          // ignore fallback
+        }
+      }
+      if (sub) {
+        setActiveSubData(sub);
+      }
+    } catch (err) {
+      console.warn('Unable to load active company subscription', err);
+    } finally {
+      setIsSubLoading(false);
+    }
+  }, [organization?.id, user?.organizationId, currentCompany?.id, user?.companyId]);
+
+  useEffect(() => {
+    fetchActiveSubscription();
+  }, [fetchActiveSubscription]);
 
   // Fetch plans & modules
   const fetchData = useCallback(async () => {
@@ -183,8 +271,13 @@ export default function SubscriptionPlansSettings() {
     });
   }, [plans, searchFilter, statusFilter]);
 
-  // Open Create Modal
+  // Open Create Modal (Protected)
   const handleOpenCreateModal = () => {
+    if (!canManageCatalog) {
+      dispatch(addAlert({ type: 'error', message: 'You do not have permission to create subscription plans in the catalog.' }));
+      return;
+    }
+
     setEditingPlan(null);
     setServerFormError(null);
     setFormValidationErrors({});
@@ -199,8 +292,13 @@ export default function SubscriptionPlansSettings() {
     setIsFormModalOpen(true);
   };
 
-  // Open Edit Modal
+  // Open Edit Modal (Protected)
   const handleOpenEditModal = (plan) => {
+    if (!canManageCatalog) {
+      dispatch(addAlert({ type: 'error', message: 'You do not have permission to modify subscription plans in the catalog.' }));
+      return;
+    }
+
     setEditingPlan(plan);
     setServerFormError(null);
     setFormValidationErrors({});
@@ -269,6 +367,11 @@ export default function SubscriptionPlansSettings() {
 
   // Activate / Deactivate plan toggle
   const handleToggleStatus = async (plan) => {
+    if (!canManageCatalog) {
+      dispatch(addAlert({ type: 'error', message: 'You do not have permission to change subscription plan status in the catalog.' }));
+      return;
+    }
+
     const newStatus = !plan.active;
     try {
       await toggleSubscriptionPlanStatus(plan.id, newStatus);
@@ -286,6 +389,11 @@ export default function SubscriptionPlansSettings() {
   // Form Submit Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!canManageCatalog) {
+      dispatch(addAlert({ type: 'error', message: 'You do not have permission to save subscription plans in the catalog.' }));
+      return;
+    }
+
     setServerFormError(null);
 
     // 1. Frontend validation
@@ -323,6 +431,18 @@ export default function SubscriptionPlansSettings() {
     }
   };
 
+  // Active subscription display variables
+  const activePlanName = effectiveActiveSub?.planName || effectiveActiveSub?.name || (effectiveActiveSub?.trialing ? '30-Day Free Trial' : 'Current Subscription');
+  const subStatus = effectiveActiveSub?.status || 'ACTIVE';
+  const effectiveAccessMode = effectiveActiveSub?.accessMode || organization?.accessMode || 'FULL';
+  const isTrial = effectiveActiveSub?.trialing || String(subStatus).toUpperCase() === 'TRIALING' || String(effectiveActiveSub?.planCode).includes('TRIAL');
+  const daysRemaining = effectiveActiveSub?.daysRemaining;
+  const orgName = organization?.name || organization?.code || 'Organization';
+  const companyName = currentCompany?.name || currentCompany?.legalName || orgName;
+  const companiesCount = authContext?.companies?.length || 1;
+  const maxCompaniesQuota = effectiveActiveSub?.maxCompanies ?? effectiveActiveSub?.plan?.maxCompanies ?? 4;
+  const maxUsersQuota = effectiveActiveSub?.maxUsersPerCompany ?? effectiveActiveSub?.plan?.maxUsersPerCompany ?? 10;
+
   return (
     <div className="flex-1 bg-zinc-50/50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
@@ -338,30 +458,139 @@ export default function SubscriptionPlansSettings() {
               Subscription Plans & Entitlement Rules
             </h1>
             <p className="text-xs sm:text-sm text-zinc-500 mt-1">
-              Configure SaaS subscription tiers, active duration, company and user quotas, and modular access rights.
+              {canManageCatalog
+                ? 'Configure SaaS subscription tiers, active duration, company and user quotas, and modular access rights.'
+                : 'Review available subscription tiers, manage your organization plan, and upgrade capacity for your company.'}
             </p>
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
             <button
               type="button"
-              onClick={fetchData}
-              disabled={isLoading}
+              onClick={() => {
+                fetchActiveSubscription();
+                fetchData();
+              }}
+              disabled={isLoading || isSubLoading}
               className="inline-flex items-center gap-1.5 px-3 py-2 border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 rounded-xl text-xs font-semibold shadow-2xs transition-colors"
-              title="Refresh plans from server"
+              title="Refresh plans and active subscription"
             >
-              <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
+              <RefreshCw size={13} className={isLoading || isSubLoading ? 'animate-spin' : ''} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
 
-            <button
-              type="button"
-              onClick={handleOpenCreateModal}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow transition-all shrink-0 active:scale-95"
-            >
-              <Plus size={15} />
-              <span>Create Plan</span>
-            </button>
+            {canManageCatalog && (
+              <button
+                type="button"
+                onClick={handleOpenCreateModal}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow transition-all shrink-0 active:scale-95"
+              >
+                <Plus size={15} />
+                <span>Create Plan</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ── Active Company Subscription Overview Banner ── */}
+        <div className="bg-white rounded-2xl border border-zinc-200/80 p-5 sm:p-6 shadow-2xs space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-zinc-100">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 shadow-2xs">
+                <Building2 size={22} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
+                    Company Active Subscription
+                  </span>
+                  <span className="text-zinc-300">•</span>
+                  <span className="font-mono text-xs font-bold text-zinc-700">
+                    {currentCompany?.code || organization?.code || 'COMPANY'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5 mt-0.5 flex-wrap">
+                  <h2 className="text-lg sm:text-xl font-bold font-display text-zinc-900 tracking-tight">
+                    {activePlanName}
+                  </h2>
+                  {isTrial ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200 shadow-2xs">
+                      <Sparkles size={11} className="text-sky-600" />
+                      <span>Free Trial {daysRemaining !== null && daysRemaining !== undefined ? `(${daysRemaining}d left)` : ''}</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                      <CheckCircle2 size={11} className="text-emerald-600" />
+                      <span>{subStatus || 'Active'}</span>
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Organization: <strong className="text-zinc-800">{orgName}</strong>
+                  {currentCompany?.name && (
+                    <>
+                      {' '}&bull; Legal Entity: <strong className="text-zinc-800">{companyName}</strong>
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {canUpgradeSubscription && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800">
+                  <ShieldCheck size={14} className="text-emerald-600" />
+                  <span>Owner Subscription Authority</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Allocation & Quota Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-zinc-50/80 p-3 rounded-xl border border-zinc-100 space-y-0.5">
+              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
+                <Lock size={12} className={effectiveAccessMode === 'FULL' ? 'text-emerald-600' : 'text-amber-600'} />
+                <span>Access Mode</span>
+              </div>
+              <div className="text-sm font-black text-zinc-900">{effectiveAccessMode}</div>
+              <p className="text-[10px] text-zinc-400">All features operational</p>
+            </div>
+
+            <div className="bg-zinc-50/80 p-3 rounded-xl border border-zinc-100 space-y-0.5">
+              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
+                <Clock size={12} className="text-indigo-600" />
+                <span>Validity / Cycle</span>
+              </div>
+              <div className="text-sm font-black text-zinc-900">
+                {daysRemaining !== null && daysRemaining !== undefined ? `${daysRemaining} Days Left` : '30-Day Billing Cycle'}
+              </div>
+              <p className="text-[10px] text-zinc-400">
+                {effectiveActiveSub?.validUntil ? `Valid until ${new Date(effectiveActiveSub.validUntil).toLocaleDateString()}` : 'Standard active period'}
+              </p>
+            </div>
+
+            <div className="bg-zinc-50/80 p-3 rounded-xl border border-zinc-100 space-y-0.5">
+              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
+                <Building2 size={12} className="text-indigo-600" />
+                <span>Companies Quota</span>
+              </div>
+              <div className="text-sm font-black text-zinc-900">
+                {companiesCount} / {formatPlanLimit(maxCompaniesQuota, 'companies')}
+              </div>
+              <p className="text-[10px] text-zinc-400">Active legal companies</p>
+            </div>
+
+            <div className="bg-zinc-50/80 p-3 rounded-xl border border-zinc-100 space-y-0.5">
+              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
+                <Users size={12} className="text-indigo-600" />
+                <span>Users / Company</span>
+              </div>
+              <div className="text-sm font-black text-zinc-900">
+                {formatPlanLimit(maxUsersQuota, 'users')}
+              </div>
+              <p className="text-[10px] text-zinc-400">Seats per company workspace</p>
+            </div>
           </div>
         </div>
 
@@ -512,14 +741,16 @@ export default function SubscriptionPlansSettings() {
                   : 'Get started by creating your first subscription plan with customized company and user quotas.'}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleOpenCreateModal}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
-            >
-              <Plus size={15} />
-              <span>Create First Plan</span>
-            </button>
+            {canManageCatalog && (
+              <button
+                type="button"
+                onClick={handleOpenCreateModal}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
+              >
+                <Plus size={15} />
+                <span>Create First Plan</span>
+              </button>
+            )}
           </div>
         ) : viewMode === 'grid' ? (
           /* ── GRID CARDS VIEW ── */
@@ -529,6 +760,7 @@ export default function SubscriptionPlansSettings() {
               const iconStyle = getPlanIconStyle(plan);
               const priceDisplay = formatPlanPrice(plan);
               const isFreeTrial = plan.isTrial || plan.code === '30_DAY_FREE_TRIAL';
+              const isCurrent = isCurrentPlan(plan, effectiveActiveSub);
 
               const activeModulesList = (plan.modules || []).filter(m => m.active !== false);
 
@@ -536,7 +768,9 @@ export default function SubscriptionPlansSettings() {
                 <div
                   key={plan.id || plan.code}
                   className={`bg-white rounded-2xl border p-6 flex flex-col justify-between transition-all duration-200 hover:shadow-md ${
-                    isFreeTrial
+                    isCurrent
+                      ? 'border-emerald-300 ring-2 ring-emerald-500/15 shadow-xs'
+                      : isFreeTrial
                       ? 'border-indigo-300 ring-2 ring-indigo-500/10 shadow-xs'
                       : 'border-zinc-200/80 shadow-2xs'
                   }`}
@@ -553,7 +787,13 @@ export default function SubscriptionPlansSettings() {
                             <h3 className="text-base sm:text-lg font-bold text-zinc-900 tracking-tight truncate">
                               {plan.name}
                             </h3>
-                            {isFreeTrial && (
+                            {isCurrent && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                                <Check size={11} className="text-emerald-600 stroke-[3]" />
+                                <span>Current Plan</span>
+                              </span>
+                            )}
+                            {isFreeTrial && !isCurrent && (
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200 shadow-2xs">
                                 <Sparkles size={11} className="text-sky-600" />
                                 <span>Free Trial</span>
@@ -658,17 +898,21 @@ export default function SubscriptionPlansSettings() {
 
                   {/* Actions Footer */}
                   <div className="flex items-center justify-between border-t border-zinc-100 pt-4 mt-6">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleStatus(plan)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-colors ${
-                        plan.active
-                          ? 'text-zinc-600 border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900'
-                          : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100'
-                      }`}
-                    >
-                      {plan.active ? 'Deactivate' : 'Activate Plan'}
-                    </button>
+                    {canManageCatalog ? (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(plan)}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-colors ${
+                          plan.active
+                            ? 'text-zinc-600 border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900'
+                            : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100'
+                        }`}
+                      >
+                        {plan.active ? 'Deactivate' : 'Activate Plan'}
+                      </button>
+                    ) : (
+                      <div />
+                    )}
 
                     <div className="flex items-center gap-2">
                       <button
@@ -680,14 +924,36 @@ export default function SubscriptionPlansSettings() {
                         <span>Details</span>
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEditModal(plan)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 px-3.5 py-1.5 rounded-xl transition-colors shadow-2xs active:scale-95"
-                      >
-                        <Edit2 size={13} />
-                        <span>Edit</span>
-                      </button>
+                      {canManageCatalog && (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(plan)}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 px-3.5 py-1.5 rounded-xl transition-colors shadow-2xs active:scale-95"
+                        >
+                          <Edit2 size={13} />
+                          <span>Edit</span>
+                        </button>
+                      )}
+
+                      {/* Upgrade / Choose Plan Button for Owner / Subscriber */}
+                      {canUpgradeSubscription && !canManageCatalog && (
+                        isCurrent ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-3.5 py-1.5 rounded-xl shadow-2xs cursor-default">
+                            <CheckCircle2 size={13} className="text-emerald-600" />
+                            <span>Current Plan</span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setCheckoutPlan(plan)}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 border border-indigo-600 px-3.5 py-1.5 rounded-xl transition-all shadow-2xs active:scale-95 hover:shadow-xs"
+                          >
+                            <CreditCard size={13} />
+                            <span>{plan.isTrial ? 'Choose Trial' : 'Upgrade Plan'}</span>
+                            <ArrowRight size={13} />
+                          </button>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -787,14 +1053,34 @@ export default function SubscriptionPlansSettings() {
                             >
                               <Eye size={14} />
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEditModal(plan)}
-                              className="p-1.5 text-indigo-600 hover:text-indigo-800 rounded-lg hover:bg-indigo-50 transition-colors"
-                              title="Edit Plan"
-                            >
-                              <Edit2 size={14} />
-                            </button>
+                            {canManageCatalog && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditModal(plan)}
+                                className="p-1.5 text-indigo-600 hover:text-indigo-800 rounded-lg hover:bg-indigo-50 transition-colors"
+                                title="Edit Plan"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                            )}
+                            {canUpgradeSubscription && !canManageCatalog && (
+                              isCurrentPlan(plan, effectiveActiveSub) ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  <Check size={10} className="text-emerald-600 stroke-[3]" />
+                                  <span>Current</span>
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setCheckoutPlan(plan)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-2xs"
+                                  title="Upgrade to this plan"
+                                >
+                                  <CreditCard size={12} />
+                                  <span>Upgrade</span>
+                                </button>
+                              )
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1490,17 +1776,33 @@ export default function SubscriptionPlansSettings() {
 
             {/* Footer */}
             <div className="px-6 py-4 border-t border-zinc-100 bg-zinc-50/50 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsDetailsModalOpen(false);
-                  handleOpenEditModal(viewingPlan);
-                }}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 hover:text-indigo-900"
-              >
-                <Edit2 size={13} />
-                <span>Edit This Plan</span>
-              </button>
+              <div>
+                {canManageCatalog ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDetailsModalOpen(false);
+                      handleOpenEditModal(viewingPlan);
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 hover:text-indigo-900"
+                  >
+                    <Edit2 size={13} />
+                    <span>Edit This Plan</span>
+                  </button>
+                ) : canUpgradeSubscription && !isCurrentPlan(viewingPlan, effectiveActiveSub) ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDetailsModalOpen(false);
+                      setCheckoutPlan(viewingPlan);
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 hover:text-indigo-900"
+                  >
+                    <CreditCard size={13} />
+                    <span>Subscribe to This Plan</span>
+                  </button>
+                ) : null}
+              </div>
               <button
                 type="button"
                 onClick={() => setIsDetailsModalOpen(false)}
@@ -1512,6 +1814,22 @@ export default function SubscriptionPlansSettings() {
           </div>
         </div>
       )}
+
+      {/* ── Razorpay Subscription Checkout & Payment Modal ── */}
+      <SubscriptionCheckoutModal
+        isOpen={Boolean(checkoutPlan)}
+        onClose={() => setCheckoutPlan(null)}
+        selectedPlan={checkoutPlan}
+        organization={organization}
+        user={user}
+        onSuccess={(updatedSub) => {
+          if (updatedSub) {
+            setActiveSubData(updatedSub);
+          }
+          fetchActiveSubscription();
+          fetchData();
+        }}
+      />
 
     </div>
   );

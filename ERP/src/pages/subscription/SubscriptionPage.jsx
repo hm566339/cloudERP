@@ -244,12 +244,18 @@ function SubscriptionContent() {
         throw new Error('Server did not return a valid payment authorization ID.');
       }
 
+      const keyId = checkoutData.keyId;
+      if (!keyId || typeof keyId !== 'string' || !keyId.trim()) {
+        throw new Error('Payment gateway configuration is missing (Razorpay Key ID not configured on the server). Please contact administrator.');
+      }
+
       const options = {
-        key: checkoutData.keyId,
+        key: keyId.trim(),
         subscription_id: checkoutData.subscriptionId,
         name: 'Mark2 ERP',
         description: `${selectedPlanForUpgrade.name || 'ERP'} Subscription`,
-        currency: selectedPlanForUpgrade.currency || 'INR',
+        currency: checkoutData.currency || selectedPlanForUpgrade.currency || 'INR',
+        amount: checkoutData.amount,
         handler: function () {
           setCheckoutSuccess(true);
           setShowUpgradeModal(false);
