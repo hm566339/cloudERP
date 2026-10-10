@@ -1059,8 +1059,22 @@ public class AuthServiceImpl implements AuthService {
 
                 Company company = session.getCompany();
 
-                if (company == null) {
-                        log.warn("Token refresh failed - missing company in session | sessionId={}", session.getId());
+                boolean isOwnerSession = (company == null && session.getOrganization() != null);
+
+                if (session.getOrganization() != null) {
+                        OrganizationMember member = organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                        session.getOrganization().getId(), user.getId(), MembershipStatus.ACTIVE)
+                                        .orElseThrow(() -> new BadCredentialsException("Organization membership revoked"));
+                        if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
+                                throw new InvalidOperationException("Organization access is blocked");
+                        }
+                        if (member.getMemberType() == MemberType.OWNER) {
+                                isOwnerSession = true;
+                        }
+                }
+
+                if (!isOwnerSession && company == null) {
+                        log.warn("Token refresh failed - missing company in non-owner session | sessionId={}", session.getId());
                         throw new InvalidOperationException(
                                         "Invalid company session");
                 }
@@ -1074,7 +1088,7 @@ public class AuthServiceImpl implements AuthService {
                 }
                 final Module module = resolvedModule;
 
-                if (module != null) {
+                if (!isOwnerSession && module != null) {
                         CompanyModule companyModule = companyModuleRepository
                                         .findByCompany_IdAndModule_IdAndActiveTrue(
                                                         company.getId(),
@@ -1096,32 +1110,32 @@ public class AuthServiceImpl implements AuthService {
                                         });
                 }
 
-                if (session.getOrganization() != null) {
-                        organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
-                                        session.getOrganization().getId(), user.getId(), MembershipStatus.ACTIVE)
-                                        .orElseThrow(() -> new BadCredentialsException("Organization membership revoked"));
-                        if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
-                                throw new InvalidOperationException("Organization access is blocked");
-                        }
+                String newAccessToken;
+                String newRefreshToken;
+
+                if (isOwnerSession) {
+                        Map<String, Object> claims = buildOwnerClaims(user, session.getOrganization());
+                        newAccessToken = jwtService.generateAccessToken(user.getUsername(), claims);
+                        newRefreshToken = jwtService.generateRefreshToken(user.getUsername(), session.getOrganization().getOrganizationCode());
+                } else {
+                        String effectiveClientId = (module != null && module.getClientId() != null)
+                                        ? module.getClientId().toString()
+                                        : (request.getClientId() != null ? request.getClientId().toString() : "ERP_WORKSPACE");
+
+                        Map<String, Object> claims = buildClaims(
+                                        user,
+                                        company,
+                                        module,
+                                        effectiveClientId);
+
+                        newAccessToken = jwtService.generateAccessToken(
+                                        user.getUsername(),
+                                        claims);
+
+                        newRefreshToken = jwtService.generateRefreshToken(
+                                        user.getUsername(),
+                                        company.getCompanyCode());
                 }
-
-                String effectiveClientId = (module != null && module.getClientId() != null)
-                                ? module.getClientId().toString()
-                                : (request.getClientId() != null ? request.getClientId().toString() : "ERP_WORKSPACE");
-
-                Map<String, Object> claims = buildClaims(
-                                user,
-                                company,
-                                module,
-                                effectiveClientId);
-
-                String newAccessToken = jwtService.generateAccessToken(
-                                user.getUsername(),
-                                claims);
-
-                String newRefreshToken = jwtService.generateRefreshToken(
-                                user.getUsername(),
-                                company.getCompanyCode());
 
                 session.setAccessToken(newAccessToken);
                 session.setRefreshToken(null);
@@ -1142,11 +1156,13 @@ public class AuthServiceImpl implements AuthService {
                                 .expiresAt(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
                                 .build());
 
-                log.info("Token refresh successful | sessionId={} | userId={} | companyId={} | moduleId={} | clientId={}",
-                                session.getId(), user.getId(), company.getId(), (module != null ? module.getId() : "NONE"), effectiveClientId);
+                log.info("Token refresh successful | sessionId={} | userId={} | ownerSession={}",
+                                session.getId(), user.getId(), isOwnerSession);
 
                 RefreshTokenResponse response = ssoSessionMapper
                                 .toRefreshTokenResponse(session);
+                response.setAccessToken(newAccessToken);
+                response.setRefreshToken(newRefreshToken);
                 response.setExpiresIn(
                                 (long) (ACCESS_TOKEN_MINUTES * 60));
                 return response;
@@ -1182,6 +1198,25 @@ public class AuthServiceImpl implements AuthService {
                 }
                 Company company = session.getCompany();
 
+                boolean isOwnerSession = (company == null && session.getOrganization() != null);
+
+                if (session.getOrganization() != null) {
+                        OrganizationMember member = organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                        session.getOrganization().getId(), user.getId(), MembershipStatus.ACTIVE)
+                                        .orElseThrow(() -> new BadCredentialsException("Organization membership revoked"));
+                        if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
+                                throw new InvalidOperationException("Organization access is blocked");
+                        }
+                        if (member.getMemberType() == MemberType.OWNER) {
+                                isOwnerSession = true;
+                        }
+                }
+
+                if (!isOwnerSession && company == null) {
+                        log.warn("Hashed refresh failed - missing company in non-owner session | sessionId={}", session.getId());
+                        throw new InvalidOperationException("Invalid company session");
+                }
+
                 Module resolvedModule = null;
                 if (clientId != null) {
                         resolvedModule = moduleRepository.findByClientId(clientId).orElse(null);
@@ -1191,7 +1226,7 @@ public class AuthServiceImpl implements AuthService {
                 }
                 final Module module = resolvedModule;
 
-                if (module != null) {
+                if (!isOwnerSession && module != null) {
                         CompanyModule companyModule = companyModuleRepository
                                         .findByCompany_IdAndModule_IdAndActiveTrue(company.getId(), module.getId())
                                         .orElseThrow(() -> {
@@ -1208,23 +1243,25 @@ public class AuthServiceImpl implements AuthService {
                                         });
                 }
 
-                if (session.getOrganization() != null) {
-                        organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
-                                        session.getOrganization().getId(), user.getId(), MembershipStatus.ACTIVE)
-                                        .orElseThrow(() -> new BadCredentialsException("Organization membership revoked"));
-                        if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
-                                throw new InvalidOperationException("Organization access is blocked");
-                        }
-                }
-
                 record.setUsedAt(now);
                 refreshTokenRecordRepository.save(record);
-                String effectiveClientId = (module != null && module.getClientId() != null)
-                                ? module.getClientId().toString()
-                                : (clientId != null ? clientId.toString() : "ERP_WORKSPACE");
-                Map<String, Object> claims = buildClaims(user, company, module, effectiveClientId);
-                String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
-                String refreshToken = jwtService.generateRefreshToken(user.getUsername(), company.getCompanyCode());
+
+                String accessToken;
+                String refreshToken;
+
+                if (isOwnerSession) {
+                        Map<String, Object> claims = buildOwnerClaims(user, session.getOrganization());
+                        accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
+                        refreshToken = jwtService.generateRefreshToken(user.getUsername(), session.getOrganization().getOrganizationCode());
+                } else {
+                        String effectiveClientId = (module != null && module.getClientId() != null)
+                                        ? module.getClientId().toString()
+                                        : (clientId != null ? clientId.toString() : "ERP_WORKSPACE");
+                        Map<String, Object> claims = buildClaims(user, company, module, effectiveClientId);
+                        accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
+                        refreshToken = jwtService.generateRefreshToken(user.getUsername(), company.getCompanyCode());
+                }
+
                 session.setAccessToken(accessToken);
                 session.setAccessTokenValidTill(now.plusMinutes(ACCESS_TOKEN_MINUTES));
                 session.setRefreshToken(null);
@@ -1239,8 +1276,8 @@ public class AuthServiceImpl implements AuthService {
                                 .expiresAt(now.plusDays(REFRESH_TOKEN_DAYS))
                                 .build());
 
-                log.info("Hashed refresh token rotated successfully | familyId={} | userId={} | clientId={}",
-                                record.getFamilyId(), user.getId(), effectiveClientId);
+                log.info("Hashed refresh token rotated successfully | familyId={} | userId={} | ownerSession={}",
+                                record.getFamilyId(), user.getId(), isOwnerSession);
 
                 return RefreshTokenResponse.builder()
                                 .accessToken(accessToken)

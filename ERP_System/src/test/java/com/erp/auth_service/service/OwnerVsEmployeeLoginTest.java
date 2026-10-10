@@ -6,6 +6,9 @@ import com.erp.auth_service.exception.BadCredentialsException;
 import com.erp.auth_service.exception.InvalidOperationException;
 import com.erp.auth_service.model.*;
 import com.erp.auth_service.repository.*;
+import com.erp.auth_service.dto.request.RefreshTokenRequest;
+import com.erp.auth_service.dto.response.RefreshTokenResponse;
+import com.erp.auth_service.security.JwtDecoder;
 import com.erp.auth_service.security.JwtService;
 import com.erp.auth_service.service.impl.AuthServiceImpl;
 import com.erp.auth_service.utility.AccessMode;
@@ -64,6 +67,8 @@ class OwnerVsEmployeeLoginTest {
     private RefreshTokenRecordRepository refreshTokenRecordRepository;
     @Mock
     private JwtService jwtService;
+    @Mock
+    private JwtDecoder jwtDecoder;
     @Mock
     private PasswordEncoder passwordEncoder;
 
@@ -280,4 +285,52 @@ class OwnerVsEmployeeLoginTest {
         assertThrows(InvalidOperationException.class, () ->
                 authService.organizationLogin(request, "127.0.0.1", "Browser"));
     }
+
+    @Test
+    @DisplayName("Owner token refresh succeeds with null company and maintains owner claims")
+    void testOwnerTokenRefresh_RotatesSuccessfullyWithoutCompany() {
+        Session ownerSession = Session.builder()
+                .id(UUID.randomUUID())
+                .user(ownerUser)
+                .company(null)
+                .organization(org)
+                .module(null)
+                .accessToken("old.owner.access")
+                .accessTokenValidTill(LocalDateTime.now().plusMinutes(15))
+                .refreshTokenValidTill(LocalDateTime.now().plusDays(7))
+                .build();
+
+        RefreshTokenRecord record = RefreshTokenRecord.builder()
+                .id(UUID.randomUUID())
+                .session(ownerSession)
+                .tokenHash("mock-hash")
+                .familyId(UUID.randomUUID())
+                .issuedAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusDays(7))
+                .build();
+
+        when(refreshTokenRecordRepository.findByTokenHash(anyString()))
+                .thenReturn(Optional.of(record));
+        when(jwtDecoder.isTokenExpired(anyString())).thenReturn(false);
+        when(userRepository.findByIdWithRoles(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
+        when(organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
+                eq(org.getId()), eq(ownerUser.getId()), eq(MembershipStatus.ACTIVE)))
+                .thenReturn(Optional.of(ownerMember));
+        when(jwtService.generateAccessToken(eq(ownerUser.getUsername()), anyMap()))
+                .thenReturn("new.owner.jwt");
+        when(jwtService.generateRefreshToken(eq(ownerUser.getUsername()), eq("mohit")))
+                .thenReturn("new.owner.refresh");
+
+        RefreshTokenRequest request = new RefreshTokenRequest();
+        request.setRefreshToken("valid.raw.refresh");
+
+        RefreshTokenResponse response = authService.refreshToken(request);
+
+        assertNotNull(response);
+        assertEquals("new.owner.jwt", response.getAccessToken());
+        assertEquals("new.owner.refresh", response.getRefreshToken());
+        verify(jwtService).generateRefreshToken(eq(ownerUser.getUsername()), eq("mohit"));
+        verify(sessionRepository).save(argThat(s -> s.getCompany() == null && s.getOrganization().equals(org)));
+    }
 }
+
