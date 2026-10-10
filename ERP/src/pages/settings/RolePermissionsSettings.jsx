@@ -45,6 +45,7 @@ const PermissionCheckbox = ({ checked, indeterminate, disabled, onChange }) => {
 };
 
 export default function RolePermissionsSettings() {
+  const dispatch = useAppDispatch();
   const routeParams = useParams();
   const selectedCompany = useAppSelector(selectSelectedCompany);
   const currentUser = useAppSelector(selectCurrentUser);

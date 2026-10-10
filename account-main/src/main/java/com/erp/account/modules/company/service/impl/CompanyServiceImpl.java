@@ -148,6 +148,24 @@ public class CompanyServiceImpl implements CompanyService {
 
                 if (!TenantUtils.isSystemAdmin()) {
                         UUID companyId = TenantUtils.getCurrentCompanyId();
+                        if (companyId == null) {
+                                return CompanyResponseList.builder()
+                                                .company(java.util.Collections.emptyList())
+                                                .paginationResponse(PaginationResponse.builder()
+                                                                .page(1)
+                                                                .size(10)
+                                                                .currentPage(0)
+                                                                .pageSize(10)
+                                                                .totalPages(0)
+                                                                .totalElements(0L)
+                                                                .numberOfElements(0)
+                                                                .first(true)
+                                                                .last(true)
+                                                                .hasNext(false)
+                                                                .hasPrevious(false)
+                                                                .build())
+                                                .build();
+                        }
                         Company company = companyRepository.findById(companyId)
                                         .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + companyId));
                         return CompanyResponseList.builder()

@@ -2345,7 +2345,15 @@ public class AuthServiceImpl implements AuthService {
                                         .build();
                 }
                 Company company = session.getCompany();
-                if (company == null) {
+                boolean isOwner = false;
+                if (session.getOrganization() != null) {
+                        isOwner = organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                        session.getOrganization().getId(), session.getUser().getId(), MembershipStatus.ACTIVE)
+                                        .map(m -> m.getMemberType() == MemberType.OWNER)
+                                        .orElse(false);
+                }
+
+                if (company == null && !isOwner) {
                         log.warn(
                                         "Company missing in session -> sessionId: {}",
                                         session.getId());
@@ -2388,7 +2396,7 @@ public class AuthServiceImpl implements AuthService {
                                 || (session.getModule() != null && "SYSTEM_ADMIN".equalsIgnoreCase(session.getModule().getName()));
 
                 Module module = session.getModule();
-                if (module != null && !isSystemAdmin) {
+                if (module != null && !isSystemAdmin && !isOwner && company != null) {
                         if (Boolean.FALSE.equals(
                                         module.getModuleStatus())) {
 
@@ -2443,9 +2451,14 @@ public class AuthServiceImpl implements AuthService {
                                                 user.getId(), session.getOrganization().getId());
                                 return TokenVerifyResponse.builder().valid(false).build();
                         }
+                        if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
+                                log.warn("Token verification failed - blocked organization | userId={} | orgId={}",
+                                                user.getId(), session.getOrganization().getId());
+                                return TokenVerifyResponse.builder().valid(false).build();
+                        }
                 }
 
-                if (session.getOrganization() != null && company.getOrganization() != null
+                if (session.getOrganization() != null && company != null && company.getOrganization() != null
                                 && !session.getOrganization().getId().equals(company.getOrganization().getId())) {
                         log.warn("Company {} does not belong to session organization {}",
                                         company.getId(), session.getOrganization().getId());
@@ -2453,10 +2466,11 @@ public class AuthServiceImpl implements AuthService {
                 }
 
                 log.info(
-                                "Token verified successfully -> userId={} | companyId={} | moduleId={}",
+                                "Token verified successfully -> userId={} | companyId={} | moduleId={} | owner={}",
                                 user.getId(),
-                                company.getId(),
-                                (module != null ? module.getId() : "NONE"));
+                                (company != null ? company.getId() : "NONE"),
+                                (module != null ? module.getId() : "NONE"),
+                                isOwner);
 
                 try {
                         UserResponse userResponse = userMapper.toResponse(user);
@@ -2500,6 +2514,11 @@ public class AuthServiceImpl implements AuthService {
                                                         .toList();
                                         userResponse.setRole(scopedRoles);
                                 }
+                        } else if (isOwner) {
+                                List<com.erp.auth_service.dto.response.RoleResponse> ownerRoles = new ArrayList<>();
+                                ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder().name("OWNER").build());
+                                ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder().name("ROLE_OWNER").build());
+                                userResponse.setRole(ownerRoles);
                         }
                         EffectivePermissionsResponse effective = permissionService
                                         .getEffectivePermissions(user.getId(), company != null ? company.getId() : null);
