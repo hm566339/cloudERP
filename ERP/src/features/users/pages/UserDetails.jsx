@@ -147,8 +147,9 @@ export default function UserDetails() {
     setIsCompanyModulesLoading(true);
     setCompanyModulesError(null);
     try {
-      const res = await getCompanyModulesByCompany(targetCompanyId);
-      setAvailableModules(res.companyModuleResponse || res.data || res.content || res || []);
+      const res = await getCompanyModulesByCompany(targetCompanyId, { active: true });
+      const rawList = res?.data || res?.companyModuleResponse || res?.content || (Array.isArray(res) ? res : []);
+      setAvailableModules(Array.isArray(rawList) ? rawList : []);
     } catch (err) {
       setCompanyModulesError(err);
     } finally {
@@ -1058,6 +1059,7 @@ export default function UserDetails() {
         isOpen={isAssignPortalModalOpen}
         onClose={() => setIsAssignPortalModalOpen(false)}
         user={user}
+        companyId={targetCompanyId || user?.companyId}
         availableModules={availableModules}
         initialPermissions={initialPermissions}
         grantPortalAccessMutation={grantPortalAccess}

@@ -14,6 +14,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UserPortalAccessResponse {
     private UUID id;
+    private UUID companyModuleId;
+    private UUID moduleId;
     private String username;
     private String moduleName;
     private String host;

@@ -244,13 +244,22 @@ export default function UserList() {
     const uniqueModulesMap = new Map();
     rawModulesList.forEach(m => {
       const modCompanyId = m.company?.id || m.companyId;
-      if (targetCompanyId && modCompanyId !== targetCompanyId) return;
+      if (targetCompanyId && modCompanyId && modCompanyId !== targetCompanyId) return;
 
       const modId = m.id || m.companyModuleId;
       const globalId = m.module?.id || m.moduleId;
-      const modLabel = m.module?.name || m.module?.moduleName || m.moduleName || m.name || 'Unknown';
+      const modLabel = m.name || m.module?.name || m.moduleName || m.label || 'Unknown';
       if (!uniqueModulesMap.has(modLabel)) {
-        uniqueModulesMap.set(modLabel, { id: modId, globalId, label: modLabel });
+        uniqueModulesMap.set(modLabel, {
+          id: modId,
+          companyModuleId: modId,
+          moduleId: globalId,
+          globalId,
+          name: modLabel,
+          label: modLabel,
+          host: m.host || m.module?.host,
+          status: m.status !== false && m.status !== 'INACTIVE'
+        });
       }
     });
     return Array.from(uniqueModulesMap.values());
@@ -276,15 +285,15 @@ export default function UserList() {
       perms = user.portalAccess
         .filter(pa => pa.status === true || pa.status === undefined || pa.status === 'ACTIVE')
         .map(pa => {
-          const mId = pa.moduleId || pa.module?.id || pa.companyModule?.id;
+          const mId = pa.moduleId || pa.module?.id || pa.companyModule?.id || pa.companyModuleId;
           if (mId) {
-            const matched = availableModules.find(m => m.globalId === mId || m.id === mId);
+            const matched = availableModules.find(m => m.globalId === mId || m.id === mId || m.companyModuleId === mId);
             if (matched) return matched.id;
             return mId;
           }
           const mName = pa.moduleName || pa.module?.name || pa.module?.moduleName;
           if (mName) {
-            const matched = availableModules.find(m => m.label === mName);
+            const matched = availableModules.find(m => m.label?.toLowerCase() === mName.toLowerCase());
             if (matched) return matched.id;
           }
           return pa.id;
@@ -292,7 +301,7 @@ export default function UserList() {
     } else {
       perms = (user.permissions || []).map(p => {
         if (!p) return p;
-        const matched = availableModules.find(m => m.globalId === p || m.id === p || m.label === p);
+        const matched = availableModules.find(m => m.globalId === p || m.id === p || m.companyModuleId === p || m.label?.toLowerCase() === String(p).toLowerCase());
         return matched ? matched.id : p;
       }).filter(Boolean);
     }
@@ -581,10 +590,10 @@ export default function UserList() {
       },
       {
         key: 'assign-access',
-        label: 'Assign Portal Access',
+        label: 'Manage Module Access',
         icon: Layers,
         onClick: (row) => openModuleModal(row),
-        tooltip: 'Assign Portal Access',
+        tooltip: 'Manage Module Access',
         className: 'hover:text-purple-600 hover:bg-purple-50'
       },
       {
@@ -831,9 +840,11 @@ export default function UserList() {
         isOpen={showModuleModal}
         onClose={() => {
           setShowModuleModal(false);
+          setModuleTargetUser(null);
         }}
         onUpdated={fetchUsers}
         user={moduleTargetUser}
+        companyId={activeCompanyId || moduleTargetUser?.companyId || moduleTargetUser?.company?.id}
         availableModules={availableModules}
         initialPermissions={initialPermissions}
         grantPortalAccessMutation={grantPortalAccess}

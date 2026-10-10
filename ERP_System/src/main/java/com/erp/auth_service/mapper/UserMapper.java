@@ -64,6 +64,8 @@ public interface UserMapper {
 
     // UserPortalAccess → Response
     @Mapping(target = "id", source = "id")
+    @Mapping(target = "companyModuleId", source = "companyModule.id")
+    @Mapping(target = "moduleId", source = "companyModule.module.id")
     @Mapping(target = "username", source = "user.username")
     @Mapping(target = "moduleName", source = "companyModule.module.name")
     @Mapping(target = "host", source = "companyModule.module.host")

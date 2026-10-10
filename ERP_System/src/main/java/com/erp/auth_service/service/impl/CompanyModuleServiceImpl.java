@@ -275,6 +275,7 @@ public class CompanyModuleServiceImpl implements CompanyModuleService {
                 return companyModules.stream()
                                 .map(companyModule -> CompanyModulesResposnse.builder()
                                                 .id(companyModule.getId())
+                                                .companyId(companyModule.getCompany() != null ? companyModule.getCompany().getId() : companyId)
                                                 .moduleId(companyModule.getModule().getId())
                                                 .host(companyModule.getModule().getHost())
                                                 .name(companyModule.getModule().getName())

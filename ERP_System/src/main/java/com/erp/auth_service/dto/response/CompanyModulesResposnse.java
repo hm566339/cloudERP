@@ -16,6 +16,8 @@ public class CompanyModulesResposnse {
 
     private UUID id;
 
+    private UUID companyId;
+
     private UUID moduleId;
 
     private String host;
