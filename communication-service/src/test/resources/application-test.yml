@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: communication-service-test
+
+  datasource:
+    url: jdbc:h2:mem:commdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: false
+
+  thymeleaf:
+    cache: false
+    mode: HTML
+    encoding: UTF-8
+
+server:
+  port: 0
+
+app:
+  jwt:
+    secret: test-jwt-secret-key-must-be-at-least-256-bits-long-for-testing-purposes-1234567890
+  service-auth:
+    internal-token: test-service-token
+    header-name: X-Service-Token
+  smtp:
+    host: localhost
+    port: 2525
+    username: test@mark2.in
+    password: testpassword
+    auth: false
+    starttls-enable: false
+    starttls-required: false
+    from-address: test-noreply@mark2.in
+    from-name: "Mark2 ERP Test"
+  outbox:
+    enabled: false
+    poll-interval-ms: 60000
+    batch-size: 10
+    max-retries: 3

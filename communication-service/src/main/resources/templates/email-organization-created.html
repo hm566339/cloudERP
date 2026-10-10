@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Mark2 ERP Account Is Ready</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f8;font-family:Arial,sans-serif;color:#333333;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                    <tr>
+                        <td align="center" style="background:#0f172a;padding:28px;color:#ffffff;">
+                            <h2 style="margin:0;font-size:22px;">Mark2 Cloud ERP</h2>
+                            <p style="margin:6px 0 0;color:#94a3b8;font-size:14px;">Organization Workspace Created</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:32px;font-size:15px;line-height:1.6;">
+                            <h3 style="margin:0 0 16px;color:#0f172a;">Your Organization is Ready!</h3>
+                            <p style="margin:0 0 20px;">Congratulations! Your Mark2 ERP organization workspace has been created successfully.</p>
+                            
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px;">
+                                <tr>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;font-weight:600;">Organization</td>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#0f172a;font-weight:600;" th:text="${organizationName}">Org Name</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;font-weight:600;">Organization Code</td>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#0f172a;" th:text="${organizationCode}">code</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;font-weight:600;">Company Name</td>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#0f172a;" th:text="${primaryCompanyName}">Primary Company</td>
+                                </tr>
+                                <tr th:if="${trialExpirationDate}">
+                                    <td style="padding:12px 16px;font-size:13px;color:#64748b;font-weight:600;">Trial Expiration</td>
+                                    <td style="padding:12px 16px;font-size:14px;color:#059669;font-weight:600;" th:text="${trialExpirationDate}">Dec 31, 2026</td>
+                                </tr>
+                            </table>
+
+                            <div style="text-align:center;margin:28px 0;">
+                                <a th:href="${loginPortalUrl}" style="display:inline-block;background-color:#2563eb;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">
+                                    Sign In to Your Workspace &rarr;
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="background:#f8fafc;padding:18px;color:#94a3b8;font-size:12px;">
+                            &copy; Mark2 ERP. All rights reserved.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email Address — Mark2 ERP</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f8;font-family:Arial,sans-serif;color:#333333;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                    <tr>
+                        <td align="center" style="background:#2563eb;padding:24px;color:#ffffff;font-size:24px;font-weight:bold;">
+                            Mark2 SSO Verification
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:32px;font-size:16px;line-height:1.6;">
+                            <p style="margin:0 0 16px;">Dear User,</p>
+                            <p style="margin:0 0 16px;">We received a request to verify your email address for Mark2 ERP.</p>
+                            <p style="margin:0 0 24px;">Please click the button below to complete verification.</p>
+                            <table role="presentation" cellpadding="0" cellspacing="0" align="center">
+                                <tr>
+                                    <td align="center" style="background:#2563eb;border-radius:8px;">
+                                        <a th:href="${verificationUrl}" style="display:inline-block;padding:14px 28px;color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;">
+                                            Verify Email
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin:28px 0 16px;color:#666666;font-size:14px;">
+                                If you did not request this verification, you can safely ignore this email.
+                            </p>
+                            <p style="margin:0;color:#666666;font-size:14px;">
+                                For security reasons, do not share this email.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="background:#f8fafc;padding:18px;color:#94a3b8;font-size:12px;">
+                            &copy; Mark2 ERP. All rights reserved.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

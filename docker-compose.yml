@@ -291,7 +291,53 @@ services:
       - erp-network
 
   # ----------------------------------------------------------------------------
-  # 7. Frontend Client & Subpath Reverse Proxy (Binds to 127.0.0.1:3001)
+  # 7. Communication Service (Internal only)
+  # ----------------------------------------------------------------------------
+  communication-service:
+    image: ${IMAGE_COMMUNICATION:-mohit950/clouderp:communication-${TAG:-latest}}
+    build:
+      context: ./communication-service
+      dockerfile: Dockerfile
+    container_name: erp-communication-service
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/communication_db
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      COMM_SERVICE_TOKEN: ${COMM_SERVICE_TOKEN:-mark2-internal-comm-secret-token}
+      COMM_SMTP_HOST: ${COMM_SMTP_HOST:-${MAIL_HOST:-smtp.gmail.com}}
+      COMM_SMTP_PORT: ${COMM_SMTP_PORT:-${MAIL_PORT:-587}}
+      COMM_SMTP_USERNAME: ${COMM_SMTP_USERNAME:-${MAIL_USERNAME:-}}
+      COMM_SMTP_PASSWORD: ${COMM_SMTP_PASSWORD:-${MAIL_PASSWORD:-}}
+      COMM_SMTP_AUTH: ${COMM_SMTP_AUTH:-${MAIL_AUTH:-true}}
+      COMM_SMTP_STARTTLS_ENABLE: ${COMM_SMTP_STARTTLS_ENABLE:-${MAIL_STARTTLS_ENABLE:-true}}
+      COMM_SMTP_STARTTLS_REQUIRED: ${COMM_SMTP_STARTTLS_REQUIRED:-true}
+      COMM_EMAIL_FROM_ADDRESS: ${COMM_EMAIL_FROM_ADDRESS:-noreply@mark2.in}
+      COMM_EMAIL_FROM_NAME: ${COMM_EMAIL_FROM_NAME:-Mark2 ERP}
+      COMM_EMAIL_REPLY_TO: ${COMM_EMAIL_REPLY_TO:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8084/actuator/health || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - erp-network
+
+  # ----------------------------------------------------------------------------
+  # 8. Frontend Client & Subpath Reverse Proxy (Binds to 127.0.0.1:3001)
   # ----------------------------------------------------------------------------
   frontend:
     image: ${IMAGE_FRONTEND:-mohit950/clouderp:frontend-${TAG:-latest}}

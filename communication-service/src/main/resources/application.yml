@@ -1,0 +1,88 @@
+spring:
+  application:
+    name: communication-service
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/communication_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: CommunicationHikariCP
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+
+  thymeleaf:
+    cache: false
+    mode: HTML
+    encoding: UTF-8
+
+server:
+  port: ${SERVER_PORT:8084}
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+logging:
+  level:
+    root: INFO
+    com.erp.communication: DEBUG
+    org.springframework.security: WARN
+    org.springframework.mail: INFO
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:default-must-be-overridden-in-production}
+  service-auth:
+    internal-token: ${COMM_SERVICE_TOKEN:mark2-internal-comm-secret-token}
+    header-name: ${COMM_SERVICE_TOKEN_HEADER:X-Service-Token}
+  smtp:
+    host: ${COMM_SMTP_HOST:smtp.gmail.com}
+    port: ${COMM_SMTP_PORT:587}
+    username: ${COMM_SMTP_USERNAME:}
+    password: ${COMM_SMTP_PASSWORD:}
+    auth: ${COMM_SMTP_AUTH:true}
+    starttls-enable: ${COMM_SMTP_STARTTLS_ENABLE:true}
+    starttls-required: ${COMM_SMTP_STARTTLS_REQUIRED:true}
+    from-address: ${COMM_EMAIL_FROM_ADDRESS:noreply@mark2.in}
+    from-name: ${COMM_EMAIL_FROM_NAME:Mark2 ERP}
+    reply-to: ${COMM_EMAIL_REPLY_TO:}
+    connection-timeout-ms: ${COMM_SMTP_CONNECTION_TIMEOUT_MS:10000}
+    timeout-ms: ${COMM_SMTP_TIMEOUT_MS:10000}
+    write-timeout-ms: ${COMM_SMTP_WRITE_TIMEOUT_MS:10000}
+  outbox:
+    enabled: ${OUTBOX_WORKER_ENABLED:true}
+    poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:10000}
+    batch-size: ${OUTBOX_BATCH_SIZE:20}
+    max-retries: ${OUTBOX_MAX_RETRIES:3}

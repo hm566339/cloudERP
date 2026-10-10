@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice from Mark2 ERP</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f8;font-family:Arial,sans-serif;color:#333333;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                    <tr>
+                        <td align="center" style="background:#1e40af;padding:24px;color:#ffffff;font-size:22px;font-weight:bold;">
+                            <span th:text="${companyName}">Company</span> — Tax Invoice
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:32px;font-size:15px;line-height:1.6;">
+                            <p style="margin:0 0 16px;">Dear <strong th:text="${customerName} ? ${customerName} : 'Customer'">Customer</strong>,</p>
+                            <p style="margin:0 0 20px;">Thank you for your business. Please find attached Tax Invoice <strong th:text="${invoiceNumber}">INV-001</strong>.</p>
+                            
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px;">
+                                <tr>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;font-weight:600;">Invoice Number</td>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#0f172a;font-weight:600;" th:text="${invoiceNumber}">INV-001</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;font-weight:600;">Invoice Date</td>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#0f172a;" th:text="${invoiceDate}">Date</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;font-weight:600;">Total Amount</td>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:15px;color:#059669;font-weight:700;" th:text="${totalAmount}">INR 0.00</td>
+                                </tr>
+                                <tr th:if="${dueDate}">
+                                    <td style="padding:12px 16px;font-size:13px;color:#64748b;font-weight:600;">Due Date</td>
+                                    <td style="padding:12px 16px;font-size:14px;color:#dc2626;font-weight:600;" th:text="${dueDate}">Due Date</td>
+                                </tr>
+                            </table>
+
+                            <p style="margin:20px 0 0;font-size:13px;color:#64748b;">
+                                The detailed invoice PDF is attached with this email. For payment inquiries or remittance receipts, please reach out to our billing team.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="background:#f8fafc;padding:18px;color:#94a3b8;font-size:12px;">
+                            &copy; Mark2 ERP. All rights reserved.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

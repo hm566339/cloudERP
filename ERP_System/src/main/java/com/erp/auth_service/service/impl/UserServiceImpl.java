@@ -11,6 +11,7 @@ import com.erp.auth_service.exception.DuplicateResourceException;
 import com.erp.auth_service.exception.ForbiddenException;
 import com.erp.auth_service.exception.ResourceNotFoundException;
 import com.erp.auth_service.exception.TokenExpiredException;
+import com.erp.auth_service.mail.CommunicationServiceClient;
 import com.erp.auth_service.mail.EmailService;
 import com.erp.auth_service.mapper.UserMapper;
 import com.erp.auth_service.model.*;
@@ -87,6 +88,9 @@ public class UserServiceImpl implements UserService {
 
     @org.springframework.context.annotation.Lazy
     private final com.erp.auth_service.service.PermissionService permissionService;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private CommunicationServiceClient communicationServiceClient;
 
     @Autowired
     public UserServiceImpl(
@@ -335,24 +339,53 @@ public class UserServiceImpl implements UserService {
 
         boolean emailSent = false;
         String emailError = null;
+        boolean dispatchedViaCommService = false;
 
-        try {
-            emailService.sendProvisioningEmail(
-                    savedUser.getEmail(),
-                    savedUser.getFullName(),
-                    company.getCompanyName(),
-                    savedUser.getUsername(),
-                    passwordSetupLink,
-                    companyLoginUrl,
-                    setupExpirationHours
-            );
-            emailSent = true;
-            log.info("Provisioning email accepted by email service | userId={} | email={} | companyCode={}",
-                    savedUser.getId(), savedUser.getEmail(), company.getCompanyCode());
-        } catch (Exception ex) {
-            log.error("Failed to deliver user provisioning email | userId={} | email={} | error={}",
-                    savedUser.getId(), savedUser.getEmail(), ex.getMessage(), ex);
-            emailError = ex.getMessage();
+        // Step 1: Attempt Central Communication Service dispatch with idempotency key
+        if (communicationServiceClient != null && communicationServiceClient.isEnabled()) {
+            try {
+                String idempotencyKey = "user-provisioning-" + savedUser.getId();
+                dispatchedViaCommService = communicationServiceClient.sendEmployeeProvisioningEmail(
+                        company.getId(),
+                        savedUser.getEmail(),
+                        savedUser.getFullName(),
+                        company.getCompanyName(),
+                        savedUser.getUsername(),
+                        passwordSetupLink,
+                        companyLoginUrl,
+                        setupExpirationHours,
+                        idempotencyKey
+                );
+                if (dispatchedViaCommService) {
+                    emailSent = true;
+                    log.info("Provisioning email accepted by central Communication Service | userId={} | email={} | companyCode={}",
+                            savedUser.getId(), savedUser.getEmail(), company.getCompanyCode());
+                }
+            } catch (Exception commEx) {
+                log.warn("Central Communication Service call failed; falling back to local mailer | error={}", commEx.getMessage());
+            }
+        }
+
+        // Step 2: Graceful fallback to local EmailService if not dispatched centrally
+        if (!dispatchedViaCommService) {
+            try {
+                emailService.sendProvisioningEmail(
+                        savedUser.getEmail(),
+                        savedUser.getFullName(),
+                        company.getCompanyName(),
+                        savedUser.getUsername(),
+                        passwordSetupLink,
+                        companyLoginUrl,
+                        setupExpirationHours
+                );
+                emailSent = true;
+                log.info("Provisioning email accepted by local email service | userId={} | email={} | companyCode={}",
+                        savedUser.getId(), savedUser.getEmail(), company.getCompanyCode());
+            } catch (Exception ex) {
+                log.error("Failed to deliver user provisioning email | userId={} | email={} | error={}",
+                        savedUser.getId(), savedUser.getEmail(), ex.getMessage(), ex);
+                emailError = ex.getMessage();
+            }
         }
 
         UserResponse response = userMapper.toResponse(savedUser);
@@ -418,22 +451,51 @@ public class UserServiceImpl implements UserService {
 
         boolean emailSent = false;
         String emailError = null;
+        boolean dispatchedViaCommService = false;
 
-        try {
-            emailService.sendProvisioningEmail(
-                    user.getEmail(),
-                    user.getFullName(),
-                    company.getCompanyName(),
-                    user.getUsername(),
-                    passwordSetupLink,
-                    companyLoginUrl,
-                    setupExpirationHours
-            );
-            emailSent = true;
-            log.info("Setup email re-sent successfully | userId={} | email={}", user.getId(), user.getEmail());
-        } catch (Exception ex) {
-            log.error("Failed to re-send setup email | userId={} | error={}", user.getId(), ex.getMessage(), ex);
-            emailError = ex.getMessage();
+        // Step 1: Attempt Central Communication Service dispatch with idempotency key
+        if (communicationServiceClient != null && communicationServiceClient.isEnabled()) {
+            try {
+                String idempotencyKey = "user-resend-setup-" + user.getId() + "-" + System.currentTimeMillis();
+                dispatchedViaCommService = communicationServiceClient.sendEmployeeProvisioningEmail(
+                        company.getId(),
+                        user.getEmail(),
+                        user.getFullName(),
+                        company.getCompanyName(),
+                        user.getUsername(),
+                        passwordSetupLink,
+                        companyLoginUrl,
+                        setupExpirationHours,
+                        idempotencyKey
+                );
+                if (dispatchedViaCommService) {
+                    emailSent = true;
+                    log.info("Setup email re-sent successfully via central Communication Service | userId={} | email={}",
+                            user.getId(), user.getEmail());
+                }
+            } catch (Exception commEx) {
+                log.warn("Central Communication Service call failed on resend; falling back to local mailer | error={}", commEx.getMessage());
+            }
+        }
+
+        // Step 2: Graceful fallback to local EmailService
+        if (!dispatchedViaCommService) {
+            try {
+                emailService.sendProvisioningEmail(
+                        user.getEmail(),
+                        user.getFullName(),
+                        company.getCompanyName(),
+                        user.getUsername(),
+                        passwordSetupLink,
+                        companyLoginUrl,
+                        setupExpirationHours
+                );
+                emailSent = true;
+                log.info("Setup email re-sent successfully via local email service | userId={} | email={}", user.getId(), user.getEmail());
+            } catch (Exception ex) {
+                log.error("Failed to re-send setup email | userId={} | error={}", user.getId(), ex.getMessage(), ex);
+                emailError = ex.getMessage();
+            }
         }
 
         UserResponse response = userMapper.toResponse(user);

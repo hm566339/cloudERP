@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request for Quotation</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f8;font-family:Arial,sans-serif;color:#333333;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                    <tr>
+                        <td align="center" style="background:#334155;padding:24px;color:#ffffff;font-size:22px;font-weight:bold;">
+                            Request for Quotation — <span th:text="${rfqNumber}">RFQ-001</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:32px;font-size:15px;line-height:1.6;">
+                            <p style="margin:0 0 16px;">Dear <strong th:text="${vendorName} ? ${vendorName} : 'Vendor'">Vendor</strong>,</p>
+                            <p style="margin:0 0 20px;">
+                                You are invited to submit a quotation for RFQ <strong th:text="${rfqNumber}">RFQ-001</strong> issued by <strong th:text="${companyName} ? ${companyName} : 'Our Company'">Our Company</strong>.
+                            </p>
+                            
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px;">
+                                <tr>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;font-weight:600;">RFQ Number</td>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#0f172a;font-weight:600;" th:text="${rfqNumber}">RFQ-100</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;font-weight:600;">Quotation Deadline</td>
+                                    <td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#dc2626;font-weight:600;" th:text="${quotationDeadline} ? ${quotationDeadline} : 'Not Specified'">Deadline</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:12px 16px;font-size:13px;color:#64748b;font-weight:600;">Expected Delivery Date</td>
+                                    <td style="padding:12px 16px;font-size:14px;color:#0f172a;" th:text="${expectedDeliveryDate} ? ${expectedDeliveryDate} : 'Not Specified'">Delivery Date</td>
+                                </tr>
+                            </table>
+
+                            <p style="margin:20px 0 0;font-size:14px;color:#475569;">
+                                Please review the attached RFQ document and submit your competitive pricing before the deadline.
+                            </p>
+                            <p style="margin:16px 0 0;font-size:14px;color:#475569;">
+                                Regards,<br>
+                                <strong th:text="${companyName} ? ${companyName} : 'Procurement Team'">Procurement Team</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="background:#f8fafc;padding:18px;color:#94a3b8;font-size:12px;">
+                            &copy; Mark2 ERP. All rights reserved.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

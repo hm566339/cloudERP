@@ -762,5 +762,18 @@ public class EmailService {
                     .replace("'", "&#39;");
     }
 
+    public static String maskEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return "[empty]";
+        }
+        int atIdx = email.indexOf('@');
+        if (atIdx <= 1) {
+            return "***" + email.substring(Math.max(0, atIdx));
+        }
+        String local = email.substring(0, atIdx);
+        String domain = email.substring(atIdx);
+        return local.charAt(0) + "***" + local.charAt(local.length() - 1) + domain;
+    }
+
 }
 
