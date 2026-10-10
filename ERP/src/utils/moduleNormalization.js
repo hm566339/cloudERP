@@ -137,6 +137,19 @@ export function normalizeFeaturesList(rawFeatures) {
   });
 }
 
+export function normalizeFeatureCode(input) {
+  if (!input) return '';
+  const clean = String(input).trim().toUpperCase().replace(/[-\s]/g, '_');
+  if (clean === 'ROLES') return 'ROLE';
+  if (clean === 'USERS') return 'USER';
+  if (clean === 'PERMISSIONS') return 'PERMISSION';
+  if (clean === 'FEATURES') return 'FEATURE';
+  if (clean === 'MODULES') return 'MODULE';
+  if (clean === 'SESSIONS') return 'SESSION';
+  if (clean === 'PORTAL_ACCESS' || clean === 'PORTALACCESS') return 'PORTAL_ACCESS';
+  return clean;
+}
+
 export function normalizePermissionsList(rawPermissions) {
   if (!Array.isArray(rawPermissions)) return [];
   return rawPermissions.map((p) => {
@@ -154,9 +167,14 @@ export function normalizePermissionsList(rawPermissions) {
         allowed: true,
       };
     }
-    const feat = String(p.featureCode || p.feature || '').trim().toUpperCase();
-    const act = String(p.action || '').trim().toUpperCase();
+    let feat = String(p.featureCode || p.feature || '').trim().toUpperCase();
+    let act = String(p.action || '').trim().toUpperCase();
     const permCode = String(p.permissionCode || (act ? `${feat}:${act}` : feat)).trim().toUpperCase();
+    if (!feat && permCode.includes(':')) {
+      const parts = permCode.split(':');
+      feat = parts[0] || '';
+      if (!act) act = parts[1] || '';
+    }
     const explicitMod = normalizeModuleName(p.moduleName);
     const resolvedMod = explicitMod || (SSO_FEATURE_CODES.includes(feat) ? CANONICAL_MODULES.SSO : '');
     return {
@@ -415,6 +433,7 @@ export function canViewModule(authContext, moduleOrFeature) {
 
   // 2. Is it a feature/sub-module? (e.g. 'CUSTOMERS', 'BANK_ACCOUNTS', 'PRODUCTS', 'STOCK')
   const upper = str.toUpperCase();
+  const normUpper = normalizeFeatureCode(upper);
   const features = authContext?.features || [];
   const permissions = authContext?.permissions || [];
 
@@ -422,28 +441,31 @@ export function canViewModule(authContext, moduleOrFeature) {
   const matchingPerm = permissions.find((p) => {
     if (typeof p === 'string') {
       const parts = p.toUpperCase().split(':');
-      return (parts[0] === upper || p.toUpperCase() === upper) && p.toUpperCase() !== 'ALL';
+      const pFeat = parts[0] || p.toUpperCase();
+      return (pFeat === upper || pFeat === normUpper || p.toUpperCase() === upper) && p.toUpperCase() !== 'ALL';
     }
     const feat = String(p.featureCode || p.feature || '').trim().toUpperCase();
-    return feat === upper && p.allowed !== false && p.active !== false;
+    const pCode = String(p.permissionCode || '').trim().toUpperCase();
+    const pFeat = pCode.includes(':') ? pCode.split(':')[0] : feat;
+    return (feat === upper || feat === normUpper || pFeat === upper || pFeat === normUpper) && p.allowed !== false && p.active !== false;
   });
 
   if (matchingPerm) {
     const parentMod = typeof matchingPerm === 'object' ? normalizeModuleName(matchingPerm.moduleName) : null;
-    if (!parentMod || entitled.includes(parentMod)) {
+    if (!parentMod || parentMod === CANONICAL_MODULES.SSO || entitled.includes(parentMod)) {
       return true;
     }
   }
 
   const matchingFeat = features.find((f) => {
-    if (typeof f === 'string') return f.toUpperCase() === upper;
+    if (typeof f === 'string') return f.toUpperCase() === upper || f.toUpperCase() === normUpper;
     const code = String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase();
-    return code === upper && f.active !== false;
+    return (code === upper || code === normUpper) && f.active !== false;
   });
 
   if (matchingFeat) {
     const parentMod = typeof matchingFeat === 'object' ? normalizeModuleName(matchingFeat.moduleName) : null;
-    if (!parentMod || entitled.includes(parentMod)) {
+    if (!parentMod || parentMod === CANONICAL_MODULES.SSO || entitled.includes(parentMod)) {
       return true;
     }
   }

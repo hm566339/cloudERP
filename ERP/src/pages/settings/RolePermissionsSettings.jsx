@@ -3,7 +3,10 @@ import {
   Save, Loader2, Search, Plus, Copy, Info, 
   ChevronRight, ChevronDown, CheckCircle2, Users, LayoutGrid
 } from 'lucide-react';
-import { useAppDispatch } from '../../app/hooks';
+import { useParams } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectSelectedCompany } from '../../features/company-management/companySlice';
+import { selectCurrentUser } from '../../features/auth/authSlice';
 import { addAlert } from '../../features/notifications/notificationSlice';
 import { getRoles, getRolePermissions, syncRolePermissions, createRole } from '../../api/sso/role';
 import { getAllFeatures } from '../../api/sso/feature';
@@ -42,8 +45,16 @@ const PermissionCheckbox = ({ checked, indeterminate, disabled, onChange }) => {
 };
 
 export default function RolePermissionsSettings() {
-  const dispatch = useAppDispatch();
-  const companyId = JSON.parse(localStorage.getItem('selected_company'))?.id || JSON.parse(localStorage.getItem('auth_user'))?.companyCode;
+  const routeParams = useParams();
+  const selectedCompany = useAppSelector(selectSelectedCompany);
+  const currentUser = useAppSelector(selectCurrentUser);
+  const companyId = routeParams?.companyId || selectedCompany?.id || currentUser?.companyId || currentUser?.companyCode || (() => {
+    try {
+      return JSON.parse(localStorage.getItem('selected_company'))?.id || JSON.parse(localStorage.getItem('auth_user'))?.companyCode;
+    } catch {
+      return null;
+    }
+  })();
 
   const [roles, setRoles] = useState([]);
   const [features, setFeatures] = useState([]);

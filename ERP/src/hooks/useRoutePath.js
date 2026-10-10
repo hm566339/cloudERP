@@ -3,7 +3,7 @@ import { useRBAC } from '../utils/rbac';
 
 export function useRoutePath() {
   const { companyId } = useParams();
-  const { isSuperAdmin, isCompanyAdmin } = useRBAC();
+  const { isSuperAdmin, isCompanyAdmin, isOwner } = useRBAC();
 
   return {
     buildPath: (path) => {
@@ -13,7 +13,7 @@ export function useRoutePath() {
       const cleanPath = path.startsWith('/') ? path.slice(1) : path;
       
       // Determine if we are in a company-scoped admin view
-      const isAdmin = isSuperAdmin || isCompanyAdmin;
+      const isAdmin = isSuperAdmin || isCompanyAdmin || isOwner;
       
       if (isAdmin && companyId) {
         return `/company/${companyId}/${cleanPath}`;

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ShieldCheck, Save, Loader2, Info } from 'lucide-react';
-import { useAppDispatch } from '../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectSelectedCompany } from '../../features/company-management/companySlice';
+import { selectCurrentUser } from '../../features/auth/authSlice';
 import { addAlert } from '../../features/notifications/notificationSlice';
 import { getUsers } from '../../api/sso/user';
 import { getUserPermissions, getUserEffectivePermissions, syncUserPermissions } from '../../api/sso/permission';
@@ -13,7 +15,16 @@ import DataTable from '../../components/data-table/DataTable';
 
 export default function UserPermissionsSettings() {
   const dispatch = useAppDispatch();
-  const companyId = JSON.parse(localStorage.getItem('selected_company'))?.id || JSON.parse(localStorage.getItem('auth_user'))?.companyCode;
+  const routeParams = useParams();
+  const selectedCompany = useAppSelector(selectSelectedCompany);
+  const currentUser = useAppSelector(selectCurrentUser);
+  const companyId = routeParams?.companyId || selectedCompany?.id || currentUser?.companyId || currentUser?.companyCode || (() => {
+    try {
+      return JSON.parse(localStorage.getItem('selected_company'))?.id || JSON.parse(localStorage.getItem('auth_user'))?.companyCode;
+    } catch {
+      return null;
+    }
+  })();
 
   const [users, setUsers] = useState([]);
   const [features, setFeatures] = useState([]);

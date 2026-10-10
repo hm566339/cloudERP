@@ -125,6 +125,9 @@ const ModuleRoutesList = lazy(
 const PortalAccess = lazy(
   () => import("../features/portal-access/pages/PortalAccessList"),
 );
+const SessionList = lazy(
+  () => import("../features/sessions/pages/SessionList"),
+);
 
 // ─── Company Management ───────────────────────────────────────────────────────
 const CompanyDashboard = lazy(
@@ -867,6 +870,27 @@ export default function AppRoutes() {
           <Route path="users/:id" element={<UserDetails />} />
           <Route path="roles" element={<RoleList />} />
           <Route path="portal-access" element={<PortalAccess />} />
+          <Route path="sessions" element={<SessionList />} />
+          <Route path="security/roles" element={<RolePermissionsSettings />} />
+          <Route path="roles/permissions" element={<RolePermissionsSettings />} />
+          <Route path="security/users" element={<UserPermissionsSettings />} />
+          <Route path="security/features" element={<FeatureList />} />
+          <Route path="security/permissions" element={<PermissionList />} />
+          <Route path="features" element={<FeatureList />} />
+
+          {/* Settings & Admin Configuration (Tenant) */}
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings/general" element={<GeneralSettings />} />
+          <Route path="settings/security" element={<SecuritySettings />} />
+          <Route path="settings/security/features" element={<FeatureList />} />
+          <Route path="settings/security/permissions" element={<PermissionList />} />
+          <Route path="settings/security/roles" element={<RolePermissionsSettings />} />
+          <Route path="settings/security/users" element={<UserPermissionsSettings />} />
+          <Route path="settings/notifications" element={<NotificationsSettings />} />
+          <Route path="settings/integrations" element={<IntegrationsSettings />} />
+          <Route path="settings/audit-logs" element={<AuditLogsSettings />} />
+          <Route path="settings/preferences" element={<PreferencesSettings />} />
+          <Route path="settings/plans" element={<SubscriptionPlansSettings />} />
         </Route>
 
         {/* ── SUPERADMIN COMPANY ROUTES ── */}
@@ -928,6 +952,13 @@ export default function AppRoutes() {
           <Route path="users/:id" element={<UserDetails />} />
           <Route path="roles" element={<RoleList />} />
           <Route path="portal-access" element={<PortalAccess />} />
+          <Route path="sessions" element={<SessionList />} />
+          <Route path="security/roles" element={<RolePermissionsSettings />} />
+          <Route path="roles/permissions" element={<RolePermissionsSettings />} />
+          <Route path="security/users" element={<UserPermissionsSettings />} />
+          <Route path="security/features" element={<FeatureList />} />
+          <Route path="security/permissions" element={<PermissionList />} />
+          <Route path="features" element={<FeatureList />} />
 
           {/* Reports */}
           <Route path="reports" element={<FinancialReports />} />
@@ -939,12 +970,16 @@ export default function AppRoutes() {
 
           {/* Utility */}
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings/general" element={<GeneralSettings />} />
           <Route path="settings/security" element={<SecuritySettings />} />
           <Route path="settings/security/features" element={<FeatureList />} />
           <Route path="settings/security/permissions" element={<PermissionList />} />
           <Route path="settings/notifications" element={<NotificationsSettings />} />
           <Route path="settings/security/roles" element={<RolePermissionsSettings />} />
           <Route path="settings/security/users" element={<UserPermissionsSettings />} />
+          <Route path="settings/integrations" element={<IntegrationsSettings />} />
+          <Route path="settings/audit-logs" element={<AuditLogsSettings />} />
+          <Route path="settings/preferences" element={<PreferencesSettings />} />
           <Route path="settings/plans" element={<SubscriptionPlansSettings />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="*" element={<CompanyEntryRedirect />} />
@@ -997,7 +1032,7 @@ export default function AppRoutes() {
           path="/settings"
           element={
             <ProtectedRoute requireCompany={false}>
-              <RoleRoute allowedRoles={["super_admin"]}>
+              <RoleRoute allowedRoles={["super_admin", "owner", "company_admin"]}>
                 <CompanyLayout />
               </RoleRoute>
             </ProtectedRoute>
@@ -1010,6 +1045,10 @@ export default function AppRoutes() {
           <Route path="security/permissions" element={<PermissionList />} />
           <Route path="security/roles" element={<RolePermissionsSettings />} />
           <Route path="security/users" element={<UserPermissionsSettings />} />
+          <Route path="roles" element={<Navigate to="/settings/security/roles" replace />} />
+          <Route path="users" element={<Navigate to="/settings/security/users" replace />} />
+          <Route path="features" element={<Navigate to="/settings/security/features" replace />} />
+          <Route path="permissions" element={<Navigate to="/settings/security/permissions" replace />} />
           <Route path="notifications" element={<NotificationsSettings />} />
           <Route path="integrations" element={<IntegrationsSettings />} />
           <Route path="audit-logs" element={<AuditLogsSettings />} />

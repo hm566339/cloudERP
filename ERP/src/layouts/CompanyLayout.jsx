@@ -170,7 +170,7 @@ export default function CompanyLayout() {
     const modulePathStr = pathSegments[2]
 
     const globalCompanyRoutes = [
-      'dashboard', 'company-dashboard', 'settings', 'profile', 'modules', 'module-routes',
+      'dashboard', 'company-dashboard', 'settings', 'security', 'features', 'permissions', 'profile', 'modules', 'module-routes',
       'admin', 'users', 'roles', 'portal-access', 'sessions', 'reports', 'accounts',
       'sales-crm', 'workflows', 'workflow', 'approvals'
     ]
