@@ -56,6 +56,9 @@ public class User {
     @Column(length = 255)
     private String fullName;
 
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
     /*
      * ACCOUNT STATUS
      */

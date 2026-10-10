@@ -162,6 +162,28 @@ public class UserServiceImpl implements UserService {
     @Value("${api.frontend}")
     private String emailBaseUrl;
 
+    @Value("${sso.password-setup.expiration-hours:24}")
+    private int setupExpirationHours = 24;
+
+    public static final String ONBOARDING_NOTES =
+            "Account created. The user must set their password using the password-setup link sent to their registered email address. After setting the password, the user must log in through their assigned company's login URL. Do not use another company's login URL. If the setup link expires, contact the company administrator to request a new link.";
+
+    private String hashToken(String rawToken) {
+        if (rawToken == null) return null;
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(rawToken.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            log.error("Unable to hash token: {}", e.getMessage(), e);
+            throw new IllegalStateException("Token hashing failed", e);
+        }
+    }
+
     private void assertCompanyOwnership(Company company) {
         if (PlatformSecurityUtil.isElevatedAdmin()) {
             return;
@@ -203,70 +225,222 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Company is inactive");
         }
 
-        if (company.getOrganization() != null) {
-            Subscription subscription = subscriptionRepository
-                    .findTopByOrganization_IdOrderByCreatedAtDesc(company.getOrganization().getId())
-                    .orElse(null);
-            if (subscription != null && subscription.getPlan() != null) {
-                Integer maxUsersPerCompany = subscription.getPlan().getMaxUsersPerCompany();
-                if (maxUsersPerCompany != null) {
-                    long currentUsers = userRepository.countByCompanyId(companyId);
-                    if (currentUsers >= maxUsersPerCompany) {
-                        throw new BadRequestException("Maximum users limit per company (" + maxUsersPerCompany + ") reached for plan");
+        String username = request.getUsername().trim();
+        String email = request.getEmail().trim().toLowerCase(java.util.Locale.ROOT);
+
+        // Check if an existing user matches in this company
+        Optional<User> existingByUsername = userRepository.findByCompany_IdAndUsernameIgnoreCase(companyId, username);
+        Optional<User> existingByEmail = userRepository.findByCompany_IdAndEmailIgnoreCase(companyId, email);
+
+        User savedUser;
+
+        // Graceful retry handling for pending/unverified user provisioning
+        if (existingByEmail.isPresent() || existingByUsername.isPresent()) {
+            User existing = existingByEmail.orElseGet(() -> existingByUsername.orElse(null));
+            if (existing.getAccountStatus() == AccountStatus.INACTIVE && existing.getEmailStatus() == Status.UNVERIFIED) {
+                log.info("Reprovisioning pending user | userId={} | companyId={} | email={}", existing.getId(), companyId, email);
+                existing.setFullName(request.getFullName().trim());
+                existing.setEmpId(request.getEmpId().trim());
+                existing.setUsername(username);
+                existing.setEmail(email);
+                existing.setNotes(ONBOARDING_NOTES);
+                savedUser = userRepository.save(existing);
+            } else {
+                if (existingByUsername.isPresent()) {
+                    throw new BadRequestException("Username already exists");
+                }
+                throw new BadRequestException("Email already exists");
+            }
+        } else {
+            // Check plan user limits only for new user creation
+            if (company.getOrganization() != null) {
+                Subscription subscription = subscriptionRepository
+                        .findTopByOrganization_IdOrderByCreatedAtDesc(company.getOrganization().getId())
+                        .orElse(null);
+                if (subscription != null && subscription.getPlan() != null) {
+                    Integer maxUsersPerCompany = subscription.getPlan().getMaxUsersPerCompany();
+                    if (maxUsersPerCompany != null) {
+                        long currentUsers = userRepository.countByCompanyId(companyId);
+                        if (currentUsers >= maxUsersPerCompany) {
+                            throw new BadRequestException("Maximum users limit per company (" + maxUsersPerCompany + ") reached for plan");
+                        }
                     }
                 }
             }
+
+            // Secure unguessable random placeholder, account remains INACTIVE until user sets password
+            String randomSecureSecret = JwtService.generateRandomToken();
+            User user = User.builder()
+                    .empId(request.getEmpId().trim())
+                    .username(username)
+                    .fullName(request.getFullName().trim())
+                    .email(email)
+                    .password(passwordEncoder.encode(randomSecureSecret))
+                    .company(company)
+                    .accountStatus(AccountStatus.INACTIVE)
+                    .emailStatus(Status.UNVERIFIED)
+                    .failedLoginCount(0)
+                    .notes(ONBOARDING_NOTES)
+                    .build();
+
+            savedUser = userRepository.save(user);
         }
 
-        String username = request.getUsername().trim();
-        String email = request.getEmail()
-                .trim()
-                .toLowerCase();
+        // Grant initial portal access for module if not already granted
+        companyModuleRepository.findByCompany_IdAndModule_Id(company.getId(), module.getId())
+                .ifPresent(cm -> {
+                    if (!userPortalAccessRepository.existsByUser_IdAndCompanyModule_Id(savedUser.getId(), cm.getId())) {
+                        UserPortalAccess access = UserPortalAccess.builder()
+                                .user(savedUser)
+                                .companyModule(cm)
+                                .status(true)
+                                .build();
+                        userPortalAccessRepository.save(access);
+                    }
+                });
 
-        if (userRepository.existsByCompany_IdAndUsernameIgnoreCase(
-                companyId, username)) {
-            throw new BadRequestException("Username already exists");
+        // Invalidate previous unused setup/verification tokens for this user
+        List<UserToken> previousTokens = userTokenRepository.findByUser_IdAndTokenTypeInAndUsedFalse(
+                savedUser.getId(),
+                List.of(TokenType.PASSWORD_SETUP, TokenType.PASSWORD_RESET, TokenType.EMAIL_VERIFICATION)
+        );
+        for (UserToken pt : previousTokens) {
+            pt.setUsed(true);
+        }
+        if (!previousTokens.isEmpty()) {
+            userTokenRepository.saveAll(previousTokens);
         }
 
-        if (userRepository.existsByCompany_IdAndEmailIgnoreCase(companyId, email)) {
-            throw new BadRequestException("Email already exists");
-        }
-        String rawPassword = generate(12);
-        User user = User.builder()
-                .empId(request.getEmpId())
-                .username(username)
-                .fullName(request.getFullName().trim())
-                .email(email)
-                .password(passwordEncoder.encode(rawPassword))
-                .company(company)
-                .accountStatus(AccountStatus.INACTIVE)
-                .emailStatus(Status.UNVERIFIED)
-                .failedLoginCount(0)
-                .build();
+        // Generate secure single-use time-limited token
+        String rawToken = JwtService.generateRandomToken();
+        String hashedToken = hashToken(rawToken);
 
-        User savedUser = userRepository.save(user);
-        String tokenValue = jwtService.generateRandomToken();
         UserToken userToken = UserToken.builder()
-                .token(tokenValue)
+                .token(hashedToken)
                 .user(savedUser)
                 .company(company)
                 .module(module)
-                .tokenType(TokenType.EMAIL_VERIFICATION)
-                .expiresAt(LocalDateTime.now().plusMinutes(VERIFY_TOKEN_MINUTES))
+                .tokenType(TokenType.PASSWORD_SETUP)
+                .expiresAt(LocalDateTime.now().plusHours(setupExpirationHours))
                 .used(false)
                 .build();
-
         userTokenRepository.save(userToken);
+
+        // Build URLs using trusted configured public base URL and company slug/code
+        String base = (emailBaseUrl != null && !emailBaseUrl.isBlank())
+                ? emailBaseUrl.replaceAll("/$", "")
+                : "https://www.mark2.in/erp";
+        String passwordSetupLink = base + "/set-password?token=" + rawToken;
+        String companyLoginUrl = base + "/c/" + company.getCompanyCode().trim().toLowerCase(java.util.Locale.ROOT) + "/login";
+
+        boolean emailSent = false;
+        String emailError = null;
+
         try {
-            String verifyUrl = emailBaseUrl
-                    + "/verify-email?token=" + tokenValue;
-
-            emailService.sendEmail(savedUser.getEmail(), verifyUrl);
-
-        } catch (Exception e) {
-            throw new BadRequestException("User created but email sending failed");
+            emailService.sendProvisioningEmail(
+                    savedUser.getEmail(),
+                    savedUser.getFullName(),
+                    company.getCompanyName(),
+                    savedUser.getUsername(),
+                    passwordSetupLink,
+                    companyLoginUrl,
+                    setupExpirationHours
+            );
+            emailSent = true;
+            log.info("Provisioning email accepted by email service | userId={} | email={} | companyCode={}",
+                    savedUser.getId(), savedUser.getEmail(), company.getCompanyCode());
+        } catch (Exception ex) {
+            log.error("Failed to deliver user provisioning email | userId={} | email={} | error={}",
+                    savedUser.getId(), savedUser.getEmail(), ex.getMessage(), ex);
+            emailError = ex.getMessage();
         }
-        return userMapper.toResponse(savedUser);
+
+        UserResponse response = userMapper.toResponse(savedUser);
+        response.setNotes(savedUser.getNotes());
+        response.setEmailSent(emailSent);
+        response.setEmailError(emailError);
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public UserResponse resendSetupEmail(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        assertUserAccess(user);
+
+        if (user.getAccountStatus() == AccountStatus.ACTIVE && user.getEmailStatus() == Status.VERIFIED) {
+            throw new BadRequestException("User has already activated their account and set their password");
+        }
+
+        Company company = user.getCompany();
+        if (company == null) {
+            throw new BadRequestException("User is not associated with a company");
+        }
+
+        // Invalidate prior unused tokens
+        List<UserToken> previousTokens = userTokenRepository.findByUser_IdAndTokenTypeInAndUsedFalse(
+                user.getId(),
+                List.of(TokenType.PASSWORD_SETUP, TokenType.PASSWORD_RESET, TokenType.EMAIL_VERIFICATION)
+        );
+        for (UserToken pt : previousTokens) {
+            pt.setUsed(true);
+        }
+        if (!previousTokens.isEmpty()) {
+            userTokenRepository.saveAll(previousTokens);
+        }
+
+        // Find module for token
+        Module module = userPortalAccessRepository
+                .findFirstByUser_IdAndStatusTrueOrderByCreatedAtAsc(user.getId())
+                .map(upa -> upa.getCompanyModule().getModule())
+                .orElseGet(() -> moduleRepository.findByModuleStatus(true).stream().findFirst().orElse(null));
+
+        String rawToken = JwtService.generateRandomToken();
+        String hashedToken = hashToken(rawToken);
+
+        UserToken userToken = UserToken.builder()
+                .token(hashedToken)
+                .user(user)
+                .company(company)
+                .module(module)
+                .tokenType(TokenType.PASSWORD_SETUP)
+                .expiresAt(LocalDateTime.now().plusHours(setupExpirationHours))
+                .used(false)
+                .build();
+        userTokenRepository.save(userToken);
+
+        String base = (emailBaseUrl != null && !emailBaseUrl.isBlank())
+                ? emailBaseUrl.replaceAll("/$", "")
+                : "https://www.mark2.in/erp";
+        String passwordSetupLink = base + "/set-password?token=" + rawToken;
+        String companyLoginUrl = base + "/c/" + company.getCompanyCode().trim().toLowerCase(java.util.Locale.ROOT) + "/login";
+
+        boolean emailSent = false;
+        String emailError = null;
+
+        try {
+            emailService.sendProvisioningEmail(
+                    user.getEmail(),
+                    user.getFullName(),
+                    company.getCompanyName(),
+                    user.getUsername(),
+                    passwordSetupLink,
+                    companyLoginUrl,
+                    setupExpirationHours
+            );
+            emailSent = true;
+            log.info("Setup email re-sent successfully | userId={} | email={}", user.getId(), user.getEmail());
+        } catch (Exception ex) {
+            log.error("Failed to re-send setup email | userId={} | error={}", user.getId(), ex.getMessage(), ex);
+            emailError = ex.getMessage();
+        }
+
+        UserResponse response = userMapper.toResponse(user);
+        response.setNotes(user.getNotes());
+        response.setEmailSent(emailSent);
+        response.setEmailError(emailError);
+        return response;
     }
 
     @Override

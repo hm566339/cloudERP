@@ -2066,9 +2066,25 @@ public class AuthServiceImpl implements AuthService {
 
         // ==================== RESET PASSWORD ====================
         // FIX #8: method signature uses PasswordReset (correct spelling)
+        private String hashToken(String rawToken) {
+                if (rawToken == null) return null;
+                try {
+                        byte[] digest = MessageDigest.getInstance("SHA-256")
+                                        .digest(rawToken.trim().getBytes(StandardCharsets.UTF_8));
+                        StringBuilder sb = new StringBuilder();
+                        for (byte b : digest) {
+                                sb.append(String.format("%02x", b));
+                        }
+                        return sb.toString();
+                } catch (Exception e) {
+                        log.error("Unable to hash token | error={}", e.getMessage(), e);
+                        throw new IllegalStateException("Unable to hash token", e);
+                }
+        }
+
         @Override
         @Transactional
-        public String resetPassword(
+        public Map<String, String> resetPasswordWithDetails(
                         PasswordReset passwordReset,
                         String code) {
 
@@ -2079,31 +2095,35 @@ public class AuthServiceImpl implements AuthService {
                                         "Token is required");
                 }
 
-                log.info("Password reset attempt | token={}", maskCode(code));
+                String rawCode = code.trim();
+                String hashedCode = hashToken(rawCode);
+
+                log.info("Password setup/reset attempt | token={}", maskCode(rawCode));
 
                 UserToken token = userTokenRepository
-                                .findByToken(code.trim())
+                                .findByToken(hashedCode)
+                                .or(() -> userTokenRepository.findByToken(rawCode))
                                 .orElseThrow(() -> {
-                                        log.warn("Password reset failed - token not found | token={}", maskCode(code));
+                                        log.warn("Password setup/reset failed - token not found | token={}", maskCode(rawCode));
                                         return new BadCredentialsException("Token not found");
                                 });
 
-                if (token.getTokenType() != TokenType.PASSWORD_RESET) {
-                        log.warn("Password reset failed - invalid token type | token={} | type={}", maskCode(code), token.getTokenType());
+                if (token.getTokenType() != TokenType.PASSWORD_RESET && token.getTokenType() != TokenType.PASSWORD_SETUP) {
+                        log.warn("Password setup/reset failed - invalid token type | token={} | type={}", maskCode(rawCode), token.getTokenType());
                         throw new BadCredentialsException(
                                         "Invalid token");
                 }
 
                 if (Boolean.TRUE.equals(
                                 token.getUsed())) {
-                        log.warn("Password reset failed - token already used | token={}", maskCode(code));
+                        log.warn("Password setup/reset failed - token already used | token={}", maskCode(rawCode));
                         throw new BadCredentialsException(
                                         "Token already used");
                 }
 
                 if (token.getExpiresAt()
                                 .isBefore(LocalDateTime.now())) {
-                        log.warn("Password reset failed - token expired | token={} | expiredAt={}", maskCode(code), token.getExpiresAt());
+                        log.warn("Password setup/reset failed - token expired | token={} | expiredAt={}", maskCode(rawCode), token.getExpiresAt());
                         throw new TokenExpiredException(
                                         "Token expired");
                 }
@@ -2111,7 +2131,7 @@ public class AuthServiceImpl implements AuthService {
                 User user = token.getUser();
 
                 if (user == null) {
-                        log.warn("Password reset failed - invalid token user | token={}", maskCode(code));
+                        log.warn("Password setup/reset failed - invalid token user | token={}", maskCode(rawCode));
                         throw new BadCredentialsException(
                                         "Invalid token user");
                 }
@@ -2119,7 +2139,7 @@ public class AuthServiceImpl implements AuthService {
                 Company company = token.getCompany();
 
                 if (company == null) {
-                        log.warn("Password reset failed - invalid company token | token={}", maskCode(code));
+                        log.warn("Password setup/reset failed - invalid company token | token={}", maskCode(rawCode));
                         throw new InvalidOperationException(
                                         "Invalid company token");
                 }
@@ -2129,18 +2149,36 @@ public class AuthServiceImpl implements AuthService {
 
                 user.setFailedLoginCount(0);
                 user.setLockedUntil(null);
+                user.setAccountStatus(AccountStatus.ACTIVE);
+                user.setEmailStatus(Status.VERIFIED);
                 userRepository.save(user);
                 token.setUsed(true);
                 userTokenRepository.save(token);
                 sessionRepository.deleteByUser_Id(
                                 user.getId());
 
+                String companyCode = company.getCompanyCode();
+                String base = (url != null ? url.replaceAll("/$", "") : "");
+                String companyLoginUrl = base + "/c/" + companyCode.toLowerCase(Locale.ROOT) + "/login";
+
                 log.info(
-                                "Password reset successful | userId={} | companyId={}",
+                                "Password setup/reset successful | userId={} | companyId={}",
                                 user.getId(),
                                 company.getId());
 
-                return "Password reset successfully";
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Password set successfully");
+                response.put("companyCode", companyCode);
+                response.put("companyLoginUrl", companyLoginUrl);
+                return response;
+        }
+
+        @Override
+        @Transactional
+        public String resetPassword(
+                        PasswordReset passwordReset,
+                        String code) {
+                return resetPasswordWithDetails(passwordReset, code).get("message");
         }
 
         @Override

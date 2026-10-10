@@ -158,13 +158,23 @@ export default function UserCreateEditModal({
           throw new Error("Could not resolve company UUID. Please select a valid company.");
         }
 
-        await createUserMutation(finalCompanyId, selectedModuleId, {
+        const res = await createUserMutation(finalCompanyId, selectedModuleId, {
           empId,
           username,
           email,
           fullName: name.trim(),
         });
-        dispatch(addAlert({ type: "success", message: "User provisioned successfully" }));
+        if (res && res.emailSent === false) {
+          dispatch(addAlert({
+            type: "warning",
+            message: `User created, but password-setup email could not be delivered: ${res.emailError || "SMTP service unavailable"}. You can resend the setup email from the user actions.`
+          }));
+        } else {
+          dispatch(addAlert({
+            type: "success",
+            message: "User account provisioned successfully and password setup email sent!"
+          }));
+        }
       }
       onClose();
     } catch (error) {
@@ -299,7 +309,7 @@ export default function UserCreateEditModal({
               disabled={isSubmitting}
               className="btn-primary"
             >
-              {isSubmitting ? "Saving..." : currentUser ? "Save Changes" : "Provision User"}
+              {isSubmitting ? (currentUser ? "Saving..." : "Provisioning...") : currentUser ? "Save Changes" : "Provision User"}
             </button>
           </div>
         </form>

@@ -519,6 +519,8 @@ export default function AppRoutes() {
           <Route path="/:moduleCode/login" element={<Login />} />
           <Route path="/o/:organizationCode/login" element={<Login />} />
           <Route path="/o/:organizationCode" element={<Navigate to="login" replace />} />
+          <Route path="/c/:companyCode/login" element={<Login />} />
+          <Route path="/c/:companyCode" element={<Navigate to="login" replace />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/account/callback" element={<AuthCallback />} />
@@ -527,6 +529,8 @@ export default function AppRoutes() {
           <Route path="/forgot-password/:token" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/set-password" element={<ResetPassword />} />
+          <Route path="/set-password/:token" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/register" element={<Register />} />
           <Route path="/quotation/accept/:token" element={<QuotationAcceptancePage />} />

@@ -160,3 +160,8 @@ export const resetPassword = async (token, password) => {
   });
   return response.data?.data || response.data;
 };
+
+export const resendSetupEmail = async (userId) => {
+  const response = await apiClient.post(`/api/sso/user/${userId}/resend-setup-email`);
+  return response.data?.data || response.data;
+};

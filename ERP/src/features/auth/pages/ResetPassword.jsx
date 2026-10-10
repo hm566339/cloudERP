@@ -1,19 +1,22 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { KeyRound, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { KeyRound, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from "lucide-react";
 import { useAppDispatch } from "../../../app/hooks";
 import { addAlert } from "../../notifications/notificationSlice";
 import { resetPassword } from '../../../api/sso/user';
-import { useSearchParams, useParams } from "react-router-dom";
 import { useRoutePath } from "../../../hooks/useRoutePath";
 
 const schema = yup.object().shape({
   password: yup
     .string()
-    .min(6, "Password must be at least 6 characters")
+    .min(8, "Password must be at least 8 characters")
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=])/,
+      "Password must contain uppercase, lowercase, number, and special character (@#$%^&+=)"
+    )
     .required("Password is required"),
   confirmPassword: yup
     .string()
@@ -23,6 +26,7 @@ const schema = yup.object().shape({
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { buildPath } = useRoutePath();
   const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +34,8 @@ export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const token = paramToken || searchParams.get("token");
   const [loading, setLoading] = useState(false);
+
+  const isSetPassword = location.pathname.includes("set-password");
 
   const {
     register,
@@ -41,25 +47,31 @@ export default function ResetPassword() {
 
   const onSubmit = async (data) => {
     if (!token) {
-      dispatch(addAlert({ type: "error", message: "Invalid or missing reset token." }));
+      dispatch(addAlert({ type: "error", message: "Invalid or missing setup/reset token." }));
       return;
     }
     
     try {
       setLoading(true);
-      await resetPassword(token, data.password);
+      const res = await resetPassword(token, data.password);
       dispatch(
         addAlert({
           type: "success",
-          message: "Password reset successfully! Log in with your new credentials.",
+          message: isSetPassword
+            ? "Password created successfully! Please log in to your company portal."
+            : "Password reset successfully! Log in with your new credentials.",
         }),
       );
-      navigate(buildPath("/login"));
+      if (res?.companyCode) {
+        navigate(`/c/${res.companyCode}/login`);
+      } else {
+        navigate(buildPath("/login"));
+      }
     } catch (error) {
       dispatch(
         addAlert({
           type: "error",
-          message: error?.response?.data?.message || "Failed to reset password. The link might be expired.",
+          message: error?.response?.data?.message || "Failed to process password. The link might be expired or already used.",
         })
       );
     } finally {
@@ -74,15 +86,24 @@ export default function ResetPassword() {
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
 
       <div className="space-y-3 mb-10 text-center relative z-10 mt-2">
-        <h2 className="text-3xl sm:text-4xl font-display font-black text-zinc-900 tracking-tight leading-tight">New password</h2>
-        <p className="text-[12px] text-zinc-500 font-medium">Please enter and confirm your new credentials</p>
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 mb-2 shadow-inner">
+          <ShieldCheck size={26} />
+        </div>
+        <h2 className="text-3xl sm:text-4xl font-display font-black text-zinc-900 tracking-tight leading-tight">
+          {isSetPassword ? "Set Your Password" : "New password"}
+        </h2>
+        <p className="text-[12px] text-zinc-500 font-medium">
+          {isSetPassword 
+            ? "Create a secure password to activate your company user account" 
+            : "Please enter and confirm your new credentials"}
+        </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative z-10">
         {/* New Password */}
         <div className="space-y-2">
           <label className="text-[11.2px] font-bold text-zinc-700 block">
-            New Password
+            {isSetPassword ? "New Password" : "New Password"}
           </label>
           <div className="relative group">
             <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-zinc-400 group-focus-within:text-primary transition-colors pointer-events-none z-10">
@@ -112,7 +133,7 @@ export default function ResetPassword() {
         {/* Confirm Password */}
         <div className="space-y-2">
           <label className="text-[11.2px] font-bold text-zinc-700 block">
-            Confirm New Password
+            Confirm Password
           </label>
           <div className="relative group">
             <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-zinc-400 group-focus-within:text-primary transition-colors pointer-events-none z-10">
@@ -141,7 +162,7 @@ export default function ResetPassword() {
             <div className="w-6 h-6 border-2 border-zinc-300 border-t-white rounded-full animate-spin"></div>
           ) : (
             <>
-              <span>Reset Password</span>
+              <span>{isSetPassword ? "Set Password & Continue" : "Reset Password"}</span>
               <ArrowRight size={20} className="group-hover:translate-x-1.5 transition-transform" />
             </>
           )}

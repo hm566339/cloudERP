@@ -56,4 +56,6 @@ public interface UserService {
 
     Status verifyEmailAdmin(UUID id, Status status);
 
+    UserResponse resendSetupEmail(UUID userId);
+
 }

@@ -4,7 +4,7 @@ import { useAppSelector } from "../../../app/hooks";
 import { selectCurrentUser } from "../../../features/auth/authSlice";
 import {
   Search, UserPlus, Key, Edit, Edit2, Trash2, CheckCircle, AlertCircle, Eye, ShieldAlert,
-  Users, Building2, Layers, UserCog, RotateCcw, RefreshCw, ChevronDown, X
+  Users, Building2, Layers, UserCog, RotateCcw, RefreshCw, ChevronDown, X, Mail
 } from "lucide-react";
 import { useAppDispatch } from "../../../app/hooks";
 import { addAlert } from "../../notifications/notificationSlice";
@@ -12,7 +12,8 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   getUsers, createUser, updateUser, deleteUser,
   assignRole, removeRole, grantPortalAccess, removePortalAccess,
-  changePassword, togglePortalAccess, updateUserStatus, verifyUserEmail
+  changePassword, togglePortalAccess, updateUserStatus, verifyUserEmail,
+  resendSetupEmail
 } from '../../../api/sso/user';
 import { getCompanies, getCompanyByCode } from '../../../api/sso/company';
 import { getRoles } from '../../../api/sso/role';
@@ -343,6 +344,22 @@ export default function UserList() {
     }
   }, [dispatch, fetchUsers]);
 
+  const handleResendSetupEmail = React.useCallback(async (targetUser) => {
+    try {
+      const res = await resendSetupEmail(targetUser.id);
+      dispatch(addAlert({
+        type: "success",
+        message: res?.message || `Password setup email resent to ${targetUser.email}`
+      }));
+    } catch (err) {
+      console.error("Resend email error:", err);
+      dispatch(addAlert({
+        type: "error",
+        message: err?.response?.data?.message || "Failed to resend setup email"
+      }));
+    }
+  }, [dispatch]);
+
   const openChangePasswordModal = (user) => {
     setPasswordTargetUser(user);
     setShowPasswordModal(true);
@@ -588,8 +605,16 @@ export default function UserList() {
         onClick: (row) => handleDelete(row.id, row.name),
         tooltip: 'Delete User'
       }
-    ] : [])
-  ], [canEdit, canDelete, handleDelete]);
+    ] : []),
+    {
+      key: 'resend-setup-email',
+      label: 'Resend Setup Email',
+      icon: Mail,
+      onClick: (row) => handleResendSetupEmail(row),
+      tooltip: 'Resend Setup Email',
+      className: 'hover:text-sky-600 hover:bg-sky-50'
+    }
+  ], [canEdit, canDelete, handleDelete, handleResendSetupEmail]);
 
   const renderExpandedRow = (user) => {
     return (
@@ -645,6 +670,28 @@ export default function UserList() {
                 );
               })}
             </div>
+          </div>
+        )}
+        {user.notes && (
+          <div className="space-y-1 col-span-full bg-amber-50/70 border border-amber-200/80 rounded-lg p-3">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-amber-900 block">
+              Onboarding Notes
+            </span>
+            <p className="text-xs text-zinc-700 leading-relaxed whitespace-pre-wrap">{user.notes}</p>
+          </div>
+        )}
+        {user.emailStatus !== 'VERIFIED' && (
+          <div className="col-span-full flex items-center justify-between bg-sky-50/70 border border-sky-200/70 rounded-lg p-3">
+            <div className="text-xs text-sky-800">
+              <span className="font-bold">Pending Password Setup:</span> The user has not activated their account yet.
+            </div>
+            <button
+              onClick={() => handleResendSetupEmail(user)}
+              className="px-3 py-1.5 text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors flex items-center gap-1.5 shadow-xs"
+            >
+              <Mail size={13} />
+              <span>Resend Setup Email</span>
+            </button>
           </div>
         )}
       </div>

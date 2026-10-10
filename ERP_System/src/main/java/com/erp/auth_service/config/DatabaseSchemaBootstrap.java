@@ -27,6 +27,7 @@ public class DatabaseSchemaBootstrap implements CommandLineRunner {
         log.info("Ensuring database column nullability compatibility for Organization Owner flows...");
         dropColumnNotNullSafely("authorization_code", "company_id");
         dropColumnNotNullSafely("session", "company_id");
+        addColumnIfMissingSafely("\"user\"", "notes", "TEXT");
     }
 
     private void dropColumnNotNullSafely(String tableName, String columnName) {
@@ -38,6 +39,17 @@ public class DatabaseSchemaBootstrap implements CommandLineRunner {
         } catch (Exception ex) {
             log.warn("Could not alter {}.{} (table may not exist or constraint already dropped): {}",
                     tableName, columnName, ex.getMessage());
+        }
+    }
+
+    private void addColumnIfMissingSafely(String tableName, String columnName, String columnType) {
+        try {
+            jdbcTemplate.execute(
+                    "ALTER TABLE " + tableName + " ADD COLUMN IF NOT EXISTS " + columnName + " " + columnType
+            );
+            log.info("Successfully verified/added column {}.{}", tableName, columnName);
+        } catch (Exception ex) {
+            log.warn("Could not add column {}.{}: {}", tableName, columnName, ex.getMessage());
         }
     }
 }

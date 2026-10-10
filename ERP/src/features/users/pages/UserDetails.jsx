@@ -18,7 +18,8 @@ import {
   removeRole,
   grantPortalAccess,
   removePortalAccess,
-  togglePortalAccess
+  togglePortalAccess,
+  resendSetupEmail
 } from '../../../api/sso/user';
 import { getRoles } from '../../../api/sso/role';
 import { getCompanyModulesByCompany } from '../../../api/sso/companyModules';
@@ -325,6 +326,21 @@ export default function UserDetails() {
     }
   };
 
+  const handleResendSetupEmail = async () => {
+    try {
+      const res = await resendSetupEmail(user.id);
+      dispatch(addAlert({
+        type: 'success',
+        message: res?.message || `Password setup email sent to ${user.email}`
+      }));
+    } catch (err) {
+      dispatch(addAlert({
+        type: 'error',
+        message: err?.response?.data?.message || 'Failed to resend setup email'
+      }));
+    }
+  };
+
   const handleToggleAccountStatus = async () => {
     const newStatus = user.accountStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     const confirmed = await confirmDialog({
@@ -412,6 +428,13 @@ export default function UserDetails() {
         },
         ...(canEdit() ? [
           { type: 'divider' },
+          ...(user.emailStatus !== 'VERIFIED' ? [
+            {
+              label: 'Resend Setup Email',
+              icon: Mail,
+              onClick: handleResendSetupEmail,
+            },
+          ] : []),
           {
             label: user.accountStatus === 'ACTIVE' ? 'Deactivate User' : 'Activate User',
             icon: user.accountStatus === 'ACTIVE' ? XCircle : CheckCircle2,
@@ -600,6 +623,29 @@ export default function UserDetails() {
                       {user.accountStatus || 'ACTIVE'}
                     </span>
                   </div>
+
+                  {user.notes && (
+                    <div className="pt-2 border-t border-zinc-100">
+                      <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                        Onboarding Notes
+                      </p>
+                      <div className="bg-amber-50/70 border border-amber-200/80 rounded-lg p-3 text-xs text-zinc-700 leading-relaxed whitespace-pre-wrap">
+                        {user.notes}
+                      </div>
+                    </div>
+                  )}
+
+                  {user.emailStatus !== 'VERIFIED' && (
+                    <div className="pt-1">
+                      <button
+                        onClick={handleResendSetupEmail}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 transition-colors"
+                      >
+                        <Mail size={13} />
+                        <span>Resend Setup Email</span>
+                      </button>
+                    </div>
+                  )}
 
                   <div className="pt-2 border-t border-zinc-100 space-y-3">
                     <InfoField 

@@ -34,4 +34,8 @@ public interface UserTokenRepository extends JpaRepository<UserToken, UUID> {
             TokenType tokenType,
             LocalDateTime now
     );
+
+    java.util.List<UserToken> findByUser_IdAndTokenTypeAndUsedFalse(UUID userId, TokenType tokenType);
+
+    java.util.List<UserToken> findByUser_IdAndTokenTypeInAndUsedFalse(UUID userId, java.util.Collection<TokenType> tokenTypes);
 }

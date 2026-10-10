@@ -79,6 +79,12 @@ public class UserController {
                 return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "User deleted")));
         }
 
+        // POST /user/:id/resend-setup-email
+        @PostMapping("/{id}/resend-setup-email")
+        public ResponseEntity<ResponseWrapper<UserResponse>> resendSetupEmail(@PathVariable UUID id) {
+                return ResponseEntity.ok(ResponseWrapper.success(userService.resendSetupEmail(id)));
+        }
+
         // POST /user/:id/role
         @PostMapping("/{id}/role")
         public ResponseEntity<ResponseWrapper<UserRoleAssignmentResponse>> assignRole(
@@ -157,8 +163,8 @@ public class UserController {
         public ResponseEntity<ResponseWrapper<Map<String, String>>> resetPassword(
                         @RequestParam("token") String token,
                         @Valid @RequestBody RequestWrapper<PasswordReset> passwordReset) {
-                String message = authService.resetPassword(passwordReset.getData(), token);
-                return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", message)));
+                Map<String, String> details = authService.resetPasswordWithDetails(passwordReset.getData(), token);
+                return ResponseEntity.ok(ResponseWrapper.success(details));
         }
 
         @PatchMapping("/{userId}/verify-email")

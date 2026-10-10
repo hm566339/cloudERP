@@ -40,11 +40,12 @@ const getModuleName = (code) => {
 };
 
 export default function Login() {
-  const { moduleCode, organizationCode } = useParams();
+  const { moduleCode, organizationCode, companyCode: routeCompanyCode } = useParams();
   const navigate = useNavigate();
   const { buildPath } = useRoutePath();
 
   const isOrgMode = Boolean(organizationCode);
+  const isCompanyMode = Boolean(routeCompanyCode);
 
 
   // Query organization lookup if in organization mode
@@ -65,7 +66,7 @@ export default function Login() {
   const gotoUrl = searchParams.get('goto');
   const queryCompanyCode = searchParams.get('companyCode');
 
-  const [companyCode, setCompanyCode] = useState(queryCompanyCode || '');
+  const [companyCode, setCompanyCode] = useState(routeCompanyCode || queryCompanyCode || '');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -145,7 +146,7 @@ export default function Login() {
             host: gotoUrl || genericErpHost,
           }
           : {
-            companyCode: queryCompanyCode || companyCode || '',
+            companyCode: (routeCompanyCode || queryCompanyCode || companyCode || '').trim().toLowerCase(),
             host: gotoUrl || genericErpHost,
           }
         ),
@@ -409,12 +410,20 @@ export default function Login() {
               <span>Organization Owner Portal</span>
             </div>
           )}
+          {isCompanyMode && (
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-semibold border border-indigo-100 mb-1">
+              <Building2 size={12} className="text-indigo-600" />
+              <span>Company Portal: {routeCompanyCode}</span>
+            </div>
+          )}
           <h2 className="text-3xl font-display font-black text-zinc-900 tracking-tight">
             {isOrgMode ? 'Owner Sign In' : 'Welcome Back'}
           </h2>
           <p className="text-sm text-zinc-500 font-medium">
             {isOrgMode ? (
               <>Sign in to organization <span className="text-zinc-900 font-bold capitalize">{orgDisplayName}</span> control center</>
+            ) : isCompanyMode ? (
+              <>Sign in to your account at <span className="text-zinc-900 font-bold uppercase">{routeCompanyCode}</span></>
             ) : (
               `Please enter your details to sign in to ${moduleName}.`
             )}
@@ -507,6 +516,16 @@ export default function Login() {
             <div className="flex items-center justify-between text-[11px] text-zinc-400">
               <span>Code</span>
               <span className="font-mono text-zinc-600 font-bold uppercase">{orgDisplayCode}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Company Portal Information Badge */}
+        {isCompanyMode && (
+          <div className="mt-8 pt-6 border-t border-zinc-100 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-400 font-medium">Company Workspace</span>
+              <span className="font-mono text-zinc-900 font-bold uppercase">{routeCompanyCode}</span>
             </div>
           </div>
         )}

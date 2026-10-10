@@ -27,6 +27,9 @@ public class UserResponse {
     private AccountStatus accountStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String notes;
+    private Boolean emailSent;
+    private String emailError;
     private List<RoleResponse> role;
     private List<UserPortalAccessResponse> portalAccess;
     private List<SsoSessionResponse> session;

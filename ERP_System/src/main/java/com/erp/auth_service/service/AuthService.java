@@ -41,6 +41,8 @@ public interface AuthService {
 
     String resetPassword(PasswordReset passwordReset, String code);
 
+    Map<String, String> resetPasswordWithDetails(PasswordReset passwordReset, String code);
+
     void validateClient(UUID clientId, String clientSecret);
 
     void validateClient(String clientId, String clientSecret);

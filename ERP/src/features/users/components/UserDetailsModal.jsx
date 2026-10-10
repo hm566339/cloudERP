@@ -6,6 +6,7 @@ import {
 import { useAppDispatch } from "../../../app/hooks";
 import { addAlert } from "../../notifications/notificationSlice";
 import CustomSelect from '../../../components/common/CustomSelect';
+import { resendSetupEmail } from '../../../api/sso/user';
 
 export default function UserDetailsModal({
   isOpen,
@@ -183,6 +184,21 @@ export default function UserDetailsModal({
     }
   };
 
+  const handleResendSetupEmail = async () => {
+    try {
+      const res = await resendSetupEmail(user.id);
+      dispatch(addAlert({
+        type: 'success',
+        message: res?.message || `Password setup email sent to ${user.email}`
+      }));
+    } catch (err) {
+      dispatch(addAlert({
+        type: 'error',
+        message: err?.response?.data?.message || 'Failed to resend setup email'
+      }));
+    }
+  };
+
   const companyName = user.companyId 
     ? (companies?.find(c => c.id === user.companyId)?.name || user.companyId)
     : "N/A";
@@ -312,6 +328,17 @@ export default function UserDetailsModal({
                       required
                     />
                   </div>
+                  {user.notes && (
+                    <div className="rounded-xl border border-amber-200/80 bg-amber-50/70 p-3 space-y-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900 block">
+                        Onboarding Notes
+                      </span>
+                      <p className="text-xs text-zinc-700 leading-relaxed whitespace-pre-wrap">
+                        {user.notes}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="pt-4 flex items-center gap-3 border-t border-zinc-100">
                     <div className="flex items-center gap-2 text-xs text-zinc-500">
                       <Calendar size={14} /> Registered: {user.created || 'N/A'}
@@ -425,6 +452,25 @@ export default function UserDetailsModal({
                     <button type="submit" className="btn-primary w-full">Change Password</button>
                   )}
                 </form>
+
+                {user.emailStatus !== 'VERIFIED' && (
+                  <div className="pt-6 border-t border-zinc-100 max-w-md space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                      Account Onboarding
+                    </h4>
+                    <p className="text-xs text-zinc-600">
+                      This user has not yet verified their email or completed initial password setup.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleResendSetupEmail}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 transition-colors"
+                    >
+                      <Mail size={14} />
+                      <span>Resend Setup Email</span>
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
