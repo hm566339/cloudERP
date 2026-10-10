@@ -353,7 +353,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } finally {
             TenantContext.clear();
             RequestContext.clear();
-            SecurityContextHolder.clearContext();
+            // NOTE: Do NOT clear SecurityContextHolder here.
+            // Spring Security's SecurityContextHolderFilter / SecurityContextPersistenceFilter
+            // is responsible for clearing the context after the full request lifecycle.
+            // Clearing it in this finally block destroys authentication before downstream
+            // filters, controllers, and async handlers can read the authenticated principal,
+            // causing /api/sso/auth/me to receive a 401 even after a valid token is presented.
         }
     }
 

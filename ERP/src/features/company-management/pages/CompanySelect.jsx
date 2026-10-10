@@ -12,7 +12,7 @@ import { getCookie, removeCookie } from '../../../utils/cookieHelper'
 import { parseJwt, extractRoleFromToken } from '../../../utils/rbac'
 import { setCredentials } from '../../auth/authSlice'
 import { addAlert } from '../../notifications/notificationSlice'
-import { useLogoutApiMutation } from '../../auth/services/authApi'
+import { useLogoutApiMutation, useSelectCompanyMutation, useLazySsoGetMeQuery } from '../../auth/services/authApi'
 import { useRoutePath } from "../../../hooks/useRoutePath";
 import MarkLogo from '../../../components/common/MarkLogo';
 
@@ -26,7 +26,11 @@ export default function CompanySelect() {
   const reduxCompanyList = useAppSelector((state) => state.company.companyList)
   const currentUser = useAppSelector((state) => state.auth?.user ?? null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [isSelecting, setIsSelecting] = useState(false)
   const isSuperAdmin = currentUser?.role === 'super_admin' || currentUser?.role?.toLowerCase().includes('super')
+
+  const [selectCompany] = useSelectCompanyMutation()
+  const [triggerSsoGetMe] = useLazySsoGetMeQuery()
 
   const { data: companiesData, isLoading: isAuthLoading } = useGetCompaniesQuery({ page: 0, pageSize: 200 }, {
     skip: !isSuperAdmin
@@ -65,6 +69,118 @@ export default function CompanySelect() {
 
 
   const handleSelect = async (company) => {
+    if (isSelecting) return;
+
+    // ── ORGANIZATION MODE: multi-company selection after org owner login ──
+    // When the backend returns requiresCompanySelection=true (org login with multiple companies),
+    // no access token was issued yet. We must call POST /api/sso/auth/select-company to obtain
+    // a real access token tied to the chosen company, then bootstrap the session.
+    const pendingOrgCode = sessionStorage.getItem('pending_org_code');
+    if (pendingOrgCode) {
+      setIsSelecting(true);
+      try {
+        const selectPayload = {
+          organizationCode: pendingOrgCode,
+          companyId: company.id,
+        };
+
+        const selectResult = await selectCompany(selectPayload).unwrap();
+        const selectData = selectResult?.data || selectResult;
+
+        const accessToken = selectData?.accessToken || selectData?.access_token || selectData?.token || null;
+        const refreshTokenValue = selectData?.refreshToken || selectData?.refresh_token || null;
+
+        if (!accessToken) {
+          dispatch(addAlert({ type: 'error', message: 'Company selection failed: no access token returned. Please try logging in again.' }));
+          navigate('/login', { replace: true });
+          return;
+        }
+
+        // Persist tokens — same storage locations the rest of the app reads from
+        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        const secureAttr = isHttps ? '; Secure' : '';
+        document.cookie = `ACCESS_TOKEN=${accessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+        document.cookie = `auth_token=${accessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('ACCESS_TOKEN', accessToken);
+          localStorage.setItem('auth_token', accessToken);
+        }
+        if (refreshTokenValue) {
+          document.cookie = `ACCESS_TOKEN_REFRESH=${refreshTokenValue}; path=/; max-age=604800; SameSite=Lax${secureAttr}`;
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('ACCESS_TOKEN_REFRESH', refreshTokenValue);
+          }
+        }
+
+        // Clear the pending org code — selection is complete
+        sessionStorage.removeItem('pending_org_code');
+
+        // Handle redirectUrl from select-company response (same pattern as Login.jsx)
+        if (selectData?.redirectUrl) {
+          try {
+            const urlObj = new URL(selectData.redirectUrl.startsWith('http') ? selectData.redirectUrl : `http://${selectData.redirectUrl}`);
+            let targetPath = urlObj.pathname;
+            if (targetPath.startsWith('/erp/')) {
+              targetPath = targetPath.replace(/^\/erp/, '');
+            }
+            if (targetPath.startsWith('/api/')) {
+              targetPath = '/auth/callback';
+            }
+            navigate(targetPath + urlObj.search + urlObj.hash, { replace: true });
+          } catch {
+            const codeQuery = selectData.redirectUrl.includes('?') ? selectData.redirectUrl.substring(selectData.redirectUrl.indexOf('?')) : '';
+            navigate(`/auth/callback${codeQuery}`, { replace: true });
+          }
+          return;
+        }
+
+        // No redirectUrl: bootstrap session directly from /me
+        dispatch(setSelectedCompany(company));
+        dispatch(baseApi.util.resetApiState());
+
+        let meData = null;
+        try {
+          const meResult = await triggerSsoGetMe().unwrap();
+          meData = meResult?.data || meResult;
+        } catch (meErr) {
+          console.warn('[CompanySelect] Could not fetch /me after company selection, continuing with token data', meErr);
+        }
+
+        const decoded = parseJwt(accessToken);
+        let finalUser = decoded ? { ...decoded } : (selectData?.user || {});
+        if (meData) finalUser = { ...finalUser, ...meData };
+
+        const userRole = extractRoleFromToken(accessToken, finalUser) || 'viewer';
+        const mergedUser = { ...finalUser, role: userRole };
+
+        dispatch(setCredentials({
+          user: mergedUser,
+          organization: meData?.organization || selectData?.organization,
+          currentCompany: meData?.currentCompany || company,
+          companies: meData?.companies,
+          membership: meData?.membership,
+          subscription: meData?.subscription,
+          accessMode: meData?.accessMode,
+          modules: meData?.modules,
+          features: meData?.features,
+          permissions: meData?.permissions || decoded?.permissions || [],
+        }));
+
+        navigate('/workspace', { replace: true });
+        return;
+      } catch (err) {
+        console.error('[CompanySelect] org select-company failed:', err);
+        const msg = err?.data?.message || err?.message || 'Company selection failed. Please log in again.';
+        dispatch(addAlert({ type: 'error', message: msg }));
+        sessionStorage.removeItem('pending_org_code');
+        navigate('/login', { replace: true });
+        return;
+      } finally {
+        setIsSelecting(false);
+      }
+    }
+
+    // ── STANDARD FLOW: user already has a session token ──
     let activeUser = currentUser;
     if (!activeUser) {
       const cookieToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token') || (typeof localStorage !== 'undefined' ? (localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('auth_token')) : null);
@@ -273,16 +389,18 @@ export default function CompanySelect() {
             </div>
 
             <div className="flex-1 overflow-y-auto max-h-[320px] space-y-3 pr-2 custom-scrollbar">
-              {isLoading ? (
-                <div className="flex justify-center py-12">
+              {isLoading || isSelecting ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
                   <div className="w-8 h-8 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin"></div>
+                  {isSelecting && <p className="text-xs text-zinc-500 font-medium">Signing you in…</p>}
                 </div>
               ) : filteredCompanies.length > 0 ? (
                 filteredCompanies.map((company) => (
                   <button
                     key={company.id}
                     onClick={() => handleSelect(company)}
-                    className="w-full flex items-center justify-between p-4 bg-white border border-zinc-200/80 rounded-2xl hover:border-primary-500/40 hover:shadow-[0_8px_20px_rgb(0,0,0,0.06)] transition-all duration-300 group active:scale-[0.98] text-left relative overflow-hidden"
+                    disabled={isSelecting}
+                    className="w-full flex items-center justify-between p-4 bg-white border border-zinc-200/80 rounded-2xl hover:border-primary-500/40 hover:shadow-[0_8px_20px_rgb(0,0,0,0.06)] transition-all duration-300 group active:scale-[0.98] text-left relative overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-primary-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                     <div className="flex items-center gap-4 relative z-10">

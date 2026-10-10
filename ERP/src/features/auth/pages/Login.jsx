@@ -152,8 +152,10 @@ export default function Login() {
         if (loginData.companies && loginData.companies.length > 0) {
           dispatch(setCompanyList(loginData.companies));
         }
-        if (loginData.organization) {
-          sessionStorage.setItem('pending_org_code', loginData.organization.code || organizationCode);
+        // Save org code for CompanySelect to use when calling POST /api/sso/auth/select-company
+        const orgCode = loginData.organization?.code || loginData.organization?.id || organizationCode;
+        if (orgCode) {
+          sessionStorage.setItem('pending_org_code', String(orgCode).toLowerCase());
         }
         navigate('/company-select', { replace: true });
         return;
