@@ -390,7 +390,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             for (Cookie cookie : request.getCookies()) {
                 if ("ACCESS_TOKEN".equalsIgnoreCase(cookie.getName())
                         || "access_token".equalsIgnoreCase(cookie.getName())
-                        || "accessToken".equalsIgnoreCase(cookie.getName())) {
+                        || "accessToken".equalsIgnoreCase(cookie.getName())
+                        || "auth_token".equalsIgnoreCase(cookie.getName())
+                        || "authToken".equalsIgnoreCase(cookie.getName())) {
                     if (StringUtils.hasText(cookie.getValue())) {
                         return cookie.getValue().trim();
                     }

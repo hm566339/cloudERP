@@ -77,7 +77,13 @@ public class AuthController {
         String userAgent = httpServletRequest.getHeader("User-Agent");
 
         LoginResponse response = authService.login(request.getData(), ip, userAgent);
-        return ResponseEntity.ok(ResponseWrapper.success(response));
+
+        HttpHeaders headers = new HttpHeaders();
+        if (response != null && StringUtils.hasText(response.getAccessToken())) {
+            attachAuthCookies(headers, response.getAccessToken(), response.getRefreshToken(), isSecureCookie(httpServletRequest));
+        }
+
+        return ResponseEntity.ok().headers(headers).body(ResponseWrapper.success(response));
     }
 
     @PostMapping("/auth/select-company")
@@ -88,8 +94,15 @@ public class AuthController {
         if (data.getOrganizationCode() == null || data.getCompanyId() == null) {
             throw new BadCredentialsException("organizationCode and companyId are required");
         }
-        return ResponseEntity.ok(ResponseWrapper.success(authService.organizationLogin(
-                data, getClientIp(httpServletRequest), httpServletRequest.getHeader("User-Agent"))));
+        LoginResponse response = authService.organizationLogin(
+                data, getClientIp(httpServletRequest), httpServletRequest.getHeader("User-Agent"));
+
+        HttpHeaders headers = new HttpHeaders();
+        if (response != null && StringUtils.hasText(response.getAccessToken())) {
+            attachAuthCookies(headers, response.getAccessToken(), response.getRefreshToken(), isSecureCookie(httpServletRequest));
+        }
+
+        return ResponseEntity.ok().headers(headers).body(ResponseWrapper.success(response));
     }
 
     // ==================== ADMIN LOGIN ====================
@@ -109,11 +122,11 @@ public class AuthController {
         long accessTokenMaxAge = getCookieMaxAgeSeconds(accessToken);
         long refreshTokenMaxAge = getCookieMaxAgeSeconds(refreshToken);
 
-        // boolean secure = isSecureCookie();
+        boolean isSec = isSecureCookie(httpServletRequest);
 
         ResponseCookie accessCookie = ResponseCookie.from("ACCESS_TOKEN", accessToken)
                 .httpOnly(true)
-                .secure(secure)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(accessTokenMaxAge)
@@ -121,10 +134,18 @@ public class AuthController {
 
         ResponseCookie refreshCookie = ResponseCookie.from("ACCESS_TOKEN_REFRESH", refreshToken)
                 .httpOnly(true)
-                .secure(secure)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(refreshTokenMaxAge)
+                .build();
+
+        ResponseCookie authTokenCookie = ResponseCookie.from("auth_token", accessToken)
+                .httpOnly(false)
+                .secure(isSec)
+                .sameSite(sameSite)
+                .path("/")
+                .maxAge(accessTokenMaxAge)
                 .build();
 
         response.setAccessToken(null);
@@ -133,6 +154,7 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, authTokenCookie.toString())
                 .body(response);
     }
 
@@ -151,9 +173,11 @@ public class AuthController {
             }
         }
 
+        boolean isSec = isSecureCookie(request);
+
         ResponseCookie accessCookie = ResponseCookie.from("ACCESS_TOKEN", "")
                 .httpOnly(true)
-                .secure(secure)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(0)
@@ -161,7 +185,15 @@ public class AuthController {
 
         ResponseCookie refreshCookie = ResponseCookie.from("ACCESS_TOKEN_REFRESH", "")
                 .httpOnly(true)
-                .secure(secure)
+                .secure(isSec)
+                .sameSite(sameSite)
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        ResponseCookie authTokenCookie = ResponseCookie.from("auth_token", "")
+                .httpOnly(false)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(0)
@@ -169,7 +201,7 @@ public class AuthController {
 
         ResponseCookie ssoSessionCookie = ResponseCookie.from("SSO_SESSION", "")
                 .httpOnly(true)
-                .secure(secure)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(0)
@@ -177,7 +209,7 @@ public class AuthController {
 
         ResponseCookie lowerAccessCookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
-                .secure(secure)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(0)
@@ -185,7 +217,7 @@ public class AuthController {
 
         ResponseCookie lowerRefreshCookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
-                .secure(secure)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(0)
@@ -194,6 +226,7 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, authTokenCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, ssoSessionCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, lowerAccessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, lowerRefreshCookie.toString())
@@ -228,15 +261,23 @@ public class AuthController {
     // ================= TOKEN EXCHANGE =================
     @PostMapping("/token/exchange")
     public ResponseEntity<TokenResponse> exchange(
-            @Valid @RequestBody RequestWrapper<TokenExchangeRequest> request) {
+            @Valid @RequestBody RequestWrapper<TokenExchangeRequest> request,
+            HttpServletRequest httpServletRequest) {
 
         TokenExchangeRequest data = request.getData();
         authService.validateClient(data.getClientId(), data.getClientSecret());
 
-        return ResponseEntity.ok(authService.exchangeCodeForToken(
+        TokenResponse tokenResponse = authService.exchangeCodeForToken(
                 data.getCode(),
                 data.getClientId(),
-                data.getClientSecret()));
+                data.getClientSecret());
+
+        HttpHeaders headers = new HttpHeaders();
+        if (tokenResponse != null && StringUtils.hasText(tokenResponse.getAccessToken())) {
+            attachAuthCookies(headers, tokenResponse.getAccessToken(), tokenResponse.getRefreshToken(), isSecureCookie(httpServletRequest));
+        }
+
+        return ResponseEntity.ok().headers(headers).body(tokenResponse);
     }
 
     // ================= REFRESH TOKEN =================
@@ -316,9 +357,11 @@ public class AuthController {
         long accessTokenMaxAge = getCookieMaxAgeSeconds(accessToken);
         long refreshTokenMaxAge = getCookieMaxAgeSeconds(refreshToken);
 
+        boolean isSec = isSecureCookie(httpServletRequest);
+
         ResponseCookie accessCookie = ResponseCookie.from("ACCESS_TOKEN", accessToken != null ? accessToken : "")
                 .httpOnly(false)
-                .secure(secure)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(accessTokenMaxAge)
@@ -326,7 +369,7 @@ public class AuthController {
 
         ResponseCookie refreshCookie = ResponseCookie.from("ACCESS_TOKEN_REFRESH", refreshToken != null ? refreshToken : "")
                 .httpOnly(false)
-                .secure(secure)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(refreshTokenMaxAge)
@@ -334,7 +377,7 @@ public class AuthController {
 
         ResponseCookie authTokenCookie = ResponseCookie.from("auth_token", accessToken != null ? accessToken : "")
                 .httpOnly(false)
-                .secure(secure)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(accessTokenMaxAge)
@@ -408,9 +451,11 @@ public class AuthController {
         long accessTokenMaxAge = getCookieMaxAgeSeconds(accessToken);
         long refreshTokenMaxAge = getCookieMaxAgeSeconds(refreshToken);
 
+        boolean isSec = isSecureCookie(httpServletRequest);
+
         ResponseCookie accessCookie = ResponseCookie.from("ACCESS_TOKEN", accessToken)
                 .httpOnly(true)
-                .secure(secure)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(accessTokenMaxAge)
@@ -418,10 +463,18 @@ public class AuthController {
 
         ResponseCookie refreshCookie = ResponseCookie.from("ACCESS_TOKEN_REFRESH", refreshToken)
                 .httpOnly(true)
-                .secure(secure)
+                .secure(isSec)
                 .sameSite(sameSite)
                 .path("/")
                 .maxAge(refreshTokenMaxAge)
+                .build();
+
+        ResponseCookie authTokenCookie = ResponseCookie.from("auth_token", accessToken)
+                .httpOnly(false)
+                .secure(isSec)
+                .sameSite(sameSite)
+                .path("/")
+                .maxAge(accessTokenMaxAge)
                 .build();
 
         response.setAccessToken(null);
@@ -430,6 +483,7 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, authTokenCookie.toString())
                 .body(ResponseWrapper.success(response));
     }
 
@@ -499,7 +553,9 @@ public class AuthController {
             for (Cookie cookie : request.getCookies()) {
                 if ("ACCESS_TOKEN".equalsIgnoreCase(cookie.getName())
                         || "access_token".equalsIgnoreCase(cookie.getName())
-                        || "accessToken".equalsIgnoreCase(cookie.getName())) {
+                        || "accessToken".equalsIgnoreCase(cookie.getName())
+                        || "auth_token".equalsIgnoreCase(cookie.getName())
+                        || "authToken".equalsIgnoreCase(cookie.getName())) {
                     if (StringUtils.hasText(cookie.getValue())) {
                         return cookie.getValue().trim();
                     }
@@ -516,9 +572,66 @@ public class AuthController {
         return header.substring(7);
     }
 
-    // private boolean isSecureCookie() {
-    // return !environment.acceptsProfiles(Profiles.of("local", "dev"));
-    // }
+    private boolean isSecureCookie(HttpServletRequest request) {
+        if (secure) {
+            return true;
+        }
+        if (request != null) {
+            if (request.isSecure()) {
+                return true;
+            }
+            String proto = request.getHeader("X-Forwarded-Proto");
+            if (proto != null && "https".equalsIgnoreCase(proto.trim())) {
+                return true;
+            }
+            String origin = request.getHeader("Origin");
+            if (origin != null && origin.startsWith("https://")) {
+                return true;
+            }
+            String referer = request.getHeader("Referer");
+            if (referer != null && referer.startsWith("https://")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void attachAuthCookies(HttpHeaders headers, String accessToken, String refreshToken, boolean isSec) {
+        if (StringUtils.hasText(accessToken)) {
+            long accessTokenMaxAge = getCookieMaxAgeSeconds(accessToken);
+            ResponseCookie accessCookie = ResponseCookie.from("ACCESS_TOKEN", accessToken)
+                    .httpOnly(false)
+                    .secure(isSec)
+                    .sameSite(sameSite)
+                    .path("/")
+                    .maxAge(accessTokenMaxAge)
+                    .build();
+
+            ResponseCookie authTokenCookie = ResponseCookie.from("auth_token", accessToken)
+                    .httpOnly(false)
+                    .secure(isSec)
+                    .sameSite(sameSite)
+                    .path("/")
+                    .maxAge(accessTokenMaxAge)
+                    .build();
+
+            headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
+            headers.add(HttpHeaders.SET_COOKIE, authTokenCookie.toString());
+        }
+
+        if (StringUtils.hasText(refreshToken)) {
+            long refreshTokenMaxAge = getCookieMaxAgeSeconds(refreshToken);
+            ResponseCookie refreshCookie = ResponseCookie.from("ACCESS_TOKEN_REFRESH", refreshToken)
+                    .httpOnly(false)
+                    .secure(isSec)
+                    .sameSite(sameSite)
+                    .path("/")
+                    .maxAge(refreshTokenMaxAge)
+                    .build();
+
+            headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        }
+    }
 
     private long getCookieMaxAgeSeconds(String token) {
         if (token == null || token.isBlank()) {

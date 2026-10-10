@@ -164,12 +164,21 @@ export default function Login() {
       const refreshTokenValue = loginData?.refreshToken || loginData?.refresh_token || null;
 
       try {
+        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        const secureAttr = isHttps ? '; Secure' : '';
         if (accessToken) {
-          document.cookie = `ACCESS_TOKEN=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
-          document.cookie = `auth_token=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
+          document.cookie = `ACCESS_TOKEN=${accessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+          document.cookie = `auth_token=${accessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('ACCESS_TOKEN', accessToken);
+            localStorage.setItem('auth_token', accessToken);
+          }
         }
         if (refreshTokenValue) {
-          document.cookie = `ACCESS_TOKEN_REFRESH=${refreshTokenValue}; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = `ACCESS_TOKEN_REFRESH=${refreshTokenValue}; path=/; max-age=604800; SameSite=Lax${secureAttr}`;
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('ACCESS_TOKEN_REFRESH', refreshTokenValue);
+          }
         }
       } catch (cookieErr) {
         console.error('[Login] Failed to set auth cookies:', cookieErr);

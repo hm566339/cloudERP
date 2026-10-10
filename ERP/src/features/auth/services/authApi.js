@@ -83,6 +83,12 @@ export const authApi = baseApi.injectEndpoints({
                         document.cookie.match(new RegExp('(^| )access_token=([^;]+)'));
           if (match) token = match[2];
         }
+        if (!token && typeof localStorage !== 'undefined') {
+          token = localStorage.getItem('ACCESS_TOKEN') ||
+                  localStorage.getItem('auth_token') ||
+                  localStorage.getItem('token') ||
+                  '';
+        }
         let requestedCompanyId = null;
         if (typeof arg === 'string' || typeof arg === 'number') {
           requestedCompanyId = arg;

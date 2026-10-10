@@ -442,7 +442,7 @@ export default function AppRoutes() {
   const dispatch = useAppDispatch();
 
   // Trigger getMe when rehydrated to validate httpOnly session
-  const cookieToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token');
+  const cookieToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token') || (typeof localStorage !== 'undefined' ? (localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('auth_token')) : null);
 
   // Decode credentials from ACCESS_TOKEN cookie on startup if currentUser is null
   React.useEffect(() => {
@@ -1067,7 +1067,7 @@ function RootIndexHandler() {
   const [searchParams] = useSearchParams();
   const authenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectCurrentUser);
-  const cookieToken = getCookie("ACCESS_TOKEN") || getCookie("auth_token");
+  const cookieToken = getCookie("ACCESS_TOKEN") || getCookie("auth_token") || (typeof localStorage !== "undefined" ? (localStorage.getItem("ACCESS_TOKEN") || localStorage.getItem("auth_token")) : null);
 
   const urlToken = searchParams.get("token") || searchParams.get("accessToken");
   if (urlToken) {

@@ -61,7 +61,7 @@ export default function ProtectedRoute({ children, requireCompany = true, module
   if (!authenticated) {
     const searchParams = new URLSearchParams(location.search);
     const queryToken = searchParams.get('token') || searchParams.get('accessToken') || searchParams.get('access_token') || searchParams.get('jwt');
-    const cookieToken = queryToken || getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token');
+    const cookieToken = queryToken || getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token') || (typeof localStorage !== 'undefined' ? (localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('auth_token')) : null);
     
     if (cookieToken) {
       const decoded = parseJwt(cookieToken);
@@ -80,8 +80,14 @@ export default function ProtectedRoute({ children, requireCompany = true, module
           }));
         }
         if (queryToken) {
-          document.cookie = `ACCESS_TOKEN=${queryToken}; path=/; max-age=86400; SameSite=Lax`;
-          document.cookie = `auth_token=${queryToken}; path=/; max-age=86400; SameSite=Lax`;
+          const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+          const secureAttr = isHttps ? '; Secure' : '';
+          document.cookie = `ACCESS_TOKEN=${queryToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+          document.cookie = `auth_token=${queryToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('ACCESS_TOKEN', queryToken);
+            localStorage.setItem('auth_token', queryToken);
+          }
         }
         // Still wait for auth context check
         return (

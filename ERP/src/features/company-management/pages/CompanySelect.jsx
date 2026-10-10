@@ -67,7 +67,7 @@ export default function CompanySelect() {
   const handleSelect = async (company) => {
     let activeUser = currentUser;
     if (!activeUser) {
-      const cookieToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token');
+      const cookieToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token') || (typeof localStorage !== 'undefined' ? (localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('auth_token')) : null);
       if (cookieToken) {
         const decoded = parseJwt(cookieToken);
         if (decoded) {

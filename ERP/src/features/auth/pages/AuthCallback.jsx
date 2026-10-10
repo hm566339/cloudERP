@@ -27,18 +27,27 @@ export default function AuthCallback() {
 
       const code = searchParams.get('code');
       const queryToken = searchParams.get('token') || searchParams.get('accessToken') || searchParams.get('access_token');
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const secureAttr = isHttps ? '; Secure' : '';
       
-      // If we got a token in the query params, save it to cookies so the proxy can attach it
+      // If we got a token in the query params, save it to cookies and localStorage
       if (queryToken) {
-        document.cookie = `ACCESS_TOKEN=${queryToken}; path=/; max-age=86400; SameSite=Lax`;
-        document.cookie = `auth_token=${queryToken}; path=/; max-age=86400; SameSite=Lax`;
+        document.cookie = `ACCESS_TOKEN=${queryToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+        document.cookie = `auth_token=${queryToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('ACCESS_TOKEN', queryToken);
+          localStorage.setItem('auth_token', queryToken);
+        }
       }
       
-      const cookieToken = queryToken || getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token');
+      let cookieToken = queryToken || getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token');
+      if (!cookieToken && typeof localStorage !== 'undefined') {
+        cookieToken = localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('auth_token');
+      }
       
       try {
         let activeToken = cookieToken;
-        if (code && !activeToken) {
+        if (code) {
           const customClientId = searchParams.get('clientId');
           const customClientSecret = searchParams.get('clientSecret');
           try {
@@ -52,19 +61,29 @@ export default function AuthCallback() {
             const newAccessToken = tokenData?.access_token || tokenData?.accessToken;
             const newRefreshToken = tokenData?.refresh_token || tokenData?.refreshToken;
             if (newAccessToken) {
-              document.cookie = `ACCESS_TOKEN=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
-              document.cookie = `auth_token=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
+              document.cookie = `ACCESS_TOKEN=${newAccessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+              document.cookie = `auth_token=${newAccessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+              if (typeof localStorage !== 'undefined') {
+                localStorage.setItem('ACCESS_TOKEN', newAccessToken);
+                localStorage.setItem('auth_token', newAccessToken);
+              }
               activeToken = newAccessToken;
             }
             if (newRefreshToken) {
-              document.cookie = `ACCESS_TOKEN_REFRESH=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
+              document.cookie = `ACCESS_TOKEN_REFRESH=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax${secureAttr}`;
+              if (typeof localStorage !== 'undefined') {
+                localStorage.setItem('ACCESS_TOKEN_REFRESH', newRefreshToken);
+              }
             }
           } catch (exchangeErr) {
             console.error('[AuthCallback] SSO authorization code exchange failed:', exchangeErr);
-            const msg = exchangeErr?.response?.data?.message || exchangeErr?.message || 'Failed to exchange authorization code';
-            setError(msg);
-            setTimeout(() => navigate(buildPath('/login')), 3000);
-            return;
+            // If code exchange failed but we already have an active valid token from direct login, continue
+            if (!activeToken) {
+              const msg = exchangeErr?.response?.data?.message || exchangeErr?.message || 'Failed to exchange authorization code';
+              setError(msg);
+              setTimeout(() => navigate(buildPath('/login')), 3000);
+              return;
+            }
           }
         }
         let decodedToken = null;

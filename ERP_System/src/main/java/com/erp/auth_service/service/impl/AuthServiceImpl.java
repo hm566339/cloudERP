@@ -501,9 +501,12 @@ public class AuthServiceImpl implements AuthService {
                 log.info("Login successful - authorization code issued | userId={} | companyId={} | moduleId={} | code={} | ip={}",
                                 user.getId(), company.getId(), module.getId(), maskCode(codeValue), ip);
 
-                return LoginResponse.builder()
-                                .redirectUrl(redirectUrl)
-                                .build();
+                LoginResponse.LoginResponseBuilder respBuilder = LoginResponse.builder()
+                                .redirectUrl(redirectUrl);
+
+                tryCreateSessionAndTokens(user, company, company.getOrganization(), module, ip, userAgent, respBuilder);
+
+                return respBuilder.build();
         }
 
         @Override
@@ -637,13 +640,75 @@ public class AuthServiceImpl implements AuthService {
                                 : (module != null && module.getHost() != null ? module.getHost().trim() : "/erp");
                 String redirectUrl = resolveGenericErpCallbackUrl(redirectBase, codeValue);
 
-                return LoginResponse.builder()
+                LoginResponse.LoginResponseBuilder respBuilder = LoginResponse.builder()
                                 .requiresCompanySelection(false)
                                 .organization(LoginResponse.OrganizationContext.builder()
                                                 .id(organization.getId()).name(organization.getDisplayName())
                                                 .code(organization.getOrganizationCode()).build())
-                                .redirectUrl(redirectUrl)
-                                .build();
+                                .redirectUrl(redirectUrl);
+
+                tryCreateSessionAndTokens(user, company, organization, module, ip, userAgent, respBuilder);
+
+                return respBuilder.build();
+        }
+
+        private void tryCreateSessionAndTokens(
+                        User user,
+                        Company company,
+                        Organization organization,
+                        Module module,
+                        String ip,
+                        String userAgent,
+                        LoginResponse.LoginResponseBuilder respBuilder) {
+                if (jwtService == null || sessionRepository == null) {
+                        return;
+                }
+                try {
+                        String effectiveClientId = (module != null && module.getClientId() != null)
+                                        ? module.getClientId().toString()
+                                        : ((module != null) ? "ACCOUNT" : "ERP_WORKSPACE");
+
+                        Map<String, Object> claims = buildClaims(user, company, module, effectiveClientId);
+                        String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
+                        String refreshToken = jwtService.generateRefreshToken(user.getUsername(), company.getCompanyCode());
+
+                        if (org.springframework.util.StringUtils.hasText(accessToken)) {
+                                Session session = Session.builder()
+                                                .user(user)
+                                                .company(company)
+                                                .organization(organization != null ? organization : company.getOrganization())
+                                                .module(module)
+                                                .accessToken(accessToken)
+                                                .accessTokenValidTill(LocalDateTime.now().plusMinutes(ACCESS_TOKEN_MINUTES))
+                                                .refreshTokenValidTill(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
+                                                .ipAddress(ip)
+                                                .userAgent(userAgent)
+                                                .build();
+
+                                sessionRepository.save(session);
+
+                                if (refreshTokenRecordRepository != null && org.springframework.util.StringUtils.hasText(refreshToken)) {
+                                        refreshTokenRecordRepository.save(RefreshTokenRecord.builder()
+                                                        .session(session)
+                                                        .tokenHash(hashRefreshToken(refreshToken))
+                                                        .familyId(UUID.randomUUID())
+                                                        .issuedAt(LocalDateTime.now())
+                                                        .expiresAt(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
+                                                        .build());
+                                }
+
+                                respBuilder.accessToken(accessToken).refreshToken(refreshToken);
+                                respBuilder.user(UserDto.builder()
+                                                .id(user.getId())
+                                                .username(user.getUsername())
+                                                .email(user.getEmail())
+                                                .fullName(user.getFullName())
+                                                .accountStatus(user.getAccountStatus() != null ? user.getAccountStatus().name() : null)
+                                                .build());
+                        }
+                } catch (Exception ex) {
+                        log.debug("Direct session creation on login bypassed: {}", ex.getMessage());
+                }
         }
 
         private String resolveGenericErpCallbackUrl(String host, String codeValue) {
@@ -2055,7 +2120,9 @@ public class AuthServiceImpl implements AuthService {
 
                                 if (("ACCESS_TOKEN".equalsIgnoreCase(cookie.getName())
                                                 || "access_token".equalsIgnoreCase(cookie.getName())
-                                                || "accessToken".equalsIgnoreCase(cookie.getName()))
+                                                || "accessToken".equalsIgnoreCase(cookie.getName())
+                                                || "auth_token".equalsIgnoreCase(cookie.getName())
+                                                || "authToken".equalsIgnoreCase(cookie.getName()))
                                                 && cookie.getValue() != null
                                                 && !cookie.getValue().isBlank()) {
 
