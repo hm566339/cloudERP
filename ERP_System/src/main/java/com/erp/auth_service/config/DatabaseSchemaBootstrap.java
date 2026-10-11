@@ -24,10 +24,12 @@ public class DatabaseSchemaBootstrap implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        log.info("Ensuring database column nullability compatibility for Organization Owner flows...");
+        log.info("Ensuring database column nullability and foreign key cascade compatibility...");
         dropColumnNotNullSafely("authorization_code", "company_id");
         dropColumnNotNullSafely("session", "company_id");
         addColumnIfMissingSafely("\"user\"", "notes", "TEXT");
+        migrateRefreshTokenRecordCascadeForeignKeySafely();
+        ensureCaseInsensitiveUserIndexesSafely();
     }
 
     private void dropColumnNotNullSafely(String tableName, String columnName) {
@@ -50,6 +52,135 @@ public class DatabaseSchemaBootstrap implements CommandLineRunner {
             log.info("Successfully verified/added column {}.{}", tableName, columnName);
         } catch (Exception ex) {
             log.warn("Could not add column {}.{}: {}", tableName, columnName, ex.getMessage());
+        }
+    }
+
+    private void migrateRefreshTokenRecordCascadeForeignKeySafely() {
+        try {
+            log.info("Checking refresh_token_record foreign key ON DELETE CASCADE constraint...");
+
+            // 1. Purge legacy orphaned records first so FK modification cannot fail on dirty data
+            jdbcTemplate.execute(
+                "DELETE FROM refresh_token_record WHERE session_id IS NULL OR session_id NOT IN (SELECT id FROM session)"
+            );
+
+            // 2. Query whether an ON DELETE CASCADE foreign key constraint already exists for session_id on refresh_token_record
+            Integer cascadeExists = jdbcTemplate.queryForObject(
+                """
+                SELECT COUNT(*)
+                FROM information_schema.referential_constraints rc
+                JOIN information_schema.table_constraints tc
+                    ON rc.constraint_name = tc.constraint_name
+                    AND rc.constraint_schema = tc.constraint_schema
+                JOIN information_schema.key_column_usage kcu
+                    ON tc.constraint_name = kcu.constraint_name
+                    AND tc.constraint_schema = kcu.constraint_schema
+                WHERE tc.table_name = 'refresh_token_record'
+                  AND kcu.column_name = 'session_id'
+                  AND rc.delete_rule = 'CASCADE'
+                """,
+                Integer.class
+            );
+
+            if (cascadeExists == null || cascadeExists == 0) {
+                log.info("Migrating refresh_token_record foreign key constraint to ON DELETE CASCADE...");
+
+                // Drop any existing foreign key constraint on refresh_token_record(session_id)
+                jdbcTemplate.execute(
+                    """
+                    DO $$
+                    DECLARE
+                        r RECORD;
+                    BEGIN
+                        FOR r IN (
+                            SELECT tc.constraint_name
+                            FROM information_schema.table_constraints tc
+                            JOIN information_schema.key_column_usage kcu
+                                ON tc.constraint_name = kcu.constraint_name
+                                AND tc.table_schema = kcu.table_schema
+                            WHERE tc.table_name = 'refresh_token_record'
+                              AND tc.constraint_type = 'FOREIGN KEY'
+                              AND kcu.column_name = 'session_id'
+                        ) LOOP
+                            EXECUTE 'ALTER TABLE refresh_token_record DROP CONSTRAINT ' || quote_ident(r.constraint_name);
+                        END LOOP;
+                    END $$;
+                    """
+                );
+
+                // Add foreign key constraint with ON DELETE CASCADE
+                jdbcTemplate.execute(
+                    """
+                    ALTER TABLE refresh_token_record
+                        ADD CONSTRAINT fkiqef9ces3kb0fssekw7k0dm4x
+                        FOREIGN KEY (session_id)
+                        REFERENCES session (id)
+                        ON DELETE CASCADE
+                    """
+                );
+                log.info("Successfully configured ON DELETE CASCADE on refresh_token_record(session_id).");
+            } else {
+                log.info("Foreign key constraint on refresh_token_record(session_id) already has ON DELETE CASCADE.");
+            }
+
+            // Ensure index exists on session_id
+            jdbcTemplate.execute(
+                "CREATE INDEX IF NOT EXISTS idx_refresh_token_record_session_id ON refresh_token_record (session_id)"
+            );
+        } catch (Exception ex) {
+            log.warn("Could not migrate refresh_token_record foreign key constraint: {}", ex.getMessage());
+        }
+    }
+
+    private void ensureCaseInsensitiveUserIndexesSafely() {
+        try {
+            // Check if duplicate case-insensitive usernames exist in "user"
+            Integer duplicateUsernames = jdbcTemplate.queryForObject(
+                """
+                SELECT COUNT(*) FROM (
+                    SELECT company_id, LOWER(username)
+                    FROM "user"
+                    GROUP BY company_id, LOWER(username)
+                    HAVING COUNT(*) > 1
+                ) dupes
+                """,
+                Integer.class
+            );
+
+            if (duplicateUsernames != null && duplicateUsernames > 0) {
+                log.warn("Detected {} case-insensitive duplicate username collision(s) in 'user' table. Unique index creation deferred until duplicates are resolved.",
+                        duplicateUsernames);
+            } else {
+                jdbcTemplate.execute(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_user_company_lower_username ON \"user\" (company_id, LOWER(username))"
+                );
+                log.info("Verified unique case-insensitive index on 'user'(company_id, LOWER(username)).");
+            }
+
+            // Check if duplicate case-insensitive emails exist in "user"
+            Integer duplicateEmails = jdbcTemplate.queryForObject(
+                """
+                SELECT COUNT(*) FROM (
+                    SELECT company_id, LOWER(email)
+                    FROM "user"
+                    GROUP BY company_id, LOWER(email)
+                    HAVING COUNT(*) > 1
+                ) dupes
+                """,
+                Integer.class
+            );
+
+            if (duplicateEmails != null && duplicateEmails > 0) {
+                log.warn("Detected {} case-insensitive duplicate email collision(s) in 'user' table. Unique index creation deferred until duplicates are resolved.",
+                        duplicateEmails);
+            } else {
+                jdbcTemplate.execute(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_user_company_lower_email ON \"user\" (company_id, LOWER(email))"
+                );
+                log.info("Verified unique case-insensitive index on 'user'(company_id, LOWER(email)).");
+            }
+        } catch (Exception ex) {
+            log.warn("Could not verify/create case-insensitive indexes on 'user': {}", ex.getMessage());
         }
     }
 }

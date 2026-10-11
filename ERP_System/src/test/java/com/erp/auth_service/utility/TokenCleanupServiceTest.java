@@ -172,4 +172,21 @@ class TokenCleanupServiceTest {
         inOrder.verify(refreshTokenRecordRepository).deleteBySessionRefreshTokenValidTillBefore(any(LocalDateTime.class));
         inOrder.verify(ssoSessionRepository).deleteByRefreshTokenValidTillBefore(any(LocalDateTime.class));
     }
+
+    @Test
+    @DisplayName("7. Failure isolation: error in session cleanup is logged and does not crash remaining cleanup steps")
+    void testErrorIsolationDoesNotCrashRemainingSteps() {
+        // Arrange: ssoSessionRepository throws an exception (e.g. transient DB lock or integrity error)
+        when(ssoSessionRepository.deleteByRefreshTokenValidTillBefore(any(LocalDateTime.class)))
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("Simulated FK violation"));
+
+        // Act & Assert: scheduled job must NOT crash
+        assertDoesNotThrow(() -> tokenCleanupService.cleanupExpiredTokens());
+
+        // Verify remaining steps (user tokens and auth codes) were still attempted
+        verify(userTokenRepository).deleteByExpiresAtBefore(any(LocalDateTime.class));
+        verify(userTokenRepository).deleteByUsedTrue();
+        verify(authorizationCodeRepository).deleteByExpiresAtBefore(any(LocalDateTime.class));
+        verify(authorizationCodeRepository).deleteByUsedTrue();
+    }
 }

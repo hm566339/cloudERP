@@ -81,7 +81,8 @@ public class AuthServiceImpl implements AuthService {
         public UserResponse register(CreateUserRequest request) {
 
                 log.info("User registration requested | companyCode={} | username={} | email={} | role={} | module={}",
-                                request.getCompanyCode(), request.getUsername(), request.getEmail(), request.getRole(), request.getModule());
+                                request.getCompanyCode(), request.getUsername(), request.getEmail(), request.getRole(),
+                                request.getModule());
 
                 /*
                  * FIND COMPANY
@@ -89,7 +90,8 @@ public class AuthServiceImpl implements AuthService {
                 Company company = companyRepository
                                 .findByCompanyCode(request.getCompanyCode())
                                 .orElseThrow(() -> {
-                                        log.warn("Registration failed - company not found | companyCode={}", request.getCompanyCode());
+                                        log.warn("Registration failed - company not found | companyCode={}",
+                                                        request.getCompanyCode());
                                         return new ResourceNotFoundException("Company not found");
                                 });
 
@@ -209,7 +211,8 @@ public class AuthServiceImpl implements AuthService {
                         emailService.sendEmail(
                                         savedUser.getEmail(),
                                         verifyUrl);
-                        log.info("Registration verification email dispatched | userId={} | email={}", savedUser.getId(), savedUser.getEmail());
+                        log.info("Registration verification email dispatched | userId={} | email={}", savedUser.getId(),
+                                        savedUser.getEmail());
                 } catch (Exception ex) {
                         log.error("Failed to send registration verification email | userId={} | email={} | error={}",
                                         savedUser.getId(), savedUser.getEmail(), ex.getMessage(), ex);
@@ -250,20 +253,27 @@ public class AuthServiceImpl implements AuthService {
                 Company company = companyRepository
                                 .findByCompanyCode(request.getCompanyCode())
                                 .orElseThrow(() -> {
-                                        log.warn("Login failed - company not found | companyCode={} | ip={}", request.getCompanyCode(), ip);
+                                        log.warn("Login failed - company not found | companyCode={} | ip={}",
+                                                        request.getCompanyCode(), ip);
                                         return new ResourceNotFoundException("Company not found");
                                 });
 
                 String input = request.getUsername().trim();
 
-                User user = userRepository
-                                .findUserWithRoles(
-                                                company.getId(),
-                                                input)
-                                .orElseThrow(() -> {
-                                        log.warn("Login failed - user not found | companyCode={} | username={} | ip={}", request.getCompanyCode(), input, ip);
-                                        return new ResourceNotFoundException("User not found");
-                                });
+                List<User> candidates = userRepository.findUsersWithRolesByCompany(company.getId(), input);
+                if (candidates.isEmpty()) {
+                        log.warn("Login failed - user not found | companyCode={} | username={} | ip={}",
+                                        request.getCompanyCode(), input, ip);
+                        throw new ResourceNotFoundException("User not found");
+                }
+
+                User user = resolveUnambiguousUser(candidates, input, company.getCompanyCode());
+                if (user == null) {
+                        log.error("Login rejected - ambiguous user identity: multiple conflicting users found in company [{}] for input [{}] | candidatesCount={}",
+                                        company.getCompanyCode(), input, candidates.size());
+                        throw new BadCredentialsException(
+                                        "Ambiguous user identity. Please use your exact username or email.");
+                }
 
                 if (user.getLockedUntil() != null
                                 && user.getLockedUntil().isAfter(LocalDateTime.now())) {
@@ -292,7 +302,8 @@ public class AuthServiceImpl implements AuthService {
                                 userRepository.save(user);
 
                                 log.warn("Account locked due to excessive failed attempts | userId={} | username={} | attempts={}/{} | lockedForMinutes={} | ip={}",
-                                                user.getId(), user.getUsername(), attempts, MAX_FAILED_ATTEMPTS, LOCKOUT_MINUTES, ip);
+                                                user.getId(), user.getUsername(), attempts, MAX_FAILED_ATTEMPTS,
+                                                LOCKOUT_MINUTES, ip);
 
                                 throw new AccountLockedException(
                                                 "Account locked due to multiple failed attempts");
@@ -342,7 +353,8 @@ public class AuthServiceImpl implements AuthService {
                                                                                         .orElse(null))));
 
                         if (module == null) {
-                                log.error("No module available to issue email verification token | userId={}", user.getId());
+                                log.error("No module available to issue email verification token | userId={}",
+                                                user.getId());
                                 throw new ResourceNotFoundException("No module found for token assignment");
                         }
 
@@ -364,9 +376,11 @@ public class AuthServiceImpl implements AuthService {
                                 emailService.sendEmail(
                                                 user.getEmail(),
                                                 verifyUrl);
-                                log.info("Verification email resent for unverified user login | userId={} | email={}", user.getId(), user.getEmail());
+                                log.info("Verification email resent for unverified user login | userId={} | email={}",
+                                                user.getId(), user.getEmail());
                         } catch (Exception ex) {
-                                log.error("Failed to send verification email | userId={} | email={} | error={}", user.getId(), user.getEmail(), ex.getMessage(), ex);
+                                log.error("Failed to send verification email | userId={} | email={} | error={}",
+                                                user.getId(), user.getEmail(), ex.getMessage(), ex);
                         }
 
                         throw new EmailNotVerifiedException(
@@ -375,7 +389,8 @@ public class AuthServiceImpl implements AuthService {
 
                 if (user.getAccountStatus() != AccountStatus.ACTIVE) {
 
-                        log.warn("Login rejected - account inactive | userId={} | status={}", user.getId(), user.getAccountStatus());
+                        log.warn("Login rejected - account inactive | userId={} | status={}", user.getId(),
+                                        user.getAccountStatus());
                         throw new InvalidOperationException(
                                         "Your account is inactive");
                 }
@@ -406,24 +421,31 @@ public class AuthServiceImpl implements AuthService {
 
                 String targetModuleCode = request.getModuleCode() != null && !request.getModuleCode().isBlank()
                                 ? request.getModuleCode().trim()
-                                : (request.getModule() != null && !request.getModule().isBlank() ? request.getModule().trim() : null);
+                                : (request.getModule() != null && !request.getModule().isBlank()
+                                                ? request.getModule().trim()
+                                                : null);
 
                 boolean isGenericHost = isGenericErpHost(requestedHost);
                 if (targetModuleCode != null || (requestedHost != null && !requestedHost.isBlank() && !isGenericHost)) {
                         Module foundModule = null;
                         if (targetModuleCode != null) {
                                 String canonical = extractCanonicalModuleName(targetModuleCode);
-                                foundModule = (canonical != null) ? moduleRepository.findByNameIgnoreCase(canonical).orElse(null) : null;
+                                foundModule = (canonical != null)
+                                                ? moduleRepository.findByNameIgnoreCase(canonical).orElse(null)
+                                                : null;
                                 if (foundModule == null) {
-                                        foundModule = moduleRepository.findByNameIgnoreCase(targetModuleCode).orElse(null);
+                                        foundModule = moduleRepository.findByNameIgnoreCase(targetModuleCode)
+                                                        .orElse(null);
                                 }
                         }
-                        if (foundModule == null && requestedHost != null && !requestedHost.isBlank() && !isGenericHost) {
+                        if (foundModule == null && requestedHost != null && !requestedHost.isBlank()
+                                        && !isGenericHost) {
                                 foundModule = moduleRepository.findByHost(requestedHost.trim()).orElse(null);
                                 if (foundModule == null) {
                                         String extracted = extractCanonicalModuleName(requestedHost);
                                         if (extracted != null) {
-                                                foundModule = moduleRepository.findByNameIgnoreCase(extracted).orElse(null);
+                                                foundModule = moduleRepository.findByNameIgnoreCase(extracted)
+                                                                .orElse(null);
                                         }
                                 }
                         }
@@ -439,7 +461,8 @@ public class AuthServiceImpl implements AuthService {
                                                         company.getId(),
                                                         selectedModule.getId())
                                         .orElseThrow(() -> {
-                                                log.warn("Login failed - module not enabled for company | companyId={} | moduleId={}", company.getId(), selectedModule.getId());
+                                                log.warn("Login failed - module not enabled for company | companyId={} | moduleId={}",
+                                                                company.getId(), selectedModule.getId());
                                                 return new ResourceNotFoundException(
                                                                 "Module not enabled for company");
                                         });
@@ -450,7 +473,8 @@ public class AuthServiceImpl implements AuthService {
                                                         user.getId(),
                                                         selectedCompanyModule.getId())
                                         .orElseThrow(() -> {
-                                                log.warn("Login failed - portal access denied | userId={} | companyModuleId={}", user.getId(), selectedCompanyModule.getId());
+                                                log.warn("Login failed - portal access denied | userId={} | companyModuleId={}",
+                                                                user.getId(), selectedCompanyModule.getId());
                                                 return new ResourceNotFoundException(
                                                                 "You do not have access to this portal");
                                         });
@@ -469,7 +493,8 @@ public class AuthServiceImpl implements AuthService {
                                         .findFirstByUser_IdAndStatusTrueOrderByCreatedAtAsc(
                                                         user.getId())
                                         .orElseThrow(() -> {
-                                                log.warn("Login failed - no active portal access found | userId={}", user.getId());
+                                                log.warn("Login failed - no active portal access found | userId={}",
+                                                                user.getId());
                                                 return new ResourceNotFoundException(
                                                                 "No active portal access found");
                                         });
@@ -544,13 +569,15 @@ public class AuthServiceImpl implements AuthService {
                 Subscription subscription = subscriptionRepository
                                 .findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId())
                                 .orElseThrow(() -> {
-                                        log.warn("Organization login failed - subscription unavailable | orgId={}", organization.getId());
+                                        log.warn("Organization login failed - subscription unavailable | orgId={}",
+                                                        organization.getId());
                                         return new InvalidOperationException(
                                                         "Organization subscription unavailable");
                                 });
 
                 if (subscription.getAccessMode() == AccessMode.BLOCKED) {
-                        log.warn("Organization login rejected - subscription access blocked | orgId={}", organization.getId());
+                        log.warn("Organization login rejected - subscription access blocked | orgId={}",
+                                        organization.getId());
                         throw new InvalidOperationException("Organization access is blocked");
                 }
 
@@ -633,7 +660,8 @@ public class AuthServiceImpl implements AuthService {
 
                 if (module != null) {
                         log.info("Organization login for specific module | orgCode={} | companyId={} | userId={} | moduleName={}",
-                                        organization.getOrganizationCode(), company.getId(), user.getId(), module.getName());
+                                        organization.getOrganizationCode(), company.getId(), user.getId(),
+                                        module.getName());
 
                         if (!organizationModuleRepository.existsByOrganization_IdAndModule_IdAndEnabledTrue(
                                         organization.getId(), module.getId())) {
@@ -651,7 +679,8 @@ public class AuthServiceImpl implements AuthService {
                                         });
 
                         userPortalAccessRepository
-                                        .findByUser_IdAndCompanyModule_IdAndStatusTrue(user.getId(), companyModule.getId())
+                                        .findByUser_IdAndCompanyModule_IdAndStatusTrue(user.getId(),
+                                                        companyModule.getId())
                                         .orElseThrow(() -> {
                                                 log.warn("Organization login failed - user lacks portal access | userId={} | companyModuleId={}",
                                                                 user.getId(), companyModule.getId());
@@ -660,18 +689,22 @@ public class AuthServiceImpl implements AuthService {
                                         });
                 } else {
                         log.info("Organization login for generic ERP workspace (module-independent) | orgCode={} | companyId={} | userId={} | subscriptionStatus={} | accessMode={}",
-                                        organization.getOrganizationCode(), company.getId(), user.getId(), subscription.getStatus(), subscription.getAccessMode());
+                                        organization.getOrganizationCode(), company.getId(), user.getId(),
+                                        subscription.getStatus(), subscription.getAccessMode());
                 }
 
                 String codeValue = UUID.randomUUID().toString();
                 AuthorizationCode code = AuthorizationCode.builder()
                                 .code(codeValue).used(false).expiresAt(LocalDateTime.now().plusMinutes(5))
                                 .user(user).company(company).organization(organization).module(module)
-                                .gotoUrl(module != null ? module.getHost() : (request.getHost() != null ? request.getHost().trim() : "/erp")).build();
+                                .gotoUrl(module != null ? module.getHost()
+                                                : (request.getHost() != null ? request.getHost().trim() : "/erp"))
+                                .build();
                 authorizationCodeRepository.save(code);
 
                 log.info("Organization login successful - authorization code issued | orgCode={} | companyId={} | userId={} | module={} | code={}",
-                                organization.getOrganizationCode(), company.getId(), user.getId(), module != null ? module.getName() : "NONE", maskCode(codeValue));
+                                organization.getOrganizationCode(), company.getId(), user.getId(),
+                                module != null ? module.getName() : "NONE", maskCode(codeValue));
 
                 String redirectBase = (request.getHost() != null && !request.getHost().isBlank())
                                 ? request.getHost().trim()
@@ -702,7 +735,8 @@ public class AuthServiceImpl implements AuthService {
                 try {
                         Map<String, Object> claims = buildOwnerClaims(user, organization);
                         String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
-                        String refreshToken = jwtService.generateRefreshToken(user.getUsername(), organization.getOrganizationCode());
+                        String refreshToken = jwtService.generateRefreshToken(user.getUsername(),
+                                        organization.getOrganizationCode());
 
                         if (org.springframework.util.StringUtils.hasText(accessToken)) {
                                 Session session = Session.builder()
@@ -711,7 +745,8 @@ public class AuthServiceImpl implements AuthService {
                                                 .organization(organization)
                                                 .module(null)
                                                 .accessToken(accessToken)
-                                                .accessTokenValidTill(LocalDateTime.now().plusMinutes(ACCESS_TOKEN_MINUTES))
+                                                .accessTokenValidTill(
+                                                                LocalDateTime.now().plusMinutes(ACCESS_TOKEN_MINUTES))
                                                 .refreshTokenValidTill(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
                                                 .ipAddress(ip)
                                                 .userAgent(userAgent)
@@ -719,7 +754,8 @@ public class AuthServiceImpl implements AuthService {
 
                                 sessionRepository.save(session);
 
-                                if (refreshTokenRecordRepository != null && org.springframework.util.StringUtils.hasText(refreshToken)) {
+                                if (refreshTokenRecordRepository != null
+                                                && org.springframework.util.StringUtils.hasText(refreshToken)) {
                                         refreshTokenRecordRepository.save(RefreshTokenRecord.builder()
                                                         .session(session)
                                                         .tokenHash(hashRefreshToken(refreshToken))
@@ -735,7 +771,9 @@ public class AuthServiceImpl implements AuthService {
                                                 .username(user.getUsername())
                                                 .email(user.getEmail())
                                                 .fullName(user.getFullName())
-                                                .accountStatus(user.getAccountStatus() != null ? user.getAccountStatus().name() : null)
+                                                .accountStatus(user.getAccountStatus() != null
+                                                                ? user.getAccountStatus().name()
+                                                                : null)
                                                 .build());
                         }
                 } catch (Exception ex) {
@@ -775,16 +813,19 @@ public class AuthServiceImpl implements AuthService {
 
                         Map<String, Object> claims = buildClaims(user, company, module, effectiveClientId);
                         String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
-                        String refreshToken = jwtService.generateRefreshToken(user.getUsername(), company.getCompanyCode());
+                        String refreshToken = jwtService.generateRefreshToken(user.getUsername(),
+                                        company.getCompanyCode());
 
                         if (org.springframework.util.StringUtils.hasText(accessToken)) {
                                 Session session = Session.builder()
                                                 .user(user)
                                                 .company(company)
-                                                .organization(organization != null ? organization : company.getOrganization())
+                                                .organization(organization != null ? organization
+                                                                : company.getOrganization())
                                                 .module(module)
                                                 .accessToken(accessToken)
-                                                .accessTokenValidTill(LocalDateTime.now().plusMinutes(ACCESS_TOKEN_MINUTES))
+                                                .accessTokenValidTill(
+                                                                LocalDateTime.now().plusMinutes(ACCESS_TOKEN_MINUTES))
                                                 .refreshTokenValidTill(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
                                                 .ipAddress(ip)
                                                 .userAgent(userAgent)
@@ -792,7 +833,8 @@ public class AuthServiceImpl implements AuthService {
 
                                 sessionRepository.save(session);
 
-                                if (refreshTokenRecordRepository != null && org.springframework.util.StringUtils.hasText(refreshToken)) {
+                                if (refreshTokenRecordRepository != null
+                                                && org.springframework.util.StringUtils.hasText(refreshToken)) {
                                         refreshTokenRecordRepository.save(RefreshTokenRecord.builder()
                                                         .session(session)
                                                         .tokenHash(hashRefreshToken(refreshToken))
@@ -808,7 +850,9 @@ public class AuthServiceImpl implements AuthService {
                                                 .username(user.getUsername())
                                                 .email(user.getEmail())
                                                 .fullName(user.getFullName())
-                                                .accountStatus(user.getAccountStatus() != null ? user.getAccountStatus().name() : null)
+                                                .accountStatus(user.getAccountStatus() != null
+                                                                ? user.getAccountStatus().name()
+                                                                : null)
                                                 .build());
                         }
                 } catch (Exception ex) {
@@ -842,7 +886,8 @@ public class AuthServiceImpl implements AuthService {
                         clean = clean.substring(0, clean.length() - "/crm".length()) + "/erp";
                 }
 
-                // If internal container hostname like account-service.local or inventory-service.local, fallback to relative path
+                // If internal container hostname like account-service.local or
+                // inventory-service.local, fallback to relative path
                 if (clean.contains(".local") || clean.contains("account-service") || clean.contains("inventory-service")
                                 || clean.contains("workflow-service")) {
                         return "/erp/auth/callback?code=" + codeValue;
@@ -863,7 +908,8 @@ public class AuthServiceImpl implements AuthService {
                         text = text.substring(0, text.length() - 1);
                 }
                 if (text.endsWith("/erp") || text.endsWith("/workspace") || text.endsWith("/dashboard")
-                                || text.contains("/erp/workspace") || text.contains("/erp/o/") || text.contains("/erp/login")
+                                || text.contains("/erp/workspace") || text.contains("/erp/o/")
+                                || text.contains("/erp/login")
                                 || text.equals("erp") || text.equals("workspace")) {
                         return true;
                 }
@@ -885,7 +931,9 @@ public class AuthServiceImpl implements AuthService {
         private Optional<Module> resolveOrganizationModule(LoginRequest request, Company company) {
                 String explicitModuleInput = request.getModuleCode() != null && !request.getModuleCode().isBlank()
                                 ? request.getModuleCode().trim()
-                                : (request.getModule() != null && !request.getModule().isBlank() ? request.getModule().trim() : null);
+                                : (request.getModule() != null && !request.getModule().isBlank()
+                                                ? request.getModule().trim()
+                                                : null);
 
                 // CASE 2, 3, 4, 6: Explicit module was requested
                 if (explicitModuleInput != null) {
@@ -897,7 +945,8 @@ public class AuthServiceImpl implements AuthService {
                                 found = moduleRepository.findByNameIgnoreCase(explicitModuleInput);
                         }
                         if (found.isEmpty()) {
-                                log.warn("Organization login failed - explicit module not found | moduleCode={}", explicitModuleInput);
+                                log.warn("Organization login failed - explicit module not found | moduleCode={}",
+                                                explicitModuleInput);
                                 throw new ResourceNotFoundException("Module not found");
                         }
                         return found;
@@ -909,7 +958,8 @@ public class AuthServiceImpl implements AuthService {
                         String cleanHost = host.trim();
                         // Recognize generic ERP host as module-independent (CASE 1 & CASE 5)
                         if (isGenericErpHost(cleanHost)) {
-                                log.info("Recognized generic ERP workspace host [{}], proceeding with module-independent organization login", cleanHost);
+                                log.info("Recognized generic ERP workspace host [{}], proceeding with module-independent organization login",
+                                                cleanHost);
                                 return Optional.empty();
                         }
 
@@ -948,9 +998,12 @@ public class AuthServiceImpl implements AuthService {
                                         String[] segments = path.split("/");
                                         for (int i = segments.length - 1; i >= 0; i--) {
                                                 String seg = segments[i].trim().toLowerCase(Locale.ROOT);
-                                                if (seg.isEmpty() || seg.equals("api") || seg.equals("dashboard") || seg.equals("login")
-                                                                || seg.equals("auth") || seg.equals("callback") || seg.equals("erp")
-                                                                || seg.equals("workspace") || seg.equals("o") || seg.equals("company-select")
+                                                if (seg.isEmpty() || seg.equals("api") || seg.equals("dashboard")
+                                                                || seg.equals("login")
+                                                                || seg.equals("auth") || seg.equals("callback")
+                                                                || seg.equals("erp")
+                                                                || seg.equals("workspace") || seg.equals("o")
+                                                                || seg.equals("company-select")
                                                                 || seg.equals("org")) {
                                                         continue;
                                                 }
@@ -973,7 +1026,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         private String mapStringToCanonical(String raw) {
-                if (raw == null) return null;
+                if (raw == null)
+                        return null;
                 String lower = raw.trim().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
                 if (lower.startsWith("account") || lower.startsWith("finance") || lower.startsWith("accounting")) {
                         return "ACCOUNT";
@@ -1024,7 +1078,8 @@ public class AuthServiceImpl implements AuthService {
                                 .findByRefreshToken(
                                                 request.getRefreshToken())
                                 .orElseThrow(() -> {
-                                        log.warn("Token refresh failed - session not found | clientId={}", request.getClientId());
+                                        log.warn("Token refresh failed - session not found | clientId={}",
+                                                        request.getClientId());
                                         return new BadCredentialsException("Invalid refresh token");
                                 });
 
@@ -1047,7 +1102,8 @@ public class AuthServiceImpl implements AuthService {
                                 .findByIdWithRoles(
                                                 session.getUser().getId())
                                 .orElseThrow(() -> {
-                                        log.warn("Token refresh failed - user not found | userId={}", session.getUser().getId());
+                                        log.warn("Token refresh failed - user not found | userId={}",
+                                                        session.getUser().getId());
                                         return new ResourceNotFoundException("User not found");
                                 });
 
@@ -1062,9 +1118,12 @@ public class AuthServiceImpl implements AuthService {
                 boolean isOwnerSession = (company == null && session.getOrganization() != null);
 
                 if (session.getOrganization() != null) {
-                        OrganizationMember member = organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
-                                        session.getOrganization().getId(), user.getId(), MembershipStatus.ACTIVE)
-                                        .orElseThrow(() -> new BadCredentialsException("Organization membership revoked"));
+                        OrganizationMember member = organizationMemberRepository
+                                        .findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                                        session.getOrganization().getId(), user.getId(),
+                                                        MembershipStatus.ACTIVE)
+                                        .orElseThrow(() -> new BadCredentialsException(
+                                                        "Organization membership revoked"));
                         if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
                                 throw new InvalidOperationException("Organization access is blocked");
                         }
@@ -1074,7 +1133,8 @@ public class AuthServiceImpl implements AuthService {
                 }
 
                 if (!isOwnerSession && company == null) {
-                        log.warn("Token refresh failed - missing company in non-owner session | sessionId={}", session.getId());
+                        log.warn("Token refresh failed - missing company in non-owner session | sessionId={}",
+                                        session.getId());
                         throw new InvalidOperationException(
                                         "Invalid company session");
                 }
@@ -1106,7 +1166,8 @@ public class AuthServiceImpl implements AuthService {
                                         .orElseThrow(() -> {
                                                 log.warn("Token refresh failed - user does not have portal access | userId={} | companyModuleId={}",
                                                                 user.getId(), companyModule.getId());
-                                                return new InvalidOperationException("User does not have portal access");
+                                                return new InvalidOperationException(
+                                                                "User does not have portal access");
                                         });
                 }
 
@@ -1116,11 +1177,13 @@ public class AuthServiceImpl implements AuthService {
                 if (isOwnerSession) {
                         Map<String, Object> claims = buildOwnerClaims(user, session.getOrganization());
                         newAccessToken = jwtService.generateAccessToken(user.getUsername(), claims);
-                        newRefreshToken = jwtService.generateRefreshToken(user.getUsername(), session.getOrganization().getOrganizationCode());
+                        newRefreshToken = jwtService.generateRefreshToken(user.getUsername(),
+                                        session.getOrganization().getOrganizationCode());
                 } else {
                         String effectiveClientId = (module != null && module.getClientId() != null)
                                         ? module.getClientId().toString()
-                                        : (request.getClientId() != null ? request.getClientId().toString() : "ERP_WORKSPACE");
+                                        : (request.getClientId() != null ? request.getClientId().toString()
+                                                        : "ERP_WORKSPACE");
 
                         Map<String, Object> claims = buildClaims(
                                         user,
@@ -1175,12 +1238,14 @@ public class AuthServiceImpl implements AuthService {
                 LocalDateTime now = LocalDateTime.now();
                 if (record.getUsedAt() != null || record.getRevokedAt() != null) {
                         log.warn("CRITICAL: Refresh token reuse detected! Revoking token family | familyId={} | sessionId={}",
-                                        record.getFamilyId(), record.getSession() != null ? record.getSession().getId() : null);
+                                        record.getFamilyId(),
+                                        record.getSession() != null ? record.getSession().getId() : null);
                         revokeRefreshFamily(record.getFamilyId(), record.getSession());
                         throw new BadCredentialsException("Refresh token reuse detected");
                 }
                 if (record.getExpiresAt().isBefore(now) || jwtDecoder.isTokenExpired(presentedToken)) {
-                        log.warn("Hashed refresh token expired | familyId={} | recordId={}", record.getFamilyId(), record.getId());
+                        log.warn("Hashed refresh token expired | familyId={} | recordId={}", record.getFamilyId(),
+                                        record.getId());
                         record.setRevokedAt(now);
                         refreshTokenRecordRepository.save(record);
                         throw new TokenExpiredException("Refresh token expired");
@@ -1189,7 +1254,8 @@ public class AuthServiceImpl implements AuthService {
                 Session session = record.getSession();
                 User user = userRepository.findByIdWithRoles(session.getUser().getId())
                                 .orElseThrow(() -> {
-                                        log.warn("Hashed refresh failed - user not found | userId={}", session.getUser().getId());
+                                        log.warn("Hashed refresh failed - user not found | userId={}",
+                                                        session.getUser().getId());
                                         return new ResourceNotFoundException("User not found");
                                 });
                 if (user.getAccountStatus() != AccountStatus.ACTIVE) {
@@ -1201,9 +1267,12 @@ public class AuthServiceImpl implements AuthService {
                 boolean isOwnerSession = (company == null && session.getOrganization() != null);
 
                 if (session.getOrganization() != null) {
-                        OrganizationMember member = organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
-                                        session.getOrganization().getId(), user.getId(), MembershipStatus.ACTIVE)
-                                        .orElseThrow(() -> new BadCredentialsException("Organization membership revoked"));
+                        OrganizationMember member = organizationMemberRepository
+                                        .findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                                        session.getOrganization().getId(), user.getId(),
+                                                        MembershipStatus.ACTIVE)
+                                        .orElseThrow(() -> new BadCredentialsException(
+                                                        "Organization membership revoked"));
                         if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
                                 throw new InvalidOperationException("Organization access is blocked");
                         }
@@ -1213,7 +1282,8 @@ public class AuthServiceImpl implements AuthService {
                 }
 
                 if (!isOwnerSession && company == null) {
-                        log.warn("Hashed refresh failed - missing company in non-owner session | sessionId={}", session.getId());
+                        log.warn("Hashed refresh failed - missing company in non-owner session | sessionId={}",
+                                        session.getId());
                         throw new InvalidOperationException("Invalid company session");
                 }
 
@@ -1235,11 +1305,13 @@ public class AuthServiceImpl implements AuthService {
                                                 return new InvalidOperationException("Module not enabled for company");
                                         });
                         userPortalAccessRepository
-                                        .findByUser_IdAndCompanyModule_IdAndStatusTrue(user.getId(), companyModule.getId())
+                                        .findByUser_IdAndCompanyModule_IdAndStatusTrue(user.getId(),
+                                                        companyModule.getId())
                                         .orElseThrow(() -> {
                                                 log.warn("Hashed refresh failed - portal access denied | userId={} | companyModuleId={}",
                                                                 user.getId(), companyModule.getId());
-                                                return new InvalidOperationException("User does not have portal access");
+                                                return new InvalidOperationException(
+                                                                "User does not have portal access");
                                         });
                 }
 
@@ -1252,7 +1324,8 @@ public class AuthServiceImpl implements AuthService {
                 if (isOwnerSession) {
                         Map<String, Object> claims = buildOwnerClaims(user, session.getOrganization());
                         accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
-                        refreshToken = jwtService.generateRefreshToken(user.getUsername(), session.getOrganization().getOrganizationCode());
+                        refreshToken = jwtService.generateRefreshToken(user.getUsername(),
+                                        session.getOrganization().getOrganizationCode());
                 } else {
                         String effectiveClientId = (module != null && module.getClientId() != null)
                                         ? module.getClientId().toString()
@@ -1288,7 +1361,8 @@ public class AuthServiceImpl implements AuthService {
 
         private void revokeRefreshFamily(UUID familyId, Session session) {
                 LocalDateTime now = LocalDateTime.now();
-                log.warn("Revoking refresh family | familyId={} | sessionId={}", familyId, session != null ? session.getId() : null);
+                log.warn("Revoking refresh family | familyId={} | sessionId={}", familyId,
+                                session != null ? session.getId() : null);
                 refreshTokenRecordRepository.findAllByFamilyId(familyId).forEach(token -> token.setRevokedAt(now));
                 refreshTokenRecordRepository.findAllByFamilyId(familyId).forEach(refreshTokenRecordRepository::save);
                 if (session != null) {
@@ -1343,7 +1417,8 @@ public class AuthServiceImpl implements AuthService {
                                 .findByIdWithRoles(
                                                 session.getUser().getId())
                                 .orElseThrow(() -> {
-                                        log.warn("Admin refresh token failed - user not found | userId={}", session.getUser().getId());
+                                        log.warn("Admin refresh token failed - user not found | userId={}",
+                                                        session.getUser().getId());
                                         return new ResourceNotFoundException("User not found");
                                 });
 
@@ -1356,7 +1431,8 @@ public class AuthServiceImpl implements AuthService {
                 Company company = session.getCompany();
 
                 if (company == null) {
-                        log.warn("Admin refresh token failed - invalid admin session company | sessionId={}", session.getId());
+                        log.warn("Admin refresh token failed - invalid admin session company | sessionId={}",
+                                        session.getId());
                         throw new InvalidOperationException(
                                         "Invalid admin session");
                 }
@@ -1371,7 +1447,8 @@ public class AuthServiceImpl implements AuthService {
                                                                                 role.getName()));
 
                 if (!isSystemAdmin) {
-                        log.warn("Admin refresh token rejected - user lacks SYSTEM_ADMIN role | userId={}", user.getId());
+                        log.warn("Admin refresh token rejected - user lacks SYSTEM_ADMIN role | userId={}",
+                                        user.getId());
                         throw new BadCredentialsException(
                                         "You are not authorized");
                 }
@@ -1440,7 +1517,8 @@ public class AuthServiceImpl implements AuthService {
                         return "Logout successful";
                 }
 
-                // Fallback: If session not found by access token, attempt to resolve userId from claims and delete sessions
+                // Fallback: If session not found by access token, attempt to resolve userId
+                // from claims and delete sessions
                 try {
                         UUID userId = jwtDecoder.extractUserId(trimmedToken);
                         if (userId != null) {
@@ -1453,7 +1531,6 @@ public class AuthServiceImpl implements AuthService {
 
                 return "Logout successful";
         }
-
 
         // ==================== AUTH CODE (direct login) ====================
 
@@ -1468,7 +1545,8 @@ public class AuthServiceImpl implements AuthService {
                 Company company = companyRepository
                                 .findByCompanyCode(request.getCompanyCode())
                                 .orElseThrow(() -> {
-                                        log.warn("Direct auth code failed - company not found | companyCode={}", request.getCompanyCode());
+                                        log.warn("Direct auth code failed - company not found | companyCode={}",
+                                                        request.getCompanyCode());
                                         return new ResourceNotFoundException("Company not found");
                                 });
 
@@ -1480,13 +1558,15 @@ public class AuthServiceImpl implements AuthService {
                                                 input,
                                                 input)
                                 .orElseThrow(() -> {
-                                        log.warn("Direct auth code failed - user not found | companyCode={} | username={}", request.getCompanyCode(), input);
+                                        log.warn("Direct auth code failed - user not found | companyCode={} | username={}",
+                                                        request.getCompanyCode(), input);
                                         return new BadCredentialsException("Invalid credentials");
                                 });
 
                 if (user.getLockedUntil() != null
                                 && user.getLockedUntil().isAfter(LocalDateTime.now())) {
-                        log.warn("Direct auth code rejected - account locked | userId={} | lockedUntil={}", user.getId(), user.getLockedUntil());
+                        log.warn("Direct auth code rejected - account locked | userId={} | lockedUntil={}",
+                                        user.getId(), user.getLockedUntil());
                         throw new AccountLockedException(
                                         "Account is locked. Try again later");
                 }
@@ -1543,7 +1623,8 @@ public class AuthServiceImpl implements AuthService {
                 Module module = moduleRepository
                                 .findByHost(request.getHost())
                                 .orElseThrow(() -> {
-                                        log.warn("Direct auth code failed - module not found | host={}", request.getHost());
+                                        log.warn("Direct auth code failed - module not found | host={}",
+                                                        request.getHost());
                                         return new ResourceNotFoundException("Module does not exist");
                                 });
 
@@ -1666,7 +1747,8 @@ public class AuthServiceImpl implements AuthService {
                 Module module = code.getModule();
                 boolean isGenericErp = (module == null);
 
-                // If a non-placeholder client ID is provided, verify it does not belong to a different module
+                // If a non-placeholder client ID is provided, verify it does not belong to a
+                // different module
                 if (!isGenericErp && clientIdStr != null && !clientIdStr.isBlank() && !isPlaceholder(clientIdStr)) {
                         try {
                                 UUID parsedClientId = UUID.fromString(clientIdStr.trim());
@@ -1686,8 +1768,10 @@ public class AuthServiceImpl implements AuthService {
                                 // Non-UUID clientId (e.g. module name or canonical name)
                                 String canonicalRequested = extractCanonicalModuleName(clientIdStr);
                                 String canonicalModule = extractCanonicalModuleName(module.getName());
-                                if (canonicalRequested != null && canonicalModule != null && !canonicalRequested.equalsIgnoreCase(canonicalModule)) {
-                                        log.warn("Token exchange warning | client string {} does not match module {}", clientIdStr, module.getName());
+                                if (canonicalRequested != null && canonicalModule != null
+                                                && !canonicalRequested.equalsIgnoreCase(canonicalModule)) {
+                                        log.warn("Token exchange warning | client string {} does not match module {}",
+                                                        clientIdStr, module.getName());
                                 }
                         }
                 }
@@ -1726,7 +1810,8 @@ public class AuthServiceImpl implements AuthService {
                                                 member.getId(), code.getOrganization().getId(), company.getId())
                                                 .orElseThrow(() -> {
                                                         log.warn("Token exchange failed | reason=COMPANY_ACCESS_REVOKED | orgId={} | companyId={}",
-                                                                        code.getOrganization().getId(), company.getId());
+                                                                        code.getOrganization().getId(),
+                                                                        company.getId());
                                                         return new BadCredentialsException("Company access revoked");
                                                 });
                         } else if (!isOwnerMember) {
@@ -1744,7 +1829,8 @@ public class AuthServiceImpl implements AuthService {
                                 }
                         }
                         if (code.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
-                                log.warn("Token exchange failed | reason=ORG_ACCESS_BLOCKED | orgId={}", code.getOrganization().getId());
+                                log.warn("Token exchange failed | reason=ORG_ACCESS_BLOCKED | orgId={}",
+                                                code.getOrganization().getId());
                                 throw new InvalidOperationException("Organization access is blocked");
                         }
                 }
@@ -1910,7 +1996,8 @@ public class AuthServiceImpl implements AuthService {
                                         .findByCompanyCode(companyCode);
 
                         if (optionalCompany.isEmpty()) {
-                                log.warn("Password reset requested for non-existent company | companyCode={}", companyCode);
+                                log.warn("Password reset requested for non-existent company | companyCode={}",
+                                                companyCode);
                                 return "If account exists, reset link sent to email";
                         }
                         Company company = optionalCompany.get();
@@ -1921,7 +2008,8 @@ public class AuthServiceImpl implements AuthService {
                                                         email);
 
                         if (optionalUser.isEmpty()) {
-                                log.warn("Password reset requested for non-existent user | companyCode={} | email={}", companyCode, email);
+                                log.warn("Password reset requested for non-existent user | companyCode={} | email={}",
+                                                companyCode, email);
                                 return "If account exists, reset link sent to email";
                         }
 
@@ -1944,7 +2032,8 @@ public class AuthServiceImpl implements AuthService {
                                                                                         .orElse(null))));
 
                         if (module == null) {
-                                log.error("No module found for password reset token assignment | userId={}", user.getId());
+                                log.error("No module found for password reset token assignment | userId={}",
+                                                user.getId());
                                 throw new ResourceNotFoundException("No module found for token assignment");
                         }
 
@@ -2004,12 +2093,14 @@ public class AuthServiceImpl implements AuthService {
                 UserToken userToken = userTokenRepository
                                 .findByToken(cleanToken)
                                 .orElseThrow(() -> {
-                                        log.warn("Email verification failed - invalid token | token={}", maskCode(cleanToken));
+                                        log.warn("Email verification failed - invalid token | token={}",
+                                                        maskCode(cleanToken));
                                         return new BadCredentialsException("Invalid token");
                                 });
 
                 if (userToken.getTokenType() != TokenType.EMAIL_VERIFICATION) {
-                        log.warn("Email verification failed - invalid token type | token={} | type={}", maskCode(cleanToken), userToken.getTokenType());
+                        log.warn("Email verification failed - invalid token type | token={} | type={}",
+                                        maskCode(cleanToken), userToken.getTokenType());
                         throw new BadCredentialsException(
                                         "Invalid token type");
                 }
@@ -2024,7 +2115,8 @@ public class AuthServiceImpl implements AuthService {
                 if (userToken.getExpiresAt() == null
                                 || userToken.getExpiresAt()
                                                 .isBefore(LocalDateTime.now())) {
-                        log.warn("Email verification failed - token expired | token={} | expiredAt={}", maskCode(cleanToken), userToken.getExpiresAt());
+                        log.warn("Email verification failed - token expired | token={} | expiredAt={}",
+                                        maskCode(cleanToken), userToken.getExpiresAt());
                         throw new TokenExpiredException(
                                         "Token expired");
                 }
@@ -2046,7 +2138,8 @@ public class AuthServiceImpl implements AuthService {
                 if (user.getEmailStatus() == Status.VERIFIED) {
                         userToken.setUsed(true);
                         userTokenRepository.save(userToken);
-                        log.info("Email was already verified | userId={} | companyId={}", user.getId(), company.getId());
+                        log.info("Email was already verified | userId={} | companyId={}", user.getId(),
+                                        company.getId());
                         return "Email already verified";
                 }
 
@@ -2067,7 +2160,8 @@ public class AuthServiceImpl implements AuthService {
         // ==================== RESET PASSWORD ====================
         // FIX #8: method signature uses PasswordReset (correct spelling)
         private String hashToken(String rawToken) {
-                if (rawToken == null) return null;
+                if (rawToken == null)
+                        return null;
                 try {
                         byte[] digest = MessageDigest.getInstance("SHA-256")
                                         .digest(rawToken.trim().getBytes(StandardCharsets.UTF_8));
@@ -2104,12 +2198,15 @@ public class AuthServiceImpl implements AuthService {
                                 .findByToken(hashedCode)
                                 .or(() -> userTokenRepository.findByToken(rawCode))
                                 .orElseThrow(() -> {
-                                        log.warn("Password setup/reset failed - token not found | token={}", maskCode(rawCode));
+                                        log.warn("Password setup/reset failed - token not found | token={}",
+                                                        maskCode(rawCode));
                                         return new BadCredentialsException("Token not found");
                                 });
 
-                if (token.getTokenType() != TokenType.PASSWORD_RESET && token.getTokenType() != TokenType.PASSWORD_SETUP) {
-                        log.warn("Password setup/reset failed - invalid token type | token={} | type={}", maskCode(rawCode), token.getTokenType());
+                if (token.getTokenType() != TokenType.PASSWORD_RESET
+                                && token.getTokenType() != TokenType.PASSWORD_SETUP) {
+                        log.warn("Password setup/reset failed - invalid token type | token={} | type={}",
+                                        maskCode(rawCode), token.getTokenType());
                         throw new BadCredentialsException(
                                         "Invalid token");
                 }
@@ -2123,7 +2220,8 @@ public class AuthServiceImpl implements AuthService {
 
                 if (token.getExpiresAt()
                                 .isBefore(LocalDateTime.now())) {
-                        log.warn("Password setup/reset failed - token expired | token={} | expiredAt={}", maskCode(rawCode), token.getExpiresAt());
+                        log.warn("Password setup/reset failed - token expired | token={} | expiredAt={}",
+                                        maskCode(rawCode), token.getExpiresAt());
                         throw new TokenExpiredException(
                                         "Token expired");
                 }
@@ -2221,7 +2319,8 @@ public class AuthServiceImpl implements AuthService {
 
                 Module module = moduleOpt.get();
                 if (Boolean.FALSE.equals(module.getModuleStatus())) {
-                        log.warn("Client validation failed - client module inactive | clientId={} | moduleId={}", clientId, module.getId());
+                        log.warn("Client validation failed - client module inactive | clientId={} | moduleId={}",
+                                        clientId, module.getId());
                         throw new BadCredentialsException("Client is inactive");
                 }
                 validateModuleSecret(module, clientSecret);
@@ -2238,7 +2337,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         private boolean isPlaceholder(String val) {
-                if (val == null) return true;
+                if (val == null)
+                        return true;
                 String t = val.trim().toLowerCase(Locale.ROOT);
                 return t.isEmpty()
                                 || t.startsWith("your_")
@@ -2386,7 +2486,8 @@ public class AuthServiceImpl implements AuthService {
                 boolean isOwner = false;
                 if (session.getOrganization() != null) {
                         isOwner = organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
-                                        session.getOrganization().getId(), session.getUser().getId(), MembershipStatus.ACTIVE)
+                                        session.getOrganization().getId(), session.getUser().getId(),
+                                        MembershipStatus.ACTIVE)
                                         .map(m -> m.getMemberType() == MemberType.OWNER)
                                         .orElse(false);
                 }
@@ -2429,9 +2530,11 @@ public class AuthServiceImpl implements AuthService {
                 }
 
                 boolean isSystemAdmin = (user.getUserRoles() != null && user.getUserRoles().stream()
-                                .anyMatch(ur -> ur.getRole() != null && ("SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                .anyMatch(ur -> ur.getRole() != null && ("SYSTEM_ADMIN"
+                                                .equalsIgnoreCase(ur.getRole().getName())
                                                 || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName()))))
-                                || (session.getModule() != null && "SYSTEM_ADMIN".equalsIgnoreCase(session.getModule().getName()));
+                                || (session.getModule() != null
+                                                && "SYSTEM_ADMIN".equalsIgnoreCase(session.getModule().getName()));
 
                 Module module = session.getModule();
                 if (module != null && !isSystemAdmin && !isOwner && company != null) {
@@ -2484,7 +2587,8 @@ public class AuthServiceImpl implements AuthService {
 
                 if (session.getOrganization() != null) {
                         if (organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
-                                        session.getOrganization().getId(), user.getId(), MembershipStatus.ACTIVE).isEmpty()) {
+                                        session.getOrganization().getId(), user.getId(), MembershipStatus.ACTIVE)
+                                        .isEmpty()) {
                                 log.warn("Token verification failed - inactive organization membership | userId={} | orgId={}",
                                                 user.getId(), session.getOrganization().getId());
                                 return TokenVerifyResponse.builder().valid(false).build();
@@ -2519,7 +2623,8 @@ public class AuthServiceImpl implements AuthService {
                                                 ? session.getOrganization().getAccessMode()
                                                 : AccessMode.FULL;
                                 Optional<Subscription> subOpt = subscriptionRepository
-                                                .findTopByOrganization_IdOrderByCreatedAtDesc(session.getOrganization().getId());
+                                                .findTopByOrganization_IdOrderByCreatedAtDesc(
+                                                                session.getOrganization().getId());
                                 if (subOpt.isPresent()) {
                                         Subscription sub = subOpt.get();
                                         if (sub.getAccessMode() != null) {
@@ -2528,7 +2633,8 @@ public class AuthServiceImpl implements AuthService {
                                         if (sub.getStatus() == com.erp.auth_service.utility.SubscriptionStatus.EXPIRED
                                                         || (sub.getStatus() == com.erp.auth_service.utility.SubscriptionStatus.TRIALING
                                                                         && sub.getTrialEndsAt() != null
-                                                                        && !sub.getTrialEndsAt().isAfter(LocalDateTime.now()))) {
+                                                                        && !sub.getTrialEndsAt().isAfter(
+                                                                                        LocalDateTime.now()))) {
                                                 effectiveMode = AccessMode.READ_ONLY;
                                         }
                                 }
@@ -2542,24 +2648,35 @@ public class AuthServiceImpl implements AuthService {
                                 userResponse.setCompanyId(company.getId());
                                 userResponse.setCompanyCode(company.getCompanyCode());
                                 if (user.getUserRoles() != null) {
-                                        List<com.erp.auth_service.dto.response.RoleResponse> scopedRoles = user.getUserRoles().stream()
+                                        List<com.erp.auth_service.dto.response.RoleResponse> scopedRoles = user
+                                                        .getUserRoles().stream()
                                                         .filter(ur -> ur.getRole() != null
                                                                         && (ur.getRole().getCompany() == null
-                                                                                        || company.getId().equals(ur.getRole().getCompany().getId())
-                                                                                        || "SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
-                                                                                        || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())))
+                                                                                        || company.getId().equals(ur
+                                                                                                        .getRole()
+                                                                                                        .getCompany()
+                                                                                                        .getId())
+                                                                                        || "SYSTEM_ADMIN"
+                                                                                                        .equalsIgnoreCase(
+                                                                                                                        ur.getRole().getName())
+                                                                                        || "ROLE_SYSTEM_ADMIN"
+                                                                                                        .equalsIgnoreCase(
+                                                                                                                        ur.getRole().getName())))
                                                         .map(userMapper::toRoleResponse)
                                                         .toList();
                                         userResponse.setRole(scopedRoles);
                                 }
                         } else if (isOwner) {
                                 List<com.erp.auth_service.dto.response.RoleResponse> ownerRoles = new ArrayList<>();
-                                ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder().name("OWNER").build());
-                                ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder().name("ROLE_OWNER").build());
+                                ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder().name("OWNER")
+                                                .build());
+                                ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
+                                                .name("ROLE_OWNER").build());
                                 userResponse.setRole(ownerRoles);
                         }
                         EffectivePermissionsResponse effective = permissionService
-                                        .getEffectivePermissions(user.getId(), company != null ? company.getId() : null);
+                                        .getEffectivePermissions(user.getId(),
+                                                        company != null ? company.getId() : null);
                         userResponse.setFeatures(effective.getFeatures());
                         userResponse.setPermissions(effective.getPermissions());
                         log.debug(
@@ -2575,7 +2692,8 @@ public class AuthServiceImpl implements AuthService {
                         return TokenVerifyResponse.builder()
                                         .valid(true)
                                         .user(userResponse)
-                                        .build();                } catch (RuntimeException ex) {
+                                        .build();
+                } catch (RuntimeException ex) {
                         log.error(
                                         "Permission/feature enrichment failed during token verification -> userId={} | error={}",
                                         user.getId(),
@@ -2609,7 +2727,8 @@ public class AuthServiceImpl implements AuthService {
                         Session session = sessionRepository
                                         .findByAccessToken(token)
                                         .orElseThrow(() -> {
-                                                log.warn("Revoke access token failed - session not found | token={}", maskCode(token));
+                                                log.warn("Revoke access token failed - session not found | token={}",
+                                                                maskCode(token));
                                                 return new ResourceNotFoundException("Session not found");
                                         });
 
@@ -2631,7 +2750,8 @@ public class AuthServiceImpl implements AuthService {
                         Session session = sessionRepository
                                         .findByRefreshToken(token)
                                         .orElseThrow(() -> {
-                                                log.warn("Revoke refresh token failed - session not found | token={}", maskCode(token));
+                                                log.warn("Revoke refresh token failed - session not found | token={}",
+                                                                maskCode(token));
                                                 return new ResourceNotFoundException("Session not found");
                                         });
 
@@ -2672,12 +2792,28 @@ public class AuthServiceImpl implements AuthService {
                                         return new ResourceNotFoundException("Root company not found");
                                 });
 
-                User user = userRepository
-                                .findUserWithRoles(rootCompany.getId(), input)
-                                .orElseThrow(() -> {
-                                        log.warn("Admin login failed - user not found in root company 000000 | input={} | ip={}", input, ip);
-                                        return new BadCredentialsException("You are not authorized for admin login");
-                                });
+                List<User> candidates = userRepository.findUsersWithRolesByCompany(rootCompany.getId(), input);
+
+                if (candidates.isEmpty()) {
+                        List<User> globalMatches = userRepository
+                                        .findByUsernameIgnoreCaseOrEmailIgnoreCaseWithRoles(input, input);
+                        if (!globalMatches.isEmpty()) {
+                                log.warn("Admin login rejected - user [{}] exists in non-root company(s) but not in root admin company 000000 | ip={}",
+                                                input, ip);
+                        } else {
+                                log.warn("Admin login failed - user not found in root company 000000 | input={} | ip={}",
+                                                input, ip);
+                        }
+                        throw new BadCredentialsException("You are not authorized for admin login");
+                }
+
+                User user = resolveUnambiguousUser(candidates, input, "000000");
+                if (user == null) {
+                        log.error("Admin login rejected - ambiguous user identity: multiple conflicting users found in root company for input [{}] | candidatesCount={} | ip={}",
+                                        input, candidates.size(), ip);
+                        throw new BadCredentialsException(
+                                        "Ambiguous user identity. Please use your specific admin username or email.");
+                }
 
                 boolean isSystemAdmin = user.getUserRoles() != null
                                 && user.getUserRoles()
@@ -2797,12 +2933,61 @@ public class AuthServiceImpl implements AuthService {
                 sessionRepository.save(session);
 
                 log.info("Admin login successful | userId={} | username={} | companyCode={} | sessionId={} | ip={}",
-                                user.getId(), user.getUsername(), user.getCompany().getCompanyCode(), session.getId(), ip);
+                                user.getId(), user.getUsername(), user.getCompany().getCompanyCode(), session.getId(),
+                                ip);
 
                 return LoginResponse.builder()
                                 .accessToken(accessToken)
                                 .refreshToken(refreshToken)
                                 .build();
+        }
+
+        private User resolveUnambiguousUser(List<User> candidates, String input, String companyCode) {
+                if (candidates == null || candidates.isEmpty()) {
+                        return null;
+                }
+                if (candidates.size() == 1) {
+                        return candidates.get(0);
+                }
+
+                String normalizedInput = input.trim().toLowerCase();
+
+                List<User> exactEmailMatches = candidates.stream()
+                                .filter(u -> u.getEmail() != null
+                                                && u.getEmail().trim().equalsIgnoreCase(normalizedInput))
+                                .toList();
+
+                List<User> exactUsernameMatches = candidates.stream()
+                                .filter(u -> u.getUsername() != null
+                                                && u.getUsername().trim().equalsIgnoreCase(normalizedInput))
+                                .toList();
+
+                if (exactEmailMatches.size() == 1 && exactUsernameMatches.isEmpty()) {
+                        log.info("Disambiguated user by exact email match | userId={} | companyCode={}",
+                                        exactEmailMatches.get(0).getId(), companyCode);
+                        return exactEmailMatches.get(0);
+                }
+
+                if (exactUsernameMatches.size() == 1 && exactEmailMatches.isEmpty()) {
+                        log.info("Disambiguated user by exact username match | userId={} | companyCode={}",
+                                        exactUsernameMatches.get(0).getId(), companyCode);
+                        return exactUsernameMatches.get(0);
+                }
+
+                if (input.contains("@") && exactEmailMatches.size() == 1) {
+                        log.info("Disambiguated user by email-formatted input | userId={} | companyCode={}",
+                                        exactEmailMatches.get(0).getId(), companyCode);
+                        return exactEmailMatches.get(0);
+                }
+
+                if (!input.contains("@") && exactUsernameMatches.size() == 1) {
+                        log.info("Disambiguated user by non-email input | userId={} | companyCode={}",
+                                        exactUsernameMatches.get(0).getId(), companyCode);
+                        return exactUsernameMatches.get(0);
+                }
+
+                // Multiple candidates match ambiguously across case variations or dirty data
+                return null;
         }
 
         private Map<String, Object> buildAdminClaims(
@@ -2871,7 +3056,8 @@ public class AuthServiceImpl implements AuthService {
                 Session session = sessionRepository
                                 .findByAccessToken(accessToken.trim())
                                 .orElseThrow(() -> {
-                                        log.warn("Authorize rejected - session not found | userId={} | moduleId={}", userId, moduleId);
+                                        log.warn("Authorize rejected - session not found | userId={} | moduleId={}",
+                                                        userId, moduleId);
                                         return new ResourceNotFoundException("Session not found");
                                 });
 
@@ -2897,7 +3083,8 @@ public class AuthServiceImpl implements AuthService {
                                 || (session.getUser() != null && !session.getUser().getId().equals(userId))) {
 
                         log.warn("Authorize rejected - user mismatch | tokenUserId={} | requestedUserId={} | sessionUserId={}",
-                                        tokenUserId, userId, session.getUser() != null ? session.getUser().getId() : null);
+                                        tokenUserId, userId,
+                                        session.getUser() != null ? session.getUser().getId() : null);
                         return Map.of(
                                         "authorized", false,
                                         "reason", "User mismatch");
@@ -2909,7 +3096,8 @@ public class AuthServiceImpl implements AuthService {
                 Company company = session.getCompany();
 
                 if (company == null) {
-                        log.warn("Authorize rejected - missing company in session | sessionId={} | userId={}", session.getId(), userId);
+                        log.warn("Authorize rejected - missing company in session | sessionId={} | userId={}",
+                                        session.getId(), userId);
                         return Map.of(
                                         "authorized", false,
                                         "reason", "Invalid company session");
@@ -2921,7 +3109,8 @@ public class AuthServiceImpl implements AuthService {
                 Module module = moduleRepository
                                 .findById(moduleId)
                                 .orElseThrow(() -> {
-                                        log.warn("Authorize rejected - module not found | moduleId={} | userId={}", moduleId, userId);
+                                        log.warn("Authorize rejected - module not found | moduleId={} | userId={}",
+                                                        moduleId, userId);
                                         return new ResourceNotFoundException("Module not found");
                                 });
 
@@ -2964,7 +3153,8 @@ public class AuthServiceImpl implements AuthService {
                  * USER STATUS
                  */
                 if (user.getAccountStatus() != AccountStatus.ACTIVE) {
-                        log.warn("Authorize rejected - user account inactive | userId={} | status={}", userId, user.getAccountStatus());
+                        log.warn("Authorize rejected - user account inactive | userId={} | status={}", userId,
+                                        user.getAccountStatus());
                         return Map.of(
                                         "authorized", false,
                                         "reason", "User inactive");
@@ -2982,7 +3172,8 @@ public class AuthServiceImpl implements AuthService {
                                         .existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(
                                                         member.get().getId(), company.getId())) {
                                 log.warn("Authorize rejected - organization company access mismatch | orgId={} | memberId={} | companyId={}",
-                                                session.getOrganization().getId(), member.map(OrganizationMember::getId).orElse(null), company.getId());
+                                                session.getOrganization().getId(),
+                                                member.map(OrganizationMember::getId).orElse(null), company.getId());
                                 return Map.of(
                                                 "authorized", false,
                                                 "reason", "Company mismatch");

@@ -41,12 +41,13 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
         @Query("""
                             SELECT DISTINCT u FROM User u
+                            JOIN FETCH u.company
                             LEFT JOIN FETCH u.userRoles ur
                             LEFT JOIN FETCH ur.role
                             WHERE LOWER(u.username) = LOWER(:username)
                                OR LOWER(u.email) = LOWER(:email)
                         """)
-        Optional<User> findByUsernameIgnoreCaseOrEmailIgnoreCaseWithRoles(
+        List<User> findByUsernameIgnoreCaseOrEmailIgnoreCaseWithRoles(
                         @Param("username") String username,
                         @Param("email") String email);
 
@@ -135,9 +136,40 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
                             OR LOWER(u.email) = LOWER(:input)
                         )
                         """)
-        Optional<User> findUserWithRoles(
+        List<User> findUsersWithRolesByCompany(
                         @Param("companyId") UUID companyId,
                         @Param("input") String input);
+
+        default Optional<User> findUserWithRoles(UUID companyId, String input) {
+                List<User> users = findUsersWithRolesByCompany(companyId, input);
+                if (users == null || users.isEmpty()) {
+                        return Optional.empty();
+                }
+                if (users.size() == 1) {
+                        return Optional.of(users.get(0));
+                }
+                String norm = input.trim().toLowerCase();
+                List<User> emailMatch = users.stream()
+                                .filter(u -> u.getEmail() != null && u.getEmail().trim().equalsIgnoreCase(norm))
+                                .toList();
+                List<User> usernameMatch = users.stream()
+                                .filter(u -> u.getUsername() != null && u.getUsername().trim().equalsIgnoreCase(norm))
+                                .toList();
+                if (emailMatch.size() == 1 && usernameMatch.isEmpty()) {
+                        return Optional.of(emailMatch.get(0));
+                }
+                if (usernameMatch.size() == 1 && emailMatch.isEmpty()) {
+                        return Optional.of(usernameMatch.get(0));
+                }
+                if (input.contains("@") && emailMatch.size() == 1) {
+                        return Optional.of(emailMatch.get(0));
+                }
+                if (!input.contains("@") && usernameMatch.size() == 1) {
+                        return Optional.of(usernameMatch.get(0));
+                }
+                // Ambiguous match across multiple distinct users within the same company
+                return Optional.empty();
+        }
 
         long countByCompanyId(UUID companyId);
 
