@@ -36,6 +36,7 @@ import {
 import { useAccessMode } from '../../hooks/useAccessMode';
 import { useSubscriptionPlans } from '../../hooks/useSubscriptionPlans';
 import { useAppSelector } from '../../app/hooks';
+import { selectAuthContext } from '../../features/auth/authSlice';
 import { createSubscriptionCheckout, verifySubscriptionPayment } from '../../api/sso/subscriptionPlan.api';
 import { formatPlanLimit } from '../../utils/subscriptionPlanHelper';
 import OwnerLayout, { useIsOwnerLayout } from '../../layouts/OwnerLayout';
