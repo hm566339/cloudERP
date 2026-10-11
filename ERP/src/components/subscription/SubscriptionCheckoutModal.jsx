@@ -17,7 +17,7 @@ import {
   Lock,
   Check
 } from 'lucide-react';
-import { createSubscriptionCheckout, getOrganizationSubscription } from '../../api/sso/subscriptionPlan.api';
+import { createSubscriptionCheckout, getOrganizationSubscription, verifySubscriptionPayment } from '../../api/sso/subscriptionPlan.api';
 import { useDispatch } from 'react-redux';
 import { authApi } from '../../features/auth/services/authApi';
 import { formatPlanLimit } from '../../utils/subscriptionPlanHelper';
@@ -156,28 +156,37 @@ export default function SubscriptionCheckoutModal({
       }
 
       const keyId = checkoutData.keyId;
-      const subscriptionId = checkoutData.subscriptionId;
+      const orderId = checkoutData.orderId || checkoutData.subscriptionId;
 
       if (!keyId || typeof keyId !== 'string' || !keyId.trim()) {
         throw new Error('Payment gateway configuration is missing (Razorpay Key ID not configured on the server). Please contact administrator.');
       }
 
-      if (!subscriptionId) {
-        throw new Error('Server did not return a valid payment subscription ID. Please try again.');
+      if (!orderId) {
+        throw new Error('Server did not return a valid payment order ID. Please try again.');
       }
+
+      const amountPaise = checkoutData.amountInPaise || (checkoutData.amount ? Math.round(Number(checkoutData.amount) * 100) : undefined);
 
       // 4. Initialize Razorpay Checkout instance
       const options = {
         key: keyId.trim(),
-        subscription_id: subscriptionId,
+        order_id: checkoutData.orderId || (orderId?.startsWith('order_') ? orderId : undefined),
+        subscription_id: !checkoutData.orderId && orderId?.startsWith('sub_') ? orderId : undefined,
         name: 'Mark2 ERP',
-        description: `${selectedPlan.name || 'ERP'} Subscription`,
+        description: `${selectedPlan.name || 'ERP'} Plan Purchase`,
         currency: checkoutData.currency || selectedPlan.currency || 'INR',
-        amount: checkoutData.amount,
+        amount: amountPaise,
         handler: async function (response) {
-          logPaymentSuccess(response);
           setIsVerifying(true);
           try {
+            // Cryptographically verify payment on server and activate plan
+            await verifySubscriptionPayment(orgId, {
+              orderId: response.razorpay_order_id || checkoutData.orderId || orderId,
+              paymentId: response.razorpay_payment_id,
+              signature: response.razorpay_signature,
+            });
+
             // Verify and refresh subscription from backend
             let updatedSub = null;
             try {
@@ -205,11 +214,9 @@ export default function SubscriptionCheckoutModal({
             }, 2500);
           } catch (verifyErr) {
             console.error('Error during post-payment verification:', verifyErr);
-            setSuccessMessage(`Payment received! Refreshing subscription status...`);
-            setTimeout(() => {
-              onClose();
-              window.location.reload();
-            }, 2000);
+            const errDetail = verifyErr.response?.data?.message || verifyErr.message || 'Payment verification failed.';
+            setErrorMessage(`Payment verification error: ${errDetail}`);
+            setIsVerifying(false);
           }
         },
         prefill: {

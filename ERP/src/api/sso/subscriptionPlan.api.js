@@ -70,3 +70,8 @@ export const getOrganizationSubscription = async (organizationId) => {
   return response.data?.data || response.data;
 };
 
+export const verifySubscriptionPayment = async (organizationId, payload) => {
+  const response = await apiClient.post(`/api/sso/subscriptions/${organizationId}/verify-payment`, payload);
+  return response.data?.data || response.data;
+};
+

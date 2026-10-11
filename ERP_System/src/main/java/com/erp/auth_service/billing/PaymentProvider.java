@@ -15,4 +15,7 @@ public interface PaymentProvider {
     String extractCurrency(JsonNode payload);
     LocalDateTime extractPeriodStart(JsonNode payload);
     LocalDateTime extractPeriodEnd(JsonNode payload);
+    default String extractOrderId(JsonNode payload) {
+        return null;
+    }
 }

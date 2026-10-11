@@ -51,6 +51,16 @@ public class SubscriptionCheckoutController {
         return ResponseEntity.ok(ResponseWrapper.success(subscription));
     }
 
+    @PostMapping("/{organizationId}/verify-payment")
+    public ResponseEntity<ResponseWrapper<Subscription>> verifyPayment(
+            @PathVariable UUID organizationId,
+            @RequestBody String rawBody) {
+
+        com.erp.auth_service.dto.subscription.PaymentVerificationRequest request = parseVerificationRequest(rawBody);
+        Subscription subscription = subscriptionBillingService.verifyAndActivatePayment(organizationId, request);
+        return ResponseEntity.ok(ResponseWrapper.success(subscription));
+    }
+
     private SubscriptionCheckoutRequest parseCheckoutRequest(String rawBody) {
         if (rawBody == null || rawBody.isBlank()) {
             throw new BadRequestException("Request body cannot be empty");
@@ -64,6 +74,21 @@ public class SubscriptionCheckoutController {
             return objectMapper.treeToValue(root, SubscriptionCheckoutRequest.class);
         } catch (Exception ex) {
             throw new BadRequestException("Invalid subscription checkout payload: " + ex.getMessage());
+        }
+    }
+
+    private com.erp.auth_service.dto.subscription.PaymentVerificationRequest parseVerificationRequest(String rawBody) {
+        if (rawBody == null || rawBody.isBlank()) {
+            throw new BadRequestException("Request body cannot be empty");
+        }
+        try {
+            JsonNode root = objectMapper.readTree(rawBody);
+            if (root.has("data") && root.get("data").isObject()) {
+                return objectMapper.treeToValue(root.get("data"), com.erp.auth_service.dto.subscription.PaymentVerificationRequest.class);
+            }
+            return objectMapper.treeToValue(root, com.erp.auth_service.dto.subscription.PaymentVerificationRequest.class);
+        } catch (Exception ex) {
+            throw new BadRequestException("Invalid payment verification payload: " + ex.getMessage());
         }
     }
 }

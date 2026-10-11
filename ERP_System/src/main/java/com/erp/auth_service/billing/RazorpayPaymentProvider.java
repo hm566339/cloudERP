@@ -92,10 +92,21 @@ public class RazorpayPaymentProvider implements PaymentProvider {
         return null;
     }
 
+    @Override
     public String extractOrderId(JsonNode p) {
         JsonNode payEntity = p.path("payload").path("payment").path("entity");
         if (payEntity.hasNonNull("order_id")) {
             return payEntity.get("order_id").asText();
+        }
+        JsonNode orderEntity = p.path("payload").path("order").path("entity");
+        if (orderEntity.hasNonNull("id")) {
+            return orderEntity.get("id").asText();
+        }
+        if (p.hasNonNull("orderId")) {
+            return p.get("orderId").asText();
+        }
+        if (p.hasNonNull("order_id")) {
+            return p.get("order_id").asText();
         }
         return null;
     }
@@ -121,6 +132,13 @@ public class RazorpayPaymentProvider implements PaymentProvider {
         if (payNotes.hasNonNull("organization_id")) {
             return payNotes.get("organization_id").asText();
         }
+        JsonNode orderNotes = p.path("payload").path("order").path("entity").path("notes");
+        if (orderNotes.hasNonNull("organization_id")) {
+            return orderNotes.get("organization_id").asText();
+        }
+        if (p.path("notes").hasNonNull("organization_id")) {
+            return p.path("notes").get("organization_id").asText();
+        }
         return null;
     }
 
@@ -129,6 +147,11 @@ public class RazorpayPaymentProvider implements PaymentProvider {
         JsonNode payEntity = p.path("payload").path("payment").path("entity");
         if (payEntity.hasNonNull("amount")) {
             long paise = payEntity.get("amount").asLong();
+            return BigDecimal.valueOf(paise).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        }
+        JsonNode orderEntity = p.path("payload").path("order").path("entity");
+        if (orderEntity.hasNonNull("amount")) {
+            long paise = orderEntity.get("amount").asLong();
             return BigDecimal.valueOf(paise).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         }
         if (p.hasNonNull("amount")) {
@@ -142,6 +165,10 @@ public class RazorpayPaymentProvider implements PaymentProvider {
         JsonNode payEntity = p.path("payload").path("payment").path("entity");
         if (payEntity.hasNonNull("currency")) {
             return payEntity.get("currency").asText();
+        }
+        JsonNode orderEntity = p.path("payload").path("order").path("entity");
+        if (orderEntity.hasNonNull("currency")) {
+            return orderEntity.get("currency").asText();
         }
         if (p.hasNonNull("currency")) {
             return p.get("currency").asText();

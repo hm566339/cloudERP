@@ -14,7 +14,13 @@ public class RazorpayCheckoutResponse {
 
     private String keyId;
 
-    /** Razorpay subscription ID (sub_xxxxx) — passed to Razorpay Checkout popup */
+    /** Razorpay order ID (order_xxxxx) for one-time payment Checkout */
+    private String orderId;
+
+    /** Total amount in integer paise (e.g. 299900 for 2999.00 INR) */
+    private Long amountInPaise;
+
+    /** Legacy / fallback identifier for backward compatibility */
     private String subscriptionId;
 
     /** ERP internal subscription UUID — used for status polling and cancellation */

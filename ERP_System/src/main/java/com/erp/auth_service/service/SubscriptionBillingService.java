@@ -12,5 +12,7 @@ public interface SubscriptionBillingService {
 
     void cancelSubscription(UUID subscriptionId);
 
+    Subscription verifyAndActivatePayment(UUID organizationId, com.erp.auth_service.dto.subscription.PaymentVerificationRequest request);
+
     Subscription getOrganizationSubscription(UUID organizationId);
 }

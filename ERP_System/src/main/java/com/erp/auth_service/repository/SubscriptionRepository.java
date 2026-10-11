@@ -13,6 +13,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
 
     Optional<Subscription> findByRazorpaySubscriptionId(String razorpaySubscriptionId);
 
+    Optional<Subscription> findByRazorpayOrderId(String razorpayOrderId);
+
     Optional<Subscription> findTopByOrganization_IdAndStatus(UUID organizationId, com.erp.auth_service.utility.SubscriptionStatus status);
 
     boolean existsByOrganization_IdAndStatus(UUID organizationId, com.erp.auth_service.utility.SubscriptionStatus status);

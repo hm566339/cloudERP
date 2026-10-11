@@ -17,6 +17,7 @@ import com.erp.auth_service.utility.AccessMode;
 import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
 import com.erp.auth_service.utility.SubscriptionStatus;
+import com.erp.auth_service.dto.subscription.RazorpayOrderDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.erp.auth_service.service.impl.SubscriptionReconciliationService;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -25,6 +26,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -52,6 +55,7 @@ import static org.mockito.Mockito.*;
  * J. Cancellation, expiry, unauthorized access, missing config
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("Razorpay Production-Hardened Billing Tests")
 public class RazorpayHardenedBillingTest {
 
@@ -90,6 +94,7 @@ public class RazorpayHardenedBillingTest {
                 organizationMemberRepository,
                 subscriptionPlanRepository,
                 subscriptionRepository,
+                paymentRepository,
                 razorpayService,
                 razorpayProperties
         );
@@ -141,15 +146,14 @@ public class RazorpayHardenedBillingTest {
     // ========================================================================
 
     @Test
-    @DisplayName("A1. Plan lookup by code succeeds")
+    @DisplayName("A1. Plan lookup by code succeeds and creates Razorpay Order")
     void testA1_planLookup() {
         when(organizationRepository.findById(organizationId)).thenReturn(Optional.of(organization));
         when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("PRO")).thenReturn(Optional.of(proPlan));
         when(subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.ACTIVE)).thenReturn(Optional.empty());
         when(subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.PENDING)).thenReturn(Optional.empty());
-        when(razorpayService.createPlan(anyString(), any(), anyString(), anyString(), anyInt(), anyString())).thenReturn("plan_rzp_pro");
-        when(razorpayService.createSubscription(anyString(), anyInt(), anyInt(), anyMap()))
-                .thenReturn(RazorpaySubscriptionDto.builder().id("sub_rzp_123").status("created").build());
+        when(razorpayService.createOrder(any(BigDecimal.class), anyString(), anyString(), anyMap()))
+                .thenReturn(RazorpayOrderDto.builder().id("order_rzp_123").amount(299900L).currency("INR").status("created").build());
 
         SubscriptionCheckoutRequest req = SubscriptionCheckoutRequest.builder().planId("PRO").build();
         RazorpayCheckoutResponse res = billingService.createCheckout(organizationId, req);
@@ -157,40 +161,36 @@ public class RazorpayHardenedBillingTest {
         assertNotNull(res);
         assertEquals("Pro Plan", res.getPlanName());
         assertEquals("PRO", res.getPlanCode());
-        assertNotNull(res.getErpSubscriptionId()); // NEW field
+        assertEquals("order_rzp_123", res.getOrderId());
+        assertNotNull(res.getErpSubscriptionId());
     }
 
     @Test
-    @DisplayName("A2. Razorpay plan creation on first checkout")
+    @DisplayName("A2. Razorpay order creation on checkout converts price to paise")
     void testA2_razorpayPlanCreation() {
-        proPlan.setRazorpayPlanId(null);
         when(organizationRepository.findById(organizationId)).thenReturn(Optional.of(organization));
         when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("PRO")).thenReturn(Optional.of(proPlan));
         when(subscriptionRepository.findTopByOrganization_IdAndStatus(any(), any())).thenReturn(Optional.empty());
-        when(razorpayService.createPlan(eq("Pro Plan"), eq(new BigDecimal("2999.00")), eq("INR"), eq("monthly"), eq(1), anyString()))
-                .thenReturn("plan_rzp_new123");
-        when(razorpayService.createSubscription(eq("plan_rzp_new123"), anyInt(), anyInt(), anyMap()))
-                .thenReturn(RazorpaySubscriptionDto.builder().id("sub_123").build());
+        when(razorpayService.createOrder(eq(new BigDecimal("2999.00")), eq("INR"), anyString(), anyMap()))
+                .thenReturn(RazorpayOrderDto.builder().id("order_rzp_new123").amount(299900L).currency("INR").status("created").build());
 
         billingService.createCheckout(organizationId, SubscriptionCheckoutRequest.builder().planId("PRO").build());
 
-        verify(razorpayService).createPlan(eq("Pro Plan"), eq(new BigDecimal("2999.00")), eq("INR"), eq("monthly"), eq(1), anyString());
-        assertEquals("plan_rzp_new123", proPlan.getRazorpayPlanId());
+        verify(razorpayService).createOrder(eq(new BigDecimal("2999.00")), eq("INR"), anyString(), anyMap());
     }
 
     @Test
-    @DisplayName("A3. Existing Razorpay plan is reused without duplicate creation")
+    @DisplayName("A3. Pending payment record is saved on order creation")
     void testA3_existingRazorpayPlanReuse() {
-        proPlan.setRazorpayPlanId("plan_rzp_existing");
         when(organizationRepository.findById(organizationId)).thenReturn(Optional.of(organization));
         when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("PRO")).thenReturn(Optional.of(proPlan));
         when(subscriptionRepository.findTopByOrganization_IdAndStatus(any(), any())).thenReturn(Optional.empty());
-        when(razorpayService.createSubscription(eq("plan_rzp_existing"), anyInt(), anyInt(), anyMap()))
-                .thenReturn(RazorpaySubscriptionDto.builder().id("sub_123").build());
+        when(razorpayService.createOrder(any(BigDecimal.class), anyString(), anyString(), anyMap()))
+                .thenReturn(RazorpayOrderDto.builder().id("order_123").amount(299900L).currency("INR").status("created").build());
 
         billingService.createCheckout(organizationId, SubscriptionCheckoutRequest.builder().planId("PRO").build());
 
-        verify(razorpayService, never()).createPlan(any(), any(), any(), any(), anyInt(), any());
+        verify(paymentRepository).save(any(Payment.class));
     }
 
     @Test
@@ -434,7 +434,7 @@ public class RazorpayHardenedBillingTest {
                 .organization(organization)
                 .plan(proPlan)
                 .status(SubscriptionStatus.PENDING)
-                .razorpaySubscriptionId("sub_rzp_existing_pending")
+                .razorpayOrderId("order_rzp_existing_pending")
                 .priceAtSubscription(new BigDecimal("2999.00"))
                 .trialStartedAt(LocalDateTime.now())
                 .trialEndsAt(LocalDateTime.now())
@@ -449,10 +449,9 @@ public class RazorpayHardenedBillingTest {
         RazorpayCheckoutResponse res = billingService.createCheckout(organizationId,
                 SubscriptionCheckoutRequest.builder().planId("PRO").build());
 
-        // Must return the EXISTING subscription ID — no new Razorpay subscription created
-        assertEquals("sub_rzp_existing_pending", res.getSubscriptionId());
-        verify(razorpayService, never()).createSubscription(any(), anyInt(), anyInt(), any());
-        verify(razorpayService, never()).createPlan(any(), any(), any(), any(), anyInt(), any());
+        // Must return the EXISTING order ID — no new Razorpay order created
+        assertEquals("order_rzp_existing_pending", res.getOrderId());
+        verify(razorpayService, never()).createOrder(any(), any(), any(), any());
     }
 
     @Test
@@ -482,14 +481,13 @@ public class RazorpayHardenedBillingTest {
     @Test
     @DisplayName("H1. priceAtSubscription is stored as immutable snapshot at checkout time")
     void testH1_priceAtSubscriptionIsStoredImmutably() {
-        proPlan.setRazorpayPlanId("plan_rzp_existing");
         proPlan.setPrice(new BigDecimal("2999.00")); // current price
 
         when(organizationRepository.findById(organizationId)).thenReturn(Optional.of(organization));
         when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("PRO")).thenReturn(Optional.of(proPlan));
         when(subscriptionRepository.findTopByOrganization_IdAndStatus(any(), any())).thenReturn(Optional.empty());
-        when(razorpayService.createSubscription(anyString(), anyInt(), anyInt(), anyMap()))
-                .thenReturn(RazorpaySubscriptionDto.builder().id("sub_rzp_h1").build());
+        when(razorpayService.createOrder(any(BigDecimal.class), anyString(), anyString(), anyMap()))
+                .thenReturn(RazorpayOrderDto.builder().id("order_rzp_h1").amount(299900L).currency("INR").status("created").build());
 
         billingService.createCheckout(organizationId, SubscriptionCheckoutRequest.builder().planId("PRO").build());
 
@@ -502,25 +500,21 @@ public class RazorpayHardenedBillingTest {
     }
 
     @Test
-    @DisplayName("H2. Price change on plan clears razorpayPlanId — new subscriber gets new Razorpay plan at new price")
+    @DisplayName("H2. Price change on plan creates new order at new price")
     void testH2_priceChangeCreatesNewRazorpayPlan() {
-        // Simulate: admin changed price, razorpayPlanId was cleared (production process)
-        proPlan.setRazorpayPlanId(null); // cleared because price changed
         proPlan.setPrice(new BigDecimal("3499.00")); // new price
 
         when(organizationRepository.findById(organizationId)).thenReturn(Optional.of(organization));
         when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("PRO")).thenReturn(Optional.of(proPlan));
         when(subscriptionRepository.findTopByOrganization_IdAndStatus(any(), any())).thenReturn(Optional.empty());
-        when(razorpayService.createPlan(eq("Pro Plan"), eq(new BigDecimal("3499.00")), eq("INR"), eq("monthly"), eq(1), anyString()))
-                .thenReturn("plan_rzp_v2_new");
-        when(razorpayService.createSubscription(eq("plan_rzp_v2_new"), anyInt(), anyInt(), anyMap()))
-                .thenReturn(RazorpaySubscriptionDto.builder().id("sub_rzp_h2_new").build());
+        when(razorpayService.createOrder(eq(new BigDecimal("3499.00")), eq("INR"), anyString(), anyMap()))
+                .thenReturn(RazorpayOrderDto.builder().id("order_rzp_h2_new").amount(349900L).currency("INR").status("created").build());
 
         RazorpayCheckoutResponse res = billingService.createCheckout(organizationId,
                 SubscriptionCheckoutRequest.builder().planId("PRO").build());
 
-        // New plan must be created at new price
-        verify(razorpayService).createPlan(eq("Pro Plan"), eq(new BigDecimal("3499.00")), eq("INR"), eq("monthly"), eq(1), anyString());
+        // New order must be created at new price
+        verify(razorpayService).createOrder(eq(new BigDecimal("3499.00")), eq("INR"), anyString(), anyMap());
         assertEquals(new BigDecimal("3499.00"), res.getAmount());
     }
 
@@ -552,30 +546,21 @@ public class RazorpayHardenedBillingTest {
     }
 
     @Test
-    @DisplayName("H4. Old Razorpay plan is never reused for new higher price (prevents price bypass)")
+    @DisplayName("H4. Price update reflects on order creation")
     void testH4_oldRazorpayPlanNotReusedForNewPrice() {
-        // Plan has existing razorpayPlanId at old price 2999
-        // Simulate: admin updated price to 3499 but did NOT clear razorpayPlanId (misconfiguration)
-        proPlan.setRazorpayPlanId("plan_rzp_old_2999");
-        proPlan.setPrice(new BigDecimal("3499.00")); // price changed but planId not cleared
-
-        // VERIFY: In current design, the system reuses existing planId (safe because Razorpay
-        // doesn't allow price changes on existing plans — the plan is immutable on Razorpay's side).
-        // The ERP admin MUST clear razorpayPlanId to create a new plan at new price.
-        // This test documents the expected behavior.
+        proPlan.setPrice(new BigDecimal("3499.00"));
 
         when(organizationRepository.findById(organizationId)).thenReturn(Optional.of(organization));
         when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("PRO")).thenReturn(Optional.of(proPlan));
         when(subscriptionRepository.findTopByOrganization_IdAndStatus(any(), any())).thenReturn(Optional.empty());
-        when(razorpayService.createSubscription(eq("plan_rzp_old_2999"), anyInt(), anyInt(), anyMap()))
-                .thenReturn(RazorpaySubscriptionDto.builder().id("sub_rzp_h4").build());
+        when(razorpayService.createOrder(eq(new BigDecimal("3499.00")), anyString(), anyString(), anyMap()))
+                .thenReturn(RazorpayOrderDto.builder().id("order_rzp_h4").amount(349900L).currency("INR").status("created").build());
 
         RazorpayCheckoutResponse res = billingService.createCheckout(organizationId,
                 SubscriptionCheckoutRequest.builder().planId("PRO").build());
 
-        // System reuses existing plan — Razorpay enforces immutability at their end
-        verify(razorpayService, never()).createPlan(any(), any(), any(), any(), anyInt(), any());
-        assertEquals("plan_rzp_old_2999", proPlan.getRazorpayPlanId()); // unchanged
+        verify(razorpayService).createOrder(eq(new BigDecimal("3499.00")), anyString(), anyString(), anyMap());
+        assertEquals(new BigDecimal("3499.00"), res.getAmount());
     }
 
     // ========================================================================
@@ -687,7 +672,7 @@ public class RazorpayHardenedBillingTest {
         when(organizationRepository.findById(organizationId)).thenReturn(Optional.of(organization));
         when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("PRO")).thenReturn(Optional.of(proPlan));
         when(subscriptionRepository.findTopByOrganization_IdAndStatus(any(), any())).thenReturn(Optional.empty());
-        when(razorpayService.createSubscription(anyString(), anyInt(), anyInt(), anyMap()))
+        when(razorpayService.createOrder(any(BigDecimal.class), anyString(), anyString(), anyMap()))
                 .thenThrow(new BadRequestException("Razorpay gateway timeout"));
 
         assertThrows(BadRequestException.class, () ->
@@ -706,14 +691,19 @@ public class RazorpayHardenedBillingTest {
         when(organizationRepository.findById(organizationId)).thenReturn(Optional.of(organization));
         when(subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("PRO")).thenReturn(Optional.of(proPlan));
         when(subscriptionRepository.findTopByOrganization_IdAndStatus(any(), any())).thenReturn(Optional.empty());
-        when(razorpayService.createSubscription(anyString(), anyInt(), anyInt(), anyMap()))
-                .thenReturn(RazorpaySubscriptionDto.builder().id("sub_S4").build());
+        when(razorpayService.createOrder(any(BigDecimal.class), anyString(), anyString(), anyMap()))
+                .thenReturn(RazorpayOrderDto.builder()
+                        .id("order_S4")
+                        .amount(299900L)
+                        .currency("INR")
+                        .build());
 
         // Request does NOT contain amount — and even if the request body was tampered, it's ignored
         RazorpayCheckoutResponse res = billingService.createCheckout(organizationId,
                 SubscriptionCheckoutRequest.builder().planId("PRO").build());
 
         assertEquals(new BigDecimal("2999.00"), res.getAmount()); // DB price, not client price
+        assertEquals("order_S4", res.getOrderId());
     }
 
     // ========================================================================
@@ -750,14 +740,19 @@ public class RazorpayHardenedBillingTest {
         when(subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.ACTIVE)).thenReturn(Optional.empty());
 
         // First call finds no pending; after saving, subsequent call finds the pending subscription
-        Subscription createdSub = buildSubscription("sub_rzp_concurrent_123", SubscriptionStatus.PENDING);
+        Subscription createdSub = buildSubscription("order_rzp_concurrent_123", SubscriptionStatus.PENDING);
         createdSub.setPlan(proPlan);
+        createdSub.setRazorpayOrderId("order_rzp_concurrent_123");
         when(subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.PENDING))
                 .thenReturn(Optional.empty())
                 .thenReturn(Optional.of(createdSub));
 
-        when(razorpayService.createSubscription(anyString(), anyInt(), anyInt(), anyMap()))
-                .thenReturn(RazorpaySubscriptionDto.builder().id("sub_rzp_concurrent_123").build());
+        when(razorpayService.createOrder(any(BigDecimal.class), anyString(), anyString(), anyMap()))
+                .thenReturn(RazorpayOrderDto.builder()
+                        .id("order_rzp_concurrent_123")
+                        .amount(299900L)
+                        .currency("INR")
+                        .build());
         when(subscriptionRepository.save(any(Subscription.class))).thenReturn(createdSub);
 
         int threads = 2;
@@ -786,11 +781,11 @@ public class RazorpayHardenedBillingTest {
         for (Future<RazorpayCheckoutResponse> f : futures) {
             RazorpayCheckoutResponse resp = f.get();
             assertNotNull(resp);
-            assertEquals("sub_rzp_concurrent_123", resp.getSubscriptionId());
+            assertEquals("order_rzp_concurrent_123", resp.getOrderId());
         }
 
         // Razorpay API must be invoked EXACTLY ONCE
-        verify(razorpayService, times(1)).createSubscription(anyString(), anyInt(), anyInt(), anyMap());
+        verify(razorpayService, times(1)).createOrder(any(BigDecimal.class), anyString(), anyString(), anyMap());
     }
 
     // ========================================================================

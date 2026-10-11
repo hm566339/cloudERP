@@ -17,7 +17,8 @@ import java.util.UUID;
     indexes = {
         @Index(name = "idx_subscription_org_status", columnList = "organization_id,status"),
         @Index(name = "idx_subscription_razorpay_sub_id", columnList = "razorpay_subscription_id"),
-        @Index(name = "idx_subscription_razorpay_plan_id", columnList = "razorpay_plan_id")
+        @Index(name = "idx_subscription_razorpay_plan_id", columnList = "razorpay_plan_id"),
+        @Index(name = "idx_subscription_razorpay_order_id", columnList = "razorpay_order_id")
     }
 )
 @Getter
@@ -83,6 +84,9 @@ public class Subscription {
 
     @Column(name = "razorpay_customer_id", length = 100)
     private String razorpayCustomerId;
+
+    @Column(name = "razorpay_order_id", length = 100)
+    private String razorpayOrderId;
 
     @Column(name = "next_billing_date")
     private LocalDateTime nextBillingDate;

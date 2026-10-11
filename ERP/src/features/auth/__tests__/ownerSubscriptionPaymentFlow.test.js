@@ -246,45 +246,51 @@ describe('Owner Subscription Plan & Payment Flow Integration Tests', () => {
     it('detects unconfigured payment gateway when keyId is missing from server response', () => {
       const serverResponseWithoutKey = {
         keyId: null,
-        subscriptionId: 'sub_test123',
+        orderId: 'order_test123',
         amount: 589882,
         currency: 'INR',
       };
 
-      function validateGatewayConfig(checkoutData) {
-        const keyId = checkoutData?.keyId;
-        if (!keyId || typeof keyId !== 'string' || !keyId.trim()) {
-          throw new Error('Payment gateway configuration is missing (Razorpay Key ID not configured on the server). Please contact administrator.');
-        }
-        return true;
-      }
-
       assert.throws(
-        () => validateGatewayConfig(serverResponseWithoutKey),
+        () => validatePaymentGatewayConfig(serverResponseWithoutKey),
         /Payment gateway configuration is missing/
       );
     });
 
-    it('accepts configured payment gateway when valid keyId and subscriptionId are present', () => {
-      const validServerResponse = {
+    it('accepts configured payment gateway when valid keyId and orderId are present (one-time checkout)', () => {
+      const validOrderResponse = {
+        keyId: 'rzp_test_1234567890',
+        orderId: 'order_one_time_123',
+        amount: 499900,
+        currency: 'INR',
+      };
+
+      assert.strictEqual(validatePaymentGatewayConfig(validOrderResponse), true);
+    });
+
+    it('accepts configured payment gateway when valid keyId and legacy subscriptionId are present', () => {
+      const validSubscriptionResponse = {
         keyId: 'rzp_test_1234567890',
         subscriptionId: 'sub_test123',
         amount: 589882,
         currency: 'INR',
       };
 
-      function validateGatewayConfig(checkoutData) {
-        const keyId = checkoutData?.keyId;
-        if (!keyId || typeof keyId !== 'string' || !keyId.trim()) {
-          throw new Error('Payment gateway configuration is missing');
-        }
-        if (!checkoutData?.subscriptionId) {
-          throw new Error('Server did not return a valid subscription ID');
-        }
-        return true;
-      }
+      assert.strictEqual(validatePaymentGatewayConfig(validSubscriptionResponse), true);
+    });
 
-      assert.strictEqual(validateGatewayConfig(validServerResponse), true);
+    it('rejects when both orderId and subscriptionId are missing', () => {
+      const missingIdsResponse = {
+        keyId: 'rzp_test_1234567890',
+        amount: 589882,
+        currency: 'INR',
+      };
+
+      assert.throws(
+        () => validatePaymentGatewayConfig(missingIdsResponse),
+        /Server did not return a valid payment order or subscription ID/
+      );
     });
   });
 });
+

@@ -36,8 +36,7 @@ import {
 import { useAccessMode } from '../../hooks/useAccessMode';
 import { useSubscriptionPlans } from '../../hooks/useSubscriptionPlans';
 import { useAppSelector } from '../../app/hooks';
-import { selectAuthContext } from '../../features/auth/authSlice';
-import { createSubscriptionCheckout } from '../../api/sso/subscriptionPlan.api';
+import { createSubscriptionCheckout, verifySubscriptionPayment } from '../../api/sso/subscriptionPlan.api';
 import { formatPlanLimit } from '../../utils/subscriptionPlanHelper';
 import OwnerLayout, { useIsOwnerLayout } from '../../layouts/OwnerLayout';
 
@@ -240,8 +239,9 @@ function SubscriptionContent() {
         totalCount: 1,
       });
 
-      if (!checkoutData || !checkoutData.subscriptionId) {
-        throw new Error('Server did not return a valid payment authorization ID.');
+      const orderId = checkoutData.orderId || checkoutData.subscriptionId;
+      if (!checkoutData || !orderId) {
+        throw new Error('Server did not return a valid payment order ID.');
       }
 
       const keyId = checkoutData.keyId;
@@ -249,19 +249,35 @@ function SubscriptionContent() {
         throw new Error('Payment gateway configuration is missing (Razorpay Key ID not configured on the server). Please contact administrator.');
       }
 
+      const amountPaise = checkoutData.amountInPaise || (checkoutData.amount ? Math.round(Number(checkoutData.amount) * 100) : undefined);
+
       const options = {
         key: keyId.trim(),
-        subscription_id: checkoutData.subscriptionId,
+        order_id: checkoutData.orderId || (orderId?.startsWith('order_') ? orderId : undefined),
+        subscription_id: !checkoutData.orderId && orderId?.startsWith('sub_') ? orderId : undefined,
         name: 'Mark2 ERP',
-        description: `${selectedPlanForUpgrade.name || 'ERP'} Subscription`,
+        description: `${selectedPlanForUpgrade.name || 'ERP'} Plan Purchase`,
         currency: checkoutData.currency || selectedPlanForUpgrade.currency || 'INR',
-        amount: checkoutData.amount,
-        handler: function () {
-          setCheckoutSuccess(true);
-          setShowUpgradeModal(false);
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
+        amount: amountPaise,
+        handler: async function (response) {
+          try {
+            setCheckoutLoading(true);
+            await verifySubscriptionPayment(orgId, {
+              orderId: response.razorpay_order_id || checkoutData.orderId || orderId,
+              paymentId: response.razorpay_payment_id,
+              signature: response.razorpay_signature,
+            });
+            setCheckoutSuccess(true);
+            setShowUpgradeModal(false);
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          } catch (verifyErr) {
+            console.error('Payment verification failed:', verifyErr);
+            setCheckoutError(verifyErr.response?.data?.message || verifyErr.message || 'Payment verification failed.');
+          } finally {
+            setCheckoutLoading(false);
+          }
         },
         prefill: {
           name: orgName,
@@ -269,11 +285,17 @@ function SubscriptionContent() {
         theme: {
           color: '#18181b',
         },
+        modal: {
+          ondismiss: function () {
+            setCheckoutLoading(false);
+          },
+        },
       };
 
       const rzpInstance = new window.Razorpay(options);
       rzpInstance.on('payment.failed', function (resp) {
         setCheckoutError(resp.error?.description || 'Payment authorization cancelled or failed.');
+        setCheckoutLoading(false);
       });
       rzpInstance.open();
     } catch (err) {

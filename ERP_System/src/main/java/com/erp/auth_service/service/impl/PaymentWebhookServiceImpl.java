@@ -175,6 +175,10 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
                     break;
 
                 // --- Supplemental activation (activates subscription, does NOT extend period) ---
+                case "order.paid":
+                    handleOrderPaid(provider, paymentProvider, root, event);
+                    break;
+
                 case "payment.captured":
                 case "payment.authorized":
                 case "subscription.activated":
@@ -341,12 +345,16 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
     }
 
     // ========================================================================================
-    // SUPPLEMENTAL ACTIVATION: payment.captured / payment.authorized
-    // Activates subscription if still PENDING/PAST_DUE.
-    // Does NOT extend billing period (that is subscription.charged's job).
-    // Does NOT create a Payment record if same paymentId was already recorded.
+    // SUPPLEMENTAL ACTIVATION: payment.captured / payment.authorized / order.paid
     // ========================================================================================
     private void handlePaymentCaptured(String provider, PaymentProvider paymentProvider, JsonNode root, PaymentEvent event) {
+        String rawSubId = paymentProvider.extractSubscriptionId(root);
+        String orderId = (paymentProvider instanceof RazorpayPaymentProvider rzp) ? rzp.extractOrderId(root) : null;
+        if ((rawSubId == null || rawSubId.isBlank()) && orderId != null && !orderId.isBlank()) {
+            handleOrderPaid(provider, paymentProvider, root, event);
+            return;
+        }
+
         Subscription subscription = resolveSubscription(paymentProvider, root);
         String paymentId = paymentProvider.extractPaymentId(root);
 
@@ -389,6 +397,159 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         }
 
         markEventProcessed(event);
+    }
+
+    // ========================================================================================
+    // ONE-TIME ORDER BILLING EVENT: order.paid / payment.captured (for order)
+    // Marks payment SUCCEEDED, calculates validity, and activates subscription.
+    // Idempotent and thread-safe.
+    // ========================================================================================
+    private void handleOrderPaid(String provider, PaymentProvider paymentProvider, JsonNode root, PaymentEvent event) {
+        String orderId = paymentProvider.extractOrderId(root);
+        String paymentId = paymentProvider.extractPaymentId(root);
+
+        log.info("handleOrderPaid: provider={}, orderId={}, paymentId={}", provider, orderId, paymentId);
+
+        // 1. Idempotency check: if payment already recorded and SUCCEEDED
+        if (paymentId != null && paymentRepository.existsByProviderAndProviderPaymentId(provider, paymentId)) {
+            Optional<Payment> existingPayment = paymentRepository.findByProviderAndProviderPaymentId(provider, paymentId);
+            if (existingPayment.isPresent() && ("SUCCEEDED".equalsIgnoreCase(existingPayment.get().getStatus())
+                    || "SUCCESS".equalsIgnoreCase(existingPayment.get().getStatus()))) {
+                log.info("Payment already recorded and succeeded for paymentId={} — idempotent skip (order.paid)", paymentId);
+                markEventProcessed(event);
+                return;
+            }
+        }
+
+        // 2. Locate pending payment record by orderId or providerPaymentId
+        Payment payment = null;
+        if (orderId != null && !orderId.isBlank()) {
+            payment = paymentRepository.findByRazorpayOrderId(orderId)
+                    .orElseGet(() -> paymentRepository.findByProviderPaymentId(orderId).orElse(null));
+        }
+
+        // If no payment record found yet by orderId, but paymentId is present
+        if (payment == null && paymentId != null) {
+            payment = paymentRepository.findByProviderAndProviderPaymentId(provider, paymentId).orElse(null);
+        }
+
+        // 3. Resolve subscription
+        Subscription subscription = null;
+        if (payment != null && payment.getSubscription() != null) {
+            subscription = payment.getSubscription();
+        } else {
+            try {
+                subscription = resolveSubscription(paymentProvider, root);
+            } catch (Exception ex) {
+                log.warn("Could not resolve subscription for orderId={}: {}", orderId, ex.getMessage());
+            }
+        }
+
+        if (subscription == null) {
+            log.error("handleOrderPaid: Subscription could not be resolved for orderId={}, eventId={}",
+                    orderId, event.getProviderEventId());
+            throw new BadRequestException("Subscription not found for order: " + orderId);
+        }
+
+        // 4. Update / Create Payment record
+        BigDecimal amount = paymentProvider.extractAmount(root);
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            amount = subscription.getPriceAtSubscription() != null
+                    ? subscription.getPriceAtSubscription()
+                    : (subscription.getPrice() != null ? subscription.getPrice() : BigDecimal.ZERO);
+        }
+        String currency = paymentProvider.extractCurrency(root);
+        if (currency == null) {
+            currency = (subscription.getCurrency() != null ? subscription.getCurrency() : "INR");
+        }
+
+        if (payment == null) {
+            payment = Payment.builder()
+                    .subscription(subscription)
+                    .organization(subscription.getOrganization())
+                    .provider(provider)
+                    .providerPaymentId(paymentId != null ? paymentId : orderId)
+                    .razorpayPaymentId(paymentId)
+                    .razorpayOrderId(orderId)
+                    .amount(amount)
+                    .currency(currency)
+                    .status("SUCCEEDED")
+                    .paidAt(LocalDateTime.now())
+                    .build();
+        } else {
+            if (paymentId != null) {
+                payment.setRazorpayPaymentId(paymentId);
+                payment.setProviderPaymentId(paymentId);
+            }
+            if (orderId != null && payment.getRazorpayOrderId() == null) {
+                payment.setRazorpayOrderId(orderId);
+            }
+            payment.setStatus("SUCCEEDED");
+            payment.setPaidAt(LocalDateTime.now());
+        }
+        paymentRepository.save(payment);
+
+        // 5. Calculate validity and update subscription
+        LocalDateTime now = LocalDateTime.now();
+        int durationDays = (subscription.getPlan() != null && subscription.getPlan().getDurationDays() != null && subscription.getPlan().getDurationDays() > 0)
+                ? subscription.getPlan().getDurationDays() : 30;
+
+        LocalDateTime newStart;
+        LocalDateTime newEnd;
+
+        // If subscription is currently ACTIVE and period has not expired, extend validity
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE
+                && subscription.getCurrentPeriodEnd() != null
+                && subscription.getCurrentPeriodEnd().isAfter(now)) {
+            newStart = subscription.getCurrentPeriodStart() != null ? subscription.getCurrentPeriodStart() : now;
+            newEnd = subscription.getCurrentPeriodEnd().plusDays(durationDays);
+            log.info("handleOrderPaid: Extending active period for erpSubId={}, newEnd={}", subscription.getId(), newEnd);
+        } else {
+            newStart = now;
+            newEnd = now.plusDays(durationDays);
+            log.info("handleOrderPaid: Fresh period for erpSubId={}, start={}, end={}", subscription.getId(), newStart, newEnd);
+        }
+
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscription.setAccessMode(AccessMode.FULL);
+        subscription.setCurrentPeriodStart(newStart);
+        subscription.setCurrentPeriodEnd(newEnd);
+        subscription.setNextBillingDate(newEnd);
+        subscription.setCancelledAt(null);
+        if (orderId != null && subscription.getRazorpayOrderId() == null) {
+            subscription.setRazorpayOrderId(orderId);
+        }
+        subscriptionRepository.save(subscription);
+
+        // Update organization access mode
+        if (subscription.getOrganization() != null) {
+            subscription.getOrganization().setAccessMode(AccessMode.FULL);
+            if (organizationRepository != null) {
+                organizationRepository.save(subscription.getOrganization());
+            }
+        }
+
+        // Create or update Invoice
+        LocalDateTime finalPeriodStart = newStart;
+        LocalDateTime finalPeriodEnd = newEnd;
+        BigDecimal finalAmount = amount;
+        String finalCurrency = currency;
+        final Subscription finalSubscription = subscription;
+
+        Invoice invoice = invoiceRepository.findBySubscription_IdAndPeriodStart(subscription.getId(), finalPeriodStart)
+                .orElseGet(() -> Invoice.builder()
+                        .subscription(finalSubscription)
+                        .periodStart(finalPeriodStart)
+                        .build());
+        invoice.setPeriodEnd(finalPeriodEnd);
+        invoice.setAmount(finalAmount);
+        invoice.setCurrency(finalCurrency);
+        invoice.setStatus("PAID");
+        invoiceRepository.save(invoice);
+
+        markEventProcessed(event);
+        log.info("handleOrderPaid processed successfully: erpSubId={}, orderId={}, paymentId={}, access=FULL",
+                subscription.getId(), orderId, paymentId);
     }
 
     // ========================================================================================
@@ -585,7 +746,20 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
             } catch (IllegalArgumentException ignored) {}
         }
 
-        // 3. Try via organization ID in notes (fallback for Razorpay)
+        // 3. Try via order ID
+        String orderId = paymentProvider.extractOrderId(root);
+        if (orderId != null && !orderId.isBlank()) {
+            Optional<Subscription> byOrderId = subscriptionRepository.findByRazorpayOrderId(orderId);
+            if (byOrderId.isPresent()) {
+                return byOrderId.get();
+            }
+            Optional<Payment> byPaymentOrder = paymentRepository.findByRazorpayOrderId(orderId);
+            if (byPaymentOrder.isPresent() && byPaymentOrder.get().getSubscription() != null) {
+                return byPaymentOrder.get().getSubscription();
+            }
+        }
+
+        // 4. Try via organization ID in notes (fallback for Razorpay)
         if (paymentProvider instanceof RazorpayPaymentProvider rzp) {
             String orgIdStr = rzp.extractOrganizationId(root);
             if (orgIdStr != null && !orgIdStr.isBlank()) {

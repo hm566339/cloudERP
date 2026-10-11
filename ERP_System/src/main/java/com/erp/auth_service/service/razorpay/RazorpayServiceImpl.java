@@ -205,6 +205,113 @@ public class RazorpayServiceImpl implements RazorpayService {
     }
 
     @Override
+    public com.erp.auth_service.dto.subscription.RazorpayOrderDto createOrder(
+            BigDecimal amountInInr, String currency, String receipt, Map<String, String> notes) {
+        String resolvedBaseUrl = sanitizeBaseUrl(razorpayProperties.getBaseUrl());
+        long amountInPaise = amountInInr.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
+        String safeCurrency = (currency != null && !currency.isBlank()) ? currency.trim().toUpperCase(Locale.ROOT) : "INR";
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("amount", amountInPaise);
+        body.put("currency", safeCurrency);
+        if (receipt != null && !receipt.isBlank()) {
+            body.put("receipt", receipt);
+        }
+        if (notes != null && !notes.isEmpty()) {
+            body.put("notes", notes);
+        }
+
+        Set<String> notesKeys = (notes != null) ? notes.keySet() : Collections.emptySet();
+        log.info("Creating Razorpay order: endpoint={}/orders, amountInPaise={}, currency={}, receipt={}, notesKeys={}",
+                resolvedBaseUrl, amountInPaise, safeCurrency, receipt, notesKeys);
+
+        try {
+            String responseStr = getClient().post()
+                    .uri("/orders")
+                    .body(body)
+                    .retrieve()
+                    .body(String.class);
+
+            JsonNode json = objectMapper.readTree(responseStr);
+            com.erp.auth_service.dto.subscription.RazorpayOrderDto orderDto = mapOrderDto(json);
+            log.info("Created Razorpay order successfully with id={}, amount={}", orderDto.getId(), orderDto.getAmount());
+            return orderDto;
+        } catch (HttpStatusCodeException ex) {
+            String errorMsg = extractRazorpayError(ex.getResponseBodyAsString(), ex.getMessage());
+            log.error("Razorpay API error creating order: status={}, endpoint={}/orders, error={}",
+                    ex.getStatusCode(), resolvedBaseUrl, errorMsg);
+            throw new BadRequestException("Razorpay order creation failed: " + errorMsg);
+        } catch (Exception ex) {
+            if (ex instanceof BadRequestException bre) throw bre;
+            log.error("Failed to connect to Razorpay to create order", ex);
+            throw new ServerConnectionFailedException("Failed to communicate with Razorpay service: " + ex.getMessage());
+        }
+    }
+
+    @Override
+    public JsonNode getOrder(String orderId) {
+        log.info("Fetching Razorpay order id={}", orderId);
+        try {
+            String responseStr = getClient().get()
+                    .uri("/orders/{id}", orderId)
+                    .retrieve()
+                    .body(String.class);
+            return objectMapper.readTree(responseStr);
+        } catch (HttpStatusCodeException ex) {
+            String errorMsg = extractRazorpayError(ex.getResponseBodyAsString(), ex.getMessage());
+            log.error("Razorpay API error fetching order: status={}, error={}", ex.getStatusCode(), errorMsg);
+            throw new BadRequestException("Failed to fetch Razorpay order: " + errorMsg);
+        } catch (Exception ex) {
+            if (ex instanceof BadRequestException bre) throw bre;
+            log.error("Failed to connect to Razorpay to fetch order", ex);
+            throw new ServerConnectionFailedException("Failed to communicate with Razorpay service: " + ex.getMessage());
+        }
+    }
+
+    @Override
+    public JsonNode getPayment(String paymentId) {
+        log.info("Fetching Razorpay payment id={}", paymentId);
+        try {
+            String responseStr = getClient().get()
+                    .uri("/payments/{id}", paymentId)
+                    .retrieve()
+                    .body(String.class);
+            return objectMapper.readTree(responseStr);
+        } catch (HttpStatusCodeException ex) {
+            String errorMsg = extractRazorpayError(ex.getResponseBodyAsString(), ex.getMessage());
+            log.error("Razorpay API error fetching payment: status={}, error={}", ex.getStatusCode(), errorMsg);
+            throw new BadRequestException("Failed to fetch Razorpay payment: " + errorMsg);
+        } catch (Exception ex) {
+            if (ex instanceof BadRequestException bre) throw bre;
+            log.error("Failed to connect to Razorpay to fetch payment", ex);
+            throw new ServerConnectionFailedException("Failed to communicate with Razorpay service: " + ex.getMessage());
+        }
+    }
+
+    @Override
+    public boolean verifyPaymentSignature(String orderId, String paymentId, String signature) {
+        String secret = razorpayProperties.getKeySecret();
+        if (secret == null || secret.isBlank() || orderId == null || orderId.isBlank()
+                || paymentId == null || paymentId.isBlank() || signature == null || signature.isBlank()) {
+            log.warn("Payment signature verification failed: secret, orderId, paymentId, or signature is null/empty");
+            return false;
+        }
+
+        try {
+            String payload = orderId.trim() + "|" + paymentId.trim();
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] calculated = HexFormat.of().formatHex(mac.doFinal(payload.getBytes(StandardCharsets.UTF_8)))
+                    .getBytes(StandardCharsets.UTF_8);
+
+            return MessageDigest.isEqual(calculated, signature.trim().getBytes(StandardCharsets.UTF_8));
+        } catch (Exception ex) {
+            log.error("Error computing payment signature HMAC", ex);
+            return false;
+        }
+    }
+
+    @Override
     public boolean verifyWebhookSignature(String signature, String payload) {
         String secret = razorpayProperties.getWebhookSecret();
         if (secret == null || secret.isBlank() || signature == null || signature.isBlank() || payload == null) {
@@ -223,6 +330,28 @@ public class RazorpayServiceImpl implements RazorpayService {
             log.error("Error computing webhook HMAC signature", ex);
             return false;
         }
+    }
+
+    private com.erp.auth_service.dto.subscription.RazorpayOrderDto mapOrderDto(JsonNode json) {
+        Map<String, String> notesMap = new HashMap<>();
+        JsonNode notesNode = json.path("notes");
+        if (notesNode.isObject()) {
+            notesNode.fields().forEachRemaining(entry -> notesMap.put(entry.getKey(), entry.getValue().asText()));
+        }
+
+        return com.erp.auth_service.dto.subscription.RazorpayOrderDto.builder()
+                .id(json.path("id").asText(null))
+                .entity(json.path("entity").asText(null))
+                .amount(json.hasNonNull("amount") ? json.path("amount").asLong() : null)
+                .amountPaid(json.hasNonNull("amount_paid") ? json.path("amount_paid").asLong() : null)
+                .amountDue(json.hasNonNull("amount_due") ? json.path("amount_due").asLong() : null)
+                .currency(json.path("currency").asText(null))
+                .receipt(json.path("receipt").asText(null))
+                .status(json.path("status").asText(null))
+                .attempts(json.hasNonNull("attempts") ? json.path("attempts").asInt() : null)
+                .notes(notesMap)
+                .createdAt(json.hasNonNull("created_at") ? json.path("created_at").asLong() : null)
+                .build();
     }
 
     private RazorpaySubscriptionDto mapSubscriptionDto(JsonNode json) {

@@ -1,7 +1,9 @@
 package com.erp.auth_service.service.impl;
 
 import com.erp.auth_service.config.RazorpayProperties;
+import com.erp.auth_service.dto.subscription.PaymentVerificationRequest;
 import com.erp.auth_service.dto.subscription.RazorpayCheckoutResponse;
+import com.erp.auth_service.dto.subscription.RazorpayOrderDto;
 import com.erp.auth_service.dto.subscription.RazorpaySubscriptionDto;
 import com.erp.auth_service.dto.subscription.SubscriptionCheckoutRequest;
 import com.erp.auth_service.exception.BadRequestException;
@@ -9,10 +11,12 @@ import com.erp.auth_service.exception.ForbiddenException;
 import com.erp.auth_service.exception.ResourceNotFoundException;
 import com.erp.auth_service.model.Organization;
 import com.erp.auth_service.model.OrganizationMember;
+import com.erp.auth_service.model.Payment;
 import com.erp.auth_service.model.Subscription;
 import com.erp.auth_service.model.SubscriptionPlan;
 import com.erp.auth_service.repository.OrganizationMemberRepository;
 import com.erp.auth_service.repository.OrganizationRepository;
+import com.erp.auth_service.repository.PaymentRepository;
 import com.erp.auth_service.repository.SubscriptionPlanRepository;
 import com.erp.auth_service.repository.SubscriptionRepository;
 import com.erp.auth_service.security.PlatformSecurityUtil;
@@ -23,12 +27,14 @@ import com.erp.auth_service.utility.AccessMode;
 import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
 import com.erp.auth_service.utility.SubscriptionStatus;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,14 +50,31 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
     private final OrganizationMemberRepository organizationMemberRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final PaymentRepository paymentRepository;
     private final RazorpayService razorpayService;
     private final RazorpayProperties razorpayProperties;
+
+    // Backward-compatible constructor for existing tests
+    public SubscriptionBillingServiceImpl(OrganizationRepository organizationRepository,
+                                         OrganizationMemberRepository organizationMemberRepository,
+                                         SubscriptionPlanRepository subscriptionPlanRepository,
+                                         SubscriptionRepository subscriptionRepository,
+                                         RazorpayService razorpayService,
+                                         RazorpayProperties razorpayProperties) {
+        this.organizationRepository = organizationRepository;
+        this.organizationMemberRepository = organizationMemberRepository;
+        this.subscriptionPlanRepository = subscriptionPlanRepository;
+        this.subscriptionRepository = subscriptionRepository;
+        this.paymentRepository = null;
+        this.razorpayService = razorpayService;
+        this.razorpayProperties = razorpayProperties;
+    }
 
     private final java.util.concurrent.ConcurrentHashMap<UUID, Object> orgCheckoutLocks = new java.util.concurrent.ConcurrentHashMap<>();
 
     @Override
     public RazorpayCheckoutResponse createCheckout(UUID organizationId, SubscriptionCheckoutRequest request) {
-        log.info("Creating subscription checkout: organizationId={}, planId={}", organizationId, request.getPlanId());
+        log.info("Creating one-time order checkout: organizationId={}, planId={}", organizationId, request.getPlanId());
 
         Organization organization = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Organization not found with id: " + organizationId));
@@ -67,8 +90,10 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
             throw new BadRequestException("Free trial plans cannot be checked out with Razorpay");
         }
 
+        // Snapshot price at checkout time from verified DB record
+        BigDecimal priceAtSubscription = plan.getPrice();
+
         // ---- CONCURRENT CHECKOUT PROTECTION ----
-        // Lock per organization to prevent race conditions (double-click, parallel API calls, network retries)
         Object orgLock = orgCheckoutLocks.computeIfAbsent(organizationId, k -> new Object());
         synchronized (orgLock) {
             // Check for ACTIVE subscription (business duplicate guard)
@@ -80,23 +105,25 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                 }
             }
 
-            // Check for PENDING subscription (concurrent double-click / browser-retry protection)
-            // If there's already a PENDING checkout with the same plan, return it rather than creating a new one
+            // Check for PENDING order checkout with matching plan to avoid duplicate orders
             Optional<Subscription> pendingSubOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.PENDING);
             if (pendingSubOpt.isPresent()) {
                 Subscription pendingSub = pendingSubOpt.get();
-                if (pendingSub.getRazorpaySubscriptionId() != null
+                if (pendingSub.getRazorpayOrderId() != null
                         && pendingSub.getPlan() != null
                         && pendingSub.getPlan().getId().equals(plan.getId())) {
-                    log.info("Returning existing PENDING checkout for organizationId={}, rzpSubId={}",
-                            organizationId, pendingSub.getRazorpaySubscriptionId());
+                    log.info("Reusing existing PENDING order checkout for organizationId={}, rzpOrderId={}",
+                            organizationId, pendingSub.getRazorpayOrderId());
+                    long paise = priceAtSubscription.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
                     return RazorpayCheckoutResponse.builder()
                             .keyId(razorpayProperties.getKeyId())
-                            .subscriptionId(pendingSub.getRazorpaySubscriptionId())
+                            .orderId(pendingSub.getRazorpayOrderId())
+                            .amountInPaise(paise)
+                            .subscriptionId(pendingSub.getRazorpayOrderId()) // backward compatibility
                             .erpSubscriptionId(pendingSub.getId())
                             .planName(plan.getName())
                             .planCode(plan.getCode())
-                            .amount(pendingSub.getPriceAtSubscription() != null ? pendingSub.getPriceAtSubscription() : plan.getPrice())
+                            .amount(priceAtSubscription)
                             .currency(plan.getCurrency() != null ? plan.getCurrency() : "INR")
                             .organizationId(organization.getId())
                             .organizationName(organization.getDisplayName() != null ? organization.getDisplayName() : organization.getLegalName())
@@ -104,52 +131,55 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                 }
             }
 
-            // ---- PLAN PRICE IMMUTABILITY / VERSIONING ----
-            // Snapshot price at checkout time. This is stored on the Subscription so later price
-            // changes to the SubscriptionPlan do not affect existing subscribers.
-            BigDecimal priceAtSubscription = plan.getPrice();
-
-            // ---- RAZORPAY PLAN: CREATE OR REUSE ----
-            String rzpPlanId = plan.getRazorpayPlanId();
-            if (rzpPlanId == null || rzpPlanId.isBlank()) {
-                String period = (plan.getDurationDays() != null && plan.getDurationDays() >= 365) ? "yearly" : "monthly";
-                rzpPlanId = razorpayService.createPlan(
-                        plan.getName(),
-                        priceAtSubscription,
-                        plan.getCurrency() != null ? plan.getCurrency() : "INR",
-                        period,
-                        1,
-                        plan.getDescription() != null ? plan.getDescription() : (plan.getName() + " Subscription")
-                );
-                plan.setRazorpayPlanId(rzpPlanId);
-                subscriptionPlanRepository.save(plan);
-                log.info("Created new Razorpay plan [{}] for ERP plan [{}] at price={}",
-                        rzpPlanId, plan.getCode(), priceAtSubscription);
-            } else {
-                log.info("Reusing existing Razorpay plan [{}] for ERP plan [{}]", rzpPlanId, plan.getCode());
-            }
-
-            // ---- CREATE RAZORPAY SUBSCRIPTION (external call made without holding DB tx) ----
-            int totalCount = request.getTotalCount() != null && request.getTotalCount() > 0 ? request.getTotalCount() : 12;
-            int customerNotify = request.getCustomerNotify() != null ? request.getCustomerNotify() : 1;
-
+            // ---- CREATE RAZORPAY ORDER (ONE-TIME PAYMENT) ----
             Map<String, String> notes = new HashMap<>();
             notes.put("organization_id", organization.getId().toString());
             notes.put("organization_code", organization.getOrganizationCode());
             notes.put("plan_id", plan.getId().toString());
             notes.put("plan_code", plan.getCode());
             notes.put("plan_version", plan.getPlanVersion() != null ? plan.getPlanVersion() : "v1");
+            notes.put("payment_type", "ONE_TIME_PLAN_PURCHASE");
 
-            RazorpaySubscriptionDto rzpSub = razorpayService.createSubscription(rzpPlanId, totalCount, customerNotify, notes);
-            log.info("Created Razorpay subscription [{}] for organization=[{}], plan=[{}]",
-                    rzpSub.getId(), organization.getOrganizationCode(), plan.getCode());
+            String receipt = "rcpt_" + organization.getId().toString().substring(0, 8) + "_" + System.currentTimeMillis();
+
+            RazorpayOrderDto rzpOrder = razorpayService.createOrder(
+                    priceAtSubscription,
+                    plan.getCurrency() != null ? plan.getCurrency() : "INR",
+                    receipt,
+                    notes
+            );
+            log.info("Created Razorpay order [{}] for organization=[{}], plan=[{}]",
+                    rzpOrder.getId(), organization.getOrganizationCode(), plan.getCode());
 
             // ---- SAVE ERP SUBSCRIPTION IN PENDING STATE ----
-            Subscription subscription = buildOrUpdatePendingSubscription(organization, plan, priceAtSubscription, rzpPlanId, rzpSub.getId());
+            Subscription subscription = buildOrUpdatePendingSubscription(organization, plan, priceAtSubscription, rzpOrder.getId());
+
+            // ---- CREATE / UPDATE PENDING PAYMENT RECORD ----
+            Payment pendingPayment = paymentRepository.findByRazorpayOrderId(rzpOrder.getId())
+                    .orElseGet(() -> Payment.builder()
+                            .organization(organization)
+                            .subscription(subscription)
+                            .provider("razorpay")
+                            .providerPaymentId(rzpOrder.getId())
+                            .razorpayOrderId(rzpOrder.getId())
+                            .amount(priceAtSubscription)
+                            .currency(plan.getCurrency() != null ? plan.getCurrency() : "INR")
+                            .status("PENDING")
+                            .build());
+            pendingPayment.setSubscription(subscription);
+            pendingPayment.setAmount(priceAtSubscription);
+            pendingPayment.setCurrency(plan.getCurrency() != null ? plan.getCurrency() : "INR");
+            pendingPayment.setStatus("PENDING");
+            paymentRepository.save(pendingPayment);
+
+            long paise = rzpOrder.getAmount() != null ? rzpOrder.getAmount()
+                    : priceAtSubscription.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
 
             return RazorpayCheckoutResponse.builder()
                     .keyId(razorpayProperties.getKeyId())
-                    .subscriptionId(rzpSub.getId())
+                    .orderId(rzpOrder.getId())
+                    .amountInPaise(paise)
+                    .subscriptionId(rzpOrder.getId()) // backward compatibility
                     .erpSubscriptionId(subscription.getId())
                     .planName(plan.getName())
                     .planCode(plan.getCode())
@@ -163,7 +193,7 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
 
     private Subscription buildOrUpdatePendingSubscription(
             Organization organization, SubscriptionPlan plan,
-            BigDecimal priceAtSubscription, String rzpPlanId, String rzpSubId) {
+            BigDecimal priceAtSubscription, String rzpOrderId) {
 
         Subscription subscription = subscriptionRepository
                 .findTopByOrganization_IdAndStatus(organization.getId(), SubscriptionStatus.PENDING)
@@ -182,8 +212,7 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         subscription.setCurrency(plan.getCurrency() != null ? plan.getCurrency() : "INR");
         subscription.setStatus(SubscriptionStatus.PENDING);
         subscription.setAccessMode(organization.getAccessMode() != null ? organization.getAccessMode() : AccessMode.FULL);
-        subscription.setRazorpayPlanId(rzpPlanId);
-        subscription.setRazorpaySubscriptionId(rzpSubId);
+        subscription.setRazorpayOrderId(rzpOrderId);
 
         Subscription saved = subscriptionRepository.save(subscription);
         if (saved == null) {
@@ -192,9 +221,136 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         if (saved.getId() == null) {
             saved.setId(UUID.randomUUID());
         }
-        log.info("Saved ERP subscription [{}] in PENDING state: plan={}, priceAtSubscription={}, rzpSubId={}",
-                saved.getId(), plan.getCode(), priceAtSubscription, rzpSubId);
+        log.info("Saved ERP subscription [{}] in PENDING state: plan={}, priceAtSubscription={}, rzpOrderId={}",
+                saved.getId(), plan.getCode(), priceAtSubscription, rzpOrderId);
         return saved;
+    }
+
+    @Override
+    @Transactional
+    public Subscription verifyAndActivatePayment(UUID organizationId, PaymentVerificationRequest request) {
+        String orderId = request.getOrderId();
+        String paymentId = request.getPaymentId();
+        String signature = request.getSignature();
+
+        log.info("Verifying one-time payment: organizationId={}, orderId={}, paymentId={}",
+                organizationId, orderId, paymentId);
+
+        // 1. Authorization check: caller must have OWNER/ADMIN access to organization
+        assertOrganizationManagementAccess(organizationId);
+
+        // 2. Cryptographic signature check
+        boolean isValidSignature = razorpayService.verifyPaymentSignature(orderId, paymentId, signature);
+        if (!isValidSignature) {
+            log.warn("Invalid Razorpay payment signature for orderId={}, paymentId={}", orderId, paymentId);
+            throw new BadRequestException("Invalid payment signature. Verification failed.");
+        }
+
+        // 3. Find pending payment record by order ID (or providerPaymentId)
+        Payment payment = paymentRepository.findByRazorpayOrderId(orderId)
+                .orElseGet(() -> paymentRepository.findByProviderPaymentId(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("No payment record found for order: " + orderId)));
+
+        // 4. Verify organization ownership
+        if (payment.getOrganization() == null || !payment.getOrganization().getId().equals(organizationId)) {
+            log.warn("Security violation: Payment order {} belongs to org {}, not {}",
+                    orderId, payment.getOrganization() != null ? payment.getOrganization().getId() : null, organizationId);
+            throw new ForbiddenException("Payment order does not belong to the authenticated organization.");
+        }
+
+        Subscription subscription = payment.getSubscription();
+        if (subscription == null) {
+            throw new ResourceNotFoundException("Subscription not associated with payment: " + payment.getId());
+        }
+
+        SubscriptionPlan plan = subscription.getPlan();
+        if (plan == null) {
+            throw new ResourceNotFoundException("Subscription plan not found for subscription: " + subscription.getId());
+        }
+
+        // 5. Idempotency check: if payment already marked SUCCESS, return subscription directly without duplicate extension
+        if ("SUCCESS".equalsIgnoreCase(payment.getStatus())) {
+            log.info("Payment order {} already verified and processed (idempotent request).", orderId);
+            return subscription;
+        }
+
+        // 6. Server-side verification with Razorpay API (Double-check status & amount)
+        try {
+            JsonNode rzpPayment = razorpayService.getPayment(paymentId);
+            String paymentStatus = rzpPayment.path("status").asText("");
+            if (!"captured".equalsIgnoreCase(paymentStatus) && !"authorized".equalsIgnoreCase(paymentStatus)) {
+                log.warn("Razorpay payment {} is in status {}, expected captured/authorized", paymentId, paymentStatus);
+                throw new BadRequestException("Payment is not yet captured. Current status: " + paymentStatus);
+            }
+
+            String paymentOrderId = rzpPayment.path("order_id").asText("");
+            if (paymentOrderId != null && !paymentOrderId.isBlank() && !orderId.equals(paymentOrderId)) {
+                log.warn("Mismatched order_id in Razorpay payment: expected={}, actual={}", orderId, paymentOrderId);
+                throw new BadRequestException("Payment does not correspond to the requested order.");
+            }
+
+            long actualAmountPaise = rzpPayment.path("amount").asLong(0);
+            long expectedAmountPaise = plan.getPrice().multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
+            if (actualAmountPaise > 0 && actualAmountPaise < expectedAmountPaise) {
+                log.warn("Payment amount mismatch: expected={}, actual={}", expectedAmountPaise, actualAmountPaise);
+                throw new BadRequestException("Payment amount does not match plan price.");
+            }
+        } catch (Exception ex) {
+            if (ex instanceof BadRequestException bre) throw bre;
+            log.warn("Could not fetch payment from Razorpay API for secondary check (relying on verified HMAC signature): {}", ex.getMessage());
+        }
+
+        // 7. Update Payment record
+        payment.setRazorpayPaymentId(paymentId);
+        payment.setProviderPaymentId(paymentId);
+        payment.setRazorpaySignature(signature);
+        payment.setStatus("SUCCESS");
+        payment.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        // 8. Calculate validity & activate subscription
+        LocalDateTime now = LocalDateTime.now();
+        int durationDays = (plan.getDurationDays() != null && plan.getDurationDays() > 0) ? plan.getDurationDays() : 30;
+
+        LocalDateTime newStart;
+        LocalDateTime newEnd;
+
+        // Check if subscription was already active and not expired (Early renewal before expiry)
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE
+                && subscription.getCurrentPeriodEnd() != null
+                && subscription.getCurrentPeriodEnd().isAfter(now)) {
+            // Preserve remaining validity! Extend from current period end
+            newStart = subscription.getCurrentPeriodStart() != null ? subscription.getCurrentPeriodStart() : now;
+            newEnd = subscription.getCurrentPeriodEnd().plusDays(durationDays);
+            log.info("Extending active subscription for org={}: remaining validity preserved, newEnd={}",
+                    organizationId, newEnd);
+        } else {
+            // Fresh activation or renewal after expiration
+            newStart = now;
+            newEnd = now.plusDays(durationDays);
+            log.info("Activating fresh subscription period for org={}: start={}, end={}",
+                    organizationId, newStart, newEnd);
+        }
+
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscription.setAccessMode(AccessMode.FULL);
+        subscription.setCurrentPeriodStart(newStart);
+        subscription.setCurrentPeriodEnd(newEnd);
+        subscription.setNextBillingDate(newEnd);
+        subscription.setCancelledAt(null);
+        subscriptionRepository.save(subscription);
+
+        // Update organization access mode
+        Organization organization = subscription.getOrganization();
+        if (organization != null) {
+            organization.setAccessMode(AccessMode.FULL);
+            organizationRepository.save(organization);
+        }
+
+        log.info("Successfully activated plan [{}] for organization [{}] until {}",
+                plan.getCode(), organizationId, newEnd);
+
+        return subscription;
     }
 
     @Override

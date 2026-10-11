@@ -82,8 +82,8 @@ export function validatePaymentGatewayConfig(checkoutData) {
     throw new Error('Payment gateway configuration is missing (Razorpay Key ID not configured on the server). Please contact support or administrator.');
   }
 
-  if (!checkoutData.subscriptionId) {
-    throw new Error('Server did not return a valid payment subscription ID. Please try again.');
+  if (!checkoutData.orderId && !checkoutData.subscriptionId) {
+    throw new Error('Server did not return a valid payment order or subscription ID. Please try again.');
   }
 
   return true;
