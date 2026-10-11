@@ -44,7 +44,7 @@ public class RazorpayServiceImpl implements RazorpayService {
                 .build();
     }
 
-    private String sanitizeBaseUrl(String baseUrl) {
+    String sanitizeBaseUrl(String baseUrl) {
         if (baseUrl == null || baseUrl.isBlank()) {
             return "https://api.razorpay.com/v1";
         }
@@ -68,7 +68,9 @@ public class RazorpayServiceImpl implements RazorpayService {
 
     @Override
     public String createPlan(String name, BigDecimal amountInInr, String currency, String period, int interval, String description) {
-        log.info("Creating Razorpay plan: name={}, amount={}, currency={}, period={}", name, amountInInr, currency, period);
+        String resolvedBaseUrl = sanitizeBaseUrl(razorpayProperties.getBaseUrl());
+        log.info("Creating Razorpay plan: endpoint={}/plans, name={}, amount={}, currency={}, period={}, interval={}",
+                resolvedBaseUrl, name, amountInInr, currency, period, interval);
 
         long amountInPaise = amountInInr.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
         String safeCurrency = (currency != null && !currency.isBlank()) ? currency.trim().toUpperCase(Locale.ROOT) : "INR";
@@ -103,7 +105,8 @@ public class RazorpayServiceImpl implements RazorpayService {
             return planId;
         } catch (HttpStatusCodeException ex) {
             String errorMsg = extractRazorpayError(ex.getResponseBodyAsString(), ex.getMessage());
-            log.error("Razorpay API error creating plan: status={}, error={}", ex.getStatusCode(), errorMsg);
+            log.error("Razorpay API error creating plan: status={}, endpoint={}/plans, error={}",
+                    ex.getStatusCode(), resolvedBaseUrl, errorMsg);
             throw new BadRequestException("Razorpay plan creation failed: " + errorMsg);
         } catch (Exception ex) {
             if (ex instanceof BadRequestException bre) throw bre;
@@ -114,16 +117,21 @@ public class RazorpayServiceImpl implements RazorpayService {
 
     @Override
     public RazorpaySubscriptionDto createSubscription(String planId, int totalCount, int customerNotify, Map<String, String> notes) {
-        log.info("Creating Razorpay subscription for planId={}, totalCount={}", planId, totalCount);
+        String resolvedBaseUrl = sanitizeBaseUrl(razorpayProperties.getBaseUrl());
+        int safeTotalCount = totalCount > 0 ? totalCount : 12;
 
         Map<String, Object> body = new HashMap<>();
         body.put("plan_id", planId);
-        body.put("total_count", totalCount > 0 ? totalCount : 12);
+        body.put("total_count", safeTotalCount);
         body.put("quantity", 1);
         body.put("customer_notify", customerNotify);
         if (notes != null && !notes.isEmpty()) {
             body.put("notes", notes);
         }
+
+        Set<String> notesKeys = (notes != null) ? notes.keySet() : Collections.emptySet();
+        log.info("Creating Razorpay subscription: endpoint={}/subscriptions, planId={}, totalCount={}, quantity=1, customerNotify={}, notesKeys={}",
+                resolvedBaseUrl, planId, safeTotalCount, customerNotify, notesKeys);
 
         try {
             String responseStr = getClient().post()
@@ -136,7 +144,11 @@ public class RazorpayServiceImpl implements RazorpayService {
             return mapSubscriptionDto(json);
         } catch (HttpStatusCodeException ex) {
             String errorMsg = extractRazorpayError(ex.getResponseBodyAsString(), ex.getMessage());
-            log.error("Razorpay API error creating subscription: status={}, error={}", ex.getStatusCode(), errorMsg);
+            log.error("Razorpay API error creating subscription: status={}, endpoint={}/subscriptions, error={}",
+                    ex.getStatusCode(), resolvedBaseUrl, errorMsg);
+            if (errorMsg != null && errorMsg.toLowerCase(Locale.ROOT).contains("fee bearer is customer")) {
+                log.error("Razorpay account configuration conflict: The Razorpay merchant account has 'Customer Fee Bearer' active, which disables automated invoice creation required by Subscriptions. To resolve this, contact Razorpay Support or your Account Manager to switch your account's fee bearer setting to 'Merchant'.");
+            }
             throw new BadRequestException("Razorpay subscription creation failed: " + errorMsg);
         } catch (Exception ex) {
             if (ex instanceof BadRequestException bre) throw bre;
@@ -236,7 +248,7 @@ public class RazorpayServiceImpl implements RazorpayService {
                 .build();
     }
 
-    private String extractRazorpayError(String responseBody, String defaultMsg) {
+    String extractRazorpayError(String responseBody, String defaultMsg) {
         if (responseBody == null || responseBody.isBlank()) return defaultMsg;
         try {
             JsonNode root = objectMapper.readTree(responseBody);
