@@ -61,7 +61,16 @@ public class CommunicationDispatchService {
         RenderedEmail rendered;
         String eventCode;
         if (request.getTemplateCode() != null) {
-            rendered = templateEngineService.render(request.getTemplateCode(), request.getSubject(), request.getTemplateData());
+            Map<String, Object> templateData = request.getTemplateData() != null
+                    ? new HashMap<>(request.getTemplateData())
+                    : new HashMap<>();
+            if (!templateData.containsKey("email") && request.getRecipient() != null) {
+                templateData.put("email", request.getRecipient().trim());
+            }
+            if (!templateData.containsKey("recipient") && request.getRecipient() != null) {
+                templateData.put("recipient", request.getRecipient().trim());
+            }
+            rendered = templateEngineService.render(request.getTemplateCode(), request.getSubject(), templateData);
             eventCode = request.getTemplateCode().name();
         } else {
             if ((request.getHtmlContent() == null || request.getHtmlContent().isBlank()) &&
@@ -182,18 +191,27 @@ public class CommunicationDispatchService {
             request.setNextRetryAt(null);
         } else {
             request.setErrorSummary(result.getErrorMessage());
-            if (request.getRetryCount() >= request.getMaxRetries()) {
-                request.setStatus(NotificationStatus.FAILED);
-                request.setNextRetryAt(null);
-                log.warn("Email permanently failed after {} attempts | notificationId={}",
-                        request.getRetryCount(), request.getId());
-            } else {
+            boolean shouldRetry = result.isRetryable()
+                    && !isPermanentFailure(result.getErrorMessage())
+                    && (request.getRetryCount() < request.getMaxRetries());
+
+            if (shouldRetry) {
                 request.setStatus(NotificationStatus.PENDING);
                 // Exponential backoff: 30s, 120s, 600s
                 long delaySeconds = (long) Math.pow(2, request.getRetryCount()) * 30L;
                 request.setNextRetryAt(LocalDateTime.now().plusSeconds(delaySeconds));
                 log.info("Email scheduled for retry #{} in {} seconds | notificationId={}",
                         nextAttemptNumber, delaySeconds, request.getId());
+            } else {
+                request.setStatus(NotificationStatus.FAILED);
+                request.setNextRetryAt(null);
+                if (!result.isRetryable() || isPermanentFailure(result.getErrorMessage())) {
+                    log.warn("Email marked permanently FAILED (non-retryable error) | notificationId={} | error={}",
+                            request.getId(), result.getErrorMessage());
+                } else {
+                    log.warn("Email permanently failed after reaching max attempts ({}) | notificationId={}",
+                            request.getMaxRetries(), request.getId());
+                }
             }
         }
 
@@ -203,6 +221,15 @@ public class CommunicationDispatchService {
                 : "Email delivery attempt failed: " + result.getErrorMessage();
 
         return mapToResponse(updated, messageText, result.getProviderName(), result.getProviderMessageId());
+    }
+
+    private boolean isPermanentFailure(String errorMessage) {
+        if (errorMessage == null) return false;
+        String lower = errorMessage.toLowerCase(Locale.ROOT);
+        return lower.contains("invalid recipient")
+                || lower.contains("not in multipart mode")
+                || lower.contains("syntax error")
+                || lower.contains("address syntax");
     }
 
     private void validateEmailRequest(SendEmailRequest request) {
@@ -244,7 +271,8 @@ public class CommunicationDispatchService {
         Map<String, Object> copy = new HashMap<>();
         data.forEach((k, v) -> {
             String lower = k.toLowerCase(Locale.ROOT);
-            if (lower.contains("password") || lower.contains("token") || lower.contains("secret") || lower.contains("key")) {
+            if (lower.contains("password") || lower.contains("token") || lower.contains("secret")
+                    || lower.contains("key") || lower.contains("url") || lower.contains("link")) {
                 copy.put(k, "[REDACTED]");
             } else {
                 copy.put(k, v);

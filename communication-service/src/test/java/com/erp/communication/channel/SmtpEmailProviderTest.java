@@ -114,4 +114,103 @@ class SmtpEmailProviderTest {
         // Verify password is sanitized
         assertFalse(result.getErrorMessage().contains("secret_pw"));
     }
+
+    @Test
+    @DisplayName("Should compose and send HTML-only email without multipart errors")
+    void testHtmlOnlyEmailComposition() throws Exception {
+        EmailMessage message = EmailMessage.builder()
+                .notificationId(UUID.randomUUID())
+                .companyId(UUID.randomUUID())
+                .recipient("test@example.com")
+                .subject("HTML Only Notification")
+                .htmlBody("<div style='color:blue'><h1>Welcome</h1><p>Test HTML body</p></div>")
+                .build();
+
+        CommunicationResult result = smtpProvider.sendEmail(message);
+
+        assertTrue(result.isSuccess());
+        assertEquals("SMTP", result.getProviderName());
+
+        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mailSender, times(1)).send(captor.capture());
+
+        MimeMessage sentMessage = captor.getValue();
+        assertEquals("test@example.com", ((jakarta.mail.internet.InternetAddress) sentMessage.getAllRecipients()[0]).getAddress());
+        assertEquals("HTML Only Notification", sentMessage.getSubject());
+        assertNotNull(sentMessage.getContentType());
+    }
+
+    @Test
+    @DisplayName("Should compose plain-text and HTML alternative content without attachments (prevents 'Not in multipart mode' error)")
+    void testPlainTextAndHtmlAlternativeContentWithoutAttachments() throws Exception {
+        EmailMessage message = EmailMessage.builder()
+                .notificationId(UUID.randomUUID())
+                .companyId(UUID.randomUUID())
+                .recipient("employee@example.com")
+                .subject("Alternative Text and HTML Test")
+                .textBody("Hello Employee, Welcome to Mark2 ERP! Please visit https://www.mark2.in/erp to login.")
+                .htmlBody("<p>Hello Employee,</p><p>Welcome to <strong>Mark2 ERP</strong>!</p><p><a href='https://www.mark2.in/erp'>Login</a></p>")
+                // No attachments
+                .attachments(null)
+                .build();
+
+        CommunicationResult result = smtpProvider.sendEmail(message);
+
+        // Must succeed without throwing IllegalStateException: "Not in multipart mode"
+        assertTrue(result.isSuccess(), "Email with alternative plain text and HTML should succeed in multipart mode");
+        assertEquals("SMTP", result.getProviderName());
+
+        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mailSender, times(1)).send(captor.capture());
+
+        MimeMessage sentMessage = captor.getValue();
+        assertNotNull(sentMessage.getContent());
+        assertTrue(sentMessage.getContentType().toLowerCase().contains("multipart"),
+                "Message Content-Type must be multipart to support alternative text/html parts");
+    }
+
+    @Test
+    @DisplayName("Should compose employee provisioning email correctly with branding, recipient, and setup link")
+    void testEmployeeProvisioningEmailComposition() throws Exception {
+        String setupUrl = "https://www.mark2.in/erp/set-password?token=mock_setup_token_xyz987";
+        String loginUrl = "https://www.mark2.in/erp/c/acme-corp/login";
+
+        EmailMessage message = EmailMessage.builder()
+                .notificationId(UUID.randomUUID())
+                .companyId(UUID.randomUUID())
+                .recipient("newhire@acme.com")
+                .subject("Your Mark2 ERP Account Is Ready — Set Your Password")
+                .textBody("Hello New Hire,\n\nYour account has been provisioned in Acme Corp.\nUsername: newhire\nSet Password: " + setupUrl + "\nLogin: " + loginUrl)
+                .htmlBody("<div style='font-family:sans-serif;'><h1>Welcome to Acme Corp</h1><p>Username: <strong>newhire</strong></p><a href='" + setupUrl + "'>Set Your Password</a></div>")
+                .build();
+
+        CommunicationResult result = smtpProvider.sendEmail(message);
+
+        assertTrue(result.isSuccess());
+        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mailSender, times(1)).send(captor.capture());
+
+        MimeMessage sentMessage = captor.getValue();
+        assertEquals("newhire@acme.com", ((jakarta.mail.internet.InternetAddress) sentMessage.getAllRecipients()[0]).getAddress());
+        assertEquals("Your Mark2 ERP Account Is Ready — Set Your Password", sentMessage.getSubject());
+        assertEquals("custom-sender@mark2.in", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getAddress());
+        assertEquals("Mark2 Verification", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getPersonal());
+    }
+
+    @Test
+    @DisplayName("Should classify composition and invalid recipient errors as permanent (non-retryable)")
+    void testCompositionErrorHandlingAndSanitization() {
+        EmailMessage message = EmailMessage.builder()
+                .notificationId(UUID.randomUUID())
+                .companyId(UUID.randomUUID())
+                .recipient("invalid-format-without-at")
+                .subject("Test")
+                .build();
+
+        CommunicationResult result = smtpProvider.sendEmail(message);
+
+        assertFalse(result.isSuccess());
+        assertFalse(result.isRetryable(), "Invalid recipient address must be classified as permanent failure");
+        assertTrue(result.getErrorMessage().contains("Invalid recipient email address format"));
+    }
 }

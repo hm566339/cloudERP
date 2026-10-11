@@ -13,6 +13,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 @Component
 @RequiredArgsConstructor
@@ -45,18 +46,26 @@ public class SmtpEmailProvider implements EmailProvider {
 
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             boolean hasAttachments = message.getAttachments() != null && !message.getAttachments().isEmpty();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, hasAttachments, StandardCharsets.UTF_8.name());
 
-            // 1. Explicit Configured From Address and Display Name (CRITICAL FIX)
+            // Always initialize MimeMessageHelper with multipart mode (true) so that:
+            // 1. Alternative body parts (both plain-text and HTML) can be set via helper.setText(plainText, html)
+            // 2. Inline elements and file attachments are supported without throwing "Not in multipart mode"
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    mimeMessage,
+                    true,
+                    StandardCharsets.UTF_8.name()
+            );
+
+            // 1. Explicit Configured From Address and Display Name
             String fromAddress = smtpProperties.getFromAddress();
             String fromName = smtpProperties.getFromName();
             if (fromAddress == null || fromAddress.isBlank()) {
                 fromAddress = "noreply@mark2.in";
             }
             if (fromName != null && !fromName.isBlank()) {
-                helper.setFrom(new InternetAddress(fromAddress, fromName, StandardCharsets.UTF_8.name()));
+                helper.setFrom(new InternetAddress(fromAddress.trim(), fromName.trim(), StandardCharsets.UTF_8.name()));
             } else {
-                helper.setFrom(fromAddress);
+                helper.setFrom(fromAddress.trim());
             }
 
             // 2. Reply-To if configured
@@ -68,13 +77,19 @@ public class SmtpEmailProvider implements EmailProvider {
             helper.setTo(message.getRecipient().trim());
             helper.setSubject(message.getSubject() != null ? message.getSubject() : "");
 
-            // 4. HTML and Plain Text
-            if (message.getHtmlBody() != null && message.getTextBody() != null) {
-                helper.setText(message.getTextBody(), message.getHtmlBody());
-            } else if (message.getHtmlBody() != null) {
-                helper.setText(message.getHtmlBody(), true);
+            // 4. HTML and Plain Text Alternative Handling
+            String htmlBody = message.getHtmlBody();
+            String textBody = message.getTextBody();
+
+            if (htmlBody != null && !htmlBody.isBlank() && textBody != null && !textBody.isBlank()) {
+                // First parameter is plain-text alternative, second is HTML body
+                helper.setText(textBody, htmlBody);
+            } else if (htmlBody != null && !htmlBody.isBlank()) {
+                helper.setText(htmlBody, true);
+            } else if (textBody != null) {
+                helper.setText(textBody, false);
             } else {
-                helper.setText(message.getTextBody() != null ? message.getTextBody() : "", false);
+                helper.setText("", false);
             }
 
             // 5. Attachments
@@ -90,6 +105,7 @@ public class SmtpEmailProvider implements EmailProvider {
             }
 
             // 6. Send through SMTP socket
+            mimeMessage.saveChanges();
             mailSender.send(mimeMessage);
 
             long duration = System.currentTimeMillis() - startTime;
@@ -103,9 +119,11 @@ public class SmtpEmailProvider implements EmailProvider {
         } catch (Exception ex) {
             long duration = System.currentTimeMillis() - startTime;
             String sanitizedError = sanitizeError(ex.getMessage());
-            log.error("SMTP dispatch failed | notificationId={} | to={} | error={} | durationMs={}",
-                    message.getNotificationId(), maskedRecipient, sanitizedError, duration);
-            return CommunicationResult.failure(getProviderName(), sanitizedError, duration);
+            boolean retryable = !isPermanentError(ex);
+
+            log.error("SMTP dispatch failed | notificationId={} | to={} | error={} | retryable={} | durationMs={}",
+                    message.getNotificationId(), maskedRecipient, sanitizedError, retryable, duration);
+            return CommunicationResult.failure(getProviderName(), sanitizedError, retryable, duration);
         }
     }
 
@@ -117,6 +135,25 @@ public class SmtpEmailProvider implements EmailProvider {
         if (!trimmed.contains("@") || trimmed.startsWith("@") || trimmed.endsWith("@")) {
             throw new IllegalArgumentException("Invalid recipient email address format: " + maskEmail(trimmed));
         }
+    }
+
+    private boolean isPermanentError(Exception ex) {
+        if (ex instanceof IllegalArgumentException || ex instanceof IllegalStateException) {
+            return true;
+        }
+        String msg = ex.getMessage();
+        if (msg == null) return false;
+        String lower = msg.toLowerCase(Locale.ROOT);
+        return lower.contains("invalid recipient")
+                || lower.contains("not in multipart mode")
+                || lower.contains("address syntax")
+                || lower.contains("550")
+                || lower.contains("501")
+                || lower.contains("553")
+                || lower.contains("500")
+                || lower.contains("502")
+                || lower.contains("503")
+                || lower.contains("504");
     }
 
     public static String maskEmail(String email) {
@@ -139,7 +176,9 @@ public class SmtpEmailProvider implements EmailProvider {
 
     private String sanitizeError(String rawError) {
         if (rawError == null) return "Unknown SMTP error";
-        // Scrub potential passwords or tokens
-        return rawError.replaceAll("(?i)(password|token|secret|authorization)=[^\\s,]+", "$1=***");
+        // Scrub potential passwords, tokens, or sensitive setup links
+        return rawError
+                .replaceAll("(?i)(password|token|secret|authorization|key|auth)=[^\\s,]+", "$1=***")
+                .replaceAll("https?://[^\\s]+token=[^\\s]+", "https://...[REDACTED_LINK]");
     }
 }

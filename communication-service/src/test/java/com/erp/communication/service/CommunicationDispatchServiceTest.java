@@ -90,4 +90,52 @@ class CommunicationDispatchServiceTest {
         // Verify email provider was STILL called only 1 time in total!
         verify(emailProvider, times(1)).sendEmail(any(EmailMessage.class));
     }
+
+    @Test
+    @DisplayName("Should schedule retry with backoff when transient failure occurs")
+    void testTransientErrorSchedulesRetry() {
+        when(emailProvider.sendEmail(any(EmailMessage.class)))
+                .thenReturn(CommunicationResult.failure("SMTP", "Socket connection timeout to smtp.gmail.com", true, 100L));
+
+        UUID companyId = UUID.randomUUID();
+        SendEmailRequest request = SendEmailRequest.builder()
+                .companyId(companyId)
+                .recipient("bob@acme.com")
+                .subject("Invoice Notice")
+                .plainTextContent("Please find attached invoice")
+                .async(false)
+                .build();
+
+        CommunicationResponse response = dispatchService.dispatchEmail(request);
+        assertNotNull(response);
+        assertEquals(NotificationStatus.PENDING, response.getStatus());
+
+        var entity = requestRepository.findById(response.getNotificationId()).orElseThrow();
+        assertEquals(1, entity.getRetryCount());
+        assertNotNull(entity.getNextRetryAt(), "Transient error must schedule a next retry timestamp");
+    }
+
+    @Test
+    @DisplayName("Should mark notification permanently FAILED and not schedule retry for permanent errors")
+    void testPermanentErrorDoesNotScheduleRetry() {
+        when(emailProvider.sendEmail(any(EmailMessage.class)))
+                .thenReturn(CommunicationResult.failure("SMTP", "Invalid recipient email address format: bad@domain", false, 15L));
+
+        UUID companyId = UUID.randomUUID();
+        SendEmailRequest request = SendEmailRequest.builder()
+                .companyId(companyId)
+                .recipient("bad@domain")
+                .subject("Notice")
+                .plainTextContent("Test message")
+                .async(false)
+                .build();
+
+        CommunicationResponse response = dispatchService.dispatchEmail(request);
+        assertNotNull(response);
+        assertEquals(NotificationStatus.FAILED, response.getStatus());
+
+        var entity = requestRepository.findById(response.getNotificationId()).orElseThrow();
+        assertEquals(1, entity.getRetryCount());
+        assertNull(entity.getNextRetryAt(), "Permanent error must NOT schedule any future retry");
+    }
 }

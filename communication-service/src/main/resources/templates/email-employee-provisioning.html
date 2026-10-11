@@ -38,7 +38,7 @@
                                 </tr>
                                 <tr>
                                     <td style="padding:14px 18px;border-bottom:1px solid #e2e8f0;font-size:13px;color:#64748b;font-weight:600;">Work Email</td>
-                                    <td style="padding:14px 18px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#0f172a;" th:text="${email}">email@example.com</td>
+                                    <td style="padding:14px 18px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#0f172a;" th:text="${email} ?: (${recipient} ?: '')">email@example.com</td>
                                 </tr>
                                 <tr>
                                     <td style="padding:14px 18px;font-size:13px;color:#64748b;font-weight:600;">Login Portal</td>
