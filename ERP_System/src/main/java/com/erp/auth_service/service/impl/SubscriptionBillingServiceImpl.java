@@ -28,8 +28,8 @@ import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
 import com.erp.auth_service.utility.SubscriptionStatus;
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +42,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class SubscriptionBillingServiceImpl implements SubscriptionBillingService {
 
@@ -54,6 +53,23 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
     private final RazorpayService razorpayService;
     private final RazorpayProperties razorpayProperties;
 
+    @Autowired
+    public SubscriptionBillingServiceImpl(OrganizationRepository organizationRepository,
+                                         OrganizationMemberRepository organizationMemberRepository,
+                                         SubscriptionPlanRepository subscriptionPlanRepository,
+                                         SubscriptionRepository subscriptionRepository,
+                                         PaymentRepository paymentRepository,
+                                         RazorpayService razorpayService,
+                                         RazorpayProperties razorpayProperties) {
+        this.organizationRepository = organizationRepository;
+        this.organizationMemberRepository = organizationMemberRepository;
+        this.subscriptionPlanRepository = subscriptionPlanRepository;
+        this.subscriptionRepository = subscriptionRepository;
+        this.paymentRepository = paymentRepository;
+        this.razorpayService = razorpayService;
+        this.razorpayProperties = razorpayProperties;
+    }
+
     // Backward-compatible constructor for existing tests
     public SubscriptionBillingServiceImpl(OrganizationRepository organizationRepository,
                                          OrganizationMemberRepository organizationMemberRepository,
@@ -61,13 +77,13 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                                          SubscriptionRepository subscriptionRepository,
                                          RazorpayService razorpayService,
                                          RazorpayProperties razorpayProperties) {
-        this.organizationRepository = organizationRepository;
-        this.organizationMemberRepository = organizationMemberRepository;
-        this.subscriptionPlanRepository = subscriptionPlanRepository;
-        this.subscriptionRepository = subscriptionRepository;
-        this.paymentRepository = null;
-        this.razorpayService = razorpayService;
-        this.razorpayProperties = razorpayProperties;
+        this(organizationRepository,
+             organizationMemberRepository,
+             subscriptionPlanRepository,
+             subscriptionRepository,
+             null,
+             razorpayService,
+             razorpayProperties);
     }
 
     private final java.util.concurrent.ConcurrentHashMap<UUID, Object> orgCheckoutLocks = new java.util.concurrent.ConcurrentHashMap<>();
