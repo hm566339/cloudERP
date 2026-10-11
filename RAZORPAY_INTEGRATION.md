@@ -68,7 +68,7 @@ The following environment variables configure the Razorpay integration in `ERP_S
 | `RAZORPAY_KEY_ID` | Razorpay Key ID (Test or Live) | `rzp_test_xxxxxxxxxxxxxx` |
 | `RAZORPAY_KEY_SECRET` | Razorpay Secret Key (Never exposed to frontend) | `xxxxxxxxxxxxxxxxxxxxxxxx` |
 | `RAZORPAY_WEBHOOK_SECRET` | Secret configured in Razorpay Dashboard for Webhook verification | `whsec_xxxxxxxxxxxxxxxxx` |
-| `RAZORPAY_BASE_URL` | Razorpay API Gateway Base URL | `https://api.razorpay.com` |
+| `RAZORPAY_BASE_URL` | Razorpay API Gateway Base URL | `https://api.razorpay.com/v1` |
 
 ---
 

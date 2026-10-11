@@ -86,7 +86,7 @@ services:
       RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
       RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
       RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
-      RAZORPAY_BASE_URL: ${RAZORPAY_BASE_URL:-https://api.razorpay.com}
+      RAZORPAY_BASE_URL: ${RAZORPAY_BASE_URL:-https://api.razorpay.com/v1}
       # --- Centralized Communication Service ---
       COMMUNICATION_SERVICE_URL: ${COMMUNICATION_SERVICE_URL:-http://communication-service:8084}
       COMM_SERVICE_TOKEN: ${COMM_SERVICE_TOKEN:-mark2-internal-comm-secret-token}

@@ -111,7 +111,7 @@ razorpay:
   key-id: ${RAZORPAY_KEY_ID:}
   key-secret: ${RAZORPAY_KEY_SECRET:}
   webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
-  base-url: ${RAZORPAY_BASE_URL:https://api.razorpay.com/v1/plans}
+  base-url: ${RAZORPAY_BASE_URL:https://api.razorpay.com/v1}
   reconciliation:
     enabled: ${RAZORPAY_RECONCILIATION_ENABLED:false}
     cron: ${RAZORPAY_RECONCILIATION_CRON:0 */15 * * * *}

@@ -38,10 +38,32 @@ public class RazorpayServiceImpl implements RazorpayService {
                 (razorpayProperties.getKeyId() + ":" + razorpayProperties.getKeySecret()).getBytes(StandardCharsets.UTF_8));
 
         return restClientBuilder
-                .baseUrl(razorpayProperties.getBaseUrl())
+                .baseUrl(sanitizeBaseUrl(razorpayProperties.getBaseUrl()))
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Basic " + basicAuth)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
+    }
+
+    private String sanitizeBaseUrl(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return "https://api.razorpay.com/v1";
+        }
+        String clean = baseUrl.trim();
+        while (clean.endsWith("/")) {
+            clean = clean.substring(0, clean.length() - 1);
+        }
+        if (clean.endsWith("/plans")) {
+            clean = clean.substring(0, clean.length() - "/plans".length());
+        } else if (clean.endsWith("/subscriptions")) {
+            clean = clean.substring(0, clean.length() - "/subscriptions".length());
+        }
+        while (clean.endsWith("/")) {
+            clean = clean.substring(0, clean.length() - 1);
+        }
+        if (!clean.endsWith("/v1")) {
+            clean = clean + "/v1";
+        }
+        return clean;
     }
 
     @Override
@@ -221,6 +243,12 @@ public class RazorpayServiceImpl implements RazorpayService {
             JsonNode errorNode = root.path("error");
             if (errorNode.hasNonNull("description")) {
                 return errorNode.get("description").asText();
+            }
+            if (errorNode.hasNonNull("message")) {
+                return errorNode.get("message").asText();
+            }
+            if (root.hasNonNull("message")) {
+                return root.get("message").asText();
             }
         } catch (Exception ignored) {}
         return defaultMsg;
