@@ -85,5 +85,6 @@ check_container_health "erp-auth-service" "Auth / SSO Service" "8090"
 check_container_health "erp-account-service" "Account Service" "8081"
 check_container_health "erp-workflow-service" "Workflow Service" "8083"
 check_container_health "erp-inventory-service" "Inventory Service" "8082"
+check_container_health "erp-communication-service" "Communication Service" "8084"
 
 echo -e "${CYAN}=================================================================${NC}"

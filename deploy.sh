@@ -153,6 +153,17 @@ if [ ! -f "${SCRIPT_DIR}/db/init.sql" ]; then
     exit 1
 fi
 
+# Ensure all databases defined in init.sql exist on existing PostgreSQL instances
+if docker inspect erp-db &>/dev/null; then
+    log_info "Verifying application databases in PostgreSQL..."
+    for target_db in account sso workflow_db inventory manufacturing communication_db; do
+        if ! docker exec erp-db psql -U "${POSTGRES_USER:-postgres}" -tc "SELECT 1 FROM pg_database WHERE datname = '$target_db'" 2>/dev/null | grep -q 1; then
+            log_info "Creating database '$target_db'..."
+            docker exec erp-db psql -U "${POSTGRES_USER:-postgres}" -c "CREATE DATABASE $target_db;" 2>/dev/null || true
+        fi
+    done
+fi
+
 # 7. Start/recreate services non-destructively (NEVER uses down -v or drops volumes)
 log_info "Step 6/7: Deploying updated containers (Preserving persistent database volume)..."
 if ! $DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --remove-orphans; then
@@ -169,6 +180,7 @@ REQUIRED_CONTAINERS=(
     "erp-gateway-service"
     "erp-workflow-service"
     "erp-inventory-service"
+    "erp-communication-service"
     "erp-frontend"
 )
 

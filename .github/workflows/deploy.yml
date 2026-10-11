@@ -35,6 +35,9 @@ jobs:
           - name: workflow
             context: ./workflow-service
             dockerfile: ./workflow-service/Dockerfile
+          - name: communication
+            context: ./communication-service
+            dockerfile: ./communication-service/Dockerfile
 
     steps:
       - name: Checkout Code
