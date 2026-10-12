@@ -1,24 +1,45 @@
 package com.erp.communication.channel;
 
 import com.erp.communication.channel.email.EmailProvider;
+import com.erp.communication.channel.whatsapp.WhatsAppProvider;
 import com.erp.communication.exception.UnsupportedChannelException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class ProviderRegistry {
 
     private final EmailProvider emailProvider;
-    private final Map<CommunicationChannel, CommunicationProvider> providers = new ConcurrentHashMap<>();
+    private final WhatsAppProvider whatsAppProvider;
+
+    @Autowired
+    public ProviderRegistry(EmailProvider emailProvider, ObjectProvider<WhatsAppProvider> whatsAppProvider) {
+        this.emailProvider = emailProvider;
+        this.whatsAppProvider = whatsAppProvider.getIfAvailable();
+    }
+
+    public ProviderRegistry(EmailProvider emailProvider) {
+        this.emailProvider = emailProvider;
+        this.whatsAppProvider = null;
+    }
+
+    public ProviderRegistry(EmailProvider emailProvider, WhatsAppProvider whatsAppProvider) {
+        this.emailProvider = emailProvider;
+        this.whatsAppProvider = whatsAppProvider;
+    }
 
     public EmailProvider getEmailProvider() {
         return emailProvider;
+    }
+
+    public WhatsAppProvider getWhatsAppProvider() {
+        if (whatsAppProvider == null) {
+            throw new UnsupportedChannelException(CommunicationChannel.WHATSAPP);
+        }
+        return whatsAppProvider;
     }
 
     public CommunicationProvider getProvider(CommunicationChannel channel) {
@@ -28,12 +49,21 @@ public class ProviderRegistry {
         if (channel == CommunicationChannel.EMAIL) {
             return emailProvider;
         }
-        // WHATSAPP, SMS, PUSH, IN_APP are strictly unsupported in Phase 1
+        if (channel == CommunicationChannel.WHATSAPP && whatsAppProvider != null) {
+            return whatsAppProvider;
+        }
+
         log.warn("Requested channel [{}] is not implemented or supported", channel);
         throw new UnsupportedChannelException(channel);
     }
 
     public boolean isChannelSupported(CommunicationChannel channel) {
-        return channel == CommunicationChannel.EMAIL;
+        if (channel == CommunicationChannel.EMAIL) {
+            return true;
+        }
+        if (channel == CommunicationChannel.WHATSAPP) {
+            return whatsAppProvider != null;
+        }
+        return false;
     }
 }

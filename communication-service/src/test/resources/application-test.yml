@@ -23,6 +23,11 @@ spring:
     mode: HTML
     encoding: UTF-8
 
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
 server:
   port: 0
 
@@ -47,3 +52,18 @@ app:
     poll-interval-ms: 60000
     batch-size: 10
     max-retries: 3
+  whatsapp:
+    provider: mock
+    enabled: true
+  rabbitmq:
+    auto-startup: false
+    exchange: erp.notification.exchange
+    dlx-exchange: erp.notification.dlx
+    email-queue: erp.notification.email.queue
+    email-routing-key: notification.email
+    email-dlq: erp.notification.email.dlq
+    email-dlq-routing-key: notification.email.dlq
+    whatsapp-queue: erp.notification.whatsapp.queue
+    whatsapp-routing-key: notification.whatsapp
+    whatsapp-dlq: erp.notification.whatsapp.dlq
+    whatsapp-dlq-routing-key: notification.whatsapp.dlq

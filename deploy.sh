@@ -175,6 +175,7 @@ fi
 log_info "Step 7/7: Verifying container health..."
 REQUIRED_CONTAINERS=(
     "erp-db"
+    "erp-rabbitmq"
     "erp-auth-service"
     "erp-account-service"
     "erp-gateway-service"
@@ -205,10 +206,34 @@ if [ "$DB_HEALTHY" != true ]; then
     log_warn "Database health check timed out. Microservices may take extra time initializing."
 fi
 
+# Wait for RabbitMQ message broker container to become healthy
+echo -n "Waiting for RabbitMQ message broker container to report healthy"
+MAX_ATTEMPTS=30
+ATTEMPT=0
+RABBIT_HEALTHY=false
+while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+    STATUS=$(docker inspect --format='{{json .State.Health.Status}}' erp-rabbitmq 2>/dev/null || echo "\"starting\"")
+    if [ "$STATUS" = "\"healthy\"" ]; then
+        RABBIT_HEALTHY=true
+        break
+    fi
+    echo -n "."
+    sleep 2
+    ATTEMPT=$((ATTEMPT + 1))
+done
+echo ""
+
+if [ "$RABBIT_HEALTHY" != true ]; then
+    log_error "RabbitMQ health check failed or timed out! Cannot proceed with unhealthy message broker."
+    docker logs --tail 30 erp-rabbitmq 2>/dev/null || true
+    exit 1
+fi
+log_success "RabbitMQ message broker is healthy."
+
 # Give services a brief stabilization period
 sleep 5
 
-# Check that all 7 required containers are in 'running' state
+# Check that all required containers are in 'running' state
 FAILED_CONTAINERS=()
 for c in "${REQUIRED_CONTAINERS[@]}"; do
     C_STATUS=$(docker inspect --format='{{json .State.Status}}' "$c" 2>/dev/null || echo "\"missing\"")

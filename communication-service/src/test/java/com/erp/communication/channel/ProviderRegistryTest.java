@@ -47,4 +47,16 @@ class ProviderRegistryTest {
                 providerRegistry.getProvider(CommunicationChannel.SMS));
         assertEquals(CommunicationChannel.SMS, ex.getChannel());
     }
+
+    @Test
+    @DisplayName("Should return WhatsAppProvider for WHATSAPP channel when configured")
+    void testWhatsAppChannelSupportedWhenProvided() {
+        com.erp.communication.channel.whatsapp.WhatsAppProvider mockWhatsAppProvider =
+                Mockito.mock(com.erp.communication.channel.whatsapp.WhatsAppProvider.class);
+        ProviderRegistry registryWithWa = new ProviderRegistry(mockEmailProvider, mockWhatsAppProvider);
+
+        assertTrue(registryWithWa.isChannelSupported(CommunicationChannel.WHATSAPP));
+        assertEquals(mockWhatsAppProvider, registryWithWa.getProvider(CommunicationChannel.WHATSAPP));
+        assertEquals(mockWhatsAppProvider, registryWithWa.getWhatsAppProvider());
+    }
 }

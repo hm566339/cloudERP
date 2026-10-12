@@ -4,6 +4,8 @@ import com.erp.communication.channel.CommunicationChannel;
 import com.erp.communication.channel.ProviderRegistry;
 import com.erp.communication.channel.email.EmailMessage;
 import com.erp.communication.channel.email.SmtpEmailProvider;
+import com.erp.communication.channel.whatsapp.MockWhatsAppProvider;
+import com.erp.communication.channel.whatsapp.WhatsAppMessage;
 import com.erp.communication.dto.request.EmailAttachmentDto;
 import com.erp.communication.dto.request.SendChannelMessageRequest;
 import com.erp.communication.dto.request.SendEmailRequest;
@@ -126,10 +128,14 @@ public class CommunicationDispatchService {
             throw new InvalidRequestException("Channel is required");
         }
 
-        // Validate supported channel via registry (strictly throws UnsupportedChannelException for WhatsApp/SMS)
+        // Validate supported channel via registry (throws UnsupportedChannelException for unimplemented channels)
         providerRegistry.getProvider(request.getChannel());
 
-        // Currently only EMAIL is reached if not thrown
+        if (request.getChannel() == CommunicationChannel.WHATSAPP) {
+            return dispatchWhatsApp(request);
+        }
+
+        // Handle EMAIL channel
         TemplateCode templateCode = null;
         if (request.getTemplateCode() != null && !request.getTemplateCode().isBlank()) {
             try {
@@ -150,6 +156,136 @@ public class CommunicationDispatchService {
                 .build();
 
         return dispatchEmail(emailReq);
+    }
+
+    @Transactional
+    public CommunicationResponse dispatchWhatsApp(SendChannelMessageRequest request) {
+        if (request == null) {
+            throw new InvalidRequestException("Request cannot be null");
+        }
+        if (request.getCompanyId() == null) {
+            throw new InvalidRequestException("companyId is required");
+        }
+        if (request.getRecipient() == null || request.getRecipient().isBlank()) {
+            throw new InvalidRequestException("recipient phone number is required");
+        }
+
+        // 1. Idempotency Check
+        if (request.getIdempotencyKey() != null && !request.getIdempotencyKey().isBlank()) {
+            Optional<NotificationRequest> existing = requestRepository.findByCompanyIdAndIdempotencyKey(
+                    request.getCompanyId(), request.getIdempotencyKey().trim());
+            if (existing.isPresent()) {
+                NotificationRequest nr = existing.get();
+                log.info("Idempotent WhatsApp request detected | notificationId={} | companyId={} | key={}",
+                        nr.getId(), nr.getCompanyId(), nr.getIdempotencyKey());
+                return mapToResponse(nr, "Duplicate request recognized via idempotency key; returned previous dispatch status",
+                        providerRegistry.getWhatsAppProvider().getProviderName(), null);
+            }
+        }
+
+        // 2. Extract Message Text
+        String messageText;
+        if (request.getTemplateData() != null && request.getTemplateData().containsKey("messageText")) {
+            messageText = String.valueOf(request.getTemplateData().get("messageText"));
+        } else if (request.getSubject() != null && !request.getSubject().isBlank()) {
+            messageText = request.getSubject().trim();
+        } else {
+            messageText = "Notification from Mark2 ERP";
+        }
+
+        // 3. Persist NotificationRequest
+        UUID notificationId = UUID.randomUUID();
+        String maskedRecipient = MockWhatsAppProvider.maskPhoneNumber(request.getRecipient());
+
+        NotificationRequest entity = NotificationRequest.builder()
+                .id(notificationId)
+                .companyId(request.getCompanyId())
+                .eventCode(request.getTemplateCode() != null && !request.getTemplateCode().isBlank() ? request.getTemplateCode().trim() : "WHATSAPP_MESSAGE")
+                .channel(CommunicationChannel.WHATSAPP)
+                .recipient(request.getRecipient().trim())
+                .recipientMasked(maskedRecipient)
+                .subject(request.getSubject())
+                .idempotencyKey(request.getIdempotencyKey() != null ? request.getIdempotencyKey().trim() : null)
+                .status(Boolean.TRUE.equals(request.getAsync()) ? NotificationStatus.PENDING : NotificationStatus.PROCESSING)
+                .retryCount(0)
+                .maxRetries(3)
+                .nextRetryAt(Boolean.TRUE.equals(request.getAsync()) ? LocalDateTime.now() : null)
+                .payloadJson(sanitizePayloadForLogging(request.getTemplateData()))
+                .build();
+
+        NotificationRequest savedRequest = requestRepository.save(entity);
+
+        // 4. Synchronous vs Asynchronous Delivery
+        if (Boolean.TRUE.equals(request.getAsync())) {
+            log.info("Queued async WhatsApp request | notificationId={} | companyId={}", notificationId, request.getCompanyId());
+            communicationTaskExecutor.execute(() -> executeWhatsAppDelivery(savedRequest.getId(), messageText, request.getTemplateData()));
+            return mapToResponse(savedRequest, "WhatsApp notification accepted and queued for asynchronous processing",
+                    providerRegistry.getWhatsAppProvider().getProviderName(), null);
+        } else {
+            return executeWhatsAppDelivery(savedRequest.getId(), messageText, request.getTemplateData());
+        }
+    }
+
+    @Transactional
+    public CommunicationResponse executeWhatsAppDelivery(UUID notificationId, String messageText, Map<String, Object> templateData) {
+        NotificationRequest request = requestRepository.findById(notificationId)
+                .orElseThrow(() -> new IllegalStateException("Notification request not found: " + notificationId));
+
+        WhatsAppMessage message = WhatsAppMessage.builder()
+                .notificationId(request.getId())
+                .companyId(request.getCompanyId())
+                .recipientPhone(request.getRecipient())
+                .templateCode(request.getEventCode())
+                .messageText(messageText)
+                .templateData(templateData != null ? templateData : Collections.emptyMap())
+                .build();
+
+        CommunicationResult result = providerRegistry.getWhatsAppProvider().sendWhatsApp(message);
+
+        int nextAttemptNumber = request.getRetryCount() + 1;
+        request.setRetryCount(nextAttemptNumber);
+
+        NotificationDelivery delivery = NotificationDelivery.builder()
+                .id(UUID.randomUUID())
+                .notificationRequest(request)
+                .providerName(result.getProviderName())
+                .attemptNumber(nextAttemptNumber)
+                .status(result.isSuccess() ? DeliveryStatus.SUBMITTED : DeliveryStatus.FAILED)
+                .providerMessageId(result.getProviderMessageId())
+                .durationMs(result.getDurationMs())
+                .errorDetails(result.getErrorMessage())
+                .build();
+
+        deliveryRepository.save(delivery);
+
+        if (result.isSuccess()) {
+            request.setStatus(NotificationStatus.ACCEPTED_BY_PROVIDER);
+            request.setErrorSummary(null);
+            request.setNextRetryAt(null);
+        } else {
+            request.setErrorSummary(result.getErrorMessage());
+            boolean shouldRetry = result.isRetryable() && (request.getRetryCount() < request.getMaxRetries());
+
+            if (shouldRetry) {
+                request.setStatus(NotificationStatus.PENDING);
+                long delaySeconds = (long) Math.pow(2, request.getRetryCount()) * 30L;
+                request.setNextRetryAt(LocalDateTime.now().plusSeconds(delaySeconds));
+                log.info("WhatsApp scheduled for retry #{} in {} seconds | notificationId={}",
+                        nextAttemptNumber, delaySeconds, request.getId());
+            } else {
+                request.setStatus(NotificationStatus.FAILED);
+                request.setNextRetryAt(null);
+                log.warn("WhatsApp permanently failed | notificationId={} | error={}",
+                        request.getId(), result.getErrorMessage());
+            }
+        }
+
+        NotificationRequest updated = requestRepository.save(request);
+        String messageResult = result.isSuccess()
+                ? "WhatsApp notification accepted by provider"
+                : "WhatsApp notification failed: " + result.getErrorMessage();
+
+        return mapToResponse(updated, messageResult, result.getProviderName(), result.getProviderMessageId());
     }
 
     @Transactional

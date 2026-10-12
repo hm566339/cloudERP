@@ -42,6 +42,35 @@ services:
       - erp-network
 
   # ----------------------------------------------------------------------------
+  # 1b. RabbitMQ Message Broker (Internal on erp-network, Management on 127.0.0.1)
+  # ----------------------------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: erp-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-mark2}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-mark2secret}
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - erp-network
+
+  # ----------------------------------------------------------------------------
   # 2. Auth / SSO Service (Internal only)
   # ----------------------------------------------------------------------------
   auth-service:
@@ -322,8 +351,15 @@ services:
       COMM_EMAIL_FROM_ADDRESS: ${COMM_EMAIL_FROM_ADDRESS:-noreply@mark2.in}
       COMM_EMAIL_FROM_NAME: ${COMM_EMAIL_FROM_NAME:-Mark2 ERP}
       COMM_EMAIL_REPLY_TO: ${COMM_EMAIL_REPLY_TO:-}
+      # --- RabbitMQ ---
+      SPRING_RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      SPRING_RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-mark2}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-mark2secret}
     depends_on:
       db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:8084/actuator/health || exit 0"]
@@ -377,6 +413,7 @@ services:
 # ------------------------------------------------------------------------------
 volumes:
   db-data:
+  rabbitmq-data:
 
 # ------------------------------------------------------------------------------
 # Isolated Internal Network

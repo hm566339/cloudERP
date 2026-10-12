@@ -34,6 +34,16 @@ spring:
     mode: HTML
     encoding: UTF-8
 
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:${RABBITMQ_HOST:localhost}}
+    port: ${SPRING_RABBITMQ_PORT:${RABBITMQ_PORT:5672}}
+    username: ${SPRING_RABBITMQ_USERNAME:${RABBITMQ_DEFAULT_USER:mark2}}
+    password: ${SPRING_RABBITMQ_PASSWORD:${RABBITMQ_DEFAULT_PASS:mark2secret}}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+
 server:
   port: ${SERVER_PORT:8084}
 
@@ -86,3 +96,28 @@ app:
     poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:10000}
     batch-size: ${OUTBOX_BATCH_SIZE:20}
     max-retries: ${OUTBOX_MAX_RETRIES:3}
+  rabbitmq:
+    exchange: ${RABBITMQ_NOTIFICATION_EXCHANGE:erp.notification.exchange}
+    dlx-exchange: ${RABBITMQ_NOTIFICATION_DLX:erp.notification.dlx}
+    email-queue: ${RABBITMQ_EMAIL_QUEUE:erp.notification.email.queue}
+    email-routing-key: ${RABBITMQ_EMAIL_ROUTING_KEY:notification.email}
+    email-dlq: ${RABBITMQ_EMAIL_DLQ:erp.notification.email.dlq}
+    email-dlq-routing-key: ${RABBITMQ_EMAIL_DLQ_ROUTING_KEY:notification.email.dlq}
+    whatsapp-queue: ${RABBITMQ_WHATSAPP_QUEUE:erp.notification.whatsapp.queue}
+    whatsapp-routing-key: ${RABBITMQ_WHATSAPP_ROUTING_KEY:notification.whatsapp}
+    whatsapp-dlq: ${RABBITMQ_WHATSAPP_DLQ:erp.notification.whatsapp.dlq}
+    whatsapp-dlq-routing-key: ${RABBITMQ_WHATSAPP_DLQ_ROUTING_KEY:notification.whatsapp.dlq}
+    concurrency: ${RABBITMQ_CONCURRENCY:2}
+    max-concurrency: ${RABBITMQ_MAX_CONCURRENCY:5}
+    prefetch: ${RABBITMQ_PREFETCH:10}
+    max-attempts: ${RABBITMQ_MAX_ATTEMPTS:3}
+    initial-interval-ms: ${RABBITMQ_INITIAL_INTERVAL_MS:1000}
+    multiplier: ${RABBITMQ_MULTIPLIER:2.0}
+    max-interval-ms: ${RABBITMQ_MAX_INTERVAL_MS:10000}
+  whatsapp:
+    provider: ${WHATSAPP_PROVIDER:mock}
+    enabled: ${WHATSAPP_ENABLED:true}
+    fail-if-unconfigured: ${WHATSAPP_FAIL_IF_UNCONFIGURED:true}
+    api-url: ${WHATSAPP_API_URL:}
+    api-token: ${WHATSAPP_API_TOKEN:}
+    phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
