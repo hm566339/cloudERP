@@ -278,11 +278,15 @@ export default function Login() {
         permissions: ssoData?.permissions || mappedPermissions,
       }));
 
-      if (mergedUser.companyCode || mergedUser.companyId) {
+      const resolvedCompId = mergedUser.companyId || ssoData?.currentCompany?.id || mergedUser.companyCode;
+      const resolvedCompCode = mergedUser.companyCode || ssoData?.currentCompany?.code;
+      const resolvedCompName = mergedUser.companyName || ssoData?.currentCompany?.name || ssoData?.currentCompany?.legalName || 'Assigned Company';
+
+      if (resolvedCompId || resolvedCompCode) {
         dispatch(setSelectedCompany({
-          id: mergedUser.companyCode || mergedUser.companyId,
-          name: mergedUser.companyName || 'Assigned Company',
-          code: mergedUser.companyCode,
+          id: resolvedCompId,
+          name: resolvedCompName,
+          code: resolvedCompCode,
         }));
       } else if (ssoData?.currentCompany) {
         dispatch(setSelectedCompany({

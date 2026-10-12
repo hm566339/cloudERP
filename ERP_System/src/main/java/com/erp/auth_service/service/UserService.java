@@ -54,6 +54,8 @@ public interface UserService {
 
     SsoMeResponse getSsoMe(String accessToken, UUID requestedCompanyId);
 
+    SsoMeResponse getSsoMe(String accessToken, String companyParam);
+
     Status verifyEmailAdmin(UUID id, Status status);
 
     UserResponse resendSetupEmail(UUID userId);

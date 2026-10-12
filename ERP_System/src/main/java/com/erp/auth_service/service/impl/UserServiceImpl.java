@@ -92,6 +92,9 @@ public class UserServiceImpl implements UserService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private CommunicationServiceClient communicationServiceClient;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.erp.auth_service.repository.UserRoleRepository userRoleRepository;
+
     @Autowired
     public UserServiceImpl(
             UserRepository userRepository,
@@ -302,6 +305,37 @@ public class UserServiceImpl implements UserService {
                         userPortalAccessRepository.save(access);
                     }
                 });
+
+        // Ensure OrganizationMember and MemberCompanyAccess exist when company belongs to an organization
+        if (company.getOrganization() != null && organizationMemberRepository != null && memberCompanyAccessRepository != null) {
+            Organization organization = company.getOrganization();
+            OrganizationMember member = organizationMemberRepository
+                    .findByOrganization_IdAndUser_Id(organization.getId(), savedUser.getId())
+                    .orElseGet(() -> {
+                        OrganizationMember newMem = OrganizationMember.builder()
+                                .organization(organization)
+                                .user(savedUser)
+                                .membershipStatus(MembershipStatus.ACTIVE)
+                                .memberType(MemberType.MEMBER)
+                                .joinedAt(LocalDateTime.now())
+                                .build();
+                        OrganizationMember saved = organizationMemberRepository.save(newMem);
+                        return saved != null ? saved : newMem;
+                    });
+
+            if (member != null && member.getId() != null) {
+                if (memberCompanyAccessRepository.findByOrganizationMember_IdAndCompany_Id(member.getId(), company.getId()).isEmpty()) {
+                    memberCompanyAccessRepository.save(
+                            MemberCompanyAccess.builder()
+                                    .organizationMember(member)
+                                    .organization(organization)
+                                    .company(company)
+                                    .active(true)
+                                    .build()
+                    );
+                }
+            }
+        }
 
         // Invalidate previous unused setup/verification tokens for this user
         List<UserToken> previousTokens = userTokenRepository.findByUser_IdAndTokenTypeInAndUsedFalse(
@@ -1010,11 +1044,34 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public SsoMeResponse getSsoMe(String accessToken) {
-        return getSsoMe(accessToken, null);
+        return getSsoMe(accessToken, (UUID) null);
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
+    public SsoMeResponse getSsoMe(String accessToken, String companyParam) {
+        if (companyParam == null || companyParam.isBlank()) {
+            return getSsoMe(accessToken, (UUID) null);
+        }
+        String clean = companyParam.trim();
+        UUID uuid = null;
+        try {
+            uuid = UUID.fromString(clean);
+        } catch (IllegalArgumentException ignored) {
+        }
+        if (uuid != null) {
+            return getSsoMe(accessToken, uuid);
+        }
+        if (companyRepository != null) {
+            Company comp = companyRepository.findByCompanyCode(clean)
+                    .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + clean));
+            return getSsoMe(accessToken, comp.getId());
+        }
+        return getSsoMe(accessToken, (UUID) null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public SsoMeResponse getSsoMe(String accessToken, UUID requestedCompanyId) {
 
         if (accessToken == null || accessToken.isBlank()) {
@@ -1096,10 +1153,18 @@ public class UserServiceImpl implements UserService {
                 boolean isOwnerOrAdmin = (membershipCtx != null && (membershipCtx.getMemberType() == MemberType.OWNER || membershipCtx.getMemberType() == MemberType.ADMIN))
                         || (user.getUserRoles() != null && user.getUserRoles().stream().anyMatch(ur -> ur.getRole() != null && ("OWNER".equalsIgnoreCase(ur.getRole().getName()) || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
                 boolean hasAccess = isOwnerOrAdmin
-                        || accessibleCompanies.stream().anyMatch(c -> c.getId().equals(candidate.getId()));
+                        || accessibleCompanies.stream().anyMatch(c -> c.getId().equals(candidate.getId()))
+                        || (user.getCompany() != null && user.getCompany().getId().equals(candidate.getId()))
+                        || (session.getCompany() != null && session.getCompany().getId().equals(candidate.getId()));
                 if (orgMatches && hasAccess) {
                     currentCompany = candidate;
+                } else if (!orgMatches) {
+                    throw new ForbiddenException("Access denied: Company does not belong to authorized organization");
+                } else {
+                    throw new ForbiddenException("Access denied: User does not have access to requested company");
                 }
+            } else {
+                throw new ResourceNotFoundException("Company not found: " + requestedCompanyId);
             }
         }
 
@@ -1383,6 +1448,17 @@ public class UserServiceImpl implements UserService {
                         .status(true)
                         .build());
             }
+        } else if (membershipCtx != null && membershipCtx.getMemberType() != null && roles.isEmpty()) {
+            roles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
+                    .name(membershipCtx.getMemberType().name())
+                    .status(true)
+                    .build());
+        }
+        if (roles.isEmpty()) {
+            roles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
+                    .name("MEMBER")
+                    .status(true)
+                    .build());
         }
 
         // ── Permissions / Features ─────────────────────────────────────────

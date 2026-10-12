@@ -820,6 +820,8 @@ public class AuthServiceImpl implements AuthService {
                         return;
                 }
                 try {
+                        ensureCompanyMemberAccess(user, company, organization != null ? organization : (company != null ? company.getOrganization() : null));
+
                         String effectiveClientId = (module != null && module.getClientId() != null)
                                         ? module.getClientId().toString()
                                         : ((module != null) ? "ACCOUNT" : "ERP_WORKSPACE");
@@ -1810,6 +1812,10 @@ public class AuthServiceImpl implements AuthService {
 
                 Company company = code.getCompany();
 
+                if (company != null && code.getOrganization() != null) {
+                        ensureCompanyMemberAccess(user, company, code.getOrganization());
+                }
+
                 if (code.getOrganization() != null) {
                         OrganizationMember member = organizationMemberRepository
                                         .findByOrganization_IdAndUser_IdAndMembershipStatus(
@@ -2285,6 +2291,11 @@ public class AuthServiceImpl implements AuthService {
                 user.setAccountStatus(AccountStatus.ACTIVE);
                 user.setEmailStatus(Status.VERIFIED);
                 userRepository.save(user);
+
+                if (company.getOrganization() != null) {
+                        ensureCompanyMemberAccess(user, company, company.getOrganization());
+                }
+
                 token.setUsed(true);
                 userTokenRepository.save(token);
                 sessionRepository.deleteByUser_Id(
@@ -2405,31 +2416,62 @@ public class AuthServiceImpl implements AuthService {
                                 "username",
                                 user.getUsername());
 
-                claims.put(
-                                "companyCode",
-                                company != null ? company.getCompanyCode() : null);
-
-                claims.put(
-                                "companyName",
-                                company != null ? company.getCompanyName() : null);
-
-                if (company != null && company.getOrganization() != null) {
-                        claims.put("organizationId", company.getOrganization().getId().toString());
-                        claims.put("organizationCode", company.getOrganization().getOrganizationCode());
+                if (company != null) {
+                        claims.put("companyId", company.getId() != null ? company.getId().toString() : null);
+                        claims.put("companyCode", company.getCompanyCode());
+                        claims.put("companyName", company.getCompanyName());
+                        if (company.getOrganization() != null) {
+                                claims.put("organizationId", company.getOrganization().getId().toString());
+                                claims.put("organizationCode", company.getOrganization().getOrganizationCode());
+                                claims.put("organizationName", company.getOrganization().getDisplayName());
+                        }
+                } else {
+                        claims.put("companyId", null);
+                        claims.put("companyCode", null);
+                        claims.put("companyName", null);
                 }
 
                 claims.put(
                                 "moduleName",
                                 module != null ? module.getName() : "ERP_WORKSPACE");
 
-                claims.put(
-                                "roles",
-                                user.getUserRoles() != null
-                                                ? user.getUserRoles().stream()
-                                                                .filter(r -> r != null && r.getRole() != null)
-                                                                .map(r -> r.getRole().getName())
-                                                                .toList()
-                                                : java.util.Collections.emptyList());
+                List<String> roleNames = new ArrayList<>();
+                if (user.getUserRoles() != null && !user.getUserRoles().isEmpty()) {
+                        roleNames.addAll(user.getUserRoles().stream()
+                                        .filter(r -> r != null && r.getRole() != null)
+                                        .map(r -> r.getRole().getName())
+                                        .filter(name -> name != null && !name.isBlank())
+                                        .toList());
+                }
+                if (roleNames.isEmpty() && userRoleRepository != null) {
+                        try {
+                                List<UserRole> dbRoles = userRoleRepository.findAllByUser_Id(user.getId());
+                                if (dbRoles != null && !dbRoles.isEmpty()) {
+                                        roleNames.addAll(dbRoles.stream()
+                                                        .filter(r -> r != null && r.getRole() != null)
+                                                        .map(r -> r.getRole().getName())
+                                                        .filter(name -> name != null && !name.isBlank())
+                                                        .toList());
+                                }
+                        } catch (Exception ignored) {
+                        }
+                }
+                if (roleNames.isEmpty() && company != null && company.getOrganization() != null && organizationMemberRepository != null) {
+                        try {
+                                organizationMemberRepository.findByOrganization_IdAndUser_Id(company.getOrganization().getId(), user.getId())
+                                                .ifPresent(m -> {
+                                                        if (m.getMemberType() != null) {
+                                                                roleNames.add(m.getMemberType().name());
+                                                        }
+                                                });
+                        } catch (Exception ignored) {
+                        }
+                }
+                if (roleNames.isEmpty()) {
+                        roleNames.add("MEMBER");
+                }
+
+                claims.put("roles", roleNames);
 
                 return claims;
         }
@@ -3047,16 +3089,23 @@ public class AuthServiceImpl implements AuthService {
                                 "username",
                                 user.getUsername());
 
-                claims.put(
-                                "companyCode",
-                                company.getCompanyCode());
+                if (company != null) {
+                        claims.put("companyId", company.getId() != null ? company.getId().toString() : null);
+                        claims.put("companyCode", company.getCompanyCode());
+                        if (company.getOrganization() != null) {
+                                claims.put("organizationId", company.getOrganization().getId().toString());
+                                claims.put("organizationCode", company.getOrganization().getOrganizationCode());
+                        }
+                }
 
                 claims.put(
                                 "roles",
-                                user.getUserRoles()
-                                                .stream()
-                                                .map(r -> r.getRole().getName())
-                                                .toList());
+                                user.getUserRoles() != null
+                                                ? user.getUserRoles()
+                                                                .stream()
+                                                                .map(r -> r.getRole().getName())
+                                                                .toList()
+                                                : List.of("SYSTEM_ADMIN"));
 
                 claims.put(
                                 "loginType",
@@ -3067,6 +3116,87 @@ public class AuthServiceImpl implements AuthService {
                                 "SYSTEM_ADMIN");
 
                 return claims;
+        }
+
+        private void ensureCompanyMemberAccess(User user, Company company, Organization organization) {
+                if (user == null || company == null || organizationMemberRepository == null || memberCompanyAccessRepository == null) {
+                        return;
+                }
+                Organization org = organization != null ? organization : company.getOrganization();
+                if (org == null) {
+                        return;
+                }
+
+                if (user.getAccountStatus() != AccountStatus.ACTIVE) {
+                        log.debug("Skipping member auto-provisioning - user is not active | userId={} | status={}",
+                                        user.getId(), user.getAccountStatus());
+                        return;
+                }
+                if (Boolean.FALSE.equals(company.getActive())) {
+                        log.debug("Skipping member auto-provisioning - company is inactive | companyId={}",
+                                        company.getId());
+                        return;
+                }
+                if (org.getAccessMode() == AccessMode.BLOCKED || org.getDeletedAt() != null) {
+                        log.debug("Skipping member auto-provisioning - organization is blocked/deleted | orgId={}",
+                                        org.getId());
+                        return;
+                }
+
+                try {
+                        Optional<OrganizationMember> memberOpt = organizationMemberRepository
+                                        .findByOrganization_IdAndUser_Id(org.getId(), user.getId());
+
+                        OrganizationMember member;
+                        if (memberOpt.isPresent()) {
+                                member = memberOpt.get();
+                                if (member.getMembershipStatus() == MembershipStatus.SUSPENDED
+                                                || member.getMembershipStatus() == MembershipStatus.REMOVED
+                                                || member.getDeletedAt() != null) {
+                                        log.info("Organization membership is revoked or suspended - preserving revocation | orgId={} | userId={} | status={}",
+                                                        org.getId(), user.getId(), member.getMembershipStatus());
+                                        return;
+                                }
+                        } else {
+                                OrganizationMember newMember = OrganizationMember.builder()
+                                                .organization(org)
+                                                .user(user)
+                                                .memberType(MemberType.MEMBER)
+                                                .membershipStatus(MembershipStatus.ACTIVE)
+                                                .joinedAt(LocalDateTime.now())
+                                                .build();
+                                OrganizationMember savedMember = organizationMemberRepository.save(newMember);
+                                member = (savedMember != null) ? savedMember : newMember;
+                                log.info("Auto-provisioned OrganizationMember for active company user | orgId={} | userId={} | memberId={}",
+                                                org.getId(), user.getId(), member.getId());
+                        }
+
+                        if (member != null && member.getId() != null) {
+                                Optional<MemberCompanyAccess> accessOpt = memberCompanyAccessRepository
+                                                .findByOrganizationMember_IdAndCompany_Id(member.getId(), company.getId());
+
+                                if (accessOpt.isPresent()) {
+                                        MemberCompanyAccess access = accessOpt.get();
+                                        if (Boolean.FALSE.equals(access.getActive())) {
+                                                log.info("Company access is explicitly deactivated - preserving revocation | orgMemberId={} | companyId={}",
+                                                                member.getId(), company.getId());
+                                                return;
+                                        }
+                                } else {
+                                        memberCompanyAccessRepository.save(MemberCompanyAccess.builder()
+                                                        .organizationMember(member)
+                                                        .organization(org)
+                                                        .company(company)
+                                                        .active(true)
+                                                        .build());
+                                        log.info("Auto-provisioned MemberCompanyAccess for active company user | orgMemberId={} | companyId={}",
+                                                        member.getId(), company.getId());
+                                }
+                        }
+                } catch (Exception ex) {
+                        log.warn("Failed to ensure company member access | userId={} | companyId={} | error={}",
+                                        user.getId(), company.getId(), ex.getMessage());
+                }
         }
 
         @Override
