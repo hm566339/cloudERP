@@ -271,7 +271,8 @@ public class CompanyServiceImpl implements CompanyService {
 
         @Override
         public CompanyResponse getCompanyByCode(String companyCode) {
-                Company company = companyRepository.findByCompanyCode(companyCode)
+                String cleanCompanyCode = companyCode != null ? companyCode.trim() : null;
+                Company company = companyRepository.findByCompanyCode(cleanCompanyCode)
                                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
                 assertCompanyOwnership(company);
 
@@ -430,7 +431,8 @@ public class CompanyServiceImpl implements CompanyService {
 
         @Override
         public CompanyResponse getCompanyByIdAndcode(UUID id, String companyCode) {
-                Company company = companyRepository.findByIdAndCompanyCode(id, companyCode)
+                String cleanCompanyCode = companyCode != null ? companyCode.trim() : null;
+                Company company = companyRepository.findByIdAndCompanyCode(id, cleanCompanyCode)
                                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
                 assertCompanyOwnership(company);
 
@@ -439,15 +441,16 @@ public class CompanyServiceImpl implements CompanyService {
 
         @Override
         public CompanyResponse verifyCompany(UUID id, String companyCode) {
-                if (id == null && companyCode == null) {
+                String cleanCompanyCode = (companyCode != null && !companyCode.isBlank()) ? companyCode.trim() : null;
+                if (id == null && cleanCompanyCode == null) {
                         throw new BadRequestException(
                                         "Either id or companyCode must be provided.");
                 }
 
                 Company company;
 
-                if (id != null && companyCode != null) {
-                        company = companyRepository.findByIdAndCompanyCode(id, companyCode)
+                if (id != null && cleanCompanyCode != null) {
+                        company = companyRepository.findByIdAndCompanyCode(id, cleanCompanyCode)
                                         .orElseThrow(() -> new ResourceNotFoundException(
                                                         "Company not found with provided id and companyCode"));
                 } else if (id != null) {
@@ -455,7 +458,7 @@ public class CompanyServiceImpl implements CompanyService {
                                         .orElseThrow(() -> new ResourceNotFoundException(
                                                         "Company not found with provided id"));
                 } else {
-                        company = companyRepository.findByCompanyCode(companyCode)
+                        company = companyRepository.findByCompanyCode(cleanCompanyCode)
                                         .orElseThrow(() -> new ResourceNotFoundException(
                                                         "Company not found with provided companyCode"));
                 }

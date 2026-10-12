@@ -14,9 +14,17 @@ import java.util.UUID;
 public interface CompanyRepository
         extends JpaRepository<Company, UUID> {
 
-    Optional<Company> findByCompanyCode(String companyCode);
+    @Query("SELECT c FROM Company c WHERE LOWER(TRIM(c.companyCode)) = LOWER(TRIM(:companyCode))")
+    Optional<Company> findByCompanyCode(@Param("companyCode") String companyCode);
 
-    boolean existsByCompanyCode(String companyCode);
+    @Query("SELECT c FROM Company c WHERE LOWER(TRIM(c.companyCode)) = LOWER(TRIM(:companyCode))")
+    Optional<Company> findByCompanyCodeIgnoreCase(@Param("companyCode") String companyCode);
+
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN TRUE ELSE FALSE END FROM Company c WHERE LOWER(TRIM(c.companyCode)) = LOWER(TRIM(:companyCode))")
+    boolean existsByCompanyCode(@Param("companyCode") String companyCode);
+
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN TRUE ELSE FALSE END FROM Company c WHERE LOWER(TRIM(c.companyCode)) = LOWER(TRIM(:companyCode))")
+    boolean existsByCompanyCodeIgnoreCase(@Param("companyCode") String companyCode);
 
     boolean existsByCompanyName(String companyName);
 
@@ -71,7 +79,11 @@ public interface CompanyRepository
             """, nativeQuery = true)
     Optional<Company> findLastNumericCompanyCode();
 
-    Optional<Company> findByIdAndCompanyCode(UUID id, String companyCode);
+    @Query("SELECT c FROM Company c WHERE c.id = :id AND LOWER(TRIM(c.companyCode)) = LOWER(TRIM(:companyCode))")
+    Optional<Company> findByIdAndCompanyCode(@Param("id") UUID id, @Param("companyCode") String companyCode);
+
+    @Query("SELECT c FROM Company c WHERE c.id = :id AND LOWER(TRIM(c.companyCode)) = LOWER(TRIM(:companyCode))")
+    Optional<Company> findByIdAndCompanyCodeIgnoreCase(@Param("id") UUID id, @Param("companyCode") String companyCode);
 
     Optional<Company> findByIdAndOrganization_IdAndActiveTrue(UUID id, UUID organizationId);
 

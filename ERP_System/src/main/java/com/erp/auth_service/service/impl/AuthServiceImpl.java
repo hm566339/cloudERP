@@ -87,11 +87,12 @@ public class AuthServiceImpl implements AuthService {
                 /*
                  * FIND COMPANY
                  */
+                String cleanCompanyCode = (request.getCompanyCode() != null) ? request.getCompanyCode().trim() : null;
                 Company company = companyRepository
-                                .findByCompanyCode(request.getCompanyCode())
+                                .findByCompanyCode(cleanCompanyCode)
                                 .orElseThrow(() -> {
                                         log.warn("Registration failed - company not found | companyCode={}",
-                                                        request.getCompanyCode());
+                                                        cleanCompanyCode);
                                         return new ResourceNotFoundException("Company not found");
                                 });
 
@@ -250,20 +251,32 @@ public class AuthServiceImpl implements AuthService {
                         throw new BadCredentialsException("Username or email is required");
                 }
 
+                if (request.getCompanyCode() == null || request.getCompanyCode().isBlank()) {
+                        log.warn("Login rejected - missing companyCode | ip={}", ip);
+                        throw new ResourceNotFoundException("Company not found");
+                }
+
+                String cleanCompanyCode = request.getCompanyCode().trim();
+
                 Company company = companyRepository
-                                .findByCompanyCode(request.getCompanyCode())
+                                .findByCompanyCode(cleanCompanyCode)
                                 .orElseThrow(() -> {
                                         log.warn("Login failed - company not found | companyCode={} | ip={}",
-                                                        request.getCompanyCode(), ip);
+                                                        cleanCompanyCode, ip);
                                         return new ResourceNotFoundException("Company not found");
                                 });
+
+                if (Boolean.FALSE.equals(company.getActive())) {
+                        log.warn("Login rejected - company inactive | companyCode={} | ip={}", company.getCompanyCode(), ip);
+                        throw new BadRequestException("Company is inactive");
+                }
 
                 String input = request.getUsername().trim();
 
                 List<User> candidates = userRepository.findUsersWithRolesByCompany(company.getId(), input);
                 if (candidates.isEmpty()) {
                         log.warn("Login failed - user not found | companyCode={} | username={} | ip={}",
-                                        request.getCompanyCode(), input, ip);
+                                        cleanCompanyCode, input, ip);
                         throw new ResourceNotFoundException("User not found");
                 }
 
@@ -1542,13 +1555,19 @@ public class AuthServiceImpl implements AuthService {
                 log.info("Direct authorization code requested | companyCode={} | username={} | host={}",
                                 request.getCompanyCode(), request.getUsername(), request.getHost());
 
+                String cleanCompanyCode = (request.getCompanyCode() != null) ? request.getCompanyCode().trim() : null;
                 Company company = companyRepository
-                                .findByCompanyCode(request.getCompanyCode())
+                                .findByCompanyCode(cleanCompanyCode)
                                 .orElseThrow(() -> {
                                         log.warn("Direct auth code failed - company not found | companyCode={}",
-                                                        request.getCompanyCode());
+                                                        cleanCompanyCode);
                                         return new ResourceNotFoundException("Company not found");
                                 });
+
+                if (Boolean.FALSE.equals(company.getActive())) {
+                        log.warn("Direct auth code rejected - company inactive | companyCode={}", company.getCompanyCode());
+                        throw new BadRequestException("Company is inactive");
+                }
 
                 String input = request.getUsername().trim();
 
@@ -1992,12 +2011,13 @@ public class AuthServiceImpl implements AuthService {
 
                 try {
 
+                        String cleanCompanyCode = (companyCode != null) ? companyCode.trim() : null;
                         Optional<Company> optionalCompany = companyRepository
-                                        .findByCompanyCode(companyCode);
+                                        .findByCompanyCode(cleanCompanyCode);
 
                         if (optionalCompany.isEmpty()) {
                                 log.warn("Password reset requested for non-existent company | companyCode={}",
-                                                companyCode);
+                                                cleanCompanyCode);
                                 return "If account exists, reset link sent to email";
                         }
                         Company company = optionalCompany.get();

@@ -146,7 +146,7 @@ export default function Login() {
             host: gotoUrl || genericErpHost,
           }
           : {
-            companyCode: (routeCompanyCode || queryCompanyCode || companyCode || '').trim().toLowerCase(),
+            companyCode: (routeCompanyCode || queryCompanyCode || companyCode || '').trim(),
             host: gotoUrl || genericErpHost,
           }
         ),
@@ -320,7 +320,7 @@ export default function Login() {
       } else if (err?.status === 403 || err?.data?.message?.toLowerCase().includes('access') || err?.data?.message?.toLowerCase().includes('membership')) {
         errorMsg = "You don't have access to this organization.";
       } else if (err?.status === 404 || err?.data?.message?.toLowerCase().includes('not found')) {
-        errorMsg = 'Organization not found.';
+        errorMsg = isCompanyMode ? 'Company not found.' : 'Organization not found.';
       } else {
         errorMsg = getSafeErrorMessage(err, 'Something went wrong. Please try again.');
       }
