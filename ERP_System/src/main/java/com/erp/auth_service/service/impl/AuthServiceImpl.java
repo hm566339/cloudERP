@@ -2189,6 +2189,11 @@ public class AuthServiceImpl implements AuthService {
                                         "Token is required");
                 }
 
+                if (passwordReset == null || passwordReset.getPassword() == null || passwordReset.getPassword().isBlank()) {
+                        log.warn("Password reset rejected - password is required");
+                        throw new BadRequestException("Password is required");
+                }
+
                 String rawCode = code.trim();
                 String hashedCode = hashToken(rawCode);
 
@@ -2241,6 +2246,16 @@ public class AuthServiceImpl implements AuthService {
                         throw new InvalidOperationException(
                                         "Invalid company token");
                 }
+
+                if (passwordReset == null || passwordReset.getPassword() == null || passwordReset.getPassword().isBlank()) {
+                        log.warn("Password setup/reset failed - password is required | token={}", maskCode(rawCode));
+                        throw new BadRequestException("Password is required");
+                }
+
+                // Resolve company attributes before deleting sessions to prevent LazyInitializationException
+                String companyCode = company.getCompanyCode();
+                UUID companyId = company.getId();
+
                 user.setPassword(
                                 passwordEncoder.encode(
                                                 passwordReset.getPassword()));
@@ -2255,18 +2270,22 @@ public class AuthServiceImpl implements AuthService {
                 sessionRepository.deleteByUser_Id(
                                 user.getId());
 
-                String companyCode = company.getCompanyCode();
-                String base = (url != null ? url.replaceAll("/$", "") : "");
-                String companyLoginUrl = base + "/c/" + companyCode.toLowerCase(Locale.ROOT) + "/login";
+                String base = (url != null ? url.replaceAll("/+$", "") : "");
+                String companyLoginUrl;
+                if (companyCode != null && !companyCode.isBlank()) {
+                        companyLoginUrl = base + "/c/" + companyCode.toLowerCase(Locale.ROOT) + "/login";
+                } else {
+                        companyLoginUrl = base + "/login";
+                }
 
                 log.info(
                                 "Password setup/reset successful | userId={} | companyId={}",
                                 user.getId(),
-                                company.getId());
+                                companyId);
 
                 Map<String, String> response = new HashMap<>();
                 response.put("message", "Password set successfully");
-                response.put("companyCode", companyCode);
+                response.put("companyCode", companyCode != null ? companyCode : "");
                 response.put("companyLoginUrl", companyLoginUrl);
                 return response;
         }

@@ -161,10 +161,50 @@ public class UserController {
         // ================= RESET PASSWORD =================
         @PostMapping("/reset-password")
         public ResponseEntity<ResponseWrapper<Map<String, String>>> resetPassword(
-                        @RequestParam("token") String token,
-                        @Valid @RequestBody RequestWrapper<PasswordReset> passwordReset) {
-                Map<String, String> details = authService.resetPasswordWithDetails(passwordReset.getData(), token);
+                        @RequestParam(value = "token", required = false) String tokenParam,
+                        @RequestBody(required = false) PasswordReset passwordReset) {
+
+                if (passwordReset == null) {
+                        throw new com.erp.auth_service.exception.BadRequestException("Request body is required");
+                }
+
+                PasswordReset resolved = passwordReset.resolve();
+
+                String effectiveToken = (tokenParam != null && !tokenParam.isBlank())
+                                ? tokenParam.trim()
+                                : (resolved.getToken() != null ? resolved.getToken().trim() : null);
+
+                if (effectiveToken == null || effectiveToken.isBlank()) {
+                        throw new com.erp.auth_service.exception.BadCredentialsException("Token is required");
+                }
+
+                if (resolved.getPassword() == null || resolved.getPassword().isBlank()) {
+                        throw new com.erp.auth_service.exception.BadRequestException("Password is required");
+                }
+
+                validatePassword(resolved.getPassword());
+
+                if (resolved.getConfirmPassword() != null && !resolved.getConfirmPassword().isBlank()) {
+                        if (!resolved.getPassword().equals(resolved.getConfirmPassword())) {
+                                throw new com.erp.auth_service.exception.BadRequestException("Passwords do not match");
+                        }
+                }
+
+                Map<String, String> details = authService.resetPasswordWithDetails(resolved, effectiveToken);
                 return ResponseEntity.ok(ResponseWrapper.success(details));
+        }
+
+        private static final java.util.regex.Pattern PASSWORD_PATTERN = java.util.regex.Pattern.compile(
+                        "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$"
+        );
+
+        private void validatePassword(String password) {
+                if (password == null || password.length() < 8 || password.length() > 50) {
+                        throw new com.erp.auth_service.exception.BadRequestException("Password must be between 8 and 50 characters");
+                }
+                if (!PASSWORD_PATTERN.matcher(password).matches()) {
+                        throw new com.erp.auth_service.exception.BadRequestException("Password must contain uppercase, lowercase, number and special character (@#$%^&+=)");
+                }
         }
 
         @PatchMapping("/{userId}/verify-email")

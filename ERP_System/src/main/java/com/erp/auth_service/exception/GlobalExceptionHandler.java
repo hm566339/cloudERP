@@ -197,6 +197,29 @@ public class GlobalExceptionHandler {
                 return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, Map.of());
         }
 
+        @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+        public ResponseEntity<ResponseWrapper<Object>> handleHttpMessageNotReadable(
+                        org.springframework.http.converter.HttpMessageNotReadableException ex,
+                        HttpServletRequest request) {
+                log.warn("Malformed HTTP request payload: {}", ex.getMessage());
+                return buildResponse("Malformed request body or invalid JSON", HttpStatus.BAD_REQUEST, Map.of());
+        }
+
+        @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+        public ResponseEntity<ResponseWrapper<Object>> handleMethodNotSupported(
+                        org.springframework.web.HttpRequestMethodNotSupportedException ex,
+                        HttpServletRequest request) {
+                return buildResponse(ex.getMessage(), HttpStatus.METHOD_NOT_ALLOWED, Map.of());
+        }
+
+        @ExceptionHandler(org.hibernate.LazyInitializationException.class)
+        public ResponseEntity<ResponseWrapper<Object>> handleLazyInitialization(
+                        org.hibernate.LazyInitializationException ex,
+                        HttpServletRequest request) {
+                log.error("LazyInitializationException: ", ex);
+                return buildResponse("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR, Map.of());
+        }
+
         // 500 - Generic
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ResponseWrapper<Object>> handleGlobal(

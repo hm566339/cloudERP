@@ -46,7 +46,7 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
         @Query("DELETE FROM Session s WHERE s.accessToken = :accessToken")
         void deleteByAccessToken(@Param("accessToken") String accessToken);
 
-        @Modifying(clearAutomatically = true)
+        @Modifying
         @Query("DELETE FROM Session s WHERE s.user.id = :userId")
         void deleteByUser_Id(@Param("userId") UUID userId);
 

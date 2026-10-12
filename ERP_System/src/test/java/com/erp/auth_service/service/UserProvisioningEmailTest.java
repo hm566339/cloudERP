@@ -341,4 +341,76 @@ class UserProvisioningEmailTest {
 
         assertThrows(TokenExpiredException.class, () -> authService.resetPasswordWithDetails(passwordReset, rawToken));
     }
+
+    @Test
+    @DisplayName("Password reset rejected when password is null or blank with BadRequestException")
+    void testResetPasswordWithDetails_NullOrBlankPassword_Rejected() {
+        PasswordReset nullPassword = new PasswordReset();
+        nullPassword.setPassword(null);
+
+        assertThrows(com.erp.auth_service.exception.BadRequestException.class,
+                () -> authService.resetPasswordWithDetails(nullPassword, "valid-token"));
+
+        PasswordReset blankPassword = new PasswordReset();
+        blankPassword.setPassword("   ");
+
+        assertThrows(com.erp.auth_service.exception.BadRequestException.class,
+                () -> authService.resetPasswordWithDetails(blankPassword, "valid-token"));
+    }
+
+    @Test
+    @DisplayName("Password reset rejected when token is null or blank with BadCredentialsException")
+    void testResetPasswordWithDetails_NullOrBlankToken_Rejected() {
+        PasswordReset passwordReset = new PasswordReset();
+        passwordReset.setPassword("ValidPassword123@#");
+
+        assertThrows(BadCredentialsException.class,
+                () -> authService.resetPasswordWithDetails(passwordReset, null));
+
+        assertThrows(BadCredentialsException.class,
+                () -> authService.resetPasswordWithDetails(passwordReset, "  "));
+    }
+
+    @Test
+    @DisplayName("Password reset succeeds for PASSWORD_RESET token type and hashes password securely")
+    void testResetPasswordWithDetails_PasswordResetTokenType_Succeeds() {
+        String rawToken = "reset-type-token-123";
+        String hashedToken = sha256Hex(rawToken);
+
+        User activeUser = User.builder()
+                .id(UUID.randomUUID())
+                .username("reset.user")
+                .email("reset@techcorp.com")
+                .password("oldHashedPassword")
+                .accountStatus(AccountStatus.ACTIVE)
+                .emailStatus(Status.VERIFIED)
+                .company(company)
+                .build();
+
+        UserToken tokenRecord = UserToken.builder()
+                .id(UUID.randomUUID())
+                .token(hashedToken)
+                .tokenType(TokenType.PASSWORD_RESET)
+                .user(activeUser)
+                .company(company)
+                .used(false)
+                .expiresAt(LocalDateTime.now().plusHours(1))
+                .build();
+
+        when(userTokenRepository.findByToken(hashedToken)).thenReturn(Optional.of(tokenRecord));
+
+        PasswordReset passwordReset = new PasswordReset();
+        passwordReset.setPassword("BrandNewPassword123@#");
+
+        Map<String, String> response = authService.resetPasswordWithDetails(passwordReset, rawToken);
+
+        assertNotNull(response);
+        assertEquals("Password set successfully", response.get("message"));
+        assertEquals("techcorp", response.get("companyCode"));
+        assertTrue(tokenRecord.getUsed());
+        assertEquals("encoded_BrandNewPassword123@#", activeUser.getPassword());
+        verify(userRepository).save(activeUser);
+        verify(userTokenRepository).save(tokenRecord);
+        verify(sessionRepository).deleteByUser_Id(activeUser.getId());
+    }
 }
