@@ -59,18 +59,43 @@ public class SmtpEmailProvider implements EmailProvider {
             // 1. Explicit Configured From Address and Display Name
             String fromAddress = smtpProperties.getFromAddress();
             String fromName = smtpProperties.getFromName();
-            if (fromAddress == null || fromAddress.isBlank()) {
-                fromAddress = "noreply@mark2.in";
+            String replyTo = smtpProperties.getReplyTo();
+
+            // When using Gmail SMTP (smtp.gmail.com), Google strictly requires that the From address matches
+            // the authenticated account (or an authorized "Send mail as" alias verified in Google Account settings).
+            // If fromAddress differs from the authenticated username, align From to the authenticated username
+            // and preserve the original fromAddress in Reply-To so that recipients' replies route to the intended inbox,
+            // preventing Google from silently dropping the email post-acceptance.
+            if (isGmailHost(smtpProperties.getHost()) && smtpProperties.getUsername() != null && !smtpProperties.getUsername().isBlank()) {
+                String authUsername = smtpProperties.getUsername().trim();
+                if (fromAddress == null || fromAddress.isBlank()) {
+                    fromAddress = authUsername;
+                } else if (!fromAddress.trim().equalsIgnoreCase(authUsername)) {
+                    log.warn("Gmail SMTP sender mismatch detected: Authenticated user is '{}' but configured fromAddress is '{}'. " +
+                             "Aligning From address to '{}' and setting Reply-To to '{}' to guarantee delivery and avoid Google post-acceptance drop.",
+                            maskEmail(authUsername), maskEmail(fromAddress), maskEmail(authUsername), maskEmail(fromAddress));
+                    if (replyTo == null || replyTo.isBlank()) {
+                        replyTo = fromAddress.trim();
+                    }
+                    fromAddress = authUsername;
+                }
+            } else if (fromAddress == null || fromAddress.isBlank()) {
+                if (smtpProperties.getUsername() != null && !smtpProperties.getUsername().isBlank()) {
+                    fromAddress = smtpProperties.getUsername().trim();
+                } else {
+                    fromAddress = "noreply@mark2.in";
+                }
             }
+
             if (fromName != null && !fromName.isBlank()) {
                 helper.setFrom(new InternetAddress(fromAddress.trim(), fromName.trim(), StandardCharsets.UTF_8.name()));
             } else {
                 helper.setFrom(fromAddress.trim());
             }
 
-            // 2. Reply-To if configured
-            if (smtpProperties.getReplyTo() != null && !smtpProperties.getReplyTo().isBlank()) {
-                helper.setReplyTo(smtpProperties.getReplyTo().trim());
+            // 2. Reply-To if configured or auto-routed
+            if (replyTo != null && !replyTo.isBlank()) {
+                helper.setReplyTo(replyTo.trim());
             }
 
             // 3. Recipient and Subject
@@ -111,8 +136,8 @@ public class SmtpEmailProvider implements EmailProvider {
             long duration = System.currentTimeMillis() - startTime;
             String messageId = mimeMessage.getMessageID() != null ? mimeMessage.getMessageID() : "smtp-" + message.getNotificationId();
 
-            log.info("Email accepted by SMTP server | notificationId={} | to={} | durationMs={}",
-                    message.getNotificationId(), maskedRecipient, duration);
+            log.info("Email submitted to SMTP relay server (transport accepted) | notificationId={} | to={} | from={} | durationMs={}",
+                    message.getNotificationId(), maskedRecipient, maskEmail(fromAddress), duration);
 
             return CommunicationResult.success(getProviderName(), messageId, duration);
 
@@ -125,6 +150,12 @@ public class SmtpEmailProvider implements EmailProvider {
                     message.getNotificationId(), maskedRecipient, sanitizedError, retryable, duration);
             return CommunicationResult.failure(getProviderName(), sanitizedError, retryable, duration);
         }
+    }
+
+    private boolean isGmailHost(String host) {
+        if (host == null) return false;
+        String lower = host.toLowerCase(Locale.ROOT);
+        return lower.contains("gmail.com") || lower.contains("googlemail.com");
     }
 
     private void validateRecipient(String email) {

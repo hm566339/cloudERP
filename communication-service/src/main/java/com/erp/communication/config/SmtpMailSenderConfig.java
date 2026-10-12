@@ -37,6 +37,9 @@ public class SmtpMailSenderConfig {
         props.put("mail.smtp.connectiontimeout", String.valueOf(smtpProperties.getConnectionTimeoutMs()));
         props.put("mail.smtp.timeout", String.valueOf(smtpProperties.getTimeoutMs()));
         props.put("mail.smtp.writetimeout", String.valueOf(smtpProperties.getWriteTimeoutMs()));
+        if (smtpProperties.getUsername() != null && !smtpProperties.getUsername().isBlank()) {
+            props.put("mail.smtp.from", smtpProperties.getUsername().trim());
+        }
 
         log.info("Configured JavaMailSender with host: {}, port: {}, starttls: {}",
                 smtpProperties.getHost(), smtpProperties.getPort(), smtpProperties.isStarttlsEnable());

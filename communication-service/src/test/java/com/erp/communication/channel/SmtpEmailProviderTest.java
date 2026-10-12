@@ -213,4 +213,64 @@ class SmtpEmailProviderTest {
         assertFalse(result.isRetryable(), "Invalid recipient address must be classified as permanent failure");
         assertTrue(result.getErrorMessage().contains("Invalid recipient email address format"));
     }
+
+    @Test
+    @DisplayName("Should align From address to authenticated username and route original sender to Reply-To when using Gmail SMTP")
+    void testGmailSenderMismatchAlignmentAndReplyTo() throws Exception {
+        properties.setHost("smtp.gmail.com");
+        properties.setUsername("authenticated-account@gmail.com");
+        properties.setFromAddress("different-sender@gmail.com");
+        properties.setFromName("Mark2 Alerts");
+        properties.setReplyTo(null);
+
+        EmailMessage message = EmailMessage.builder()
+                .notificationId(UUID.randomUUID())
+                .companyId(UUID.randomUUID())
+                .recipient("client@example.com")
+                .subject("Status Update")
+                .textBody("System notification")
+                .build();
+
+        CommunicationResult result = smtpProvider.sendEmail(message);
+
+        assertTrue(result.isSuccess());
+        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mailSender, times(1)).send(captor.capture());
+
+        MimeMessage sentMessage = captor.getValue();
+        // From address must be aligned to the authenticated account to prevent Google silent drop
+        assertEquals("authenticated-account@gmail.com", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getAddress());
+        assertEquals("Mark2 Alerts", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getPersonal());
+
+        // Reply-To must be automatically set to the configured different-sender@gmail.com
+        assertNotNull(sentMessage.getReplyTo());
+        assertEquals("different-sender@gmail.com", ((jakarta.mail.internet.InternetAddress) sentMessage.getReplyTo()[0]).getAddress());
+    }
+
+    @Test
+    @DisplayName("Should preserve existing Reply-To if explicitly configured even when Gmail sender is aligned")
+    void testGmailSenderMismatchWithExplicitReplyTo() throws Exception {
+        properties.setHost("smtp.gmail.com");
+        properties.setUsername("authenticated-account@gmail.com");
+        properties.setFromAddress("unaligned@gmail.com");
+        properties.setReplyTo("explicit-support@mark2.in");
+
+        EmailMessage message = EmailMessage.builder()
+                .notificationId(UUID.randomUUID())
+                .companyId(UUID.randomUUID())
+                .recipient("client@example.com")
+                .subject("Explicit Reply-To Test")
+                .textBody("Hello")
+                .build();
+
+        CommunicationResult result = smtpProvider.sendEmail(message);
+
+        assertTrue(result.isSuccess());
+        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mailSender, times(1)).send(captor.capture());
+
+        MimeMessage sentMessage = captor.getValue();
+        assertEquals("authenticated-account@gmail.com", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getAddress());
+        assertEquals("explicit-support@mark2.in", ((jakarta.mail.internet.InternetAddress) sentMessage.getReplyTo()[0]).getAddress());
+    }
 }
