@@ -1,4 +1,5 @@
 import apiClient from '../common/client';
+import { isOwnerOrSystemAdminUser } from '../common/roleCompanyContext';
 
 export const customersApi = {
   /**
@@ -29,10 +30,11 @@ export const customersApi = {
    */
   create: async (payload) => {
     const { companyId, includeCompanyId, data } = payload || {};
+    const isPrivileged = isOwnerOrSystemAdminUser();
     const response = await apiClient.post(
       '/api/account/customers',
       { data: data || {} },
-      includeCompanyId && companyId ? { params: { companyId } } : undefined
+      includeCompanyId && companyId && isPrivileged ? { params: { companyId } } : undefined
     );
     const result = response.data;
 

@@ -1,4 +1,9 @@
 import { baseApi } from '../common/baseApi'
+import {
+  isOwnerOrSystemAdminUser,
+  getActiveCompanyId,
+  buildRoleBasedCompanyParams
+} from '../common/roleCompanyContext'
 
 // Helper — extracts a plain UUID string from whatever is passed in
 function extractId(arg) {
@@ -12,10 +17,13 @@ export const inventoryApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // GET /api/inventory/stocks?companyId=<uuid>
     getStocks: builder.query({
-      query: (companyIdArg) => ({
-        url: '/api/inventory/inventory-stocks',
-        params: { companyId: extractId(companyIdArg) },
-      }),
+      query: (companyIdArg) => {
+        const compId = extractId(companyIdArg) || getActiveCompanyId();
+        return {
+          url: '/api/inventory/inventory-stocks',
+          params: buildRoleBasedCompanyParams({}, { companyId: compId }),
+        };
+      },
       providesTags: ['Inventory'],
     }),
     createStockItem: builder.mutation({
@@ -28,10 +36,13 @@ export const inventoryApiSlice = baseApi.injectEndpoints({
     }),
     // GET /api/inventory/warehouses?companyId=<uuid>
     getWarehouses: builder.query({
-      query: (companyIdArg) => ({
-        url: '/api/inventory/warehouses',
-        params: { companyId: extractId(companyIdArg) },
-      }),
+      query: (companyIdArg) => {
+        const compId = extractId(companyIdArg) || getActiveCompanyId();
+        return {
+          url: '/api/inventory/warehouses',
+          params: buildRoleBasedCompanyParams({}, { companyId: compId }),
+        };
+      },
       providesTags: ['Inventory'],
     }),
     createWarehouse: builder.mutation({
@@ -44,10 +55,13 @@ export const inventoryApiSlice = baseApi.injectEndpoints({
     }),
     // GET /api/inventory/transfers?companyId=<uuid>
     getTransfers: builder.query({
-      query: (companyIdArg) => ({
-        url: '/api/inventory/stock-transfers',
-        params: { companyId: extractId(companyIdArg) },
-      }),
+      query: (companyIdArg) => {
+        const compId = extractId(companyIdArg) || getActiveCompanyId();
+        return {
+          url: '/api/inventory/stock-transfers',
+          params: buildRoleBasedCompanyParams({}, { companyId: compId }),
+        };
+      },
       providesTags: ['Inventory'],
     }),
     createTransfer: builder.mutation({
@@ -60,22 +74,23 @@ export const inventoryApiSlice = baseApi.injectEndpoints({
     }),
     // GET /api/inventory/dashboard?companyId=<uuid>&role=<ROLE>
     getInventoryDashboard: builder.query({
-      query: ({ companyId, role = 'EMPLOYEE' }) => ({
-        url: '/api/inventory/dashboard',
-        params: { companyId, role },
-      }),
+      query: ({ companyId, role = 'EMPLOYEE' }) => {
+        const compId = companyId || getActiveCompanyId();
+        return {
+          url: '/api/inventory/dashboard',
+          params: buildRoleBasedCompanyParams({ role }, { companyId: compId }),
+        };
+      },
       providesTags: ['Inventory'],
     }),
     getProducts: builder.query({
       query: (params) => {
         const { isSystemAdmin, companyId, ...restParams } = params || {};
-        const finalParams = { ...restParams };
-        if (isSystemAdmin && companyId) {
-          finalParams.companyId = companyId;
-        }
+        const isPrivileged = isSystemAdmin || isOwnerOrSystemAdminUser();
+        const compId = companyId || getActiveCompanyId();
         return {
           url: '/api/inventory/products',
-          params: finalParams,
+          params: buildRoleBasedCompanyParams(restParams, { companyId: compId, isPrivileged }),
         };
       },
       providesTags: ['InventoryProducts'],
@@ -83,14 +98,11 @@ export const inventoryApiSlice = baseApi.injectEndpoints({
     getInventoryStocksByProduct: builder.query({
       query: (params) => {
         const { companyId, productId, ...rest } = params || {};
-        const finalParams = { productId, ...rest };
-        if (companyId) {
-          finalParams.companyId = companyId;
-        }
+        const compId = companyId || getActiveCompanyId();
         return {
           url: '/api/inventory/inventory-stocks',
-          params: finalParams,
-          headers: companyId ? { 'X-Company-Id': companyId } : undefined
+          params: buildRoleBasedCompanyParams({ productId, ...rest }, { companyId: compId }),
+          headers: compId ? { 'X-Company-Id': compId } : undefined
         };
       },
       providesTags: ['Inventory'],
@@ -98,19 +110,14 @@ export const inventoryApiSlice = baseApi.injectEndpoints({
     getWarehouseLocations: builder.query({
       query: (params) => {
         const { isSystemAdmin, companyId, warehouseId, ...rest } = params || {};
-        const finalParams = { ...rest };
-
-        if (isSystemAdmin && companyId) {
-          finalParams.companyId = companyId;
-        }
-        if (warehouseId) {
-          finalParams.warehouseId = warehouseId;
-        }
-
+        const isPrivileged = isSystemAdmin || isOwnerOrSystemAdminUser();
+        const compId = companyId || getActiveCompanyId();
+        const initialParams = { ...rest };
+        if (warehouseId) initialParams.warehouseId = warehouseId;
         return {
           url: '/api/inventory/warehouse-locations',
-          params: finalParams,
-          headers: companyId ? { 'X-Company-Id': companyId } : undefined
+          params: buildRoleBasedCompanyParams(initialParams, { companyId: compId, isPrivileged }),
+          headers: compId ? { 'X-Company-Id': compId } : undefined
         };
       },
       providesTags: ['Inventory'],
@@ -118,19 +125,14 @@ export const inventoryApiSlice = baseApi.injectEndpoints({
     getGroupedStock: builder.query({
       query: (params) => {
         const { isSystemAdmin, companyId, productId, ...rest } = params || {};
-        const finalParams = { ...rest };
-        
-        if (companyId) {
-          finalParams.companyId = companyId;
-        }
-        if (productId) {
-          finalParams.productId = productId;
-        }
-        
+        const isPrivileged = isSystemAdmin || isOwnerOrSystemAdminUser();
+        const compId = companyId || getActiveCompanyId();
+        const initialParams = { ...rest };
+        if (productId) initialParams.productId = productId;
         return {
           url: '/api/inventory/integration/stock/products',
-          params: finalParams,
-          headers: companyId ? { 'X-Company-Id': companyId } : undefined
+          params: buildRoleBasedCompanyParams(initialParams, { companyId: compId, isPrivileged }),
+          headers: compId ? { 'X-Company-Id': compId } : undefined
         };
       },
       providesTags: ['Inventory'],

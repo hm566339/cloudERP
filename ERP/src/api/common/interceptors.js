@@ -2,7 +2,9 @@
  * @fileoverview Axios request and response interceptors.
  *
  * Request interceptor:
- *   - Attaches companyId / companyCode from localStorage to every request.
+ *   - For OWNER / SystemAdmin: attaches companyId query param to company-specific APIs.
+ *   - For all other roles: does NOT attach companyId query param (backend uses JWT session).
+ *   - Attaches X-Company-Id header for all users (gateway tenant validation).
  *   - Logs outgoing requests in development.
  *
  * Response interceptor:
@@ -41,135 +43,23 @@ const getFreshAccessToken = () => {
   return null;
 };
 
-/**
- * Helper to determine if the user is a System Admin
- */
-const isUserSystemAdmin = () => {
-  let isSystemAdmin = false;
-  if (typeof window !== 'undefined') {
-    try {
-      const persistedRoot = JSON.parse(localStorage.getItem('persist:root'));
-      if (persistedRoot) {
-        const authState = persistedRoot.auth ? JSON.parse(persistedRoot.auth) : null;
-        const user = authState?.user;
-        if (user) {
-          const rawRole = user.role || '';
-          const stripped = String(rawRole).toLowerCase().replace(/[\s_]/g, '');
-          isSystemAdmin = stripped === 'superadmin' || stripped === 'systemadmin';
-        }
-      }
-    } catch (e) { }
+import {
+  isOwnerOrSystemAdminUser,
+  isOwnerOrSystemAdminRole,
+  getActiveCompanyId,
+  buildRoleBasedCompanyParams,
+  cleanUrlRoleBasedCompany
+} from './roleCompanyContext.js';
 
-    if (!isSystemAdmin) {
-      try {
-        const authUser = JSON.parse(localStorage.getItem('auth_user'));
-        if (authUser) {
-          const rawRole = Array.isArray(authUser.roles)
-            ? (authUser.roles[0]?.name || authUser.roles[0] || '')
-            : (authUser.role || '');
-          const stripped = String(rawRole).toLowerCase().replace(/[\s_]/g, '');
-          isSystemAdmin =
-            authUser.loginType === 'ADMIN' ||
-            stripped === 'superadmin' ||
-            stripped === 'systemadmin' ||
-            String(rawRole).toUpperCase().includes('SYSTEM_ADMIN');
-        }
-      } catch (e) { }
-    }
-  }
-  return isSystemAdmin;
+export {
+  isOwnerOrSystemAdminUser,
+  isOwnerOrSystemAdminRole,
+  getActiveCompanyId,
+  buildRoleBasedCompanyParams,
+  cleanUrlRoleBasedCompany
 };
 
-/**
- * Resolves the active company ID.
- * Follows the fiscal-years reference:
- * 1. selected_company in localStorage / Redux (single source of truth for Owner & SystemAdmin)
- * 2. auth_user fallback (for normal tenant-assigned users)
- */
-export const getActiveCompanyId = () => {
-  if (typeof window === 'undefined') return null;
-
-  try {
-    const saved = localStorage.getItem('selected_company');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const id = parsed?.id || parsed?.companyId;
-      if (id && id !== 'undefined' && id !== 'null') {
-        return String(id);
-      }
-    }
-  } catch (e) { }
-
-  try {
-    if (window.__REDUX_STORE__?.getState) {
-      const state = window.__REDUX_STORE__.getState();
-      const comp = state.company?.selectedCompany || state.auth?.currentCompany;
-      const id = comp?.id || comp?.companyId;
-      if (id && id !== 'undefined' && id !== 'null') {
-        return String(id);
-      }
-    }
-  } catch (e) { }
-
-  try {
-    const authUserStr = localStorage.getItem('auth_user');
-    if (authUserStr) {
-      const authUser = JSON.parse(authUserStr);
-      const id = authUser?.companyId || authUser?.companyCode;
-      if (id && id !== 'undefined' && id !== 'null') {
-        return String(id);
-      }
-    }
-  } catch (e) { }
-
-  return null;
-};
-
-/**
- * Checks if the user is an Owner or SystemAdmin who can operate across multiple companies.
- */
-export const isOwnerOrAdminUser = () => {
-  if (typeof window === 'undefined') return false;
-
-  try {
-    if (window.__REDUX_STORE__?.getState) {
-      const state = window.__REDUX_STORE__.getState();
-      const user = state.auth?.user;
-      const membership = state.auth?.membership;
-      if (membership?.memberType === 'OWNER' || membership?.memberType === 'ADMIN') return true;
-      if (user) {
-        const rawRole = (user.role || '').toLowerCase();
-        if (rawRole.includes('owner') || rawRole.includes('superadmin') || rawRole.includes('systemadmin') || rawRole.includes('admin')) return true;
-        const roles = Array.isArray(user.roles) ? user.roles : [];
-        if (roles.some((r) => {
-          const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
-          const upper = String(name).toUpperCase();
-          return upper.includes('OWNER') || upper.includes('SUPER_ADMIN') || upper.includes('SYSTEM_ADMIN');
-        })) return true;
-      }
-    }
-  } catch (e) { }
-
-  try {
-    const authUserStr = localStorage.getItem('auth_user');
-    if (authUserStr) {
-      const authUser = JSON.parse(authUserStr);
-      if (authUser?.membership?.memberType === 'OWNER' || authUser?.membership?.memberType === 'ADMIN') return true;
-      const rawRole = (authUser.role || '').toLowerCase();
-      if (rawRole.includes('owner') || rawRole.includes('superadmin') || rawRole.includes('systemadmin') || rawRole.includes('admin')) return true;
-      const roles = Array.isArray(authUser.roles) ? authUser.roles : [];
-      if (roles.some((r) => {
-        const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
-        const upper = String(name).toUpperCase();
-        return upper.includes('OWNER') || upper.includes('SUPER_ADMIN') || upper.includes('SYSTEM_ADMIN');
-      })) return true;
-    }
-  } catch (e) { }
-
-  if (isUserSystemAdmin()) return true;
-
-  return false;
-};
+export const isOwnerOrAdminUser = isOwnerOrSystemAdminUser;
 
 /**
  * Determines whether a given pathname is a truly global/system endpoint.
@@ -327,62 +217,44 @@ export const attachRequestInterceptor = (instance) => {
         }
 
         // Global ERP Company Data Isolation:
-        // Automatically attach selected companyId to all company-specific APIs across all modules
+        // Automatically attach selected companyId to all company-specific APIs across all modules.
+        //
+        // ROLE-BASED RULE:
+        //   - OWNER / SystemAdmin: Include companyId query param (they operate across companies).
+        //   - All other roles (ACCOUNTANT, MEMBER, etc.): Do NOT include companyId query param.
+        //     The backend resolves their company from the JWT session via TenantUtils.
+        //   - X-Company-Id header is always sent for gateway-level tenant isolation.
         if (isCompanySpecificEndpoint(config.url)) {
+          const isPrivileged = isOwnerOrSystemAdminUser();
           const activeCompanyId = getActiveCompanyId();
-          const isPrivileged = isOwnerOrAdminUser();
 
+          // 1. Clean query parameter from config.url itself if present
+          if (config.url && typeof config.url === 'string' && config.url.includes('?')) {
+            config.url = cleanUrlRoleBasedCompany(config.url, isPrivileged, activeCompanyId);
+          }
+
+          // 2. Query parameter injection / stripping on config.params
+          if (config.params) {
+            config.params = buildRoleBasedCompanyParams(config.params, {
+              isPrivileged,
+              companyId: activeCompanyId,
+            });
+          } else if (isPrivileged && activeCompanyId) {
+            config.params = { companyId: activeCompanyId };
+          }
+
+          // 3. Request header injection (X-Company-Id) — for ALL users
           if (activeCompanyId) {
-            config.params = config.params || {};
-            const isSearchParams = typeof URLSearchParams !== 'undefined' && config.params instanceof URLSearchParams;
-
-            // 1. Query parameter injection (?companyId=<activeCompanyId>)
-            if (isSearchParams) {
-              const currentVal = config.params.get('companyId');
-              if (isPrivileged || !currentVal || currentVal === 'undefined' || currentVal === 'null') {
-                config.params.set('companyId', activeCompanyId);
-              }
-            } else {
-              // Selected company is the single source of truth for Owner / SystemAdmin
-              if (isPrivileged || !config.params.companyId || config.params.companyId === 'undefined' || config.params.companyId === 'null') {
-                config.params.companyId = activeCompanyId;
-              }
-            }
-
-            // 2. Request header injection (X-Company-Id: <activeCompanyId>)
             if (!config.headers) config.headers = {};
-            const finalCompanyId = isSearchParams
-              ? config.params.get('companyId')
-              : config.params.companyId;
-            if (finalCompanyId) {
-              config.headers['X-Company-Id'] = finalCompanyId;
-            }
+            config.headers['X-Company-Id'] = activeCompanyId;
+          }
 
-            // 3. For Owner / SystemAdmin: synchronize path parameters if URL contains /company/:id or /settings/:id
-            if (isPrivileged && config.url && typeof config.url === 'string') {
-              if (config.url.includes('/company/')) {
-                config.url = config.url.replace(/\/company\/[^/?#]+/g, `/company/${activeCompanyId}`);
-              } else if (config.url.startsWith('/api/settings/') || config.url.includes('/settings/')) {
-                config.url = config.url.replace(/\/settings\/[^/?#]+/g, `/settings/${activeCompanyId}`);
-              }
-            }
-          } else {
-            // Guard: Never send undefined or null if company selection is still loading
-            if (config.params) {
-              const isSearchParams = typeof URLSearchParams !== 'undefined' && config.params instanceof URLSearchParams;
-              if (isSearchParams) {
-                const currentVal = config.params.get('companyId');
-                if (!currentVal || currentVal === 'undefined' || currentVal === 'null') {
-                  config.params.delete('companyId');
-                }
-              } else if (
-                config.params.companyId === undefined ||
-                config.params.companyId === null ||
-                config.params.companyId === 'undefined' ||
-                config.params.companyId === 'null'
-              ) {
-                delete config.params.companyId;
-              }
+          // 4. For Owner / SystemAdmin: synchronize path parameters if URL contains /company/:id or /settings/:id
+          if (isPrivileged && activeCompanyId && config.url && typeof config.url === 'string') {
+            if (config.url.includes('/company/')) {
+              config.url = config.url.replace(/\/company\/[^/?#]+/g, `/company/${activeCompanyId}`);
+            } else if (config.url.startsWith('/api/settings/') || config.url.includes('/settings/')) {
+              config.url = config.url.replace(/\/settings\/[^/?#]+/g, `/settings/${activeCompanyId}`);
             }
           }
         }

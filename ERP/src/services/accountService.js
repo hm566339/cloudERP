@@ -1,5 +1,5 @@
 import API from './api'
-import { getActiveCompanyId } from '../api/common/interceptors'
+import { getActiveCompanyId, isOwnerOrSystemAdminUser } from '../api/common/roleCompanyContext.js'
 
 const cleanAccountPayload = (payload = {}) => {
   const {
@@ -36,9 +36,11 @@ const cleanAccountPayload = (payload = {}) => {
 
 const companyRequestConfig = (companyId, extra = {}) => {
   const resolvedCompanyId = companyId || getActiveCompanyId();
+  const privileged = isOwnerOrSystemAdminUser();
   return {
     ...extra,
-    params: resolvedCompanyId ? { ...(extra.params || {}), companyId: resolvedCompanyId } : extra.params,
+    // Only include companyId query param for OWNER / SystemAdmin
+    params: (privileged && resolvedCompanyId) ? { ...(extra.params || {}), companyId: resolvedCompanyId } : extra.params,
     headers: resolvedCompanyId ? { ...(extra.headers || {}), 'X-Company-Id': resolvedCompanyId } : extra.headers,
   };
 };
@@ -53,15 +55,17 @@ const buildParams = ({
   sortDirection = 'asc',
 } = {}) => {
   const resolvedCompanyId = companyId || getActiveCompanyId();
-  if (!resolvedCompanyId) {
-    throw new Error('companyId is required');
-  }
+  const privileged = isOwnerOrSystemAdminUser();
 
   const params = {
-    companyId: resolvedCompanyId,
     page: Math.max(0, page - 1),
     size: pageSize,
     sort: `${sortField},${sortDirection}`,
+  }
+
+  // Only include companyId query param for OWNER / SystemAdmin
+  if (privileged && resolvedCompanyId) {
+    params.companyId = resolvedCompanyId;
   }
 
   if (search?.trim()) params.search = search.trim()

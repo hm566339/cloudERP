@@ -1,5 +1,5 @@
 import API from './api'
-import { getActiveCompanyId } from '../api/common/interceptors.js'
+import { getActiveCompanyId, isOwnerOrSystemAdminUser } from '../api/common/roleCompanyContext.js'
 
 const buildParams = ({
   companyId,
@@ -13,16 +13,23 @@ const buildParams = ({
   sortField = 'vendorName',
   sortDirection = 'asc',
 } = {}) => {
+  const isPrivileged = isOwnerOrSystemAdminUser();
   const effectiveCompanyId = companyId || getActiveCompanyId();
-  if (!effectiveCompanyId) {
-    throw new Error('companyId is required')
+
+  // For privileged users (OWNER / SystemAdmin), active companyId is required
+  if (isPrivileged && !effectiveCompanyId) {
+    throw new Error('companyId is required for Owner / SystemAdmin');
   }
 
   const params = {
-    companyId: effectiveCompanyId,
     page: Math.max(0, page - 1),
     size: pageSize,
     sort: `${sortField},${sortDirection}`,
+  }
+
+  // Only include companyId query param for OWNER / SystemAdmin
+  if (isPrivileged && effectiveCompanyId) {
+    params.companyId = effectiveCompanyId;
   }
 
   if (search?.trim()) params.search = search.trim()

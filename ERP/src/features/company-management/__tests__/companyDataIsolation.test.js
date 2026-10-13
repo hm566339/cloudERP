@@ -114,7 +114,8 @@ describe('Company-Level Data Isolation & Query Parameter Injection Tests', () =>
       return instance;
     };
 
-    it('automatically adds companyId query parameter to account-groups', () => {
+    it('automatically adds companyId query parameter to account-groups for Owner', () => {
+      localStorageMock.setItem('auth_user', JSON.stringify({ id: 'u-1', membership: { memberType: 'OWNER' } }));
       localStorageMock.setItem('selected_company', JSON.stringify({ id: 'comp-123' }));
       const axiosMock = createMockAxiosInstance();
 
@@ -129,7 +130,8 @@ describe('Company-Level Data Isolation & Query Parameter Injection Tests', () =>
       assert.strictEqual(config.headers['X-Company-Id'], 'comp-123');
     });
 
-    it('automatically adds companyId query parameter to chart-of-accounts', () => {
+    it('automatically adds companyId query parameter to chart-of-accounts for Owner', () => {
+      localStorageMock.setItem('auth_user', JSON.stringify({ id: 'u-1', membership: { memberType: 'OWNER' } }));
       localStorageMock.setItem('selected_company', JSON.stringify({ id: 'comp-123' }));
       const axiosMock = createMockAxiosInstance();
 
@@ -143,7 +145,8 @@ describe('Company-Level Data Isolation & Query Parameter Injection Tests', () =>
       assert.strictEqual(config.headers['X-Company-Id'], 'comp-123');
     });
 
-    it('automatically adds companyId query parameter to fiscal-years', () => {
+    it('automatically adds companyId query parameter to fiscal-years for Owner', () => {
+      localStorageMock.setItem('auth_user', JSON.stringify({ id: 'u-1', membership: { memberType: 'OWNER' } }));
       localStorageMock.setItem('selected_company', JSON.stringify({ id: 'comp-123' }));
       const axiosMock = createMockAxiosInstance();
 
@@ -306,7 +309,7 @@ describe('Company-Level Data Isolation & Query Parameter Injection Tests', () =>
       });
     });
 
-    it('Step 5: Verifies that standard non-Owner user continues using their existing company context', () => {
+    it('Step 5: Verifies that standard non-Owner user (Accountant) NEVER sends companyId query param, but receives X-Company-Id header', () => {
       localStorageMock.setItem('auth_user', JSON.stringify({
         id: 'standard-user-1',
         role: 'accountant',
@@ -316,11 +319,21 @@ describe('Company-Level Data Isolation & Query Parameter Injection Tests', () =>
       const axiosMock = createMockAxiosInstance();
 
       accountingEndpoints.forEach((url) => {
-        const config = axiosMock.execute({ url, method: 'GET' });
+        const config = axiosMock.execute({ url, method: 'GET', params: { page: 0 } });
         assert.strictEqual(
-          config.params.companyId,
+          config.params?.companyId,
+          undefined,
+          `Accountant must NOT send companyId query param for ${url}`
+        );
+        assert.strictEqual(
+          'companyId' in (config.params || {}),
+          false,
+          `companyId parameter must be completely omitted for ${url}`
+        );
+        assert.strictEqual(
+          config.headers['X-Company-Id'],
           'standard-comp-assigned-999',
-          `Standard user must send their assigned companyId for ${url}`
+          `Accountant receives X-Company-Id header for tenant routing`
         );
       });
     });
@@ -524,6 +537,313 @@ describe('Company-Level Data Isolation & Query Parameter Injection Tests', () =>
 
       assert.strictEqual(futureEndpoint.params.companyId, 'future-comp-id');
       assert.strictEqual(futureEndpoint.headers['X-Company-Id'], 'future-comp-id');
+    });
+  });
+
+  describe('6. Global Role-Based companyId Handling Audit & Verification (All APIs & Roles)', () => {
+    const createMockAxiosInstance = () => {
+      let interceptorFn = null;
+      const instance = {
+        interceptors: {
+          request: {
+            use: (fn) => { interceptorFn = fn; }
+          }
+        },
+        execute: (config) => interceptorFn(config)
+      };
+      attachRequestInterceptor(instance);
+      return instance;
+    };
+
+    const modulesToTest = [
+      { name: 'Customers', url: '/api/account/customers' },
+      { name: 'Vendors', url: '/api/account/v1/vendors' },
+      { name: 'Products', url: '/api/inventory/products' },
+      { name: 'Sales Invoices', url: '/api/account/sales/invoices' },
+      { name: 'Purchase Orders', url: '/api/account/purchase-orders' },
+      { name: 'Payment Vouchers', url: '/api/account/payment-vouchers' },
+      { name: 'Inventory Stocks', url: '/api/inventory/inventory-stocks' },
+      { name: 'General Ledger Report', url: '/api/account/v1/reports/general-ledger' },
+      { name: 'GST Report', url: '/api/account/reports/gst' },
+      { name: 'Workflows', url: '/api/v1/workflow/definitions' },
+      { name: 'Finance Dashboard', url: '/api/dashboard/finance' },
+    ];
+
+    it('ACCOUNTANT: completely OMITS companyId query param across ALL modules for GET requests', () => {
+      localStorageMock.setItem('auth_user', JSON.stringify({
+        id: 'user-acc-1',
+        role: 'ACCOUNTANT',
+        companyId: 'MOHIT'
+      }));
+
+      const axiosMock = createMockAxiosInstance();
+
+      modulesToTest.forEach(({ name, url }) => {
+        const config = axiosMock.execute({
+          url,
+          method: 'GET',
+          params: { page: 0, size: 10, sortOrder: 'asc', companyId: 'MOHIT' }
+        });
+
+        assert.strictEqual(
+          config.params?.companyId,
+          undefined,
+          `[${name}] ACCOUNTANT must NOT have companyId in params`
+        );
+        assert.strictEqual(
+          'companyId' in (config.params || {}),
+          false,
+          `[${name}] companyId must be omitted completely for ACCOUNTANT`
+        );
+        assert.strictEqual(
+          config.headers['X-Company-Id'],
+          'MOHIT',
+          `[${name}] X-Company-Id header must be present for ACCOUNTANT`
+        );
+      });
+    });
+
+    it('ACCOUNTANT: Customers API query string /api/account/customers?page=0&size=10&sortOrder=asc&companyId=MOHIT strips companyId=MOHIT', () => {
+      localStorageMock.setItem('auth_user', JSON.stringify({
+        id: 'user-acc-1',
+        role: 'ACCOUNTANT',
+        companyId: 'MOHIT'
+      }));
+
+      const axiosMock = createMockAxiosInstance();
+
+      const config = axiosMock.execute({
+        url: '/api/account/customers?page=0&size=10&sortOrder=asc&companyId=MOHIT',
+        method: 'GET'
+      });
+
+      assert.strictEqual(
+        config.url,
+        '/api/account/customers?page=0&size=10&sortOrder=asc',
+        'Customers API URL must have companyId stripped completely'
+      );
+      assert.strictEqual(
+        config.params?.companyId,
+        undefined,
+        'Customers API params must not have companyId'
+      );
+      assert.strictEqual(
+        config.headers['X-Company-Id'],
+        'MOHIT',
+        'Customers API must include X-Company-Id header'
+      );
+    });
+
+    it('ACCOUNTANT: non-GET requests (POST, PUT, DELETE) completely OMIT companyId query param', () => {
+      localStorageMock.setItem('auth_user', JSON.stringify({
+        id: 'user-acc-1',
+        role: 'ACCOUNTANT',
+        companyId: 'MOHIT'
+      }));
+
+      const axiosMock = createMockAxiosInstance();
+
+      // POST Customers
+      const postConfig = axiosMock.execute({
+        url: '/api/account/customers',
+        method: 'POST',
+        data: { name: 'Acme Corp' },
+        params: { companyId: 'MOHIT' }
+      });
+      assert.strictEqual(postConfig.params?.companyId, undefined);
+      assert.strictEqual('companyId' in (postConfig.params || {}), false);
+      assert.strictEqual(postConfig.headers['X-Company-Id'], 'MOHIT');
+
+      // PUT Vendors
+      const putConfig = axiosMock.execute({
+        url: '/api/account/v1/vendors/123',
+        method: 'PUT',
+        data: { vendorName: 'Updated Vendor' },
+        params: { companyId: 'MOHIT' }
+      });
+      assert.strictEqual(putConfig.params?.companyId, undefined);
+      assert.strictEqual('companyId' in (putConfig.params || {}), false);
+      assert.strictEqual(putConfig.headers['X-Company-Id'], 'MOHIT');
+
+      // DELETE Sales Invoices
+      const deleteConfig = axiosMock.execute({
+        url: '/api/account/sales/invoices/456',
+        method: 'DELETE',
+        params: { companyId: 'MOHIT' }
+      });
+      assert.strictEqual(deleteConfig.params?.companyId, undefined);
+      assert.strictEqual('companyId' in (deleteConfig.params || {}), false);
+      assert.strictEqual(deleteConfig.headers['X-Company-Id'], 'MOHIT');
+    });
+
+    it('OWNER: INCLUDES active companyId query param across ALL modules for GET and non-GET requests', () => {
+      localStorageMock.setItem('auth_user', JSON.stringify({
+        id: 'owner-1',
+        membership: { memberType: 'OWNER' }
+      }));
+      localStorageMock.setItem('selected_company', JSON.stringify({
+        id: 'owner-active-company-uuid',
+        name: 'Owner Company'
+      }));
+
+      const axiosMock = createMockAxiosInstance();
+
+      modulesToTest.forEach(({ name, url }) => {
+        const config = axiosMock.execute({
+          url,
+          method: 'GET',
+          params: { page: 0, size: 10 }
+        });
+
+        assert.strictEqual(
+          config.params?.companyId,
+          'owner-active-company-uuid',
+          `[${name}] OWNER must receive companyId query parameter`
+        );
+        assert.strictEqual(
+          config.headers['X-Company-Id'],
+          'owner-active-company-uuid',
+          `[${name}] OWNER must receive X-Company-Id header`
+        );
+      });
+
+      // Non-GET: POST Customers
+      const postConfig = axiosMock.execute({
+        url: '/api/account/customers',
+        method: 'POST',
+        data: { name: 'Acme Corp' }
+      });
+      assert.strictEqual(postConfig.params?.companyId, 'owner-active-company-uuid');
+      assert.strictEqual(postConfig.headers['X-Company-Id'], 'owner-active-company-uuid');
+    });
+
+    it('SystemAdmin: INCLUDES active companyId query param across ALL modules for GET and non-GET requests', () => {
+      localStorageMock.setItem('auth_user', JSON.stringify({
+        id: 'sysadmin-1',
+        role: 'SystemAdmin'
+      }));
+      localStorageMock.setItem('selected_company', JSON.stringify({
+        id: 'sysadmin-active-company-uuid',
+        name: 'SysAdmin Company'
+      }));
+
+      const axiosMock = createMockAxiosInstance();
+
+      modulesToTest.forEach(({ name, url }) => {
+        const config = axiosMock.execute({
+          url,
+          method: 'GET',
+          params: { page: 0, size: 10 }
+        });
+
+        assert.strictEqual(
+          config.params?.companyId,
+          'sysadmin-active-company-uuid',
+          `[${name}] SystemAdmin must receive companyId query parameter`
+        );
+        assert.strictEqual(
+          config.headers['X-Company-Id'],
+          'sysadmin-active-company-uuid',
+          `[${name}] SystemAdmin must receive X-Company-Id header`
+        );
+      });
+
+      // Non-GET: PUT Products
+      const putConfig = axiosMock.execute({
+        url: '/api/inventory/products/item-1',
+        method: 'PUT',
+        data: { price: 99.99 }
+      });
+      assert.strictEqual(putConfig.params?.companyId, 'sysadmin-active-company-uuid');
+      assert.strictEqual(putConfig.headers['X-Company-Id'], 'sysadmin-active-company-uuid');
+    });
+
+    it('COMPANY_ADMIN: completely OMITS companyId query param (non-owner role)', () => {
+      localStorageMock.setItem('auth_user', JSON.stringify({
+        id: 'compadmin-1',
+        role: 'COMPANY_ADMIN',
+        companyId: 'comp-admin-company-id'
+      }));
+
+      const axiosMock = createMockAxiosInstance();
+
+      modulesToTest.forEach(({ name, url }) => {
+        const config = axiosMock.execute({
+          url,
+          method: 'GET',
+          params: { page: 0, companyId: 'comp-admin-company-id' }
+        });
+
+        assert.strictEqual(
+          config.params?.companyId,
+          undefined,
+          `[${name}] COMPANY_ADMIN must NOT receive companyId query param`
+        );
+        assert.strictEqual(
+          'companyId' in (config.params || {}),
+          false
+        );
+        assert.strictEqual(
+          config.headers['X-Company-Id'],
+          'comp-admin-company-id'
+        );
+      });
+    });
+
+    it('MEMBER: completely OMITS companyId query param (non-owner role)', () => {
+      localStorageMock.setItem('auth_user', JSON.stringify({
+        id: 'member-1',
+        role: 'MEMBER',
+        membership: { memberType: 'MEMBER' },
+        companyId: 'member-comp-id'
+      }));
+
+      const axiosMock = createMockAxiosInstance();
+
+      modulesToTest.forEach(({ name, url }) => {
+        const config = axiosMock.execute({
+          url,
+          method: 'GET',
+          params: { page: 0, companyId: 'member-comp-id' }
+        });
+
+        assert.strictEqual(
+          config.params?.companyId,
+          undefined,
+          `[${name}] MEMBER must NOT receive companyId query param`
+        );
+        assert.strictEqual(
+          'companyId' in (config.params || {}),
+          false
+        );
+        assert.strictEqual(
+          config.headers['X-Company-Id'],
+          'member-comp-id'
+        );
+      });
+    });
+
+    it('Documented endpoints intentionally retain companyId (e.g. SSO role API)', () => {
+      localStorageMock.setItem('auth_user', JSON.stringify({
+        id: 'user-acc-1',
+        role: 'ACCOUNTANT',
+        companyId: 'MOHIT'
+      }));
+
+      const axiosMock = createMockAxiosInstance();
+
+      // /api/sso/role is an explicit global endpoint that manages roles per company
+      const config = axiosMock.execute({
+        url: '/api/sso/role',
+        method: 'GET',
+        params: { page: 0, pageSize: 200, companyId: 'ea811382-0afc-4908-a209-9bedcc63c445' }
+      });
+
+      assert.strictEqual(
+        config.params?.companyId,
+        'ea811382-0afc-4908-a209-9bedcc63c445',
+        'Explicit SSO role management endpoint intentionally retains companyId'
+      );
     });
   });
 });

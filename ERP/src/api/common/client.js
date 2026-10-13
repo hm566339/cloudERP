@@ -5,7 +5,8 @@
  * all interceptor logic to the modular interceptors system.
  *
  * Every request flowing through this client automatically gets:
- * - Company ID/Code injection (request interceptor)
+ * - Company ID/Code injection for OWNER/SystemAdmin only (request interceptor)
+ * - X-Company-Id header for all users (gateway tenant context)
  * - Per-module 401 → refresh → retry (response interceptor)
  * - Gateway error retries (502-504)
  *

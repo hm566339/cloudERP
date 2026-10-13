@@ -1,4 +1,5 @@
 import { baseApi } from '../common/baseApi'
+import { isOwnerOrSystemAdminUser } from '../common/roleCompanyContext'
 
 // Customer Master Data — extracted from crm/crmApiSlice.js during API modularization.
 // NOTE: backend still exposes customers under /api/account/customers/*, not /api/customer/* — update URL if/when backend is modularized
@@ -19,11 +20,12 @@ export const customerApiSlice = baseApi.injectEndpoints({
     createCustomer: builder.mutation({
       query: (payload) => {
         const { companyId, company, includeCompanyId, data: nestedData, ...legacyData } = payload;
+        const isPrivileged = isOwnerOrSystemAdminUser();
         return {
           url: '/api/account/customers',
           method: 'POST',
-          params: includeCompanyId && companyId ? { companyId } : undefined,
-          headers: includeCompanyId && companyId ? { 'X-Company-Id': companyId } : undefined,
+          params: includeCompanyId && companyId && isPrivileged ? { companyId } : undefined,
+          headers: companyId ? { 'X-Company-Id': companyId } : undefined,
           data: { data: nestedData || legacyData },
         };
       },

@@ -3,6 +3,7 @@ import { removeCookie } from '../utils/cookieHelper'
 import store from '../app/store'
 import { addAlert } from '../features/notifications/notificationSlice'
 import { attachInterceptors } from '../api/common/interceptors'
+import { getActiveCompanyId, isOwnerOrSystemAdminUser } from '../api/common/roleCompanyContext'
 
 import { normalizeApiBaseUrl } from '../api/common/client'
 
@@ -55,10 +56,16 @@ export const getCompanyById = async (id) => {
  * Fetch finance dashboard for a company
  */
 export const getFinanceDashboard = async (companyId) => {
- const { data } = await API.get('/api/dashboard/finance', {
- params: { companyId },
- })
- return data
-}
+  const isPrivileged = isOwnerOrSystemAdminUser();
+  const effectiveCompanyId = companyId || getActiveCompanyId();
+  const params = {};
+  if (isPrivileged && effectiveCompanyId) {
+    params.companyId = effectiveCompanyId;
+  }
+  const { data } = await API.get('/api/dashboard/finance', {
+    params,
+  });
+  return data;
+};
 
 export default API
