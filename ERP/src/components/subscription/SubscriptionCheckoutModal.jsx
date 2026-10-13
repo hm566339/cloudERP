@@ -15,7 +15,8 @@ import {
   Clock,
   Loader2,
   Lock,
-  Check
+  Check,
+} from 'lucide-react';
 import {
   createSubscriptionCheckout,
   getOrganizationSubscription,
