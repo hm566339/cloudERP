@@ -16,7 +16,7 @@ import java.util.UUID;
 
 public interface VendorService {
 
-    VendorResponse createVendor(RequestWrapper<VendorRequest> request);
+    VendorResponse createVendor(UUID companyId1, RequestWrapper<VendorRequest> request);
 
     VendorResponse updateVendor(UUID vendorId, RequestWrapper<VendorRequest> request);
 
@@ -27,7 +27,7 @@ public interface VendorService {
     void deactivateVendor(UUID vendorId);
 
     VendorProfileResponse getVendorById(UUID vendorId);
-    
+
     List<com.erp.account.modules.vendor.dto.response.VendorAddressResponse> getVendorAddresses(UUID vendorId);
 
     VendorResponse getVendorByCode(String vendorCode);
