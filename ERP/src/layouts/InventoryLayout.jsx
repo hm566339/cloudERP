@@ -116,7 +116,7 @@ export default function InventoryLayout() {
     localStorage.clear();
     sessionStorage.clear();
 
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }, [dispatch, logoutApi, navigate])
 
   const handleSwitchCompany = useCallback(() => {

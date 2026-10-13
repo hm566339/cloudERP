@@ -33,6 +33,16 @@ function RouteLoading() {
   return <PageLoader message="Loading page…" />;
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname]);
+  return null;
+}
+
 
 
 // ─── Auth Pages ───────────────────────────────────────────────────────────────
@@ -496,9 +506,24 @@ export default function AppRoutes() {
     skip: shouldSkipSso,
   });
 
+  const [authTimedOut, setAuthTimedOut] = React.useState(false);
+
+  // Fallback safety timeout: If waiting for auth exceeds 10 seconds, timeout and release gate
+  React.useEffect(() => {
+    let timer;
+    if (isOnProtectedPage && (isSsoLoading || isSsoFetching || sessionStatus === 'checking' || sessionStatus === 'idle')) {
+      timer = setTimeout(() => {
+        setAuthTimedOut(true);
+      }, 10000);
+    } else {
+      setAuthTimedOut(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isOnProtectedPage, isSsoLoading, isSsoFetching, sessionStatus]);
+
   // Never render routes or route guards while auth initialization is in progress on PROTECTED pages.
   // On PUBLIC pages (e.g. /login, /o/:organizationCode/login), the page MUST render immediately.
-  const isAuthWaiting = !isRehydrated || (isOnProtectedPage && (isSsoLoading || isSsoFetching || sessionStatus === 'checking' || sessionStatus === 'idle'));
+  const isAuthWaiting = !authTimedOut && (!isRehydrated || (isOnProtectedPage && (isSsoLoading || isSsoFetching || sessionStatus === 'checking' || sessionStatus === 'idle')));
 
   if (isAuthWaiting) {
     return <RouteLoading />;
@@ -506,6 +531,7 @@ export default function AppRoutes() {
 
   return (
     <Suspense fallback={<RouteLoading />}>
+      <ScrollToTop />
       <Routes>
         {/* ── PUBLIC SAAS LANDING & TRIAL SIGNUP ── */}
         <Route path="/" element={<RootIndexHandler />} />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams, useParams } from 'react-router-dom';
+import { useNavigate, useLocation, Link, useSearchParams, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   ArrowRight,
@@ -73,6 +73,20 @@ export default function Login() {
   const [formError, setFormError] = useState('');
 
   const dispatch = useDispatch();
+  const location = useLocation();
+
+  const getDestination = (defaultPath) => {
+    const returnTo = sessionStorage.getItem('auth_return_to');
+    if (returnTo) {
+      sessionStorage.removeItem('auth_return_to');
+      return returnTo;
+    }
+    if (location.state?.from?.pathname) {
+      const from = location.state.from;
+      return from.pathname + (from.search || '') + (from.hash || '');
+    }
+    return defaultPath;
+  };
 
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const currentUser = useSelector(selectCurrentUser);
@@ -94,11 +108,11 @@ export default function Login() {
         currentUser.memberType?.toUpperCase() === 'OWNER';
 
       if (currentUser.role === 'super_admin') {
-        navigate('/super-admin/dashboard', { replace: true });
+        navigate(getDestination('/super-admin/dashboard'), { replace: true });
       } else if (isOwner) {
-        navigate('/owner/dashboard', { replace: true });
+        navigate(getDestination('/owner/dashboard'), { replace: true });
       } else {
-        navigate('/workspace', { replace: true });
+        navigate(getDestination('/workspace'), { replace: true });
       }
     }
   }, [isAuthenticated, currentUser, navigate, moduleCode]);
@@ -308,11 +322,11 @@ export default function Login() {
         mergedUser?.membership?.memberType?.toUpperCase() === 'OWNER';
 
       if (userRole === 'super_admin') {
-        navigate('/super-admin/dashboard', { replace: true });
+        navigate(getDestination('/super-admin/dashboard'), { replace: true });
       } else if (isOwnerRole) {
-        navigate('/owner/dashboard', { replace: true });
+        navigate(getDestination('/owner/dashboard'), { replace: true });
       } else {
-        navigate('/workspace', { replace: true });
+        navigate(getDestination('/workspace'), { replace: true });
       }
 
     } catch (err) {

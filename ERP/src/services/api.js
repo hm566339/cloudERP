@@ -40,7 +40,7 @@ API.interceptors.response.use(
 export const getCompanies = async (page = 0, pageSize = 10, search = '') => {
  const params = { page, pageSize }
  if (search?.trim()) params.search = search.trim()
- const { data } = await API.get('/api/companies', { params })
+ const { data } = await API.get('/api/sso/company', { params })
  return data
 }
 
@@ -48,7 +48,7 @@ export const getCompanies = async (page = 0, pageSize = 10, search = '') => {
  * Fetch a single company by UUID
  */
 export const getCompanyById = async (id) => {
- const { data } = await API.get(`/api/companies/${id}`)
+ const { data } = await API.get(`/api/sso/company/${id}`)
  return data
 }
 

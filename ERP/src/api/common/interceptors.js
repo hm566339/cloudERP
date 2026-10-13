@@ -275,10 +275,12 @@ export const attachRequestInterceptor = (instance) => {
           }
         }
 
-        console.log(
-          `[API REQUEST] ${config.method?.toUpperCase()} ${config.url}`,
-          config.data || config.params || '(no data)',
-        );
+        if (typeof import.meta !== 'undefined' && import.meta?.env?.DEV) {
+          console.log(
+            `[API REQUEST] ${config.method?.toUpperCase()} ${config.url}`,
+            config.data || config.params || '(no data)',
+          );
+        }
       } catch (e) {
         console.warn('[API REQUEST ERROR] Failed processing request config', e);
       }
@@ -306,7 +308,7 @@ export const attachResponseInterceptor = (instance) => {
   return instance.interceptors.response.use(
     // ── Success handler ──────────────────────────────────────────────────
     (response) => {
-      console.log(
+      if (typeof import.meta !== 'undefined' && import.meta?.env?.DEV) console.log(
         `[API RESPONSE] ${response.config.method.toUpperCase()} ${response.config.url} -> ${response.status}`,
         response.data,
       );
@@ -372,7 +374,7 @@ export const attachResponseInterceptor = (instance) => {
       // EXCEPT when the request is a '/me' probe. We want '/me' to attempt a refresh
       // so the user can be automatically logged back in if they have a valid refresh cookie.
       try {
-        const store = (typeof window !== 'undefined' && window.__REDUX_STORE__) || require('../../app/store').default;
+        const store = typeof window !== 'undefined' ? window.__REDUX_STORE__ : null;
         const state = store?.getState?.();
         const isMeProbe = requestUrl.includes('/me');
 
@@ -426,7 +428,7 @@ export const attachResponseInterceptor = (instance) => {
       setRefreshing(moduleName, true);
       originalRequest._retry = true;
 
-      const isSystemAdmin = isUserSystemAdmin();
+      const isSystemAdmin = isOwnerOrSystemAdminUser();
       let refreshEndpoint = isSystemAdmin
         ? '/api/sso/admin/token/refresh'
         : getRefreshEndpoint(moduleName);
@@ -492,7 +494,7 @@ export const attachResponseInterceptor = (instance) => {
           originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
         }
 
-        console.log(`[Auth] Token refreshed successfully for module "${moduleName}".`);
+        if (typeof import.meta !== 'undefined' && import.meta?.env?.DEV) console.log(`[Auth] Token refreshed successfully for module "${moduleName}".`);
 
         // Resolve all queued requests for this module with the new token
         processQueue(moduleName, null, freshToken);
@@ -511,8 +513,10 @@ export const attachResponseInterceptor = (instance) => {
         // DO NOT delete cookies, DO NOT call logout, DO NOT clear Redux.
         if (status === 500 || status === 502) {
           processQueue(moduleName, refreshError);
-          if (typeof window !== 'undefined') {
-            window.location.href = '/modules';
+          // Server error during refresh — preserve current path and redirect to login
+          if (typeof window !== 'undefined' && !isAuthPage(window.location.pathname)) {
+            sessionStorage.setItem('auth_return_to', window.location.pathname + window.location.search + window.location.hash);
+            window.location.href = '/login';
           }
           return Promise.reject(refreshError);
         }

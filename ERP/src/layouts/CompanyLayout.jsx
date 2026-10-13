@@ -218,8 +218,7 @@ export default function CompanyLayout() {
     localStorage.clear();
     sessionStorage.clear()
 
-    const targetPath = userRole === 'super_admin' ? '/admin-login' : '/login';
-    navigate(targetPath, { replace: true })
+    navigate('/', { replace: true })
   }, [dispatch, userRole, logoutApi, navigate])
 
   const handleSwitchCompany = useCallback(() => {

@@ -1,3 +1,7 @@
+/**
+ * @deprecated This router is orphaned and unused. App.jsx uses AppRoutes.jsx exclusively.
+ * Kept for reference only; do not import or mount in production.
+ */
 import React, { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoadingSpinner from '../components/common/LoadingSpinner'

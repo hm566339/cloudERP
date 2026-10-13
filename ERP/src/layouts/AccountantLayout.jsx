@@ -128,10 +128,6 @@ export default function AccountantLayout() {
 
   const entitledModules = useMemo(() => getEntitledModules(authContext), [authContext]);
 
-  if (entitledModules.length === 0 && authContext.user && (authContext.organization || authContext.currentCompany)) {
-    return <NoModuleAccessView />;
-  }
-
   const [logoutApi] = useLogoutApiMutation();
 
   const handleLogout = useCallback(async () => {
@@ -167,7 +163,7 @@ export default function AccountantLayout() {
     localStorage.clear();
     sessionStorage.clear();
 
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }, [dispatch, logoutApi, navigate])
 
   const handleSwitchCompany = useCallback(() => {
@@ -229,6 +225,10 @@ export default function AccountantLayout() {
       )}
     </>
   ), [sidebarLinks, location, closeMobileSidebar, selectedCompany, workspacePopupOpen, currentUser, handleSwitchCompany]);
+
+  if (entitledModules.length === 0 && authContext.user && (authContext.organization || authContext.currentCompany)) {
+    return <NoModuleAccessView />;
+  }
 
   return (
     <div className="h-screen bg-transparent flex font-sans selection:bg-zinc-200 selection:text-zinc-900 overflow-hidden">

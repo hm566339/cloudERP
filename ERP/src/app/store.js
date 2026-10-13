@@ -56,6 +56,14 @@ const rootReducer = (state, action) => {
       ...state,
       auth: {
         user: null,
+        organization: null,
+        currentCompany: null,
+        companies: [],
+        membership: null,
+        subscription: null,
+        accessMode: 'FULL',
+        modules: [],
+        features: [],
         permissions: [],
         sessionStatus: 'unauthenticated',
       },
@@ -63,6 +71,7 @@ const rootReducer = (state, action) => {
         selectedCompany: null,
         companyList: [],
       },
+      accountCompany: undefined,
       theme: state?.theme,
       hydration: state?.hydration,
     }
