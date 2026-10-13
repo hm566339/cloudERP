@@ -34,10 +34,11 @@ public class VendorController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<VendorResponse>> createVendor(
-            @Valid @RequestBody RequestWrapper<VendorRequest> requestWrapper) {
+            @Valid @RequestBody RequestWrapper<VendorRequest> requestWrapper,
+            @RequestParam(required = false) UUID companyId) {
         VendorRequest request = requestWrapper.unwrap();
         log.info("POST /api/v1/vendors - Create vendor: {}", request.getVendorCode());
-        VendorResponse response = vendorService.createVendor(requestWrapper);
+        VendorResponse response = vendorService.createVendor(companyId, requestWrapper);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Vendor created successfully"));
     }

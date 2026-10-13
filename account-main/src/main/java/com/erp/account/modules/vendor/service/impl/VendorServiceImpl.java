@@ -51,6 +51,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import com.erp.account.modules.company.entity.Company;
@@ -80,9 +81,14 @@ public class VendorServiceImpl implements VendorService {
     private final DebitNoteMapper debitNoteMapper;
 
     @Override
-    public VendorResponse createVendor(UUID companyId1, RequestWrapper<VendorRequest> requestWrapper) {
+    public VendorResponse createVendor(RequestWrapper<VendorRequest> requestWrapper) {
+        return createVendor(null, requestWrapper);
+    }
+
+    @Override
+    public VendorResponse createVendor(UUID companyIdParam, RequestWrapper<VendorRequest> requestWrapper) {
         VendorRequest request = requestWrapper.unwrap();
-        UUID companyId = TenantUtils.resolveCompanyId(companyId1);
+        UUID companyId = TenantUtils.resolveCompanyId(companyIdParam);
         log.info("Creating vendor: {} for company: {}", request.getVendorCode(), companyId);
         validateVendor(request);
         vendorValidationUtil.validateVendorForCreation(request.getVendorCode(), companyId);
@@ -502,7 +508,7 @@ public class VendorServiceImpl implements VendorService {
         }
         ChartOfAccount account = chartOfAccountRepository.findByIdAndIsDeletedFalse(accountId)
                 .orElseThrow(() -> new ValidationException("Invalid payable account: " + accountId));
-        if (account.getCompany() == null || !companyId.equals(account.getCompany().getId())) {
+        if (account.getCompany() == null || !Objects.equals(companyId, account.getCompany().getId())) {
             throw new ValidationException("Payable account must belong to the vendor company");
         }
         if (!Boolean.TRUE.equals(account.getIsActive())) {
