@@ -30,6 +30,7 @@ export function useAccessMode() {
       const planCode = ssoSubscription?.planCode || null;
 
       const isReadOnly = String(accessMode).toUpperCase() === 'READ_ONLY';
+      const isBlocked = String(accessMode).toUpperCase() === 'BLOCKED' || String(status).toUpperCase() === 'BLOCKED';
       const isTrial = ssoSubscription?.trialing === true || String(status).toUpperCase() === 'TRIALING';
       const isPending = String(status).toUpperCase() === 'PENDING';
       const isActive = !isReadOnly && !isBlocked && !isTrial && !isPending && String(status).toUpperCase() === 'ACTIVE';
@@ -67,6 +68,7 @@ export function useAccessMode() {
       isReadOnly: ctx.isReadOnly,
       isBlocked: ctx.isBlocked,
       isTrial: ctx.isTrial,
+      isPending: ctx.isPending || false,
       isActive: ctx.isActive,
       trialEndsAt: ctx.subscription.trialEndsAt,
       daysRemaining: ctx.subscription.daysRemaining,

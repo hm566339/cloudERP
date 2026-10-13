@@ -234,6 +234,7 @@ export function deriveOrganizationContext(user, selectedCompany, now = new Date(
     isReadOnly,
     isBlocked,
     isTrial,
+    isPending,
     isActive,
     badge,
   };
