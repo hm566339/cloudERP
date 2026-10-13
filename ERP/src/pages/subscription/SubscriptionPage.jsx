@@ -36,8 +36,7 @@ import {
 import { useAccessMode } from '../../hooks/useAccessMode';
 import { useSubscriptionPlans } from '../../hooks/useSubscriptionPlans';
 import { useAppSelector } from '../../app/hooks';
-import { selectAuthContext } from '../../features/auth/authSlice';
-import { createSubscriptionCheckout, verifySubscriptionPayment } from '../../api/sso/subscriptionPlan.api';
+import { createSubscriptionCheckout, verifySubscriptionPayment, cancelPendingCheckout } from '../../api/sso/subscriptionPlan.api';
 import { formatPlanLimit } from '../../utils/subscriptionPlanHelper';
 import OwnerLayout, { useIsOwnerLayout } from '../../layouts/OwnerLayout';
 
@@ -147,12 +146,17 @@ function SubscriptionContent() {
 
   const isCurrentPlan = useCallback((plan) => {
     if (!plan) return false;
+    // PENDING subscription is an uncompleted checkout attempt, not an active plan
+    if (subscription?.status === 'PENDING') {
+      if (isTrial && plan.isTrial) return true;
+      return false;
+    }
     if (subscription?.planId && plan.id === subscription.planId) return true;
     if (plan.code && currentPlanCode && plan.code.toUpperCase() === currentPlanCode) return true;
     if (isTrial && plan.isTrial) return true;
     if (!isTrial && plan.name && currentAccessPlanName && plan.name.toLowerCase() === currentAccessPlanName.toLowerCase()) return true;
     return false;
-  }, [subscription?.planId, currentPlanCode, isTrial, currentAccessPlanName]);
+  }, [subscription?.status, subscription?.planId, currentPlanCode, isTrial, currentAccessPlanName]);
 
   // Current plan object from the dynamic API plans list
   const activePlanObj = useMemo(() => {
@@ -289,6 +293,9 @@ function SubscriptionContent() {
         modal: {
           ondismiss: function () {
             setCheckoutLoading(false);
+            if (orgId && orderId) {
+              cancelPendingCheckout(orgId, orderId);
+            }
           },
         },
       };
@@ -297,6 +304,9 @@ function SubscriptionContent() {
       rzpInstance.on('payment.failed', function (resp) {
         setCheckoutError(resp.error?.description || 'Payment authorization cancelled or failed.');
         setCheckoutLoading(false);
+        if (orgId && orderId) {
+          cancelPendingCheckout(orgId, orderId);
+        }
       });
       rzpInstance.open();
     } catch (err) {

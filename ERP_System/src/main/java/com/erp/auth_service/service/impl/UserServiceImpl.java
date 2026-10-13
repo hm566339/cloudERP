@@ -1238,7 +1238,7 @@ public class UserServiceImpl implements UserService {
         // 2. Organization-level subscription fallback / merge
         if (organization != null && subscriptionRepository != null) {
             java.util.Optional<Subscription> orgSubOpt = subscriptionRepository
-                    .findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId());
+                    .findEffectiveByOrganizationId(organization.getId());
 
             if (orgSubOpt.isPresent()) {
                 Subscription orgSub = orgSubOpt.get();
@@ -1247,22 +1247,27 @@ public class UserServiceImpl implements UserService {
                         && orgSub.getTrialEndsAt().isAfter(LocalDateTime.now());
 
                 long daysRemaining = 0L;
-                if (orgSub.getTrialEndsAt() != null) {
+                if (isTrialing && orgSub.getTrialEndsAt() != null) {
                     daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
                             LocalDateTime.now(), orgSub.getTrialEndsAt());
                     if (daysRemaining < 0) daysRemaining = 0L;
-                } else if (orgSub.getCurrentPeriodEnd() != null) {
+                } else if (orgSub.getStatus() == SubscriptionStatus.ACTIVE && orgSub.getCurrentPeriodEnd() != null) {
                     daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
                             LocalDateTime.now(), orgSub.getCurrentPeriodEnd());
                     if (daysRemaining < 0) daysRemaining = 0L;
                 }
 
                 if (subscriptionCtx == null) {
+                    AccessMode subAccessMode = orgSub.getAccessMode();
+                    if (orgSub.getStatus() == SubscriptionStatus.PENDING) {
+                        subAccessMode = AccessMode.READ_ONLY;
+                    }
+
                     subscriptionCtx = SsoMeResponse.SubscriptionContext.builder()
                             .id(orgSub.getId())
                             .planCode(orgSub.getPlanCode())
                             .status(orgSub.getStatus())
-                            .accessMode(orgSub.getAccessMode())
+                            .accessMode(subAccessMode)
                             .trialStartedAt(orgSub.getTrialStartedAt())
                             .trialEndsAt(orgSub.getTrialEndsAt())
                             .currentPeriodStart(orgSub.getCurrentPeriodStart())
@@ -1271,16 +1276,20 @@ public class UserServiceImpl implements UserService {
                             .daysRemaining(daysRemaining)
                             .build();
 
-                    effectiveAccessMode = orgSub.getAccessMode();
+                    effectiveAccessMode = subAccessMode;
                     if (orgSub.getStatus() == SubscriptionStatus.EXPIRED
                             || (orgSub.getStatus() == SubscriptionStatus.TRIALING && orgSub.getTrialEndsAt() != null
-                                    && !orgSub.getTrialEndsAt().isAfter(LocalDateTime.now()))) {
+                                    && !orgSub.getTrialEndsAt().isAfter(LocalDateTime.now()))
+                            || orgSub.getStatus() == SubscriptionStatus.PENDING) {
                         effectiveAccessMode = AccessMode.READ_ONLY;
                     }
                 }
 
-                if (effectivePlan == null && orgSub.getStatus() != SubscriptionStatus.EXPIRED
-                        && orgSub.getAccessMode() != AccessMode.BLOCKED) {
+                // Grant plan entitlements ONLY if ACTIVE or legitimately TRIALING (NEVER for PENDING unconfirmed)
+                boolean isValidPaidOrTrial = orgSub.getStatus() == SubscriptionStatus.ACTIVE
+                        || (orgSub.getStatus() == SubscriptionStatus.TRIALING && isTrialing);
+
+                if (effectivePlan == null && isValidPaidOrTrial && orgSub.getAccessMode() != AccessMode.BLOCKED) {
                     if (orgSub.getPlan() != null) {
                         effectivePlan = orgSub.getPlan();
                     } else if (orgSub.getPlanCode() != null && subscriptionPlanRepository != null) {
@@ -1296,8 +1305,9 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        // 3. Fallback to default trial plan if still null
-        if (effectivePlan == null && subscriptionPlanRepository != null) {
+        // 3. Fallback to default trial plan if still null (ONLY if access mode permits and not expired/read-only)
+        if (effectivePlan == null && subscriptionPlanRepository != null
+                && effectiveAccessMode != AccessMode.BLOCKED && effectiveAccessMode != AccessMode.READ_ONLY) {
             effectivePlan = subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("30_DAY_FREE_TRIAL")
                     .or(() -> subscriptionPlanRepository.findFirstByIsTrialTrueAndActiveTrue())
                     .orElse(null);

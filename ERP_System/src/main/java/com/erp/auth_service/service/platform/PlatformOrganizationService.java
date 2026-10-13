@@ -73,7 +73,7 @@ public class PlatformOrganizationService {
         long userCount = organizationMemberRepository.countByOrganization_Id(organizationId);
         long companyCount = companyRepository.countByOrganization_Id(organizationId);
 
-        Subscription sub = subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(organizationId).orElse(null);
+        Subscription sub = subscriptionRepository.findEffectiveByOrganizationId(organizationId).orElse(null);
 
         List<String> enabledModules = organizationModuleRepository.findByOrganization_IdAndEnabledTrue(organizationId).stream()
                 .map(om -> om.getModule() != null ? om.getModule().getName() : null)
@@ -158,7 +158,7 @@ public class PlatformOrganizationService {
         if (!organizationRepository.existsById(organizationId)) {
             throw new ResourceNotFoundException("Organization not found: " + organizationId);
         }
-        return subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(organizationId)
+        return subscriptionRepository.findEffectiveByOrganizationId(organizationId)
                 .orElseThrow(() -> new ResourceNotFoundException("No subscription found for organization: " + organizationId));
     }
 
@@ -181,7 +181,7 @@ public class PlatformOrganizationService {
     private PlatformOrganizationSummaryResponse toSummaryResponse(Organization org) {
         long userCount = organizationMemberRepository.countByOrganization_Id(org.getId());
         long companyCount = companyRepository.countByOrganization_Id(org.getId());
-        Subscription sub = subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(org.getId()).orElse(null);
+        Subscription sub = subscriptionRepository.findEffectiveByOrganizationId(org.getId()).orElse(null);
 
         return PlatformOrganizationSummaryResponse.builder()
                 .id(org.getId())

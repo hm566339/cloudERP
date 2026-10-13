@@ -2704,7 +2704,7 @@ public class AuthServiceImpl implements AuthService {
                                                 ? session.getOrganization().getAccessMode()
                                                 : AccessMode.FULL;
                                 Optional<Subscription> subOpt = subscriptionRepository
-                                                .findTopByOrganization_IdOrderByCreatedAtDesc(
+                                                .findEffectiveByOrganizationId(
                                                                 session.getOrganization().getId());
                                 if (subOpt.isPresent()) {
                                         Subscription sub = subOpt.get();
@@ -2712,6 +2712,7 @@ public class AuthServiceImpl implements AuthService {
                                                 effectiveMode = sub.getAccessMode();
                                         }
                                         if (sub.getStatus() == com.erp.auth_service.utility.SubscriptionStatus.EXPIRED
+                                                        || sub.getStatus() == com.erp.auth_service.utility.SubscriptionStatus.PENDING
                                                         || (sub.getStatus() == com.erp.auth_service.utility.SubscriptionStatus.TRIALING
                                                                         && sub.getTrialEndsAt() != null
                                                                         && !sub.getTrialEndsAt().isAfter(

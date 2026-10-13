@@ -75,3 +75,17 @@ export const verifySubscriptionPayment = async (organizationId, payload) => {
   return response.data?.data || response.data;
 };
 
+export const cancelPendingCheckout = async (organizationId, orderId) => {
+  try {
+    const response = await apiClient.post(`/api/sso/subscriptions/${organizationId}/checkout/cancel`, { orderId });
+    return response.data?.data || response.data;
+  } catch (err) {
+    console.warn('cancelPendingCheckout error:', err?.response?.data?.message || err.message);
+  }
+};
+
+export const activateFreeTrial = async (organizationId, planId) => {
+  const response = await apiClient.post(`/api/sso/subscriptions/${organizationId}/activate-trial`, { planId });
+  return response.data?.data || response.data;
+};
+

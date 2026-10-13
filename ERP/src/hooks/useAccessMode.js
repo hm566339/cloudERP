@@ -30,9 +30,9 @@ export function useAccessMode() {
       const planCode = ssoSubscription?.planCode || null;
 
       const isReadOnly = String(accessMode).toUpperCase() === 'READ_ONLY';
-      const isBlocked = String(accessMode).toUpperCase() === 'BLOCKED';
       const isTrial = ssoSubscription?.trialing === true || String(status).toUpperCase() === 'TRIALING';
-      const isActive = !isReadOnly && !isBlocked && !isTrial;
+      const isPending = String(status).toUpperCase() === 'PENDING';
+      const isActive = !isReadOnly && !isBlocked && !isTrial && !isPending && String(status).toUpperCase() === 'ACTIVE';
 
       // Organization context from SSO
       const orgCode = currentUser?.organizationCode || null;
@@ -44,6 +44,7 @@ export function useAccessMode() {
         isReadOnly,
         isBlocked,
         isTrial,
+        isPending,
         isActive,
         trialEndsAt,
         daysRemaining,
@@ -89,6 +90,9 @@ function buildBadge(accessMode, status, daysRemaining) {
   }
   if (normAccess === 'READ_ONLY' || normStatus === 'EXPIRED') {
     return { show: true, text: 'Trial Expired • Read-Only', shortText: 'Read-Only', type: 'read_only', days: 0 };
+  }
+  if (normStatus === 'PENDING') {
+    return { show: true, text: 'Payment Pending', shortText: 'Pending', type: 'pending', days: 0 };
   }
   if (normStatus === 'TRIALING') {
     const days = daysRemaining != null ? daysRemaining : null;

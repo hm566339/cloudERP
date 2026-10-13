@@ -33,6 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -144,6 +146,13 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                             .organizationId(organization.getId())
                             .organizationName(organization.getDisplayName() != null ? organization.getDisplayName() : organization.getLegalName())
                             .build();
+                } else if (pendingSub.getPlan() != null && !pendingSub.getPlan().getId().equals(plan.getId())) {
+                    // Organization is switching to a different plan: safely cancel the older uncompleted pending checkout
+                    log.info("Cancelling prior pending checkout for plan [{}] in favor of new checkout for plan [{}]",
+                            pendingSub.getPlan().getCode(), plan.getCode());
+                    pendingSub.setStatus(SubscriptionStatus.CANCELLED);
+                    pendingSub.setCancelledAt(LocalDateTime.now());
+                    subscriptionRepository.save(pendingSub);
                 }
             }
 
@@ -216,9 +225,41 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                 .filter(s -> s.getPlan() != null && s.getPlan().getId().equals(plan.getId()))
                 .orElseGet(() -> Subscription.builder()
                         .organization(organization)
-                        .trialStartedAt(LocalDateTime.now())
-                        .trialEndsAt(LocalDateTime.now())
                         .build());
+
+        // Check if organization has an ongoing active trial or historical trial to preserve
+        Optional<Subscription> existingTrialOpt = subscriptionRepository
+                .findTopByOrganization_IdAndStatus(organization.getId(), SubscriptionStatus.TRIALING);
+
+        if (existingTrialOpt.isPresent()) {
+            Subscription trialSub = existingTrialOpt.get();
+            subscription.setTrialStartedAt(trialSub.getTrialStartedAt());
+            subscription.setTrialEndsAt(trialSub.getTrialEndsAt());
+        } else {
+            // Check any existing subscription with valid trial dates
+            Optional<Subscription> anyWithTrial = subscriptionRepository
+                    .findAllByOrganization_IdOrderByCreatedAtDesc(organization.getId())
+                    .stream()
+                    .filter(s -> s.getTrialStartedAt() != null && s.getTrialEndsAt() != null
+                            && s.getTrialEndsAt().isAfter(s.getTrialStartedAt()))
+                    .findFirst();
+            if (anyWithTrial.isPresent()) {
+                subscription.setTrialStartedAt(anyWithTrial.get().getTrialStartedAt());
+                subscription.setTrialEndsAt(anyWithTrial.get().getTrialEndsAt());
+            } else if (Boolean.TRUE.equals(plan.getIsTrial())) {
+                LocalDateTime start = LocalDateTime.now();
+                int durationDays = (plan.getDurationDays() != null && plan.getDurationDays() > 0) ? plan.getDurationDays() : 30;
+                subscription.setTrialStartedAt(start);
+                subscription.setTrialEndsAt(start.plusDays(durationDays));
+            } else {
+                // For a paid plan checkout with no prior trial, do NOT set identical timestamps!
+                if (subscription.getTrialStartedAt() == null || subscription.getTrialEndsAt() == null
+                        || !subscription.getTrialEndsAt().isAfter(subscription.getTrialStartedAt())) {
+                    subscription.setTrialStartedAt(null);
+                    subscription.setTrialEndsAt(null);
+                }
+            }
+        }
 
         subscription.setPlan(plan);
         subscription.setPlanCode(plan.getCode());
@@ -227,7 +268,8 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         subscription.setPlanVersionCode(plan.getPlanVersion() != null ? plan.getPlanVersion() : "v1");
         subscription.setCurrency(plan.getCurrency() != null ? plan.getCurrency() : "INR");
         subscription.setStatus(SubscriptionStatus.PENDING);
-        subscription.setAccessMode(organization.getAccessMode() != null ? organization.getAccessMode() : AccessMode.FULL);
+        // Unpaid pending subscription MUST NOT grant FULL access
+        subscription.setAccessMode(AccessMode.READ_ONLY);
         subscription.setRazorpayOrderId(rzpOrderId);
 
         Subscription saved = subscriptionRepository.save(subscription);
@@ -398,13 +440,119 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
     }
 
     @Override
+    @Transactional
+    public void cancelPendingCheckout(UUID organizationId, String orderId) {
+        if (!organizationRepository.existsById(organizationId)) {
+            throw new ResourceNotFoundException("Organization not found: " + organizationId);
+        }
+        assertOrganizationManagementAccess(organizationId);
+
+        List<Subscription> pendings = subscriptionRepository.findAllByOrganization_IdOrderByCreatedAtDesc(organizationId)
+                .stream()
+                .filter(s -> s.getStatus() == SubscriptionStatus.PENDING)
+                .filter(s -> orderId == null || orderId.isBlank() || orderId.equals(s.getRazorpayOrderId()))
+                .toList();
+
+        for (Subscription pending : pendings) {
+            pending.setStatus(SubscriptionStatus.CANCELLED);
+            pending.setCancelledAt(LocalDateTime.now());
+            subscriptionRepository.save(pending);
+            log.info("Safely cancelled pending checkout order: erpSubId={}, rzpOrderId={}",
+                    pending.getId(), pending.getRazorpayOrderId());
+
+            if (pending.getRazorpayOrderId() != null) {
+                paymentRepository.findByRazorpayOrderId(pending.getRazorpayOrderId()).ifPresent(p -> {
+                    if ("PENDING".equalsIgnoreCase(p.getStatus())) {
+                        p.setStatus("CANCELLED");
+                        paymentRepository.save(p);
+                    }
+                });
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public Subscription activateTrial(UUID organizationId, String planIdOrCode) {
+        Organization organization = organizationRepository.findById(organizationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found: " + organizationId));
+        assertOrganizationManagementAccess(organizationId);
+
+        // Check if organization already has an active paid subscription
+        Optional<Subscription> activeOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.ACTIVE);
+        if (activeOpt.isPresent()) {
+            Subscription active = activeOpt.get();
+            if (active.getCurrentPeriodEnd() == null || active.getCurrentPeriodEnd().isAfter(LocalDateTime.now())) {
+                throw new BadRequestException("Organization already has an active paid subscription");
+            }
+        }
+
+        // Check if organization already has an active trial
+        Optional<Subscription> trialingOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.TRIALING);
+        if (trialingOpt.isPresent()) {
+            Subscription existingTrial = trialingOpt.get();
+            if (existingTrial.getTrialEndsAt() != null && existingTrial.getTrialEndsAt().isAfter(LocalDateTime.now())) {
+                log.info("Organization [{}] already has an active trial until {}", organizationId, existingTrial.getTrialEndsAt());
+                return existingTrial;
+            }
+        }
+
+        // Check if organization already completed or expired their free trial
+        boolean hadExpiredTrial = subscriptionRepository.findAllByOrganization_IdOrderByCreatedAtDesc(organizationId).stream()
+                .anyMatch(s -> s.getStatus() == SubscriptionStatus.EXPIRED ||
+                        (s.getStatus() == SubscriptionStatus.TRIALING && s.getTrialEndsAt() != null && !s.getTrialEndsAt().isAfter(LocalDateTime.now())));
+        if (hadExpiredTrial) {
+            throw new BadRequestException("Organization has already completed or expired their free trial.");
+        }
+
+        // Resolve trial plan
+        SubscriptionPlan trialPlan;
+        if (planIdOrCode != null && !planIdOrCode.isBlank()) {
+            trialPlan = resolvePlan(planIdOrCode);
+        } else {
+            trialPlan = subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("30_DAY_FREE_TRIAL")
+                    .or(() -> subscriptionPlanRepository.findFirstByIsTrialTrueAndActiveTrue())
+                    .orElseThrow(() -> new ResourceNotFoundException("Default trial plan not found"));
+        }
+
+        LocalDateTime startedAt = LocalDateTime.now();
+        int durationDays = (trialPlan.getDurationDays() != null && trialPlan.getDurationDays() > 0)
+                ? trialPlan.getDurationDays() : 30;
+        LocalDateTime trialEndsAt = startedAt.plusDays(durationDays);
+
+        Subscription trialSubscription = Subscription.builder()
+                .organization(organization)
+                .plan(trialPlan)
+                .planCode(trialPlan.getCode())
+                .planVersionCode(trialPlan.getPlanVersion() != null ? trialPlan.getPlanVersion() : "v1")
+                .price(BigDecimal.ZERO)
+                .priceAtSubscription(BigDecimal.ZERO)
+                .currency(trialPlan.getCurrency() != null ? trialPlan.getCurrency() : "INR")
+                .status(SubscriptionStatus.TRIALING)
+                .accessMode(AccessMode.FULL)
+                .trialStartedAt(startedAt)
+                .trialEndsAt(trialEndsAt)
+                .currentPeriodStart(startedAt)
+                .currentPeriodEnd(trialEndsAt)
+                .build();
+
+        Subscription saved = subscriptionRepository.save(trialSubscription);
+
+        organization.setAccessMode(AccessMode.FULL);
+        organizationRepository.save(organization);
+
+        log.info("Activated free trial for organization [{}] until {}", organizationId, trialEndsAt);
+        return saved;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Subscription getOrganizationSubscription(UUID organizationId) {
         if (!organizationRepository.existsById(organizationId)) {
             throw new ResourceNotFoundException("Organization not found: " + organizationId);
         }
         assertOrganizationManagementAccess(organizationId);
-        return subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(organizationId)
+        return subscriptionRepository.findEffectiveByOrganizationId(organizationId)
                 .orElseThrow(() -> new ResourceNotFoundException("No subscription found for organization: " + organizationId));
     }
 

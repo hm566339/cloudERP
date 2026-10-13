@@ -52,6 +52,10 @@ export function deriveSubscriptionStatus({ status, accessMode, trialEndsAt, now 
     return 'EXPIRED';
   }
 
+  if (normStatus === 'PENDING') {
+    return 'PENDING';
+  }
+
   if (normStatus === 'ACTIVE') {
     return 'ACTIVE';
   }
@@ -107,6 +111,18 @@ export function formatTrialBadge({ status, accessMode, daysRemaining }) {
       full: 'Trial Expired • Read-Only',
       short: 'Read-Only',
       type: 'read_only',
+      days: 0,
+    };
+  }
+
+  if (normStatus === 'PENDING') {
+    return {
+      show: true,
+      text: 'Payment Pending',
+      shortText: 'Pending',
+      full: 'Payment Pending',
+      short: 'Pending',
+      type: 'pending',
       days: 0,
     };
   }
@@ -179,6 +195,7 @@ export function deriveOrganizationContext(user, selectedCompany, now = new Date(
   const isReadOnly = String(rawAccess).toUpperCase() === 'READ_ONLY' || status === 'EXPIRED';
   const isBlocked = String(rawAccess).toUpperCase() === 'BLOCKED' || status === 'BLOCKED';
   const isTrial = status === 'TRIALING';
+  const isPending = status === 'PENDING';
   const isActive = status === 'ACTIVE';
 
   const badge = formatTrialBadge({

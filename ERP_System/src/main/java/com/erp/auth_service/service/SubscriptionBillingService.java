@@ -12,6 +12,10 @@ public interface SubscriptionBillingService {
 
     void cancelSubscription(UUID subscriptionId);
 
+    void cancelPendingCheckout(UUID organizationId, String orderId);
+
+    Subscription activateTrial(UUID organizationId, String planIdOrCode);
+
     Subscription verifyAndActivatePayment(UUID organizationId, com.erp.auth_service.dto.subscription.PaymentVerificationRequest request);
 
     Subscription getOrganizationSubscription(UUID organizationId);

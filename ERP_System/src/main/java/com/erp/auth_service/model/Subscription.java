@@ -61,10 +61,10 @@ public class Subscription {
     @Builder.Default
     private AccessMode accessMode = AccessMode.FULL;
 
-    @Column(name = "trial_started_at", nullable = false)
+    @Column(name = "trial_started_at")
     private LocalDateTime trialStartedAt;
 
-    @Column(name = "trial_ends_at", nullable = false)
+    @Column(name = "trial_ends_at")
     private LocalDateTime trialEndsAt;
 
     @Column(name = "current_period_start")

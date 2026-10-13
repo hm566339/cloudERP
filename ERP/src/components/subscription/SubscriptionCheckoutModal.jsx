@@ -16,8 +16,12 @@ import {
   Loader2,
   Lock,
   Check
-} from 'lucide-react';
-import { createSubscriptionCheckout, getOrganizationSubscription, verifySubscriptionPayment } from '../../api/sso/subscriptionPlan.api';
+import {
+  createSubscriptionCheckout,
+  getOrganizationSubscription,
+  verifySubscriptionPayment,
+  cancelPendingCheckout,
+} from '../../api/sso/subscriptionPlan.api';
 import { useDispatch } from 'react-redux';
 import { authApi } from '../../features/auth/services/authApi';
 import { formatPlanLimit } from '../../utils/subscriptionPlanHelper';
@@ -229,6 +233,9 @@ export default function SubscriptionCheckoutModal({
         modal: {
           ondismiss: function () {
             setIsLoading(false);
+            if (orgId && orderId) {
+              cancelPendingCheckout(orgId, orderId);
+            }
           },
         },
       };
@@ -238,6 +245,9 @@ export default function SubscriptionCheckoutModal({
         setIsLoading(false);
         const failDesc = resp.error?.description || resp.error?.reason || 'Payment transaction failed or was cancelled.';
         setErrorMessage(failDesc);
+        if (orgId && orderId) {
+          cancelPendingCheckout(orgId, orderId);
+        }
       });
 
       rzpInstance.open();

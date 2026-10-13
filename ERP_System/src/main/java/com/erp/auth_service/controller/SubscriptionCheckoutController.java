@@ -43,6 +43,26 @@ public class SubscriptionCheckoutController {
         return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Subscription cancelled successfully")));
     }
 
+    @PostMapping("/{organizationId}/checkout/cancel")
+    public ResponseEntity<ResponseWrapper<Map<String, String>>> cancelPendingCheckout(
+            @PathVariable UUID organizationId,
+            @RequestBody(required = false) Map<String, String> body) {
+
+        String orderId = body != null ? body.get("orderId") : null;
+        subscriptionBillingService.cancelPendingCheckout(organizationId, orderId);
+        return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Pending checkout cancelled successfully")));
+    }
+
+    @PostMapping("/{organizationId}/activate-trial")
+    public ResponseEntity<ResponseWrapper<Subscription>> activateTrial(
+            @PathVariable UUID organizationId,
+            @RequestBody(required = false) Map<String, String> body) {
+
+        String planId = body != null ? body.get("planId") : null;
+        Subscription subscription = subscriptionBillingService.activateTrial(organizationId, planId);
+        return ResponseEntity.ok(ResponseWrapper.success(subscription));
+    }
+
     @GetMapping("/{organizationId}/current")
     public ResponseEntity<ResponseWrapper<Subscription>> getCurrent(
             @PathVariable UUID organizationId) {
