@@ -211,7 +211,7 @@ describe('Owner Subscription Plan & Payment Flow Integration Tests', () => {
   // 3. Checkout Pricing & GST Breakdown (computeCheckoutPricing)
   // ──────────────────────────────────────────────────────────────────────────
   describe('3. Checkout Pricing & GST Breakdown (computeCheckoutPricing)', () => {
-    it('computes 18% GST and total amount for paid subscription tier', () => {
+    it('computes 18% GST and total amount when taxRate is explicitly passed', () => {
       const pricing = computeCheckoutPricing(4999, 'INR', 0.18);
 
       assert.strictEqual(pricing.isFree, false);
@@ -220,6 +220,18 @@ describe('Owner Subscription Plan & Payment Flow Integration Tests', () => {
       assert.strictEqual(pricing.totalAmount, 5898.82);
       assert.strictEqual(pricing.currencySymbol, '₹');
       assert.strictEqual(pricing.formattedBasePrice, '₹4,999');
+    });
+
+    it('defaults to 0 tax rate so frontend does not add GST to plan price', () => {
+      const pricing = computeCheckoutPricing(4999, 'INR');
+
+      assert.strictEqual(pricing.isFree, false);
+      assert.strictEqual(pricing.basePrice, 4999);
+      assert.strictEqual(pricing.taxAmount, 0);
+      assert.strictEqual(pricing.totalAmount, 4999);
+      assert.strictEqual(pricing.currencySymbol, '₹');
+      assert.strictEqual(pricing.formattedBasePrice, '₹4,999');
+      assert.strictEqual(pricing.formattedTotal, '₹4,999');
     });
 
     it('handles free trial plan correctly', () => {

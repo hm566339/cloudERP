@@ -236,7 +236,7 @@ export default function TrialSignupPage() {
           <div className="flex items-center gap-3">
             <span className="text-xs text-zinc-500 hidden sm:inline">Already have an account?</span>
             <Link
-              to="/modules"
+              to="/login"
               className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 transition-colors"
             >
               Sign In
@@ -363,7 +363,7 @@ export default function TrialSignupPage() {
                       navigate(`/o/${signupSuccessData.organization.code}/login`);
                       return;
                     }
-                    navigate('/modules');
+                    navigate('/login');
                   }}
                   className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 text-white text-sm font-semibold hover:bg-zinc-800 transition-all shadow-sm group"
                 >

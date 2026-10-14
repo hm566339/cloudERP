@@ -364,8 +364,7 @@ export default function StockTransferDetails() {
             <table className="w-full text-left border-collapse min-w-[640px]">
               <thead>
                 <tr className="bg-zinc-50 border-b border-zinc-200 text-[8.8px] uppercase tracking-wider text-zinc-500">
-                    <th className="w-16">S.No.</th>
-                  <th className="font-bold py-3 px-4 w-12">#</th>
+                    <th className="font-bold py-3 px-4 w-12">#</th>
                   <th className="font-bold py-3 px-4 min-w-[120px]">Product ID *</th>
                   <th className="font-bold py-3 px-4 min-w-[96px]">UOM *</th>
                   <th className="font-bold py-3 px-4 text-right min-w-[80px]">Quantity *</th>
@@ -385,7 +384,6 @@ export default function StockTransferDetails() {
                 ) : (
                   lines.map((line, index) => (
                     <tr key={line._tempId} className="group hover:bg-zinc-50/50 transition-colors">
-                      <td className="text-zinc-500 font-medium">{typeof page !== 'undefined' && typeof size !== 'undefined' ? (page * size) + index + 1 : index + 1}</td>
                       <td className="py-2 px-4 text-[9.6px] font-medium text-zinc-400">
                         {index + 1}
                       </td>

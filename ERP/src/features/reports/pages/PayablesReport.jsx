@@ -6,6 +6,7 @@ import { Search, Filter, FileText } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { reportsApi } from '../../../api/account';
 import SortableHeader from '../../../components/common/SortableHeader';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
 export default function PayablesReport() {
   const companyId = useParams().companyId || JSON.parse(localStorage.getItem("selected_company"))?.id || JSON.parse(localStorage.getItem("auth_user"))?.companyId;;
@@ -108,7 +109,9 @@ export default function PayablesReport() {
               <tbody className="staggered-list">
                 {displayedData.map((item, idx) => (
                   <tr key={item.id || idx}>
-                    <td className="text-center font-medium text-zinc-500">{(page * pageSize) + idx + 1}</td>
+                    <td className="text-center font-medium text-zinc-500 tabular-nums">
+                      {getSerialNumber({ page, pageSize, rowIndex: idx, pageBase: 0 })}
+                    </td>
                     <td>
                       <div className="flex items-center gap-2">
                         <FileText size={14} className="text-zinc-400" />

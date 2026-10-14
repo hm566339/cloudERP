@@ -47,7 +47,7 @@ export default function RoleRoute({ children, allowedRoles = [], requiredPermiss
   }
 
   if (companyId && selectedCompany && selectedCompany.id.toString() !== companyId.toString()) {
-    return <Navigate to="/modules" replace />
+    return <Navigate to="/company-select" replace />
   }
 
   // Enforce specific module access via RBAC hook

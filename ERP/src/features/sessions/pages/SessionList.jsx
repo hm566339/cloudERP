@@ -226,7 +226,7 @@ export default function SessionList() {
 
   return (
     <div 
-      className="w-full max-w-none px-[24px] sm:px-[32px] py-[24px] space-y-6 animate-fade-in pb-12"
+      className="w-full max-w-none px-6 sm:px-8 py-6 space-y-6 animate-fade-in pb-12"
       style={{ width: '100%', maxWidth: 'none' }}
     >
       {/* ── Page Header ── */}

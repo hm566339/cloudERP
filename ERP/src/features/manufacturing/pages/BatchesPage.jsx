@@ -8,6 +8,7 @@ import SortableHeader from '../../../components/common/SortableHeader'
 import Pagination from '../../../components/common/Pagination'
 import useApiFilters from '../../../hooks/useApiFilters'
 import FILTER_CONFIGS from '../../../constants/filterConfigs'
+import { getSerialNumber } from '../../../utils/serialNumberHelper'
 
 export default function BatchesPage() {
   const companyId = useParams().companyId || JSON.parse(localStorage.getItem("selected_company"))?.id || JSON.parse(localStorage.getItem("auth_user"))?.companyCode;
@@ -92,7 +93,7 @@ export default function BatchesPage() {
  )}
  {paginated.map((b, index) => (
  <tr key={b.id}>
-                    <td className="text-center font-medium text-zinc-500">{(page * (pageSize || 10)) + index + 1}</td>
+                    <td className="text-center font-medium text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
  <td>
  <div className="flex items-center gap-2">
  <PackageOpen size={14} className="text-zinc-400" />

@@ -103,17 +103,17 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
   return (
     <div className="fixed inset-0 z-[600] flex bg-zinc-50 overflow-hidden">
       {/* Top Header */}
-      <div className="absolute top-0 left-0 right-0 h-[48px] bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-6 z-10 shadow-md">
+      <div className="absolute top-0 left-0 right-0 h-12 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-6 z-10 shadow-md">
         <h1 className="text-[13.6px] font-bold text-white flex items-center gap-2.5">
           <Printer size={20} className="text-zinc-300" />
           Print Invoice {invoiceNo && <span className="text-zinc-400 font-normal ml-2">({invoiceNo})</span>}
         </h1>
         <button onClick={onClose} className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors" title="Close Print Modal">
-          <X size={22} />
+          <X size={20} />
         </button>
       </div>
 
-      <div className="flex w-full h-full pt-[48px]">
+      <div className="flex w-full h-full pt-12">
         {/* Left Panel: Preview */}
         <div className="flex-[7] bg-zinc-400/80 p-8 flex items-center justify-center overflow-hidden relative">
           <div className="w-full h-full max-w-5xl mx-auto flex items-center justify-center shadow-2xl bg-white rounded-sm overflow-hidden border border-zinc-300/50">

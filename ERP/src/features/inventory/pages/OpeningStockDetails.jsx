@@ -314,8 +314,7 @@ export default function OpeningStockDetails() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-zinc-200 text-[8.8px] uppercase tracking-wider text-zinc-500 font-bold bg-zinc-50/50">
-                    <th className="w-16">S.No.</th>
-                      <th className="px-3 py-2 w-10 text-center">#</th>
+                    <th className="px-3 py-2 w-10 text-center">#</th>
                       <th className="px-3 py-2 min-w-[120px]">Product ID *</th>
                       <th className="px-3 py-2 min-w-[96px]">Location ID</th>
                       <th className="px-3 py-2 w-24">Qty *</th>
@@ -327,8 +326,7 @@ export default function OpeningStockDetails() {
                   <tbody>
                     {formData.lines.map((line, index) => (
                     <tr key={index} className="border-b border-zinc-100 hover:bg-zinc-50/30 transition-colors group">
-                      <td className="text-zinc-500 font-medium">{typeof page !== 'undefined' && typeof size !== 'undefined' ? (page * size) + index + 1 : index + 1}</td>
-                        <td className="px-3 py-2 text-center text-xs font-medium text-zinc-400">
+                      <td className="px-3 py-2 text-center text-xs font-medium text-zinc-400">
                           {index + 1}
                         </td>
                         <td className="px-3 py-2">

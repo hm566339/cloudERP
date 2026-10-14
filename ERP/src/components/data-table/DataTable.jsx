@@ -3,6 +3,7 @@ import DataTableHeader from './DataTableHeader';
 import DataTableAdvancedFilters from './DataTableAdvancedFilters';
 import DataTableBody from './DataTableBody';
 import DataTablePagination from './DataTablePagination';
+import { getSerialNumber } from '../../utils/serialNumberHelper';
 
 /**
  * Enterprise-grade generic reusable DataTable component.
@@ -229,8 +230,9 @@ export default function DataTable({
     if (!pagination) return 0;
     const rawPage = pagination.page ?? pagination.currentPage ?? (pageIndexBase === 0 ? 0 : 1);
     const size = Number(pagination.pageSize ?? pagination.size ?? 10);
-    const pageZero = pageIndexBase === 1 ? Math.max(0, rawPage - 1) : Math.max(0, rawPage);
-    return pageZero * size;
+    const effectiveBase = (pagination.currentPage !== undefined && pagination.page === undefined) ? 1 : pageIndexBase;
+    const firstSerial = getSerialNumber({ page: rawPage, pageSize: size, rowIndex: 0, pageBase: effectiveBase });
+    return typeof firstSerial === 'number' ? firstSerial - 1 : 0;
   }, [pagination, pageIndexBase]);
 
   // Search Configuration Normalization

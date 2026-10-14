@@ -20,6 +20,7 @@ import CustomSelect from '../../../components/common/CustomSelect';
 import TableRowActions from '../../../components/common/TableRowActions';
 import useUrlFilters from '../../../hooks/useUrlFilters';
 import { TableSkeleton } from '../../../components/common/SkeletonLoader';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
 export default function StockTransferManagement() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export default function StockTransferManagement() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const {
-    page, setPage, setPageSize, apiParams,
+    page, setPage, pageSize, setPageSize, apiParams,
     filters, setFilter, resetFilters
   } = useUrlFilters({ defaultPageSize: 10, defaultSortBy: 'createdAt', defaultSortOrder: 'desc' });
 
@@ -283,7 +284,9 @@ export default function StockTransferManagement() {
                 <tbody className="staggered-list">
                   {stockTransfers.map((doc, index) => [
                     <tr key={doc.id} onClick={() => setExpandedRowId(expandedRowId === doc.id ? null : doc.id)} className="cursor-pointer hover:bg-blue-50/30 group transition-colors">
-                      <td className="text-zinc-500 font-medium">{typeof page !== 'undefined' && typeof size !== 'undefined' ? (page * size) + index + 1 : index + 1}</td>
+                      <td className="text-zinc-500 font-medium tabular-nums">
+                        {getSerialNumber({ page, pageSize: apiParams.size || pageSize || 10, rowIndex: index, pageBase: 0 })}
+                      </td>
                       <td>
                         <div className="flex flex-col gap-1">
                           <span className="font-semibold text-zinc-900 text-sm">{doc.transferNo}</span>

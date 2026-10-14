@@ -22,6 +22,7 @@ import TableRowActions from '../../../components/common/TableRowActions';
 import InventoryPeriodForm from '../components/InventoryPeriodForm';
 import useUrlFilters from '../../../hooks/useUrlFilters';
 import { TableSkeleton } from '../../../components/common/SkeletonLoader';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
 export default function InventoryPeriodManagement() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export default function InventoryPeriodManagement() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const {
-    page, setPage, setPageSize, apiParams,
+    page, setPage, pageSize, setPageSize, apiParams,
     filters, setFilter, resetFilters
   } = useUrlFilters({ defaultPageSize: 10, defaultSortBy: 'startDate', defaultSortOrder: 'desc' });
 
@@ -270,7 +271,9 @@ export default function InventoryPeriodManagement() {
                 <tbody className="staggered-list">
                   {inventoryPeriods.map((period, index) => [
                     <tr key={period.id} onClick={() => setExpandedRowId(expandedRowId === period.id ? null : period.id)} className="hover:bg-blue-50/30 transition-colors cursor-pointer group">
-                      <td className="text-zinc-500 font-medium">{typeof page !== 'undefined' && typeof size !== 'undefined' ? (page * size) + index + 1 : index + 1}</td>
+                      <td className="text-zinc-500 font-medium tabular-nums">
+                        {getSerialNumber({ page, pageSize: apiParams.size || pageSize || 10, rowIndex: index, pageBase: 0 })}
+                      </td>
                       <td className="font-semibold text-zinc-900">{period.periodName}</td>
                       <td className="text-zinc-600 text-sm">{period.startDate}</td>
                       <td className="text-zinc-600 text-sm">{period.endDate}</td>

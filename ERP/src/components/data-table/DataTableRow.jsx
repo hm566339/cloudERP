@@ -67,8 +67,8 @@ function DataTableRow({
 
         {/* Row Index (#) */}
         {showIndex && (
-          <td className="p-4 text-center text-zinc-400 text-xs w-12 select-none">
-            {rowIndex !== undefined ? rowIndex : index + 1}
+          <td className="p-4 text-center text-zinc-400 text-xs w-12 select-none tabular-nums">
+            {rowIndex !== undefined && rowIndex !== '' && rowIndex !== null ? rowIndex : index + 1}
           </td>
         )}
 

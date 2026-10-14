@@ -11,6 +11,7 @@ import SortableHeader from '../../../components/common/SortableHeader'
 import Pagination from '../../../components/common/Pagination'
 import useApiFilters from '../../../hooks/useApiFilters'
 import FILTER_CONFIGS from '../../../constants/filterConfigs'
+import { getSerialNumber } from '../../../utils/serialNumberHelper'
 import { useAppDispatch } from '../../../app/hooks'
 import { addAlert } from '../../notifications/notificationSlice'
 
@@ -112,7 +113,7 @@ export default function PayrollPage() {
  )}
  {paginated.map((p, index) => (
  <tr key={p.id}>
-                    <td className="text-center font-medium text-zinc-500">{(page * (pageSize || 10)) + index + 1}</td>
+                    <td className="text-center font-medium text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
  <td className="font-medium text-zinc-800">{p.name}</td>
  <td className="text-zinc-600">{p.department}</td>
  <td className="text-right text-zinc-600">{p.basic.toLocaleString()}</td>

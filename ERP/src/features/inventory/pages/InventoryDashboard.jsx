@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import { getSerialNumber } from "../../../utils/serialNumberHelper"
 import {
   Package, AlertTriangle, Barcode, QrCode, Plus,
   TrendingUp, TrendingDown, Activity, RefreshCw,
@@ -242,7 +243,7 @@ export default function InventoryDashboard() {
                                 >
                                   {expandedRowId === item.id ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                                 </button>
-                                <span>{page * pageSize + index + 1}</span>
+                                <span className="tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</span>
                               </div>
                             </td>
                           <td>
@@ -307,7 +308,7 @@ export default function InventoryDashboard() {
                   <p className="text-[8px] text-zinc-500 uppercase font-mono mt-1 bg-zinc-100 inline-block px-2 py-0.5 rounded">SKU: {selectedBarcodeItem.sku}</p>
                 </div>
                 <div className="bg-white p-4 rounded-xl inline-block border border-zinc-200 shadow-sm">
-                  <div className="flex gap-[1.6px] h-14 w-48 items-center justify-center p-1">
+                  <div className="flex gap-0.5 h-14 w-48 items-center justify-center p-1">
                     {[1,3,2,1,4,2,1,3,1,2,4,1,2].map((w,i) => <div key={i} style={{width:`${w}px`}} className="h-full bg-zinc-900 rounded-sm" />)}
                   </div>
                   <span className="text-[7.2px] font-mono tracking-widest mt-2 block text-zinc-500">{selectedBarcodeItem.sku}-*BAR*</span>

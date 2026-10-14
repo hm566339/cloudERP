@@ -3,6 +3,7 @@ import SortableHeader from '../common/SortableHeader';
 import DataTableRow from './DataTableRow';
 import DataTableLoading from './DataTableLoading';
 import DataTableEmptyState from './DataTableEmptyState';
+import { getSerialNumber } from '../../utils/serialNumberHelper';
 
 /**
  * Core table body component: renders table, thead with sortable headers,
@@ -195,7 +196,7 @@ export default function DataTableBody({
                   key={key}
                   row={row}
                   index={index}
-                  rowIndex={pageIndexOffset + index + 1}
+                  rowIndex={getSerialNumber({ offset: pageIndexOffset, rowIndex: index })}
                   columns={columns}
                   rowActions={rowActions}
                   showIndex={showIndex}

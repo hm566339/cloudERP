@@ -147,64 +147,90 @@ export function FinanceDashboardSkeleton() {
 }
 
 // ── Page-level loader (Suspense / route transitions) ────────────────────────
-export function PageLoader({ message = 'Loading…' }) {
+export function PageLoader({ message = 'Loading…', className = '' }) {
   // Strip trailing dots for custom bounce animation
   const cleanMessage = message.replace(/\.+$/, '').replace(/…$/, '');
 
   return (
-    <div className="flex flex-col items-center justify-center h-full min-h-[288px] gap-6 py-20 relative overflow-hidden">
-      {/* Subtle Background glow effect */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-zinc-200/50 rounded-full blur-[64px] pointer-events-none" />
+    <div
+      className={`flex flex-col items-center justify-center w-full flex-1 min-h-[75vh] sm:min-h-[80vh] py-12 gap-5 select-none ${className}`}
+      role="status"
+      aria-live="polite"
+    >
+      {/* Center Spinner + Mark2 Logo */}
+      <div className="relative flex items-center justify-center">
+        {/* Soft Ambient Glow */}
+        <div className="absolute w-24 h-24 rounded-full bg-sky-500/15 blur-xl pointer-events-none animate-pulse" />
 
-      {/* Main Container */}
-      <div className="relative flex items-center justify-center mt-8">
-        {/* Pulsing rings */}
-        <div className="absolute w-24 h-24 rounded-full border border-zinc-900/10 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
-        <div className="absolute w-24 h-24 rounded-full border border-zinc-900/5 animate-[ping_2.5s_cubic-bezier(0,0,0.2,1)_infinite]" style={{ animationDelay: '0.5s' }} />
+        {/* Smooth Circular Gradient Spinner Ring */}
+        <div
+          className="w-18 h-18 rounded-full border-[2.5px] border-zinc-200/70 border-t-sky-500 border-r-blue-600 animate-spin"
+          style={{ animationDuration: '1s', animationTimingFunction: 'cubic-bezier(0.55, 0.15, 0.45, 0.85)' }}
+        />
 
-        {/* Orbiting dots */}
-        <div className="absolute w-20 h-20 animate-spin" style={{ animationDuration: '3s' }}>
-          <div className="absolute top-0 left-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 bg-zinc-800 rounded-full shadow-[0_0_8px_rgba(24,24,27,0.4)]" />
-        </div>
-        <div className="absolute w-16 h-16 animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}>
-          <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 -translate-x-1/2 translate-y-1/2 bg-zinc-600 rounded-full shadow-[0_0_8px_rgba(82,82,91,0.4)]" />
-        </div>
-
-        {/* Center Logo/Icon */}
-        <div className="relative z-10 w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-lg overflow-hidden group">
-          <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="relative z-10 animate-pulse">
-            <path d="M5 4v16M5 12l9-8M5 12l9 8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        {/* Center Logo Badge */}
+        <div className="absolute w-11 h-11 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center shadow-md">
+          <svg
+            className="w-6 h-6"
+            viewBox="180 80 840 600"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <linearGradient id="pageLoaderM2Blue" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#071D4A" />
+                <stop offset="48%" stopColor="#0866D8" />
+                <stop offset="100%" stopColor="#16D7F0" />
+              </linearGradient>
+              <linearGradient id="pageLoaderM2DarkBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#102B62" />
+                <stop offset="100%" stopColor="#06152F" />
+              </linearGradient>
+            </defs>
+            <g>
+              <path d="M245 300 L455 465 L365 555 L245 462 Z" fill="url(#pageLoaderM2DarkBlue)" />
+              <path d="M245 300 L365 392 L365 555 L245 640 Z" fill="url(#pageLoaderM2Blue)" />
+              <path
+                d="M365 392 L455 465 L690 250 Q735 210 800 205 L800 300 Q750 310 710 350 L500 555 Q470 585 440 560 L365 500 Z"
+                fill="url(#pageLoaderM2Blue)"
+              />
+              <path
+                d="M800 300 Q850 250 915 275 Q965 295 965 350 Q965 405 915 435 L760 525 L965 525 L965 620 L675 620 Q645 620 645 590 Q645 565 675 545 L875 425 Q900 410 900 380 Q900 355 870 350 L800 350 Z"
+                fill="url(#pageLoaderM2Blue)"
+              />
+              <path d="M365 500 L455 570 L455 660 L365 600 Z" fill="url(#pageLoaderM2DarkBlue)" />
+              <rect x="810" y="165" width="30" height="30" rx="5" fill="#075ED1" />
+              <rect x="850" y="125" width="22" height="22" rx="4" fill="#0A83E8" />
+              <rect x="890" y="95" width="42" height="42" rx="7" fill="#12CDEB" />
+              <rect x="855" y="175" width="18" height="18" rx="4" fill="#14BDEB" />
+              <rect x="900" y="155" width="24" height="24" rx="4" fill="#0876DF" />
+            </g>
           </svg>
         </div>
       </div>
 
-      <div className="flex flex-col items-center gap-4 relative z-10 mt-4">
-        {/* Fancy loading text */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10.4px] font-semibold text-zinc-600 tracking-widest uppercase">
-            {cleanMessage}
-          </span>
-          <span className="flex gap-1">
-            <span className="w-1 h-1 bg-zinc-600 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-            <span className="w-1 h-1 bg-zinc-600 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
-            <span className="w-1 h-1 bg-zinc-600 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
+      {/* Clean Modern Message & Progress */}
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-1.5 text-[11.5px] font-semibold text-zinc-700 tracking-wider uppercase font-sans">
+          <span>{cleanMessage}</span>
+          <span className="flex gap-1" aria-hidden="true">
+            <span className="w-1 h-1 bg-sky-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-1 h-1 bg-sky-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-1 h-1 bg-sky-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </span>
         </div>
 
-        {/* Dynamic progress bar */}
-        <div className="w-48 h-[2.4px] bg-zinc-200 rounded-full overflow-hidden relative">
+        {/* Minimal gradient sweep progress */}
+        <div className="w-36 h-[2.5px] bg-zinc-100 rounded-full overflow-hidden relative">
           <div
-            className="h-full w-1/3 rounded-full bg-zinc-800 relative"
-            style={{ animation: 'sweep-infinite 2s ease-in-out infinite' }}
-          >
-            <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-white/30 blur-[1.6px]" />
-          </div>
+            className="h-full w-2/5 rounded-full bg-gradient-to-r from-blue-600 to-sky-400"
+            style={{ animation: 'loader-sweep 1.5s ease-in-out infinite' }}
+          />
         </div>
       </div>
 
       <style>{`
-        @keyframes sweep-infinite {
+        @keyframes loader-sweep {
           0%   { transform: translateX(-150%); }
           100% { transform: translateX(350%); }
         }

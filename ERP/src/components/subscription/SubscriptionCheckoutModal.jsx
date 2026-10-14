@@ -400,7 +400,7 @@ export default function SubscriptionCheckoutModal({
           </div>
         </div>
 
-        {/* Pricing & GST Tax Breakdown */}
+        {/* Payment Summary */}
         <div className="space-y-2 pt-1">
           <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider block">
             Payment Summary
@@ -408,15 +408,13 @@ export default function SubscriptionCheckoutModal({
 
           <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-200/80 space-y-2.5 text-xs">
             <div className="flex items-center justify-between text-zinc-600">
-              <span>Base Subscription ({selectedPlan.durationDays || 30} days)</span>
+              <span>Plan Subscription ({selectedPlan.durationDays || 30} days)</span>
               <span className="font-semibold text-zinc-900">{pricing.formattedBasePrice}</span>
             </div>
 
-            {!pricing.isFree && (
+            {pricing.taxAmount > 0 && (
               <div className="flex items-center justify-between text-zinc-600">
-                <span className="flex items-center gap-1">
-                  <span>GST (18% Goods & Services Tax)</span>
-                </span>
+                <span>Tax</span>
                 <span className="font-semibold text-zinc-900">{pricing.formattedTax}</span>
               </div>
             )}

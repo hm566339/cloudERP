@@ -17,6 +17,7 @@ import TableRowActions from '../../../components/common/TableRowActions';
 import ProductUomForm from '../components/ProductUomForm';
 import useUrlFilters from '../../../hooks/useUrlFilters';
 import { TableSkeleton } from '../../../components/common/SkeletonLoader';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
 export default function ProductUomManagement() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export default function ProductUomManagement() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const {
-    page, setPage, setPageSize, apiParams,
+    page, setPage, pageSize, setPageSize, apiParams,
     filters, setFilter, resetFilters
   } = useUrlFilters({ defaultPageSize: 10, defaultSortBy: 'name', defaultSortOrder: 'asc' });
 
@@ -298,7 +299,9 @@ export default function ProductUomManagement() {
                 <tbody className="staggered-list">
                   {unitOfMeasures.map((uom, index) => [
                     <tr key={uom.id} onClick={() => setExpandedRowId(expandedRowId === uom.id ? null : uom.id)} className="hover:bg-blue-50/30 transition-colors cursor-pointer group">
-                      <td className="text-zinc-500 font-medium">{typeof page !== 'undefined' && typeof size !== 'undefined' ? (page * size) + index + 1 : index + 1}</td>
+                      <td className="text-zinc-500 font-medium tabular-nums">
+                        {getSerialNumber({ page, pageSize: apiParams.size || pageSize || 10, rowIndex: index, pageBase: 0 })}
+                      </td>
                       <td className="font-mono text-zinc-600">{uom.code || '-'}</td>
                       <td className="font-medium text-zinc-900">{uom.name}</td>
                       <td className="text-zinc-600">{uom.decimalPlaces}</td>

@@ -26,7 +26,7 @@ export default function DashboardLayout({
             {/* Main Content Area */}
             <div
                 className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-300 ease-in-out ${
-                    sidebar ? (isCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[260px]') : ''
+                    sidebar ? (isCollapsed ? 'lg:pl-sidebar-collapsed' : 'lg:pl-sidebar-expanded') : ''
                 }`}
             >
                 {header}

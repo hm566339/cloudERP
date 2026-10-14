@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom'
 import { useGetApprovalsQuery } from '../../../api/purchase'
 import SortableHeader from '../../../components/common/SortableHeader'
 import { useRoutePath } from "../../../hooks/useRoutePath";
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
 export default function ApprovalsPage() {
   const { buildPath } = useRoutePath();
@@ -80,7 +81,7 @@ export default function ApprovalsPage() {
  <tbody className="staggered-list">
  {displayedData.map((a, index) => (
  <tr key={a.id}>
- <td className="text-center font-medium text-zinc-500">{(page * (pageSize || 10)) + index + 1}</td>
+ <td className="text-center font-medium text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
  <td>
  <span className="font-mono text-xs font-semibold text-amber-600 flex items-center gap-1.5">
  <Clock size={14} /> {a.id}
