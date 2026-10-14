@@ -95,7 +95,7 @@ export default function CompanyCreateEditModal({
       >
         
         {/* ── Fixed Header ── */}
-        <div className="flex items-center justify-between px-[22px] py-[16px] border-b border-zinc-200 bg-zinc-50/80 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 shadow-2xs">
               <Building2 size={20} />
@@ -112,7 +112,7 @@ export default function CompanyCreateEditModal({
             </div>
           </div>
           <button 
-            type="button"
+            type="button" 
             onClick={onClose} 
             disabled={isSubmitting}
             className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/60 rounded-lg transition-colors active:scale-95 disabled:opacity-50"
@@ -124,7 +124,7 @@ export default function CompanyCreateEditModal({
         </div>
 
         {/* ── Scrollable Form Body ── */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-[24px] py-5 custom-scrollbar bg-white">
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-6 py-5 custom-scrollbar bg-white">
           <form id="company-form" onSubmit={handleSave} noValidate className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {formError && (
@@ -444,12 +444,12 @@ export default function CompanyCreateEditModal({
         </div>
 
         {/* ── Fixed Footer ── */}
-        <div className="flex justify-end items-center gap-2.5 px-[22px] py-[14px] border-t border-zinc-200 bg-zinc-50/80 shrink-0">
+        <div className="flex justify-end items-center gap-3 px-6 py-4 border-t border-zinc-200 bg-zinc-50/80 shrink-0">
           <button 
             type="button" 
             onClick={onClose}
             disabled={isSubmitting}
-            className="h-[38px] px-4 text-xs font-semibold text-zinc-700 hover:text-zinc-900 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+            className="h-9 px-4 text-xs font-semibold text-zinc-700 hover:text-zinc-900 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             Cancel
           </button>
@@ -457,7 +457,7 @@ export default function CompanyCreateEditModal({
             type="submit" 
             form="company-form"
             disabled={isSubmitting}
-            className="h-[38px] px-5 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg shadow-xs transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            className="h-9 px-5 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg shadow-xs transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (
               <>

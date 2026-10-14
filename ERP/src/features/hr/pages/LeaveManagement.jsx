@@ -8,6 +8,7 @@ import SortableHeader from '../../../components/common/SortableHeader'
 import Pagination from '../../../components/common/Pagination'
 import useApiFilters from '../../../hooks/useApiFilters'
 import FILTER_CONFIGS from '../../../constants/filterConfigs'
+import { getSerialNumber } from '../../../utils/serialNumberHelper'
 
 export default function LeavePage() {
  const companyId = useParams().companyId || JSON.parse(localStorage.getItem("selected_company"))?.id || JSON.parse(localStorage.getItem("auth_user"))?.companyCode;
@@ -94,7 +95,7 @@ export default function LeavePage() {
  )}
  {paginated.map((l, index) => (
  <tr key={l.id}>
-                    <td className="text-center font-medium text-zinc-500">{(page * (pageSize || 10)) + index + 1}</td>
+                    <td className="text-center font-medium text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
  <td className="font-medium text-zinc-800">{l.employee}</td>
  <td className="text-zinc-600">{l.type}</td>
  <td className="text-zinc-500 text-xs">

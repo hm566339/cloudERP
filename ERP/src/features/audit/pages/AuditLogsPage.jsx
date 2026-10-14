@@ -13,6 +13,7 @@ import { TableRowSkeleton } from '../../../components/common/SkeletonLoader';
 import { auditLogsApi } from '../../../api/account/auditLogs';
 import { getModules } from '../../../api/sso/module';
 import { formatDateTime } from '../../../utils/dateFormatter';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
  // Reusing this for table structure
 import { useRoutePath } from "../../../hooks/useRoutePath";
@@ -513,7 +514,9 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
                 ) : data.length > 0 ? (
                   data.map((row, index) => (
                     <tr key={row.id || index} className="hover:bg-zinc-50/80 transition-colors group">
-                      <td className="p-4 text-center text-zinc-400 text-xs">{(query.page * query.size) + index + 1}</td>
+                      <td className="p-4 text-center text-zinc-400 text-xs tabular-nums">
+                        {getSerialNumber({ page: query.page, pageSize: query.size, rowIndex: index, pageBase: 0 })}
+                      </td>
                       <td className="p-4 text-zinc-900 font-medium">{row.moduleName}</td>
                       <td className="p-4 text-zinc-500">{row.entityName}</td>
                       <td className="p-4">{getActionBadge(row.actionType)}</td>

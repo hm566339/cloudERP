@@ -9,6 +9,7 @@ import SortableHeader from '../../../components/common/SortableHeader'
 import Pagination from '../../../components/common/Pagination'
 import useApiFilters from '../../../hooks/useApiFilters'
 import FILTER_CONFIGS from '../../../constants/filterConfigs'
+import { getSerialNumber } from '../../../utils/serialNumberHelper'
 import { useAppDispatch } from '../../../app/hooks'
 import { addAlert } from '../../notifications/notificationSlice'
 import LeadFormModal from '../components/LeadFormModal'
@@ -118,7 +119,9 @@ export default function LeadsPage() {
             <tbody className="staggered-list">
               {paginatedLeads.map((l, index) => (
                 <tr key={l.id}>
-                  <td className="text-center font-medium text-zinc-500">{(page * (pageSize || 10)) + index + 1}</td>
+                  <td className="text-center font-medium text-zinc-500 tabular-nums">
+                    {getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}
+                  </td>
                   <td>
                     <div className="font-medium text-zinc-900">{l.company}</div>
                     <div className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">

@@ -378,7 +378,7 @@ export default function CompanyDetails() {
   }));
 
   return (
-    <div className="w-full max-w-none px-[24px] sm:px-[32px] py-[24px] space-y-6 animate-fade-in pb-12">
+    <div className="w-full max-w-none px-6 sm:px-8 py-6 space-y-6 animate-fade-in pb-12">
       {/* Header Area */}
       <div className="flex flex-col gap-4">
         {/* Back Link */}
@@ -480,7 +480,7 @@ export default function CompanyDetails() {
         <div className="space-y-5 min-w-0">
           
           {/* Company Info */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-[18px] shadow-xs">
+          <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
             <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100">
               <Info size={15} className="text-zinc-500" />
               <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Company Information</h2>
@@ -504,7 +504,7 @@ export default function CompanyDetails() {
           </div>
 
           {/* Contact Details */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-[18px] shadow-xs">
+          <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
             <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100">
               <Phone size={15} className="text-zinc-500" />
               <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Contact Details</h2>
@@ -542,7 +542,7 @@ export default function CompanyDetails() {
           </div>
 
           {/* Address Details */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-[18px] shadow-xs">
+          <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
             <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100">
               <MapPin size={15} className="text-zinc-500" />
               <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Location Details</h2>
@@ -578,7 +578,7 @@ export default function CompanyDetails() {
         <div className="space-y-5 min-w-0">
           
           {/* Legal & Tax Records */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-[18px] shadow-xs">
+          <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
             <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100">
               <Shield size={15} className="text-zinc-500" />
               <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Legal & Tax Records</h2>
@@ -608,7 +608,7 @@ export default function CompanyDetails() {
           </div>
 
           {/* Assigned Modules Table */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-[18px] shadow-xs">
+          <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-2 border-b border-zinc-100">
               <div className="flex items-center gap-2">
                 <Layers size={16} className="text-zinc-600" />
@@ -616,7 +616,7 @@ export default function CompanyDetails() {
               </div>
               <button 
                 onClick={handleOpenAssignModules} 
-                className="h-[34px] px-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer shrink-0"
+                className="h-8 px-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer shrink-0"
               >
                 <Plus size={14} strokeWidth={2.5} /> <span>Assign New Module</span>
               </button>

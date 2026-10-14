@@ -267,7 +267,7 @@ export default function AccountantLayout() {
       )}
 
       {/* ── Main Shell ── */}
-      <div className={`flex-1 flex flex-col h-screen min-w-0 transition-[padding] duration-300 ease-in-out ${desktopSidebarOpen ? 'lg:pl-[var(--sidebar-width)]' : 'lg:pl-0'}`}>
+      <div className={`flex-1 flex flex-col h-screen min-w-0 transition-[padding] duration-300 ease-in-out ${desktopSidebarOpen ? 'lg:pl-sidebar' : 'lg:pl-0'}`}>
         <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden">
 
           {/* Top Header */}

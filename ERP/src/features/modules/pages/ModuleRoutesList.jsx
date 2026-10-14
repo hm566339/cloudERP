@@ -279,11 +279,12 @@ export default function ModuleRoutesList() {
 
           // Pagination
           pagination={pageInfo?.totalPages ? {
-            page: pageInfo.currentPage ?? page,
+            page,
             pageSize: pageInfo.pageSize ?? 10,
             totalPages: pageInfo.totalPages,
             totalElements: pageInfo.totalCount
           } : undefined}
+          pageIndexBase={0}
           onPageChange={setPage}
           onPageSizeChange={(size) => {
             setPageSize(size);

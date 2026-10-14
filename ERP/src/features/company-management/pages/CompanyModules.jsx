@@ -103,7 +103,7 @@ export default function CompanyModules() {
 
   return (
     <div
-      className="w-full max-w-none px-[28px] sm:px-[32px] lg:px-[36px] py-[28px] space-y-6 animate-fade-in pb-12"
+      className="w-full max-w-none px-6 sm:px-8 py-6 space-y-6 animate-fade-in pb-12"
       style={{ width: '100%', maxWidth: 'none' }}
     >
       {/* Header */}
@@ -152,7 +152,7 @@ export default function CompanyModules() {
                     handleModuleClick(mod.path, mod.active);
                   }
                 }}
-                className={`w-full min-h-[170px] p-[22px] bg-white rounded-xl border flex flex-col items-center justify-between text-center transition-all duration-200 ease-out select-none group ${mod.active
+                className={`w-full min-h-[170px] p-5 bg-white rounded-xl border flex flex-col items-center justify-between text-center transition-all duration-200 ease-out select-none group ${mod.active
                     ? 'border-zinc-200 hover:border-zinc-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
                     : 'border-zinc-200/60 bg-zinc-50/40 opacity-65 grayscale cursor-not-allowed'
                   }`}

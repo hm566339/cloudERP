@@ -25,6 +25,7 @@ import { useRoutePath } from '../../../hooks/useRoutePath';
 import SearchInput from '../../../components/common/SearchInput';
 import Pagination from '../../../components/common/Pagination';
 import useListQuery from '../../../hooks/useListQuery';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
 export default function OrganizationList() {
   const { buildPath } = useRoutePath();
@@ -206,7 +207,7 @@ export default function OrganizationList() {
                   <OrgRow
                     key={org.id}
                     org={org}
-                    index={list.page * list.pageSize + idx}
+                    serialNumber={getSerialNumber({ page: list.page, pageSize: list.pageSize, rowIndex: idx, pageBase: 0 })}
                     buildPath={buildPath}
                     onStatusToggle={handleStatusToggle}
                   />
@@ -226,13 +227,13 @@ export default function OrganizationList() {
 // ──────────────────────────────────────────────────────────────────
 // Table Row for a single organization
 // ──────────────────────────────────────────────────────────────────
-function OrgRow({ org, index, buildPath, onStatusToggle }) {
+function OrgRow({ org, serialNumber, buildPath, onStatusToggle }) {
   const [actionsOpen, setActionsOpen] = useState(false);
   const detailPath = `/super-admin/organizations/${org.id}`;
 
   return (
     <tr className="hover:bg-zinc-50/70 transition-colors group">
-      <td className="p-3.5 text-center text-zinc-400 font-medium">{index + 1}</td>
+      <td className="p-3.5 text-center text-zinc-400 font-medium tabular-nums">{serialNumber}</td>
 
       {/* Name */}
       <td className="p-3.5">

@@ -16,6 +16,7 @@ import SortableHeader from "../../../components/common/SortableHeader";
 import Pagination from "../../../components/common/Pagination";
 import useApiFilters from "../../../hooks/useApiFilters";
 import FILTER_CONFIGS from "../../../constants/filterConfigs";
+import { getSerialNumber } from "../../../utils/serialNumberHelper";
 
 export default function EmployeeList() {
   const companyId = useParams().companyId || JSON.parse(localStorage.getItem("selected_company"))?.id || JSON.parse(localStorage.getItem("auth_user"))?.companyCode;
@@ -137,7 +138,9 @@ export default function EmployeeList() {
                 )}
                 {sorted.map((emp, index) => (
                   <tr key={emp.id}>
-                    <td className="text-center font-medium text-zinc-500">{(page * (pageSize || 10)) + index + 1}</td>
+                    <td className="text-center font-medium text-zinc-500 tabular-nums">
+                      {getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}
+                    </td>
                     <td>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">

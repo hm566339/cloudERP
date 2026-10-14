@@ -34,7 +34,7 @@ export default function AdminDashboard() {
 
   return (
     <div 
-      className="w-full max-w-none px-[28px] sm:px-[32px] py-[28px] space-y-5 animate-fade-in pb-12"
+      className="w-full max-w-none px-6 sm:px-8 py-6 space-y-5 animate-fade-in pb-12"
       style={{ width: '100%', maxWidth: 'none' }}
     >
       {/* ── Page Header ── */}
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
       {/* ── Top Status Cards (4-Column Responsive Grid) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
         {/* Backend Health */}
-        <div className="min-h-[140px] p-[18px] bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
+        <div className="min-h-[140px] p-5 bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100/60 flex items-center justify-center text-indigo-600 shrink-0">
               <Server size={18} strokeWidth={1.75} />
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Active Users */}
-        <div className="min-h-[140px] p-[18px] bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
+        <div className="min-h-[140px] p-5 bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100/60 flex items-center justify-center text-blue-600 shrink-0">
               <Users size={18} strokeWidth={1.75} />
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* System Uptime */}
-        <div className="min-h-[140px] p-[18px] bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
+        <div className="min-h-[140px] p-5 bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100/60 flex items-center justify-center text-emerald-600 shrink-0">
               <Clock size={18} strokeWidth={1.75} />
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* System Load */}
-        <div className="min-h-[140px] p-[18px] bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
+        <div className="min-h-[140px] p-5 bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-100/60 flex items-center justify-center text-amber-600 shrink-0">
               <Activity size={18} strokeWidth={1.75} />

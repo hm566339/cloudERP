@@ -8,6 +8,7 @@ import { CreditCard, Plus, Clock, Edit, Trash2, CheckCircle, XCircle, ArrowRight
 import { useParams } from 'react-router-dom';
 import { useAppDispatch } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 import { 
   vendorApiSlice,
   useCreateAPInvoiceMutation,
@@ -187,7 +188,7 @@ export default function AccountsPayable() {
               ) : (
                 bills.map((bill, index) => (
                   <tr key={bill.id}>
-                    <td className="text-center font-medium text-zinc-500">{(page * (pageSize || 10)) + index + 1}</td>
+                    <td className="text-center font-medium text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
                     <td>
                       <span className="text-sm font-mono text-zinc-700 font-medium">{bill.invoiceNo}</span>
                     </td>

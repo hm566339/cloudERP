@@ -9,6 +9,7 @@ import { TableRowSkeleton } from '../../../components/common/SkeletonLoader';
 import Pagination from '../../../components/common/Pagination';
 import SortableHeader from '../../../components/common/SortableHeader';
 import { useRoutePath } from "../../../hooks/useRoutePath";
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
 const JournalLinesByJournal = () => {
   const { buildPath } = useRoutePath();
@@ -92,7 +93,7 @@ const JournalLinesByJournal = () => {
               ) : (
                 journalLines.map((line, index) => (
                   <tr key={line.id}>
-                    <td className="text-center text-zinc-500">{(page * pageSize) + index + 1}</td>
+                    <td className="text-center text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
                     <td>{line.voucherNo}</td>
                     <td className="font-mono text-zinc-600">{line.accountCode}</td>
                     <td className="font-semibold">{line.accountName}</td>

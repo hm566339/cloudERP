@@ -23,6 +23,11 @@ export default {
         surface: 'var(--color-surface)',
         border: 'var(--color-border)',
       },
+      spacing: {
+        'sidebar': 'var(--sidebar-width)',
+        'sidebar-collapsed': '72px',
+        'sidebar-expanded': '260px',
+      },
       transitionDuration: {
         'micro': '120ms',
         'standard': '200ms',

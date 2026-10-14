@@ -5,5 +5,9 @@ import { PageLoader } from '../components/common/SkeletonLoader';
  * Extracted from AppRoutes.jsx.
  */
 export default function RouteLoading() {
-  return <PageLoader message="Loading page…" />;
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-white/50">
+      <PageLoader message="Loading page…" />
+    </div>
+  );
 }

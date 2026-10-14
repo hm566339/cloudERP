@@ -20,6 +20,7 @@ import CustomSelect from '../../../components/common/CustomSelect';
 import TableRowActions from '../../../components/common/TableRowActions';
 import useUrlFilters from '../../../hooks/useUrlFilters';
 import { TableSkeleton } from '../../../components/common/SkeletonLoader';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
 export default function OpeningStockManagement() {
   const dispatch = useAppDispatch();
@@ -29,7 +30,7 @@ export default function OpeningStockManagement() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const {
-    page, setPage, setPageSize, apiParams,
+    page, setPage, pageSize, setPageSize, apiParams,
     filters, setFilter, resetFilters,
     prefix
   } = useUrlFilters({ defaultPageSize: 10, defaultSortBy: 'createdAt', defaultSortOrder: 'desc' });
@@ -257,7 +258,9 @@ export default function OpeningStockManagement() {
                 <tbody className="staggered-list">
                   {openingStocks.map((doc, index) => [
                     <tr key={doc.id} onClick={() => setExpandedRowId(expandedRowId === doc.id ? null : doc.id)} className="cursor-pointer hover:bg-blue-50/30 group transition-colors">
-                      <td className="text-zinc-500 font-medium">{typeof page !== 'undefined' && typeof size !== 'undefined' ? (page * size) + index + 1 : index + 1}</td>
+                      <td className="text-zinc-500 font-medium tabular-nums">
+                        {getSerialNumber({ page, pageSize: apiParams.size || pageSize || 10, rowIndex: index, pageBase: 0 })}
+                      </td>
                       <td>
                         <span className="font-semibold text-blue-600 text-[10.4px]">{doc.openingStockNo || '-'}</span>
                       </td>

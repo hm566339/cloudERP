@@ -932,15 +932,15 @@ function SubscriptionContent() {
             </div>
             <div>
               <h3 className="text-sm font-semibold text-zinc-900">
-                Enterprise Billing Receipts & GST Compliance
+                Enterprise Billing Receipts & Compliance
               </h3>
               <p className="text-[11px] text-zinc-500">
-                Official billing statements and statutory tax receipts (18% GST Input Credit Eligible)
+                Official billing statements and statutory tax receipts
               </p>
             </div>
           </div>
           <span className="inline-flex items-center gap-1 text-[10px] text-zinc-500 font-medium">
-            Currency: <strong className="text-zinc-800">INR (₹)</strong> • Statutory GST: <strong className="text-zinc-800">18% ITC</strong>
+            Currency: <strong className="text-zinc-800">INR (₹)</strong>
           </span>
         </div>
 

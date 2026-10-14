@@ -27,14 +27,14 @@ export function isCurrentPlan(plan, activeSub) {
 }
 
 /**
- * Computes base price, estimated GST (18%), and total payable amount.
+ * Computes base price and total payable amount without adding GST from frontend.
  *
  * @param {number|string} price - Base plan price
  * @param {string} currency - Currency code (e.g. 'INR')
- * @param {number} taxRate - Tax percentage (default 0.18 = 18% GST)
+ * @param {number} taxRate - Tax percentage (default 0; frontend does not add GST)
  * @returns {Object}
  */
-export function computeCheckoutPricing(price, currency = 'INR', taxRate = 0.18) {
+export function computeCheckoutPricing(price, currency = 'INR', taxRate = 0) {
   const numPrice = Number(price ?? 0);
   if (isNaN(numPrice) || numPrice <= 0) {
     return {

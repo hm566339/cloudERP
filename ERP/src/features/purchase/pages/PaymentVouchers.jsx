@@ -9,6 +9,7 @@ import { addAlert } from '../../notifications/notificationSlice';
 import useUrlFilters from '../../../hooks/useUrlFilters';
 import Pagination from '../../../components/common/Pagination';
 import ActionableSearchInput from '../../../components/common/ActionableSearchInput';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 import SortableHeader from '../../../components/common/SortableHeader';
 import RequirePermission from '../../../components/common/RequirePermission';
 import { TableRowSkeleton } from '../../../components/common/SkeletonLoader';
@@ -575,7 +576,7 @@ export default function PaymentVouchers() {
                           onClick={() => toggleRow(rowId)}
                           className={`hover:bg-zinc-50/80 transition-colors group cursor-pointer ${isExpanded ? 'bg-zinc-50/80' : ''}`}
                         >
-                      <td className="p-4 text-center text-zinc-400">{(page * apiParams.size) + index + 1}</td>
+                      <td className="p-4 text-center text-zinc-400 tabular-nums">{getSerialNumber({ page, pageSize: apiParams.size || pageSize || 10, rowIndex: index, pageBase: 0 })}</td>
                       
                       {visibleColumns.includes('voucherNo') && (
                         <td className="p-4">

@@ -23,6 +23,7 @@ import { cashFlowApi } from '../../../api/account/reports';
 import { fiscalYearsApi } from '../../../api/account';
 import { useApiQuery } from '../../../hooks/useApi';
 import PageHeader from '../../../components/common/PageHeader';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 import ModuleTabs, { accountingTabs } from '../../../components/module-tabs';
 import DataTable from '../../../components/data-table';
 import ExportModal from '../../../components/common/ExportModal';
@@ -417,8 +418,8 @@ export default function CashFlow() {
       key: 'rowIndex',
       label: '#',
       sortable: false,
-      className: 'w-12 text-center text-zinc-400 font-mono text-[11px]',
-      render: (_, __, idx) => (filters.page * filters.pageSize) + idx + 1
+      className: 'w-12 text-center text-zinc-400 font-mono text-[11px] tabular-nums',
+      render: (_, __, idx) => getSerialNumber({ page: filters.page, pageSize: filters.pageSize, rowIndex: idx, pageBase: 0 })
     },
     {
       key: 'cashFlowCategory',

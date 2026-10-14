@@ -6,6 +6,7 @@ import CustomSelect from '../../../components/common/CustomSelect';
 import useApiFilters from '../../../hooks/useApiFilters';
 import FILTER_CONFIGS from '../../../constants/filterConfigs';
 import { createLogger } from '../../../utils/logger';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
 const logger = createLogger('SYSTEM_LOGS_PAGE');
 
@@ -150,7 +151,7 @@ export default function SystemLogsPage() {
 
   return (
     <div 
-      className="w-full max-w-none px-[24px] sm:px-[32px] py-[24px] space-y-5 animate-fade-in pb-12"
+      className="w-full max-w-none px-6 sm:px-8 py-6 space-y-5 animate-fade-in pb-12"
       style={{ width: '100%', maxWidth: 'none' }}
     >
       {/* ── Page Header ── */}
@@ -277,8 +278,8 @@ export default function SystemLogsPage() {
                       className="hover:bg-zinc-50/80 transition-colors"
                       style={{ minHeight: '54px' }}
                     >
-                      <td className="px-3 py-3 text-center font-mono text-xs text-zinc-500">
-                        {(page * (pageSize || 10)) + index + 1}
+                      <td className="px-3 py-3 text-center font-mono text-xs text-zinc-500 tabular-nums">
+                        {getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}
                       </td>
                       <td className="px-4 py-3 text-xs font-mono text-zinc-600 truncate" title={new Date(log.timestamp).toLocaleString()}>
                         {new Date(log.timestamp).toLocaleString()}

@@ -296,7 +296,7 @@ export default function StockAdjustmentDetails() {
                    ) : (
                      lines.map((line, idx) => (
                        <tr key={line.id || idx}>
-                      <td className="text-zinc-500 font-medium">{typeof page !== 'undefined' && typeof size !== 'undefined' ? (page * size) + index + 1 : index + 1}</td>
+                      <td className="text-zinc-500 font-medium text-center text-xs tabular-nums">{idx + 1}</td>
                          <td>
                            <input
                              type="text"

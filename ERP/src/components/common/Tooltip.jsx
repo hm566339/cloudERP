@@ -119,7 +119,7 @@ export default function Tooltip({
           }}
           className="pointer-events-none transition-opacity duration-micro ease-enter whitespace-nowrap animate-fade-in"
         >
-          <div className="relative bg-[#111827] text-white text-[11px] font-medium px-[9px] py-[5px] rounded-[5px] shadow-lg tracking-normal leading-tight">
+          <div className="relative bg-[#111827] text-white text-[11px] font-medium px-2.5 py-1 rounded shadow-lg tracking-normal leading-tight">
             {content}
             {/* Arrow */}
             <span 

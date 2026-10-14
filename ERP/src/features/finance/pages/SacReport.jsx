@@ -8,6 +8,7 @@ import useUrlFilters from '../../../hooks/useUrlFilters';
 import { TableRowSkeleton } from '../../../components/common/SkeletonLoader';
 import Pagination from '../../../components/common/Pagination';
 import { useRoutePath } from "../../../hooks/useRoutePath";
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
 const SacReport = () => {
   const { buildPath } = useRoutePath();
@@ -112,7 +113,7 @@ const SacReport = () => {
               ) : (
                 dataList.map((item, idx) => (
                   <tr key={item.id}>
-                    <td className="text-center text-zinc-500">{(page * (pageSize || 10)) + idx + 1}</td>
+                    <td className="text-center text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: idx, pageBase: 0 })}</td>
                     <td className="font-mono text-primary font-semibold">{item.code}</td>
                     <td>{item.description}</td>
                     <td>{item.gstSlabName || 'N/A'}</td>

@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import CustomSelect from '../common/CustomSelect';
+import { getSerialNumberRange } from '../../utils/serialNumberHelper';
 
 /**
  * Reusable DataTable pagination bar matching enterprise dashboard standards.
@@ -19,8 +20,9 @@ export default function DataTablePagination({
   const pageSize = Number(pagination.pageSize ?? pagination.size ?? 10);
   const total = Number(pagination.total ?? pagination.totalElements ?? pagination.totalCount ?? 0);
 
+  const effectiveBase = (pagination.currentPage !== undefined && pagination.page === undefined) ? 1 : pageIndexBase;
   // Normalize page to 0-based for internal math
-  const pageZero = pageIndexBase === 1 ? Math.max(0, rawPage - 1) : Math.max(0, rawPage);
+  const pageZero = effectiveBase === 1 ? Math.max(0, rawPage - 1) : Math.max(0, rawPage);
   const totalPages = pagination.totalPages
     ? Number(pagination.totalPages)
     : Math.max(1, Math.ceil(total / pageSize));
@@ -28,8 +30,7 @@ export default function DataTablePagination({
   // 1-based display page
   const displayPage = Math.min(pageZero + 1, totalPages);
 
-  const from = total > 0 ? pageZero * pageSize + 1 : 0;
-  const to = Math.min((pageZero + 1) * pageSize, total);
+  const { from, to } = getSerialNumberRange({ page: rawPage, pageSize, total, pageBase: effectiveBase });
 
   const canPrev = displayPage > 1;
   const canNext = displayPage < totalPages;
