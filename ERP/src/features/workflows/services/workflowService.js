@@ -22,10 +22,171 @@
 import apiClient from '../../../api/common/client.js';
 
 export const WORKFLOW_STORAGE_KEY = 'erp_workflow_configurations';
+export const WORKFLOW_SETTINGS_STORAGE_KEY = 'erp_workflow_additional_settings';
+
 export const WORKFLOW_DATA_SOURCES = Object.freeze({
   API: 'api',
   DRAFT: 'draft',
 });
+
+export const APPROVER_TYPES = Object.freeze([
+  'USER',
+  'ROLE',
+  'DEPARTMENT',
+  'RULE',
+  'DOCUMENT_OWNER',
+]);
+
+export const WORKFLOW_ACTION_TYPES = Object.freeze([
+  'SUBMIT',
+  'APPROVE',
+  'REJECT',
+  'RETURN',
+  'CANCEL',
+  'DELEGATE',
+  'ESCALATE',
+  'REASSIGN',
+  'COMPLETE',
+]);
+
+export const WORKFLOW_EXECUTION_TYPES = Object.freeze(['SEQUENTIAL', 'PARALLEL']);
+export const WORKFLOW_REJECTION_ACTIONS = Object.freeze(['REJECT_DOCUMENT', 'RETURN_TO_INITIATOR']);
+
+const settingsKey = (companyId) => `${WORKFLOW_SETTINGS_STORAGE_KEY}_${companyId || 'default'}`;
+const memorySettingsStore = {};
+
+export const getWorkflowAdditionalSettings = (companyId, definitionId) => {
+  const key = settingsKey(companyId);
+  try {
+    let raw = null;
+    if (typeof localStorage !== 'undefined' && localStorage?.getItem) {
+      raw = localStorage.getItem(key);
+    }
+    const store = raw ? JSON.parse(raw) : (memorySettingsStore[key] || {});
+    return definitionId ? store[definitionId] || {} : store;
+  } catch {
+    const store = memorySettingsStore[key] || {};
+    return definitionId ? store[definitionId] || {} : store;
+  }
+};
+
+export const saveWorkflowAdditionalSettings = (companyId, definitionId, settings = {}) => {
+  if (!definitionId) return;
+  const key = settingsKey(companyId);
+  try {
+    let store = {};
+    if (typeof localStorage !== 'undefined' && localStorage?.getItem) {
+      const raw = localStorage.getItem(key);
+      store = raw ? JSON.parse(raw) : {};
+    } else {
+      store = memorySettingsStore[key] || {};
+    }
+    store[definitionId] = {
+      ...(store[definitionId] || {}),
+      customerScope: settings.customerScope || 'all',
+      threshold: settings.threshold || '',
+      customerAcceptance: Boolean(settings.customerAcceptance),
+      autoCreateOrder: Boolean(settings.autoCreateOrder),
+      emailNotifications: settings.emailNotifications ?? true,
+      notes: settings.notes || '',
+      initiatedBy: settings.initiatedBy || '',
+      initiatedByRoleId: settings.initiatedByRoleId,
+      initiatedByRoleName: settings.initiatedByRoleName,
+      approvalRequired: settings.approvalRequired ?? true,
+    };
+    if (typeof localStorage !== 'undefined' && localStorage?.setItem) {
+      localStorage.setItem(key, JSON.stringify(store));
+    }
+    memorySettingsStore[key] = store;
+  } catch {
+    // Fallback in memory
+  }
+};
+
+export function validateWorkflowDefinition(workflow, options = {}) {
+  const errors = {};
+  const effectiveCompanyId = options.companyId || workflow?.companyId;
+
+  if (!effectiveCompanyId) {
+    errors.companyId = 'companyId is required.';
+  }
+
+  const code = (workflow?.workflowCode || workflow?.code || '').trim();
+  if (!code) {
+    errors.workflowCode = 'workflowCode is required.';
+  }
+
+  const name = (workflow?.workflowName || workflow?.name || '').trim();
+  if (!name) {
+    errors.name = 'workflowName is required.';
+    errors.workflowName = 'workflowName is required.';
+  }
+
+  const docType = (workflow?.documentType || workflow?.moduleName || workflow?.module || '').trim();
+  if (!docType) {
+    errors.documentType = 'documentType is required.';
+  }
+
+  const rawStages = (Array.isArray(workflow?.stages) && workflow.stages.length > 0)
+    ? workflow.stages
+    : (Array.isArray(workflow?.steps) && workflow.steps.length > 0)
+      ? workflow.steps.filter((s) => s.active !== false)
+      : [];
+
+  if (rawStages.length === 0) {
+    errors.steps = 'At least one stage is required.';
+    errors.stages = 'At least one stage is required.';
+  } else {
+    rawStages.forEach((stage, idx) => {
+      const stageCode = (stage.stageCode !== undefined)
+        ? String(stage.stageCode).trim()
+        : (stage.id && !String(stage.id).startsWith('step-') && !String(stage.id).startsWith('stage-') ? stage.id : `STAGE_${idx + 1}`);
+      const stageName = (stage.stageName !== undefined)
+        ? String(stage.stageName).trim()
+        : String(stage.title || `Stage ${idx + 1}`).trim();
+
+      if (!stageCode) {
+        errors[`stage_${idx}_code`] = `Stage ${idx + 1} code is required.`;
+        if (!errors.steps) errors.steps = 'Each stage must have a valid stage code and name.';
+      }
+      if (!stageName) {
+        errors[`stage_${idx}_name`] = `Stage ${idx + 1} name is required.`;
+        if (!errors.steps) errors.steps = 'Each stage must have a valid stage code and name.';
+      }
+
+      if (Array.isArray(stage.approvers)) {
+        stage.approvers.forEach((app, aIdx) => {
+          if (!app?.approverType || !APPROVER_TYPES.includes(String(app.approverType).toUpperCase())) {
+            errors[`stage_${idx}_approver_${aIdx}_type`] = `Approver must have a valid approverType: ${APPROVER_TYPES.join(', ')}`;
+            if (!errors.steps) errors.steps = 'Each configured approver must have a valid approverType.';
+          }
+        });
+      }
+
+      if (stage.sla) {
+        const duration = Number(stage.sla.durationHours);
+        if (isNaN(duration) || duration <= 0) {
+          errors[`stage_${idx}_sla`] = 'SLA durationHours is required and must be greater than 0.';
+          if (!errors.steps) errors.steps = 'Any configured SLA must have a valid durationHours.';
+        }
+      }
+    });
+  }
+
+  if (Array.isArray(workflow?.transitions)) {
+    workflow.transitions.forEach((trans, tIdx) => {
+      if (!trans?.actionType || !WORKFLOW_ACTION_TYPES.includes(String(trans.actionType).toUpperCase())) {
+        errors[`transition_${tIdx}_actionType`] = `Transition must have a valid actionType: ${WORKFLOW_ACTION_TYPES.join(', ')}`;
+        if (!errors.transitions) errors.transitions = 'Each configured transition must have a valid actionType.';
+      }
+    });
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
+}
 
 export class WorkflowApiNotImplementedError extends Error {
   constructor(operation) {
@@ -122,49 +283,64 @@ export const resolveRoleName = (val, rolesList = []) => {
   return match ? match.name : str;
 };
 
-const normalizeWorkflowDefinition = (item = {}) => ({
-  id: item.id || item.definitionId || item.workflowId,
-  companyId: item.companyId,
-  workflowCode: item.workflowCode || item.code || item.id,
-  workflowName: item.workflowName || item.name,
-  name: item.workflowName || item.name || item.workflowCode || item.code || 'Unnamed workflow',
-  moduleName: item.moduleName || item.module || 'GENERAL',
-  module: normalizeModuleName(item.moduleName || item.module || item.documentType),
-  documentType: item.documentType || normalizeDocumentType(item.moduleName || item.module),
-  description: item.description || '',
-  version: item.version ?? 1,
-  isActive: item.isActive ?? item.active ?? false,
-  active: item.isActive ?? item.active ?? false,
-  isDefault: item.isDefault ?? false,
-  status: item.isActive ?? item.active ? 'active' : 'inactive',
-  initiatedBy: item.initiatedBy || '',
-  initiatedByRoleId: item.initiatedByRoleId || (isUUID(item.initiatedBy) ? item.initiatedBy : undefined),
-  initiatedByRoleName: item.initiatedByRoleName || (!isUUID(item.initiatedBy) ? item.initiatedBy : undefined),
-  approvalRequired: item.approvalRequired ?? true,
-  approverRole: item.approverRole || (item.stages?.[0]?.approvers?.[0]?.roleId || item.stages?.[0]?.approvers?.[0]?.roleName || ''),
-  approverRoleId: item.approverRoleId || item.stages?.[0]?.approvers?.[0]?.roleId || (isUUID(item.approverRole) ? item.approverRole : undefined),
-  approverRoleName: item.approverRoleName || item.stages?.[0]?.approvers?.[0]?.roleName || (!isUUID(item.approverRole) ? item.approverRole : undefined),
-  threshold: item.threshold || '',
-  customerScope: item.customerScope || 'all',
-  customerAcceptance: item.customerAcceptance ?? false,
-  autoCreateOrder: item.autoCreateOrder ?? false,
-  emailNotifications: item.emailNotifications ?? true,
-  notes: item.notes || '',
-  stages: Array.isArray(item.stages) ? item.stages : [],
-  steps: Array.isArray(item.steps) && item.steps.length
-    ? item.steps
-    : Array.isArray(item.stages)
-      ? item.stages.map((stage, idx) => ({
-          id: stage.id || `stage-${idx + 1}`,
-          title: stage.stageName || `Stage ${idx + 1}`,
-          role: stage.approvers?.[0]?.roleId || stage.approvers?.[0]?.roleName || stage.approvers?.[0]?.userName || '',
-          roleId: stage.approvers?.[0]?.roleId,
-          roleName: stage.approvers?.[0]?.roleName,
-          type: 'approval',
-          active: stage.isActive !== false,
-        }))
-      : [],
-});
+const normalizeWorkflowDefinition = (item = {}, companyId) => {
+  const defId = item.id || item.definitionId || item.workflowId;
+  const effectiveCompanyId = companyId || item.companyId;
+  const extra = (effectiveCompanyId && defId) ? getWorkflowAdditionalSettings(effectiveCompanyId, defId) : {};
+
+  return {
+    id: defId,
+    companyId: effectiveCompanyId,
+    workflowCode: item.workflowCode || item.code || defId,
+    workflowName: item.workflowName || item.name,
+    name: item.workflowName || item.name || item.workflowCode || item.code || 'Unnamed workflow',
+    moduleName: item.moduleName || item.module || 'GENERAL',
+    module: normalizeModuleName(item.moduleName || item.module || item.documentType),
+    documentType: item.documentType || normalizeDocumentType(item.moduleName || item.module),
+    description: item.description || '',
+    version: item.version ?? 1,
+    isActive: item.isActive ?? item.active ?? false,
+    active: item.isActive ?? item.active ?? false,
+    isDefault: item.isDefault ?? false,
+    status: item.isActive ?? item.active ? 'active' : 'inactive',
+    initiatedBy: item.initiatedBy || extra.initiatedBy || '',
+    initiatedByRoleId: item.initiatedByRoleId || extra.initiatedByRoleId || (isUUID(item.initiatedBy) ? item.initiatedBy : undefined),
+    initiatedByRoleName: item.initiatedByRoleName || extra.initiatedByRoleName || (!isUUID(item.initiatedBy) ? item.initiatedBy : undefined),
+    approvalRequired: item.approvalRequired ?? extra.approvalRequired ?? true,
+    approverRole: item.approverRole || (item.stages?.[0]?.approvers?.[0]?.roleId || item.stages?.[0]?.approvers?.[0]?.roleName || ''),
+    approverRoleId: item.approverRoleId || item.stages?.[0]?.approvers?.[0]?.roleId || (isUUID(item.approverRole) ? item.approverRole : undefined),
+    approverRoleName: item.approverRoleName || item.stages?.[0]?.approvers?.[0]?.roleName || (!isUUID(item.approverRole) ? item.approverRole : undefined),
+    threshold: item.threshold || extra.threshold || '',
+    customerScope: item.customerScope || extra.customerScope || 'all',
+    customerAcceptance: item.customerAcceptance ?? extra.customerAcceptance ?? false,
+    autoCreateOrder: item.autoCreateOrder ?? extra.autoCreateOrder ?? false,
+    emailNotifications: item.emailNotifications ?? extra.emailNotifications ?? true,
+    notes: item.notes || extra.notes || '',
+    stages: Array.isArray(item.stages) ? item.stages : [],
+    transitions: Array.isArray(item.transitions) ? item.transitions : [],
+    steps: Array.isArray(item.steps) && item.steps.length
+      ? item.steps
+      : Array.isArray(item.stages)
+        ? item.stages.map((stage, idx) => ({
+            id: stage.id || `stage-${idx + 1}`,
+            stageCode: stage.stageCode || `STAGE_${idx + 1}`,
+            title: stage.stageName || `Stage ${idx + 1}`,
+            stageName: stage.stageName || `Stage ${idx + 1}`,
+            role: stage.approvers?.[0]?.roleId || stage.approvers?.[0]?.roleName || stage.approvers?.[0]?.userName || '',
+            roleId: stage.approvers?.[0]?.roleId,
+            roleName: stage.approvers?.[0]?.roleName,
+            approvers: stage.approvers,
+            sla: stage.sla,
+            executionType: stage.executionType || 'SEQUENTIAL',
+            minimumApprovalsRequired: stage.minimumApprovalsRequired || 1,
+            rejectionAction: stage.rejectionAction || 'REJECT_DOCUMENT',
+            isMandatory: stage.isMandatory !== false,
+            type: 'approval',
+            active: stage.isActive !== false,
+          }))
+        : [],
+  };
+};
 
 export const workflowDefinitionApi = {
   available: true,
@@ -190,14 +366,14 @@ export const workflowDefinitionApi = {
         : Array.isArray(payload?.data)
           ? payload.data
           : [];
-    return items.map(normalizeWorkflowDefinition);
+    return items.map((item) => normalizeWorkflowDefinition(item, companyId));
   },
   get: async (definitionId, companyId) => {
     if (!definitionId) throw new Error('Workflow definition ID is required.');
     const params = companyId ? { companyId } : undefined;
     const response = await apiClient.get(`/api/v1/workflow/definitions/${definitionId}`, { params });
     const data = unwrapApiData(response);
-    return normalizeWorkflowDefinition(data);
+    return normalizeWorkflowDefinition(data, companyId);
   },
   getActive: async (documentType, companyId, moduleName) => {
     if (!documentType) throw new Error('Document type is required.');
@@ -206,86 +382,185 @@ export const workflowDefinitionApi = {
     if (moduleName) params.moduleName = moduleName;
     const response = await apiClient.get('/api/v1/workflow/definitions/active', { params });
     const data = unwrapApiData(response);
-    return normalizeWorkflowDefinition(data);
+    return normalizeWorkflowDefinition(data, companyId);
   },
   create: async (definitionPayload) => {
     const source = definitionPayload && typeof definitionPayload === 'object' && 'data' in definitionPayload ? definitionPayload.data : definitionPayload;
 
-    const buildApprover = (roleValue, fallbackRoleId, fallbackRoleName) => {
-      const targetRole = roleValue || fallbackRoleId || fallbackRoleName;
-      if (!targetRole) return null;
-      const isRoleUUID = isUUID(targetRole);
-      const roleId = fallbackRoleId || (isRoleUUID ? targetRole : undefined);
-      const roleName = fallbackRoleName || (!isRoleUUID ? targetRole : undefined) || 'Approver Role';
+    const mapApprover = (app, defaultOrder = 1) => {
+      if (!app) return null;
+      if (typeof app === 'string') {
+        const isRoleUUID = isUUID(app);
+        return {
+          approverType: 'ROLE',
+          approvalOrder: defaultOrder,
+          isRequired: true,
+          canDelegate: true,
+          roleId: isRoleUUID ? app : undefined,
+          roleName: !isRoleUUID ? app : undefined,
+        };
+      }
 
-      const approver = {
-        approverType: 'ROLE',
-        approvalOrder: 1,
-        isRequired: true,
-        canDelegate: true,
+      const approverType = app.approverType && APPROVER_TYPES.includes(String(app.approverType).toUpperCase())
+        ? String(app.approverType).toUpperCase()
+        : 'ROLE';
+
+      const mapped = {
+        approverType,
+        approvalOrder: typeof app.approvalOrder === 'number' ? app.approvalOrder : defaultOrder,
+        isRequired: app.isRequired ?? true,
+        canDelegate: app.canDelegate ?? true,
       };
-      if (roleId) approver.roleId = roleId;
-      if (roleName) approver.roleName = roleName;
-      return approver;
+
+      if (app.userId && isUUID(app.userId)) mapped.userId = app.userId;
+      if (app.userName) mapped.userName = app.userName;
+      if (app.roleId && isUUID(app.roleId)) mapped.roleId = app.roleId;
+      else if (app.role && isUUID(app.role)) mapped.roleId = app.role;
+      if (app.roleName) mapped.roleName = app.roleName;
+      else if (app.role && !isUUID(app.role)) mapped.roleName = app.role;
+      if (app.departmentId && isUUID(app.departmentId)) mapped.departmentId = app.departmentId;
+      if (app.departmentName) mapped.departmentName = app.departmentName;
+      if (app.ruleExpression) mapped.ruleExpression = app.ruleExpression;
+
+      return mapped;
     };
 
-    const stages = (Array.isArray(source.stages) && source.stages.length > 0)
+    const mapSla = (sla) => {
+      if (!sla || typeof sla !== 'object') return undefined;
+      const durationHours = parseInt(sla.durationHours, 10);
+      if (isNaN(durationHours) || durationHours <= 0) return undefined;
+      const mapped = {
+        durationHours,
+        escalationAction: sla.escalationAction || 'NOTIFY_MANAGER',
+      };
+      if (sla.reminderHours !== undefined && !isNaN(parseInt(sla.reminderHours, 10))) {
+        mapped.reminderHours = parseInt(sla.reminderHours, 10);
+      }
+      if (sla.escalateToUserId && isUUID(sla.escalateToUserId)) {
+        mapped.escalateToUserId = sla.escalateToUserId;
+      }
+      if (sla.escalateToRoleName) {
+        mapped.escalateToRoleName = sla.escalateToRoleName;
+      }
+      return mapped;
+    };
+
+    const mapTransition = (trans) => {
+      if (!trans || typeof trans !== 'object') return null;
+      const actionType = String(trans.actionType || 'APPROVE').toUpperCase();
+      if (!WORKFLOW_ACTION_TYPES.includes(actionType)) return null;
+
+      const mapped = { actionType };
+      if (trans.sourceStageCode) mapped.sourceStageCode = trans.sourceStageCode;
+      if (trans.targetStageCode) mapped.targetStageCode = trans.targetStageCode;
+      if (trans.transitionCondition) mapped.transitionCondition = trans.transitionCondition;
+      if (trans.allowedRoles) mapped.allowedRoles = trans.allowedRoles;
+      return mapped;
+    };
+
+    const rawStages = (Array.isArray(source.stages) && source.stages.length > 0)
       ? source.stages
       : (Array.isArray(source.steps) && source.steps.length > 0)
-        ? source.steps.filter((s) => s.active !== false).map((step, idx) => {
-            const approver = buildApprover(
-              step.role || source.approverRole,
-              step.roleId || source.approverRoleId,
-              step.roleName || source.approverRoleName
-            );
+        ? source.steps.filter((s) => s.active !== false)
+        : [];
 
-            return {
-              stageCode: `STAGE_${idx + 1}`,
-              stageName: step.title || `Stage ${idx + 1}`,
-              stageOrder: idx + 1,
-              sequenceNo: idx + 1,
-              executionType: 'SEQUENTIAL',
-              minimumApprovalsRequired: 1,
-              rejectionAction: 'REJECT_DOCUMENT',
-              isMandatory: true,
-              approvers: approver ? [approver] : [],
-            };
-          })
-        : [{
-            stageCode: 'STAGE_1',
-            stageName: 'Initial Approval',
-            stageOrder: 1,
-            sequenceNo: 1,
-            executionType: 'SEQUENTIAL',
-            minimumApprovalsRequired: 1,
-            rejectionAction: 'REJECT_DOCUMENT',
-            isMandatory: true,
-            approvers: buildApprover(source.approverRole, source.approverRoleId, source.approverRoleName)
-              ? [buildApprover(source.approverRole, source.approverRoleId, source.approverRoleName)]
-              : [],
-          }];
+    const stages = rawStages.length > 0
+      ? rawStages.map((stageItem, idx) => {
+          const stageCode = (stageItem.stageCode || `STAGE_${idx + 1}`).trim();
+          const stageName = (stageItem.stageName || stageItem.title || `Stage ${idx + 1}`).trim();
+          const stageOrder = typeof stageItem.stageOrder === 'number' ? stageItem.stageOrder : idx + 1;
+          const sequenceNo = typeof stageItem.sequenceNo === 'number' ? stageItem.sequenceNo : idx + 1;
+          const executionType = stageItem.executionType === 'PARALLEL' ? 'PARALLEL' : 'SEQUENTIAL';
+          const minimumApprovalsRequired = typeof stageItem.minimumApprovalsRequired === 'number' && stageItem.minimumApprovalsRequired > 0
+            ? stageItem.minimumApprovalsRequired
+            : 1;
+          const rejectionAction = stageItem.rejectionAction === 'RETURN_TO_INITIATOR' ? 'RETURN_TO_INITIATOR' : 'REJECT_DOCUMENT';
+          const isMandatory = stageItem.isMandatory ?? true;
 
-    const payload = {
-      companyId: source.companyId,
-      workflowCode: source.workflowCode || source.code || `${normalizeDocumentType(source.moduleName || source.module)}-${Date.now()}`,
-      workflowName: source.workflowName || source.name,
-      moduleName: source.moduleName || source.module || 'GENERAL',
-      documentType: source.documentType || normalizeDocumentType(source.moduleName || source.module),
-      description: source.description || '',
-      version: source.version ?? 1,
-      isActive: source.isActive ?? source.active ?? true,
-      isDefault: Boolean(source.isDefault ?? false),
-      stages,
-      transitions: Array.isArray(source.transitions) ? source.transitions : [],
-    };
+          let approvers = [];
+          if (Array.isArray(stageItem.approvers) && stageItem.approvers.length > 0) {
+            approvers = stageItem.approvers.map((a, aIdx) => mapApprover(a, aIdx + 1)).filter(Boolean);
+          } else if (stageItem.role || stageItem.roleId || stageItem.roleName || source.approverRole || source.approverRoleId || source.approverRoleName) {
+            const roleVal = stageItem.role || stageItem.roleId || stageItem.roleName || source.approverRole || source.approverRoleId || source.approverRoleName;
+            const approver = mapApprover({
+              approverType: 'ROLE',
+              roleId: stageItem.roleId || source.approverRoleId || (isUUID(roleVal) ? roleVal : undefined),
+              roleName: stageItem.roleName || source.approverRoleName || (!isUUID(roleVal) ? roleVal : undefined),
+              approvalOrder: 1,
+              isRequired: true,
+              canDelegate: true,
+            });
+            if (approver) approvers.push(approver);
+          }
 
-    if (!payload.workflowName) {
+          const stage = {
+            stageCode,
+            stageName,
+            stageOrder,
+            sequenceNo,
+            executionType,
+            minimumApprovalsRequired,
+            rejectionAction,
+            isMandatory,
+            approvers,
+          };
+
+          const sla = mapSla(stageItem.sla);
+          if (sla) stage.sla = sla;
+
+          return stage;
+        })
+      : [{
+          stageCode: 'STAGE_1',
+          stageName: 'Initial Approval',
+          stageOrder: 1,
+          sequenceNo: 1,
+          executionType: 'SEQUENTIAL',
+          minimumApprovalsRequired: 1,
+          rejectionAction: 'REJECT_DOCUMENT',
+          isMandatory: true,
+          approvers: [mapApprover({
+            approverType: 'ROLE',
+            roleId: source.approverRoleId || (isUUID(source.approverRole) ? source.approverRole : undefined),
+            roleName: source.approverRoleName || (!isUUID(source.approverRole) ? source.approverRole : undefined) || 'Approver Role',
+            approvalOrder: 1,
+            isRequired: true,
+            canDelegate: true,
+          })].filter(Boolean),
+        }];
+
+    const workflowName = (source.workflowName || source.name || '').trim();
+    if (!workflowName) {
       throw new Error('Workflow name is required to create a workflow definition.');
     }
 
+    const workflowCode = (source.workflowCode || source.code || '').trim() || `${normalizeDocumentType(source.moduleName || source.module)}-${Date.now()}`;
+    const moduleName = (source.moduleName || source.module || 'GENERAL').toUpperCase();
+    const documentType = (source.documentType || normalizeDocumentType(source.moduleName || source.module)).toUpperCase();
+
+    // DTO fields ONLY - strictly match CreateWorkflowDefinitionRequest
+    const payload = {
+      companyId: source.companyId,
+      workflowCode,
+      workflowName,
+      moduleName,
+      documentType,
+      description: source.description || '',
+      version: typeof source.version === 'number' ? source.version : 1,
+      isActive: Boolean(source.isActive !== undefined ? source.isActive : source.active),
+      isDefault: Boolean(source.isDefault ?? false),
+      stages,
+      transitions: Array.isArray(source.transitions)
+        ? source.transitions.map(mapTransition).filter(Boolean)
+        : [],
+    };
+
+    if (source.effectiveFrom) payload.effectiveFrom = source.effectiveFrom;
+    if (source.effectiveTo) payload.effectiveTo = source.effectiveTo;
+
     const response = await apiClient.post('/api/v1/workflow/definitions', { data: payload });
     const data = unwrapApiData(response);
-    return normalizeWorkflowDefinition(data);
+    return normalizeWorkflowDefinition(data, source.companyId);
   },
   update: async () => { throw new WorkflowApiNotImplementedError('PUT/PATCH /api/v1/workflow/definitions/{definitionId}'); },
   remove: async (definitionId, companyId) => {
@@ -335,7 +610,7 @@ export async function loadWorkflowDefinitions(companyId, documentType = 'GENERAL
 }
 
 export async function saveWorkflowDefinitions(companyId, definitions, options = {}) {
-  const isDraftItem = (item) => !item?.id || String(item.id).startsWith('workflow-');
+  const isDraftItem = (item) => !item?.id || String(item.id).startsWith('workflow-') || String(item.id).startsWith('draft-');
   const mode = options.mode || (isDraftItem(definitions) ? 'create' : 'update');
 
   if (Array.isArray(definitions)) {
@@ -345,13 +620,15 @@ export async function saveWorkflowDefinitions(companyId, definitions, options = 
 
     const created = [];
     for (const item of definitions) {
-      if (!item || !item.name) continue;
-      created.push(await workflowDefinitionApi.create({ ...item, companyId }));
+      if (!item || !(item.name || item.workflowName)) continue;
+      const createdItem = await workflowDefinitionApi.create({ ...item, companyId });
+      saveWorkflowAdditionalSettings(companyId, createdItem.id, item);
+      created.push(createdItem);
     }
     return { definitions: created, source: WORKFLOW_DATA_SOURCES.API };
   }
 
-  if (!definitions || !definitions.name) {
+  if (!definitions || !(definitions.name || definitions.workflowName)) {
     return { definitions: [], source: WORKFLOW_DATA_SOURCES.API };
   }
 
@@ -362,12 +639,28 @@ export async function saveWorkflowDefinitions(companyId, definitions, options = 
       } else {
         await workflowDefinitionApi.deactivate(definitions.id, companyId);
       }
+      saveWorkflowAdditionalSettings(companyId, definitions.id, definitions);
       return { definitions: [definitions], source: WORKFLOW_DATA_SOURCES.API };
     }
     throw new WorkflowApiNotImplementedError('PUT/PATCH /api/v1/workflow/definitions/{definitionId}');
   }
 
-  const created = await workflowDefinitionApi.create({ ...definitions, companyId });
+  // Create mode: validate first
+  const payloadToValidate = {
+    ...definitions,
+    companyId,
+    workflowCode: (definitions.workflowCode || definitions.code || '').trim() || (definitions.name || definitions.workflowName ? `${normalizeDocumentType(definitions.moduleName || definitions.module)}_${Date.now().toString().slice(-4)}` : ''),
+  };
+  const validation = validateWorkflowDefinition(payloadToValidate, { companyId });
+  if (!validation.isValid) {
+    const errorMsg = Object.values(validation.errors)[0] || 'Workflow validation failed.';
+    const err = new Error(errorMsg);
+    err.validationErrors = validation.errors;
+    throw err;
+  }
+
+  const created = await workflowDefinitionApi.create({ ...payloadToValidate, companyId });
+  saveWorkflowAdditionalSettings(companyId, created.id, definitions);
   return { definitions: [created], source: WORKFLOW_DATA_SOURCES.API };
 }
 

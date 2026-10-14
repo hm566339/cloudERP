@@ -23,7 +23,9 @@ import {
   resolveRoleId,
   resolveRoleName,
   saveWorkflowDefinitions,
+  validateWorkflowDefinition,
   workflowAuditApi,
+  workflowDefinitionApi,
 } from '../services/workflowService';
 import useListQuery from '../../../hooks/useListQuery';
 import SearchInput from '../../../components/common/SearchInput';
@@ -90,6 +92,8 @@ export default function WorkflowManagementPage() {
   const canApprove = usePermission('WORKFLOW', 'APPROVE') || isOwnerOrAdmin;
   const [workflows, setWorkflows] = useState([]);
   const [definitionsStatus, setDefinitionsStatus] = useState('loading');
+  const [draftWorkflow, setDraftWorkflow] = useState(null);
+  const [previousSelectedId, setPreviousSelectedId] = useState('');
   const [roles, setRoles] = useState([]);
   const [rolesLoading, setRolesLoading] = useState(false);
   const [rolesError, setRolesError] = useState(null);
@@ -141,10 +145,31 @@ export default function WorkflowManagementPage() {
     }
   }, [companyId, fetchRoles]);
 
+  const reloadDefinitions = useCallback(async () => {
+    if (!companyId) {
+      setDefinitionsStatus('error');
+      return [];
+    }
+    setDefinitionsStatus('loading');
+    try {
+      const result = await loadWorkflowDefinitions(companyId, moduleToDocumentType(module));
+      const defs = result?.definitions || [];
+      setWorkflows(defs);
+      setDefinitionsStatus('ready');
+      return defs;
+    } catch (error) {
+      console.error('Failed to reload workflow definitions', error);
+      setDefinitionsStatus('error');
+      dispatch(addAlert({ type: 'error', message: error?.message || 'Workflow definitions could not be reloaded from the backend.' }));
+      return [];
+    }
+  }, [companyId, module, dispatch]);
+
   useEffect(() => {
     let active = true;
     setWorkflows([]);
     setSelectedId('');
+    setDraftWorkflow(null);
     setErrors({});
     setQuery('');
     setActiveTab('diagram');
@@ -159,7 +184,7 @@ export default function WorkflowManagementPage() {
     loadWorkflowDefinitions(companyId, moduleToDocumentType(module))
       .then((result) => {
         if (!active) return;
-        setWorkflows(result.definitions || []);
+        setWorkflows(result?.definitions || []);
         setDefinitionsStatus('ready');
       })
       .catch((error) => {
@@ -172,30 +197,42 @@ export default function WorkflowManagementPage() {
     return () => { active = false; };
   }, [companyId, module, dispatch]);
 
-  const reloadDefinitions = () => {
-    if (!companyId) {
-      setDefinitionsStatus('error');
-      return;
-    }
-    setDefinitionsStatus('loading');
-    loadWorkflowDefinitions(companyId, moduleToDocumentType(module))
-      .then((result) => {
-        setWorkflows(result.definitions || []);
-        setDefinitionsStatus('ready');
-      })
-      .catch((error) => {
-        console.error('Failed to reload workflow definitions', error);
-        setDefinitionsStatus('error');
-        dispatch(addAlert({ type: 'error', message: error?.message || 'Workflow definitions could not be reloaded from the backend.' }));
+  const visibleWorkflows = useMemo(
+    () => workflows.filter((item) => item.module === module && item.name.toLowerCase().includes(query.toLowerCase())),
+    [workflows, module, query]
+  );
+
+  const isEditingDraft = Boolean(draftWorkflow && selectedId === draftWorkflow.id);
+  const selected = isEditingDraft
+    ? draftWorkflow
+    : (workflows.find((item) => item.id === selectedId) || visibleWorkflows[0] || (draftWorkflow && draftWorkflow.module === module ? draftWorkflow : null));
+
+  const setSelected = (updater) => {
+    if (isEditingDraft) {
+      setDraftWorkflow((prev) => {
+        if (!prev) return prev;
+        return typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
       });
+    } else {
+      setWorkflows((items) =>
+        items.map((item) =>
+          item.id === selected?.id ? (typeof updater === 'function' ? updater(item) : { ...item, ...updater }) : item
+        )
+      );
+    }
   };
 
-  const visibleWorkflows = useMemo(() => workflows.filter((item) => item.module === module && item.name.toLowerCase().includes(query.toLowerCase())), [workflows, module, query]);
-  const selected = workflows.find((item) => item.id === selectedId) || visibleWorkflows[0];
-  const setSelected = (updater) => setWorkflows((items) => items.map((item) => item.id === selected?.id ? (typeof updater === 'function' ? updater(item) : { ...item, ...updater }) : item));
+  useEffect(() => {
+    if (draftWorkflow && selectedId === draftWorkflow.id) return;
+    if (visibleWorkflows.length && !visibleWorkflows.some((item) => item.id === selectedId)) {
+      setSelectedId(visibleWorkflows[0].id);
+    }
+  }, [visibleWorkflows, selectedId, draftWorkflow]);
 
-  useEffect(() => { if (visibleWorkflows.length && !visibleWorkflows.some((item) => item.id === selectedId)) setSelectedId(visibleWorkflows[0].id); }, [visibleWorkflows, selectedId]);
-  useEffect(() => { if (!canAuditView && activeTab === 'audit') setActiveTab('diagram'); }, [activeTab, canAuditView]);
+  useEffect(() => {
+    if (!canAuditView && activeTab === 'audit') setActiveTab('diagram');
+  }, [activeTab, canAuditView]);
+
   useEffect(() => {
     if (!selected) return;
     setErrors({});
@@ -203,64 +240,21 @@ export default function WorkflowManagementPage() {
 
   if (!canView) return <div className="card mx-auto mt-10 max-w-lg p-8 text-center"><ShieldCheck className="mx-auto mb-3 text-zinc-400" size={34} /><h1 className="text-lg font-semibold text-zinc-900">Workflow access restricted</h1><p className="mt-2 text-sm text-zinc-500">You do not have permission to view workflow configurations for this company.</p></div>;
 
-  const save = async () => {
-    if (!selected) return;
-    const nextErrors = {};
-    if (!selected.name.trim()) nextErrors.name = 'Workflow name is required.';
-    if (!selected.initiatedBy) nextErrors.initiatedBy = 'Select the initiating role.';
-    if (selected.approvalRequired && (!selected.approverRole || selected.steps.filter((step) => step.type === 'approval' && step.active).length === 0)) nextErrors.steps = 'Add an active approval step and approver role.';
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length) { dispatch(addAlert({ type: 'error', message: 'Please fix the workflow validation errors.' })); return; }
-    setIsSaving(true);
-    try {
-      const initiatedByRoleId = resolveRoleId(selected.initiatedBy, roles);
-      const initiatedByRoleName = resolveRoleName(selected.initiatedBy, roles);
-      const approverRoleId = resolveRoleId(selected.approverRole, roles);
-      const approverRoleName = resolveRoleName(selected.approverRole, roles);
-
-      const payloadToSave = {
-        ...selected,
-        initiatedBy: initiatedByRoleId,
-        initiatedByRoleId,
-        initiatedByRoleName,
-        approverRole: approverRoleId,
-        approverRoleId,
-        approverRoleName,
-        steps: selected.steps.map((step) => ({
-          ...step,
-          role: resolveRoleId(step.role || approverRoleId, roles),
-          roleId: resolveRoleId(step.role || approverRoleId, roles),
-          roleName: resolveRoleName(step.role || approverRoleName, roles),
-        })),
-      };
-
-      const isNewDraft = !selected.id || String(selected.id).startsWith('workflow-');
-      const mode = isNewDraft ? 'create' : 'update';
-      const result = await saveWorkflowDefinitions(companyId, payloadToSave, { mode });
-      dispatch(addAlert({ type: 'success', message: `${selected.name} saved for ${selectedCompany?.name || 'this company'}.` }));
-
-      if (isNewDraft && result?.definitions?.length) {
-        const createdDef = result.definitions[0];
-        setWorkflows((items) => items.map((w) => (w.id === selected.id ? createdDef : w)));
-        setSelectedId(createdDef.id);
-      }
-    } catch (error) {
-      console.error('Failed to save workflow definitions', error);
-      dispatch(addAlert({ type: 'error', message: error?.message || `Could not save ${selected.name}.` }));
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const create = async () => {
-    const id = `workflow-${Date.now()}`;
+  const create = () => {
+    const draftId = `draft-${Date.now()}`;
     const defaultRole = roles[0]?.id || '';
-    const item = {
-      id,
-      module,
+    const docType = moduleToDocumentType(module);
+    const newDraft = {
+      id: draftId,
+      workflowCode: `${docType}_APPROVAL_${Date.now().toString().slice(-4)}`,
       name: 'New workflow',
+      workflowName: 'New workflow',
       description: '',
+      module,
+      moduleName: docType,
+      documentType: docType,
       active: false,
+      isActive: false,
       customerScope: 'all',
       initiatedBy: defaultRole,
       approvalRequired: true,
@@ -270,20 +264,171 @@ export default function WorkflowManagementPage() {
       autoCreateOrder: false,
       emailNotifications: true,
       notes: '',
-      steps: [{ id: `${id}-1`, title: 'New approval step', role: defaultRole, type: 'approval', active: true }],
+      isDraft: true,
+      steps: [
+        {
+          id: `${draftId}-1`,
+          stageCode: 'STAGE_1',
+          stageName: 'Initial Approval',
+          title: 'Initial Approval',
+          role: defaultRole,
+          type: 'approval',
+          active: true,
+        },
+      ],
     };
-    const next = [item, ...workflows];
-    setWorkflows(next);
-    setSelectedId(id);
+
+    if (selectedId && !draftWorkflow) {
+      setPreviousSelectedId(selectedId);
+    }
+    setDraftWorkflow(newDraft);
+    setSelectedId(draftId);
+    setErrors({});
+  };
+
+  const duplicateWorkflow = () => {
+    if (!selected) return;
+    if (selectedId && !draftWorkflow) {
+      setPreviousSelectedId(selectedId);
+    }
+    const draftId = `draft-${Date.now()}`;
+    const copyName = `${selected.name || 'Workflow'} (Copy)`;
+    const rawCode = selected.workflowCode || selected.code || '';
+    const copyCode = rawCode ? `${rawCode}_COPY_${Date.now().toString().slice(-4)}` : `${moduleToDocumentType(module)}_COPY_${Date.now().toString().slice(-4)}`;
+
+    const newDraft = {
+      ...JSON.parse(JSON.stringify(selected)),
+      id: draftId,
+      name: copyName,
+      workflowName: copyName,
+      workflowCode: copyCode,
+      active: false,
+      isActive: false,
+      isDraft: true,
+    };
+    setDraftWorkflow(newDraft);
+    setSelectedId(draftId);
+    setErrors({});
+  };
+
+  const cancel = () => {
+    if (isEditingDraft) {
+      setDraftWorkflow(null);
+      setErrors({});
+      if (previousSelectedId && visibleWorkflows.some((w) => w.id === previousSelectedId)) {
+        setSelectedId(previousSelectedId);
+      } else if (visibleWorkflows.length > 0) {
+        setSelectedId(visibleWorkflows[0].id);
+      } else {
+        setSelectedId('');
+      }
+    } else {
+      reloadDefinitions();
+      setErrors({});
+    }
+  };
+
+  const save = async () => {
+    if (isSaving || !selected) return;
+
+    const initiatedByRoleId = resolveRoleId(selected.initiatedBy, roles);
+    const initiatedByRoleName = resolveRoleName(selected.initiatedBy, roles);
+    const approverRoleId = resolveRoleId(selected.approverRole, roles);
+    const approverRoleName = resolveRoleName(selected.approverRole, roles);
+
+    const docType = selected.documentType || moduleToDocumentType(selected.module || module);
+    const moduleName = (selected.moduleName || selected.module || module).toUpperCase();
+
+    const payloadToSave = {
+      ...selected,
+      companyId,
+      moduleName,
+      documentType: docType,
+      workflowName: selected.workflowName || selected.name,
+      name: selected.workflowName || selected.name,
+      workflowCode: selected.workflowCode || selected.code,
+      initiatedBy: initiatedByRoleId,
+      initiatedByRoleId,
+      initiatedByRoleName,
+      approverRole: approverRoleId,
+      approverRoleId,
+      approverRoleName,
+      isActive: Boolean(selected.isActive !== undefined ? selected.isActive : selected.active),
+      active: Boolean(selected.isActive !== undefined ? selected.isActive : selected.active),
+      steps: Array.isArray(selected.steps)
+        ? selected.steps.map((step, idx) => ({
+            ...step,
+            stageCode: step.stageCode || `STAGE_${idx + 1}`,
+            stageName: step.stageName || step.title || `Stage ${idx + 1}`,
+            role: resolveRoleId(step.role || approverRoleId, roles),
+            roleId: resolveRoleId(step.role || approverRoleId, roles),
+            roleName: resolveRoleName(step.role || approverRoleName, roles),
+          }))
+        : [],
+    };
+
+    const validation = validateWorkflowDefinition(payloadToSave, { companyId });
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      const firstError = Object.values(validation.errors)[0] || 'Please fix the workflow validation errors.';
+      dispatch(addAlert({ type: 'error', message: firstError }));
+      return;
+    }
+
     setErrors({});
     setIsSaving(true);
+
     try {
-      const created = await saveWorkflowDefinitions(companyId, item, { mode: 'create' });
-      dispatch(addAlert({ type: 'success', message: `Workflow created for ${selectedCompany?.name || 'this company'}.` }));
-      setWorkflows((items) => (created?.definitions?.length ? [created.definitions[0], ...items.filter((entry) => entry.id !== item.id)] : next));
+      if (isEditingDraft) {
+        const result = await saveWorkflowDefinitions(companyId, payloadToSave, { mode: 'create' });
+        const createdDef = result?.definitions?.[0];
+
+        dispatch(addAlert({
+          type: 'success',
+          message: `${createdDef?.name || payloadToSave.name} created successfully for ${selectedCompany?.name || 'this company'}.`,
+        }));
+
+        setDraftWorkflow(null);
+        const defs = await reloadDefinitions();
+        if (createdDef?.id) {
+          setSelectedId(createdDef.id);
+        } else if (defs && defs.length) {
+          setSelectedId(defs[0].id);
+        }
+      } else {
+        const existingOriginal = workflows.find((w) => w.id === selected.id);
+        const statusChanged = existingOriginal && (
+          Boolean(existingOriginal.active) !== Boolean(payloadToSave.active) ||
+          Boolean(existingOriginal.isActive) !== Boolean(payloadToSave.isActive)
+        );
+
+        if (statusChanged) {
+          if (payloadToSave.active) {
+            await workflowDefinitionApi.setActive(selected.id, companyId);
+          } else {
+            await workflowDefinitionApi.deactivate(selected.id, companyId);
+          }
+          dispatch(addAlert({
+            type: 'success',
+            message: `Workflow "${selected.name}" status updated to ${payloadToSave.active ? 'active' : 'inactive'}.`,
+          }));
+          await reloadDefinitions();
+        } else {
+          dispatch(addAlert({
+            type: 'warning',
+            message: 'Updating existing workflow definition metadata/stages is not supported by the backend API. Status activation/deactivation is available.',
+          }));
+        }
+      }
     } catch (error) {
-      console.error('Failed to create workflow', error);
-      dispatch(addAlert({ type: 'error', message: error?.message || `Could not create workflow.` }));
+      console.error('Failed to save workflow definition', error);
+      if (error?.validationErrors) {
+        setErrors(error.validationErrors);
+      }
+      dispatch(addAlert({
+        type: 'error',
+        message: error?.message || `Could not save ${selected.name}.`,
+      }));
     } finally {
       setIsSaving(false);
     }
@@ -292,13 +437,16 @@ export default function WorkflowManagementPage() {
   const updateStep = (stepId, changes) => setSelected((item) => ({ ...item, steps: item.steps.map((step) => step.id === stepId ? { ...step, ...changes } : step) }));
   const addStep = () => setSelected((item) => {
     const defaultRole = item.approverRole || (roles[0]?.id || '');
+    const nextIdx = (item.steps?.length || 0) + 1;
     return {
       ...item,
       steps: [
-        ...item.steps,
+        ...(item.steps || []),
         {
           id: `${item.id}-${Date.now()}`,
-          title: 'New approval step',
+          stageCode: `STAGE_${nextIdx}`,
+          stageName: `Approval Stage ${nextIdx}`,
+          title: `Approval Stage ${nextIdx}`,
           role: defaultRole,
           type: 'approval',
           active: true,
@@ -308,7 +456,24 @@ export default function WorkflowManagementPage() {
   });
   const removeStep = (stepId) => setSelected((item) => ({ ...item, steps: item.steps.filter((step) => step.id !== stepId) }));
   const moveStep = (index, offset) => setSelected((item) => { const steps = [...item.steps];[steps[index], steps[index + offset]] = [steps[index + offset], steps[index]]; return { ...item, steps }; });
-  const deleteWorkflow = () => { if (!selected) return; setDeleteTarget(selected); };
+
+  const deleteWorkflow = () => {
+    if (!selected) return;
+    if (isEditingDraft) {
+      setDraftWorkflow(null);
+      setErrors({});
+      if (previousSelectedId && visibleWorkflows.some((w) => w.id === previousSelectedId)) {
+        setSelectedId(previousSelectedId);
+      } else if (visibleWorkflows.length > 0) {
+        setSelectedId(visibleWorkflows[0].id);
+      } else {
+        setSelectedId('');
+      }
+      dispatch(addAlert({ type: 'info', message: 'Unsaved draft discarded.' }));
+      return;
+    }
+    setDeleteTarget(selected);
+  };
 
   const confirmDeleteWorkflow = async () => {
     if (!deleteTarget) return;
@@ -450,6 +615,31 @@ export default function WorkflowManagementPage() {
               <ErrorState title="Could not load workflows" message={`Workflow definitions could not be loaded for ${selectedCompany?.name || companyId}.`} onRetry={reloadDefinitions} />
             ) : (
               <>
+                {draftWorkflow && draftWorkflow.module === module && (
+                  <button
+                    type="button"
+                    key={draftWorkflow.id}
+                    onClick={() => { setSelectedId(draftWorkflow.id); setErrors({}); }}
+                    className={`w-full rounded-lg border p-3 text-left transition-all ${
+                      selected?.id === draftWorkflow.id
+                        ? 'border-amber-400 bg-amber-50/50 shadow-sm ring-1 ring-amber-400/30'
+                        : 'border-dashed border-amber-300 bg-amber-50/20 hover:border-amber-400 hover:bg-amber-50/40'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className={`text-xs font-semibold truncate ${selected?.id === draftWorkflow.id ? 'text-zinc-950 font-bold' : 'text-zinc-800'}`}>
+                        {draftWorkflow.name || 'Untitled draft'}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase border border-amber-300 bg-amber-50 text-amber-800">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        UNSAVED
+                      </span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-[11px] text-zinc-500 leading-relaxed">
+                      {draftWorkflow.description || 'Local draft — click Save changes to persist.'}
+                    </p>
+                  </button>
+                )}
                 {visibleWorkflows.map((item) => {
                   const isSelected = item.id === selected?.id;
                   return (
@@ -475,7 +665,7 @@ export default function WorkflowManagementPage() {
                     </button>
                   );
                 })}
-                {!visibleWorkflows.length && (
+                {!visibleWorkflows.length && !(draftWorkflow && draftWorkflow.module === module) && (
                   <div className="py-8 text-center text-xs text-zinc-400">
                     No workflows in {module}.
                   </div>
@@ -494,7 +684,14 @@ export default function WorkflowManagementPage() {
                   <h2 className="text-sm sm:text-base font-bold text-zinc-900 truncate">
                     {selected?.name || 'No workflow selected'}
                   </h2>
-                  {selected && <StatusBadge active={selected.active} />}
+                  {isEditingDraft ? (
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase border border-amber-300 bg-amber-50 text-amber-800 shadow-sm">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      UNSAVED
+                    </span>
+                  ) : (
+                    selected && <StatusBadge active={selected.active} />
+                  )}
                 </div>
                 <p className="mt-1 text-xs text-zinc-500 line-clamp-2 leading-relaxed">
                   {selected?.description || 'Create a workflow to begin configuring approvals.'}
@@ -506,7 +703,7 @@ export default function WorkflowManagementPage() {
                     type="button"
                     title="Duplicate workflow"
                     disabled={!canCreate || isSaving || isDeleting}
-                    onClick={create}
+                    onClick={duplicateWorkflow}
                     className="p-1.5 rounded-lg border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 hover:border-zinc-300 transition-colors disabled:opacity-40"
                   >
                     <Copy size={14} />
@@ -645,7 +842,7 @@ export default function WorkflowManagementPage() {
                 type="button"
                 className="btn-secondary h-8 px-3 text-xs inline-flex items-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 font-medium transition-all shadow-sm"
                 disabled={isSaving}
-                onClick={() => { reloadDefinitions(); setErrors({}); }}
+                onClick={cancel}
               >
                 Cancel
               </button>

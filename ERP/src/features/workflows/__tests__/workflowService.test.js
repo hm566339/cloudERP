@@ -6,6 +6,11 @@ import workflowDefinitionApi, {
   loadWorkflowDefinitions,
   saveWorkflowDefinitions,
   deleteWorkflowDefinition,
+  validateWorkflowDefinition,
+  getWorkflowAdditionalSettings,
+  saveWorkflowAdditionalSettings,
+  APPROVER_TYPES,
+  WORKFLOW_ACTION_TYPES,
   WorkflowApiNotImplementedError,
   WORKFLOW_DATA_SOURCES,
 } from '../services/workflowService.js';
@@ -303,6 +308,253 @@ describe('Workflow Definitions API Routing & Service Verification', () => {
     it('routes workflow token refresh to /api/sso/token/refresh', () => {
       const endpoint = getRefreshEndpoint('workflow');
       assert.strictEqual(endpoint, '/api/sso/token/refresh');
+    });
+  });
+
+  describe('4. Workflow Validation Rules (validateWorkflowDefinition)', () => {
+    const validDraft = {
+      companyId: 'ea811382-0afc-4908-a209-9bedcc63c445',
+      workflowCode: 'SALES_APPROVAL_01',
+      workflowName: 'Sales Invoice Approval',
+      documentType: 'SALES',
+      moduleName: 'SALES',
+      stages: [
+        {
+          stageCode: 'STAGE_1',
+          stageName: 'Manager Review',
+          approvers: [{ approverType: 'ROLE', roleName: 'Sales Manager' }],
+          sla: { durationHours: 24 },
+        },
+      ],
+      transitions: [
+        {
+          fromStageCode: 'STAGE_1',
+          toStageCode: 'STAGE_2',
+          actionType: 'APPROVE',
+        },
+      ],
+    };
+
+    it('passes for a fully valid workflow draft', () => {
+      const res = validateWorkflowDefinition(validDraft, { companyId: validDraft.companyId });
+      assert.strictEqual(res.isValid, true);
+      assert.deepStrictEqual(res.errors, {});
+    });
+
+    it('rejects missing companyId', () => {
+      const res = validateWorkflowDefinition({ ...validDraft, companyId: '' }, { companyId: '' });
+      assert.strictEqual(res.isValid, false);
+      assert.ok(res.errors.companyId);
+    });
+
+    it('rejects empty workflowCode', () => {
+      const res = validateWorkflowDefinition({ ...validDraft, workflowCode: '   ' }, { companyId: validDraft.companyId });
+      assert.strictEqual(res.isValid, false);
+      assert.ok(res.errors.workflowCode);
+    });
+
+    it('rejects empty workflowName', () => {
+      const res = validateWorkflowDefinition({ ...validDraft, workflowName: '' }, { companyId: validDraft.companyId });
+      assert.strictEqual(res.isValid, false);
+      assert.ok(res.errors.name || res.errors.workflowName);
+    });
+
+    it('rejects missing documentType', () => {
+      const res = validateWorkflowDefinition({ ...validDraft, documentType: '', moduleName: '', module: '' }, { companyId: validDraft.companyId });
+      assert.strictEqual(res.isValid, false);
+      assert.ok(res.errors.documentType);
+    });
+
+    it('rejects empty stages and steps', () => {
+      const res = validateWorkflowDefinition({ ...validDraft, stages: [], steps: [] }, { companyId: validDraft.companyId });
+      assert.strictEqual(res.isValid, false);
+      assert.ok(res.errors.steps || res.errors.stages);
+    });
+
+    it('rejects stage with missing stageCode or stageName', () => {
+      const res = validateWorkflowDefinition({
+        ...validDraft,
+        stages: [{ stageCode: '', stageName: '' }],
+      }, { companyId: validDraft.companyId });
+      assert.strictEqual(res.isValid, false);
+      assert.ok(res.errors['stage_0_code']);
+      assert.ok(res.errors['stage_0_name']);
+    });
+
+    it('rejects invalid approverType not in APPROVER_TYPES', () => {
+      const res = validateWorkflowDefinition({
+        ...validDraft,
+        stages: [{
+          stageCode: 'STAGE_1',
+          stageName: 'Review',
+          approvers: [{ approverType: 'INVALID_TYPE' }],
+        }],
+      }, { companyId: validDraft.companyId });
+      assert.strictEqual(res.isValid, false);
+      assert.ok(res.errors['stage_0_approver_0_type']);
+    });
+
+    it('rejects invalid transition actionType not in WORKFLOW_ACTION_TYPES', () => {
+      const res = validateWorkflowDefinition({
+        ...validDraft,
+        transitions: [{ actionType: 'UNKNOWN_ACTION' }],
+      }, { companyId: validDraft.companyId });
+      assert.strictEqual(res.isValid, false);
+      assert.ok(res.errors['transition_0_actionType']);
+    });
+
+    it('rejects invalid SLA durationHours (zero or negative)', () => {
+      const resZero = validateWorkflowDefinition({
+        ...validDraft,
+        stages: [{
+          stageCode: 'STAGE_1',
+          stageName: 'Review',
+          sla: { durationHours: 0 },
+        }],
+      }, { companyId: validDraft.companyId });
+      assert.strictEqual(resZero.isValid, false);
+      assert.ok(resZero.errors['stage_0_sla']);
+
+      const resNegative = validateWorkflowDefinition({
+        ...validDraft,
+        stages: [{
+          stageCode: 'STAGE_1',
+          stageName: 'Review',
+          sla: { durationHours: -5 },
+        }],
+      }, { companyId: validDraft.companyId });
+      assert.strictEqual(resNegative.isValid, false);
+      assert.ok(resNegative.errors['stage_0_sla']);
+    });
+  });
+
+  describe('5. Create Workflow POST Payload Contract & Field Whitelisting', () => {
+    it('sets isActive explicitly to false when draft is inactive', async () => {
+      try {
+        apiClient.post = async (url, body) => {
+          lastRequest = { url, body };
+          return { data: { success: true, data: { id: 'wf-inactive', ...body.data } } };
+        };
+
+        const result = await workflowDefinitionApi.create({
+          companyId: 'ea811382-0afc-4908-a209-9bedcc63c445',
+          workflowCode: 'INACTIVE_WF',
+          name: 'Inactive Approval',
+          module: 'Sales',
+          active: false,
+          isActive: false,
+          steps: [{ id: 'step-1', stageCode: 'STAGE_1', stageName: 'Review', active: true }],
+        });
+
+        assert.strictEqual(lastRequest.body.data.isActive, false, 'isActive must be explicitly false in POST payload');
+        assert.strictEqual(result.active, false);
+      } finally {
+        restoreClient();
+      }
+    });
+
+    it('sets isActive explicitly to true when draft is active', async () => {
+      try {
+        apiClient.post = async (url, body) => {
+          lastRequest = { url, body };
+          return { data: { success: true, data: { id: 'wf-active', ...body.data } } };
+        };
+
+        const result = await workflowDefinitionApi.create({
+          companyId: 'ea811382-0afc-4908-a209-9bedcc63c445',
+          workflowCode: 'ACTIVE_WF',
+          name: 'Active Approval',
+          module: 'Sales',
+          active: true,
+          isActive: true,
+          steps: [{ id: 'step-1', stageCode: 'STAGE_1', stageName: 'Review', active: true }],
+        });
+
+        assert.strictEqual(lastRequest.body.data.isActive, true, 'isActive must be explicitly true when enabled');
+        assert.strictEqual(result.active, true);
+      } finally {
+        restoreClient();
+      }
+    });
+
+    it('does not send frontend-only properties in POST payload to backend', async () => {
+      try {
+        apiClient.post = async (url, body) => {
+          lastRequest = { url, body };
+          return { data: { success: true, data: { id: 'wf-dto-clean', ...body.data } } };
+        };
+
+        await workflowDefinitionApi.create({
+          companyId: 'ea811382-0afc-4908-a209-9bedcc63c445',
+          workflowCode: 'CLEAN_DTO',
+          name: 'Clean DTO',
+          module: 'Sales',
+          notes: 'Internal secret notes',
+          threshold: '50000',
+          customerScope: 'specific',
+          customerAcceptance: true,
+          autoCreateOrder: true,
+          emailNotifications: true,
+          status: 'draft',
+          steps: [{ id: 'step-1', stageCode: 'STAGE_1', stageName: 'Review', active: true }],
+        });
+
+        const sentPayload = lastRequest.body.data;
+        assert.strictEqual(sentPayload.notes, undefined, 'notes must not be sent in backend payload');
+        assert.strictEqual(sentPayload.threshold, undefined, 'threshold must not be sent in backend payload');
+        assert.strictEqual(sentPayload.customerScope, undefined, 'customerScope must not be sent in backend payload');
+        assert.strictEqual(sentPayload.customerAcceptance, undefined, 'customerAcceptance must not be sent in backend payload');
+        assert.strictEqual(sentPayload.autoCreateOrder, undefined, 'autoCreateOrder must not be sent in backend payload');
+        assert.strictEqual(sentPayload.emailNotifications, undefined, 'emailNotifications must not be sent in backend payload');
+        assert.strictEqual(sentPayload.steps, undefined, 'steps must not be sent in backend payload (stages is used)');
+        assert.strictEqual(sentPayload.status, undefined, 'frontend status string must not be sent');
+
+        // Confirm Java DTO keys exist
+        assert.strictEqual(sentPayload.companyId, 'ea811382-0afc-4908-a209-9bedcc63c445');
+        assert.strictEqual(sentPayload.workflowCode, 'CLEAN_DTO');
+        assert.strictEqual(sentPayload.workflowName, 'Clean DTO');
+        assert.strictEqual(sentPayload.moduleName, 'SALES');
+        assert.strictEqual(sentPayload.documentType, 'SALES');
+        assert.ok(Array.isArray(sentPayload.stages));
+        assert.ok(Array.isArray(sentPayload.transitions));
+      } finally {
+        restoreClient();
+      }
+    });
+
+    it('saves and retrieves additional settings via localStorage helper without backend definition mutation', () => {
+      const companyId = 'ea811382-0afc-4908-a209-9bedcc63c445';
+      const defId = 'wf-extra-settings-test';
+
+      saveWorkflowAdditionalSettings(companyId, defId, {
+        customerScope: 'specific',
+        threshold: '75000',
+        customerAcceptance: true,
+        autoCreateOrder: true,
+        emailNotifications: false,
+        notes: 'Admin review only',
+      });
+
+      const retrieved = getWorkflowAdditionalSettings(companyId, defId);
+      assert.strictEqual(retrieved.customerScope, 'specific');
+      assert.strictEqual(retrieved.threshold, '75000');
+      assert.strictEqual(retrieved.customerAcceptance, true);
+      assert.strictEqual(retrieved.autoCreateOrder, true);
+      assert.strictEqual(retrieved.emailNotifications, false);
+      assert.strictEqual(retrieved.notes, 'Admin review only');
+    });
+
+    it('update throws WorkflowApiNotImplementedError confirming PUT/PATCH update limitation', async () => {
+      await assert.rejects(
+        async () => {
+          await workflowDefinitionApi.update('some-id');
+        },
+        (err) => {
+          assert.ok(err instanceof WorkflowApiNotImplementedError);
+          assert.match(err.message, /PUT\/PATCH \/api\/v1\/workflow\/definitions/);
+          return true;
+        }
+      );
     });
   });
 });

@@ -36,14 +36,44 @@ export default function WorkflowConfigurationForm({
         <Field label="Workflow name">
           <input
             className={`w-full h-8 px-2.5 rounded-lg border bg-white text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 ${
-              errors.name ? 'border-red-400' : 'border-zinc-200'
+              (errors.name || errors.workflowName) ? 'border-red-400' : 'border-zinc-200'
             }`}
             disabled={!canEdit}
-            value={workflow.name}
-            onChange={(e) => update('name', e.target.value)}
+            value={workflow.name || workflow.workflowName || ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              update('name', val);
+              update('workflowName', val);
+              if (!workflow.codeManuallyEdited) {
+                const autoCode = val.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+                update('workflowCode', autoCode);
+              }
+            }}
+            placeholder="e.g. Sales Invoice Approval"
           />
-          {errors.name && <p className="text-[11px] text-red-600 font-medium mt-1">{errors.name}</p>}
+          {(errors.name || errors.workflowName) && (
+            <p className="text-[11px] text-red-600 font-medium mt-1">{errors.name || errors.workflowName}</p>
+          )}
         </Field>
+
+        <Field label="Workflow code" hint="Unique code, e.g. SALES_APPROVAL">
+          <input
+            className={`w-full h-8 px-2.5 rounded-lg border bg-white text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 font-mono text-[11px] ${
+              errors.workflowCode ? 'border-red-400' : 'border-zinc-200'
+            }`}
+            disabled={!canEdit}
+            value={workflow.workflowCode || ''}
+            onChange={(e) => {
+              update('workflowCode', e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''));
+              update('codeManuallyEdited', true);
+            }}
+            placeholder="e.g. SALES_APPROVAL"
+          />
+          {errors.workflowCode && (
+            <p className="text-[11px] text-red-600 font-medium mt-1">{errors.workflowCode}</p>
+          )}
+        </Field>
+      </div>
 
         <Field label="Initiated by role">
           <select
@@ -90,7 +120,6 @@ export default function WorkflowConfigurationForm({
             <p className="text-[10px] text-amber-600 mt-1">No roles found for this company.</p>
           )}
         </Field>
-      </div>
 
       <Field label="Description">
         <textarea
