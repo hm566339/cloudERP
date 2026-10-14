@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import useListQuery from '../../../hooks/useListQuery';
+import SearchInput from '../../../components/common/SearchInput';
 import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Edit2, Trash2, Eye, Calendar
@@ -58,8 +60,8 @@ export default function StockAdjustmentManagement() {
   const pageable = useMemo(() => ({
     page,
     size: apiParams.size || 10,
-    sort: sortBy ? `${sortBy},${sortOrder || 'desc'}` : (apiParams.sort ? `${apiParams.sort},${apiParams.direction || 'desc'}` : 'createdAt,desc')
-  }), [page, apiParams.size, sortBy, sortOrder, apiParams.sort, apiParams.direction]);
+    sort: sortBy ? `${sortBy},${sortOrder || 'desc'}` : (apiParams.sort || 'createdAt,desc')
+  }), [page, apiParams.size, sortBy, sortOrder, apiParams.sort]);
 
   const { stockAdjustments, pagination: pageInfo, isLoading, isFetching, refetch } = useStockAdjustmentList(
     finalParams,

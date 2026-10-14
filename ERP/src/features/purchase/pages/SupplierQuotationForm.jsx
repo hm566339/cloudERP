@@ -504,7 +504,6 @@ export default function SupplierQuotationForm() {
           };
         }));
       const payload = buildPayload(resolvedItems);
-      console.log('[SupplierQuotationForm] Submitting payload to backend:', JSON.stringify(payload, null, 2));
       if (isEditing) {
         await updateMutation.mutateAsync([id, payload]);
         dispatch(addAlert({ type: 'success', message: 'Supplier quotation updated successfully' }));

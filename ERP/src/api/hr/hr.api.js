@@ -4,11 +4,20 @@ export const hrApiSlice = baseApi.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
     getEmployees: builder.query({
-      query: ({ companyId, page, pageSize, search }) => ({
-        url: "/api/account/employees",
-        headers: { "X-Company-Id": companyId },
-        params: { page, pageSize, search }
-      }),
+      query: (arg = {}) => {
+        const opts = typeof arg === 'string' ? { companyId: arg } : (arg || {});
+        const companyId = opts.companyId;
+        const searchVal = typeof opts.search === 'string' ? opts.search : undefined;
+        return {
+          url: "/api/account/employees",
+          headers: companyId ? { "X-Company-Id": companyId } : undefined,
+          params: {
+            page: opts.page,
+            pageSize: opts.pageSize,
+            ...(searchVal ? { search: searchVal } : {})
+          }
+        };
+      },
       transformResponse: (response) => {
         const employees = response?.data?.content || response?.content || response?.data || response || [];
         return {

@@ -26,6 +26,18 @@ const hasSystemAdminRole = (user) => {
   });
 };
 
+const sanitizePhone = (val) => {
+  if (!val) return '';
+  const digits = String(val).replace(/\D/g, '');
+  if (digits.length === 12 && digits.startsWith('91')) {
+    return digits.slice(2);
+  }
+  if (digits.length === 11 && digits.startsWith('0')) {
+    return digits.slice(1);
+  }
+  return digits;
+};
+
 const getGstStates = (response) => {
   if (Array.isArray(response)) return response;
   return response?.data?.records || response?.records || response?.data?.states ||
@@ -77,7 +89,13 @@ export default function CustomerFormModal({ isOpen, onClose, onSubmit, initialDa
   const gstStates = getGstStates(gstStatesData);
 
   const mappedInitialData = useMemo(() => {
-    if (!initialData) return null;
+    if (!initialData) {
+      return {
+        country: 'India',
+        isActive: true,
+        creditLimit: 0,
+      };
+    }
     const defaultAddress = (initialData.addresses && initialData.addresses.length > 0)
       ? (initialData.addresses.find((a) => a.isDefault) || initialData.addresses[0])
       : {};
@@ -87,8 +105,11 @@ export default function CustomerFormModal({ isOpen, onClose, onSubmit, initialDa
       addressLine1: defaultAddress.addressLine1 || '',
       city: defaultAddress.city || '',
       state: defaultAddress.gstStateName || defaultAddress.state || '',
-      country: defaultAddress.country || '',
+      postalCode: defaultAddress.postalCode || '',
+      country: defaultAddress.country || 'India',
       addressId: defaultAddress.id || undefined,
+      isActive: initialData.isActive !== undefined ? initialData.isActive : true,
+      creditLimit: initialData.creditLimit ?? 0,
     };
   }, [initialData]);
 
@@ -114,18 +135,42 @@ export default function CustomerFormModal({ isOpen, onClose, onSubmit, initialDa
   const validate = (formData) => {
     const errors = {};
     const email = formData.email?.trim();
-    const phoneDigits = formData.phone?.replace(/\D/g, '');
     const gstin = formData.gstin?.trim().toUpperCase();
     const panNo = formData.panNo?.trim().toUpperCase();
 
     if (!formData.customerName?.trim()) errors.customerName = 'Customer name is required.';
     if (isSystemAdmin && !formData.companyId) errors.companyId = 'Company is required.';
     if (email && !emailPattern.test(email)) errors.email = 'Enter a valid email address.';
-    if (formData.phone && (!phoneDigits || phoneDigits.length < 10 || phoneDigits.length > 15)) {
-      errors.phone = 'Enter a valid phone number.';
+
+    if (formData.phone?.trim()) {
+      const cleanPhone = sanitizePhone(formData.phone);
+      if (!cleanPhone || cleanPhone.length !== 10) {
+        errors.phone = 'Phone number must be a 10-digit number (e.g. 9876543210).';
+      }
     }
+
     if (gstin && !gstinPattern.test(gstin)) errors.gstin = 'Enter a valid GSTIN.';
     if (panNo && !panPattern.test(panNo)) errors.panNo = 'Enter a valid PAN number.';
+    if (gstin && !panNo && (!gstinPattern.test(gstin) || gstin.length < 12)) {
+      errors.panNo = 'PAN number is required when GSTIN is provided.';
+    }
+
+    const hasAddressInfo = Boolean(
+      formData.addressLine1?.trim() ||
+      formData.city?.trim() ||
+      formData.state?.trim() ||
+      formData.postalCode?.trim()
+    );
+
+    if (hasAddressInfo) {
+      if (!formData.addressLine1?.trim()) {
+        errors.addressLine1 = 'Street Address is required for customer address.';
+      }
+      if (!formData.city?.trim()) {
+        errors.city = 'City is required for customer address.';
+      }
+    }
+
     if (formData.creditLimit === '' || formData.creditLimit === null || Number.isNaN(Number(formData.creditLimit)) || Number(formData.creditLimit) < 0) {
       errors.creditLimit = 'Credit limit must be a non-negative number.';
     }
@@ -135,9 +180,6 @@ export default function CustomerFormModal({ isOpen, onClose, onSubmit, initialDa
   /**
    * handleSubmit — receives the flat formData from UpdateModal and builds
    * the final API payload with Customer-specific transformations.
-   *
-   * This is the ONLY Customer-specific logic in this file.
-   * UpdateModal calls this with the collected form values.
    */
   const handleSubmit = (formData) => {
     const stateValue = formData.state?.trim().toLowerCase();
@@ -145,36 +187,54 @@ export default function CustomerFormModal({ isOpen, onClose, onSubmit, initialDa
       state.stateName, state.name, state.stateCode, state.code,
     ].filter(Boolean).some((value) => String(value).trim().toLowerCase() === stateValue));
     
-    const address = {
-      addressType: 'BILLING',
-      addressLine1: formData.addressLine1?.trim() || '',
-      addressLine2: '',
-      city: formData.city?.trim() || '',
-      country: formData.country?.trim() || '',
-      postalCode: '',
-      isDefault: true,
-      isActive: true,
-    };
+    const hasAddressInfo = Boolean(
+      formData.addressLine1?.trim() ||
+      formData.city?.trim() ||
+      formData.state?.trim() ||
+      formData.postalCode?.trim()
+    );
 
-    if (isEditMode && formData.addressId) {
-      address.id = formData.addressId;
+    let addresses = undefined;
+    if (hasAddressInfo) {
+      const address = {
+        addressType: 'BILLING',
+        addressLine1: formData.addressLine1?.trim() || '',
+        addressLine2: '',
+        city: formData.city?.trim() || '',
+        country: formData.country?.trim() || 'India',
+        postalCode: formData.postalCode?.trim() || '',
+        isDefault: true,
+        isActive: true,
+      };
+
+      if (isEditMode && formData.addressId) {
+        address.id = formData.addressId;
+      }
+      
+      if (matchedState?.id) address.gstStateId = matchedState.id;
+      addresses = [address];
     }
-    
-    if (matchedState?.id) address.gstStateId = matchedState.id;
+
+    const cleanPhone = sanitizePhone(formData.phone);
+    const gstin = formData.gstin?.trim().toUpperCase() || null;
+    let panNo = formData.panNo?.trim().toUpperCase() || null;
+    if (gstin && !panNo && gstin.length >= 12) {
+      panNo = gstin.substring(2, 12);
+    }
 
     if (!isEditMode) {
       return onSubmit({
         ...(isSystemAdmin ? { companyId: formData.companyId, includeCompanyId: true } : {}),
         data: {
-          customerCode: formData.customerCode?.trim() || '',
+          customerCode: formData.customerCode?.trim() || null,
           customerName: formData.customerName?.trim() || '',
-          gstin: formData.gstin?.trim().toUpperCase() || '',
-          panNo: formData.panNo?.trim().toUpperCase() || '',
-          email: formData.email?.trim() || '',
-          phone: formData.phone?.trim() || '',
+          gstin: gstin,
+          panNo: panNo,
+          email: formData.email?.trim() || null,
+          phone: cleanPhone || null,
           creditLimit: Number(formData.creditLimit) || 0,
           isActive: formData.isActive !== false,
-          addresses: [address],
+          ...(addresses ? { addresses } : {}),
         },
       });
     }
@@ -187,12 +247,12 @@ export default function CustomerFormModal({ isOpen, onClose, onSubmit, initialDa
       customerName: formData.customerName?.trim() || '',
       customerCode: formData.customerCode?.trim() || null,
       email:        formData.email?.trim() || null,
-      phone:        formData.phone?.trim() || null,
-      gstin:        formData.gstin?.trim().toUpperCase() || null,
-      panNo:        formData.panNo?.trim().toUpperCase() || null,
+      phone:        cleanPhone || null,
+      gstin:        gstin,
+      panNo:        panNo,
       creditLimit:  Number(formData.creditLimit) || 0,
       isActive:     formData.isActive ?? true,
-      addresses:    [address],
+      ...(addresses ? { addresses } : {}),
     };
 
     if (!payload.id) delete payload.id;

@@ -632,7 +632,6 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
       igstRate = 18;
     }
 
-    console.log('[HSN Rate Resolution]', { hsnSacId: rawId, hsnSacCode: rawCode, cgstRate, sgstRate, igstRate, hsnMaster: hsnMaster ? { id: hsnMaster.id, code: hsnMaster.code, gstSlabId: hsnMaster.gstSlabId, cgstRate: hsnMaster.cgstRate, sgstRate: hsnMaster.sgstRate, igstRate: hsnMaster.igstRate } : null });
     return { cgstRate, sgstRate, igstRate };
   }
 
@@ -646,7 +645,6 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
 
   // Recalculate ALL items' taxes
   const recalculateTaxes = (currentItems) => {
-    console.log('[Tax Recalculation] companyStateCode:', companyStateCode, 'buyerStateCode:', resolvedBuyerStateCode);
     return currentItems.map(item => {
       let updated = { ...item };
       const qty = parseFloat(updated.quantity) || 0;
@@ -685,7 +683,6 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
       updated.taxAmount = taxResult.totalTax;
       updated.totalAmount = updated.taxableAmount + updated.taxAmount;
 
-      console.log('[GST Result]', { product: updated.itemName, isInterState: updated.isInterState, cgstRate: updated.cgstRate, sgstRate: updated.sgstRate, igstRate: updated.igstRate, taxableAmount: updated.taxableAmount, cgstAmount: updated.cgstAmount, sgstAmount: updated.sgstAmount, igstAmount: updated.igstAmount, taxAmount: updated.taxAmount });
       return updated;
     });
   };

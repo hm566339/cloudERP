@@ -11,6 +11,7 @@ import { ToastNotification } from './AuthLayout';
 import OwnerSidebar from './OwnerSidebar';
 import OwnerTopHeader from './OwnerTopHeader';
 import { useRBAC } from '../utils/rbac';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 export const OwnerLayoutContext = createContext(false);
 
@@ -156,7 +157,9 @@ export default function OwnerLayout({ children }) {
         banner={<SubscriptionNoticeBanner />}
       >
         <ToastNotification />
-        {children || <Outlet />}
+        <ErrorBoundary>
+          {children || <Outlet />}
+        </ErrorBoundary>
       </DashboardLayout>
     </OwnerLayoutContext.Provider>
   );

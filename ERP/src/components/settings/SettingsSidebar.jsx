@@ -130,8 +130,8 @@ export function SettingsSidebar({
         {/* ── Drawer Header ── */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100/90 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100/80 flex items-center justify-center text-indigo-600 shadow-2xs">
-              <SettingsIcon size={16} className="transition-transform duration-500 hover:rotate-45" />
+            <div className="w-8 h-8 rounded-xl bg-zinc-100 border border-zinc-200/80 flex items-center justify-center text-zinc-800 shadow-2xs">
+              <SettingsIcon size={16} className="transition-transform duration-500 hover:rotate-45 text-zinc-700" />
             </div>
             <div>
               <h2 className="text-[15px] font-bold text-zinc-900 tracking-tight leading-none">
@@ -167,7 +167,7 @@ export function SettingsSidebar({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search settings..."
               aria-label="Search settings"
-              className="w-full pl-9 pr-8 py-2 bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder-zinc-400 outline-none transition-all shadow-2xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15"
+              className="w-full pl-9 pr-8 py-2 bg-white border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder-zinc-400 outline-none transition-all shadow-2xs focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10"
             />
             {searchQuery && (
               <button
@@ -204,9 +204,9 @@ export function SettingsSidebar({
                   key={item.id}
                   type="button"
                   onClick={() => handleItemClick(item)}
-                  className={`w-full group text-left flex items-center justify-between p-2.5 rounded-xl transition-all duration-200 border ${
+                  className={`w-full group text-left flex items-center justify-between p-2.5 rounded-xl transition-all duration-150 border ${
                     isActive
-                      ? 'bg-gradient-to-r from-purple-50/90 to-indigo-50/90 border-indigo-200/80 text-indigo-950 shadow-2xs'
+                      ? 'bg-zinc-900 border-zinc-900 text-white shadow-xs'
                       : 'bg-white hover:bg-zinc-50/90 border-transparent hover:border-zinc-200/60 text-zinc-800 shadow-none'
                   }`}
                   aria-current={isActive ? 'true' : undefined}
@@ -214,10 +214,10 @@ export function SettingsSidebar({
                   <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
                     {/* Item Icon */}
                     <div
-                      className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                      className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all duration-150 ${
                         isActive
-                          ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-sm'
-                          : 'bg-zinc-100 text-zinc-600 group-hover:bg-indigo-50 group-hover:text-indigo-600'
+                          ? 'bg-zinc-800 text-white border border-zinc-700/60 shadow-xs'
+                          : 'bg-zinc-100 text-zinc-600 group-hover:bg-zinc-200/80 group-hover:text-zinc-900'
                       }`}
                     >
                       {IconComponent && (
@@ -229,16 +229,22 @@ export function SettingsSidebar({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <span
-                          className={`text-xs font-semibold tracking-tight truncate ${
+                          className={`text-xs tracking-tight truncate ${
                             isActive
-                              ? 'text-indigo-950 font-bold'
-                              : 'text-zinc-800 group-hover:text-zinc-950'
+                              ? 'text-white font-bold'
+                              : 'text-zinc-800 group-hover:text-zinc-950 font-semibold'
                           }`}
                         >
                           {item.title}
                         </span>
                         {item.badge && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700">
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                              isActive
+                                ? 'bg-zinc-800 text-zinc-200 border border-zinc-700'
+                                : 'bg-zinc-100 text-zinc-700 border border-zinc-200/80'
+                            }`}
+                          >
                             {item.badge}
                           </span>
                         )}
@@ -246,7 +252,7 @@ export function SettingsSidebar({
                       <p
                         className={`text-[11px] leading-tight truncate mt-0.5 ${
                           isActive
-                            ? 'text-indigo-600/90 font-medium'
+                            ? 'text-zinc-300 font-normal'
                             : 'text-zinc-500 group-hover:text-zinc-600'
                         }`}
                       >
@@ -258,9 +264,9 @@ export function SettingsSidebar({
                   {/* Right Chevron */}
                   <ChevronRight
                     size={14}
-                    className={`shrink-0 transition-transform duration-200 ${
+                    className={`shrink-0 transition-transform duration-150 ${
                       isActive
-                        ? 'text-indigo-600 translate-x-0.5'
+                        ? 'text-zinc-400 translate-x-0.5'
                         : 'text-zinc-300 group-hover:text-zinc-600 group-hover:translate-x-0.5'
                     }`}
                   />
@@ -274,10 +280,10 @@ export function SettingsSidebar({
         <div className="p-3.5 border-t border-zinc-100 bg-zinc-50/70 shrink-0">
           <div className="flex items-center justify-between text-[11px] text-zinc-500 px-1">
             <div className="flex items-center gap-1.5 text-zinc-400">
-              <Sparkles size={13} className="text-indigo-500" />
+              <Sparkles size={13} className="text-zinc-400" />
               <span>ERP System Admin v2.4</span>
             </div>
-            <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
+            <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80">
               Operational
             </span>
           </div>

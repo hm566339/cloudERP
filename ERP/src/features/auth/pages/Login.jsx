@@ -3,7 +3,6 @@ import { useNavigate, useLocation, Link, useSearchParams, useParams } from 'reac
 import { useDispatch, useSelector } from 'react-redux';
 import {
   ArrowRight,
-  ShieldCheck,
   Loader2,
   ChevronLeft,
   Eye,
@@ -13,7 +12,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-import { useLoginMutation, useLazyGetMeQuery, useLazySsoGetMeQuery, useGetOrganizationQuery } from '../services/authApi';
+import { useLoginMutation, useAdminLoginMutation, useLazyGetMeQuery, useLazySsoGetMeQuery, useGetOrganizationQuery } from '../services/authApi';
 import { useGetOpenCompaniesQuery } from '../../../api/sso/company.api';
 import { setCredentials, selectIsAuthenticated, selectCurrentUser } from '../authSlice';
 import { setSelectedCompany, setCompanyList } from '../../company-management/companySlice';
@@ -24,6 +23,7 @@ import { getCookie } from '../../../utils/cookieHelper';
 import { useRoutePath } from '../../../hooks/useRoutePath';
 import { getSafeErrorMessage } from '../../../utils/apiErrorHelper';
 import { normalizeModuleName } from '../../../utils/moduleNormalization';
+import { resolveSafeRedirectDestination } from '../../../utils/redirectHelper';
 
 const getModuleName = (code) => {
   if (!code) return 'Portal';
@@ -76,16 +76,12 @@ export default function Login() {
   const location = useLocation();
 
   const getDestination = (defaultPath) => {
-    const returnTo = sessionStorage.getItem('auth_return_to');
-    if (returnTo) {
-      sessionStorage.removeItem('auth_return_to');
-      return returnTo;
-    }
-    if (location.state?.from?.pathname) {
-      const from = location.state.from;
-      return from.pathname + (from.search || '') + (from.hash || '');
-    }
-    return defaultPath;
+    return resolveSafeRedirectDestination({
+      searchParams,
+      sessionStorage: typeof window !== 'undefined' ? window.sessionStorage : null,
+      locationStateFrom: location.state?.from,
+      defaultPath,
+    });
   };
 
   const isAuthenticated = useSelector(selectIsAuthenticated);
@@ -96,6 +92,7 @@ export default function Login() {
   });
 
   const [login, { isLoading: isLoginLoading }] = useLoginMutation();
+  const [adminLogin, { isLoading: isAdminLoginLoading }] = useAdminLoginMutation();
   const [triggerGetMe, { isLoading: isGetMeLoading }] = useLazyGetMeQuery();
   const [triggerSsoGetMe] = useLazySsoGetMeQuery();
 
@@ -107,8 +104,15 @@ export default function Login() {
         currentUser.membership?.memberType?.toUpperCase() === 'OWNER' ||
         currentUser.memberType?.toUpperCase() === 'OWNER';
 
-      if (currentUser.role === 'super_admin') {
-        navigate(getDestination('/super-admin/dashboard'), { replace: true });
+      const isSuperAdmin =
+        currentUser.role === 'super_admin' ||
+        currentUser.roles?.some(r => {
+          const name = (typeof r === 'string' ? r : r?.name)?.toUpperCase();
+          return name === 'SYSTEM_ADMIN' || name === 'SUPER_ADMIN';
+        });
+
+      if (isSuperAdmin) {
+        navigate('/super-admin/dashboard', { replace: true });
       } else if (isOwner) {
         navigate(getDestination('/owner/dashboard'), { replace: true });
       } else {
@@ -149,6 +153,7 @@ export default function Login() {
       // Build payload matching backend LoginRequest contract
       // Global ERP login sends generic ERP frontend host, NOT module-specific backend API
       const genericErpHost = window.location.origin + '/erp';
+      const effectiveCompanyCode = (routeCompanyCode || queryCompanyCode || companyCode || '').trim();
       const loginPayload = {
         username: username.trim(),
         password,
@@ -160,13 +165,36 @@ export default function Login() {
             host: gotoUrl || genericErpHost,
           }
           : {
-            companyCode: (routeCompanyCode || queryCompanyCode || companyCode || '').trim(),
+            companyCode: effectiveCompanyCode,
             host: gotoUrl || genericErpHost,
           }
         ),
       };
 
-      const response = await login(loginPayload).unwrap();
+      let response = null;
+
+      if (isOrgMode || effectiveCompanyCode) {
+        response = await login(loginPayload).unwrap();
+      } else {
+        // No companyCode provided on global login page:
+        // Try adminLogin first for Super Admin / System Admin
+        try {
+          response = await adminLogin({
+            username: username.trim(),
+            password,
+          }).unwrap();
+        } catch (adminErr) {
+          // If admin login returned 401 (not authorized for admin login),
+          // ask the user to provide their company code for company-level login
+          if (adminErr?.status === 401 || adminErr?.data?.message?.toLowerCase().includes('not authorized')) {
+            setFormError('Please enter your Company Code to sign in to your workspace.');
+            dispatch(addAlert({ type: 'warning', message: 'Please enter your Company Code' }));
+            return;
+          }
+          throw adminErr;
+        }
+      }
+
       const loginData = response?.data || response;
 
       // Handle multi-company requirement from LoginResponse
@@ -185,9 +213,16 @@ export default function Login() {
         return;
       }
 
-      // 1. Extract tokens from response body and save to cookies immediately
-      const accessToken = loginData?.accessToken || loginData?.access_token || loginData?.token || null;
-      const refreshTokenValue = loginData?.refreshToken || loginData?.refresh_token || null;
+      // 1. Extract tokens from response body or cookies and save to storage immediately
+      let accessToken = loginData?.accessToken || loginData?.access_token || loginData?.token || null;
+      let refreshTokenValue = loginData?.refreshToken || loginData?.refresh_token || null;
+
+      if (!accessToken) {
+        accessToken = getCookie('ACCESS_TOKEN') || getCookie('auth_token') || null;
+      }
+      if (!refreshTokenValue) {
+        refreshTokenValue = getCookie('ACCESS_TOKEN_REFRESH') || null;
+      }
 
       try {
         const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
@@ -223,7 +258,6 @@ export default function Login() {
             console.warn('[Login] Normalizing backend callback path to generic SPA callback:', targetPath);
             targetPath = '/auth/callback';
           }
-          console.log('[Login] Navigating to SPA auth callback:', targetPath + urlObj.search + urlObj.hash);
           navigate(targetPath + urlObj.search + urlObj.hash, { replace: true });
         } catch {
           const codeQuery = loginData.redirectUrl.includes('?') ? loginData.redirectUrl.substring(loginData.redirectUrl.indexOf('?')) : '';
@@ -241,7 +275,7 @@ export default function Login() {
       try {
         const meResult = await triggerSsoGetMe().unwrap();
         ssoData = meResult?.data || meResult;
-        finalUser = { ...finalUser, ...ssoData };
+        finalUser = { ...finalUser, ...(ssoData?.user || {}), ...ssoData };
       } catch (meErr) {
         console.warn('Could not fetch SSO profile after login, falling back', meErr);
         try {
@@ -261,6 +295,21 @@ export default function Login() {
       } else {
         userRole = extractRoleFromToken(null, finalUser) || 'viewer';
         mappedPermissions = ssoData?.permissions || finalUser.permissions || (userRole === 'super_admin' ? ['all'] : ['dashboard', moduleCode].filter(Boolean));
+      }
+
+      const isSuperAdminRole =
+        userRole === 'super_admin' ||
+        ssoData?.roles?.some(r => {
+          const name = (typeof r === 'string' ? r : r?.name)?.toUpperCase();
+          return name === 'SYSTEM_ADMIN' || name === 'SUPER_ADMIN';
+        }) ||
+        finalUser?.roles?.some(r => {
+          const name = (typeof r === 'string' ? r : r?.name)?.toUpperCase();
+          return name === 'SYSTEM_ADMIN' || name === 'SUPER_ADMIN';
+        });
+
+      if (isSuperAdminRole) {
+        userRole = 'super_admin';
       }
 
       const mergedUser = { ...finalUser, role: userRole };
@@ -321,8 +370,8 @@ export default function Login() {
         ssoData?.membership?.memberType?.toUpperCase() === 'OWNER' ||
         mergedUser?.membership?.memberType?.toUpperCase() === 'OWNER';
 
-      if (userRole === 'super_admin') {
-        navigate(getDestination('/super-admin/dashboard'), { replace: true });
+      if (isSuperAdminRole || userRole === 'super_admin') {
+        navigate('/super-admin/dashboard', { replace: true });
       } else if (isOwnerRole) {
         navigate(getDestination('/owner/dashboard'), { replace: true });
       } else {
@@ -349,7 +398,7 @@ export default function Login() {
   };
 
   const moduleName = getModuleName(moduleCode);
-  const isLoading = isLoginLoading || isGetMeLoading;
+  const isLoading = isLoginLoading || isAdminLoginLoading || isGetMeLoading;
 
   // ── Render: Loading Organization Resolution ──
   if (isOrgMode && isOrgLoading) {
@@ -474,6 +523,23 @@ export default function Login() {
             />
           </div>
 
+          {/* Optional Company Code (for company users on global login) */}
+          {!isOrgMode && !isCompanyMode && (
+            <div className="space-y-1.5">
+              <label className="text-[11.2px] font-bold text-zinc-700 block">
+                Company Code <span className="text-zinc-400 font-normal">(Optional for Admin)</span>
+              </label>
+              <input
+                type="text"
+                value={companyCode}
+                onChange={(e) => setCompanyCode(e.target.value.toUpperCase())}
+                className="w-full px-4 py-3.5 bg-white border border-zinc-200/80 focus:border-primary focus:ring-primary/20 rounded-2xl text-[12px] font-medium text-zinc-800 shadow-sm transition-all uppercase placeholder:normal-case"
+                placeholder="e.g. MOHIT, KASERA (leave blank for Admin)"
+                autoComplete="organization"
+              />
+            </div>
+          )}
+
           {/* Password with Visibility Toggle */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
@@ -545,19 +611,6 @@ export default function Login() {
               <span className="text-zinc-400 font-medium">Company Workspace</span>
               <span className="font-mono text-zinc-900 font-bold uppercase">{routeCompanyCode}</span>
             </div>
-          </div>
-        )}
-
-        {/* Super Administrator Login Link (for non-org mode or fallback) */}
-        {!isOrgMode && (
-          <div className="mt-8 pt-8 border-t border-zinc-100 flex justify-center">
-            <Link
-              to={buildPath('/admin-login')}
-              className="inline-flex items-center gap-2 text-[11.2px] font-bold text-zinc-500 hover:text-zinc-900 transition-colors"
-            >
-              <ShieldCheck size={18} />
-              <span>Super Administrator Login</span>
-            </Link>
           </div>
         )}
       </div>

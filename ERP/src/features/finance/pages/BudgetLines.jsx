@@ -24,8 +24,8 @@ const fetchBudgetHeaders = (companyId) => {
   return accountHttpClient.get('/api/account/budget-headers', { params: { size: 1000, companyId } });
 };
 
-const fetchDepartments = (companyId) => {
-  return accountHttpClient.get('/api/account/departments', { params: { size: 1000, companyId } }).catch(() => ({ data: [] }));
+const fetchDepartments = () => {
+  return Promise.resolve({ data: [] });
 };
 
 const getLineStatus = (record) => {

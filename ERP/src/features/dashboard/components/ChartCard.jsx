@@ -33,9 +33,9 @@ function ChartCard({ title, data, colors }) {
   return (
     <div className="card p-5 h-[240px] flex flex-col bg-white border border-zinc-200 rounded-xl shadow-sm">
       <h3 className="text-sm font-bold text-zinc-700 mb-4">{title}</h3>
-      <div className="flex-1 w-full relative overflow-hidden">
+      <div style={{ minHeight: '160px', minWidth: 0 }} className="flex-1 w-full relative overflow-hidden">
         {hasData ? (
-          <ResponsiveContainer width="100%" height="100%" debounce={300}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={160} debounce={300}>
             <PieChart>
               <Pie
                 data={data}

@@ -10,7 +10,7 @@ export function SettingsInput({ label, id, description, ...props }) {
       )}
       <input
         id={id}
-        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors text-slate-900"
+        className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 outline-none transition-colors text-zinc-900"
         {...props}
       />
       {description && <p className="text-xs text-slate-500 mt-1.5">{description}</p>}

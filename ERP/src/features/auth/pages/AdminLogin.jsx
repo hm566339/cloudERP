@@ -91,10 +91,19 @@ export default function AdminLogin() {
         return;
       }
 
-      const meResult = await triggerSsoGetMe().unwrap();
-      const finalUser = meResult.data || meResult;
-      
-      const userRole = extractRoleFromToken(null, finalUser) || 'viewer';
+      let finalUser = null;
+      try {
+        const meResult = await triggerSsoGetMe().unwrap();
+        finalUser = meResult?.data || meResult;
+      } catch (meErr) {
+        // Fallback to credentials / response payload if /me query fails
+      }
+
+      if (!finalUser) {
+        finalUser = response?.user || response?.data || { username: formData.username, email: formData.username, role: 'super_admin' };
+      }
+
+      const userRole = extractRoleFromToken(accessToken, finalUser) || finalUser.role || 'super_admin';
       const mappedPermissions = finalUser.permissions || (userRole === 'super_admin' ? ['all'] : ['dashboard']);
 
       const mergedUser = { ...finalUser, role: userRole };

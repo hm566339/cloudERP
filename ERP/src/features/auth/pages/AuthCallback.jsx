@@ -8,6 +8,7 @@ import { setSelectedCompany } from '../../company-management/companySlice';
 import { extractRoleFromToken, parseJwt } from '../../../utils/rbac';
 import { getCookie } from '../../../utils/cookieHelper';
 import { useRoutePath } from "../../../hooks/useRoutePath";
+import { isSafeRedirectPath } from "../../../utils/redirectHelper";
 
 export default function AuthCallback() {
   const [searchParams] = useSearchParams();
@@ -159,38 +160,39 @@ export default function AuthCallback() {
           }));
         }
 
-        // Redirect to intended destination
-        const destination = sessionStorage.getItem('auth_redirect') || '/';
+        // Redirect to intended destination safely
+        const rawDestination = sessionStorage.getItem('auth_redirect') || '/';
         sessionStorage.removeItem('auth_redirect');
         
-        // Ensure destination is a relative path or frontend URL
-        if (destination.startsWith('http') && !destination.startsWith(window.location.origin)) {
-          window.location.href = destination;
-        } else {
-          let path = destination;
-          if (path.startsWith(window.location.origin)) {
-            path = path.replace(window.location.origin, '');
-          }
-          if (path.startsWith('/erp/')) {
-            path = path.replace(/^\/erp/, '');
-          }
-          const isOwnerUser =
-            userRole === 'owner' ||
-            meData?.membership?.memberType?.toUpperCase() === 'OWNER' ||
-            mergedUser?.membership?.memberType?.toUpperCase() === 'OWNER' ||
-            decodedToken?.principalType === 'ORGANIZATION_OWNER';
-
-          if (!path || path === '/' || path === '/login' || path === '/accounts/dashboard' || path === '/account/dashboard' || path === '/workspace') {
-            if (isAdminContext) {
-              path = '/super-admin/dashboard';
-            } else if (isOwnerUser) {
-              path = '/owner/dashboard';
-            } else {
-              path = '/workspace';
-            }
-          }
-          navigate(path, { replace: true });
+        let path = rawDestination;
+        if (path.startsWith(window.location.origin)) {
+          path = path.replace(window.location.origin, '');
         }
+        if (path.startsWith('/erp/')) {
+          path = path.replace(/^\/erp/, '');
+        }
+
+        // Validate that destination is a safe relative path; reject open-redirects
+        if (!isSafeRedirectPath(path)) {
+          path = '/';
+        }
+
+        const isOwnerUser =
+          userRole === 'owner' ||
+          meData?.membership?.memberType?.toUpperCase() === 'OWNER' ||
+          mergedUser?.membership?.memberType?.toUpperCase() === 'OWNER' ||
+          decodedToken?.principalType === 'ORGANIZATION_OWNER';
+
+        if (!path || path === '/' || path === '/login' || path === '/accounts/dashboard' || path === '/account/dashboard' || path === '/workspace') {
+          if (isAdminContext) {
+            path = '/super-admin/dashboard';
+          } else if (isOwnerUser) {
+            path = '/owner/dashboard';
+          } else {
+            path = '/workspace';
+          }
+        }
+        navigate(path, { replace: true });
       } catch (err) {
         console.error("SSO Callback failed", err);
         const msg = err?.response?.data?.message || err.message || 'Authentication failed';

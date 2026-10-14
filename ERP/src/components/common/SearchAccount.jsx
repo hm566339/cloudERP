@@ -1,34 +1,171 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, X, BookOpen, Loader2, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import {
+  Search,
+  X,
+  BookOpen,
+  Loader2,
+  ArrowRight,
+  Building2,
+  LayoutDashboard,
+  Plus,
+  Briefcase,
+  Layers,
+  ShieldCheck,
+  ScrollText,
+} from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { chartOfAccountsApi } from '../../api/account/chartOfAccounts';
+import { useGetOrganizationsQuery } from '../../api/sso';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import useDebounce from '../../hooks/useDebounce';
 
 /**
- * Enterprise Search Account component.
- * Allows searching accounts by code or name with instant suggestions.
- * On selection, automatically navigates to General Ledger for the selected account.
+ * Enterprise Search Account / Platform Console Search component.
+ * In Standard ERP: Searches chart of accounts with instant suggestions & ledger navigation.
+ * In Super Admin: Searches platform console destinations and tenant organizations.
  */
 export default function SearchAccount({
-  placeholder = "Search account (e.g. 1001, Cash, Bank)...",
+  placeholder,
   onSelect,
   className = "",
   autoNavigate = true
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { buildPath } = useRoutePath();
+
+  const isSuperAdmin = location.pathname.startsWith('/super-admin');
+
+  const defaultPlaceholder = isSuperAdmin
+    ? "Search platform, organizations, consoles... (⌘K)"
+    : "Search account (e.g. 1001, Cash, Bank)...";
+
+  const effectivePlaceholder = placeholder || defaultPlaceholder;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState([]);
+  const [accountResults, setAccountResults] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
   const containerRef = useRef(null);
   const inputRef = useRef(null);
 
   const debouncedSearch = useDebounce(searchTerm, 250);
+
+  // Super Admin console navigation destinations
+  const superAdminDestinations = useMemo(() => [
+    {
+      id: 'dest-dash',
+      type: 'nav',
+      title: 'Super Admin Dashboard',
+      subtitle: 'Platform overview, tenant metrics & system health',
+      category: 'Console Navigation',
+      icon: LayoutDashboard,
+      path: '/super-admin/dashboard',
+    },
+    {
+      id: 'dest-orgs',
+      type: 'nav',
+      title: 'Organizations & Tenants',
+      subtitle: 'Manage all provisioned enterprise tenants',
+      category: 'Console Navigation',
+      icon: Building2,
+      path: '/super-admin/organizations',
+    },
+    {
+      id: 'dest-prov',
+      type: 'nav',
+      title: 'Provision New Organization',
+      subtitle: 'Create tenant container, admin user & workspace',
+      category: 'Platform Action',
+      icon: Plus,
+      path: '/super-admin/organizations/provision',
+    },
+    {
+      id: 'dest-comps',
+      type: 'nav',
+      title: 'Workspaces & Companies',
+      subtitle: 'Cross-tenant company catalog & provisioning',
+      category: 'Console Navigation',
+      icon: Briefcase,
+      path: '/super-admin/companies',
+    },
+    {
+      id: 'dest-mods',
+      type: 'nav',
+      title: 'Global Modules Registry',
+      subtitle: 'SSO, Account, Inventory, Workflow & CRM config',
+      category: 'Console Navigation',
+      icon: Layers,
+      path: '/super-admin/modules',
+    },
+    {
+      id: 'dest-roles',
+      type: 'nav',
+      title: 'Roles & Access Control',
+      subtitle: 'Cross-tenant policy definitions & permission scopes',
+      category: 'Console Navigation',
+      icon: ShieldCheck,
+      path: '/super-admin/roles',
+    },
+    {
+      id: 'dest-audit',
+      type: 'nav',
+      title: 'Platform Audit Logs',
+      subtitle: 'Security, authentication and administrative audit trail',
+      category: 'Console Navigation',
+      icon: ScrollText,
+      path: '/super-admin/audit-logs',
+    },
+  ], []);
+
+  // Super Admin live organizations query
+  const {
+    data: orgsData,
+    isLoading: isOrgsLoading,
+  } = useGetOrganizationsQuery(
+    { page: 0, size: 20, search: debouncedSearch.trim() },
+    { skip: !isSuperAdmin || !debouncedSearch.trim() }
+  );
+
+  const matchingOrgs = useMemo(() => {
+    if (!isSuperAdmin) return [];
+    const orgs = orgsData?.organizations || [];
+    return orgs.map((o) => ({
+      id: `org-${o.id}`,
+      orgId: o.id,
+      type: 'organization',
+      title: o.name || 'Organization',
+      subtitle: `Code: ${o.code || '—'} • ${o.status || 'ACTIVE'}`,
+      category: 'Tenant Organization',
+      icon: Building2,
+      path: `/super-admin/organizations/${o.id}`,
+    }));
+  }, [isSuperAdmin, orgsData]);
+
+  const matchingDestinations = useMemo(() => {
+    if (!isSuperAdmin) return [];
+    const q = debouncedSearch.trim().toLowerCase();
+    if (!q) {
+      // When opened with empty text, show top primary destinations
+      return superAdminDestinations.slice(0, 4);
+    }
+    return superAdminDestinations.filter(
+      (d) =>
+        d.title.toLowerCase().includes(q) ||
+        d.subtitle.toLowerCase().includes(q) ||
+        d.category.toLowerCase().includes(q)
+    );
+  }, [isSuperAdmin, debouncedSearch, superAdminDestinations]);
+
+  // Combined results
+  const results = useMemo(() => {
+    if (isSuperAdmin) {
+      return [...matchingOrgs, ...matchingDestinations];
+    }
+    return accountResults;
+  }, [isSuperAdmin, matchingOrgs, matchingDestinations, accountResults]);
 
   // Global Ctrl+K / Cmd+K shortcut to focus search
   useEffect(() => {
@@ -43,12 +180,14 @@ export default function SearchAccount({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Fetch accounts on debounced search
+  // Fetch accounts on debounced search (Standard ERP mode)
   useEffect(() => {
+    if (isSuperAdmin) return;
+
     let isMounted = true;
     const fetchAccounts = async () => {
       if (!debouncedSearch || debouncedSearch.trim().length === 0) {
-        setResults([]);
+        setAccountResults([]);
         setLoading(false);
         return;
       }
@@ -57,19 +196,24 @@ export default function SearchAccount({
       try {
         const res = await chartOfAccountsApi.getList({
           searchKey: debouncedSearch.trim(),
-          size: 20
+          size: 20,
         });
 
-        const raw = res?.data?.data || res?.data?.content || res?.content || res?.data || res || [];
-        const list = Array.isArray(raw) ? raw : (raw?.content && Array.isArray(raw.content) ? raw.content : []);
+        const raw =
+          res?.data?.data || res?.data?.content || res?.content || res?.data || res || [];
+        const list = Array.isArray(raw)
+          ? raw
+          : raw?.content && Array.isArray(raw.content)
+          ? raw.content
+          : [];
 
         if (isMounted) {
-          setResults(list.filter(acc => acc.isActive !== false));
+          setAccountResults(list.filter((acc) => acc.isActive !== false));
           setSelectedIndex(-1);
         }
       } catch (err) {
         console.error("Error searching accounts:", err);
-        if (isMounted) setResults([]);
+        if (isMounted) setAccountResults([]);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -79,7 +223,7 @@ export default function SearchAccount({
     return () => {
       isMounted = false;
     };
-  }, [debouncedSearch]);
+  }, [debouncedSearch, isSuperAdmin]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -92,16 +236,27 @@ export default function SearchAccount({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelect = useCallback((account) => {
-    setIsOpen(false);
-    setSearchTerm('');
-    if (onSelect) {
-      onSelect(account);
-    }
-    if (autoNavigate && account?.id) {
-      navigate(buildPath(`/accounts/reports/ledger?accountId=${account.id}`));
-    }
-  }, [onSelect, autoNavigate, navigate, buildPath]);
+  const handleSelect = useCallback(
+    (item) => {
+      setIsOpen(false);
+      setSearchTerm('');
+
+      if (isSuperAdmin) {
+        if (item?.path) {
+          navigate(buildPath(item.path));
+        }
+        return;
+      }
+
+      if (onSelect) {
+        onSelect(item);
+      }
+      if (autoNavigate && item?.id) {
+        navigate(buildPath(`/accounts/reports/ledger?accountId=${item.id}`));
+      }
+    },
+    [isSuperAdmin, onSelect, autoNavigate, navigate, buildPath]
+  );
 
   const handleKeyDown = (e) => {
     if (!isOpen) {
@@ -113,10 +268,10 @@ export default function SearchAccount({
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev < results.length - 1 ? prev + 1 : 0));
+      setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev > 0 ? prev - 1 : results.length - 1));
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (selectedIndex >= 0 && selectedIndex < results.length) {
@@ -129,12 +284,14 @@ export default function SearchAccount({
     }
   };
 
+  const isCurrentLoading = isSuperAdmin ? isOrgsLoading : loading;
+
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       {/* Search Input Box */}
       <div className="relative flex items-center">
         <div className="absolute left-3 pointer-events-none text-zinc-400">
-          {loading ? (
+          {isCurrentLoading ? (
             <Loader2 size={15} className="animate-spin text-zinc-500" />
           ) : (
             <Search size={15} />
@@ -151,7 +308,7 @@ export default function SearchAccount({
           }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={effectivePlaceholder}
           className="w-full h-9 pl-9 pr-14 bg-zinc-100/80 hover:bg-zinc-100 focus:bg-white border border-zinc-200 focus:border-zinc-300 rounded-xl text-[11px] font-medium text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/5 transition-all shadow-2xs"
         />
 
@@ -161,7 +318,7 @@ export default function SearchAccount({
               type="button"
               onClick={() => {
                 setSearchTerm('');
-                setResults([]);
+                setAccountResults([]);
                 inputRef.current?.focus();
               }}
               className="p-1 text-zinc-400 hover:text-zinc-600 rounded transition-colors"
@@ -178,26 +335,72 @@ export default function SearchAccount({
       </div>
 
       {/* Autocomplete Dropdown */}
-      {isOpen && searchTerm.trim().length > 0 && (
+      {isOpen && (searchTerm.trim().length > 0 || (isSuperAdmin && results.length > 0)) && (
         <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-zinc-200 rounded-xl shadow-lg overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
           <div className="px-3 py-2 bg-zinc-50/70 border-b border-zinc-100 flex items-center justify-between text-[10px] text-zinc-400 font-semibold uppercase tracking-wider">
-            <span>Matching Accounts ({results.length})</span>
-            <span>Press ↵ to view ledger</span>
+            <span>
+              {isSuperAdmin
+                ? `Platform Results (${results.length})`
+                : `Matching Accounts (${results.length})`}
+            </span>
+            <span>Press ↵ to open</span>
           </div>
 
           <div className="max-h-72 overflow-y-auto divide-y divide-zinc-50 p-1">
-            {loading && results.length === 0 ? (
+            {isCurrentLoading && results.length === 0 ? (
               <div className="p-4 text-center text-xs text-zinc-400 flex items-center justify-center gap-2">
                 <Loader2 size={14} className="animate-spin text-zinc-500" />
-                <span>Searching accounts...</span>
+                <span>Searching {isSuperAdmin ? 'platform...' : 'accounts...'}</span>
               </div>
             ) : results.length === 0 ? (
               <div className="p-4 text-center text-xs text-zinc-500">
-                No accounts found matching "{searchTerm}"
+                No matching results found for "{searchTerm}"
               </div>
             ) : (
-              results.map((acc, index) => {
+              results.map((item, index) => {
                 const isSelected = index === selectedIndex;
+
+                if (isSuperAdmin) {
+                  const ItemIcon = item.icon || Building2;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleSelect(item)}
+                      onMouseEnter={() => setSelectedIndex(index)}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-lg text-left transition-colors ${
+                        isSelected ? 'bg-zinc-100/80 text-zinc-900' : 'hover:bg-zinc-50 text-zinc-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 shrink-0">
+                          <ItemIcon size={14} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-zinc-900 truncate">
+                              {item.title}
+                            </span>
+                            <span className="px-1.5 py-0.2 rounded text-[8.5px] font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200 uppercase shrink-0">
+                              {item.category}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-zinc-400 truncate mt-0.5">
+                            {item.subtitle}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2 text-zinc-400 text-xs font-medium">
+                        <span className="text-[10px] hidden sm:inline text-zinc-400">Open</span>
+                        <ArrowRight size={13} className="text-zinc-500" />
+                      </div>
+                    </button>
+                  );
+                }
+
+                // Standard ERP Chart of Accounts Result
+                const acc = item;
                 return (
                   <button
                     key={acc.id}

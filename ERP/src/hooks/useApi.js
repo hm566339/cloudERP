@@ -10,24 +10,47 @@ export function useApiQuery(apiFunction, params = null, options = { skip: false 
     apiFunctionRef.current = apiFunction;
   }, [apiFunction]);
 
+  const abortControllerRef = useRef(null);
+
   const fetchData = useCallback(async () => {
     const safeOptions = options || {};
     if (safeOptions.skip || safeOptions.enabled === false) return;
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
 
     setIsLoading(true);
     setError(null);
     try {
       const fn = apiFunctionRef.current;
       const result = Array.isArray(params) ? await fn(...params) : await fn(params);
-      setData(result);
+      if (!signal.aborted) {
+        setData(result);
+      }
       return result;
     } catch (err) {
+      if (signal.aborted || err?.name === 'CanceledError' || err?.name === 'AbortError') {
+        return;
+      }
       setError(err);
       throw err;
     } finally {
-      setIsLoading(false);
+      if (!signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, [JSON.stringify(params), JSON.stringify(options)]);
+
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     fetchData();

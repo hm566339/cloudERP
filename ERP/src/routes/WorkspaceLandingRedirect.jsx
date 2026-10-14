@@ -49,9 +49,15 @@ export default function WorkspaceLandingRedirect() {
   const isSuperAdmin =
     authContext?.user?.role === 'super_admin' ||
     (Array.isArray(authContext?.user?.roles) &&
-      authContext.user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'SUPER_ADMIN')) ||
+      authContext.user.roles.some((r) => {
+        const name = (typeof r === 'string' ? r : r?.name)?.toUpperCase();
+        return name === 'SUPER_ADMIN' || name === 'SYSTEM_ADMIN';
+      })) ||
     (Array.isArray(authContext?.roles) &&
-      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'SUPER_ADMIN'));
+      authContext.roles.some((r) => {
+        const name = (typeof r === 'string' ? r : r?.name)?.toUpperCase();
+        return name === 'SUPER_ADMIN' || name === 'SYSTEM_ADMIN';
+      }));
 
   if (isSuperAdmin) {
     return <Navigate to="/super-admin/dashboard" replace />;

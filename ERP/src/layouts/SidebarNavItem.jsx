@@ -54,23 +54,28 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
         <span className="flex-1 text-left truncate">{item.label}</span>
         <ChevronDown
           size={14}
-          className={`shrink-0 text-zinc-400 transition-transform duration-200 ${open ? '' : '-rotate-90'}`}
+          className={`shrink-0 text-zinc-400 transition-transform duration-standard ease-move ${open ? '' : '-rotate-90'}`}
         />
       </button>
 
-      {open && (
-        <div className={`mt-0.5 space-y-0.5 ${level === 0 ? 'ml-3 pl-3 border-l border-zinc-200/80 pb-0.5' : 'ml-3 pl-2.5 border-l border-zinc-100 pb-0.5'}`}>
-          {item.children.map((child) => (
-            <SidebarNavItem
-              key={child.id}
-              item={child}
-              location={location}
-              level={level + 1}
-              onLinkClick={onLinkClick}
-            />
-          ))}
+      <div 
+        className="grid transition-[grid-template-rows] duration-standard ease-move"
+        style={{ gridTemplateRows: open ? '1fr' : '0fr' }}
+      >
+        <div className="overflow-hidden min-h-0">
+          <div className={`mt-0.5 space-y-0.5 ${level === 0 ? 'ml-3 pl-3 border-l border-zinc-200/80 pb-0.5' : 'ml-3 pl-2.5 border-l border-zinc-100 pb-0.5'}`}>
+            {item.children.map((child) => (
+              <SidebarNavItem
+                key={child.id}
+                item={child}
+                location={location}
+                level={level + 1}
+                onLinkClick={onLinkClick}
+              />
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

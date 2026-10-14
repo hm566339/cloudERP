@@ -9,6 +9,9 @@ import DataTableStatusBadge from '../../../components/data-table/DataTableStatus
 import { confirmDialog } from '../../../utils/confirmDialog';
 import { addAlert } from '../../notifications/notificationSlice';
 import { useApiMutation, useApiQuery } from '../../../hooks/useApi';
+import useListQuery from '../../../hooks/useListQuery';
+import SearchInput from '../../../components/common/SearchInput';
+import Pagination from '../../../components/common/Pagination';
 
 const formatType = (value) => {
   if (!value) return 'General';
@@ -44,9 +47,15 @@ export default function ApprovalRequestsPage() {
     JSON.parse(localStorage.getItem('selected_company') || '{}')?.id ||
     JSON.parse(localStorage.getItem('auth_user') || '{}')?.companyCode ||
     null;
-  const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    searchTerm,
+    setSearch,
+    debouncedSearch,
+  } = useListQuery(null, { defaultPageSize: 10, searchParam: 'search' });
 
   const { data, isLoading, refetch } = useApiQuery(workflowTasksApi.getPending, {
     companyId,
@@ -122,15 +131,12 @@ export default function ApprovalRequestsPage() {
 
       <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-zinc-200 p-4 md:flex-row md:items-center md:justify-between">
-          <div className="relative w-full max-w-md">
-            <input
+          <div className="w-full max-w-md">
+            <SearchInput
               value={searchTerm}
-              onChange={(event) => {
-                setSearchTerm(event.target.value);
-                setPage(0);
-              }}
+              onChange={setSearch}
               placeholder="Search by document, ID, or status"
-              className="h-9 w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-800 outline-none transition focus:border-blue-500 focus:bg-white"
+              isLoading={isLoading}
             />
           </div>
 
@@ -140,7 +146,6 @@ export default function ApprovalRequestsPage() {
               value={pageSize}
               onChange={(event) => {
                 setPageSize(Number(event.target.value));
-                setPage(0);
               }}
               className="h-9 rounded-lg border border-zinc-200 bg-zinc-50 px-2 text-sm text-zinc-700 outline-none focus:border-blue-500"
             >
@@ -221,31 +226,15 @@ export default function ApprovalRequestsPage() {
         </div>
 
         {!isLoading && filteredTasks.length > 0 && (
-          <div className="flex items-center justify-between gap-3 border-t border-zinc-200 px-4 py-3 text-sm text-zinc-600">
-            <span>
-              Showing {Math.min((page * pageSize) + 1, filteredTasks.length)}-{Math.min((page + 1) * pageSize, filteredTasks.length)} of {filteredTasks.length}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setPage((current) => Math.max(0, current - 1))}
-                disabled={page === 0}
-                className="rounded-md border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="text-xs">
-                Page {page + 1} / {totalPages}
-              </span>
-              <button
-                type="button"
-                onClick={() => setPage((current) => Math.min(totalPages - 1, current + 1))}
-                disabled={page >= totalPages - 1}
-                className="rounded-md border border-zinc-200 px-2.5 py-1.5 text-xs font-medium text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
+          <div className="border-t border-zinc-200 px-4 py-3">
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              totalElements={filteredTasks.length}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </div>
         )}
       </div>

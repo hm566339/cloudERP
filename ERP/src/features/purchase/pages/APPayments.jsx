@@ -380,7 +380,7 @@ export default function APPayments() {
     return q;
   }, [debouncedSearch, filters]);
 
-  const { data: apiData = [], isLoading, isFetching, refetch } = useGetApPaymentsQuery({
+  const { data: apiData = [], isLoading, isFetching, error, refetch } = useGetApPaymentsQuery({
     companyId,
     ...apiParams,
     ...listFilters
@@ -810,6 +810,13 @@ export default function APPayments() {
 
       {/* ── Table Container ── */}
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
+        {error && (
+          <div className="mb-4 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-xs flex items-center justify-between">
+            <span>
+              {error?.data?.message || 'Notice: AP Payments is currently operating with company-level scoping constraints.'}
+            </span>
+          </div>
+        )}
         <DataTable
           selectable
           rowKey="id"

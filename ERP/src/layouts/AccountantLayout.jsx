@@ -30,6 +30,7 @@ import SubscriptionNoticeBanner from '../components/common/SubscriptionNoticeBan
 import { selectAuthContext } from '../features/auth/authSlice'
 import { getEntitledModules } from '../utils/moduleNormalization'
 import NoModuleAccessView from '../components/common/NoModuleAccessView'
+import ErrorBoundary from '../components/common/ErrorBoundary'
 
 export default function AccountantLayout() {
   const dispatch = useAppDispatch()
@@ -466,7 +467,9 @@ export default function AccountantLayout() {
 
           <main className="flex-1 overflow-x-hidden flex flex-col min-h-0 min-w-0">
             <div className="w-full flex-1 flex flex-col min-h-0 min-w-0">
-              <Outlet key={location.pathname} />
+              <ErrorBoundary>
+                <Outlet key={location.pathname} />
+              </ErrorBoundary>
             </div>
           </main>
 

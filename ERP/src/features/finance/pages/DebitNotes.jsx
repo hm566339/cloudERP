@@ -137,7 +137,7 @@ export default function DebitNotes() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const fullState = useAppSelector((state) => state);
+  const authState = useAppSelector((state) => state.auth);
   const companyId = JSON.parse(localStorage.getItem('selected_company'))?.id || JSON.parse(localStorage.getItem('auth_user'))?.companyCode;
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -253,30 +253,31 @@ export default function DebitNotes() {
   const { data: vendorsData } = useApiQuery(
     vendorsApi.getVendors,
     [{ isActive: true }],
-    { page: 0, size: 500, sort: 'vendorName,asc' }
+    { page: 0, size: 100, sort: 'vendorName,asc' }
   );
 
-  const { data: invoicesData, isLoading: isLoadingInvoices, isError: isErrorInvoices, refetch: refetchInvoices } = useApiQuery(apInvoicesApi.getList, {
-    size: 100,
+  const invoiceQueryParams = useMemo(() => [{
+    statuses: 'POSTED,PARTIALLY_PAID,APPROVED',
     companyId,
-    'filter.statuses': 'POSTED',
-    'filter.hasOutstandingBalance': true
-  });
+    size: 100,
+    page: 0,
+    ...(formData.vendorId ? { vendorId: formData.vendorId } : {})
+  }], [companyId, formData.vendorId]);
 
-  const { data: payableAccountsData, refetch: refetchPayable } = useApiQuery(chartOfAccountsApi.getList, { size: 1000, companyId, groupCode: 'LIA-AP', groupCodes: 'LIA-AP' });
-  const { data: purchaseReturnAccountsData, refetch: refetchPurchaseReturn } = useApiQuery(chartOfAccountsApi.getList, { size: 1000, companyId, categoryCode: 'EXP', categoryCodes: 'EXP' });
+  const { data: invoicesData, isLoading: isLoadingInvoices, isError: isErrorInvoices, refetch: refetchInvoices } = useApiQuery(
+    apInvoicesApi.getList,
+    invoiceQueryParams
+  );
+
+  const { data: payableAccountsData, refetch: refetchPayable } = useApiQuery(chartOfAccountsApi.getList, { size: 100, companyId, groupCode: 'LIA-AP', groupCodes: 'LIA-AP' });
+  const { data: purchaseReturnAccountsData, refetch: refetchPurchaseReturn } = useApiQuery(chartOfAccountsApi.getList, { size: 100, companyId, categoryCode: 'EXP', categoryCodes: 'EXP' });
 
   const apiContent = invoicesData?.content || invoicesData?.data?.content || invoicesData?.data || invoicesData || [];
-  const filteredInvoices = Array.isArray(apiContent) ? apiContent.filter(inv => inv.status === 'POSTED') : [];
+  const filteredInvoices = Array.isArray(apiContent) ? apiContent.filter(inv => inv.status === 'POSTED' || inv.status === 'APPROVED' || !inv.status) : [];
   const finalOptions = filteredInvoices.map(invoice => ({
     value: invoice.id,
-    label: `${invoice.invoiceNo} - ${invoice.vendorName}`
+    label: `${invoice.invoiceNo || invoice.id} - ${invoice.vendorName || invoice.vendor?.name || 'Vendor'}`
   }));
-
-  console.log('API response:', invoicesData);
-  console.log('response.data.content:', apiContent);
-  console.log('filtered invoices:', filteredInvoices);
-  console.log('final Select options:', finalOptions);
 
 
   const raw_payableAccounts = payableAccountsData?.data?.data || payableAccountsData?.data?.content || payableAccountsData?.data || payableAccountsData || [];
@@ -351,7 +352,7 @@ export default function DebitNotes() {
 
   /** Build extraActions array for a debit note row's 3-dot menu */
   const buildWorkflowExtraActions = (debitNote) => {
-    const actions = getDebitNoteWorkflowActions(fullState, debitNote.status);
+    const actions = getDebitNoteWorkflowActions(authState, debitNote.status);
     return actions.map((action) => {
       const IconComponent = WORKFLOW_ICON_MAP[action.icon] || FileText;
       return {
@@ -477,8 +478,8 @@ export default function DebitNotes() {
   };
 
   const [selectedDebitNotes, setSelectedDebitNotes] = useState([]);
-  const canUpdate = hasPermission(fullState, 'DEBIT_NOTES', 'UPDATE');
-  const canDelete = hasPermission(fullState, 'DEBIT_NOTES', 'DELETE');
+  const canUpdate = hasPermission(authState, 'DEBIT_NOTES', 'UPDATE');
+  const canDelete = hasPermission(authState, 'DEBIT_NOTES', 'DELETE');
 
   const columns = useMemo(() => [
     {
@@ -678,7 +679,7 @@ export default function DebitNotes() {
   ], [vendors]);
 
   const getRowActions = (record) => {
-    const workflowActions = getDebitNoteWorkflowActions(fullState, record.status);
+    const workflowActions = getDebitNoteWorkflowActions(authState, record.status);
 
     const actions = [
       {

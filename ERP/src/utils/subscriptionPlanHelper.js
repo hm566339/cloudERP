@@ -19,7 +19,20 @@ export function formatPlanLimit(limit, unit = '') {
   if (isNaN(num)) {
     return 'Unlimited';
   }
-  return unit ? `${num} ${unit}` : `${num}`;
+  if (!unit) return `${num}`;
+  const lowerUnit = unit.toLowerCase().trim();
+  const isCapitalized = unit.charAt(0) === unit.charAt(0).toUpperCase();
+
+  if (num === 1) {
+    if (lowerUnit === 'companies' || lowerUnit === 'company') {
+      return isCapitalized ? '1 Company' : '1 company';
+    }
+    if (lowerUnit === 'users' || lowerUnit === 'user') {
+      return isCapitalized ? '1 User' : '1 user';
+    }
+    return `1 ${unit.replace(/s$/i, '')}`;
+  }
+  return `${num} ${unit}`;
 }
 
 /**

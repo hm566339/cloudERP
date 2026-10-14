@@ -13,35 +13,17 @@ import SharedCompanyRoutes from "./SharedCompanyRoutes";
 import { getModuleDashboardPath, getPostLoginRedirectPath } from "../utils/moduleAccess";
 import { useRBAC, parseJwt, extractRoleFromToken } from "../utils/rbac";
 import { getCookie } from "../utils/cookieHelper";
-import { PageLoader } from "../components/common/SkeletonLoader";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { selectIsRehydrated } from "../features/hydration/hydrationSlice";
-import { selectIsAuthenticated, selectCurrentUser, selectSessionStatus, selectAuthContext, setCredentials } from "../features/auth/authSlice";
+import { selectIsAuthenticated, selectCurrentUser, selectSessionStatus, selectAuthContext, setCredentials, setSessionStatus } from "../features/auth/authSlice";
 import { setSelectedCompany } from "../features/company-management/companySlice";
 import { useGetMeQuery, useSsoGetMeQuery } from "../features/auth/services/authApi";
 import WorkspaceLandingRedirect from "./WorkspaceLandingRedirect";
-import { getEntitledModules } from "../utils/moduleNormalization";
+import AccountRedirectHandler from "./AccountRedirectHandler";
+import RouteLoading from "./RouteLoading";
+import ScrollToTop from "./ScrollToTop";
+import { RootIndexHandler, CompanyEntryRedirect } from "./RouteRedirects";
 
-// Helper component to catch backend redirects to /account and map them to /accounts
-const AccountRedirectHandler = () => {
-  const location = useLocation();
-  const newPath = location.pathname.replace(/^\/account(\/|$)/, '/accounts$1');
-  return <Navigate to={newPath + location.search + location.hash} replace />;
-};
-
-function RouteLoading() {
-  return <PageLoader message="Loading page…" />;
-}
-
-function ScrollToTop() {
-  const { pathname } = useLocation();
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-    }
-  }, [pathname]);
-  return null;
-}
 
 
 
@@ -62,6 +44,7 @@ const Register = lazy(() => import("../features/auth/pages/Register"));
 const AuthCallback = lazy(() => import("../features/auth/pages/AuthCallback"));
 const QuotationAcceptancePage = lazy(() => import("../features/sales/pages/QuotationAcceptancePage"));
 const NotAuthorized = lazy(() => import("../pages/NotAuthorized"));
+const NotFound = lazy(() => import("../pages/NotFound"));
 
 // ─── Public Landing & SaaS Trial ──────────────────────────────────────────────
 const LandingPage = lazy(() => import("../pages/public/LandingPage"));
@@ -500,7 +483,14 @@ export default function AppRoutes() {
 
   // Global ERP Shell auth: always use SSO /me as the single canonical auth source.
   const hasAuthToken = !!cookieToken || !!currentUser;
-  const shouldSkipSso = !isRehydrated || (isPublicPage && !hasAuthToken && sessionStatus === 'unauthenticated');
+  const shouldSkipSso = !isRehydrated || (isPublicPage && !hasAuthToken);
+
+  // If rehydration finished on a public page with no tokens, mark unauthenticated cleanly
+  React.useEffect(() => {
+    if (isRehydrated && !hasAuthToken && sessionStatus === 'idle') {
+      dispatch(setSessionStatus('unauthenticated'));
+    }
+  }, [isRehydrated, hasAuthToken, sessionStatus, dispatch]);
 
   const { isLoading: isSsoLoading, isFetching: isSsoFetching } = useSsoGetMeQuery(undefined, {
     skip: shouldSkipSso,
@@ -939,6 +929,7 @@ export default function AppRoutes() {
 
           <Route path="company-dashboard" element={<CompanyDashboard />} />
           <Route path="subscription" element={<SubscriptionPage />} />
+          <Route path="gst-reports/*" element={<Navigate to="accounts/reports/gst/summary" replace />} />
 
           {/* Finance & Accounts Module (Replacing Legacy Finance/Accounting) */}
           {SharedAccountsRoutes({ prefix: "accounts/" })}
@@ -1086,82 +1077,9 @@ export default function AppRoutes() {
           <Route path="plans" element={<SubscriptionPlansSettings />} />
         </Route>
 
-        {/* ── Fallback ── */}
-        <Route path="*" element={<SmartRedirect />} />
+        {/* ── Catch-all 404 Route ── */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );
-}
-
-function RootIndexHandler() {
-  const [searchParams] = useSearchParams();
-  const authenticated = useAppSelector(selectIsAuthenticated);
-  const user = useAppSelector(selectCurrentUser);
-  const cookieToken = getCookie("ACCESS_TOKEN") || getCookie("auth_token") || (typeof localStorage !== "undefined" ? (localStorage.getItem("ACCESS_TOKEN") || localStorage.getItem("auth_token")) : null);
-
-  const urlToken = searchParams.get("token") || searchParams.get("accessToken");
-  if (urlToken) {
-    return <Navigate to={`/accounts/dashboard?token=${encodeURIComponent(urlToken)}`} replace />;
-  }
-
-  if (authenticated && user) {
-    return <Navigate to={getPostLoginRedirectPath({ user })} replace />;
-  }
-
-  if (cookieToken && user) {
-    return <Navigate to={getPostLoginRedirectPath({ user })} replace />;
-  }
-
-  return <LandingPage />;
-}
-
-function SmartRedirect() {
-  const [searchParams] = useSearchParams();
-  const authenticated = useAppSelector(selectIsAuthenticated);
-  const user = useAppSelector(selectCurrentUser);
-
-  const urlToken = searchParams.get("token") || searchParams.get("accessToken");
-  if (urlToken) {
-    return <Navigate to={`/accounts/dashboard?token=${encodeURIComponent(urlToken)}`} replace />;
-  }
-
-  if (authenticated && user) {
-    return <Navigate to={getPostLoginRedirectPath({ user: user })} replace />;
-  }
-
-  return <Navigate to="/" replace />;
-}
-
-function CompanyEntryRedirect() {
-  const { companyId } = useParams();
-  const { accessLoading = false } = useOutletContext() || {};
-  const authContext = useAppSelector(selectAuthContext);
-  const user = authContext.user;
-
-  if (accessLoading) {
-    return <RouteLoading />;
-  }
-
-  const isAdmin = user?.role === 'super_admin';
-
-  // Admins get the general overview dashboard
-  if (isAdmin) {
-    return <Navigate to={`/company/${companyId}/dashboard`} replace />;
-  }
-
-  // Regular users get redirected to the first canonical entitled module
-  const entitledModules = getEntitledModules(authContext);
-
-  if (entitledModules.includes('ACCOUNT')) {
-    return <Navigate to="/accounts/dashboard" replace />;
-  }
-  if (entitledModules.includes('INVENTORY')) {
-    return <Navigate to="/inventory/dashboard" replace />;
-  }
-  if (entitledModules.includes('CRM')) {
-    return <Navigate to="/crm/dashboard" replace />;
-  }
-
-  // Fallback if no modules matched
-  return <Navigate to={`/company/${companyId}/dashboard`} replace />;
 }

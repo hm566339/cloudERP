@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Box, ShoppingCart,
-  Briefcase, Banknote, Factory, Shield,
+  Briefcase, Banknote, Factory,
   ArrowRight
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
@@ -19,8 +19,7 @@ const MODULES = [
   { id: 'sales', name: 'Sales', description: 'Orders, invoicing & dispatch', icon: ShoppingCart, color: 'text-indigo-500', bg: 'bg-indigo-50', border: 'border-indigo-100' },
   { id: 'purchase', name: 'Purchase', description: 'Procurement & vendor management', icon: Briefcase, color: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-100' },
   { id: 'hr', name: 'HR & Payroll', description: 'Employee management & payroll', icon: Building2, color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-100' },
-  { id: 'manufacturing', name: 'Manufacturing', description: 'Production & quality control', icon: Factory, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-100' },
-  { id: 'sso', name: 'Super Admin', description: 'Global system configuration', icon: Shield, color: 'text-zinc-700', bg: 'bg-zinc-100', border: 'border-zinc-200', path: '/admin-login' }
+  { id: 'manufacturing', name: 'Manufacturing', description: 'Production & quality control', icon: Factory, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-100' }
 ];
 
 export default function ModuleSelection() {

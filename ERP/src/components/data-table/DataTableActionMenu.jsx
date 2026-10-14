@@ -45,8 +45,8 @@ export default function DataTableActionMenu({ actions = [], row, index }) {
         let colorClass = 'text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100';
         if (isActive) {
           colorClass = isDanger 
-            ? 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100 shadow-2xs'
-            : 'text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 shadow-2xs';
+            ? 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100 shadow-sm'
+            : 'text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 shadow-sm';
         } else if (isDanger) {
           colorClass = 'text-zinc-400 hover:text-red-600 hover:bg-red-50';
         } else if (action.variant === 'primary' || action.variant === 'indigo') {
@@ -72,7 +72,7 @@ export default function DataTableActionMenu({ actions = [], row, index }) {
             aria-label={ariaLabel}
             aria-disabled={isDisabled || isLoading ? true : undefined}
             aria-pressed={action.active !== undefined ? isActive : undefined}
-            className={`w-7 h-7 flex items-center justify-center shrink-0 rounded-lg transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500/40 focus-visible:ring-offset-1 focus-visible:ring-offset-white ${colorClass} ${customClass}`}
+            className={`w-7 h-7 flex items-center justify-center shrink-0 rounded-lg transition-colors duration-micro ease-enter active:scale-[0.96] disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500/40 focus-visible:ring-offset-1 focus-visible:ring-offset-white ${colorClass} ${customClass}`}
           >
             {RawIcon ? (
               React.isValidElement(RawIcon) ? (

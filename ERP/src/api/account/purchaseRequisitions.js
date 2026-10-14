@@ -92,7 +92,6 @@ export const purchaseRequisitionsApi = {
   create: async (payload, companyId) => {
     const p = payload && typeof payload === 'object' && 'data' in payload ? payload : { data: payload };
     const params = companyId ? { companyId } : {};
-    console.log('CREATE API REQUEST', { companyId, payload: p });
     const response = await apiClient.post('/api/account/purchase-requisitions', p, { params });
     return response.data?.data || response.data;
   },

@@ -216,7 +216,7 @@ export default function UserPermissionsSettings() {
             type="checkbox"
             checked={hasDirectPermission(row.code, action)}
             onChange={() => handleToggle(row.code, action)}
-            className="w-4 h-4 text-indigo-600 border-zinc-300 rounded focus:ring-indigo-500 cursor-pointer"
+            className="w-4 h-4 text-zinc-900 border-zinc-300 rounded focus:ring-zinc-900 accent-zinc-900 cursor-pointer"
           />
         ) : (
           <span className="text-zinc-300 text-xs">-</span>
@@ -259,7 +259,7 @@ export default function UserPermissionsSettings() {
           <button
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'direct'
-                ? 'border-indigo-600 text-indigo-600'
+                ? 'border-zinc-900 text-zinc-900 font-bold'
                 : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'
             }`}
             onClick={() => setActiveTab('direct')}
@@ -269,7 +269,7 @@ export default function UserPermissionsSettings() {
           <button
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'effective'
-                ? 'border-indigo-600 text-indigo-600'
+                ? 'border-zinc-900 text-zinc-900 font-bold'
                 : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'
             }`}
             onClick={() => setActiveTab('effective')}

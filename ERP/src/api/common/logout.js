@@ -53,8 +53,8 @@ export const isAuthPage = (path) =>
 export const dispatchLogout = (options = {}) => {
   const defaultLandingPath =
     (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_BASE_PATH || import.meta.env?.BASE_URL))
-      ? (import.meta.env.VITE_BASE_PATH || import.meta.env.BASE_URL).replace(/\/$/, '') + '/'
-      : '/erp/';
+      ? (import.meta.env.VITE_BASE_PATH || import.meta.env.BASE_URL).replace(/\/$/, '') + '/login'
+      : '/erp/login';
 
   const {
     redirectTo = defaultLandingPath,

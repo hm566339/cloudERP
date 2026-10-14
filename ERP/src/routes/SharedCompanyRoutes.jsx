@@ -153,9 +153,21 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
         <Route path={`${prefix}inventory/product-serials/:id`} element={<GenericEntityDetails endpoint="/api/inventory/product-serials" entityName="Product Serial" />} />
         <Route path={`${prefix}inventory/product-uoms`} element={<ProductUomManagement />} />
         <Route path={`${prefix}inventory/product-uoms/:id`} element={<GenericEntityDetails endpoint="/api/inventory/product-uoms" entityName="Product UOM" />} />
+
+        {/* Inventory convenience aliases */}
+        <Route path={`${prefix}inventory/movements`} element={<Navigate to={`../${prefix}inventory/stock-movements`} replace />} />
+        <Route path={`${prefix}inventory/adjustments`} element={<Navigate to={`../${prefix}inventory/stock-adjustments`} replace />} />
+        <Route path={`${prefix}inventory/transfers`} element={<Navigate to={`../${prefix}inventory/stock-transfers`} replace />} />
+        <Route path={`${prefix}inventory/valuation`} element={<Navigate to={`../${prefix}inventory/valuations`} replace />} />
+        <Route path={`${prefix}inventory/warehouses`} element={<Navigate to={`../${prefix}inventory/warehouse`} replace />} />
       </Route>
 
       {/* Sales & CRM */}
+      <Route path={`${prefix}sales`} element={<Navigate to={`${prefix}sales-crm/dashboard`} replace />} />
+      <Route path={`${prefix}sales/quotations`} element={<Navigate to={`../${prefix}sales-crm/quotations`} replace />} />
+      <Route path={`${prefix}sales/orders`} element={<Navigate to={`../${prefix}sales-crm/orders`} replace />} />
+      <Route path={`${prefix}sales/delivery-challans`} element={<Navigate to={`../accounts/transactions/delivery-challans`} replace />} />
+      <Route path={`${prefix}sales/invoices`} element={<Navigate to={`../${prefix}sales-crm/invoices`} replace />} />
       <Route path={`${prefix}sales-crm`} element={<Navigate to={`${prefix}sales-crm/dashboard`} replace />} />
       <Route path={`${prefix}sales-crm/dashboard`} element={<SalesCRMDashboard />} />
       <Route path={`${prefix}sales-crm/customers`} element={<CustomerManagement />} />
@@ -184,6 +196,13 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
       />
 
       {/* Purchase Management */}
+      <Route path={`${prefix}purchase`} element={<Navigate to={`${prefix}purchases/dashboard`} replace />} />
+      <Route path={`${prefix}purchase/requisitions`} element={<Navigate to={`../${prefix}purchases/requisitions`} replace />} />
+      <Route path={`${prefix}purchase/rfqs`} element={<Navigate to={`../${prefix}purchases/rfqs`} replace />} />
+      <Route path={`${prefix}purchase/orders`} element={<Navigate to={`../${prefix}purchases/purchase-orders`} replace />} />
+      <Route path={`${prefix}purchase/grn`} element={<Navigate to={`../${prefix}purchases/goods-receipts`} replace />} />
+      <Route path={`${prefix}purchase/invoices`} element={<Navigate to={`../${prefix}purchases/invoices`} replace />} />
+      <Route path={`${prefix}purchase/payments`} element={<Navigate to={`../${prefix}purchases/payments`} replace />} />
       <Route path={`${prefix}purchases`} element={<Navigate to={`${prefix}purchases/dashboard`} replace />} />
       <Route path={`${prefix}purchases/dashboard`} element={<PurchaseDashboard />} />
       <Route path={`${prefix}purchases/vendors`} element={<VendorManagement />} />

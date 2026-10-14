@@ -51,8 +51,8 @@ export default function StockMovementLineManagement() {
   const pageable = useMemo(() => ({
     page,
     size: apiParams.size || 10,
-    sort: `${apiParams.sort},${apiParams.direction}`
-  }), [page, apiParams.size, apiParams.sort, apiParams.direction]);
+    sort: apiParams.sort || 'createdAt,desc'
+  }), [page, apiParams.size, apiParams.sort]);
 
   const { stockMovementLines, pagination: pageInfo, isLoading, isFetching, refetch } = useStockMovementLineList(
     finalParams,

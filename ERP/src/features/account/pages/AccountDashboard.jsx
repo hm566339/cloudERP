@@ -143,56 +143,37 @@ function AccountDashboard() {
 
     const params = { companyId };
 
-    // Cards
     setIsLoadingCards(true);
-    dashboardApi.getCards(params)
-      .then(res => setCards(res?.data || []))
-      .catch(() => setCards([]))
-      .finally(() => setIsLoadingCards(false));
-
-    // Quick Actions
     setIsLoadingQuickActions(true);
-    dashboardApi.getQuickActions(params)
-      .then(res => setQuickActions(res?.data || []))
-      .catch(() => setQuickActions([]))
-      .finally(() => setIsLoadingQuickActions(false));
-
-    // Approvals (only if user has APPROVE permission)
-    if (canApprove) {
-      setIsLoadingApprovals(true);
-      dashboardApi.getApprovals(params)
-        .then(res => setApprovals(res?.data || []))
-        .catch(() => setApprovals([]))
-        .finally(() => setIsLoadingApprovals(false));
-    }
-
-    // Alerts
+    if (canApprove) setIsLoadingApprovals(true);
     setIsLoadingAlerts(true);
-    dashboardApi.getAlerts(params)
-      .then(res => setAlerts(res?.data || []))
-      .catch((err) => {
-        console.warn('Dashboard alerts unavailable:', err?.message);
-        setAlerts([]);
-      })
-      .finally(() => setIsLoadingAlerts(false));
-
-    // Activities
     setIsLoadingActivities(true);
-    dashboardApi.getActivities(params)
-      .then(res => setActivities(res?.data || []))
-      .catch(() => setActivities([]))
-      .finally(() => setIsLoadingActivities(false));
 
-    // Charts
-    dashboardApi.getCharts(params)
-      .then(res => setCharts(res?.data || []))
-      .catch(() => setCharts([]));
-
-    // Navigation
-    dashboardApi.getNavigation(params)
-      .then(res => setNavigation(res?.data || []))
-      .catch(() => setNavigation([]));
-
+    try {
+      const res = await dashboardApi.getDashboard(params);
+      const data = res?.data || res || {};
+      setCards(data.cards || []);
+      setCharts(data.charts || []);
+      setQuickActions(data.quickActions || []);
+      setApprovals(canApprove ? (data.approvals || []) : []);
+      setAlerts(data.alerts || []);
+      setActivities(data.activities || []);
+      setNavigation(data.navigation || []);
+    } catch (err) {
+      setCards([]);
+      setCharts([]);
+      setQuickActions([]);
+      setApprovals([]);
+      setAlerts([]);
+      setActivities([]);
+      setNavigation([]);
+    } finally {
+      setIsLoadingCards(false);
+      setIsLoadingQuickActions(false);
+      setIsLoadingApprovals(false);
+      setIsLoadingAlerts(false);
+      setIsLoadingActivities(false);
+    }
   }, [companyId, hasUser, canApprove, refreshKey]);
 
   useEffect(() => {
@@ -395,7 +376,24 @@ function AccountDashboard() {
             </DashboardSection>
 
             {/* ────────── Charts Row ────────── */}
-            {charts && charts.length > 0 && (
+            {isLoadingCards || (loading && charts.length === 0) ? (
+              <DashboardSection 
+                title="Analytics & Trends" 
+                icon={PieChart} 
+                description="Visualized financial insights."
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="h-[240px] bg-white border border-zinc-200 rounded-xl p-5 animate-pulse flex flex-col justify-between">
+                    <div className="h-4 bg-zinc-100 rounded w-1/3" />
+                    <div className="h-32 bg-zinc-50 rounded-lg" />
+                  </div>
+                  <div className="h-[240px] bg-white border border-zinc-200 rounded-xl p-5 animate-pulse flex flex-col justify-between">
+                    <div className="h-4 bg-zinc-100 rounded w-1/3" />
+                    <div className="h-32 bg-zinc-50 rounded-lg" />
+                  </div>
+                </div>
+              </DashboardSection>
+            ) : charts && charts.length > 0 ? (
               <DashboardSection 
                 title="Analytics & Trends" 
                 icon={PieChart} 
@@ -418,7 +416,7 @@ function AccountDashboard() {
                   })}
                 </div>
               </DashboardSection>
-            )}
+            ) : null}
 
             {/* ────────── Approvals, Alerts, Activities Row ────────── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

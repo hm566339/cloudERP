@@ -210,31 +210,10 @@ export const employeeDriverService = {
         });
       }
     } catch (ssoErr) {
-      console.debug('SSO company users endpoint unavailable or empty:', ssoErr?.message || ssoErr);
+      // SSO company users endpoint optional fallback
     }
 
-    // 3. Tertiary: HR Employees API (/api/account/employees)
-    try {
-      const hrRes = await apiClient.get('/api/account/employees', {
-        params: { pageSize: 200, size: 200 },
-      });
-      const hrList =
-        hrRes.data?.data?.content ||
-        hrRes.data?.content ||
-        hrRes.data?.data ||
-        (Array.isArray(hrRes.data) ? hrRes.data : []);
-
-      if (Array.isArray(hrList)) {
-        hrList.forEach((e) => {
-          const norm = normalizePerson(e);
-          if (norm && !collected.has(norm.id)) {
-            collected.set(norm.id, norm);
-          }
-        });
-      }
-    } catch (hrErr) {
-      console.debug('HR employees endpoint unavailable or empty:', hrErr?.message || hrErr);
-    }
+    // 3. (HR employees /api/account/employees omitted as backend service is unavailable)
 
     // 4. Local storage fallback if still empty
     if (collected.size === 0) {
@@ -297,7 +276,7 @@ export const employeeDriverService = {
           return norm?.name || null;
         }
       } catch (e) {
-        console.debug('Failed to resolve person by id:', id, e?.message);
+        // Fallback gracefully on lookup failure
       } finally {
         employeeDriverService._pendingPromises.delete(id);
       }

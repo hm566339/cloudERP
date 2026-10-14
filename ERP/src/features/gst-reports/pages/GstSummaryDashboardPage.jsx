@@ -172,34 +172,29 @@ export default function GstSummaryDashboardPage() {
   }, [filters]);
 
   // ── Master data for filter dropdowns ───────────────────────────────────────
-  const fetchBranches = useCallback(
-    () => accountHttpClient.get('/api/account/branches', { params: { companyId, size: 1000 } }).then((r) => r.data).catch(() => ({ content: [] })),
-    [companyId]
-  );
   const fetchGstRegistrations = useCallback(
-    () => accountHttpClient.get('/api/account/gst-registrations', { params: { companyId, size: 1000 } }).then((r) => r.data).catch(() => ({ content: [] })),
+    () => accountHttpClient.get('/api/account/gst/master/registrations/company', { params: { companyId, size: 100 } }).then((r) => r.data).catch(() => ({ content: [] })),
     [companyId]
   );
   const fetchFiscalYears = useCallback(
-    () => fiscalYearsApi.getFiscalYears({ companyId, size: 200 }).then((r) => r.data),
+    () => fiscalYearsApi.getFiscalYears({ companyId, size: 100 }).then((r) => r.data),
     [companyId]
   );
-  const fetchCustomers = useCallback(() => customersApi.getList({}, { page: 0, size: 1000 }), [companyId]);
-  const fetchVendors = useCallback(() => vendorsApi.getVendors({}, { page: 0, size: 1000 }), [companyId]);
+  const fetchCustomers = useCallback(() => customersApi.getList({}, { page: 0, size: 100 }), [companyId]);
+  const fetchVendors = useCallback(() => vendorsApi.getVendors({}, { page: 0, size: 100 }), [companyId]);
   const fetchHsn = useCallback(
-    () => hsnSacMasterApi.getHsnSacList({ companyId, size: 1000 }).then((r) => r.data),
+    () => hsnSacMasterApi.getHsnSacList({ companyId, size: 100 }).then((r) => r.data),
     [companyId]
   );
 
   const skip = !companyId;
-  const { data: branchesResponse } = useApiQuery(fetchBranches, null, { skip });
   const { data: registrationsResponse } = useApiQuery(fetchGstRegistrations, null, { skip });
   const { data: fiscalYearsResponse } = useApiQuery(fetchFiscalYears, null, { skip });
   const { data: customersResponse } = useApiQuery(fetchCustomers, null, { skip });
   const { data: vendorsResponse } = useApiQuery(fetchVendors, null, { skip });
   const { data: hsnResponse } = useApiQuery(fetchHsn, null, { skip });
 
-  const branches = useMemo(() => extractList(branchesResponse), [branchesResponse]);
+  const branches = useMemo(() => [], []);
   const registrations = useMemo(() => extractList(registrationsResponse), [registrationsResponse]);
   const fiscalYears = useMemo(() => extractList(fiscalYearsResponse), [fiscalYearsResponse]);
   const customers = useMemo(() => extractList(customersResponse), [customersResponse]);
@@ -267,18 +262,14 @@ export default function GstSummaryDashboardPage() {
   useEffect(() => {
     if (hasAutoLoaded.current) return;
     hasAutoLoaded.current = true;
-    console.log('[GST] Auto-loading dashboard...');
     const payload = buildPayload(filters);
-    console.log('[GST] Auto-load payload:', payload);
     setHasSearched(true);
     refetch(payload);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSearch = useCallback(() => {
-    console.log('[GST] handleSearch() called');
     if (isLoading) return;
     const payload = buildPayload(filters);
-    console.log('[GST] Search payload:', payload);
     setHasSearched(true);
     refetch(payload);
   }, [buildPayload, filters, isLoading, refetch]);

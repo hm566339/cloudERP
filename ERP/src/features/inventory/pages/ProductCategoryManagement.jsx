@@ -52,8 +52,8 @@ export default function ProductCategoryManagement() {
   const pageable = useMemo(() => ({
     page,
     size: apiParams.size || 10,
-    sort: `${apiParams.sort},${apiParams.direction}`
-  }), [page, apiParams.size, apiParams.sort, apiParams.direction]);
+    sort: apiParams.sort || 'name,asc'
+  }), [page, apiParams.size, apiParams.sort]);
 
   const { productCategories, pagination: pageInfo, isLoading, isFetching, refetch } = useProductCategoryList(
     finalParams,

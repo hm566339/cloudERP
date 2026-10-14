@@ -4,7 +4,8 @@ import {
   getActiveCompanyId,
   isOwnerOrAdminUser,
   isCompanySpecificEndpoint,
-  attachRequestInterceptor
+  attachRequestInterceptor,
+  isValidCompanyId
 } from '../../../api/common/interceptors.js';
 
 describe('Company-Level Data Isolation & Query Parameter Injection Tests', () => {
@@ -95,6 +96,27 @@ describe('Company-Level Data Isolation & Query Parameter Injection Tests', () =>
     });
 
     it('returns null safely when company selection is loading or unavailable', () => {
+      assert.strictEqual(getActiveCompanyId(), null);
+    });
+
+    it('rejects dummy 000000, 0, or zero-uuid and returns null instead of passing to backend', () => {
+      assert.strictEqual(isValidCompanyId('000000'), false);
+      assert.strictEqual(isValidCompanyId('0'), false);
+      assert.strictEqual(isValidCompanyId('00000000-0000-0000-0000-000000000000'), false);
+      assert.strictEqual(isValidCompanyId('null'), false);
+      assert.strictEqual(isValidCompanyId('undefined'), false);
+      assert.strictEqual(isValidCompanyId(''), false);
+      assert.strictEqual(isValidCompanyId('ad270acb-9b7b-430a-82ec-21fb3b7b2529'), true);
+      assert.strictEqual(isValidCompanyId('comp-uuid-aaa'), true);
+
+      localStorageMock.setItem('auth_user', JSON.stringify({
+        id: 'u-super',
+        companyCode: '000000',
+        companyId: '000000',
+        role: 'super_admin'
+      }));
+
+      // Must never return "000000" as activeCompanyId!
       assert.strictEqual(getActiveCompanyId(), null);
     });
   });

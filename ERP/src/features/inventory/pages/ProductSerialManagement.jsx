@@ -53,8 +53,8 @@ export default function ProductSerialManagement() {
   const pageable = useMemo(() => ({
     page,
     size: apiParams.size || 10,
-    sort: `${apiParams.sort},${apiParams.direction}`
-  }), [page, apiParams.size, apiParams.sort, apiParams.direction]);
+    sort: apiParams.sort || 'serialNumber,asc'
+  }), [page, apiParams.size, apiParams.sort]);
 
   const { productSerials, pagination: pageInfo, isLoading, isFetching, refetch } = useProductSerialList(
     finalParams,

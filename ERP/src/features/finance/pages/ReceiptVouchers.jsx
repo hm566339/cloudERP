@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import useListQuery from '../../../hooks/useListQuery';
+import SearchInput from '../../../components/common/SearchInput';
 import { 
   Plus, Eye, RefreshCw, Trash2, Edit2, Download, FileText, 
   Send, Check, BookOpen, Undo, XCircle, X, Truck
@@ -107,7 +109,7 @@ export default function ReceiptVouchers() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { buildPath } = useRoutePath();
-  const fullState = useAppSelector((state) => state);
+  const authState = useAppSelector((state) => state.auth);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
@@ -230,7 +232,7 @@ export default function ReceiptVouchers() {
 
   /** Build extraActions array for a receipt row's action menu */
   const buildWorkflowExtraActions = (receipt) => {
-    const actions = getReceiptWorkflowActions(fullState, receipt.receiptStatus);
+    const actions = getReceiptWorkflowActions(authState, receipt.receiptStatus);
     return actions.map((action) => {
       const IconComponent = WORKFLOW_ICON_MAP[action.icon] || FileText;
       return {

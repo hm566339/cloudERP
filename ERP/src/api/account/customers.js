@@ -29,11 +29,12 @@ export const customersApi = {
    * POST /api/account/customers
    */
   create: async (payload) => {
-    const { companyId, includeCompanyId, data } = payload || {};
+    const { companyId, includeCompanyId, data, ...rest } = payload || {};
+    const requestData = data !== undefined ? data : rest;
     const isPrivileged = isOwnerOrSystemAdminUser();
     const response = await apiClient.post(
       '/api/account/customers',
-      { data: data || {} },
+      { data: requestData || {} },
       includeCompanyId && companyId && isPrivileged ? { params: { companyId } } : undefined
     );
     const result = response.data;
@@ -52,8 +53,10 @@ export const customersApi = {
    * Update an existing customer
    * PUT /api/account/customers/{id}
    */
-  update: async (data) => {
-    const { id, companyId, ...payloadWithoutId } = data;
+  update: async (payload) => {
+    const { id, companyId, data, ...rest } = payload || {};
+    const requestData = data !== undefined ? data : rest;
+    const { id: _, ...payloadWithoutId } = requestData;
     const response = await apiClient.put(`/api/account/customers/${id}`, { data: payloadWithoutId });
     return response.data;
   },

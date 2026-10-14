@@ -358,7 +358,7 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                   <label className="text-[10.4px] font-semibold text-zinc-700">Total Value</label>
                   <div className="w-full h-9 px-3 bg-zinc-50 border border-zinc-300 rounded-md text-[10.4px] font-medium text-zinc-900 flex items-center gap-2">
                     <Calculator size={14} className="text-zinc-500" />
-                    <span>${adjustmentValue.toFixed(2)}</span>
+                    <span>₹{adjustmentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 </div>
 
