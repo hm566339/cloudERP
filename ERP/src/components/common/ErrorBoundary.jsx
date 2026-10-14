@@ -140,7 +140,10 @@ export default class ErrorBoundary extends React.Component {
                 Refresh Page
               </button>
               <button
-                onClick={() => (window.location.href = '/')}
+                onClick={() => {
+                  const basePath = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_BASE_PATH || import.meta.env?.BASE_URL)) || '/erp/';
+                  window.location.href = basePath.endsWith('/') ? basePath : `${basePath}/`;
+                }}
                 className="flex-1 px-4 py-2 border border-input rounded-lg hover:bg-accent transition-colors font-medium text-foreground"
               >
                 Go Home

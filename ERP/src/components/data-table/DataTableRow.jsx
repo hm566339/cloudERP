@@ -5,7 +5,7 @@ import DataTableActionMenu from './DataTableActionMenu';
  * Individual row component for DataTable with custom cell rendering,
  * sticky actions, and expandable row content.
  */
-export default function DataTableRow({
+function DataTableRow({
   row,
   index,
   columns = [],
@@ -42,7 +42,7 @@ export default function DataTableRow({
     <>
       <tr
         onClick={hasClickAction ? handleRowClick : undefined}
-        className={`border-b border-zinc-100 transition-colors ${
+        className={`border-b border-zinc-100 transition-colors duration-micro ease-enter ${
           hasClickAction ? 'cursor-pointer' : ''
         } ${isSelected ? 'bg-zinc-50/90' : isExpanded ? 'bg-zinc-50/80' : 'hover:bg-zinc-50/70'} ${customClass}`}
       >
@@ -124,3 +124,5 @@ export default function DataTableRow({
     </>
   );
 }
+
+export default React.memo(DataTableRow);

@@ -12,10 +12,8 @@ export default function EmployeeExpenseBalance({ employeeId }) {
     
     const fetchBalances = async () => {
       try {
-        console.log('EmployeeExpenseBalance: fetching for employeeId:', employeeId);
         setLoading(true);
         const response = await expenseRequestService.getEmployeeBalances({ employeeId });
-        console.log('EmployeeExpenseBalance: API response:', response);
         const balanceData = response?.data || response;
         setData(balanceData);
       } catch (err) {
@@ -29,10 +27,7 @@ export default function EmployeeExpenseBalance({ employeeId }) {
     fetchBalances();
   }, [employeeId]);
 
-  console.log('EmployeeExpenseBalance rendered with employeeId:', employeeId);
-
   if (!employeeId) {
-    console.warn('EmployeeExpenseBalance: employeeId is falsy, returning null');
     // For debugging purposes, if employeeId is missing, let's still render something to show it's here
     return (
       <div className="card p-4 text-red-500 font-bold border border-red-500">

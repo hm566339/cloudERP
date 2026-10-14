@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import useListQuery from '../../../hooks/useListQuery';
 import ExpandedRowDetails from '../components/ExpandedRowDetails';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -47,8 +48,8 @@ export default function StockTransferManagement() {
   const pageable = useMemo(() => ({
     page,
     size: apiParams.size || 10,
-    sort: `${apiParams.sort},${apiParams.direction}`
-  }), [page, apiParams.size, apiParams.sort, apiParams.direction]);
+    sort: apiParams.sort || 'createdAt,desc'
+  }), [page, apiParams.size, apiParams.sort]);
 
   const { stockTransfers, pagination: pageInfo, isLoading, isFetching, refetch } = useStockTransferList(
     finalParams,

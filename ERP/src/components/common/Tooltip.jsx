@@ -117,7 +117,7 @@ export default function Tooltip({
             transform: coords.showBelow ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
             zIndex: 9999,
           }}
-          className="pointer-events-none transition-opacity duration-150 ease-out whitespace-nowrap"
+          className="pointer-events-none transition-opacity duration-micro ease-enter whitespace-nowrap animate-fade-in"
         >
           <div className="relative bg-[#111827] text-white text-[11px] font-medium px-[9px] py-[5px] rounded-[5px] shadow-lg tracking-normal leading-tight">
             {content}

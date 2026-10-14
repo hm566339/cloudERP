@@ -25,8 +25,9 @@ export const bankAccountsApi = {
     return response.data?.data || response.data;
   },
 
-  updateBankAccount: async ({ id, data }) => {
-    const { id: _, ...payloadWithoutId } = data;
+  updateBankAccount: async ({ id, data, ...rest }) => {
+    const updateData = data || rest;
+    const { id: _, ...payloadWithoutId } = updateData;
     const response = await accountHttpClient.put(`/api/account/bank-accounts/${id}`, { data: payloadWithoutId });
     return response.data?.data || response.data;
   },

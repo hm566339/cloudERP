@@ -242,10 +242,24 @@ export default function UpdateModal({
       await onSubmit(rawData);
       onClose();
     } catch (err) {
+      const responseData = err?.response?.data || err?.data;
+      const fieldErrorsFromBackend = responseData?.data;
+      if (fieldErrorsFromBackend && typeof fieldErrorsFromBackend === 'object') {
+        const mappedErrors = {};
+        Object.entries(fieldErrorsFromBackend).forEach(([key, val]) => {
+          const cleanKey = key.replace(/^data\./, '');
+          mappedErrors[cleanKey] = val;
+        });
+        setFieldErrors((prev) => ({ ...prev, ...mappedErrors }));
+      }
       const msg =
-        err?.data?.message ||
+        (typeof fieldErrorsFromBackend === 'string' ? fieldErrorsFromBackend : null) ||
+        responseData?.message ||
+        (Array.isArray(responseData?.errors) ? responseData.errors.join(', ') : null) ||
+        (fieldErrorsFromBackend && typeof fieldErrorsFromBackend === 'object'
+          ? Object.values(fieldErrorsFromBackend).join(', ')
+          : null) ||
         err?.message ||
-        err?.data?.errors?.join(', ') ||
         'Save failed';
       setLocalError(msg);
     } finally {

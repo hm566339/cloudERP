@@ -3,18 +3,18 @@ import { accountHttpClient } from '../common/client';
 export const apPaymentsApi = {
   /**
    * Get paginated AP Payments with filters
-   * GET /api/account/ap-payments
+   * GET /api/account/payment-vouchers
    */
-  getList: async ({ params }) => {
-    return accountHttpClient.get('/api/account/ap-payments', { params });
+  getList: async ({ params } = {}) => {
+    return accountHttpClient.get('/api/account/payment-vouchers', { params });
   },
 
   /**
    * Get AP Payment by ID
-   * GET /api/account/ap-payments/{id}
+   * GET /api/account/payment-vouchers/{id}
    */
   getById: async (id) => {
-    return accountHttpClient.get(`/api/account/ap-payments/${id}`);
+    return accountHttpClient.get(`/api/account/payment-vouchers/${id}`);
   },
 
   /**

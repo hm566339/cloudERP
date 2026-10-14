@@ -635,8 +635,6 @@ export default function VendorFormModal({ isOpen, onClose, initialData, onSucces
       isActive: Boolean(formData.isActive)
     };
 
-    console.log("formData", formData);
-    console.log("payload", payload);
 
     try {
       if (isEditing) {

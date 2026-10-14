@@ -94,7 +94,7 @@ export default function OwnerTopHeader({
       localStorage.clear();
       sessionStorage.clear();
       dispatch(logoutAction());
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [logoutApi, dispatch, navigate]);
 

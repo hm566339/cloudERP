@@ -97,9 +97,9 @@ export default function InventorySnapshotManagement() {
   } = useUrlFilters({ defaultPageSize: 10, defaultSortBy: 'snapshotDate', defaultSortOrder: 'desc' });
 
   // Lookups to guarantee clean, user-friendly labels without exposing raw UUIDs
-  const { products } = useProductList({}, { page: 0, size: 1000 });
-  const { warehouses } = useWarehouseList({}, { page: 0, size: 1000 });
-  const { locations } = useWarehouseLocationList({}, { page: 0, size: 1000 });
+  const { products } = useProductList({}, { page: 0, size: 100 });
+  const { warehouses } = useWarehouseList({}, { page: 0, size: 100 });
+  const { locations } = useWarehouseLocationList({}, { page: 0, size: 100 });
 
   const productMap = useMemo(() => {
     const map = new Map();
@@ -197,8 +197,8 @@ export default function InventorySnapshotManagement() {
   const pageable = useMemo(() => ({
     page,
     size: apiParams.size || 10,
-    sort: sortBy ? `${sortBy},${sortOrder || 'desc'}` : (apiParams.sort ? `${apiParams.sort},${apiParams.direction || 'desc'}` : 'snapshotDate,desc')
-  }), [page, apiParams.size, sortBy, sortOrder, apiParams.sort, apiParams.direction]);
+    sort: sortBy ? `${sortBy},${sortOrder || 'desc'}` : (apiParams.sort || 'snapshotDate,desc')
+  }), [page, apiParams.size, sortBy, sortOrder, apiParams.sort]);
 
   const { inventorySnapshots, pagination: pageInfo, isLoading, isFetching, refetch } = useInventorySnapshotList(
     finalParams,

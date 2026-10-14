@@ -40,6 +40,7 @@ import { fetchAccountCompanies, selectAccountCompanies, clearAccountCompany } fr
 import SearchAccount from '../components/common/SearchAccount'
 import { SettingsSidebar } from '../components/settings'
 import SubscriptionNoticeBanner from '../components/common/SubscriptionNoticeBanner'
+import ErrorBoundary from '../components/common/ErrorBoundary'
 
 export default function CompanyLayout() {
 
@@ -179,7 +180,7 @@ export default function CompanyLayout() {
     const currentModuleKey = normalizeModuleKey(modulePathStr)
     if (currentModuleKey && !accessibleModuleKeys.includes(currentModuleKey)) {
       console.warn(`[RBAC] Access Denied for module: ${currentModuleKey}. Allowed:`, accessibleModuleKeys)
-      navigate(buildPath('dashboard'), { replace: true })
+      navigate('/403', { replace: true })
     }
   }, [accessLoading, accessibleModuleKeys, companyId, isSuperAdminGlobal, userRole, location.pathname, navigate])
 
@@ -218,8 +219,7 @@ export default function CompanyLayout() {
     localStorage.clear();
     sessionStorage.clear()
 
-    const targetPath = userRole === 'super_admin' ? '/admin-login' : '/login';
-    navigate(targetPath, { replace: true })
+    navigate('/', { replace: true })
   }, [dispatch, userRole, logoutApi, navigate])
 
   const handleSwitchCompany = useCallback(() => {
@@ -335,7 +335,7 @@ export default function CompanyLayout() {
 
       {/* ── Desktop Sidebar ── */}
       <aside
-        className={`hidden lg:flex flex-col bg-[var(--color-sidebar-bg)] border-r border-black/[0.06] fixed top-0 bottom-0 left-0 z-20 transition-transform duration-300 ease-in-out will-change-transform ${desktopSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`hidden lg:flex flex-col bg-[var(--color-sidebar-bg)] border-r border-black/[0.06] fixed top-0 bottom-0 left-0 z-20 transition-transform duration-large ease-move overscroll-contain ${desktopSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={{ width: 'var(--sidebar-width)' }}
       >
         {sidebarContent}
@@ -345,17 +345,17 @@ export default function CompanyLayout() {
       {mobileSidebarOpen && (
         <>
           <div
-            className="fixed inset-0 bg-zinc-900/40 backdrop-blur-sm z-30 lg:hidden"
+            className="fixed inset-0 bg-zinc-900/40 backdrop-blur-xs z-30 lg:hidden"
             onClick={() => setMobileSidebarOpen(false)}
           />
           <aside
-            className="fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] animate-slide-in-right lg:hidden shadow-xl will-change-transform"
+            className="fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] animate-slide-in-right lg:hidden shadow-xl overscroll-contain"
             style={{ width: 'var(--sidebar-width)' }}
           >
             <div className="absolute top-3 right-3">
               <button
                 onClick={() => setMobileSidebarOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-500"
+                className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-500 transition-colors duration-micro ease-enter"
               >
                 <X size={18} />
               </button>
@@ -366,7 +366,7 @@ export default function CompanyLayout() {
       )}
 
       {/* ── Main Shell ── */}
-      <div className={`flex-1 flex flex-col h-screen min-w-0 transition-[padding] duration-300 ease-in-out ${desktopSidebarOpen ? 'lg:pl-[var(--sidebar-width)]' : 'lg:pl-0'}`}>
+      <div className={`flex-1 flex flex-col h-screen min-w-0 transition-[padding] duration-large ease-move ${desktopSidebarOpen ? 'lg:pl-[var(--sidebar-width)]' : 'lg:pl-0'}`}>
         <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden">
 
           {/* Top Header */}
@@ -583,9 +583,11 @@ export default function CompanyLayout() {
 
           <SubscriptionNoticeBanner />
 
-          <main className={`flex-1 min-h-0 min-w-0 flex flex-col bg-zinc-50/30 ${isFullHeightPage ? 'overflow-hidden p-0' : 'overflow-x-hidden overflow-y-auto'}`} >
+          <main className={`flex-1 min-h-0 min-w-0 flex flex-col bg-zinc-50/30 overscroll-contain ${isFullHeightPage ? 'overflow-hidden p-0' : 'overflow-x-hidden overflow-y-auto'}`} >
             <div className={`w-full flex-1 flex flex-col min-h-0 min-w-0 ${isFullHeightPage ? 'h-full' : ''}`}>
-              <Outlet context={{ accessibleModuleKeys, accessLoading, companyModulesData, authContext, isOwner: isOwnerUser }} />
+              <ErrorBoundary>
+                <Outlet context={{ accessibleModuleKeys, accessLoading, companyModulesData, authContext, isOwner: isOwnerUser }} />
+              </ErrorBoundary>
             </div>
           </main>
 

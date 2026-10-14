@@ -51,8 +51,8 @@ export default function InventoryPeriodManagement() {
   const pageable = useMemo(() => ({
     page,
     size: apiParams.size || 10,
-    sort: `${apiParams.sort},${apiParams.direction}`
-  }), [page, apiParams.size, apiParams.sort, apiParams.direction]);
+    sort: apiParams.sort || 'startDate,desc'
+  }), [page, apiParams.size, apiParams.sort]);
 
   const { inventoryPeriods, pagination: pageInfo, isLoading, isFetching, refetch } = useInventoryPeriodList(
     finalParams,

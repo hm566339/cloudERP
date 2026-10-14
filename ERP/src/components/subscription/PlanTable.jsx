@@ -1,0 +1,155 @@
+import React from 'react';
+import {
+  Check,
+  Eye,
+  Edit2,
+  CreditCard,
+  Trash2,
+} from 'lucide-react';
+import { formatPlanLimit } from '../../utils/subscriptionPlanHelper';
+import { isCurrentPlan } from '../../utils/subscriptionCheckoutHelper';
+import { formatPlanPrice } from './planUiUtils';
+
+export default function PlanTable({
+  plans,
+  effectiveActiveSub,
+  canManageCatalog,
+  canUpgradeSubscription,
+  onOpenDetails,
+  onOpenEdit,
+  onCheckout,
+  onDelete,
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-2xs overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+              <th className="py-3.5 px-4">Plan Name</th>
+              <th className="py-3.5 px-4">Code</th>
+              <th className="py-3.5 px-4">Duration</th>
+              <th className="py-3.5 px-4">Max Companies</th>
+              <th className="py-3.5 px-4">Max Users / Co.</th>
+              <th className="py-3.5 px-4">Price</th>
+              <th className="py-3.5 px-4">Modules</th>
+              <th className="py-3.5 px-4">Status</th>
+              <th className="py-3.5 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-zinc-100 text-zinc-800">
+            {plans.map((plan) => {
+              const priceDisplay = formatPlanPrice(plan);
+              const activeModulesList = (plan.modules || []).filter((m) => m.active !== false);
+
+              return (
+                <tr key={plan.id || plan.code} className="hover:bg-zinc-50/60 transition-colors">
+                  <td className="py-3.5 px-4">
+                    <div className="font-bold text-zinc-900">{plan.name}</div>
+                    {plan.isTrial && (
+                      <span className="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 mt-0.5">
+                        Trial
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-3.5 px-4 font-mono font-semibold text-zinc-500">
+                    {plan.code}
+                  </td>
+                  <td className="py-3.5 px-4 font-medium text-zinc-600">
+                    {plan.durationDays || 30} days
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200/60"
+                    >
+                      {formatPlanLimit(plan.maxCompanies)}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200/60"
+                    >
+                      {formatPlanLimit(plan.maxUsersPerCompany)}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 font-mono font-bold text-zinc-900">
+                    {priceDisplay}
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <div className="flex items-center gap-1">
+                      <span className="font-semibold text-zinc-700">
+                        {activeModulesList.length} modules
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold ${
+                        plan.active
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-zinc-100 text-zinc-500 border border-zinc-200'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${plan.active ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
+                      <span>{plan.active ? 'Active' : 'Inactive'}</span>
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => onOpenDetails(plan)}
+                        className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-lg hover:bg-zinc-100 transition-colors"
+                        title="View Plan Details"
+                      >
+                        <Eye size={14} />
+                      </button>
+                      {canManageCatalog && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenEdit(plan)}
+                          className="p-1.5 text-zinc-600 hover:text-zinc-900 rounded-lg hover:bg-zinc-100 transition-colors"
+                          title="Edit Plan"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                      )}
+                      {canManageCatalog && onDelete && (
+                        <button
+                          type="button"
+                          onClick={() => onDelete(plan)}
+                          className="p-1.5 text-rose-500 hover:text-rose-700 rounded-lg hover:bg-rose-50 transition-colors"
+                          title="Delete / Deactivate Plan"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                      {canUpgradeSubscription && !canManageCatalog && (
+                        isCurrentPlan(plan, effectiveActiveSub) ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <Check size={10} className="text-emerald-600 stroke-[3]" />
+                            <span>Current</span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onCheckout(plan)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white bg-zinc-900 hover:bg-zinc-800 transition-colors shadow-2xs"
+                            title="Upgrade to this plan"
+                          >
+                            <CreditCard size={12} />
+                            <span>Upgrade</span>
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

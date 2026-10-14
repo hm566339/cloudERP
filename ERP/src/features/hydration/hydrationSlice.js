@@ -21,6 +21,7 @@ const hydrationSlice = createSlice({
       logger.debug('Starting Redux rehydration');
     },
     completeRehydration: (state) => {
+      if (state.isRehydrated) return;
       state.isRehydrating = false;
       state.isRehydrated = true;
       state.error = null;

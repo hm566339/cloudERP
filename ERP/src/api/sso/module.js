@@ -1,6 +1,16 @@
 import apiClient from '../common/client';
 
+let modulesCache = null;
+let modulesCacheTime = 0;
+const MODULES_TTL = 5 * 60 * 1000;
+
 export const getModules = async (params = {}) => {
+  const isDefaultQuery = !params.search && (params.status === undefined || params.status === '' || params.status === 'ALL') && (params.page === undefined || params.page === 0);
+  const now = Date.now();
+  if (isDefaultQuery && modulesCache && (now - modulesCacheTime < MODULES_TTL)) {
+    return modulesCache;
+  }
+
   const page = params?.page ?? 0;
   const pageSize = params?.pageSize ?? 200;
   const query = new URLSearchParams();
@@ -13,7 +23,12 @@ export const getModules = async (params = {}) => {
   }
 
   const response = await apiClient.get(`/api/sso/module?${query.toString()}`);
-  return response.data?.data || response.data;
+  const data = response.data?.data || response.data;
+  if (isDefaultQuery) {
+    modulesCache = data;
+    modulesCacheTime = now;
+  }
+  return data;
 };
 
 export const getModuleById = async (id) => {
@@ -22,6 +37,7 @@ export const getModuleById = async (id) => {
 };
 
 export const createModule = async (moduleData) => {
+  modulesCache = null;
   const response = await apiClient.post('/api/sso/module', { data: moduleData });
   return response.data?.data || response.data;
 };

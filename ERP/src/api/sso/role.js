@@ -19,16 +19,8 @@ export const getRoles = async (params = {}) => {
   return response.data?.data || response.data;
 };
 
-export const getRoleById = async (id, params = {}) => {
-  const page = params?.page ?? 0;
-  const pageSize = params?.pageSize ?? 200;
-  const query = new URLSearchParams();
-  query.append('page', page);
-  query.append('pageSize', pageSize);
-  if (params?.search) query.append('search', params.search);
-  if (params?.status !== undefined && params.status !== '') query.append('status', params.status);
-
-  const response = await apiClient.get(`/api/sso/role/${id}?${query.toString()}`);
+export const getRoleById = async (id) => {
+  const response = await apiClient.get(`/api/sso/role/${id}`);
   return response.data?.data || response.data;
 };
 

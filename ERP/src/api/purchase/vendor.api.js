@@ -293,30 +293,61 @@ export const vendorApiSlice = baseApi.injectEndpoints({
       providesTags: ["Vendor"],
     }),
 
-    // AP Payments  /api/account/ap-payments
+    // AP Payments (mapped to /api/account/payment-vouchers to resolve companyId for SYSTEM_ADMIN)
     getApPayments: builder.query({
       query: (arg) => {
-        const { companyId, ...params } = typeof arg === 'string' ? { companyId: arg } : arg;
+        const { companyId, ...params } = typeof arg === 'string' ? { companyId: arg } : (arg || {});
         return {
-          url: "/api/account/ap-payments",
-          params,
+          url: "/api/account/payment-vouchers",
+          params: companyId ? { ...params, companyId } : params,
           headers: companyId ? { "X-Company-Id": companyId } : undefined,
         };
+      },
+      transformResponse: (response) => {
+        const rawList = Array.isArray(response)
+          ? response
+          : (response?.data?.content || response?.content || response?.data || []);
+        const transformed = rawList.map(item => ({
+          ...item,
+          paymentNo: item.paymentNo || item.voucherNo,
+          paymentDate: item.paymentDate || item.voucherDate,
+        }));
+        if (response && typeof response === 'object' && !Array.isArray(response)) {
+          return {
+            ...response,
+            data: transformed,
+          };
+        }
+        return transformed;
       },
       providesTags: ["Vendor"],
     }),
     getApPaymentById: builder.query({
       query: ({ id, companyId }) => ({
-        url: `/api/account/ap-payments/${id}`,
+        url: `/api/account/payment-vouchers/${id}`,
+        params: companyId ? { companyId } : undefined,
         headers: companyId ? { "X-Company-Id": companyId } : undefined,
       }),
+      transformResponse: (response) => {
+        const item = response?.data || response;
+        if (!item) return response;
+        const transformed = {
+          ...item,
+          paymentNo: item.paymentNo || item.voucherNo,
+          paymentDate: item.paymentDate || item.voucherDate,
+        };
+        if (response?.data) {
+          return { ...response, data: transformed };
+        }
+        return transformed;
+      },
       providesTags: ["Vendor"],
     }),
     createApPayment: builder.mutation({
       query: (payload) => {
         const { companyId, ...data } = payload;
         return {
-          url: "/api/account/ap-payments",
+          url: "/api/account/payment-vouchers",
           method: "POST",
           headers: companyId ? { "X-Company-Id": companyId } : undefined,
           data,
@@ -328,7 +359,7 @@ export const vendorApiSlice = baseApi.injectEndpoints({
       query: (payload) => {
         const { id, companyId, ...data } = payload;
         return {
-          url: `/api/account/ap-payments/${id}`,
+          url: `/api/account/payment-vouchers/${id}`,
           method: "PUT",
           headers: companyId ? { "X-Company-Id": companyId } : undefined,
           data,
@@ -338,7 +369,7 @@ export const vendorApiSlice = baseApi.injectEndpoints({
     }),
     deleteApPayment: builder.mutation({
       query: ({ id, companyId }) => ({
-        url: `/api/account/ap-payments/${id}`,
+        url: `/api/account/payment-vouchers/${id}`,
         method: "DELETE",
         headers: companyId ? { "X-Company-Id": companyId } : undefined,
       }),
@@ -346,16 +377,16 @@ export const vendorApiSlice = baseApi.injectEndpoints({
     }),
     reverseApPayment: builder.mutation({
       query: ({ id, companyId }) => ({
-        url: `/api/account/ap-payments/${id}/reverse`,
-        method: "PUT",
+        url: `/api/account/payment-vouchers/${id}/reverse`,
+        method: "POST",
         headers: companyId ? { "X-Company-Id": companyId } : undefined,
       }),
       invalidatesTags: ["Vendor"],
     }),
     postApPayment: builder.mutation({
       query: ({ id, companyId }) => ({
-        url: `/api/account/ap-payments/${id}/post`,
-        method: "PUT",
+        url: `/api/account/payment-vouchers/${id}/post`,
+        method: "POST",
         headers: companyId ? { "X-Company-Id": companyId } : undefined,
       }),
       invalidatesTags: ["Vendor"],
@@ -364,10 +395,10 @@ export const vendorApiSlice = baseApi.injectEndpoints({
     // Payment Vouchers  /api/account/payment-vouchers
     getPaymentVouchers: builder.query({
       query: (arg) => {
-        const { companyId, ...params } = typeof arg === 'string' ? { companyId: arg } : arg;
+        const { companyId, ...params } = typeof arg === 'string' ? { companyId: arg } : (arg || {});
         return {
           url: "/api/account/payment-vouchers",
-          params,
+          params: companyId ? { ...params, companyId } : params,
           headers: companyId ? { "X-Company-Id": companyId } : undefined,
         };
       },

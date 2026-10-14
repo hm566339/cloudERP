@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { X, Truck, Package, AlertCircle, Warehouse, RefreshCw, MapPin, CheckCircle, Info } from 'lucide-react';
+import { X, Truck, Package, AlertCircle } from 'lucide-react';
 import { 
   useCreateDeliveryChallanFromSoMutation,
   useCreateDeliveryChallanFromReceiptMutation,
@@ -17,6 +17,9 @@ import {
   buildDeliveryChallanPayload 
 } from '../utils/deliveryChallanValidation';
 import DeliveryInvoiceActionsModal from './DeliveryInvoiceActionsModal';
+import DeliveryChallanConfirmModal from './delivery-challan/DeliveryChallanConfirmModal';
+import DeliveryChallanWarehouseSelect from './delivery-challan/DeliveryChallanWarehouseSelect';
+import DeliveryChallanItemsTable from './delivery-challan/DeliveryChallanItemsTable';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
@@ -968,304 +971,37 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
           </div>
 
           {/* Warehouse Selection Section */}
-          <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <label htmlFor="dc-warehouse-select" className="text-xs font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <Warehouse size={15} className="text-indigo-600" />
-                  Dispatch Warehouse <span className="text-red-500">*</span>
-                </label>
-                <p className="text-[11px] text-zinc-500 mt-0.5">
-                  {stockWarehouses.length > 0 
-                    ? 'Warehouses matched from stock inventory for this order.'
-                    : 'Select the source warehouse for dispatching items.'}
-                </p>
-              </div>
-
-              <div className="w-full sm:w-80">
-                {isLoadingStock || isLoadingWarehouses ? (
-                  <div className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg">
-                    <div className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                    <span>Loading stock warehouses...</span>
-                  </div>
-                ) : isStockError && availableWarehouses.length === 0 ? (
-                  <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
-                    <span className="truncate">{stockQueryError?.data?.message || 'Failed to load stock'}</span>
-                    <button
-                      type="button"
-                      onClick={() => refetchStock()}
-                      className="p-1 hover:bg-red-100 rounded text-red-700 transition-colors shrink-0"
-                      title="Retry"
-                    >
-                      <RefreshCw size={13} />
-                    </button>
-                  </div>
-                ) : availableWarehouses.length === 0 ? (
-                  <div className="px-3 py-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg font-medium">
-                    No warehouses found. Please create a warehouse in Inventory.
-                  </div>
-                ) : (
-                  <select
-                    id="dc-warehouse-select"
-                    value={selectedWarehouseId}
-                    onChange={handleWarehouseChange}
-                    disabled={isSubmittingInProgress || !isStatusConfirmed}
-                    className={`w-full px-3 py-2 text-sm rounded-lg border bg-white text-zinc-800 font-medium transition-all outline-none ${
-                      !selectedWarehouseId && validationErrors.length > 0
-                        ? 'border-red-400 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                        : 'border-zinc-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
-                    }`}
-                  >
-                    <option value="">Select Warehouse *</option>
-                    {availableWarehouses.map(w => {
-                      const whId = w.warehouseId || w.id;
-                      const whName = w.warehouseName || w.name || 'Warehouse';
-                      const stockLabel = w.totalStock !== undefined ? ` — Available Stock: ${w.totalStock}` : '';
-                      return (
-                        <option key={whId} value={whId}>
-                          {whName} {w.warehouseCode ? `(${w.warehouseCode})` : ''}{stockLabel}
-                        </option>
-                      );
-                    })}
-                  </select>
-                )}
-              </div>
-            </div>
-
-            {selectedWarehouseId && (
-              <div className="mt-2 pt-2 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500">
-                <span className="flex items-center gap-1">
-                  <MapPin size={12} className="text-zinc-400" />
-                  {isLoadingStock ? (
-                    'Loading warehouse locations from stock...'
-                  ) : selectedWhObj?.locations?.length > 0 ? (
-                    `${selectedWhObj.locations.length} location${selectedWhObj.locations.length > 1 ? 's' : ''} available in ${selectedWhObj.warehouseName || selectedWhObj.name}`
-                  ) : locations.length > 0 ? (
-                    `${locations.length} warehouse location${locations.length > 1 ? 's' : ''} available`
-                  ) : (
-                    'Default warehouse storage'
-                  )}
-                </span>
-                <span className="font-mono text-[10px] text-zinc-400">
-                  ID: {selectedWarehouseId.slice(0, 8)}...
-                </span>
-              </div>
-            )}
-          </div>
+          <DeliveryChallanWarehouseSelect
+            selectedWarehouseId={selectedWarehouseId}
+            onWarehouseChange={handleWarehouseChange}
+            isSubmittingInProgress={isSubmittingInProgress}
+            isStatusConfirmed={isStatusConfirmed}
+            validationErrors={validationErrors}
+            availableWarehouses={availableWarehouses}
+            stockWarehouses={stockWarehouses}
+            isLoadingStock={isLoadingStock}
+            isLoadingWarehouses={isLoadingWarehouses}
+            isStockError={isStockError}
+            stockQueryError={stockQueryError}
+            refetchStock={refetchStock}
+            selectedWhObj={selectedWhObj}
+            locations={locations}
+          />
 
           {/* Dispatch Items Table */}
-          <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden shadow-sm">
-            <div className="px-4 py-3 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Package size={14} className="text-zinc-400" />
-                Dispatch Items
-              </h3>
-              <span className="text-[11px] text-zinc-500 font-medium">
-                Dispatch quantity cannot exceed available stock
-              </span>
-            </div>
-
-            <div className="w-full">
-              <table className="w-full text-left text-xs table-fixed border-collapse">
-                <colgroup>
-                  <col className="w-[28%]" />
-                  <col className="w-[8.5%]" />
-                  <col className="w-[8.5%]" />
-                  <col className="w-[9%]" />
-                  <col className="w-[13%]" />
-                  <col className="w-[19%]" />
-                  <col className="w-[14%]" />
-                </colgroup>
-                <thead className="bg-zinc-50/80 border-b border-zinc-200 text-xs font-semibold text-zinc-600">
-                  <tr>
-                    <th className="px-3 py-2.5 text-left">Product</th>
-                    <th className="px-2 py-2.5 text-right">Ordered</th>
-                    <th className="px-2 py-2.5 text-right">Delivered</th>
-                    <th className="px-2 py-2.5 text-right">Pending</th>
-                    <th className="px-2 py-2.5 text-right">Avail. Stock</th>
-                    <th className="px-2.5 py-2.5 text-left">Warehouse Location</th>
-                    <th className="px-3 py-2.5 text-right">Dispatch Qty</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 bg-white">
-                  {isSourceLoading && (
-                    <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-zinc-500">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                          <span className="text-xs font-medium">
-                            Loading items from {isReceiptMode ? 'linked Sales Invoice' : 'Sales Order'}...
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-
-                  {!isSourceLoading && items.length > 0 && items.map((it, idx) => {
-                    const qtyVal = Number(it.quantityToDispatch) || 0;
-                    const isExcessOrder = qtyVal > it.available;
-                    const isExcessStock = it.availableStock !== undefined && it.availableStock !== null && qtyVal > it.availableStock;
-                    const isNegative = qtyVal < 0;
-                    const isQtyError = isExcessOrder || isExcessStock || isNegative;
-                    const isItemDispatched = qtyVal > 0;
-
-                    // Locations for this specific product in the selected warehouse
-                    const itemWh = it.matchedProduct?.warehouses?.find(w => (w.warehouseId || w.id) === selectedWarehouseId);
-                    const itemLocations = itemWh?.locations || locations;
-                    const isMissingLocation = isItemDispatched && itemLocations.length > 0 && !it.warehouseLocationId;
-                    const isDisabled = it.available === 0 || !isStatusConfirmed || (selectedWarehouseId && it.availableStock === 0);
-
-                    return (
-                      <tr 
-                        key={it.sourceSalesOrderItemId || idx} 
-                        className={isQtyError || isMissingLocation ? 'bg-red-50/40' : 'hover:bg-zinc-50/60 transition-colors'}
-                      >
-                        {/* Product info */}
-                        <td className="px-3 py-2.5 align-top">
-                          <div className="font-semibold text-zinc-900 text-xs break-words leading-snug">
-                            {it.itemName}
-                          </div>
-                          {it.description && (
-                            <div className="text-[11px] text-zinc-500 mt-0.5 line-clamp-1 break-words" title={it.description}>
-                              {it.description}
-                            </div>
-                          )}
-
-                          {/* Match status & dispatch availability badge */}
-                          {it.available === 0 ? (
-                            <div className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-1 rounded border border-amber-200 inline-flex items-center gap-1.5 mt-1.5">
-                              <AlertCircle size={11} className="shrink-0 text-amber-600" />
-                              <span>This item has already been fully dispatched or reserved.</span>
-                            </div>
-                          ) : isLoadingStock ? (
-                            <div className="text-[10px] text-zinc-400 animate-pulse mt-1">Checking stock...</div>
-                          ) : it.isMatched ? (
-                            <div className="text-[10px] font-medium text-emerald-600 flex items-center gap-1 mt-1">
-                              <CheckCircle size={11} className="shrink-0" />
-                              <span>Stock matched</span>
-                            </div>
-                          ) : (
-                            <div 
-                              className="text-[10px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 inline-flex items-center gap-1 mt-1 max-w-full" 
-                              title={it.itemProductId || 'No ID'}
-                            >
-                              <AlertCircle size={10} className="shrink-0 text-amber-600" />
-                              <span className="truncate">Product ID not in stock</span>
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Quantities */}
-                        <td className="px-2 py-2.5 text-right font-medium text-zinc-700 text-xs align-middle">{fmt(it.ordered)}</td>
-                        <td className="px-2 py-2.5 text-right font-medium text-emerald-600 text-xs align-middle">{fmt(it.delivered)}</td>
-                        <td className="px-2 py-2.5 text-right font-bold text-zinc-900 text-xs align-middle">{fmt(it.available)}</td>
-
-                        {/* Available Stock */}
-                        <td className="px-2 py-2.5 text-right text-xs align-middle">
-                          {!selectedWarehouseId ? (
-                            <span className="text-zinc-400 text-[11px] italic">Select Wh</span>
-                          ) : it.availableStock === 0 ? (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200 leading-tight">
-                              0 (Out)
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              {fmt(it.availableStock)}
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Warehouse Location Dropdown */}
-                        <td className="px-2.5 py-2.5 align-middle">
-                          {!selectedWarehouseId ? (
-                            <span className="text-xs text-zinc-400 italic">Select warehouse</span>
-                          ) : isLoadingStock || isLoadingLocations ? (
-                            <span className="text-xs text-zinc-400 flex items-center gap-1">
-                              <div className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                              <span className="text-[11px]">Loading...</span>
-                            </span>
-                          ) : itemLocations.length === 0 ? (
-                            <span className="text-xs text-zinc-400 italic">Default</span>
-                          ) : (
-                            <select
-                              value={it.warehouseLocationId || ''}
-                              onChange={(e) => handleLocationChange(idx, e.target.value)}
-                              disabled={isDisabled || isSubmittingInProgress}
-                              className={`w-full px-2 py-1 text-xs rounded-md border bg-white outline-none transition-all truncate ${
-                                isDisabled
-                                  ? 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed'
-                                  : isMissingLocation
-                                    ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/50 text-red-700'
-                                    : 'border-zinc-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-zinc-800'
-                              }`}
-                            >
-                              <option value="">Select Location *</option>
-                              {itemLocations.map(loc => (
-                                <option key={loc.locationId || loc.id} value={loc.locationId || loc.id}>
-                                  {loc.locationName || loc.name || loc.locationCode || 'Location'} {loc.availableQuantity !== undefined ? `(Stock: ${loc.availableQuantity})` : ''}
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                        </td>
-
-                        {/* Dispatch Qty Input */}
-                        <td className="px-3 py-2.5 text-right align-middle">
-                          <div className="flex flex-col items-end">
-                            <input
-                              type="number"
-                              min="0"
-                              max={Math.min(it.available, it.availableStock !== undefined ? it.availableStock : it.available)}
-                              step="any"
-                              disabled={isDisabled || isSubmittingInProgress || it.available === 0}
-                              value={it.available === 0 ? 0 : (it.quantityToDispatch === 0 && it.quantityToDispatch.toString() !== "0" ? '' : it.quantityToDispatch)}
-                              onChange={(e) => handleQtyChange(idx, e.target.value)}
-                              className={`w-full max-w-[85px] px-2 py-1 text-right text-xs font-semibold rounded-md border ${
-                                (isDisabled || it.available === 0)
-                                  ? 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed'
-                                  : isQtyError 
-                                    ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50 text-red-700' 
-                                    : 'border-zinc-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
-                              } outline-none transition-all`}
-                            />
-                            {it.available === 0 ? (
-                              <div className="text-[9px] text-amber-700 font-semibold mt-0.5 leading-tight text-right break-words max-w-[85px]">
-                                Fully dispatched
-                              </div>
-                            ) : isExcessStock ? (
-                              <div className="text-[9px] text-red-600 font-semibold mt-0.5 leading-tight text-right break-words max-w-[85px]">
-                                &gt; Stock ({it.availableStock})
-                              </div>
-                            ) : isExcessOrder ? (
-                              <div className="text-[9px] text-red-600 font-semibold mt-0.5 leading-tight text-right break-words max-w-[85px]">
-                                &gt; Open ({it.available})
-                              </div>
-                            ) : null}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                  {!isSourceLoading && items.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-zinc-400 text-xs">
-                        {isReceiptMode ? 'No items found in linked Sales Invoice.' : 'No items found in this Sales Order.'}
-                      </td>
-                    </tr>
-                  )}
-
-                  {!isSourceLoading && items.length > 0 && items.every(it => it.available === 0) && (
-                    <tr>
-                      <td colSpan={7} className="px-4 py-4 text-center text-zinc-500 font-medium bg-zinc-50/50 text-xs">
-                        All items have already been completely delivered.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <DeliveryChallanItemsTable
+            items={items}
+            isSourceLoading={isSourceLoading}
+            isReceiptMode={isReceiptMode}
+            selectedWarehouseId={selectedWarehouseId}
+            locations={locations}
+            isLoadingStock={isLoadingStock}
+            isLoadingLocations={isLoadingLocations}
+            isStatusConfirmed={isStatusConfirmed}
+            isSubmittingInProgress={isSubmittingInProgress}
+            onLocationChange={handleLocationChange}
+            onQtyChange={handleQtyChange}
+          />
           
           {/* Validation & Error Alerts */}
           {hasExcessStockError && (
@@ -1336,121 +1072,61 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
     </div>
 
     {/* ── Confirmation Popup (rendered after successful DC creation) ── */}
-    {dcConfirmPopup && (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center gap-3 px-6 py-5 border-b border-zinc-100 bg-gradient-to-r from-indigo-50 to-white">
-            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-              <CheckCircle size={20} className="text-indigo-600" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-zinc-900">Delivery Confirmation</h3>
-              {dcConfirmPopup.dcNumber && (
-                <p className="text-xs text-zinc-500 mt-0.5 font-mono">{dcConfirmPopup.dcNumber}</p>
-              )}
-            </div>
-          </div>
+    <DeliveryChallanConfirmModal
+      isOpen={Boolean(dcConfirmPopup)}
+      dcNumber={dcConfirmPopup?.dcNumber}
+      isConfirming={isConfirming}
+      confirmError={confirmError}
+      onCancelDraft={() => {
+        dispatch(addAlert({ type: 'success', message: 'Delivery Challan saved as Draft' }));
+        const res = dcConfirmPopup?.originalRes;
+        setDcConfirmPopup(null);
+        setConfirmError(null);
+        if (onSuccess && res) onSuccess(res);
+        onClose();
+      }}
+      onConfirm={async () => {
+        setConfirmError(null);
+        try {
+          const confirmRes = await confirmDeliveryChallan({
+            id: dcConfirmPopup.dcId,
+            companyId: activeCompanyId,
+          }).unwrap();
 
-          {/* Body */}
-          <div className="px-6 py-5">
-            <p className="text-sm text-zinc-700 leading-relaxed">
-              Delivery Challan created successfully. Do you want to{' '}
-              <span className="font-semibold text-indigo-700">confirm</span> this Delivery Challan?
-            </p>
-            <p className="text-xs text-zinc-400 mt-2">
-              Confirming will change the status from <span className="font-semibold uppercase tracking-wide text-amber-600">DRAFT</span> to{' '}
-              <span className="font-semibold uppercase tracking-wide text-emerald-600">CONFIRMED</span> and dispatch the inventory.
-            </p>
+          // 1. Success toast notification
+          dispatch(addAlert({ type: 'success', message: 'Delivery Challan confirmed successfully.' }));
 
-            {/* Error message */}
-            {confirmError && (
-              <div className="mt-4 flex items-start gap-2.5 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-500" />
-                <p className="text-xs text-red-700 font-medium">{confirmError}</p>
-              </div>
-            )}
-          </div>
+          // 2. Extract confirmed delivery challan and invoice IDs
+          const confirmedChallanId = dcConfirmPopup?.dcId || confirmRes?.data?.id || confirmRes?.id;
+          const confirmedChallanNumber = dcConfirmPopup?.dcNumber || confirmRes?.data?.dcNumber || confirmRes?.data?.deliveryChallanNumber || confirmRes?.dcNumber;
+          const confirmedInvoiceId = dcConfirmPopup?.invoiceId || confirmRes?.data?.salesInvoiceId || confirmRes?.data?.invoiceId || confirmRes?.salesInvoiceId || confirmRes?.invoiceId || selectedSalesInvoiceId || salesInvoiceData?.id;
+          const confirmedInvoiceNumber = dcConfirmPopup?.invoiceNumber || confirmRes?.data?.salesInvoiceNumber || confirmRes?.data?.invoiceNumber || confirmRes?.salesInvoiceNumber || confirmRes?.invoiceNumber || salesInvoiceData?.invoiceNumber;
+          const confirmedCustomerName = dcConfirmPopup?.customerName || confirmRes?.data?.customerName || confirmRes?.customerName || customerName;
+          const originalRes = dcConfirmPopup?.originalRes;
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 bg-zinc-50 border-t border-zinc-100">
-            <button
-              type="button"
-              disabled={isConfirming}
-              onClick={() => {
-                dispatch(addAlert({ type: 'success', message: 'Delivery Challan saved as Draft' }));
-                const res = dcConfirmPopup?.originalRes;
-                setDcConfirmPopup(null);
-                setConfirmError(null);
-                if (onSuccess && res) onSuccess(res);
-                onClose();
-              }}
-              className="px-4 py-2 text-sm font-semibold text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors disabled:opacity-50"
-            >
-              No, Keep as Draft
-            </button>
-            <button
-              type="button"
-              disabled={isConfirming}
-              onClick={async () => {
-                setConfirmError(null);
-                try {
-                  const confirmRes = await confirmDeliveryChallan({
-                    id: dcConfirmPopup.dcId,
-                    companyId: activeCompanyId,
-                  }).unwrap();
+          const payloadData = {
+            dcId: confirmedChallanId,
+            deliveryChallanId: confirmedChallanId,
+            dcNumber: confirmedChallanNumber,
+            deliveryChallanNumber: confirmedChallanNumber,
+            invoiceId: confirmedInvoiceId,
+            confirmedInvoiceId: confirmedInvoiceId,
+            invoiceNumber: confirmedInvoiceNumber,
+            customerName: confirmedCustomerName,
+            originalRes,
+          };
 
-                  // 1. Success toast notification
-                  dispatch(addAlert({ type: 'success', message: 'Delivery Challan confirmed successfully.' }));
-
-                  // 2. Extract confirmed delivery challan and invoice IDs
-                  const confirmedChallanId = dcConfirmPopup?.dcId || confirmRes?.data?.id || confirmRes?.id;
-                  const confirmedChallanNumber = dcConfirmPopup?.dcNumber || confirmRes?.data?.dcNumber || confirmRes?.data?.deliveryChallanNumber || confirmRes?.dcNumber;
-                  const confirmedInvoiceId = dcConfirmPopup?.invoiceId || confirmRes?.data?.salesInvoiceId || confirmRes?.data?.invoiceId || confirmRes?.salesInvoiceId || confirmRes?.invoiceId || selectedSalesInvoiceId || salesInvoiceData?.id;
-                  const confirmedInvoiceNumber = dcConfirmPopup?.invoiceNumber || confirmRes?.data?.salesInvoiceNumber || confirmRes?.data?.invoiceNumber || confirmRes?.salesInvoiceNumber || confirmRes?.invoiceNumber || salesInvoiceData?.invoiceNumber;
-                  const confirmedCustomerName = dcConfirmPopup?.customerName || confirmRes?.data?.customerName || confirmRes?.customerName || customerName;
-                  const originalRes = dcConfirmPopup?.originalRes;
-
-                  const payloadData = {
-                    dcId: confirmedChallanId,
-                    deliveryChallanId: confirmedChallanId,
-                    dcNumber: confirmedChallanNumber,
-                    deliveryChallanNumber: confirmedChallanNumber,
-                    invoiceId: confirmedInvoiceId,
-                    confirmedInvoiceId: confirmedInvoiceId,
-                    invoiceNumber: confirmedInvoiceNumber,
-                    customerName: confirmedCustomerName,
-                    originalRes,
-                  };
-
-                  // 3. Close the intermediate DC confirm dialog and open Invoice Actions Popup
-                  setDcConfirmPopup(null);
-                  setInvoiceActionsData(payloadData);
-                  setIsInvoiceActionsModalOpen(true);
-                } catch (err) {
-                  const msg = err?.data?.message || err?.data?.error || err?.message || 'Failed to confirm Delivery Challan. Please try again.';
-                  setConfirmError(msg);
-                  dispatch(addAlert({ type: 'error', message: msg }));
-                }
-              }}
-              className="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-xs"
-            >
-              {isConfirming ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Confirming...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle size={16} />
-                  <span>Yes, Confirm Delivery</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+          // 3. Close the intermediate DC confirm dialog and open Invoice Actions Popup
+          setDcConfirmPopup(null);
+          setInvoiceActionsData(payloadData);
+          setIsInvoiceActionsModalOpen(true);
+        } catch (err) {
+          const msg = err?.data?.message || err?.data?.error || err?.message || 'Failed to confirm Delivery Challan. Please try again.';
+          setConfirmError(msg);
+          dispatch(addAlert({ type: 'error', message: msg }));
+        }
+      }}
+    />
 
     {/* ── Invoice Actions Popup (rendered automatically after successful delivery confirmation) ── */}
     {isInvoiceActionsModalOpen && (

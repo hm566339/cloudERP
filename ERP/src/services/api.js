@@ -1,26 +1,10 @@
-import axios from 'axios'
-import { removeCookie } from '../utils/cookieHelper'
+import apiClient from '../api/common/client'
 import store from '../app/store'
 import { addAlert } from '../features/notifications/notificationSlice'
-import { attachInterceptors } from '../api/common/interceptors'
 import { getActiveCompanyId, isOwnerOrSystemAdminUser } from '../api/common/roleCompanyContext'
 
-import { normalizeApiBaseUrl } from '../api/common/client'
-
-const rawBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '/api';
-const BASE_URL = normalizeApiBaseUrl(rawBaseUrl);
-
-const API = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: true,
-  timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
-
-// Attach robust modular interceptors (handles 401 refresh queue, 502 retries, company headers)
-attachInterceptors(API)
+export const API = apiClient
+export default apiClient
 
 // Keep legacy global error alerts for 500s
 API.interceptors.response.use(
@@ -40,7 +24,7 @@ API.interceptors.response.use(
 export const getCompanies = async (page = 0, pageSize = 10, search = '') => {
  const params = { page, pageSize }
  if (search?.trim()) params.search = search.trim()
- const { data } = await API.get('/api/companies', { params })
+ const { data } = await API.get('/api/sso/company', { params })
  return data
 }
 
@@ -48,7 +32,7 @@ export const getCompanies = async (page = 0, pageSize = 10, search = '') => {
  * Fetch a single company by UUID
  */
 export const getCompanyById = async (id) => {
- const { data } = await API.get(`/api/companies/${id}`)
+ const { data } = await API.get(`/api/sso/company/${id}`)
  return data
 }
 
@@ -67,5 +51,3 @@ export const getFinanceDashboard = async (companyId) => {
   });
   return data;
 };
-
-export default API

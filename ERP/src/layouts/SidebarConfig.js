@@ -35,6 +35,7 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
     { id: 'acc-rep-gst-gstr3b', label: 'GSTR-3B', path: `${gstBase}/gstr3b`, icon: Receipt },
     { id: 'acc-rep-gst-hsn', label: 'HSN Summary', path: `${gstBase}/hsn-summary`, icon: FileSpreadsheet },
     { id: 'acc-rep-gst-itc', label: 'ITC Report', path: `${gstBase}/itc`, icon: Landmark },
+    { id: 'acc-rep-gst-gstr2b', label: 'GSTR-2B', path: `${gstBase}/gstr2b`, icon: FileSpreadsheet },
     ...(hasGstExport() ? [{ id: 'acc-rep-gst-export', label: 'Export Reports', path: `${gstBase}/export`, icon: Download }] : []),
   ];
 
@@ -84,28 +85,10 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
         path: '/super-admin/companies',
         children: [
           {
-            id: 'sa-org-members',
-            label: 'Members',
-            path: '/super-admin/users',
-            icon: Users,
-          },
-          {
             id: 'sa-org-companies',
             label: 'Companies',
             path: '/super-admin/companies',
             icon: Building2,
-          },
-          {
-            id: 'sa-org-roles',
-            label: 'Organization Roles',
-            path: '/super-admin/roles',
-            icon: ShieldCheck,
-          },
-          {
-            id: 'sa-org-modules',
-            label: 'Organization Modules',
-            path: '/super-admin/company-modules',
-            icon: Layers,
           },
         ],
       },
@@ -132,29 +115,6 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
         ],
       },
 
-      // ── Security & Operations ──────────────────────────────────────────
-      {
-        id: 'sa-security',
-        label: 'Security & Ops',
-        icon: Shield,
-        path: '/super-admin/audit-logs',
-        children: [
-          {
-            id: 'sa-audit',
-            label: 'Audit Logs',
-            path: '/super-admin/audit-logs',
-            icon: ScrollText,
-          },
-        ],
-      },
-
-      // ── Settings ──────────────────────────────────────────────────────
-      {
-        id: 'sa-settings',
-        label: 'Settings',
-        path: '/super-admin/settings',
-        icon: Settings,
-      },
     ]
   }
 
@@ -192,7 +152,6 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
               { id: 'acc-txn-pay', label: 'Payment Voucher', path: `${base}/accounts/transactions/payments` },
               { id: 'acc-txn-cn', label: 'Credit Note', path: `${base}/accounts/transactions/credit-notes` },
               { id: 'acc-txn-dn', label: 'Debit Note', path: `${base}/accounts/transactions/debit-notes` },
-              { id: 'acc-txn-led', label: 'General Ledger', path: `${base}/accounts/reports/ledger` },
               { id: 'acc-txn-jour', label: 'GL Journals', path: `${base}/accounts/transactions/journal` },
               { id: 'acc-txn-jour-lines', label: 'GL Journal Lines', path: `${base}/accounts/transactions/journal-lines` }
             ]
@@ -204,8 +163,7 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
               { id: 'acc-rep-pl', label: 'Profit & Loss', path: `${base}/accounts/reports/profit-loss`, icon: TrendingUp },
               { id: 'acc-rep-bs', label: 'Balance Sheet', path: `${base}/accounts/reports/balance-sheet`, icon: PieChart },
               { id: 'acc-rep-cf', label: 'Cash Flow', path: `${base}/accounts/reports/cash-flow`, icon: Activity },
-              { id: 'acc-rep-gst', label: 'GST Reports', path: `${base}/accounts/reports/gst`, icon: BarChart3, children: gstChildren(`${base}/accounts/reports/gst`) },
-              { id: 'acc-rep-aud', label: 'Audit Logs', path: `${base}/accounts/settings/audit-logs`, icon: ScrollText }
+              { id: 'acc-rep-gst', label: 'GST Reports', path: `${base}/accounts/reports/gst`, icon: BarChart3, children: gstChildren(`${base}/accounts/reports/gst`) }
             ]
           },
           {
@@ -220,9 +178,9 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
             ]
           },
           {
-            id: 'acc-set', label: 'Settings', path: `${base}/accounts/settings/accounting-periods`, icon: Settings, children: [
+            id: 'acc-set', label: 'Settings', path: `${base}/accounts/organization/accounting-periods`, icon: Settings, children: [
               { id: 'acc-set-ap', label: 'Accounting Periods', path: `${base}/accounts/organization/accounting-periods`, icon: Clock },
-              { id: 'acc-set-fy', label: 'Fiscal Years', path: `${base}/accounts/organization/financial-years`, icon: Calendar }
+              { id: 'acc-set-aud', label: 'Audit Logs', path: `${base}/accounts/settings/audit-logs`, icon: ScrollText }
             ]
           }
         ]
@@ -331,7 +289,6 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
   if (canViewModule('payment_vouchers') || canViewModule('accounts_txn')) accTxnChildren.push({ id: 'acc-txn-pay', label: 'Payment Voucher', path: `${base}/accounts/transactions/payments` })
   if (canViewModule('credit_notes') || canViewModule('accounts_txn')) accTxnChildren.push({ id: 'acc-txn-cn', label: 'Credit Note', path: `${base}/accounts/transactions/credit-notes` })
   if (canViewModule('debit_notes') || canViewModule('accounts_txn')) accTxnChildren.push({ id: 'acc-txn-dn', label: 'Debit Note', path: `${base}/accounts/transactions/debit-notes` })
-  if (canViewModule('reports') || canViewModule('accounts_rep') || canViewModule('accounts_txn')) accTxnChildren.push({ id: 'acc-txn-led', label: 'General Ledger', path: `${base}/accounts/reports/ledger` })
   if (canViewModule('gl_journals') || canViewModule('accounts_txn')) accTxnChildren.push({ id: 'acc-txn-jour', label: 'GL Journals', path: `${base}/accounts/transactions/journal` })
   if (canViewModule('gl_journal_lines') || canViewModule('accounts_txn')) accTxnChildren.push({ id: 'acc-txn-jour-lines', label: 'GL Journal Lines', path: `${base}/accounts/transactions/journal-lines` })
 
@@ -345,7 +302,6 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
     accRepChildren.push({ id: 'acc-rep-bs', label: 'Balance Sheet', path: `${base}/accounts/reports/balance-sheet`, icon: PieChart })
     accRepChildren.push({ id: 'acc-rep-cf', label: 'Cash Flow', path: `${base}/accounts/reports/cash-flow`, icon: Activity })
     if (canViewModule('gst_reports')) accRepChildren.push({ id: 'acc-rep-gst', label: 'GST Reports', path: `${base}/accounts/reports/gst`, icon: BarChart3, children: gstChildren(`${base}/accounts/reports/gst`) })
-    accRepChildren.push({ id: 'acc-rep-aud', label: 'Audit Logs', path: `${base}/accounts/settings/audit-logs`, icon: ScrollText })
   }
   if (accRepChildren.length > 0) accountsChildren.push({ id: 'acc-reports', label: 'Reports', path: `${base}/accounts/reports/trial-balance`, icon: LineChart, children: accRepChildren })
 
@@ -360,8 +316,9 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
 
   const accSetChildren = []
   if (canViewModule('accounting_periods') || canViewModule('accounts_org')) accSetChildren.push({ id: 'acc-set-ap', label: 'Accounting Periods', path: `${base}/accounts/organization/accounting-periods`, icon: Clock })
-  if (canViewModule('fiscal_years') || canViewModule('accounts_org')) accSetChildren.push({ id: 'acc-set-fy', label: 'Fiscal Years', path: `${base}/accounts/organization/financial-years`, icon: Calendar })
-  if (accSetChildren.length > 0) accountsChildren.push({ id: 'acc-settings', label: 'Settings', path: `${base}/accounts/settings/accounting-periods`, icon: Settings, children: accSetChildren })
+  if (canViewModule('audit_logs') || canViewModule('accounts_org')) accSetChildren.push({ id: 'acc-set-aud', label: 'Audit Logs', path: `${base}/accounts/settings/audit-logs`, icon: ScrollText })
+  accSetChildren.push({ id: 'acc-set-sales', label: 'Sales Settings', path: `${base}/accounts/settings/sales`, icon: Settings })
+  if (accSetChildren.length > 0) accountsChildren.push({ id: 'acc-settings', label: 'Settings', path: `${base}/accounts/organization/accounting-periods`, icon: Settings, children: accSetChildren })
 
   if (accountsChildren.length > 0) {
     links.push({

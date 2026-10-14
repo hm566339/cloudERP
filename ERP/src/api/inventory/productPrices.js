@@ -20,57 +20,29 @@ export const productPricesApi = {
   getList: async (filter = {}, pageable = {}) => {
     const params = new URLSearchParams();
 
-    // Filter fields - append direct and prefixed for robust Spring model binding
-    if (filter?.companyId) {
-      params.append('companyId', filter.companyId);
-      params.append('filter.companyId', filter.companyId);
-    }
-    if (filter?.productId) {
-      params.append('productId', filter.productId);
-      params.append('filter.productId', filter.productId);
-    }
-    if (filter?.priceType) {
-      params.append('priceType', filter.priceType);
-      params.append('filter.priceType', filter.priceType);
-    }
-    if (filter?.status) {
-      params.append('status', filter.status);
-      params.append('filter.status', filter.status);
-    }
-    if (filter?.currencyCode) {
-      params.append('currencyCode', filter.currencyCode);
-      params.append('filter.currencyCode', filter.currencyCode);
-    }
-    if (filter?.searchKey) {
-      params.append('searchKey', filter.searchKey.trim());
-      params.append('filter.searchKey', filter.searchKey.trim());
-    }
+    // Filter fields
+    if (filter?.companyId) params.append('filter.companyId', filter.companyId);
+    if (filter?.productId) params.append('filter.productId', filter.productId);
+    if (filter?.priceType) params.append('filter.priceType', filter.priceType);
+    if (filter?.status) params.append('filter.status', filter.status);
+    if (filter?.currencyCode) params.append('filter.currencyCode', filter.currencyCode);
+    if (filter?.searchKey) params.append('filter.searchKey', filter.searchKey.trim());
     if (filter?.minQuantity !== undefined && filter?.minQuantity !== null && filter?.minQuantity !== '') {
-      params.append('minQuantity', filter.minQuantity);
       params.append('filter.minQuantity', filter.minQuantity);
     }
-    if (filter?.effectiveFrom) {
-      params.append('effectiveFrom', filter.effectiveFrom);
-      params.append('filter.effectiveFrom', filter.effectiveFrom);
-    }
-    if (filter?.effectiveTo) {
-      params.append('effectiveTo', filter.effectiveTo);
-      params.append('filter.effectiveTo', filter.effectiveTo);
-    }
+    if (filter?.effectiveFrom) params.append('filter.effectiveFrom', filter.effectiveFrom);
+    if (filter?.effectiveTo) params.append('filter.effectiveTo', filter.effectiveTo);
 
     // Pageable fields
     if (pageable?.page !== undefined) {
-      params.append('page', pageable.page);
       params.append('pageable.page', pageable.page);
     }
     if (pageable?.size !== undefined) {
-      params.append('size', pageable.size);
       params.append('pageable.size', pageable.size);
     }
     if (pageable?.sort) {
       const sorts = Array.isArray(pageable.sort) ? pageable.sort : [pageable.sort];
       sorts.forEach(s => {
-        params.append('sort', s);
         params.append('pageable.sort', s);
       });
     }

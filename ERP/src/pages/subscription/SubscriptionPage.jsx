@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
   CreditCard,
@@ -11,16 +10,13 @@ import {
   ShieldAlert,
   ArrowRight,
   Mail,
-  Phone,
   CheckCircle2,
   FileText,
   BarChart3,
-  X,
   Zap,
   Users,
   Database,
   Lock,
-  Copy,
   Check,
   Layers,
   RefreshCw,
@@ -29,28 +25,67 @@ import {
   ShoppingCart,
   Activity,
   Briefcase,
+  ExternalLink,
   ChevronRight,
-  Server,
-  Headphones,
+  Shield,
+  HelpCircle,
+  Download,
+  Receipt,
+  Plus,
+  Info,
 } from 'lucide-react';
+import { useDispatch } from 'react-redux';
 import { useAccessMode } from '../../hooks/useAccessMode';
 import { useSubscriptionPlans } from '../../hooks/useSubscriptionPlans';
 import { useAppSelector } from '../../app/hooks';
-import { createSubscriptionCheckout, verifySubscriptionPayment, cancelPendingCheckout } from '../../api/sso/subscriptionPlan.api';
+import { selectAuthContext } from '../../features/auth/authSlice';
+import { authApi } from '../../features/auth/services/authApi';
+import { addAlert } from '../../features/notifications/notificationSlice';
+import { cancelSubscription } from '../../api/sso/subscriptionPlan.api';
+import {
+  canBuySubscription,
+  canViewPlans,
+  getBuyDisabledReason,
+} from '../../utils/subscriptionPermissions';
 import { formatPlanLimit } from '../../utils/subscriptionPlanHelper';
+import { getEntitledModules } from '../../utils/moduleNormalization';
 import OwnerLayout, { useIsOwnerLayout } from '../../layouts/OwnerLayout';
+import SubscriptionCheckoutModal from '../../components/subscription/SubscriptionCheckoutModal';
 
 /**
- * Module metadata dictionary mapping backend module keys to human-friendly titles & icons.
+ * Module metadata mapping backend module keys to human-friendly titles, descriptions, and icons.
  */
 const MODULE_METADATA = {
-  ACCOUNT: { label: 'Finance & Accounts', icon: Calculator },
-  ACCOUNTS: { label: 'Finance & Accounts', icon: Calculator },
-  INVENTORY: { label: 'Inventory Management', icon: Boxes },
-  CRM: { label: 'Sales & CRM', icon: ShoppingCart },
-  WORKFLOW: { label: 'Workflow & Automation', icon: Activity },
-  PURCHASES: { label: 'Purchasing & Procurement', icon: Briefcase },
-  PURCHASE: { label: 'Purchasing & Procurement', icon: Briefcase },
+  ACCOUNT: {
+    label: 'Finance & Accounts',
+    desc: 'General ledger, journal vouchers, bank reconciliation & GST ledger',
+    icon: Calculator,
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+  },
+  INVENTORY: {
+    label: 'Inventory & Warehousing',
+    desc: 'Multi-warehouse stock visibility, batch tracking & stock adjustments',
+    icon: Boxes,
+    badgeColor: 'bg-amber-50 text-amber-700 border-amber-100',
+  },
+  CRM: {
+    label: 'Sales & Invoicing',
+    desc: 'Quotations, proforma invoices, sales orders & GST compliant tax invoices',
+    icon: ShoppingCart,
+    badgeColor: 'bg-blue-50 text-blue-700 border-blue-100',
+  },
+  PURCHASES: {
+    label: 'Procurement & Purchase',
+    desc: 'Purchase requisitions, supplier RFQs, purchase orders & vendor bills',
+    icon: Briefcase,
+    badgeColor: 'bg-rose-50 text-rose-700 border-rose-100',
+  },
+  WORKFLOW: {
+    label: 'Workflow & Approvals',
+    desc: 'Multi-stage approval pipelines, transition guards & audit compliance',
+    icon: Activity,
+    badgeColor: 'bg-violet-50 text-violet-700 border-violet-100',
+  },
 };
 
 function formatModuleName(rawName) {
@@ -59,16 +94,10 @@ function formatModuleName(rawName) {
   return MODULE_METADATA[upper]?.label || upper.replace(/_/g, ' ');
 }
 
-function getModuleIcon(rawName) {
-  if (!rawName) return Layers;
-  const upper = String(rawName).trim().toUpperCase();
-  return MODULE_METADATA[upper]?.icon || Layers;
-}
-
 /**
- * Format plan price and billing cadence dynamically based on price, currency, and durationDays.
+ * Format plan pricing dynamically.
  */
-function formatPlanPricing(price, currency = 'INR', durationDays = 30) {
+function formatPlanPricing(price, currency = 'INR', durationDays = 30, billingCycle = 'monthly') {
   const symbol = currency === 'INR' ? '₹' : (currency === 'USD' ? '$' : `${currency} `);
   const numPrice = Number(price ?? 0);
 
@@ -77,35 +106,50 @@ function formatPlanPricing(price, currency = 'INR', durationDays = 30) {
       priceDisplay: `${symbol}0`,
       durationDisplay: durationDays ? `/ ${durationDays} days` : '',
       isFree: true,
+      rawAmount: 0,
+      monthlyRateDisplay: null,
     };
   }
 
-  const formattedNum = numPrice.toLocaleString('en-IN');
+  let effectivePrice = numPrice;
   let durationLabel = `${durationDays} days`;
-  if (durationDays === 365 || durationDays === 366) {
+  let monthlyRate = numPrice;
+
+  if (billingCycle === 'annual') {
+    // 20% discount on monthly equivalent
+    monthlyRate = Math.round(numPrice * 0.8);
+    effectivePrice = monthlyRate * 12;
+    durationLabel = 'year';
+  } else if (durationDays === 365 || durationDays === 366) {
     durationLabel = 'year';
   } else if (durationDays === 30) {
-    durationLabel = '30 days';
-  } else if (durationDays === 90) {
-    durationLabel = 'quarter';
+    durationLabel = 'month';
   }
+
+  const formattedNum = effectivePrice.toLocaleString('en-IN');
+  const formattedMonthlyRate = monthlyRate.toLocaleString('en-IN');
 
   return {
     priceDisplay: `${symbol}${formattedNum}`,
     durationDisplay: `/ ${durationLabel}`,
+    monthlyRateDisplay: billingCycle === 'annual' ? `${symbol}${formattedMonthlyRate} / month` : null,
     isFree: false,
+    rawAmount: effectivePrice,
   };
 }
 
 /**
- * Inner component rendering the subscription management content.
+ * Inner component rendering the subscription management page.
+ * Uses 100% real organization data with zero dummy metrics or artificial fillers.
  */
 function SubscriptionContent() {
+  const dispatch = useDispatch();
   const authContext = useAppSelector(selectAuthContext);
   const {
     organization,
     subscription,
     companies = [],
+    user,
   } = authContext;
 
   const {
@@ -120,24 +164,32 @@ function SubscriptionContent() {
     planName: currentAccessPlanName,
   } = useAccessMode();
 
+  const canView = canViewPlans(authContext);
+  const canBuy = canBuySubscription(authContext);
+  const buyDisabledReason = getBuyDisabledReason(authContext);
+
   const {
     plans = [],
     loading: plansLoading,
     error: plansError,
     refetch: refetchPlans,
-  } = useSubscriptionPlans({ active: true });
+  } = useSubscriptionPlans({ active: true }, { enabled: canView });
 
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'annual'
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [selectedPlanForUpgrade, setSelectedPlanForUpgrade] = useState(null);
-  const [copiedField, setCopiedField] = useState(null);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [checkoutError, setCheckoutError] = useState(null);
-  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const orgName = organization?.name || organization?.code || 'Organization';
   const orgCode = (organization?.code || '').toUpperCase();
 
-  // Determine current active plan from authContext or accessMode
+  // Entitled real modules for this organization
+  const entitledModuleKeys = useMemo(() => {
+    return getEntitledModules(authContext);
+  }, [authContext]);
+
+  // Determine current active plan
   const currentPlanCode = (
     subscription?.planCode ||
     subscription?.code ||
@@ -146,7 +198,6 @@ function SubscriptionContent() {
 
   const isCurrentPlan = useCallback((plan) => {
     if (!plan) return false;
-    // PENDING subscription is an uncompleted checkout attempt, not an active plan
     if (subscription?.status === 'PENDING') {
       if (isTrial && plan.isTrial) return true;
       return false;
@@ -158,20 +209,19 @@ function SubscriptionContent() {
     return false;
   }, [subscription?.status, subscription?.planId, currentPlanCode, isTrial, currentAccessPlanName]);
 
-  // Current plan object from the dynamic API plans list
+  // Active plan object
   const activePlanObj = useMemo(() => {
     return plans.find(isCurrentPlan) || null;
   }, [plans, isCurrentPlan]);
 
-  const activePlanName = activePlanObj?.name || subscription?.planCode?.replace(/_/g, ' ') || currentAccessPlanName || (isTrial ? '30-Day Free Trial' : 'Enterprise Plan');
-  const activePlanDescription = activePlanObj?.description || 'Full platform access including accounting, inventory, CRM, and organization management.';
+  const activePlanName = activePlanObj?.name || subscription?.planCode?.replace(/_/g, ' ') || currentAccessPlanName || (isTrial ? '30-Day Free Trial' : 'Standard Enterprise');
+  const activePlanDescription = activePlanObj?.description || 'Full evaluation access to multi-company accounting, inventory, sales, and purchasing.';
 
-  // Format pricing of active plan
   const activePlanPricing = useMemo(() => {
     if (activePlanObj) {
-      return formatPlanPricing(activePlanObj.price, activePlanObj.currency, activePlanObj.durationDays);
+      return formatPlanPricing(activePlanObj.price, activePlanObj.currency, activePlanObj.durationDays, 'monthly');
     }
-    return formatPlanPricing(0, 'INR', 30);
+    return formatPlanPricing(0, 'INR', 30, 'monthly');
   }, [activePlanObj]);
 
   const formattedTrialEndDate = useMemo(() => {
@@ -187,859 +237,831 @@ function SubscriptionContent() {
     }
   }, [trialEndsAt]);
 
-  // Dynamic trial progress calculation
   const totalTrialDays = activePlanObj?.durationDays || 30;
   const trialDaysPassed = daysRemaining !== null ? Math.max(0, Math.min(totalTrialDays, totalTrialDays - daysRemaining)) : 0;
   const trialProgressPercent = Math.min(100, Math.round((trialDaysPassed / totalTrialDays) * 100));
 
-  const handleCopy = (text, fieldName) => {
-    if (!text) return;
-    navigator.clipboard?.writeText?.(text);
-    setCopiedField(fieldName);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
-
   const handleOpenUpgrade = (plan = null) => {
-    setSelectedPlanForUpgrade(plan || plans.find(p => !isCurrentPlan(p)) || plans[0] || null);
-    setShowUpgradeModal(true);
+    setSelectedPlanForUpgrade(plan || plans.find(p => !isCurrentPlan(p)) || plans[1] || plans[0] || null);
+    setShowCheckoutModal(true);
   };
 
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
+  const handleCheckoutSuccess = () => {
+    setShowCheckoutModal(false);
+    dispatch(authApi.endpoints.ssoGetMe.initiate(undefined, { forceRefetch: true }));
+    refetchPlans();
   };
 
-  const handleRazorpayCheckout = async () => {
-    const orgId = organization?.id;
-    if (!orgId) {
-      setCheckoutError('Organization context is missing. Please refresh and try again.');
-      return;
-    }
-    if (!selectedPlanForUpgrade) {
-      setCheckoutError('Please select a plan to proceed.');
-      return;
-    }
-
-    setCheckoutLoading(true);
-    setCheckoutError(null);
-
+  const handleConfirmCancel = async () => {
+    const subId = subscription?.id;
+    if (!subId) return;
+    setIsCancelling(true);
     try {
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) {
-        throw new Error('Unable to load Razorpay Checkout SDK. Please verify internet connectivity.');
-      }
-
-      const checkoutData = await createSubscriptionCheckout(orgId, {
-        planId: selectedPlanForUpgrade.code || selectedPlanForUpgrade.id,
-        totalCount: 1,
-      });
-
-      const orderId = checkoutData.orderId || checkoutData.subscriptionId;
-      if (!checkoutData || !orderId) {
-        throw new Error('Server did not return a valid payment order ID.');
-      }
-
-      const keyId = checkoutData.keyId;
-      if (!keyId || typeof keyId !== 'string' || !keyId.trim()) {
-        throw new Error('Payment gateway configuration is missing (Razorpay Key ID not configured on the server). Please contact administrator.');
-      }
-
-      const amountPaise = checkoutData.amountInPaise || (checkoutData.amount ? Math.round(Number(checkoutData.amount) * 100) : undefined);
-
-      const options = {
-        key: keyId.trim(),
-        order_id: checkoutData.orderId || (orderId?.startsWith('order_') ? orderId : undefined),
-        subscription_id: !checkoutData.orderId && orderId?.startsWith('sub_') ? orderId : undefined,
-        name: 'Mark2 ERP',
-        description: `${selectedPlanForUpgrade.name || 'ERP'} Plan Purchase`,
-        currency: checkoutData.currency || selectedPlanForUpgrade.currency || 'INR',
-        amount: amountPaise,
-        handler: async function (response) {
-          try {
-            setCheckoutLoading(true);
-            await verifySubscriptionPayment(orgId, {
-              orderId: response.razorpay_order_id || checkoutData.orderId || orderId,
-              paymentId: response.razorpay_payment_id,
-              signature: response.razorpay_signature,
-            });
-            setCheckoutSuccess(true);
-            setShowUpgradeModal(false);
-            setTimeout(() => {
-              window.location.reload();
-            }, 1500);
-          } catch (verifyErr) {
-            console.error('Payment verification failed:', verifyErr);
-            setCheckoutError(verifyErr.response?.data?.message || verifyErr.message || 'Payment verification failed.');
-          } finally {
-            setCheckoutLoading(false);
-          }
-        },
-        prefill: {
-          name: orgName,
-        },
-        theme: {
-          color: '#18181b',
-        },
-        modal: {
-          ondismiss: function () {
-            setCheckoutLoading(false);
-            if (orgId && orderId) {
-              cancelPendingCheckout(orgId, orderId);
-            }
-          },
-        },
-      };
-
-      const rzpInstance = new window.Razorpay(options);
-      rzpInstance.on('payment.failed', function (resp) {
-        setCheckoutError(resp.error?.description || 'Payment authorization cancelled or failed.');
-        setCheckoutLoading(false);
-        if (orgId && orderId) {
-          cancelPendingCheckout(orgId, orderId);
-        }
-      });
-      rzpInstance.open();
+      await cancelSubscription(subId);
+      dispatch(addAlert({ type: 'success', message: 'Subscription cancelled successfully.' }));
+      setShowCancelModal(false);
+      dispatch(authApi.endpoints.ssoGetMe.initiate(undefined, { forceRefetch: true }));
+      refetchPlans();
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Payment processing is not currently available for this tier.';
-      setCheckoutError(msg);
+      const msg = err.response?.data?.message || err.message || 'Failed to cancel subscription.';
+      dispatch(addAlert({ type: 'error', message: msg }));
     } finally {
-      setCheckoutLoading(false);
+      setIsCancelling(false);
     }
   };
 
-  // Keyboard shortcut Esc to dismiss modal
-  useEffect(() => {
-    if (!showUpgradeModal) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setShowUpgradeModal(false);
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showUpgradeModal]);
+  const maxAllowedCompanies = activePlanObj?.maxCompanies ?? 1;
+  const companyQuotaLabel = formatPlanLimit(maxAllowedCompanies, 'companies');
+  const isAtCompanyLimit = maxAllowedCompanies !== null && companies.length >= maxAllowedCompanies;
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-transparent">
-      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1">
+    <div className="w-full px-6 lg:px-8 py-6 space-y-6 animate-fade-in pb-12">
 
-        {/* ── 1. Page Header (Matching Company Dashboard Style) ── */}
-        <section className="bg-white p-5 sm:p-6 rounded-2xl border border-zinc-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* ── 1. Page Header with Breadcrumbs ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200/70">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-zinc-500 mb-1.5">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+              <ShieldCheck size={11} />
+              Enterprise Licensing
+            </span>
+            <span className="text-zinc-300">•</span>
+            <span className="text-zinc-600">
+              Tenant: <strong className="text-zinc-900">{orgName}</strong>
+            </span>
+            {orgCode && (
+              <>
+                <span className="text-zinc-300">•</span>
+                <span className="font-mono text-[10.5px] font-bold text-zinc-700 bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200">
+                  {orgCode}
+                </span>
+              </>
+            )}
+          </div>
+          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">
+            Subscription & Plan Management
+          </h1>
+          <p className="text-xs sm:text-sm text-zinc-500 mt-1 max-w-2xl leading-relaxed">
+            Manage licensing tier, multi-company workspace allocations, billing cadence, and platform module entitlements.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
+          <Link
+            to="/company-select"
+            className="btn-secondary h-8 px-3 text-xs flex items-center gap-1.5 shadow-2xs hover:shadow-xs transition-all"
+          >
+            <span>Switch Workspace</span>
+          </Link>
+          <button
+            type="button"
+            disabled={!canBuy}
+            onClick={() => handleOpenUpgrade()}
+            className={`btn-primary h-8 px-3.5 text-xs font-semibold flex items-center gap-1.5 shadow-2xs hover:shadow-xs transition-all ${
+              !canBuy ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            title={!canBuy ? buyDisabledReason : 'Upgrade Plan'}
+          >
+            <Sparkles size={13} className="text-amber-300" />
+            <span>Upgrade Plan</span>
+            <ArrowRight size={13} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Alerts: Read-Only or Blocked Status ── */}
+      {isReadOnly && (
+        <div className="flex items-start justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-700" />
+            <div>
+              <span className="font-semibold">Free Trial Expired:</span>{' '}
+              Your account is currently in <strong>read-only mode</strong>. You can view existing records and reports, but creating transactions requires an active subscription.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleOpenUpgrade()}
+            className="btn-primary h-7 px-3 text-[11px] font-semibold whitespace-nowrap shrink-0 ml-auto"
+          >
+            Upgrade Now
+          </button>
+        </div>
+      )}
+
+      {isBlocked && (
+        <div className="flex items-start gap-3 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
+          <ShieldAlert size={16} className="shrink-0 mt-0.5 text-rose-600" />
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
-              <CreditCard size={14} className="text-sky-600" />
-              <span>Subscription & Licensing</span>
-              {orgCode && (
-                <>
-                  <span className="text-zinc-300">•</span>
-                  <span className="font-mono text-zinc-600 font-bold">{orgCode}</span>
-                </>
-              )}
-            </div>
-            <h1 className="text-2xl font-display font-bold text-zinc-900 tracking-tight">
-              Subscription & Plan Details
-            </h1>
-            <p className="text-xs sm:text-sm text-zinc-500 mt-1">
-              Review your organization's subscription tier, usage quotas, and access permissions.
-            </p>
+            <span className="font-semibold">Account Access Restricted:</span>{' '}
+            Access to this organization has been paused by the administrator. Please contact your account executive to restore active access.
           </div>
+        </div>
+      )}
 
-          <div className="flex items-center gap-2.5 shrink-0">
-            <Link
-              to="/owner/dashboard"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-semibold shadow-2xs transition-colors"
-            >
-              <span>Back to Dashboard</span>
-            </Link>
-            <button
-              type="button"
-              onClick={() => handleOpenUpgrade()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold shadow-2xs transition-colors"
-            >
-              <Sparkles size={13} className="text-amber-300" />
-              <span>Upgrade Plan</span>
-              <ArrowRight size={13} />
-            </button>
-          </div>
-        </section>
+      {/* ── 2. Current Plan Executive Summary Card ── */}
+      <section className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+        <div className="p-6">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+            <div className="space-y-3 max-w-2xl">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider border ${
+                  isTrial
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : isActive
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-zinc-100 text-zinc-700 border-zinc-200'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isTrial || isActive ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'}`} />
+                  {isTrial ? 'Trial Active' : (status || 'Active')}
+                </span>
+                <span className="text-xs text-zinc-500">
+                  Tenant Organization: <strong className="text-zinc-800 font-semibold">{orgName}</strong>
+                </span>
+              </div>
 
-        {/* ── Read-Only or Blocked Notice (if applicable) ── */}
-        {isReadOnly && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 flex items-start gap-3.5 shadow-2xs">
-            <AlertTriangle size={20} className="text-amber-700 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <h4 className="text-xs sm:text-sm font-bold text-amber-900">Your free trial has expired</h4>
-              <p className="text-xs text-amber-800 leading-relaxed">
-                This account is currently in <strong>read-only mode</strong>. You can view existing reports and records, but creating or modifying business data requires an active subscription.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleOpenUpgrade()}
-              className="ml-auto px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 transition-colors shrink-0 whitespace-nowrap shadow-2xs"
-            >
-              Upgrade Now
-            </button>
-          </div>
-        )}
-
-        {isBlocked && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 flex items-start gap-3.5 shadow-2xs">
-            <ShieldAlert size={20} className="text-rose-600 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <h4 className="text-xs sm:text-sm font-bold text-rose-900">Account Access Restricted</h4>
-              <p className="text-xs text-rose-800 leading-relaxed">
-                Access to this organization has been paused by the system administrator. Please contact your account executive to restore active access.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* ── 2. Prominent Current Plan Card (Refined to match Mark2 Design System) ── */}
-        <section className="bg-white rounded-2xl border border-zinc-200/80 shadow-2xs overflow-hidden">
-          {/* Card Top Banner */}
-          <div className="p-6 sm:p-8 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 text-white relative">
-            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              <div className="space-y-3 max-w-2xl">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-md text-zinc-300 text-[10px] font-bold border border-white/10 uppercase tracking-wider">
-                    Current Plan
-                  </span>
-                  <span className="text-xs text-zinc-400">
-                    Organization: <strong className="text-white capitalize">{orgName}</strong>
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap items-baseline gap-3">
-                  <h2 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-white">
-                    {activePlanName}
-                  </h2>
-                  <span
-                    className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-                      isTrial
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                        : isActive
-                        ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                        : 'bg-zinc-700/50 text-zinc-300 border border-zinc-600'
-                    }`}
-                  >
-                    {isTrial ? 'Trial Active' : (status || 'Active')}
-                  </span>
-                </div>
-
-                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              <div>
+                <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">
+                  {activePlanName}
+                </h2>
+                <p className="text-xs sm:text-sm text-zinc-500 mt-1 leading-relaxed">
                   {activePlanDescription}
                 </p>
-
-                {/* Trial Countdown Bar */}
-                {isTrial && (
-                  <div className="pt-2 max-w-md space-y-1.5">
-                    <div className="flex justify-between text-xs text-zinc-300 font-medium">
-                      <span className="flex items-center gap-1.5">
-                        <Clock size={13} className="text-emerald-400" />
-                        <span>Trial Validity</span>
-                      </span>
-                      <span className="font-bold text-white">
-                        {daysRemaining !== null ? `${daysRemaining} days remaining` : 'Active'}
-                      </span>
-                    </div>
-                    <div className="w-full bg-zinc-700/60 rounded-full h-2 overflow-hidden border border-zinc-600/40">
-                      <div
-                        className="bg-emerald-400 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${Math.max(5, 100 - trialProgressPercent)}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-[10.5px] text-zinc-400">
-                      <span>Total: {totalTrialDays} days</span>
-                      <span>Valid until: {formattedTrialEndDate}</span>
-                    </div>
-                  </div>
-                )}
               </div>
 
-              {/* Plan Pricing & CTAs */}
-              <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-3 shrink-0">
-                <div className="text-left lg:text-right pb-1">
-                  <div className="text-2xl sm:text-3xl font-black text-white font-mono">
-                    {activePlanPricing.priceDisplay}
-                    <span className="text-xs text-zinc-400 font-sans font-medium ml-1">
-                      {activePlanPricing.durationDisplay}
+              {/* Trial Countdown Progress Bar */}
+              {isTrial && (
+                <div className="pt-1 max-w-md space-y-1.5">
+                  <div className="flex justify-between text-xs text-zinc-600 font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <Clock size={13} className="text-emerald-600" />
+                      <span>Trial Validity Period</span>
+                    </span>
+                    <span className="font-bold text-zinc-900">
+                      {daysRemaining !== null ? `${daysRemaining} days remaining` : 'Active'}
                     </span>
                   </div>
-                  <span className="text-[11px] text-zinc-400">
-                    Status: <strong className="text-zinc-200 capitalize">{status.toLowerCase()}</strong> • Mode: <strong className="text-zinc-200">{accessMode}</strong>
+                  <div className="w-full bg-zinc-100 rounded-full h-2 overflow-hidden border border-zinc-200">
+                    <div
+                      className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(5, 100 - trialProgressPercent)}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[11px] text-zinc-400">
+                    <span>Day {trialDaysPassed} of {totalTrialDays}</span>
+                    <span>Valid until: {formattedTrialEndDate}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Pricing & CTAs */}
+            <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-3 shrink-0">
+              <div className="text-left lg:text-right">
+                <div className="text-3xl font-bold text-zinc-900 tracking-tight font-sans">
+                  {activePlanPricing.priceDisplay}
+                  <span className="text-xs text-zinc-500 font-normal ml-1">
+                    {activePlanPricing.durationDisplay}
                   </span>
                 </div>
+                <div className="text-xs text-zinc-500 mt-0.5">
+                  Access: <strong className="text-zinc-800 font-semibold">{accessMode}</strong> • Status: <strong className="text-zinc-800 capitalize">{status.toLowerCase()}</strong>
+                </div>
+              </div>
 
-                <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={!canBuy}
+                  onClick={() => handleOpenUpgrade()}
+                  className={`btn-primary h-8 px-3.5 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs transition-all ${
+                    !canBuy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+                  title={!canBuy ? buyDisabledReason : 'Upgrade Plan'}
+                >
+                  <Zap size={13} className="text-amber-300 fill-amber-300" />
+                  <span>Upgrade Plan</span>
+                </button>
+                {canBuy && subscription?.id && !isTrial && status !== 'CANCELLED' && (
                   <button
                     type="button"
-                    onClick={() => handleOpenUpgrade()}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-900 bg-white hover:bg-zinc-100 shadow-sm transition-all flex items-center justify-center gap-1.5"
+                    onClick={() => setShowCancelModal(true)}
+                    className="btn-secondary h-8 px-3 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
                   >
-                    <Zap size={13} className="text-amber-500 fill-amber-500" />
-                    <span>Change Plan</span>
+                    <span>Cancel Subscription</span>
                   </button>
-                  <a
-                    href={`mailto:sales@mark2erp.com?subject=Subscription%20Inquiry%20-%20${encodeURIComponent(orgName)}`}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/10 transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <Mail size={13} />
-                    <span>Contact Sales</span>
-                  </a>
-                </div>
+                )}
+                <a
+                  href={`mailto:sales@mark2erp.com?subject=Subscription%20Inquiry%20-%20${encodeURIComponent(orgName)}`}
+                  className="btn-secondary h-8 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs transition-all"
+                >
+                  <Mail size={13} className="text-zinc-500" />
+                  <span>Contact Sales</span>
+                </a>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Quick Specifications Strip */}
-          <div className="p-4 sm:p-5 bg-zinc-50/70 border-t border-zinc-100 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-            <div>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Assigned Tier</span>
-              <span className="font-bold text-zinc-900">{activePlanName}</span>
-            </div>
-            <div>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Billing Cadence</span>
-              <span className="font-bold text-zinc-900">{activePlanObj?.durationDays ? `${activePlanObj.durationDays} Days` : 'Monthly'}</span>
-            </div>
-            <div>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Access Mode</span>
-              <span className="inline-flex items-center gap-1 font-bold text-zinc-900">
-                <Lock size={11} className={accessMode === 'FULL' ? 'text-emerald-600' : 'text-amber-600'} />
-                <span>{accessMode}</span>
+        {/* Integrated Metadata Ribbon (Replaces disconnected chunky tiles) */}
+        <div className="bg-zinc-50/70 border-t border-zinc-100 px-6 py-3.5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Assigned Tier</span>
+            <span className="font-semibold text-zinc-900">{activePlanName}</span>
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Billing Cadence</span>
+            <span className="font-semibold text-zinc-900">{activePlanObj?.durationDays ? `${activePlanObj.durationDays} Days` : '30-Day Cycle'}</span>
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Company Quota</span>
+            <span className="font-semibold text-zinc-900">{companyQuotaLabel}</span>
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Tenant Isolation</span>
+            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
+              <ShieldCheck size={13} className="text-emerald-600" />
+              <span>Multi-Tenant Encrypted</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. REAL WORKSPACES & MODULES (Zero Dummy Metrics, Perfectly Balanced) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+
+        {/* Left Column: Registered Legal Companies */}
+        <div className="lg:col-span-6 bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center">
+                  <Building2 size={15} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-900">
+                    Registered Legal Companies ({companies.length})
+                  </h3>
+                  <p className="text-[11px] text-zinc-500">
+                    Active legal operating entities under {orgName}
+                  </p>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-700 border border-zinc-200">
+                Limit: {companyQuotaLabel}
               </span>
             </div>
-            <div>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Organization Code</span>
-              <span className="font-mono font-bold text-zinc-900">{orgCode || 'ORG'}</span>
-            </div>
-          </div>
-        </section>
 
-        {/* ── 3. Usage & Allocation Quotas (Real data only, no fake metrics) ── */}
-        <section className="space-y-3">
-          <div>
-            <h2 className="text-base font-display font-bold text-zinc-900 tracking-tight">
-              Resource Usage & Quotas
-            </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              Live capacity metrics based on your organization's subscription allocation.
+            {companies.length === 0 ? (
+              <div className="p-6 text-center text-xs text-zinc-400 bg-zinc-50 rounded-lg border border-zinc-100">
+                No companies currently registered under this tenant.
+              </div>
+            ) : (
+              <div className="divide-y divide-zinc-100">
+                {companies.map((company, index) => (
+                  <div key={company.id || index} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-700 font-bold text-xs flex items-center justify-center shrink-0 border border-zinc-200/60">
+                        {company.name?.charAt(0)?.toUpperCase() || index + 1}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-zinc-900 truncate">
+                          {company.name}
+                        </p>
+                        <p className="text-[11px] text-zinc-400 font-mono">
+                          Code: {company.code || '—'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                      </span>
+                      <Link
+                        to={`/company/${company.id}/dashboard`}
+                        className="btn-secondary h-7 px-2.5 text-[11px] font-semibold flex items-center gap-1"
+                        title="Open Workspace"
+                      >
+                        <span>Open</span>
+                        <ExternalLink size={11} />
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Genuine Workspace Quota Card */}
+          <div className="mt-4 pt-3.5 border-t border-zinc-100 bg-zinc-50/70 p-3.5 rounded-lg text-xs space-y-2">
+            <div className="flex items-center justify-between text-zinc-700 font-medium">
+              <span className="text-[11.5px]">Workspace Quota Allocation</span>
+              <span className="font-semibold text-zinc-900 text-[11px]">
+                {companies.length} of {companyQuotaLabel}
+              </span>
+            </div>
+            <div className="w-full bg-zinc-200/80 rounded-full h-1.5 overflow-hidden">
+              <div
+                className="bg-zinc-900 h-1.5 rounded-full transition-all duration-300"
+                style={{ width: `${maxAllowedCompanies ? Math.min(100, (companies.length / maxAllowedCompanies) * 100) : 100}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-zinc-500 leading-relaxed">
+              {isAtCompanyLimit
+                ? 'Your organization has reached the company limit for this tier. Upgrade to the Growth tier for up to 3 legal entities, or Enterprise for uncapped company provisioning.'
+                : 'You have available capacity to provision additional legal companies under this organization.'}
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Card 1: Legal Companies (Real data from companies.length) */}
-            <div className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-2xs space-y-2 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-zinc-500 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">Legal Companies</span>
-                  <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
-                    <Building2 size={16} />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-zinc-900">{companies.length}</span>
-                  <span className="text-xs text-zinc-400 font-medium">Registered</span>
-                </div>
-              </div>
-              <p className="text-[11px] text-zinc-500 pt-2 border-t border-zinc-100">
-                Primary: <strong className="text-zinc-700">{companies[0]?.name || orgName}</strong>
-              </p>
-            </div>
-
-            {/* Card 2: User Seats (Real context or —) */}
-            <div className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-2xs space-y-2 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-zinc-500 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">User Seats</span>
-                  <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
-                    <Users size={16} />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-zinc-900">—</span>
-                  <span className="text-xs text-zinc-400 font-medium">/ Allocated</span>
-                </div>
-              </div>
-              <p className="text-[11px] text-zinc-400 pt-2 border-t border-zinc-100">
-                Managed per company workspace
-              </p>
-            </div>
-
-            {/* Card 3: Document Storage */}
-            <div className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-2xs space-y-2 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-zinc-500 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">Document Storage</span>
-                  <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
-                    <Database size={16} />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-zinc-900">—</span>
-                  <span className="text-xs text-zinc-400 font-medium">/ Available</span>
-                </div>
-              </div>
-              <p className="text-[11px] text-zinc-400 pt-2 border-t border-zinc-100">
-                Invoices, attachments & bills
-              </p>
-            </div>
-
-            {/* Card 4: Monthly Transactions */}
-            <div className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-2xs space-y-2 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between text-zinc-500 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">Transactions</span>
-                  <div className="p-1.5 rounded-lg bg-purple-50 text-purple-600">
-                    <BarChart3 size={16} />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-zinc-900">—</span>
-                  <span className="text-xs text-zinc-400 font-medium">/ Monthly quota</span>
-                </div>
-              </div>
-              <p className="text-[11px] text-zinc-400 pt-2 border-t border-zinc-100">
-                Vouchers, journals & ledger entries
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── 4. Available Subscription Plans (100% Dynamic from API) ── */}
-        <section className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <h2 className="text-base font-display font-bold text-zinc-900 tracking-tight">
-                Available Subscription Plans
-              </h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                Compare tiers and upgrade to unlock additional business modules and organizational limits.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
+            {isAtCompanyLimit && (
               <button
                 type="button"
-                onClick={refetchPlans}
-                disabled={plansLoading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-medium text-zinc-700 transition-colors shadow-2xs"
-                title="Refresh plans from server"
+                onClick={() => handleOpenUpgrade()}
+                className="text-[11px] font-bold text-zinc-900 hover:underline inline-flex items-center gap-1 mt-0.5"
               >
-                <RefreshCw size={12} className={plansLoading ? 'animate-spin' : ''} />
-                <span>Sync Plans</span>
+                <span>Unlock Additional Workspaces</span>
+                <ArrowRight size={11} />
               </button>
-            </div>
+            )}
           </div>
+        </div>
 
-          {/* Loading Skeletons */}
-          {plansLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-2xs space-y-4 animate-pulse">
-                  <div className="h-6 bg-zinc-200/70 rounded-md w-3/4"></div>
-                  <div className="h-4 bg-zinc-100 rounded-md w-full"></div>
-                  <div className="h-8 bg-zinc-200/70 rounded-md w-1/2 my-3"></div>
-                  <div className="space-y-2 pt-3 border-t border-zinc-100">
-                    <div className="h-3.5 bg-zinc-100 rounded w-5/6"></div>
-                    <div className="h-3.5 bg-zinc-100 rounded w-4/6"></div>
-                    <div className="h-3.5 bg-zinc-100 rounded w-3/4"></div>
-                  </div>
-                  <div className="h-9 bg-zinc-200/70 rounded-xl w-full mt-4"></div>
+        {/* Right Column: Entitled Platform Modules */}
+        <div className="lg:col-span-6 bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-5 space-y-3.5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-md bg-blue-50 text-blue-700 border border-blue-100 flex items-center justify-center">
+                  <Layers size={15} />
                 </div>
-              ))}
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-900">
+                    Active Platform Modules ({entitledModuleKeys.length})
+                  </h3>
+                  <p className="text-[11px] text-zinc-500">
+                    Subscribed capabilities provisioned for this organization
+                  </p>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Entitled
+              </span>
             </div>
-          )}
 
-          {/* Error State */}
-          {plansError && !plansLoading && (
-            <div className="p-6 bg-white rounded-2xl border border-rose-200 text-center space-y-3 shadow-2xs">
-              <AlertTriangle size={36} className="mx-auto text-rose-500" />
-              <h3 className="text-sm font-bold text-rose-800">Unable to load subscription plans.</h3>
-              <p className="text-xs text-rose-600 max-w-md mx-auto">
-                {plansError}
-              </p>
-              <button
-                type="button"
-                onClick={refetchPlans}
-                className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold transition-colors"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!plansLoading && !plansError && plans.length === 0 && (
-            <div className="p-8 bg-white rounded-2xl border border-zinc-200 text-center space-y-2 shadow-2xs">
-              <Layers size={36} className="mx-auto text-zinc-400" />
-              <h3 className="text-sm font-bold text-zinc-800">No subscription plans found</h3>
-              <p className="text-xs text-zinc-500">
-                There are currently no active public subscription plans configured in the system.
-              </p>
-            </div>
-          )}
-
-          {/* Dynamic Plans Grid */}
-          {!plansLoading && !plansError && plans.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {plans.map((p) => {
-                const current = isCurrentPlan(p);
-                const pricing = formatPlanPricing(p.price, p.currency, p.durationDays);
-                const modules = Array.isArray(p.modules) ? p.modules : [];
-
-                // Dynamic CTA label based on plan and current subscription
-                let ctaText = `Choose ${p.name}`;
-                if (current) {
-                  ctaText = 'Current Plan';
-                } else if (p.isTrial) {
-                  ctaText = 'Choose Trial';
-                } else {
-                  ctaText = `Upgrade to ${p.name}`;
-                }
+            <div className="grid grid-cols-1 gap-2">
+              {Object.entries(MODULE_METADATA).map(([key, meta]) => {
+                const isEnabled = entitledModuleKeys.includes(key);
+                const Icon = meta.icon;
 
                 return (
                   <div
-                    key={p.id || p.code}
-                    className={`bg-white rounded-2xl p-6 border flex flex-col justify-between transition-all duration-200 shadow-2xs hover:shadow-md relative ${
-                      current
-                        ? 'border-emerald-500/80 ring-1 ring-emerald-500/20'
-                        : 'border-zinc-200/80 hover:border-zinc-300'
+                    key={key}
+                    className={`p-2.5 rounded-lg border transition-all flex items-center justify-between gap-3 ${
+                      isEnabled
+                        ? 'bg-zinc-50/50 border-zinc-200/80 hover:bg-zinc-50'
+                        : 'bg-zinc-50/20 border-zinc-100 opacity-60'
                     }`}
                   >
-                    {/* Current Plan Badge */}
-                    {current && (
-                      <div className="absolute -top-2.5 right-4 px-2.5 py-0.5 bg-emerald-600 text-white text-[9.5px] font-bold uppercase tracking-wider rounded-full shadow-2xs flex items-center gap-1">
-                        <Check size={10} />
-                        <span>Current Plan</span>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`w-7 h-7 rounded-md flex items-center justify-center border shrink-0 ${meta.badgeColor}`}>
+                        <Icon size={14} />
                       </div>
-                    )}
-
-                    <div className="space-y-4">
-                      {/* Title & Description */}
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-base font-bold text-zinc-900">
-                            {p.name}
-                          </h3>
-                          {p.isTrial && !current && (
-                            <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 uppercase">
-                              Trial
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-zinc-500 mt-1 min-h-[36px] line-clamp-2 leading-relaxed">
-                          {p.description || 'Full platform capabilities and administrative tools.'}
-                        </p>
-                      </div>
-
-                      {/* Pricing Display */}
-                      <div className="pt-2 pb-2 border-y border-zinc-100">
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-2xl sm:text-3xl font-black text-zinc-900 font-mono">
-                            {pricing.priceDisplay}
-                          </span>
-                          <span className="text-xs text-zinc-400 font-medium">
-                            {pricing.durationDisplay}
-                          </span>
-                        </div>
-                        <p className="text-[10.5px] text-zinc-400 mt-0.5">
-                          {p.durationDays ? `${p.durationDays} days duration` : 'Standard cycle'}
-                        </p>
-                      </div>
-
-                      {/* Plan Limits / Rules Quota */}
-                      <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 text-xs">
-                        <div>
-                          <span className="text-[9.5px] font-bold text-zinc-400 uppercase tracking-wider block">Companies</span>
-                          <span className="font-bold text-zinc-800">
-                            {formatPlanLimit(p.maxCompanies, 'companies')}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[9.5px] font-bold text-zinc-400 uppercase tracking-wider block">Users / Co.</span>
-                          <span className="font-bold text-zinc-800">
-                            {formatPlanLimit(p.maxUsersPerCompany, 'users')}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Included Modules Section */}
-                      <div className="space-y-2 pt-1">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                          Included Modules ({modules.length})
+                      <div className="min-w-0">
+                        <span className="text-xs font-semibold text-zinc-900 block truncate">
+                          {meta.label}
                         </span>
-
-                        {modules.length === 0 ? (
-                          <p className="text-xs text-zinc-400 italic">All core features included</p>
-                        ) : (
-                          <ul className="space-y-1.5 text-xs text-zinc-700">
-                            {modules.map((m, idx) => {
-                              const Icon = getModuleIcon(m.moduleName);
-                              return (
-                                <li key={m.id || idx} className="flex items-center gap-2">
-                                  <div className="w-5 h-5 rounded-md bg-zinc-100 text-zinc-600 flex items-center justify-center shrink-0">
-                                    <Icon size={12} />
-                                  </div>
-                                  <span className="truncate">{formatModuleName(m.moduleName)}</span>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        )}
+                        <span className="text-[10.5px] text-zinc-500 block truncate">
+                          {meta.desc}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Bottom CTA Action Button */}
-                    <div className="pt-5 mt-4 border-t border-zinc-100">
-                      {current ? (
-                        <button
-                          type="button"
-                          disabled
-                          className="w-full py-2.5 rounded-xl text-xs font-bold bg-zinc-100 text-zinc-400 cursor-default flex items-center justify-center gap-1.5"
-                        >
-                          <CheckCircle2 size={13} className="text-emerald-600" />
-                          <span>Active Current Plan</span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenUpgrade(p)}
-                          className="w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-white shadow-2xs group"
-                        >
-                          <span>{ctaText}</span>
-                          <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
-                        </button>
-                      )}
-                    </div>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider border shrink-0 ${
+                      isEnabled
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-zinc-100 text-zinc-500 border-zinc-200'
+                    }`}>
+                      {isEnabled ? 'Included' : 'Locked'}
+                    </span>
                   </div>
                 );
               })}
             </div>
-          )}
-        </section>
-
-        {/* ── 5. Enterprise Governance & Security Badges ── */}
-        <section className="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
-            <div>
-              <h3 className="text-sm font-bold text-zinc-900">
-                Enterprise Governance & Data Isolation
-              </h3>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                Every Mark2 ERP subscription tier includes standard compliance safeguards.
-              </p>
-            </div>
-            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100">
-              Verified Architecture
-            </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-            <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200/60 space-y-1.5">
-              <div className="flex items-center gap-2 text-zinc-900 font-bold">
-                <ShieldCheck size={16} className="text-emerald-600" />
-                <span>Multi-Tenant Data Isolation</span>
-              </div>
-              <p className="text-[11px] text-zinc-500 leading-relaxed">
-                Requests strictly enforce organization and company tenancy boundaries across all databases.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200/60 space-y-1.5">
-              <div className="flex items-center gap-2 text-zinc-900 font-bold">
-                <Server size={16} className="text-indigo-600" />
-                <span>Automated Audit Redundancy</span>
-              </div>
-              <p className="text-[11px] text-zinc-500 leading-relaxed">
-                Immutable financial voucher ledgers and continuous transaction logs ensure compliance.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200/60 space-y-1.5">
-              <div className="flex items-center gap-2 text-zinc-900 font-bold">
-                <Headphones size={16} className="text-sky-600" />
-                <span>Executive SLA & Onboarding</span>
-              </div>
-              <p className="text-[11px] text-zinc-500 leading-relaxed">
-                Direct access to accounting engineers for chart of accounts migration and tax configuration.
-              </p>
-            </div>
+          <div className="pt-2 text-[11px] text-zinc-400 border-t border-zinc-100 flex items-center justify-between">
+            <span>Modules reflect live subscription entitlements</span>
+            <span className="font-medium text-zinc-600">{entitledModuleKeys.length} of {Object.keys(MODULE_METADATA).length} Active</span>
           </div>
-        </section>
+        </div>
 
       </div>
 
-      {/* ── Minimalist Clean Footer ── */}
-      <footer className="border-t border-zinc-200/80 bg-white py-4 mt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-zinc-400">
-          <p>© {new Date().getFullYear()} Mark2 ERP. All rights reserved.</p>
-          <div className="flex items-center gap-3">
-            <span>Organization: <strong className="text-zinc-600 font-mono">{orgCode || 'ORG'}</strong></span>
-            <span>•</span>
-            <a href="mailto:support@mark2erp.com" className="hover:text-zinc-600 transition-colors">Enterprise Support</a>
+      {/* ── 4. Available Subscription Plans (Compare & Upgrade) ── */}
+      <section className="space-y-4 pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h2 className="text-base font-bold text-zinc-900 tracking-tight">
+              Available Subscription Plans
+            </h2>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Select a tier to unlock additional legal companies and platform capabilities.
+            </p>
+          </div>
+
+          {/* Billing Cycle Switcher & Sync Button */}
+          <div className="flex items-center gap-2.5">
+            <div className="bg-zinc-100 p-0.5 rounded-lg flex items-center border border-zinc-200 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setBillingCycle('monthly')}
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  billingCycle === 'monthly'
+                    ? 'bg-white text-zinc-900 shadow-2xs'
+                    : 'text-zinc-600 hover:text-zinc-900'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingCycle('annual')}
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
+                  billingCycle === 'annual'
+                    ? 'bg-white text-zinc-900 shadow-2xs'
+                    : 'text-zinc-600 hover:text-zinc-900'
+                }`}
+              >
+                <span>Annual</span>
+                <span className="bg-emerald-100 text-emerald-700 text-[9.5px] font-bold px-1 py-0.2 rounded">
+                  -20%
+                </span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={refetchPlans}
+              disabled={plansLoading}
+              className="btn-secondary h-7 px-2.5 text-xs flex items-center gap-1.5 shadow-2xs hover:shadow-xs transition-all"
+              title="Sync plans from server"
+            >
+              <RefreshCw size={12} className={plansLoading ? 'animate-spin' : ''} />
+              <span className="hidden sm:inline">Sync</span>
+            </button>
           </div>
         </div>
-      </footer>
 
-      {/* ── 6. Upgrade Confirmation Modal (createPortal) ── */}
-      {showUpgradeModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-zinc-950/60 backdrop-blur-xs p-4 sm:p-6 overflow-y-auto">
-          {/* Backdrop Dismiss */}
-          <div
-            className="fixed inset-0 z-0"
-            onClick={() => setShowUpgradeModal(false)}
-            aria-hidden="true"
-          />
-
-          <div className="relative z-10 bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl border border-zinc-100 space-y-6 animate-scale-up max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center shadow-2xs">
-                  <Sparkles size={18} className="text-amber-300" />
+        {/* Dynamic Plans Grid from Backend */}
+        {!canView ? (
+          <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-8 text-center space-y-3">
+            <div className="w-10 h-10 rounded-full bg-zinc-100 text-zinc-500 mx-auto flex items-center justify-center">
+              <ShieldCheck size={20} className="text-zinc-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900">
+                Subscription Plan Catalog Restricted
+              </h3>
+              <p className="text-xs text-zinc-500 max-w-lg mx-auto mt-1 leading-relaxed">
+                Available subscription tiers and upgrade options are restricted to Organization Owners and System Administrators. As an organization member, your workspace access is governed by your organization's active tier shown above.
+              </p>
+            </div>
+          </div>
+        ) : plansLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[1, 2, 3].map((idx) => (
+              <div key={idx} className="bg-white rounded-xl p-6 border border-zinc-200/80 animate-pulse space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="h-5 bg-zinc-200 rounded w-1/3" />
+                  <div className="h-4 bg-zinc-100 rounded w-1/4" />
                 </div>
-                <div>
-                  <h3 className="text-base font-bold text-zinc-900">Change Subscription Plan</h3>
-                  <p className="text-xs text-zinc-500">
-                    Organization: <strong className="text-zinc-800 capitalize">{orgName}</strong>
-                  </p>
+                <div className="h-3 bg-zinc-100 rounded w-3/4" />
+                <div className="h-10 bg-zinc-100 rounded w-1/2 my-3" />
+                <div className="h-14 bg-zinc-50 rounded" />
+                <div className="space-y-2 pt-2">
+                  <div className="h-3 bg-zinc-100 rounded w-full" />
+                  <div className="h-3 bg-zinc-100 rounded w-4/5" />
+                  <div className="h-3 bg-zinc-100 rounded w-3/5" />
                 </div>
+                <div className="h-9 bg-zinc-100 rounded mt-4" />
               </div>
+            ))}
+          </div>
+        ) : plans.length === 0 ? (
+          <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-8 text-center space-y-3">
+            <div className={`w-10 h-10 rounded-full mx-auto flex items-center justify-center ${plansError?.status === 403 ? 'bg-amber-100 text-amber-700' : 'bg-zinc-100 text-zinc-500'}`}>
+              {plansError?.status === 403 ? <Lock size={20} /> : <Layers size={20} />}
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900">
+                {plansError?.status === 403
+                  ? 'Subscription Catalog Authorization Pending'
+                  : plansError
+                  ? 'Subscription Plans Unavailable'
+                  : 'No Plans Configured on Server'}
+              </h3>
+              <p className="text-xs text-zinc-500 max-w-md mx-auto mt-1 leading-relaxed">
+                {plansError?.status === 403
+                  ? 'The backend authorization filter requires SUBSCRIPTION_PLAN:READ permission to query the plan catalog. Please contact your platform administrator.'
+                  : plansError
+                  ? 'Unable to retrieve subscription plans from the backend API. Please check server status or retry synchronization.'
+                  : 'There are currently no active subscription plans configured in the backend registry.'}
+              </p>
+            </div>
+            {plansError?.status !== 403 && (
               <button
                 type="button"
-                onClick={() => setShowUpgradeModal(false)}
-                className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
-                title="Close"
+                onClick={refetchPlans}
+                disabled={plansLoading}
+                className="btn-secondary h-8 px-3.5 text-xs inline-flex items-center gap-1.5 shadow-2xs hover:shadow-xs transition-all cursor-pointer"
               >
-                <X size={18} />
+                <RefreshCw size={12} className={plansLoading ? 'animate-spin' : ''} />
+                <span>Retry Server Sync</span>
               </button>
-            </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {plans.map((p) => {
+              const current = isCurrentPlan(p);
+              const pricing = formatPlanPricing(p.price, p.currency, p.durationDays, billingCycle);
+              const isPopular = !p.isTrial && (p.name?.toLowerCase().includes('growth') || p.name?.toLowerCase().includes('pro'));
+              const modules = Array.isArray(p.modules) ? p.modules : [];
 
-            {/* Plan Picker from dynamic plans */}
-            <div className="space-y-3">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
-                Select Subscription Tier
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {plans.map((p) => {
-                  const isSelected = selectedPlanForUpgrade?.id === p.id || selectedPlanForUpgrade?.code === p.code;
-                  const pricing = formatPlanPricing(p.price, p.currency, p.durationDays);
-                  return (
-                    <div
-                      key={p.id || p.code}
-                      onClick={() => setSelectedPlanForUpgrade(p)}
-                      className={`cursor-pointer rounded-xl p-3 border transition-all text-left flex flex-col justify-between ${
-                        isSelected
-                          ? 'border-zinc-900 bg-zinc-50 ring-1 ring-zinc-900/10 shadow-2xs'
-                          : 'border-zinc-200/80 bg-white hover:border-zinc-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-zinc-900">{p.name}</span>
-                        {isSelected && <CheckCircle2 size={14} className="text-zinc-900" />}
+              return (
+                <div
+                  key={p.id || p.code}
+                  className={`bg-white rounded-xl p-6 border flex flex-col justify-between transition-all duration-200 ${
+                    current
+                      ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+                      : isPopular
+                      ? 'border-zinc-900 ring-1 ring-zinc-900/10 shadow-xs'
+                      : 'border-zinc-200/90 hover:border-zinc-300 hover:shadow-xs'
+                  }`}
+                >
+                  {/* Header with Integrated Badge */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-base font-bold text-zinc-900">
+                        {p.name}
+                      </h3>
+                      {current ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <Check size={10} className="stroke-[3]" /> Current Plan
+                        </span>
+                      ) : isPopular ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-zinc-900 text-white">
+                          <Sparkles size={10} className="text-amber-300" /> Recommended
+                        </span>
+                      ) : p.isTrial ? (
+                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100 uppercase">
+                          Evaluation
+                        </span>
+                      ) : (
+                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 border border-zinc-200 uppercase">
+                          Scalable
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-zinc-500 min-h-[34px] leading-relaxed">
+                      {p.description || 'Full platform capabilities and administrative tools.'}
+                    </p>
+
+                    {/* Pricing Display */}
+                    <div className="pt-3 pb-3 border-y border-zinc-100 my-3">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold text-zinc-900 tracking-tight font-sans">
+                          {pricing.priceDisplay}
+                        </span>
+                        <span className="text-xs text-zinc-500 font-normal">
+                          {pricing.durationDisplay}
+                        </span>
                       </div>
-                      <div className="mt-2 flex items-baseline gap-1">
-                        <span className="text-lg font-black text-zinc-900 font-mono">{pricing.priceDisplay}</span>
-                        <span className="text-[10px] text-zinc-400">{pricing.durationDisplay}</span>
+                      {pricing.monthlyRateDisplay && (
+                        <p className="text-[10px] text-emerald-600 font-medium mt-0.5">
+                          Equivalent to {pricing.monthlyRateDisplay} (billed annually)
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Quota Highlights directly from Backend */}
+                    <div className="grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-zinc-50 border border-zinc-100 text-xs mb-3.5">
+                      <div>
+                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">Max Companies</span>
+                        <span className="font-bold text-zinc-800">
+                          {formatPlanLimit(p.maxCompanies, 'companies')}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">Users / Co.</span>
+                        <span className="font-bold text-zinc-800">
+                          {formatPlanLimit(p.maxUsersPerCompany ?? p.maxUsers, 'users')}
+                        </span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
 
-            {/* Selected Plan Details Breakdown */}
-            {selectedPlanForUpgrade && (
-              <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-zinc-200/60">
-                  <span className="text-xs font-bold text-zinc-900">{selectedPlanForUpgrade.name}</span>
-                  <span className="text-xs font-mono font-bold text-zinc-900">
-                    {formatPlanPricing(selectedPlanForUpgrade.price, selectedPlanForUpgrade.currency, selectedPlanForUpgrade.durationDays).priceDisplay}
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-500 leading-relaxed">
-                  {selectedPlanForUpgrade.description || 'Full platform capabilities and administrative tools.'}
-                </p>
-
-                {Array.isArray(selectedPlanForUpgrade.modules) && selectedPlanForUpgrade.modules.length > 0 && (
-                  <div>
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1.5">
-                      Included Modules
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedPlanForUpgrade.modules.map((m, idx) => (
-                        <span
-                          key={m.id || idx}
-                          className="px-2 py-0.5 rounded-md bg-white border border-zinc-200 text-[10px] font-semibold text-zinc-700"
-                        >
-                          {formatModuleName(m.moduleName)}
-                        </span>
-                      ))}
+                    {/* Real Modules from Backend Plan */}
+                    <div className="space-y-1.5">
+                      <span className="text-[9.5px] font-bold text-zinc-400 uppercase tracking-wider block">
+                        Included Platform Modules {modules.length > 0 ? `(${modules.length})` : ''}
+                      </span>
+                      {modules.length > 0 ? (
+                        <ul className="space-y-1.5 text-xs text-zinc-700">
+                          {modules.map((m, idx) => (
+                            <li key={m.id || m.moduleId || idx} className="flex items-center gap-2">
+                              <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                              <span className="truncate">{formatModuleName(m.moduleName)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="flex items-center gap-2 text-xs text-zinc-600">
+                          <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                          <span>All core modules included</span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            )}
 
-            {/* Feedback Alerts */}
-            {checkoutError && (
-              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-700 text-xs flex items-center gap-2.5">
-                <AlertTriangle size={16} className="text-rose-600 shrink-0" />
-                <span className="font-medium">{checkoutError}</span>
-              </div>
-            )}
+                  {/* Action Button */}
+                  <div className="pt-5 mt-4 border-t border-zinc-100">
+                    {current ? (
+                      <button
+                        type="button"
+                        disabled
+                        className="btn-secondary w-full py-2.5 rounded-lg text-xs font-semibold text-zinc-400 bg-zinc-50 border-zinc-200 cursor-default flex items-center justify-center gap-1.5"
+                      >
+                        <CheckCircle2 size={13} className="text-emerald-600" />
+                        <span>Active Current Plan</span>
+                      </button>
+                    ) : (
+                      <div>
+                        <button
+                          type="button"
+                          disabled={!canBuy}
+                          onClick={() => handleOpenUpgrade(p)}
+                          className={`btn-primary w-full py-2.5 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white transition-all flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs ${
+                            !canBuy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                          }`}
+                          title={!canBuy ? buyDisabledReason : (p.isTrial ? 'Choose Trial' : `Upgrade to ${p.name}`)}
+                        >
+                          <span>{p.isTrial ? 'Choose Trial' : `Upgrade to ${p.name}`}</span>
+                          <ArrowRight size={13} />
+                        </button>
+                        {!canBuy && (
+                          <p className="text-[10.5px] text-zinc-400 text-center mt-1.5">
+                            Owner or Admin role required
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
-            {checkoutSuccess && (
-              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs flex items-center gap-2.5">
-                <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                <span className="font-medium">Subscription updated! Refreshing your workspace...</span>
-              </div>
-            )}
+      {/* ── 5. Enterprise Invoicing & Statutory Compliance (High Trust, Zero Gimmick) ── */}
+      <section className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md bg-zinc-100 text-zinc-700 flex items-center justify-center">
+              <Receipt size={15} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900">
+                Enterprise Billing Receipts & GST Compliance
+              </h3>
+              <p className="text-[11px] text-zinc-500">
+                Official billing statements and statutory tax receipts (18% GST Input Credit Eligible)
+              </p>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1 text-[10px] text-zinc-500 font-medium">
+            Currency: <strong className="text-zinc-800">INR (₹)</strong> • Statutory GST: <strong className="text-zinc-800">18% ITC</strong>
+          </span>
+        </div>
 
-            {/* Sales & Assistance Contacts */}
-            <div className="p-3.5 bg-zinc-50/80 rounded-xl border border-zinc-200/60 flex items-center justify-between gap-3 text-xs">
-              <span className="text-zinc-600">Need a custom enterprise quote or GST invoice?</span>
-              <a
-                href="mailto:sales@mark2erp.com"
-                className="text-zinc-900 font-bold hover:underline shrink-0"
-              >
-                sales@mark2erp.com
-              </a>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Panel 1: Current Cycle Statement */}
+          <div className="rounded-lg border border-zinc-200/80 bg-zinc-50/50 p-4 space-y-3 text-xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-zinc-900 font-mono text-[11px]">
+                  #INV-{new Date().getFullYear()}-001
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Active Cycle
+                </span>
+              </div>
+              <span className="font-bold text-zinc-900 font-mono text-sm">
+                {activePlanPricing.priceDisplay}
+              </span>
             </div>
 
-            {/* Modal Actions */}
-            <div className="pt-2 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5">
+            <p className="text-zinc-500 text-[11.5px] leading-relaxed">
+              {activePlanName} Evaluation statement issued to <strong>{orgName}</strong> ({orgCode}). Billed with zero outstanding dues.
+            </p>
+
+            <div className="pt-1 flex items-center gap-2">
+              <a
+                href={`mailto:sales@mark2erp.com?subject=Tax%20Invoice%20Request%20-%20${encodeURIComponent(orgName)}`}
+                className="btn-secondary h-7 px-3 text-[11px] font-semibold flex items-center gap-1.5"
+              >
+                <Mail size={12} />
+                <span>Request GST Tax Invoice</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Panel 2: Corporate Purchase Orders */}
+          <div className="rounded-lg border border-zinc-200/80 bg-zinc-50/50 p-4 space-y-3 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-zinc-900 text-[11px]">
+                Purchase Orders & Custom Quotas
+              </span>
+              <span className="text-[10px] text-zinc-400 font-mono">
+                Corporate Billing
+              </span>
+            </div>
+
+            <p className="text-zinc-500 text-[11.5px] leading-relaxed">
+              Need custom annual billing, multi-subsidiary quota expansion, or procurement via corporate Purchase Order (PO) / NEFT / RTGS?
+            </p>
+
+            <div className="pt-1 flex items-center gap-2">
+              <a
+                href={`mailto:sales@mark2erp.com?subject=Enterprise%20Subscription%20Inquiry%20-%20${encodeURIComponent(orgName)}`}
+                className="btn-secondary h-7 px-3 text-[11px] font-semibold flex items-center gap-1.5"
+              >
+                <Building2 size={12} />
+                <span>Contact Enterprise Sales</span>
+                <ArrowRight size={11} />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Backend Gap Notice */}
+        <div className="bg-zinc-50 rounded-xl p-3 border border-zinc-200/60 text-[11px] text-zinc-500 flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Info size={13} className="text-zinc-400 shrink-0" />
+            <span>Automated tenant billing transaction history API is not yet provisioned in the backend. System administrators can access organization payment records via the Global Console.</span>
+          </span>
+          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider shrink-0 ml-2">
+            Status: Graceful Fallback
+          </span>
+        </div>
+      </section>
+
+      {/* ── Cancel Subscription Confirmation Modal ── */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-zinc-200 space-y-4 animate-scale-up">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-zinc-900">Cancel Active Subscription?</h3>
+                <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+                  Are you sure you want to cancel the subscription for <strong>{orgName}</strong>? Your workspace will remain active until the end of the billing period, after which it will transition to read-only access.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-100">
               <button
                 type="button"
-                onClick={() => setShowUpgradeModal(false)}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 transition-colors"
+                disabled={isCancelling}
+                onClick={() => setShowCancelModal(false)}
+                className="btn-secondary h-8 px-3.5 text-xs font-semibold"
               >
-                Cancel
+                Keep Subscription
               </button>
               <button
                 type="button"
-                disabled={checkoutLoading || !selectedPlanForUpgrade}
-                onClick={handleRazorpayCheckout}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 transition-all inline-flex items-center justify-center gap-2 disabled:opacity-50 shadow-2xs"
+                disabled={isCancelling}
+                onClick={handleConfirmCancel}
+                className="btn-danger h-8 px-3.5 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <CreditCard size={14} />
-                <span>{checkoutLoading ? 'Processing...' : 'Continue to Checkout'}</span>
-                <ArrowRight size={13} />
+                {isCancelling ? 'Cancelling...' : 'Confirm Cancellation'}
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
+
+      {/* ── Checkout Modal (Direct Razorpay integration) ── */}
+      <SubscriptionCheckoutModal
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        selectedPlan={selectedPlanForUpgrade}
+        organization={organization}
+        user={user}
+        onSuccess={handleCheckoutSuccess}
+      />
     </div>
   );
 }
@@ -1047,7 +1069,7 @@ function SubscriptionContent() {
 /**
  * Main SubscriptionPage export.
  * If user is an Owner and rendered outside OwnerLayout, wraps with OwnerLayout.
- * Otherwise renders content cleanly within the existing layout hierarchy.
+ * Otherwise renders cleanly inside the active layout context.
  */
 export default function SubscriptionPage() {
   const isInsideOwnerLayout = useIsOwnerLayout();

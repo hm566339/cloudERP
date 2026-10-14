@@ -37,8 +37,15 @@ export const normalizeApiBaseUrl = (url) => {
   return trimmed;
 };
 
-const rawBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '/api';
-const BASE_URL = normalizeApiBaseUrl(rawBaseUrl);
+export const getClientBaseUrl = () => {
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return '';
+  }
+  const rawBaseUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '/api';
+  return normalizeApiBaseUrl(rawBaseUrl);
+};
+
+const BASE_URL = getClientBaseUrl();
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

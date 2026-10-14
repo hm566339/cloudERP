@@ -125,13 +125,6 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
     { skip: !isOpen || !companyId }
   );
 
-  useEffect(() => {
-    if (isOpen) {
-      console.log("Payment Terms Response:", ptData);
-      console.log("Delivery Terms Response:", dtData);
-      console.log("Terms Conditions Response:", tcData);
-    }
-  }, [isOpen, ptData, dtData, tcData]);
 
   const extractItems = (response) => {
     const result = response?.data ?? response;

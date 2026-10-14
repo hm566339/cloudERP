@@ -42,7 +42,8 @@ const bankAccountSections = [
     title: 'Financials & Status',
     fields: [
       { key: 'openingBalance', label: 'Opening Balance', type: 'number' },
-      { key: 'isPrimary', label: 'Primary Account', type: 'boolean' }
+      { key: 'isPrimary', label: 'Primary Account', type: 'boolean', defaultValue: false },
+      { key: 'isActive', label: 'Active Status', type: 'boolean', defaultValue: true }
     ]
   }
 ];
@@ -50,6 +51,17 @@ const bankAccountSections = [
 export default function BankAccountFormModal({ isOpen, onClose, editingRecord, onSuccess }) {
   const dispatch = useAppDispatch();
   const isEditing = !!editingRecord?.id;
+
+  const initialData = React.useMemo(() => {
+    if (!editingRecord) return { isActive: true, isPrimary: false };
+    return {
+      ...editingRecord,
+      isActive: editingRecord.isActive !== undefined 
+        ? Boolean(editingRecord.isActive) 
+        : (editingRecord.status ? editingRecord.status === 'ACTIVE' : true),
+      isPrimary: Boolean(editingRecord.isPrimary)
+    };
+  }, [editingRecord]);
 
   const { mutateAsync: createAccount, isLoading: isCreating } = useApiMutation(bankAccountsApi.createBankAccount);
   const { mutateAsync: updateAccount, isLoading: isUpdating } = useApiMutation(bankAccountsApi.updateBankAccount);
@@ -61,7 +73,7 @@ export default function BankAccountFormModal({ isOpen, onClose, editingRecord, o
     if (!formData.accountNumber?.trim()) errors.accountNumber = 'Account number is required';
     if (!formData.accountType) errors.accountType = 'Account type is required';
     
-    if (formData.openingBalance !== '' && formData.openingBalance !== null) {
+    if (formData.openingBalance !== '' && formData.openingBalance !== null && formData.openingBalance !== undefined) {
       const balance = Number(formData.openingBalance);
       if (Number.isNaN(balance)) {
         errors.openingBalance = 'Invalid amount';
@@ -83,11 +95,12 @@ export default function BankAccountFormModal({ isOpen, onClose, editingRecord, o
         upiId: formData.upiId?.trim(),
         accountHolderName: formData.accountHolderName?.trim(),
         openingBalance: formData.openingBalance ? Number(formData.openingBalance) : 0,
-        isPrimary: Boolean(formData.isPrimary)
+        isPrimary: Boolean(formData.isPrimary),
+        isActive: formData.isActive !== undefined ? Boolean(formData.isActive) : true
       };
 
       if (isEditing) {
-        await updateAccount({ id: editingRecord.id, ...payload });
+        await updateAccount({ id: editingRecord.id, data: payload, ...payload });
         dispatch(addAlert({ type: 'success', message: 'Bank account updated successfully' }));
       } else {
         await createAccount(payload);
@@ -107,7 +120,7 @@ export default function BankAccountFormModal({ isOpen, onClose, editingRecord, o
       onClose={onClose}
       title={isEditing ? 'Edit Bank Account' : 'New Bank Account'}
       sections={bankAccountSections}
-      initialData={editingRecord}
+      initialData={initialData}
       onSubmit={handleSubmit}
       validate={validate}
       isSubmitting={isSubmitting}

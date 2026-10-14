@@ -178,10 +178,14 @@ function ChartCard({
         <h3 className="text-sm font-bold text-gray-900">{title}</h3>
         {description && <p className="text-xs text-gray-500 mt-1">{description}</p>}
       </div>
-      <div style={{ height: `${height}px` }} className="w-full relative overflow-hidden">
-        <ResponsiveContainer width="100%" height="100%" debounce={300}>
-          {renderChart()}
-        </ResponsiveContainer>
+      <div style={{ height: `${height}px`, minHeight: `${height}px`, minWidth: 0 }} className="w-full relative overflow-hidden">
+        {!loading && data && data.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={height} debounce={300}>
+            {renderChart()}
+          </ResponsiveContainer>
+        ) : (
+          renderChart()
+        )}
       </div>
     </div>
   );

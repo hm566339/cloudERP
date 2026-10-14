@@ -1,5 +1,5 @@
 import React from 'react'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useParams, useLocation } from 'react-router-dom'
 import { useAppSelector } from '../app/hooks'
 import { selectSelectedCompany } from '../features/company-management/companySlice'
 import { selectCurrentUser } from '../features/auth/authSlice'
@@ -10,6 +10,7 @@ export default function RoleRoute({ children, allowedRoles = [], requiredPermiss
   const selectedCompany = useAppSelector(selectSelectedCompany)
   const sessionStatus = useAppSelector(state => state.auth?.sessionStatus)
   const { companyId } = useParams()
+  const location = useLocation()
 
   const { roleName, canViewModule, isOwner, isSuperAdmin } = useRBAC()
 
@@ -23,7 +24,7 @@ export default function RoleRoute({ children, allowedRoles = [], requiredPermiss
   }
 
   if (!currentUser) {
-    return <Navigate to="/modules" replace />
+    return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   const userRole = currentUser.role

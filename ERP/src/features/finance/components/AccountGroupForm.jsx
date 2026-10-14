@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, X } from 'lucide-react';
 import { useApiQuery, useApiMutation } from '../../../hooks/useApi';
 import { accountCategoriesApi } from '../../../api/account/accountCategories';
@@ -6,15 +6,26 @@ import { accountGroupsApi } from '../../../api/account/accountGroups';
 import CustomSelect from '../../../components/common/CustomSelect';
 import AccountCategoryForm from './AccountCategoryForm';
 
-export default function AccountGroupForm({ initialData, onSubmit, onCancel, isLoading }) {
-  const isEditing = !!(initialData?.id || initialData?.groupId);
+export default function AccountGroupForm({ initialData, onSubmit, onSuccess, onCancel, isLoading: externalLoading }) {
+  const isEditing = !!(initialData?.id || initialData?.groupId || initialData?.accountGroupId);
   const [formData, setFormData] = useState({
-    categoryId: '',
-    parentGroupId: '',
-    code: '',
-    name: '',
+    categoryId: initialData?.categoryId || '',
+    parentGroupId: initialData?.parentGroupId || '',
+    code: initialData?.code || '',
+    name: initialData?.name || '',
     ...initialData
   });
+
+  useEffect(() => {
+    setFormData({
+      categoryId: initialData?.categoryId || '',
+      parentGroupId: initialData?.parentGroupId || '',
+      code: initialData?.code || '',
+      name: initialData?.name || '',
+      ...initialData
+    });
+    setErrors({});
+  }, [initialData]);
 
   const [errors, setErrors] = useState({});
   const [groupSearchQuery, setGroupSearchQuery] = useState('');
@@ -48,6 +59,8 @@ export default function AccountGroupForm({ initialData, onSubmit, onCancel, isLo
   );
 
   const { mutate: createGroup, isLoading: isCreatingGroup } = useApiMutation(accountGroupsApi.create);
+  const { mutate: updateGroup, isLoading: isUpdatingGroup } = useApiMutation(accountGroupsApi.update);
+  const isLoading = externalLoading || isCreatingGroup || isUpdatingGroup;
 
   const handleCreateParentGroupSubmit = (payload) => {
     // extract data if wrapped
@@ -137,12 +150,43 @@ export default function AccountGroupForm({ initialData, onSubmit, onCancel, isLo
       name: formData.name.trim()
     };
 
-    onSubmit({ data: payload });
+    if (typeof onSubmit === 'function') {
+      onSubmit({ data: payload });
+    } else {
+      const isEditingGroup = !!(initialData?.id || initialData?.groupId || initialData?.accountGroupId);
+      if (isEditingGroup) {
+        const id = initialData.id || initialData.groupId || initialData.accountGroupId;
+        updateGroup({ id, data: payload }, {
+          onSuccess: (res) => {
+            onSuccess?.(res?.data || res);
+          },
+          onError: (err) => {
+            const msg = err?.response?.data?.message || err?.message || 'Failed to update account group';
+            setErrors(prev => ({ ...prev, form: msg }));
+          }
+        });
+      } else {
+        createGroup({ data: payload }, {
+          onSuccess: (res) => {
+            onSuccess?.(res?.data || res);
+          },
+          onError: (err) => {
+            const msg = err?.response?.data?.message || err?.message || 'Failed to create account group';
+            setErrors(prev => ({ ...prev, form: msg }));
+          }
+        });
+      }
+    }
   };
 
   return (
     <>
       <form id="account-group-form" onSubmit={handleSubmit} className="flex flex-col gap-y-4">
+        {errors.form && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs font-medium text-red-700">
+            {errors.form}
+          </div>
+        )}
         {/* Category */}
         <div className="space-y-1 w-full">
           <CustomSelect
@@ -303,7 +347,7 @@ export default function AccountGroupForm({ initialData, onSubmit, onCancel, isLo
   );
 }
 
-export function AccountGroupFormModal({ initialData, onSubmit, onCancel, isLoading }) {
+export function AccountGroupFormModal({ initialData, onSubmit, onSuccess, onCancel, isLoading }) {
   // If we ever need to use it in a modal wrapper, it can be here
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
@@ -317,7 +361,7 @@ export function AccountGroupFormModal({ initialData, onSubmit, onCancel, isLoadi
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar bg-white">
-          <AccountGroupForm initialData={initialData} onSubmit={onSubmit} onCancel={onCancel} isLoading={isLoading} />
+          <AccountGroupForm initialData={initialData} onSubmit={onSubmit} onSuccess={onSuccess} onCancel={onCancel} isLoading={isLoading} />
         </div>
       </div>
     </div>

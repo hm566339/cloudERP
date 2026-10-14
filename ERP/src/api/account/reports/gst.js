@@ -11,12 +11,8 @@ export const gstReportsApi = {
 
   // Dashboard summary — request body is wrapped in a `data` envelope per API contract:
   // POST /api/account/reports/gst/summary  { "data": { companyId, branchId, gstRegistrationId, ... } }
-  getSummaryDashboard: (payload = {}) => {
-    console.log('[gstReportsApi] getSummaryDashboard called, payload:', payload);
-    const result = post(`${GST_SUMMARY_BASE}/summary`, payload?.data ? payload : { data: payload });
-    console.log('[gstReportsApi] post() returned promise:', result);
-    return result;
-  },
+  getSummaryDashboard: (payload = {}) =>
+    post(`${GST_SUMMARY_BASE}/summary`, payload?.data ? payload : { data: payload }),
 
   getGstr1: (payload = {}) => post(`${GST_REPORTS_BASE}/gstr1`, {
     filters: payload,

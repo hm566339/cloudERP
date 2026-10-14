@@ -95,18 +95,6 @@ export const authApi = baseApi.injectEndpoints({
         } else if (arg && typeof arg === 'object') {
           requestedCompanyId = arg.companyId || arg.id;
         }
-        if (!requestedCompanyId && typeof window !== 'undefined') {
-          try {
-            const saved = localStorage.getItem('selected_company');
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              const id = parsed?.id || parsed?.companyId;
-              if (id && id !== 'undefined' && id !== 'null') {
-                requestedCompanyId = id;
-              }
-            }
-          } catch (e) {}
-        }
         return {
           url: '/api/sso/auth/me',
           method: 'GET',

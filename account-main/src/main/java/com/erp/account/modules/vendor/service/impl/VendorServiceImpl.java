@@ -1,8 +1,6 @@
 package com.erp.account.modules.vendor.service.impl;
 
 import com.erp.account.modules.vendor.dto.request.VendorRequest;
-import com.erp.account.modules.vendor.dto.response.VendorResponse;
-import com.erp.account.modules.vendor.dto.response.VendorProfileResponse;
 import com.erp.account.modules.vendor.dto.response.*;
 import com.erp.account.modules.apinvoice.repository.ApInvoiceRepository;
 import com.erp.account.modules.appayment.repository.ApPaymentRepository;
@@ -20,7 +18,6 @@ import com.erp.account.modules.vendor.mapper.VendorMapper;
 
 import com.erp.account.modules.vendor.repository.VendorAddressRepository;
 import com.erp.account.modules.vendor.entity.VendorAddress;
-import com.erp.account.modules.vendor.dto.response.VendorAddressResponse;
 import com.erp.account.modules.vendor.entity.Vendor;
 import com.erp.account.modules.vendor.repository.VendorRepository;
 
@@ -54,6 +51,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import com.erp.account.modules.company.entity.Company;
@@ -82,11 +80,15 @@ public class VendorServiceImpl implements VendorService {
     private final DebitNoteRepository debitNoteRepository;
     private final DebitNoteMapper debitNoteMapper;
 
-
     @Override
     public VendorResponse createVendor(RequestWrapper<VendorRequest> requestWrapper) {
+        return createVendor(null, requestWrapper);
+    }
+
+    @Override
+    public VendorResponse createVendor(UUID companyIdParam, RequestWrapper<VendorRequest> requestWrapper) {
         VendorRequest request = requestWrapper.unwrap();
-        UUID companyId = TenantUtils.getCurrentCompanyId();
+        UUID companyId = TenantUtils.resolveCompanyId(companyIdParam);
         log.info("Creating vendor: {} for company: {}", request.getVendorCode(), companyId);
         validateVendor(request);
         vendorValidationUtil.validateVendorForCreation(request.getVendorCode(), companyId);
@@ -164,11 +166,11 @@ public class VendorServiceImpl implements VendorService {
     public VendorProfileResponse getVendorById(UUID vendorId) {
         Vendor vendor = getVendorEntityById(vendorId);
         VendorProfileResponse response = new VendorProfileResponse();
-        
+
         // Copy basic vendor details
         VendorResponse baseResponse = vendorMapper.entityToResponse(vendor);
         org.springframework.beans.BeanUtils.copyProperties(baseResponse, response);
-        
+
         enrichVendorResponse(response, vendor);
         enrichVendorProfile(response, vendor);
         return response;
@@ -344,155 +346,159 @@ public class VendorServiceImpl implements VendorService {
     private void enrichVendorProfile(VendorProfileResponse profile, Vendor vendor) {
         UUID companyId = vendor.getCompany().getId();
         UUID vendorId = vendor.getId();
-        
+
         // 1. Ledger Information
-        BigDecimal outstanding = profile.getOutstandingBalance() != null ? profile.getOutstandingBalance() : BigDecimal.ZERO;
+        BigDecimal outstanding = profile.getOutstandingBalance() != null ? profile.getOutstandingBalance()
+                : BigDecimal.ZERO;
         VendorLedgerInfoDto ledgerInfo = VendorLedgerInfoDto.builder()
-            .creditLimit(vendor.getCreditLimit() != null ? vendor.getCreditLimit() : BigDecimal.ZERO)
-            .availableCredit(profile.getAvailableCredit() != null ? profile.getAvailableCredit() : BigDecimal.ZERO)
-            .currentBalance(outstanding)
-            .openingBalance(vendor.getOpeningBalance() != null ? vendor.getOpeningBalance() : BigDecimal.ZERO)
-            .closingBalance(outstanding)
-            .outstandingBalance(outstanding)
-            .build();
+                .creditLimit(vendor.getCreditLimit() != null ? vendor.getCreditLimit() : BigDecimal.ZERO)
+                .availableCredit(profile.getAvailableCredit() != null ? profile.getAvailableCredit() : BigDecimal.ZERO)
+                .currentBalance(outstanding)
+                .openingBalance(vendor.getOpeningBalance() != null ? vendor.getOpeningBalance() : BigDecimal.ZERO)
+                .closingBalance(outstanding)
+                .outstandingBalance(outstanding)
+                .build();
         profile.setLedgerInformation(ledgerInfo);
-        
+
         // 2. Purchase Bills (Invoices)
         List<ApInvoice> invoices = apInvoiceRepository.findByVendor(
-            companyId, vendorId, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "invoiceDate"))).getContent();
-        
+                companyId, vendorId, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "invoiceDate"))).getContent();
+
         List<VendorInvoiceDto> invoiceDtos = invoices.stream().map(inv -> VendorInvoiceDto.builder()
-            .invoiceId(inv.getId())
-            .invoiceNumber(inv.getInvoiceNo())
-            .invoiceDate(inv.getInvoiceDate())
-            .dueDate(inv.getDueDate())
-            .purchaseAmount(inv.getTotalAmount())
-            .taxAmount(inv.getTaxAmount())
-            .paidAmount(inv.getPaidAmount())
-            .pendingAmount(inv.getOutstandingAmount())
-            .status(inv.getStatus() != null ? inv.getStatus().name() : null)
-            .build()).collect(Collectors.toList());
+                .invoiceId(inv.getId())
+                .invoiceNumber(inv.getInvoiceNo())
+                .invoiceDate(inv.getInvoiceDate())
+                .dueDate(inv.getDueDate())
+                .purchaseAmount(inv.getTotalAmount())
+                .taxAmount(inv.getTaxAmount())
+                .paidAmount(inv.getPaidAmount())
+                .pendingAmount(inv.getOutstandingAmount())
+                .status(inv.getStatus() != null ? inv.getStatus().name() : null)
+                .build()).collect(Collectors.toList());
         profile.setPurchaseBills(invoiceDtos);
-        
+
         // 3. Payments Made
         List<ApPayment> payments = apPaymentRepository.findByVendorIdAndCompanyIdAndIsDeletedFalse(
-            vendorId, companyId, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "paymentDate"))).getContent();
-            
+                vendorId, companyId, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "paymentDate"))).getContent();
+
         List<VendorPaymentDto> paymentDtos = payments.stream().map(pay -> VendorPaymentDto.builder()
-            .paymentId(pay.getId())
-            .paymentNumber(pay.getPaymentNo())
-            .paymentDate(pay.getPaymentDate())
-            .amount(pay.getPaymentAmount())
-            .paymentMode(pay.getPaymentMode() != null ? pay.getPaymentMode().name() : null)
-            .bankCashAccount(pay.getBankAccount() != null ? pay.getBankAccount().getBankName() : null)
-            .referenceNumber(pay.getReferenceNo())
-            .remarks(pay.getRemarks())
-            .build()).collect(Collectors.toList());
+                .paymentId(pay.getId())
+                .paymentNumber(pay.getPaymentNo())
+                .paymentDate(pay.getPaymentDate())
+                .amount(pay.getPaymentAmount())
+                .paymentMode(pay.getPaymentMode() != null ? pay.getPaymentMode().name() : null)
+                .bankCashAccount(pay.getBankAccount() != null ? pay.getBankAccount().getBankName() : null)
+                .referenceNumber(pay.getReferenceNo())
+                .remarks(pay.getRemarks())
+                .build()).collect(Collectors.toList());
         profile.setPaymentsMade(paymentDtos);
-        
+
         // 4. Outstanding Payables
         VendorOutstandingDto outstandingDto = VendorOutstandingDto.builder()
-            .totalOutstanding(outstanding)
-            .overdueAmount(BigDecimal.ZERO)
-            .notYetDueAmount(outstanding)
-            .ageingSummary(new java.util.HashMap<>())
-            .build();
+                .totalOutstanding(outstanding)
+                .overdueAmount(BigDecimal.ZERO)
+                .notYetDueAmount(outstanding)
+                .ageingSummary(new java.util.HashMap<>())
+                .build();
         profile.setOutstandingPayables(outstandingDto);
-        
+
         // 4.1 Fetch other domain objects
-        List<PurchaseOrder> pos = purchaseOrderRepository.findByCompanyIdAndVendorIdAndIsDeletedFalse(companyId, vendorId);
+        List<PurchaseOrder> pos = purchaseOrderRepository.findByCompanyIdAndVendorIdAndIsDeletedFalse(companyId,
+                vendorId);
         profile.setPurchaseOrders(pos.stream().map(purchaseOrderMapper::toResponse).collect(Collectors.toList()));
 
-        List<GoodsReceipt> grns = goodsReceiptRepository.findByCompanyIdAndVendorIdAndIsDeletedFalse(companyId, vendorId);
+        List<GoodsReceipt> grns = goodsReceiptRepository.findByCompanyIdAndVendorIdAndIsDeletedFalse(companyId,
+                vendorId);
         profile.setGoodsReceiptNotes(grns.stream().map(goodsReceiptMapper::toResponse).collect(Collectors.toList()));
 
-        List<DebitNote> dns = debitNoteRepository.findAllByCompanyIdAndApInvoiceVendorIdAndIsDeletedFalse(companyId, vendorId);
+        List<DebitNote> dns = debitNoteRepository.findAllByCompanyIdAndApInvoiceVendorIdAndIsDeletedFalse(companyId,
+                vendorId);
         profile.setDebitNotes(dns.stream().map(debitNoteMapper::toResponse).collect(Collectors.toList()));
-        
+
         // 5. Recent Transactions
         List<VendorTransactionDto> transactions = new java.util.ArrayList<>();
         for (VendorInvoiceDto inv : invoiceDtos) {
             transactions.add(VendorTransactionDto.builder()
-                .date(inv.getInvoiceDate())
-                .transactionType("INVOICE")
-                .referenceNumber(inv.getInvoiceNumber())
-                .amount(inv.getPurchaseAmount())
-                .status(inv.getStatus())
-                .build());
+                    .date(inv.getInvoiceDate())
+                    .transactionType("INVOICE")
+                    .referenceNumber(inv.getInvoiceNumber())
+                    .amount(inv.getPurchaseAmount())
+                    .status(inv.getStatus())
+                    .build());
         }
         for (VendorPaymentDto pay : paymentDtos) {
             transactions.add(VendorTransactionDto.builder()
-                .date(pay.getPaymentDate())
-                .transactionType("PAYMENT")
-                .referenceNumber(pay.getPaymentNumber())
-                .amount(pay.getAmount())
-                .status(pay.getPaymentMode())
-                .build());
+                    .date(pay.getPaymentDate())
+                    .transactionType("PAYMENT")
+                    .referenceNumber(pay.getPaymentNumber())
+                    .amount(pay.getAmount())
+                    .status(pay.getPaymentMode())
+                    .build());
         }
         transactions.sort(java.util.Comparator.comparing(VendorTransactionDto::getDate).reversed());
         profile.setRecentTransactions(transactions.stream().limit(20).collect(Collectors.toList()));
-        
+
         // 6. Ledger Entries
         List<VendorLedgerEntryDto> entries = new java.util.ArrayList<>();
         BigDecimal runningBalance = vendor.getOpeningBalance() != null ? vendor.getOpeningBalance() : BigDecimal.ZERO;
-        
+
         List<VendorTransactionDto> ascTransactions = new java.util.ArrayList<>(transactions);
         ascTransactions.sort(java.util.Comparator.comparing(VendorTransactionDto::getDate));
         for (VendorTransactionDto tx : ascTransactions) {
             VendorLedgerEntryDto entry = VendorLedgerEntryDto.builder()
-                .date(tx.getDate())
-                .voucherType(tx.getTransactionType())
-                .voucherNumber(tx.getReferenceNumber())
-                .credit("INVOICE".equals(tx.getTransactionType()) ? tx.getAmount() : BigDecimal.ZERO)
-                .debit("PAYMENT".equals(tx.getTransactionType()) ? tx.getAmount() : BigDecimal.ZERO)
-                .build();
+                    .date(tx.getDate())
+                    .voucherType(tx.getTransactionType())
+                    .voucherNumber(tx.getReferenceNumber())
+                    .credit("INVOICE".equals(tx.getTransactionType()) ? tx.getAmount() : BigDecimal.ZERO)
+                    .debit("PAYMENT".equals(tx.getTransactionType()) ? tx.getAmount() : BigDecimal.ZERO)
+                    .build();
             runningBalance = runningBalance.add(entry.getCredit()).subtract(entry.getDebit());
             entry.setBalance(runningBalance);
             entries.add(entry);
         }
         java.util.Collections.reverse(entries); // newest first
         profile.setLedgerEntries(entries);
-        
+
         // 7. Statistics
         BigDecimal totalPayments = apPaymentRepository.getTotalVendorPayments(vendorId);
-        
+
         VendorStatisticsDto stats = VendorStatisticsDto.builder()
-            .totalPurchaseAmount(apInvoiceRepository.getVendorTotalPurchaseAmount(vendorId))
-            .totalPurchaseBills(profile.getTotalInvoices())
-            .totalPayments(totalPayments != null ? totalPayments : BigDecimal.ZERO)
-            .totalOutstanding(outstanding)
-            .averagePaymentDays(0)
-            .lastPurchaseDate(invoiceDtos.isEmpty() ? null : invoiceDtos.get(0).getInvoiceDate())
-            .lastPaymentDate(paymentDtos.isEmpty() ? null : paymentDtos.get(0).getPaymentDate())
-            .build();
+                .totalPurchaseAmount(apInvoiceRepository.getVendorTotalPurchaseAmount(vendorId))
+                .totalPurchaseBills(profile.getTotalInvoices())
+                .totalPayments(totalPayments != null ? totalPayments : BigDecimal.ZERO)
+                .totalOutstanding(outstanding)
+                .averagePaymentDays(0)
+                .lastPurchaseDate(invoiceDtos.isEmpty() ? null : invoiceDtos.get(0).getInvoiceDate())
+                .lastPaymentDate(paymentDtos.isEmpty() ? null : paymentDtos.get(0).getPaymentDate())
+                .build();
         profile.setStatistics(stats);
-        
+
         // 8. Contacts & Addresses
         VendorContactDto contact = VendorContactDto.builder()
-            .contactPerson(vendor.getVendorName())
-            .email(vendor.getEmail())
-            .phone(vendor.getPhone())
-            .mobile(vendor.getPhone())
-            .build();
+                .contactPerson(vendor.getVendorName())
+                .email(vendor.getEmail())
+                .phone(vendor.getPhone())
+                .mobile(vendor.getPhone())
+                .build();
         profile.setContacts(java.util.Collections.singletonList(contact));
-        
+
         VendorAddressDto address = VendorAddressDto.builder()
-            .type("BILLING")
-            .addressLine1(vendor.getAddressLine1())
-            .city(vendor.getCity())
-            .state(vendor.getState())
-            .country(vendor.getCountry())
-            .pinCode(vendor.getPinCode())
-            .build();
+                .type("BILLING")
+                .addressLine1(vendor.getAddressLine1())
+                .city(vendor.getCity())
+                .state(vendor.getState())
+                .country(vendor.getCountry())
+                .pinCode(vendor.getPinCode())
+                .build();
         profile.setAddresses(java.util.Collections.singletonList(address));
-        
+
         // 9. Audit Info
         VendorAuditInfoDto auditInfo = VendorAuditInfoDto.builder()
-            .createdBy(vendor.getCreatedBy())
-            .createdAt(vendor.getCreatedAt())
-            .updatedBy(vendor.getUpdatedBy())
-            .updatedAt(vendor.getUpdatedAt())
-            .build();
+                .createdBy(vendor.getCreatedBy())
+                .createdAt(vendor.getCreatedAt())
+                .updatedBy(vendor.getUpdatedBy())
+                .updatedAt(vendor.getUpdatedAt())
+                .build();
         profile.setAuditInformation(auditInfo);
     }
 
@@ -502,7 +508,7 @@ public class VendorServiceImpl implements VendorService {
         }
         ChartOfAccount account = chartOfAccountRepository.findByIdAndIsDeletedFalse(accountId)
                 .orElseThrow(() -> new ValidationException("Invalid payable account: " + accountId));
-        if (account.getCompany() == null || !companyId.equals(account.getCompany().getId())) {
+        if (account.getCompany() == null || !Objects.equals(companyId, account.getCompany().getId())) {
             throw new ValidationException("Payable account must belong to the vendor company");
         }
         if (!Boolean.TRUE.equals(account.getIsActive())) {
@@ -551,14 +557,13 @@ public class VendorServiceImpl implements VendorService {
         return vendorCode;
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public List<VendorAddressResponse> getVendorAddresses(UUID vendorId) {
         UUID companyId = TenantUtils.getCurrentCompanyId();
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with id: " + vendorId));
-        
+
         if (!vendor.getCompany().getId().equals(companyId)) {
             throw new ResourceNotFoundException("Vendor not found with id: " + vendorId);
         }

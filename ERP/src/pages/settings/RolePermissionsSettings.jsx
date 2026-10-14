@@ -395,7 +395,7 @@ export default function RolePermissionsSettings() {
                 placeholder="Search roles..."
                 value={searchRole}
                 onChange={e => setSearchRole(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 text-sm bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                className="w-full h-9 pl-9 pr-3 text-sm bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
               />
             </div>
           </div>
@@ -636,7 +636,7 @@ export default function RolePermissionsSettings() {
               value={newRoleData.name}
               onChange={(e) => setNewRoleData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="e.g. Finance Manager"
-              className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
               disabled={isCreatingRole}
               required
             />
@@ -650,7 +650,7 @@ export default function RolePermissionsSettings() {
               onChange={(e) => setNewRoleData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Role description..."
               rows={3}
-              className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none"
+              className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 resize-none"
               disabled={isCreatingRole}
             />
           </div>
@@ -660,7 +660,7 @@ export default function RolePermissionsSettings() {
               id="role-active"
               checked={newRoleData.active}
               onChange={(e) => setNewRoleData(prev => ({ ...prev, active: e.target.checked }))}
-              className="w-4 h-4 text-indigo-600 border-zinc-300 rounded focus:ring-indigo-500"
+              className="w-4 h-4 text-zinc-900 border-zinc-300 rounded focus:ring-zinc-900 accent-zinc-900"
               disabled={isCreatingRole}
             />
             <label htmlFor="role-active" className="text-sm font-medium text-zinc-700">

@@ -55,9 +55,9 @@ export default function BudgetVarianceReport() {
   const raw_budgetHeadersList = budgetHeadersData?.data?.content || budgetHeadersData?.data || [];
   const budgetHeadersList = Array.isArray(raw_budgetHeadersList) ? raw_budgetHeadersList : [];
 
-  const { data: departmentsData } = useApiQuery(() => accountHttpClient.get('/api/account/departments', { params: { size: 1000, companyId } }).catch(() => ({ data: [] })));
-  const raw_departmentsList = departmentsData?.data?.content || departmentsData?.data || [];
-  const departmentsList = Array.isArray(raw_departmentsList) ? raw_departmentsList : [];
+  const departmentsData = { data: [] };
+  const raw_departmentsList = [];
+  const departmentsList = [];
 
   return (
     <div className="animate-fade-in space-y-6">

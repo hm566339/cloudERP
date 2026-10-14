@@ -63,9 +63,9 @@ function StatCard({
  className={`
  card p-4 group cursor-default min-w-0
  border-l-[2.4px] ${styles.border}
- hover:shadow-card-hover hover:-translate-y-0.5
- transition-all duration-300 ease-out
- animate-slide-up
+ hover:shadow-sm
+ transition-shadow duration-micro ease-enter
+ animate-fade-in
  `}
  >
  <div className="flex items-start justify-between mb-2">

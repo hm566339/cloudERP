@@ -5,23 +5,25 @@ export const apInvoicesApi = {
     const params = new URLSearchParams();
     
     // Filters
-    if (filters?.keyword) params.append('keyword', filters.keyword);
+    if (filters?.keyword || filters?.searchKey) params.append('searchKey', filters.keyword || filters.searchKey);
     if (filters?.vendorId) params.append('vendorId', filters.vendorId);
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.['filter.statuses']) params.append('filter.statuses', filters['filter.statuses']);
-    if (filters?.['filter.hasOutstandingBalance'] !== undefined) params.append('filter.hasOutstandingBalance', filters['filter.hasOutstandingBalance']);
+    if (filters?.invoiceNo) params.append('invoiceNo', filters.invoiceNo);
+    const statuses = filters?.statuses || filters?.['filter.statuses'] || filters?.status;
+    if (statuses) params.append('statuses', statuses);
+    const hasBal = filters?.hasOutstandingBalance ?? filters?.['filter.hasOutstandingBalance'];
+    if (hasBal !== undefined) params.append('hasOutstandingBalance', hasBal);
     if (filters?.approvalStatus) params.append('approvalStatus', filters.approvalStatus);
     if (filters?.glPostingStatus) params.append('glPostingStatus', filters.glPostingStatus);
     if (filters?.paymentStatus) params.append('paymentStatus', filters.paymentStatus);
     if (filters?.isOverdue !== undefined) params.append('isOverdue', filters.isOverdue);
-    if (filters?.fromDate) params.append('fromDate', filters.fromDate);
-    if (filters?.toDate) params.append('toDate', filters.toDate);
+    if (filters?.fromDate || filters?.invoiceDateFrom) params.append('invoiceDateFrom', filters.fromDate || filters.invoiceDateFrom);
+    if (filters?.toDate || filters?.invoiceDateTo) params.append('invoiceDateTo', filters.toDate || filters.invoiceDateTo);
     if (filters?.dueDateFrom) params.append('dueDateFrom', filters.dueDateFrom);
     if (filters?.dueDateTo) params.append('dueDateTo', filters.dueDateTo);
-    if (filters?.minAmount) params.append('minAmount', filters.minAmount);
-    if (filters?.maxAmount) params.append('maxAmount', filters.maxAmount);
-    if (filters?.minOutstanding) params.append('minOutstanding', filters.minOutstanding);
-    if (filters?.maxOutstanding) params.append('maxOutstanding', filters.maxOutstanding);
+    if (filters?.minAmount || filters?.minTotalAmount) params.append('minTotalAmount', filters.minAmount || filters.minTotalAmount);
+    if (filters?.maxAmount || filters?.maxTotalAmount) params.append('maxTotalAmount', filters.maxAmount || filters.maxTotalAmount);
+    if (filters?.minOutstanding || filters?.minOutstandingAmount) params.append('minOutstandingAmount', filters.minOutstanding || filters.minOutstandingAmount);
+    if (filters?.maxOutstanding || filters?.maxOutstandingAmount) params.append('maxOutstandingAmount', filters.maxOutstanding || filters.maxOutstandingAmount);
     let isSystemAdmin = false;
     try {
       const authUser = JSON.parse(localStorage.getItem('auth_user'));
@@ -34,13 +36,16 @@ export const apInvoicesApi = {
     }
 
     // Pageable
-    if (pageable?.page !== undefined) params.append('page', pageable.page);
-    if (pageable?.size !== undefined) params.append('size', pageable.size);
-    if (pageable?.sort) {
-      if (Array.isArray(pageable.sort)) {
-        pageable.sort.forEach(s => params.append('sort', s));
+    const pageVal = pageable?.page !== undefined ? pageable.page : filters?.page;
+    if (pageVal !== undefined) params.append('page', pageVal);
+    const sizeVal = pageable?.size !== undefined ? pageable.size : filters?.size;
+    if (sizeVal !== undefined) params.append('size', Math.min(sizeVal, 200));
+    const sortVal = pageable?.sort || filters?.sort;
+    if (sortVal) {
+      if (Array.isArray(sortVal)) {
+        sortVal.forEach(s => params.append('sort', s));
       } else {
-        params.append('sort', pageable.sort);
+        params.append('sort', sortVal);
       }
     }
 

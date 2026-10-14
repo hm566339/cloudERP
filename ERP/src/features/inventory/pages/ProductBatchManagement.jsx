@@ -53,8 +53,8 @@ export default function ProductBatchManagement() {
   const pageable = useMemo(() => ({
     page,
     size: apiParams.size || 10,
-    sort: `${apiParams.sort},${apiParams.direction}`
-  }), [page, apiParams.size, apiParams.sort, apiParams.direction]);
+    sort: apiParams.sort || 'manufacturingDate,desc'
+  }), [page, apiParams.size, apiParams.sort]);
 
   const { productBatches, pagination: pageInfo, isLoading, isFetching, refetch } = useProductBatchList(
     finalParams,

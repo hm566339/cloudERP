@@ -797,7 +797,6 @@ export default function CreateSupplierQuotationModal({
         },
       };
 
-      console.log('[CreateSupplierQuotationModal] Submitting payload to backend:', JSON.stringify(payload, null, 2));
 
       const result = await supplierQuotationsApi.create(payload, companyId);
       const qNum = result?.quotationNumber || result?.data?.quotationNumber;

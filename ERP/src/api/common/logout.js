@@ -51,8 +51,13 @@ export const isAuthPage = (path) =>
  * @param {import('./types').LogoutOptions} [options]
  */
 export const dispatchLogout = (options = {}) => {
+  const defaultLandingPath =
+    (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_BASE_PATH || import.meta.env?.BASE_URL))
+      ? (import.meta.env.VITE_BASE_PATH || import.meta.env.BASE_URL).replace(/\/$/, '') + '/login'
+      : '/erp/login';
+
   const {
-    redirectTo = '/login',
+    redirectTo = defaultLandingPath,
     clearQueues = true,
     dispatchAction = true,
   } = options;
@@ -65,7 +70,7 @@ export const dispatchLogout = (options = {}) => {
     // 1. Dispatch Redux logout action
     if (dispatchAction) {
       try {
-        const store = (typeof window !== 'undefined' && window.__REDUX_STORE__) || require('../../app/store').default;
+        const store = typeof window !== 'undefined' ? window.__REDUX_STORE__ : null;
         if (store?.dispatch) {
           store.dispatch({ type: 'auth/logout' });
         }
@@ -83,8 +88,15 @@ export const dispatchLogout = (options = {}) => {
     // 3. Clear all browser storage to ensure a clean slate
     if (typeof window !== 'undefined') {
       try {
+        const currentPath = window.location.pathname;
+        const returnUrl = window.location.pathname + window.location.search + window.location.hash;
+
         localStorage.clear();
         sessionStorage.clear();
+
+        if (!isAuthPage(currentPath) && currentPath !== '/' && currentPath !== '/login') {
+          sessionStorage.setItem('auth_return_to', returnUrl);
+        }
         
         // Expire all auth-related cookies manually
         const cookiesToClear = ['ACCESS_TOKEN', 'ACCESS_TOKEN_REFRESH', 'auth_token'];

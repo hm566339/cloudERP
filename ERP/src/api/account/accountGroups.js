@@ -24,8 +24,10 @@ export const accountGroupsApi = {
    * Create a new Account Group
    * POST /api/account/account-groups
    */
-  create: async (data) => {
-    const response = await accountHttpClient.post('/api/account/account-groups', data);
+  create: async (payload) => {
+    const rawData = payload?.data || payload;
+    const requestBody = rawData?.data ? rawData : { data: rawData };
+    const response = await accountHttpClient.post('/api/account/account-groups', requestBody);
     return response.data;
   },
 
@@ -33,8 +35,11 @@ export const accountGroupsApi = {
    * Update an existing Account Group
    * PUT /api/account/account-groups/{accountGroupId}
    */
-  update: async ({ id, data }) => {
-    const response = await accountHttpClient.put(`/api/account/account-groups/${id}`, data);
+  update: async (payload) => {
+    const id = payload?.id || payload?.accountGroupId;
+    const rawData = payload?.data?.data ? payload.data : (payload?.data ? payload.data : payload);
+    const requestBody = rawData?.data ? rawData : { data: rawData };
+    const response = await accountHttpClient.put(`/api/account/account-groups/${id}`, requestBody);
     return response.data;
   },
 

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import useListQuery from '../../../hooks/useListQuery';
 import ExpandedRowDetails from '../components/ExpandedRowDetails';
 import { 
   Plus, Edit2, Trash2, PackageOpen, Search, MapPin, 
@@ -48,8 +49,8 @@ export default function OpeningStockManagement() {
   const pageable = useMemo(() => ({
     page,
     size: apiParams.size || 10,
-    sort: `${apiParams.sort},${apiParams.direction}`
-  }), [page, apiParams.size, apiParams.sort, apiParams.direction]);
+    sort: apiParams.sort || 'createdAt,desc'
+  }), [page, apiParams.size, apiParams.sort]);
 
   const { openingStocks, pagination: pageInfo, isLoading, isFetching, refetch } = useOpeningStockList(
     finalParams,

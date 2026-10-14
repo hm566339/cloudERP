@@ -20,8 +20,9 @@ const LOG_LEVEL_NAMES = {
 };
 
 // Determine log level from environment or default to INFO
-const CURRENT_LOG_LEVEL = import.meta.env.VITE_LOG_LEVEL
-  ? LOG_LEVELS[import.meta.env.VITE_LOG_LEVEL] || LOG_LEVELS.INFO
+const envLogLevel = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_LOG_LEVEL) || (typeof process !== 'undefined' && process.env?.VITE_LOG_LEVEL);
+const CURRENT_LOG_LEVEL = envLogLevel
+  ? LOG_LEVELS[envLogLevel] || LOG_LEVELS.INFO
   : LOG_LEVELS.INFO;
 
 const getTimestamp = () => {

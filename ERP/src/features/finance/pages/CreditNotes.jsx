@@ -156,7 +156,7 @@ export default function CreditNotes() {
   const navigate = useNavigate();
   const { buildPath } = useRoutePath();
   const location = useLocation();
-  const fullState = useAppSelector((state) => state);
+  const authState = useAppSelector((state) => state.auth);
   const companyId = JSON.parse(localStorage.getItem('selected_company'))?.id || JSON.parse(localStorage.getItem('auth_user'))?.companyCode;
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -295,13 +295,13 @@ export default function CreditNotes() {
   const { data: customersData } = useApiQuery(
     customersApi.getList,
     [{ isActive: true }],
-    { page: 0, size: 500, sort: 'customerName,asc' }
+    { page: 0, size: 100, sort: 'customerName,asc' }
   );
 
-  const { data: invoicesData, refetch: refetchInvoices } = useApiQuery(salesInvoicesApi.getList, { size: 1000, companyId, eligibleForCreditNote: true });
+  const { data: invoicesData, refetch: refetchInvoices } = useApiQuery(salesInvoicesApi.getList, { size: 100, companyId, eligibleForCreditNote: true });
 
-  const { data: receivableAccountsData, refetch: refetchReceivable } = useApiQuery(chartOfAccountsApi.getList, { size: 1000, companyId, groupCode: 'AST-AR', groupCodes: 'AST-AR' });
-  const { data: revenueAccountsData, refetch: refetchRevenue } = useApiQuery(chartOfAccountsApi.getList, { size: 1000, companyId, categoryCode: 'INC', categoryCodes: 'INC' });
+  const { data: receivableAccountsData, refetch: refetchReceivable } = useApiQuery(chartOfAccountsApi.getList, { size: 100, companyId, groupCode: 'AST-AR', groupCodes: 'AST-AR' });
+  const { data: revenueAccountsData, refetch: refetchRevenue } = useApiQuery(chartOfAccountsApi.getList, { size: 100, companyId, categoryCode: 'INC', categoryCodes: 'INC' });
 
   const raw_invoicesList = invoicesData?.data?.content || invoicesData?.data || invoicesData || [];
   const invoicesList = Array.isArray(raw_invoicesList) ? raw_invoicesList : [];
@@ -501,8 +501,8 @@ export default function CreditNotes() {
   };
 
   const [selectedCreditNotes, setSelectedCreditNotes] = useState([]);
-  const canUpdate = hasPermission(fullState, 'CREDIT_NOTES', 'UPDATE');
-  const canDelete = hasPermission(fullState, 'CREDIT_NOTES', 'DELETE');
+  const canUpdate = hasPermission(authState, 'CREDIT_NOTES', 'UPDATE');
+  const canDelete = hasPermission(authState, 'CREDIT_NOTES', 'DELETE');
 
   const columns = useMemo(() => [
     {
@@ -708,7 +708,7 @@ export default function CreditNotes() {
   ], [customers]);
 
   const getRowActions = (record) => {
-    const workflowActions = getCreditNoteWorkflowActions(fullState, record.status);
+    const workflowActions = getCreditNoteWorkflowActions(authState, record.status);
     const isRowActionPending = actionCreditNoteId === record.id;
 
     const actions = [

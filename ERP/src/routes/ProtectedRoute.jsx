@@ -6,7 +6,13 @@ import { selectIsAuthenticated, selectCurrentUser, selectSessionStatus, selectAu
 import { getCookie } from '../utils/cookieHelper';
 import { parseJwt, extractRoleFromToken, useRBAC, normalizeModuleName, canAccess } from '../utils/rbac';
 
-export default function ProtectedRoute({ children, requireCompany = true, module }) {
+export default function ProtectedRoute({
+  children,
+  requireCompany = true,
+  module,
+  allowedRoles = [],
+  requiredPermissions = null,
+}) {
   const authenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectCurrentUser);
   const sessionStatus = useAppSelector(selectSessionStatus);
@@ -21,6 +27,12 @@ export default function ProtectedRoute({ children, requireCompany = true, module
   const isTenantLocked = !!user?.companyCode || !!user?.companyId;
   const lockedCompanyId = user?.companyCode || user?.companyId;
   
+  const rawRole = user?.role || authContext?.user?.role || '';
+  const userRole = typeof rawRole === 'object' ? (rawRole.name || '') : String(rawRole);
+  const normalizedUserRole = userRole.toLowerCase().replace(/[\s_]/g, '');
+  const isOwnerUser = user?.membership?.memberType === 'OWNER' || authContext?.membership?.memberType === 'OWNER' || normalizedUserRole === 'owner';
+  const isSuperAdminUser = isSuperAdmin || normalizedUserRole === 'superadmin' || normalizedUserRole === 'systemadmin';
+
   // Specific routes that bypass company requirements
   const isAccountsRoute = location.pathname === '/accounts' || location.pathname.startsWith('/accounts/') || location.pathname === '/account' || location.pathname.startsWith('/account/');
   const isProcurementRoute = [
@@ -29,8 +41,27 @@ export default function ProtectedRoute({ children, requireCompany = true, module
   ].some(p => location.pathname === p || location.pathname.startsWith(p + '/'));
   const shouldRequireCompany = requireCompany && !isAccountsRoute && !isProcurementRoute;
 
-  // Auto-sync company context from SSO authContext if selectedCompany is missing
+  // Auto-sync company context from URL, SSO authContext, or tenant lock
   useEffect(() => {
+    if (companyId && (!selectedCompany || selectedCompany?.id?.toString() !== companyId.toString())) {
+      let candidate = null;
+      if (typeof localStorage !== 'undefined') {
+        try {
+          const stored = JSON.parse(localStorage.getItem('selected_company') || 'null');
+          if (stored && (stored.id?.toString() === companyId.toString() || stored.code?.toString() === companyId.toString())) {
+            candidate = stored;
+          }
+        } catch (e) {}
+      }
+      if (isSuperAdminUser || !isTenantLocked || lockedCompanyId?.toString() === companyId.toString()) {
+        dispatch(setSelectedCompany(candidate || {
+          id: companyId,
+          code: candidate?.code || companyId,
+          name: candidate?.name || 'Active Company',
+        }));
+        return;
+      }
+    }
     if (authContext.currentCompany && !selectedCompany) {
       dispatch(setSelectedCompany({
         id: authContext.currentCompany.id || authContext.currentCompany.code,
@@ -44,7 +75,7 @@ export default function ProtectedRoute({ children, requireCompany = true, module
         code: user?.companyCode
       }));
     }
-  }, [authContext.currentCompany, shouldRequireCompany, selectedCompany, isTenantLocked, lockedCompanyId, user, dispatch]);
+  }, [companyId, authContext.currentCompany, shouldRequireCompany, selectedCompany, isTenantLocked, lockedCompanyId, user, isSuperAdminUser, dispatch]);
 
   // While checking session or fetching initial authorization context, show loader
   // NEVER redirect to /403 while auth initialization is in progress
@@ -84,9 +115,17 @@ export default function ProtectedRoute({ children, requireCompany = true, module
           const secureAttr = isHttps ? '; Secure' : '';
           document.cookie = `ACCESS_TOKEN=${queryToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
           document.cookie = `auth_token=${queryToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-          if (typeof localStorage !== 'undefined') {
-            localStorage.setItem('ACCESS_TOKEN', queryToken);
-            localStorage.setItem('auth_token', queryToken);
+          if (typeof window !== 'undefined' && window.history?.replaceState) {
+            try {
+              const cleanUrl = new URL(window.location.href);
+              cleanUrl.searchParams.delete('token');
+              cleanUrl.searchParams.delete('accessToken');
+              cleanUrl.searchParams.delete('access_token');
+              cleanUrl.searchParams.delete('jwt');
+              window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+            } catch (e) {
+              // Ignore URL parsing errors
+            }
           }
         }
         // Still wait for auth context check
@@ -123,7 +162,35 @@ export default function ProtectedRoute({ children, requireCompany = true, module
 
   // URL mismatch with selected company
   if (shouldRequireCompany && companyId && selectedCompany?.id?.toString() !== companyId.toString()) {
+    if (isSuperAdminUser || !isTenantLocked || lockedCompanyId?.toString() === companyId.toString()) {
+      return (
+        <div className="flex h-screen w-full items-center justify-center bg-gray-50">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      );
+    }
     return <Navigate to="/company-select" replace />;
+  }
+
+  // Allowed roles check
+  if (allowedRoles && allowedRoles.length > 0) {
+    if (!isSuperAdminUser) {
+      const normalizedAllowed = allowedRoles.map((r) => String(r).toLowerCase().replace(/[\s_]/g, ''));
+      const isAllowed = normalizedAllowed.includes(normalizedUserRole) || (isOwnerUser && (normalizedAllowed.includes('owner') || normalizedAllowed.includes('companyadmin')));
+      if (!isAllowed) {
+        return <Navigate to="/403" replace />;
+      }
+    }
+  }
+
+  // Required permissions check
+  if (requiredPermissions) {
+    const permsToCheck = Array.isArray(requiredPermissions) ? requiredPermissions : [requiredPermissions];
+    for (const perm of permsToCheck) {
+      if (!canViewModule(perm)) {
+        return <Navigate to="/403" replace />;
+      }
+    }
   }
 
   // Module access check: block access if user lacks the required module or feature

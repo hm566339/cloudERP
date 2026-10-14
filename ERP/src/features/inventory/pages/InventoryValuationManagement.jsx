@@ -54,10 +54,10 @@ export default function InventoryValuationManagement() {
   } = useUrlFilters({ defaultPageSize: 10, defaultSortBy: 'valuationDate', defaultSortOrder: 'desc' });
 
   // Lookups to guarantee clean, user-friendly labels without exposing raw UUIDs
-  const { products } = useProductList({}, { page: 0, size: 1000 });
-  const { warehouses } = useWarehouseList({}, { page: 0, size: 1000 });
-  const { locations } = useWarehouseLocationList({}, { page: 0, size: 1000 });
-  const { stockMovements } = useStockMovementList({}, { page: 0, size: 1000 });
+  const { products } = useProductList({}, { page: 0, size: 100 });
+  const { warehouses } = useWarehouseList({}, { page: 0, size: 100 });
+  const { locations } = useWarehouseLocationList({}, { page: 0, size: 100 });
+  const { stockMovements } = useStockMovementList({}, { page: 0, size: 100 });
 
   const productMap = useMemo(() => {
     const map = new Map();
@@ -184,8 +184,8 @@ export default function InventoryValuationManagement() {
   const pageable = useMemo(() => ({
     page,
     size: apiParams.size || 10,
-    sort: sortBy ? `${sortBy},${sortOrder || 'desc'}` : (apiParams.sort ? `${apiParams.sort},${apiParams.direction || 'desc'}` : 'valuationDate,desc')
-  }), [page, apiParams.size, sortBy, sortOrder, apiParams.sort, apiParams.direction]);
+    sort: sortBy ? `${sortBy},${sortOrder || 'desc'}` : (apiParams.sort || 'valuationDate,desc')
+  }), [page, apiParams.size, sortBy, sortOrder, apiParams.sort]);
 
   const { inventoryValuations, pagination: pageInfo, isLoading, isFetching, refetch } = useInventoryValuationList(
     finalParams,

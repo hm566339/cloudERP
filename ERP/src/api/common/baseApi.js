@@ -1,9 +1,240 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import apiClient from "./client";
-import { addAlert } from "../../features/notifications/notificationSlice";
-import { createLogger } from "../../utils/logger";
+import apiClient from "./client.js";
+import { addAlert } from "../../features/notifications/notificationSlice.js";
+import { createLogger } from "../../utils/logger.js";
+import { isValidCompanyId } from "./roleCompanyContext.js";
 
 const logger = createLogger("BASE_API");
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Table-Driven Endpoint Contract Mapper
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const ENDPOINT_CONTRACT_MAP = [
+  // 1. SSO admin endpoints (Spring Data Pageable: 0-based, size, Spring Page in data)
+  {
+    prefix: '/api/sso/admin',
+    pageBase: 0,
+    sizeParam: 'size',
+    responseShape: 'SPRING_PAGE',
+    domainKey: 'content',
+  },
+  // 2. SSO user endpoints (0-based, pageSize, domain key 'users')
+  {
+    prefix: '/api/sso/user',
+    pageBase: 0,
+    sizeParam: 'pageSize',
+    responseShape: 'SSO_DOMAIN_PAGINATION',
+    domainKey: 'users',
+  },
+  // 3. SSO role endpoints (0-based, pageSize, domain key 'roles')
+  {
+    prefix: '/api/sso/role',
+    pageBase: 0,
+    sizeParam: 'pageSize',
+    responseShape: 'SSO_DOMAIN_PAGINATION',
+    domainKey: 'roles',
+  },
+  // 4. SSO company endpoints (1-based, pageSize, domain key 'companies')
+  {
+    prefix: '/api/sso/company',
+    pageBase: 1,
+    sizeParam: 'pageSize',
+    responseShape: 'SSO_DOMAIN_PAGINATION',
+    domainKey: 'companies',
+  },
+  // 5. General SSO fallback
+  {
+    prefix: '/api/sso',
+    pageBase: 0,
+    sizeParam: 'pageSize',
+    responseShape: 'SSO_ENVELOPE',
+    domainKey: null,
+  },
+  // 6. Account & Financials Service (0-based, size, ApiResponse.paginated envelope)
+  {
+    prefix: '/api/account',
+    pageBase: 0,
+    sizeParam: 'size',
+    responseShape: 'API_PAGINATED',
+    domainKey: 'content',
+  },
+  // 7. Inventory Service (0-based, size, ApiResponse.paginated envelope)
+  {
+    prefix: '/api/inventory',
+    pageBase: 0,
+    sizeParam: 'size',
+    responseShape: 'API_PAGINATED',
+    domainKey: 'content',
+  },
+  // 8. Workflow Service (0-based, size, Spring Page inside ApiResponse data)
+  {
+    prefix: '/api/v1/workflow',
+    pageBase: 0,
+    sizeParam: 'size',
+    responseShape: 'SPRING_PAGE',
+    domainKey: 'content',
+  },
+  // 9. Communication Service
+  {
+    prefix: '/api/communication',
+    pageBase: 0,
+    sizeParam: 'size',
+    responseShape: 'API_PAGINATED',
+    domainKey: 'content',
+  },
+];
+
+export const getEndpointContract = (url = '') => {
+  if (!url || typeof url !== 'string') {
+    return {
+      prefix: '',
+      pageBase: 0,
+      sizeParam: 'size',
+      responseShape: 'API_PAGINATED',
+      domainKey: 'content',
+    };
+  }
+  for (const contract of ENDPOINT_CONTRACT_MAP) {
+    if (url.startsWith(contract.prefix)) {
+      return contract;
+    }
+  }
+  return {
+    prefix: '',
+    pageBase: 0,
+    sizeParam: 'size',
+    responseShape: 'API_PAGINATED',
+    domainKey: 'content',
+  };
+};
+
+export const normalizeRequestParams = (url, params) => {
+  if (!params || typeof params !== 'object') return params;
+  const contract = getEndpointContract(url);
+  const normalized = { ...params };
+
+  // 1. Normalize size / pageSize
+  if (contract.sizeParam === 'size') {
+    if (normalized.pageSize !== undefined) {
+      normalized.size = normalized.pageSize;
+      delete normalized.pageSize;
+    }
+  } else if (contract.sizeParam === 'pageSize') {
+    if (normalized.size !== undefined) {
+      normalized.pageSize = normalized.size;
+      delete normalized.size;
+    }
+  }
+
+  // 2. Normalize page base (caller may pass 0-based or 1-based)
+  if (contract.pageBase === 1) {
+    if (normalized.page !== undefined && Number(normalized.page) === 0) {
+      normalized.page = 1;
+    }
+  }
+
+  // 3. Drop invalid or dummy companyId (e.g. "000000", "0") to prevent backend UUID parsing errors
+  if (normalized.companyId !== undefined && !isValidCompanyId(normalized.companyId)) {
+    delete normalized.companyId;
+  }
+
+  return normalized;
+};
+
+export const unwrapResponseByContract = (url, rawData) => {
+  if (!rawData || typeof rawData !== 'object' || Array.isArray(rawData)) {
+    return rawData;
+  }
+  if (typeof Blob !== 'undefined' && rawData instanceof Blob) {
+    return rawData;
+  }
+
+  const contract = getEndpointContract(url);
+
+  // 1. Direct Spring Page: { content: [...], totalElements, totalPages, number, size }
+  if (Array.isArray(rawData.content)) {
+    const list = [...rawData.content];
+    list._pageInfo = {
+      totalElements: rawData.totalElements ?? list.length,
+      totalPages: rawData.totalPages ?? 1,
+      number: rawData.number ?? 0,
+      size: rawData.size ?? list.length,
+    };
+    return list;
+  }
+
+  // 2. Standard ApiResponse / ResponseWrapper: { success: true, data: ... }
+  if (rawData.data !== undefined && typeof rawData.success === 'boolean') {
+    const inner = rawData.data;
+
+    // 2a. Array inside data: { data: [...] }
+    if (Array.isArray(inner)) {
+      const list = [...inner];
+      if (rawData.pagination) {
+        list._pageInfo = {
+          totalElements: rawData.pagination.totalElements ?? rawData.pagination.totalCount ?? list.length,
+          totalPages: rawData.pagination.totalPages ?? 1,
+          page: rawData.pagination.page ?? rawData.pagination.currentPage ?? 1,
+          size: rawData.pagination.size ?? rawData.pagination.pageSize ?? list.length,
+        };
+      }
+      return list;
+    }
+
+    // 2b. Object inside data
+    if (inner && typeof inner === 'object') {
+      // Direct Spring Page inside data: { data: { content: [...], totalElements, ... } }
+      if (Array.isArray(inner.content)) {
+        const list = [...inner.content];
+        list._pageInfo = {
+          totalElements: inner.totalElements ?? list.length,
+          totalPages: inner.totalPages ?? 1,
+          number: inner.number ?? 0,
+          size: inner.size ?? list.length,
+        };
+        return list;
+      }
+
+      // SSO Domain Pagination: { data: { companies: [...], pagination: { ... } } }
+      if (contract.domainKey && Array.isArray(inner[contract.domainKey])) {
+        const list = [...inner[contract.domainKey]];
+        if (inner.pagination) {
+          list._pageInfo = {
+            totalElements: inner.pagination.totalCount ?? inner.pagination.totalElements ?? list.length,
+            totalPages: inner.pagination.totalPages ?? 1,
+            page: inner.pagination.currentPage ?? inner.pagination.page ?? 1,
+            size: inner.pagination.pageSize ?? inner.pagination.size ?? list.length,
+          };
+        }
+        return list;
+      }
+
+      // General domain array detection (e.g. users, roles, items)
+      const arrayKeys = Object.keys(inner).filter((k) => Array.isArray(inner[k]));
+      const metaKeys = ['pagination', '_pageInfo', 'page', 'size', 'pageSize', 'totalElements', 'totalCount', 'totalPages'];
+      const nonMetaNonArrayKeys = Object.keys(inner).filter((k) => !Array.isArray(inner[k]) && !metaKeys.includes(k));
+
+      if (arrayKeys.length === 1 && nonMetaNonArrayKeys.length === 0) {
+        const list = [...inner[arrayKeys[0]]];
+        if (inner.pagination) {
+          list._pageInfo = {
+            totalElements: inner.pagination.totalCount ?? inner.pagination.totalElements ?? list.length,
+            totalPages: inner.pagination.totalPages ?? 1,
+            page: inner.pagination.currentPage ?? inner.pagination.page ?? 1,
+            size: inner.pagination.pageSize ?? inner.pagination.size ?? list.length,
+          };
+        }
+        return list;
+      }
+
+      // Return full object if complex (e.g. details, reports, nested objects)
+      return inner;
+    }
+  }
+
+  return rawData;
+};
 
 const axiosBaseQuery =
   ({ baseUrl } = { baseUrl: "" }) =>
@@ -23,14 +254,8 @@ const axiosBaseQuery =
           `Expected params to be an object, but got ${typeof params}. Dropping params to prevent Axios crash.`,
         );
         safeParams = undefined;
-      } else if (
-        safeParams &&
-        safeParams.pageSize !== undefined &&
-        !(url && url.startsWith("/api/sso"))
-      ) {
-        // Spring Data expects 'size', not 'pageSize'. Auto-map this to prevent default 20 size limit override.
-        safeParams = { ...safeParams, size: safeParams.pageSize };
-        delete safeParams.pageSize;
+      } else if (safeParams) {
+        safeParams = normalizeRequestParams(url, safeParams);
       }
 
       try {
@@ -48,94 +273,8 @@ const axiosBaseQuery =
         if (finalData instanceof Blob || (typeof Blob !== 'undefined' && finalData instanceof Blob)) {
           return { data: finalData };
         }
-        // Auto-unpack backend response wrappers to prevent .filter() errors in UI components
-        // Handles: Spring pagination {content:[...]}, wrapped {data:[...]},
-        // and {success, data: {someKey: [...], pagination: {}}}
-        if (
-          finalData &&
-          typeof finalData === "object" &&
-          !Array.isArray(finalData)
-        ) {
-          // 1) Spring Data pagination: { content: [...], totalElements, totalPages, ... }
-          if (Array.isArray(finalData.content)) {
-            const pageInfo = {
-              totalElements: finalData.totalElements,
-              totalPages: finalData.totalPages,
-              number: finalData.number,
-              size: finalData.size,
-            };
-            finalData = finalData.content;
-            finalData._pageInfo = pageInfo;
-          }
-          // 2) Wrapper like { success, message, data: ... } — only unwrap if it looks like a response envelope
-          // (requires a 'success' boolean flag to avoid accidentally unwrapping entities with a 'data' field)
-          else if (
-            finalData.data !== undefined &&
-            typeof finalData.success === "boolean"
-          ) {
-            const inner = finalData.data;
-            if (Array.isArray(inner)) {
-              // { data: [...] }
-              finalData = inner;
-              if (result.data.pagination)
-                finalData._pageInfo = result.data.pagination;
-            } else if (
-              inner &&
-              typeof inner === "object" &&
-              !Array.isArray(inner)
-            ) {
-              // { data: { content: [...], ... } } — Spring pagination inside wrapper
-              if (Array.isArray(inner.content)) {
-                const pageInfo = {
-                  totalElements: inner.totalElements,
-                  totalPages: inner.totalPages,
-                  number: inner.number,
-                  size: inner.size,
-                };
-                finalData = inner.content;
-                finalData._pageInfo = pageInfo;
-              } else {
-                // { data: { companies: [...], pagination: {} } } — find the array property
-                const arrayKeys = Object.keys(inner).filter((k) =>
-                  Array.isArray(inner[k]),
-                );
-                // Only auto-unwrap if the array is the ONLY property (or the only one besides pagination/pageInfo)
-                const otherKeys = Object.keys(inner).filter(
-                  (k) =>
-                    !Array.isArray(inner[k]) &&
-                    ![
-                      "pagination",
-                      "_pageInfo",
-                      "page",
-                      "size",
-                      "totalElements",
-                      "totalPages",
-                      "totalCount",
-                      "total",
-                      "count",
-                      "pageNumber",
-                      "currentPage",
-                      "hasNext",
-                      "hasPrevious",
-                      "number",
-                      "first",
-                      "last",
-                      "empty",
-                    ].includes(k),
-                );
-                const hasImportantOtherKeys = otherKeys.length > 0;
-
-                if (arrayKeys.length === 1 && !hasImportantOtherKeys) {
-                  finalData = inner[arrayKeys[0]];
-                  if (inner.pagination) finalData._pageInfo = inner.pagination;
-                } else {
-                  // Return the whole object so components can access rows, summary, openingBalance, etc.
-                  finalData = inner;
-                }
-              }
-            }
-          }
-        }
+        // Table-driven contract unwrapping
+        finalData = unwrapResponseByContract(url, result.data);
 
         // If the backend returns a 200 OK but success is explicitly false, treat it as an error
         if (result.data && typeof result.data === 'object' && result.data.success === false) {
@@ -229,6 +368,8 @@ const axiosBaseQuery =
         return {
           error: {
             status: status || 500,
+            message: message || "An unexpected error occurred",
+            fieldErrors: responseData?.data?.fieldErrors || responseData?.errors || null,
             data: axiosError.response?.data || { message },
           },
         };

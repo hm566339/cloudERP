@@ -47,10 +47,10 @@ export default function ReceiptWorkflowActions({
   variant = 'header',
 }) {
   const dispatch = useAppDispatch();
-  const fullState = useAppSelector((state) => state);
+  const authState = useAppSelector((state) => state.auth);
 
   // Get permitted actions for current user + status
-  const workflowActions = getReceiptWorkflowActions(fullState, receiptStatus);
+  const workflowActions = getReceiptWorkflowActions(authState, receiptStatus);
 
   // Create mutations for all six workflow endpoints
   const submitMutation   = useApiMutation(() => receiptVouchersApi.submitReceipt(receiptId));

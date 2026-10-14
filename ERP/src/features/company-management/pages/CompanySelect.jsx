@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import axios from 'axios'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Building2, Search, ShieldCheck, ChevronRight, LogOut, Loader2, Sparkles, Shield, Zap } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '../../../app/hooks'
@@ -286,7 +285,7 @@ export default function CompanySelect() {
     localStorage.clear();
     sessionStorage.clear()
 
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return (

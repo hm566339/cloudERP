@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createSelector } from '@reduxjs/toolkit';
 import { authApi } from './services/authApi.js';
 import {
   normalizeModuleName,
@@ -184,9 +184,22 @@ const authSlice = createSlice({
         const payload = action?.payload;
         const error = action?.error;
         const status = payload?.status || payload?.originalStatus || error?.status || error?.originalStatus;
+        const requestedCompany = action?.meta?.arg?.originalArgs || action?.meta?.arg;
+        const isCompanyForbidden = status === 403 && !!requestedCompany && !!state.user;
+
+        if (isCompanyForbidden) {
+          // User is forbidden from this specific company, but still has valid user session.
+          // Invalidate the company context without wiping user credentials.
+          state.currentCompany = null;
+          if (typeof localStorage !== 'undefined') {
+            try { localStorage.removeItem('selected_company'); } catch (e) {}
+          }
+          return;
+        }
+
         const isAuthRejection = status === 401 || status === 403;
 
-        // When unauthenticated (401 or 403) or if session fails during bootstrap
+        // When unauthenticated (401 or root /me forbidden) or if session fails during bootstrap
         if (isAuthRejection || !state.user) {
           state.user = null;
           state.permissions = [];
@@ -249,20 +262,34 @@ export const selectAccessMode = (state) => state.auth?.accessMode ?? 'FULL';
 export const selectAuthorizedModules = (state) => state.auth?.modules ?? [];
 
 /**
- * Returns the single canonical authorization context object
+ * Returns the single canonical authorization context object (memoized to prevent re-renders)
  */
-export const selectAuthContext = (state) => ({
-  user: state.auth?.user ?? null,
-  organization: state.auth?.organization ?? null,
-  currentCompany: state.auth?.currentCompany ?? null,
-  companies: state.auth?.companies ?? [],
-  membership: state.auth?.membership ?? null,
-  subscription: state.auth?.subscription ?? null,
-  accessMode: state.auth?.accessMode ?? 'FULL',
-  modules: state.auth?.modules ?? [],
-  features: state.auth?.features ?? [],
-  permissions: state.auth?.permissions ?? [],
-});
+export const selectAuthContext = createSelector(
+  [
+    (state) => state.auth?.user ?? null,
+    (state) => state.auth?.organization ?? null,
+    (state) => state.auth?.currentCompany ?? null,
+    (state) => state.auth?.companies ?? null,
+    (state) => state.auth?.membership ?? null,
+    (state) => state.auth?.subscription ?? null,
+    (state) => state.auth?.accessMode ?? 'FULL',
+    (state) => state.auth?.modules ?? null,
+    (state) => state.auth?.features ?? null,
+    (state) => state.auth?.permissions ?? null,
+  ],
+  (user, organization, currentCompany, companies, membership, subscription, accessMode, modules, features, permissions) => ({
+    user,
+    organization,
+    currentCompany,
+    companies: companies || [],
+    membership,
+    subscription,
+    accessMode,
+    modules: modules || [],
+    features: features || [],
+    permissions: permissions || [],
+  })
+);
 
 /** true if the current session is in 30-day trial and trial has not expired */
 export const selectIsTrialing = (state) => {

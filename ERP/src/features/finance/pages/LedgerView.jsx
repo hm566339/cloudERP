@@ -1,4 +1,7 @@
 import React from 'react';
+import useListQuery from '../../../hooks/useListQuery';
+import SearchInput from '../../../components/common/SearchInput';
+import Pagination from '../../../components/common/Pagination';
 import { useParams, Link } from 'react-router-dom';
 import { BookOpen, ArrowLeft, Printer, Download } from 'lucide-react';
 import { useApiQuery } from '../../../hooks/useApi';

@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -8,6 +8,8 @@ import { User, Mail, KeyRound, Eye, EyeOff, Building2, UserCircle, Briefcase, Ha
 import { addAlert } from '../../notifications/notificationSlice'
 import { register as registerApi } from '../../../api/sso/auth'
 import { useRoutePath } from "../../../hooks/useRoutePath";
+import { selectIsAuthenticated, selectCurrentUser } from '../authSlice';
+import { getPostLoginRedirectPath } from '../../../utils/moduleAccess';
 
 const registerSchema = yup.object().shape({
   fullName: yup.string().required('Full Name is required'),
@@ -25,6 +27,16 @@ export default function Register() {
 
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const currentUser = useSelector(selectCurrentUser);
+
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      const destination = getPostLoginRedirectPath({ user: currentUser });
+      navigate(destination, { replace: true });
+    }
+  }, [isAuthenticated, currentUser, navigate]);
+
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 

@@ -11,35 +11,13 @@ import ExpensesTab from '../components/expenses/ExpensesTab';
 import ReimbursementsTab from '../components/expenses/ReimbursementsTab';
 import ExpenseReportsTab from '../components/expenses/ExpenseReportsTab';
 
-import ExpenseRequestModal from '../components/expenses/ExpenseRequestModal';
-import ExpenseRequestDetailsModal from '../components/expenses/ExpenseRequestDetailsModal';
-import {
-  ExpenseRequestApproveModal,
-  ExpenseRequestRejectModal,
-  ExpenseRequestCancelModal,
-} from '../components/expenses/ExpenseRequestActionModals';
-import RecordExpenseModal from '../components/expenses/RecordExpenseModal';
-import ProcessReimbursementModal from '../components/expenses/ProcessReimbursementModal';
-import ExpenseAccountingModal from '../components/expenses/ExpenseAccountingModal';
-import ExpenseDetailsModal from '../components/expenses/ExpenseDetailsModal';
-import {
-  ExpenseApproveModal,
-  ExpenseRejectModal,
-  ExpenseCancelModal,
-  ExpenseDeleteModal,
-} from '../components/expenses/ExpenseActionModals';
-
+import ExpenseRequestModalsGroup from '../components/expenses/ExpenseRequestModalsGroup';
+import ExpenseActionModalsGroup from '../components/expenses/ExpenseActionModalsGroup';
+import ReimbursementModalsGroup from '../components/expenses/ReimbursementModalsGroup';
 import { expenseRequestsApi } from '../../../api/account/expenseRequests';
 import { expensesApi } from '../../../api/account/expenses';
 import { reimbursementsApi } from '../../../api/account/reimbursements';
 import { expenseStorageService } from '../services/expenseStorageService';
-import ReimbursementDetailsModal from '../components/expenses/ReimbursementDetailsModal';
-import {
-  ReimbursementApproveModal,
-  ReimbursementRejectModal,
-  ReimbursementCancelModal,
-  ReimbursementDeleteModal,
-} from '../components/expenses/ReimbursementActionModals';
 
 export default function ExpenseTracking({ forcedTab }) {
   const params = useParams();
@@ -1293,270 +1271,124 @@ export default function ExpenseTracking({ forcedTab }) {
       {/* ────────────────────────────────────────────────── */}
       {/* MODALS */}
       {/* ────────────────────────────────────────────────── */}
-
-      {/* Create / Edit Expense Request Modal */}
-      <ExpenseRequestModal
-        isOpen={isRequestModalOpen}
-        onClose={() => {
-          setIsRequestModalOpen(false);
-          setEditingRequest(null);
-        }}
-        onSubmit={handleSaveRequest}
-        initialData={editingRequest}
+      <ExpenseRequestModalsGroup
+        isRequestModalOpen={isRequestModalOpen}
+        setIsRequestModalOpen={setIsRequestModalOpen}
+        editingRequest={editingRequest}
+        setEditingRequest={setEditingRequest}
+        handleSaveRequest={handleSaveRequest}
         companyId={companyId}
-        isSubmitting={isSubmittingRequest}
+        isSubmittingRequest={isSubmittingRequest}
+        isDetailsModalOpen={isDetailsModalOpen}
+        setIsDetailsModalOpen={setIsDetailsModalOpen}
+        selectedRequestForDetails={selectedRequestForDetails}
+        setSelectedRequestForDetails={setSelectedRequestForDetails}
+        handleSubmitForApproval={handleSubmitForApproval}
+        handleConvertToExpense={handleConvertToExpense}
+        actionProcessingId={actionProcessingId}
+        isApproveModalOpen={isApproveModalOpen}
+        setIsApproveModalOpen={setIsApproveModalOpen}
+        selectedRequestForApprove={selectedRequestForApprove}
+        setSelectedRequestForApprove={setSelectedRequestForApprove}
+        handleConfirmApprove={handleConfirmApprove}
+        isApproving={isApproving}
+        isRejectModalOpen={isRejectModalOpen}
+        setIsRejectModalOpen={setIsRejectModalOpen}
+        selectedRequestForReject={selectedRequestForReject}
+        setSelectedRequestForReject={setSelectedRequestForReject}
+        handleConfirmReject={handleConfirmReject}
+        isRejecting={isRejecting}
+        isCancelModalOpen={isCancelModalOpen}
+        setIsCancelModalOpen={setIsCancelModalOpen}
+        selectedRequestForCancel={selectedRequestForCancel}
+        setSelectedRequestForCancel={setSelectedRequestForCancel}
+        handleConfirmCancel={handleConfirmCancel}
+        isCancelling={isCancelling}
       />
 
-      {/* Expense Request Details Modal */}
-      <ExpenseRequestDetailsModal
-        isOpen={isDetailsModalOpen}
-        onClose={() => {
-          setIsDetailsModalOpen(false);
-          setSelectedRequestForDetails(null);
-        }}
-        requestId={selectedRequestForDetails?.id}
-        initialRequest={selectedRequestForDetails}
-        onEdit={(req) => {
-          setIsDetailsModalOpen(false);
-          setEditingRequest(req);
-          setIsRequestModalOpen(true);
-        }}
-        onSubmitForApproval={handleSubmitForApproval}
-        onApprove={(req) => {
-          setSelectedRequestForApprove(req);
-          setIsApproveModalOpen(true);
-        }}
-        onReject={(req) => {
-          setSelectedRequestForReject(req);
-          setIsRejectModalOpen(true);
-        }}
-        onCancel={(req) => {
-          setSelectedRequestForCancel(req);
-          setIsCancelModalOpen(true);
-        }}
-        onConvertToExpense={handleConvertToExpense}
-        actionLoading={!!actionProcessingId}
-      />
-
-      {/* Approve Request Modal */}
-      <ExpenseRequestApproveModal
-        isOpen={isApproveModalOpen}
-        onClose={() => {
-          setIsApproveModalOpen(false);
-          setSelectedRequestForApprove(null);
-        }}
-        request={selectedRequestForApprove}
-        onConfirm={handleConfirmApprove}
-        isLoading={isApproving}
-      />
-
-      {/* Reject Request Modal */}
-      <ExpenseRequestRejectModal
-        isOpen={isRejectModalOpen}
-        onClose={() => {
-          setIsRejectModalOpen(false);
-          setSelectedRequestForReject(null);
-        }}
-        request={selectedRequestForReject}
-        onConfirm={handleConfirmReject}
-        isLoading={isRejecting}
-      />
-
-      {/* Cancel Request Modal */}
-      <ExpenseRequestCancelModal
-        isOpen={isCancelModalOpen}
-        onClose={() => {
-          setIsCancelModalOpen(false);
-          setSelectedRequestForCancel(null);
-        }}
-        request={selectedRequestForCancel}
-        onConfirm={handleConfirmCancel}
-        isLoading={isCancelling}
-      />
-
-      {/* Record Expense Modal */}
-      <RecordExpenseModal
-        isOpen={isExpenseModalOpen}
-        onClose={() => {
-          setIsExpenseModalOpen(false);
-          setEditingExpense(null);
-          setRequestRefForExpense(null);
-        }}
-        onSubmit={handleSaveExpense}
-        initialData={editingExpense}
-        requestRefData={requestRefForExpense}
+      <ExpenseActionModalsGroup
+        isExpenseModalOpen={isExpenseModalOpen}
+        setIsExpenseModalOpen={setIsExpenseModalOpen}
+        editingExpense={editingExpense}
+        setEditingExpense={setEditingExpense}
+        requestRefForExpense={requestRefForExpense}
+        setRequestRefForExpense={setRequestRefForExpense}
+        handleSaveExpense={handleSaveExpense}
         companyId={companyId}
-        isSubmitting={isSubmittingExpense}
+        isSubmittingExpense={isSubmittingExpense}
+        isAccountingModalOpen={isAccountingModalOpen}
+        setIsAccountingModalOpen={setIsAccountingModalOpen}
+        accountingModalExpense={accountingModalExpense}
+        setAccountingModalExpense={setAccountingModalExpense}
+        accountingModalReimbursement={accountingModalReimbursement}
+        setAccountingModalReimbursement={setAccountingModalReimbursement}
+        isExpenseDetailsModalOpen={isExpenseDetailsModalOpen}
+        setIsExpenseDetailsModalOpen={setIsExpenseDetailsModalOpen}
+        selectedExpenseForDetails={selectedExpenseForDetails}
+        setSelectedExpenseForDetails={setSelectedExpenseForDetails}
+        handleSubmitExpenseForApproval={handleSubmitExpenseForApproval}
+        handleViewAccountingForExpense={handleViewAccountingForExpense}
+        expenseActionProcessingId={expenseActionProcessingId}
+        isExpenseApproveModalOpen={isExpenseApproveModalOpen}
+        setIsExpenseApproveModalOpen={setIsExpenseApproveModalOpen}
+        selectedExpenseForApprove={selectedExpenseForApprove}
+        setSelectedExpenseForApprove={setSelectedExpenseForApprove}
+        handleConfirmExpenseApprove={handleConfirmExpenseApprove}
+        isExpenseApproving={isExpenseApproving}
+        isExpenseRejectModalOpen={isExpenseRejectModalOpen}
+        setIsExpenseRejectModalOpen={setIsExpenseRejectModalOpen}
+        selectedExpenseForReject={selectedExpenseForReject}
+        setSelectedExpenseForReject={setSelectedExpenseForReject}
+        handleConfirmExpenseReject={handleConfirmExpenseReject}
+        isExpenseRejecting={isExpenseRejecting}
+        isExpenseCancelModalOpen={isExpenseCancelModalOpen}
+        setIsExpenseCancelModalOpen={setIsExpenseCancelModalOpen}
+        selectedExpenseForCancel={selectedExpenseForCancel}
+        setSelectedExpenseForCancel={setSelectedExpenseForCancel}
+        handleConfirmExpenseCancel={handleConfirmExpenseCancel}
+        isExpenseCancelling={isExpenseCancelling}
+        isExpenseDeleteModalOpen={isExpenseDeleteModalOpen}
+        setIsExpenseDeleteModalOpen={setIsExpenseDeleteModalOpen}
+        selectedExpenseForDelete={selectedExpenseForDelete}
+        setSelectedExpenseForDelete={setSelectedExpenseForDelete}
+        handleConfirmExpenseDelete={handleConfirmExpenseDelete}
+        isExpenseDeleting={isExpenseDeleting}
       />
 
-
-      {/* Expense Accounting Modal */}
-      <ExpenseAccountingModal
-        isOpen={isAccountingModalOpen}
-        onClose={() => {
-          setIsAccountingModalOpen(false);
-          setAccountingModalExpense(null);
-          setAccountingModalReimbursement(null);
-        }}
-        expense={accountingModalExpense}
-        reimbursement={accountingModalReimbursement}
-      />
-
-      {/* Expense Details Modal */}
-      <ExpenseDetailsModal
-        isOpen={isExpenseDetailsModalOpen}
-        onClose={() => {
-          setIsExpenseDetailsModalOpen(false);
-          setSelectedExpenseForDetails(null);
-        }}
-        expenseId={selectedExpenseForDetails?.id}
-        initialExpense={selectedExpenseForDetails}
-        onEdit={(exp) => {
-          setIsExpenseDetailsModalOpen(false);
-          setEditingExpense(exp);
-          setIsExpenseModalOpen(true);
-        }}
-        onSubmitForApproval={handleSubmitExpenseForApproval}
-        onApprove={(exp) => {
-          setSelectedExpenseForApprove(exp);
-          setIsExpenseApproveModalOpen(true);
-        }}
-        onReject={(exp) => {
-          setSelectedExpenseForReject(exp);
-          setIsExpenseRejectModalOpen(true);
-        }}
-        onCancel={(exp) => {
-          setSelectedExpenseForCancel(exp);
-          setIsExpenseCancelModalOpen(true);
-        }}
-        onDelete={(exp) => {
-          setSelectedExpenseForDelete(exp);
-          setIsExpenseDeleteModalOpen(true);
-        }}
-        onOpenAccounting={(exp) => {
-          setIsExpenseDetailsModalOpen(false);
-          handleViewAccountingForExpense(exp);
-        }}
-        actionLoading={!!expenseActionProcessingId}
-      />
-
-      {/* Expense Approve Modal */}
-      <ExpenseApproveModal
-        isOpen={isExpenseApproveModalOpen}
-        onClose={() => {
-          setIsExpenseApproveModalOpen(false);
-          setSelectedExpenseForApprove(null);
-        }}
-        expense={selectedExpenseForApprove}
-        onConfirm={handleConfirmExpenseApprove}
-        isLoading={isExpenseApproving}
-      />
-
-      {/* Expense Reject Modal */}
-      <ExpenseRejectModal
-        isOpen={isExpenseRejectModalOpen}
-        onClose={() => {
-          setIsExpenseRejectModalOpen(false);
-          setSelectedExpenseForReject(null);
-        }}
-        expense={selectedExpenseForReject}
-        onConfirm={handleConfirmExpenseReject}
-        isLoading={isExpenseRejecting}
-      />
-
-      {/* Expense Cancel Modal */}
-      <ExpenseCancelModal
-        isOpen={isExpenseCancelModalOpen}
-        onClose={() => {
-          setIsExpenseCancelModalOpen(false);
-          setSelectedExpenseForCancel(null);
-        }}
-        expense={selectedExpenseForCancel}
-        onConfirm={handleConfirmExpenseCancel}
-        isLoading={isExpenseCancelling}
-      />
-
-      {/* Expense Delete Modal */}
-      <ExpenseDeleteModal
-        isOpen={isExpenseDeleteModalOpen}
-        onClose={() => {
-          setIsExpenseDeleteModalOpen(false);
-          setSelectedExpenseForDelete(null);
-        }}
-        expense={selectedExpenseForDelete}
-        onConfirm={handleConfirmExpenseDelete}
-        isLoading={isExpenseDeleting}
-      />
-
-      {/* ── Reimbursement Modals ── */}
-
-      {/* Reimbursement Details Modal */}
-      <ReimbursementDetailsModal
-        isOpen={isReimbursementDetailsModalOpen}
-        onClose={() => {
-          setIsReimbursementDetailsModalOpen(false);
-          setSelectedReimbursementForDetails(null);
-        }}
-        reimbursement={selectedReimbursementForDetails}
-      />
-
-      {/* Pay Reimbursement Modal */}
-      <ProcessReimbursementModal
-        isOpen={isReimbursementModalOpen}
-        onClose={() => {
-          setIsReimbursementModalOpen(false);
-          setSelectedReimbursement(null);
-        }}
-        reimbursement={selectedReimbursement}
-        onSubmit={handleConfirmReimbursementPay}
-      />
-
-      {/* Approve Reimbursement Modal */}
-      <ReimbursementApproveModal
-        isOpen={isReimbursementApproveModalOpen}
-        onClose={() => {
-          setIsReimbursementApproveModalOpen(false);
-          setSelectedReimbursementForApprove(null);
-        }}
-        reimbursement={selectedReimbursementForApprove}
-        onConfirm={handleConfirmReimbursementApprove}
-        isLoading={isReimbursementApproving}
-      />
-
-      {/* Reject Reimbursement Modal */}
-      <ReimbursementRejectModal
-        isOpen={isReimbursementRejectModalOpen}
-        onClose={() => {
-          setIsReimbursementRejectModalOpen(false);
-          setSelectedReimbursementForReject(null);
-        }}
-        reimbursement={selectedReimbursementForReject}
-        onConfirm={handleConfirmReimbursementReject}
-        isLoading={isReimbursementRejecting}
-      />
-
-      {/* Cancel Reimbursement Modal */}
-      <ReimbursementCancelModal
-        isOpen={isReimbursementCancelModalOpen}
-        onClose={() => {
-          setIsReimbursementCancelModalOpen(false);
-          setSelectedReimbursementForCancel(null);
-        }}
-        reimbursement={selectedReimbursementForCancel}
-        onConfirm={handleConfirmReimbursementCancel}
-        isLoading={isReimbursementCancelling}
-      />
-
-      {/* Delete Reimbursement Modal */}
-      <ReimbursementDeleteModal
-        isOpen={isReimbursementDeleteModalOpen}
-        onClose={() => {
-          setIsReimbursementDeleteModalOpen(false);
-          setSelectedReimbursementForDelete(null);
-        }}
-        reimbursement={selectedReimbursementForDelete}
-        onConfirm={handleConfirmReimbursementDelete}
-        isLoading={isReimbursementDeleting}
+      <ReimbursementModalsGroup
+        isReimbursementDetailsModalOpen={isReimbursementDetailsModalOpen}
+        setIsReimbursementDetailsModalOpen={setIsReimbursementDetailsModalOpen}
+        selectedReimbursementForDetails={selectedReimbursementForDetails}
+        setSelectedReimbursementForDetails={setSelectedReimbursementForDetails}
+        isReimbursementModalOpen={isReimbursementModalOpen}
+        setIsReimbursementModalOpen={setIsReimbursementModalOpen}
+        selectedReimbursement={selectedReimbursement}
+        setSelectedReimbursement={setSelectedReimbursement}
+        handleConfirmReimbursementPay={handleConfirmReimbursementPay}
+        isReimbursementApproveModalOpen={isReimbursementApproveModalOpen}
+        setIsReimbursementApproveModalOpen={setIsReimbursementApproveModalOpen}
+        selectedReimbursementForApprove={selectedReimbursementForApprove}
+        setSelectedReimbursementForApprove={setSelectedReimbursementForApprove}
+        handleConfirmReimbursementApprove={handleConfirmReimbursementApprove}
+        isReimbursementApproving={isReimbursementApproving}
+        isReimbursementRejectModalOpen={isReimbursementRejectModalOpen}
+        setIsReimbursementRejectModalOpen={setIsReimbursementRejectModalOpen}
+        selectedReimbursementForReject={selectedReimbursementForReject}
+        setSelectedReimbursementForReject={setSelectedReimbursementForReject}
+        handleConfirmReimbursementReject={handleConfirmReimbursementReject}
+        isReimbursementRejecting={isReimbursementRejecting}
+        isReimbursementCancelModalOpen={isReimbursementCancelModalOpen}
+        setIsReimbursementCancelModalOpen={setIsReimbursementCancelModalOpen}
+        selectedReimbursementForCancel={selectedReimbursementForCancel}
+        setSelectedReimbursementForCancel={setSelectedReimbursementForCancel}
+        handleConfirmReimbursementCancel={handleConfirmReimbursementCancel}
+        isReimbursementCancelling={isReimbursementCancelling}
+        isReimbursementDeleteModalOpen={isReimbursementDeleteModalOpen}
+        setIsReimbursementDeleteModalOpen={setIsReimbursementDeleteModalOpen}
+        selectedReimbursementForDelete={selectedReimbursementForDelete}
+        setSelectedReimbursementForDelete={setSelectedReimbursementForDelete}
+        handleConfirmReimbursementDelete={handleConfirmReimbursementDelete}
+        isReimbursementDeleting={isReimbursementDeleting}
       />
     </div>
   );

@@ -796,6 +796,7 @@ export default function CustomerDetails() {
               fetchCustomer();
             } catch (err) {
               dispatch(addAlert({ type: 'error', message: err.response?.data?.message || 'Failed to update customer' }));
+              throw err;
             }
           }}
         />

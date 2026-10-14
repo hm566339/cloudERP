@@ -28,8 +28,10 @@ public class SsoAuthorizationService {
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     /**
-     * Determines whether the given authentication possesses SYSTEM_ADMIN privileges.
-     * SYSTEM_ADMIN and ROLE_SYSTEM_ADMIN are the only unconditional full-access bypass roles.
+     * Determines whether the given authentication possesses SYSTEM_ADMIN
+     * privileges.
+     * SYSTEM_ADMIN and ROLE_SYSTEM_ADMIN are the only unconditional full-access
+     * bypass roles.
      */
     public boolean isSystemAdmin(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -48,7 +50,8 @@ public class SsoAuthorizationService {
     }
 
     /**
-     * Evaluates authorization for the incoming HTTP request against YAML rules and DB permissions.
+     * Evaluates authorization for the incoming HTTP request against YAML rules and
+     * DB permissions.
      */
     public AuthorizationDecision authorize(Authentication authentication, HttpServletRequest request) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -85,11 +88,13 @@ public class SsoAuthorizationService {
         String primaryPermissionCode = featureCode + ":" + primaryAction;
 
         // 4. Check DB permissions
-        return evaluateDbAuthorization(authentication, featureCode, candidateActions, primaryAction, primaryPermissionCode);
+        return evaluateDbAuthorization(authentication, featureCode, candidateActions, primaryAction,
+                primaryPermissionCode);
     }
 
     /**
-     * Resolves the module/feature code from the request path using configured URL patterns.
+     * Resolves the module/feature code from the request path using configured URL
+     * patterns.
      */
     public String resolveFeatureCode(String path) {
         if (path == null) {
@@ -102,7 +107,8 @@ public class SsoAuthorizationService {
             cleanPath = cleanPath.substring(0, qIdx);
         }
 
-        for (AuthorizationProperties.CompiledModulePattern entry : authorizationProperties.getCompiledModulePatterns()) {
+        for (AuthorizationProperties.CompiledModulePattern entry : authorizationProperties
+                .getCompiledModulePatterns()) {
             if (pathMatcher.match(entry.pattern(), cleanPath)) {
                 return entry.module();
             }
@@ -121,7 +127,8 @@ public class SsoAuthorizationService {
             cleanPath = cleanPath.substring(0, qIdx);
         }
 
-        // 1. Custom action suffixes matching happens BEFORE generic HTTP method matching
+        // 1. Custom action suffixes matching happens BEFORE generic HTTP method
+        // matching
         if (authorizationProperties.getCustomActionSuffixes() != null) {
             for (Map.Entry<String, String> entry : authorizationProperties.getCustomActionSuffixes().entrySet()) {
                 String suffix = entry.getKey();
@@ -151,7 +158,6 @@ public class SsoAuthorizationService {
                 return actions;
             }
         }
-
         return Collections.emptyList();
     }
 
@@ -165,7 +171,6 @@ public class SsoAuthorizationService {
         List<String> candidatePermissionCodes = candidateActions.stream()
                 .map(act -> featureCode + ":" + act)
                 .toList();
-
         // 1. Regular database user (CustomUserDetails)
         if (authentication.getPrincipal() instanceof CustomUserDetails cud && cud.getUser() != null) {
             UUID userId = cud.getUser().getId();
@@ -187,7 +192,8 @@ public class SsoAuthorizationService {
                     for (UserPermissionDetailDto p : effective.getPermissions()) {
                         if (p.getPermissionCode() != null && p.getPermissionCode().equalsIgnoreCase(candidateCode)) {
                             if (p.isAllowed() && p.isActive()) {
-                                return AuthorizationDecision.allow(featureCode, primaryAction, candidateCode, "DB_PERMISSION");
+                                return AuthorizationDecision.allow(featureCode, primaryAction, candidateCode,
+                                        "DB_PERMISSION");
                             } else if (!p.isActive()) {
                                 disabledFound = true;
                             } else if (!p.isAllowed()) {
@@ -198,14 +204,17 @@ public class SsoAuthorizationService {
                 }
 
                 if (disabledFound) {
-                    return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode, "PERMISSION_DISABLED");
+                    return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode,
+                            "PERMISSION_DISABLED");
                 }
                 if (deniedFound) {
-                    return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode, "PERMISSION_DENIED");
+                    return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode,
+                            "PERMISSION_DENIED");
                 }
             }
 
-            // Check if feature permission exists in catalog to differentiate PERMISSION_NOT_FOUND vs PERMISSION_DENIED
+            // Check if feature permission exists in catalog to differentiate
+            // PERMISSION_NOT_FOUND vs PERMISSION_DENIED
             boolean existsInCatalog = false;
             for (String candidateCode : candidatePermissionCodes) {
                 if (featurePermissionRepository.findByPermissionCodeIgnoreCase(candidateCode).isPresent()) {
@@ -215,9 +224,11 @@ public class SsoAuthorizationService {
             }
 
             if (existsInCatalog) {
-                return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode, "PERMISSION_DENIED");
+                return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode,
+                        "PERMISSION_DENIED");
             } else {
-                return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode, "PERMISSION_NOT_FOUND");
+                return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode,
+                        "PERMISSION_NOT_FOUND");
             }
         }
 
@@ -226,7 +237,8 @@ public class SsoAuthorizationService {
         if (authorities != null) {
             for (GrantedAuthority ga : authorities) {
                 String authStr = ga.getAuthority();
-                if (authStr == null) continue;
+                if (authStr == null)
+                    continue;
 
                 for (String candidateCode : candidatePermissionCodes) {
                     if (authStr.equalsIgnoreCase(candidateCode)
@@ -248,7 +260,8 @@ public class SsoAuthorizationService {
                             || "PERM_PLATFORM_PAYMENT_READ".equalsIgnoreCase(authStr)
                             || "PERM_PLATFORM_USER_READ".equalsIgnoreCase(authStr)
                             || "PERM_PLATFORM_COMPANY_READ".equalsIgnoreCase(authStr)) {
-                        return AuthorizationDecision.allow(featureCode, primaryAction, primaryPermissionCode, "DB_PERMISSION");
+                        return AuthorizationDecision.allow(featureCode, primaryAction, primaryPermissionCode,
+                                "DB_PERMISSION");
                     }
                 }
             }

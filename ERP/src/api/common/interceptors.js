@@ -47,6 +47,7 @@ import {
   isOwnerOrSystemAdminUser,
   isOwnerOrSystemAdminRole,
   getActiveCompanyId,
+  isValidCompanyId,
   buildRoleBasedCompanyParams,
   cleanUrlRoleBasedCompany
 } from './roleCompanyContext.js';
@@ -55,6 +56,7 @@ export {
   isOwnerOrSystemAdminUser,
   isOwnerOrSystemAdminRole,
   getActiveCompanyId,
+  isValidCompanyId,
   buildRoleBasedCompanyParams,
   cleanUrlRoleBasedCompany
 };
@@ -83,7 +85,8 @@ export const isGlobalEndpoint = (pathname) => {
   if (
     pathname.startsWith('/api/sso/platform') ||
     pathname === '/api/health' ||
-    pathname.startsWith('/api/health/')
+    pathname.startsWith('/api/health/') ||
+    pathname.startsWith('/actuator')
   ) {
     return true;
   }
@@ -204,15 +207,80 @@ export const isCompanySpecificEndpoint = (url) => {
 };
 
 export const attachRequestInterceptor = (instance) => {
+  if (instance._requestInterceptorAttached) return null;
+  instance._requestInterceptorAttached = true;
+
   return instance.interceptors.request.use(
     (config) => {
       try {
+        config._startTime = Date.now();
+
+        // Parameter Sanitizer: drop non-primitive values (functions, undefined, NaN)
+        if (config.params && typeof config.params === 'object') {
+          if (typeof URLSearchParams !== 'undefined' && config.params instanceof URLSearchParams) {
+            const cleanParams = new URLSearchParams();
+            for (const [key, val] of config.params.entries()) {
+              if (typeof val === 'function') {
+                console.warn(`[API PARAM GUARD] Dropping function parameter '${key}':`, val);
+                continue;
+              }
+              if (val === 'undefined' || val === 'null' || val === undefined || val === null || val === '') {
+                continue;
+              }
+              cleanParams.append(key, val);
+            }
+            config.params = cleanParams;
+          } else {
+            Object.keys(config.params).forEach((key) => {
+              const val = config.params[key];
+              if (typeof val === 'function') {
+                console.warn(`[API PARAM GUARD] Dropping function parameter '${key}':`, val);
+                delete config.params[key];
+              } else if (val === undefined || Number.isNaN(val) || val === 'undefined' || val === 'null') {
+                delete config.params[key];
+              } else if (typeof val === 'string' && val.endsWith(',undefined')) {
+                config.params[key] = val.replace(',undefined', ',asc');
+              }
+            });
+          }
+        }
+
+        // Clean query parameters directly on config.url if present
+        if (config.url && typeof config.url === 'string' && config.url.includes('?')) {
+          try {
+            const [base, query] = config.url.split('?');
+            const searchParams = new URLSearchParams(query);
+            let modified = false;
+            for (const [key, val] of Array.from(searchParams.entries())) {
+              if (typeof val === 'string' && (val.includes('[native code]') || val.includes('function '))) {
+                console.warn(`[API URL GUARD] Dropping function value in URL query '${key}':`, val);
+                searchParams.delete(key);
+                modified = true;
+              } else if (val === 'undefined' && (key.endsWith('direction') || key.endsWith('sort') || key === 'sort')) {
+                searchParams.delete(key);
+                modified = true;
+              }
+            }
+            if (modified) {
+              const cleanQuery = searchParams.toString();
+              config.url = cleanQuery ? `${base}?${cleanQuery}` : base;
+            }
+          } catch {}
+        }
+
         // Clean up any legacy companyCode params from all requests to prevent backend confusion
         if (config.params) {
           if (typeof URLSearchParams !== 'undefined' && config.params instanceof URLSearchParams) {
             config.params.delete('companyCode');
+            const pCompId = config.params.get('companyId');
+            if (pCompId && !isValidCompanyId(pCompId)) {
+              config.params.delete('companyId');
+            }
           } else {
             delete config.params.companyCode;
+            if (config.params.companyId !== undefined && !isValidCompanyId(config.params.companyId)) {
+              delete config.params.companyId;
+            }
           }
         }
 
@@ -239,18 +307,21 @@ export const attachRequestInterceptor = (instance) => {
               isPrivileged,
               companyId: activeCompanyId,
             });
-          } else if (isPrivileged && activeCompanyId) {
+          } else if (isPrivileged && isValidCompanyId(activeCompanyId)) {
             config.params = { companyId: activeCompanyId };
           }
 
           // 3. Request header injection (X-Company-Id) — for ALL users
-          if (activeCompanyId) {
+          if (isValidCompanyId(activeCompanyId)) {
             if (!config.headers) config.headers = {};
             config.headers['X-Company-Id'] = activeCompanyId;
+          } else if (config.headers) {
+            delete config.headers['X-Company-Id'];
+            delete config.headers['x-company-id'];
           }
 
           // 4. For Owner / SystemAdmin: synchronize path parameters if URL contains /company/:id or /settings/:id
-          if (isPrivileged && activeCompanyId && config.url && typeof config.url === 'string') {
+          if (isPrivileged && isValidCompanyId(activeCompanyId) && config.url && typeof config.url === 'string') {
             if (config.url.includes('/company/')) {
               config.url = config.url.replace(/\/company\/[^/?#]+/g, `/company/${activeCompanyId}`);
             } else if (config.url.startsWith('/api/settings/') || config.url.includes('/settings/')) {
@@ -275,10 +346,7 @@ export const attachRequestInterceptor = (instance) => {
           }
         }
 
-        console.log(
-          `[API REQUEST] ${config.method?.toUpperCase()} ${config.url}`,
-          config.data || config.params || '(no data)',
-        );
+        // Request logging omitted in production; no sensitive payload or credentials printed
       } catch (e) {
         console.warn('[API REQUEST ERROR] Failed processing request config', e);
       }
@@ -303,28 +371,30 @@ export const attachRequestInterceptor = (instance) => {
  * @returns {number} Interceptor ID (for potential ejection).
  */
 export const attachResponseInterceptor = (instance) => {
+  if (instance._responseInterceptorAttached) return null;
+  instance._responseInterceptorAttached = true;
+
   return instance.interceptors.response.use(
     // ── Success handler ──────────────────────────────────────────────────
     (response) => {
-      console.log(
-        `[API RESPONSE] ${response.config.method.toUpperCase()} ${response.config.url} -> ${response.status}`,
-        response.data,
-      );
       return response;
     },
 
     // ── Error handler ────────────────────────────────────────────────────
     async (error) => {
       const originalRequest = error.config;
+      const duration = originalRequest?._startTime ? ` [${Date.now() - originalRequest._startTime}ms]` : '';
 
-      // Log the error
+      // Log the error with method, URL and elapsed duration
       if (error.response) {
         console.error(
-          `[API RESPONSE ERROR] ${error.response.config.method.toUpperCase()} ${error.response.config.url} -> ${error.response.status}`,
+          `[API RESPONSE ERROR] ${error.response.config.method?.toUpperCase()} ${error.response.config.url}${duration} -> ${error.response.status}`,
           error.response.data,
         );
       } else {
-        console.error('[API RESPONSE ERROR] Network/Unknown Error:', error.message);
+        const method = originalRequest?.method?.toUpperCase() || '';
+        const url = originalRequest?.url || '';
+        console.error(`[API RESPONSE ERROR] ${method} ${url}${duration} Network/Unknown Error:`, error.message);
       }
 
       // ── Gateway retries (502-504) ──────────────────────────────────────
@@ -368,11 +438,21 @@ export const attachResponseInterceptor = (instance) => {
         return Promise.reject(error);
       }
 
+      // If we are already on an auth page and have no access or refresh tokens, skip refresh
+      if (typeof window !== 'undefined' && isAuthPage(window.location.pathname)) {
+        const hasAccessToken = getFreshAccessToken();
+        const hasRefreshCookie = typeof document !== 'undefined' && document.cookie.match(/(^| )(ACCESS_TOKEN_REFRESH|refresh_token|refreshToken)=([^;]+)/);
+        const hasRefreshStorage = typeof localStorage !== 'undefined' && (localStorage.getItem('ACCESS_TOKEN_REFRESH') || localStorage.getItem('refreshToken') || localStorage.getItem('refresh_token'));
+        if (!hasAccessToken && !hasRefreshCookie && !hasRefreshStorage) {
+          return Promise.reject(error);
+        }
+      }
+
       // Skip refresh if the user is already known to be unauthenticated,
       // EXCEPT when the request is a '/me' probe. We want '/me' to attempt a refresh
       // so the user can be automatically logged back in if they have a valid refresh cookie.
       try {
-        const store = (typeof window !== 'undefined' && window.__REDUX_STORE__) || require('../../app/store').default;
+        const store = typeof window !== 'undefined' ? window.__REDUX_STORE__ : null;
         const state = store?.getState?.();
         const isMeProbe = requestUrl.includes('/me');
 
@@ -426,7 +506,7 @@ export const attachResponseInterceptor = (instance) => {
       setRefreshing(moduleName, true);
       originalRequest._retry = true;
 
-      const isSystemAdmin = isUserSystemAdmin();
+      const isSystemAdmin = isOwnerOrSystemAdminUser();
       let refreshEndpoint = isSystemAdmin
         ? '/api/sso/admin/token/refresh'
         : getRefreshEndpoint(moduleName);
@@ -492,7 +572,7 @@ export const attachResponseInterceptor = (instance) => {
           originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
         }
 
-        console.log(`[Auth] Token refreshed successfully for module "${moduleName}".`);
+        // Token refreshed successfully
 
         // Resolve all queued requests for this module with the new token
         processQueue(moduleName, null, freshToken);
@@ -511,8 +591,13 @@ export const attachResponseInterceptor = (instance) => {
         // DO NOT delete cookies, DO NOT call logout, DO NOT clear Redux.
         if (status === 500 || status === 502) {
           processQueue(moduleName, refreshError);
-          if (typeof window !== 'undefined') {
-            window.location.href = '/modules';
+          // Server error during refresh — preserve current path and redirect to login
+          if (typeof window !== 'undefined' && !isAuthPage(window.location.pathname)) {
+            sessionStorage.setItem('auth_return_to', window.location.pathname + window.location.search + window.location.hash);
+            const basePath = (typeof import.meta !== 'undefined' && (import.meta?.env?.VITE_BASE_PATH || import.meta?.env?.BASE_URL))
+              ? (import.meta.env.VITE_BASE_PATH || import.meta.env.BASE_URL).replace(/\/$/, '')
+              : '/erp';
+            window.location.href = `${basePath}/login`;
           }
           return Promise.reject(refreshError);
         }

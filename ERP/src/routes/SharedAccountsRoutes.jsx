@@ -150,6 +150,13 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => (
         </ProtectedRoute>
       }
     />
+    {/* Aliases for direct convenience paths */}
+    <Route path={`${prefix}chart-of-accounts`} element={<Navigate to={`../${prefix}masters/ledgers`} replace />} />
+    <Route path={`${prefix}customers`} element={<Navigate to={`../${prefix}masters/customers`} replace />} />
+    <Route path={`${prefix}vendors`} element={<Navigate to={`../${prefix}masters/vendors`} replace />} />
+    <Route path={`${prefix}fiscal-years`} element={<Navigate to={`../${prefix}organization/financial-years`} replace />} />
+    <Route path={`${prefix}accounting-periods`} element={<Navigate to={`../${prefix}organization/accounting-periods`} replace />} />
+    <Route path={`${prefix}bank-accounts`} element={<Navigate to={`../${prefix}masters/bank-accounts`} replace />} />
 
     {/* Masters */}
     <Route
@@ -891,6 +898,10 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => (
         }
       />
     </Route>
+    {/* Journal Aliases */}
+    <Route path={`${prefix}transactions/journal-entries`} element={<Navigate to={`../${prefix}transactions/journal`} replace />} />
+    <Route path={`${prefix}transactions/journals`} element={<Navigate to={`../${prefix}transactions/journal`} replace />} />
+
     <Route
       path={`${prefix}transactions/journal`}
       element={
@@ -956,7 +967,9 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => (
           </ProtectedRoute>
         }
       />
+      <Route path={`${prefix}transactions/payment-vouchers`} element={<Navigate to={`../${prefix}transactions/payments`} replace />} />
     </Route>
+    <Route path={`${prefix}transactions/receipt-vouchers`} element={<Navigate to={`../${prefix}transactions/receipts`} replace />} />
     <Route
       path={`${prefix}transactions/receipts`}
       element={

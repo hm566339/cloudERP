@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   CreditCard,
@@ -81,6 +81,9 @@ export default function SubscriptionCheckoutModal({
   const userEmail = user?.email || user?.username || '';
   const userName = user?.fullName || user?.name || orgName;
 
+  const isSubmittingRef = useRef(false);
+  const isVerifyingRef = useRef(false);
+
   // Pricing calculations
   const pricing = useMemo(() => {
     if (!selectedPlan) return computeCheckoutPricing(0);
@@ -98,6 +101,8 @@ export default function SubscriptionCheckoutModal({
     if (isOpen) {
       setIsLoading(false);
       setIsVerifying(false);
+      isSubmittingRef.current = false;
+      isVerifyingRef.current = false;
       setErrorMessage(null);
       setSuccessMessage(null);
     }
@@ -115,6 +120,10 @@ export default function SubscriptionCheckoutModal({
 
   // Execute payment checkout flow
   const handleProceedToPayment = async () => {
+    if (isSubmittingRef.current || isLoading || isVerifying) {
+      return;
+    }
+
     if (!orgId) {
       setErrorMessage('Organization context is missing. Please refresh and try again.');
       return;
@@ -124,6 +133,7 @@ export default function SubscriptionCheckoutModal({
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setErrorMessage(null);
 
@@ -183,6 +193,10 @@ export default function SubscriptionCheckoutModal({
         currency: checkoutData.currency || selectedPlan.currency || 'INR',
         amount: amountPaise,
         handler: async function (response) {
+          if (isVerifyingRef.current) {
+            return;
+          }
+          isVerifyingRef.current = true;
           setIsVerifying(true);
           try {
             // Cryptographically verify payment on server and activate plan
@@ -209,6 +223,8 @@ export default function SubscriptionCheckoutModal({
 
             setSuccessMessage(`Payment confirmed! Your subscription has been successfully upgraded to ${selectedPlan.name}.`);
             setIsVerifying(false);
+            isVerifyingRef.current = false;
+            isSubmittingRef.current = false;
 
             if (onSuccess) {
               onSuccess(updatedSub);
@@ -222,6 +238,8 @@ export default function SubscriptionCheckoutModal({
             const errDetail = verifyErr.response?.data?.message || verifyErr.message || 'Payment verification failed.';
             setErrorMessage(`Payment verification error: ${errDetail}`);
             setIsVerifying(false);
+            isVerifyingRef.current = false;
+            isSubmittingRef.current = false;
           }
         },
         prefill: {
@@ -229,11 +247,12 @@ export default function SubscriptionCheckoutModal({
           email: userEmail,
         },
         theme: {
-          color: '#4f46e5',
+          color: '#18181b',
         },
         modal: {
           ondismiss: function () {
             setIsLoading(false);
+            isSubmittingRef.current = false;
             if (orgId && orderId) {
               cancelPendingCheckout(orgId, orderId);
             }
@@ -244,6 +263,7 @@ export default function SubscriptionCheckoutModal({
       const rzpInstance = new window.Razorpay(options);
       rzpInstance.on('payment.failed', function (resp) {
         setIsLoading(false);
+        isSubmittingRef.current = false;
         const failDesc = resp.error?.description || resp.error?.reason || 'Payment transaction failed or was cancelled.';
         setErrorMessage(failDesc);
         if (orgId && orderId) {
@@ -256,17 +276,10 @@ export default function SubscriptionCheckoutModal({
       console.error('[SubscriptionCheckoutModal] Checkout error:', err);
       setErrorMessage(err.message || 'Payment processing failed. Please try again later.');
       setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
-  const logPaymentSuccess = (resp) => {
-    if (typeof console !== 'undefined' && console.log) {
-      console.log('[SubscriptionCheckout] Payment successful:', {
-        razorpay_payment_id: resp?.razorpay_payment_id,
-        razorpay_subscription_id: resp?.razorpay_subscription_id,
-      });
-    }
-  };
 
   if (!isOpen || !selectedPlan) return null;
 
@@ -281,12 +294,12 @@ export default function SubscriptionCheckoutModal({
         {/* Top Header */}
         <div className="flex items-start justify-between gap-4 pb-4 border-b border-zinc-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100 shadow-2xs">
+            <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-800 flex items-center justify-center shrink-0 border border-zinc-200/80 shadow-2xs">
               <CreditCard size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10.5px] font-bold text-indigo-600 uppercase tracking-wider">
+                <span className="text-[10.5px] font-bold text-zinc-500 uppercase tracking-wider">
                   Secure Checkout
                 </span>
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80">
@@ -321,7 +334,7 @@ export default function SubscriptionCheckoutModal({
               {orgCode && <span className="font-mono text-[10.5px] text-zinc-400 ml-1">({orgCode})</span>}
             </div>
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 shrink-0">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md border border-zinc-200/80 shrink-0">
             OWNER AUTHORIZED
           </span>
         </div>
@@ -346,7 +359,7 @@ export default function SubscriptionCheckoutModal({
             <div className="grid grid-cols-2 gap-3 pt-2 border-t border-zinc-200/60 text-xs">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-500 uppercase">
-                  <Building2 size={11} className="text-indigo-600" />
+                  <Building2 size={11} className="text-zinc-700" />
                   <span>Max Companies</span>
                 </div>
                 <div className="text-xs font-bold text-zinc-900">
@@ -356,7 +369,7 @@ export default function SubscriptionCheckoutModal({
 
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-500 uppercase">
-                  <Users size={11} className="text-indigo-600" />
+                  <Users size={11} className="text-zinc-700" />
                   <span>Users / Company</span>
                 </div>
                 <div className="text-xs font-bold text-zinc-900">
@@ -375,9 +388,9 @@ export default function SubscriptionCheckoutModal({
                   {activeModules.map((m, idx) => (
                     <span
                       key={m.moduleId || m.id || idx}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-white border border-zinc-200 text-zinc-800 shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-white border border-zinc-200 text-zinc-800 shadow-2xs"
                     >
-                      <Check size={10} className="text-indigo-600 stroke-[3]" />
+                      <Check size={10} className="text-zinc-700 stroke-[2.5]" />
                       <span>{m.moduleName || m.name ? formatModuleName(m.moduleName || m.name) : 'Module'}</span>
                     </span>
                   ))}
@@ -410,7 +423,7 @@ export default function SubscriptionCheckoutModal({
 
             <div className="border-t border-zinc-200/80 pt-2.5 flex items-center justify-between text-sm">
               <span className="font-bold text-zinc-900">Total Payable Amount</span>
-              <span className="text-lg font-black font-display text-indigo-600">
+              <span className="text-lg font-black font-display text-zinc-900">
                 {pricing.formattedTotal}
               </span>
             </div>
@@ -441,8 +454,8 @@ export default function SubscriptionCheckoutModal({
 
         {/* Verifying Spinner Indicator */}
         {isVerifying && (
-          <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs flex items-center justify-center gap-2.5 font-bold">
-            <Loader2 size={16} className="animate-spin text-indigo-600" />
+          <div className="p-4 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-800 text-xs flex items-center justify-center gap-2.5 font-bold">
+            <Loader2 size={16} className="animate-spin text-zinc-700" />
             <span>Verifying payment with billing server...</span>
           </div>
         )}
@@ -462,7 +475,7 @@ export default function SubscriptionCheckoutModal({
             type="button"
             onClick={handleProceedToPayment}
             disabled={isLoading || isVerifying || !!successMessage}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow transition-all disabled:opacity-50 active:scale-95"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold shadow-sm hover:shadow transition-all disabled:opacity-50 active:scale-95"
           >
             {isLoading ? (
               <>

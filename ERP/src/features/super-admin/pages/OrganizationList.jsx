@@ -22,51 +22,39 @@ import { useRoutePath } from '../../../hooks/useRoutePath';
  * Calls: GET /api/sso/admin/organizations?page=0&size=200
  * No companyId — organization listing is platform-wide.
  */
+import SearchInput from '../../../components/common/SearchInput';
+import Pagination from '../../../components/common/Pagination';
+import useListQuery from '../../../hooks/useListQuery';
+
 export default function OrganizationList() {
   const { buildPath } = useRoutePath();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
-  const statusFilter = searchParams.get('status') || 'ALL';
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Organization listing — platform-wide, no companyId
-  // NOTE: Organization API uses page (0-based) and size — NOT pageSize
-  const {
-    data: orgsData,
-    isLoading: orgsLoading,
-    isFetching: orgsFetching,
-    error: orgsError,
-    refetch: refetchOrgs,
-  } = useGetOrganizationsQuery({ page: 0, size: 200 });
+  // Unified list query hook with server pagination, debounced search & URL state
+  const list = useListQuery(useGetOrganizationsQuery, {
+    defaultPageSize: 10,
+    searchParam: 'search',
+  });
 
   const [updateOrgStatus] = useUpdateOrganizationStatusMutation();
 
-  const orgs = orgsData?.organizations || [];
-
-  // Filter organizations
-  const filtered = useMemo(() => {
-    return orgs.filter((item) => {
-      const matchesSearch = !searchTerm ||
-        item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.code?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [orgs, searchTerm, statusFilter]);
+  const orgs = list.items || [];
+  const statusFilter = list.filters.status || 'ALL';
 
   const handleStatusToggle = async (org) => {
     const newStatus = org.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
     try {
       await updateOrgStatus({ id: org.id, status: newStatus }).unwrap();
       dispatch(addAlert({ type: 'success', message: `Organization ${newStatus === 'ACTIVE' ? 'activated' : 'suspended'} successfully.` }));
+      list.refetch();
     } catch (e) {
       dispatch(addAlert({ type: 'error', message: 'Failed to update organization status.' }));
     }
   };
 
-  const isLoading = orgsLoading || orgsFetching;
+  const isLoading = list.loading;
+  const isFetching = list.isFetching;
 
   return (
     <div className="w-full px-6 lg:px-8 py-6 space-y-5 animate-fade-in pb-12">
@@ -94,10 +82,10 @@ export default function OrganizationList() {
         <div className="flex items-center gap-2.5 self-start sm:self-center">
           <button
             type="button"
-            onClick={refetchOrgs}
+            onClick={list.refetch}
             className="btn-secondary h-9 px-3 text-xs flex items-center gap-1.5"
           >
-            <RefreshCw size={13} className={(orgsLoading || orgsFetching) ? 'animate-spin' : ''} />
+            <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
             Refresh
           </button>
           <Link
@@ -110,9 +98,8 @@ export default function OrganizationList() {
         </div>
       </div>
 
-
       {/* Show error notice if org API fails */}
-      {orgsError && (
+      {list.error && (
         <div className="flex items-start gap-3 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
           <AlertTriangle size={15} className="shrink-0 mt-0.5 text-rose-500" />
           <div>
@@ -126,47 +113,49 @@ export default function OrganizationList() {
       {/* ── Filters Bar ── */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         {/* Search */}
-        <div className="relative flex-1 max-w-sm">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Search organizations..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-9 pl-9 pr-3 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-white text-zinc-900 placeholder-zinc-400"
+        <div className="w-full sm:max-w-sm">
+          <SearchInput
+            placeholder="Search organizations by name or code..."
+            value={list.searchTerm}
+            onChange={list.setSearch}
+            isLoading={isFetching}
           />
         </div>
 
         {/* Status Filter Tabs */}
         <div className="flex items-center gap-1 bg-zinc-100 rounded-lg p-1">
-          {['ALL', 'ACTIVE', 'SUSPENDED', 'INACTIVE'].map((s) => (
-            <Link
-              key={s}
-              to={s === 'ALL' ? buildPath('/super-admin/organizations') : buildPath(`/super-admin/organizations?status=${s}`)}
-              className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${
-                statusFilter === s
-                  ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/60'
-                  : 'text-zinc-500 hover:text-zinc-700'
-              }`}
-            >
-              {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
-            </Link>
-          ))}
+          {['ALL', 'ACTIVE', 'SUSPENDED', 'INACTIVE'].map((s) => {
+            const isSelected = statusFilter === s;
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => list.setFilter('status', s === 'ALL' ? '' : s)}
+                className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${
+                  isSelected
+                    ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/60'
+                    : 'text-zinc-500 hover:text-zinc-700'
+                }`}
+              >
+                {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
+              </button>
+            );
+          })}
         </div>
 
-        <span className="text-[11px] text-zinc-400 font-medium">
-          {filtered.length} {filtered.length === 1 ? 'organization' : 'organizations'}
+        <span className="text-[11px] text-zinc-400 font-medium sm:ml-auto">
+          {list.total} {list.total === 1 ? 'organization' : 'organizations'}
         </span>
       </div>
 
       {/* ── Main Table ── */}
       <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs overflow-hidden">
-        {isLoading ? (
+        {isLoading && orgs.length === 0 ? (
           <div className="p-8 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
             <span className="text-xs text-zinc-400">Loading organizations…</span>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : orgs.length === 0 ? (
           <div className="p-10 flex flex-col items-center justify-center gap-3 text-center">
             <div className="w-12 h-12 rounded-xl bg-zinc-50 border border-zinc-200 flex items-center justify-center text-zinc-400">
               <Building2 size={24} />
@@ -174,10 +163,20 @@ export default function OrganizationList() {
             <div>
               <p className="text-sm font-semibold text-zinc-800 mb-1">No organizations found</p>
               <p className="text-xs text-zinc-400">
-                {searchTerm ? 'Try adjusting your search.' : 'Provision your first organization to get started.'}
+                {list.searchTerm || statusFilter !== 'ALL'
+                  ? 'Try adjusting your search or clearing active filters.'
+                  : 'Provision your first organization to get started.'}
               </p>
             </div>
-            {!searchTerm && (
+            {(list.searchTerm || statusFilter !== 'ALL') ? (
+              <button
+                type="button"
+                onClick={list.resetFilters}
+                className="btn-secondary text-xs px-3.5 py-1.5 mt-2"
+              >
+                Clear Filters
+              </button>
+            ) : (
               <Link
                 to={buildPath('/super-admin/organizations/provision')}
                 className="btn-primary text-xs px-4 py-2 flex items-center gap-1.5"
@@ -188,7 +187,7 @@ export default function OrganizationList() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className={`overflow-x-auto transition-opacity ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead className="bg-zinc-50/80 border-b border-zinc-200 text-zinc-500">
                 <tr>
@@ -203,11 +202,11 @@ export default function OrganizationList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
-                {filtered.map((org, idx) => (
+                {orgs.map((org, idx) => (
                   <OrgRow
                     key={org.id}
                     org={org}
-                    index={idx}
+                    index={list.page * list.pageSize + idx}
                     buildPath={buildPath}
                     onStatusToggle={handleStatusToggle}
                   />
@@ -216,6 +215,9 @@ export default function OrganizationList() {
             </table>
           </div>
         )}
+
+        {/* Server Pagination */}
+        <Pagination {...list.paginationProps} itemName="organizations" />
       </div>
     </div>
   );

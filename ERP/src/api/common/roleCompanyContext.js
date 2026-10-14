@@ -241,6 +241,27 @@ export const isOwnerOrSystemAdminUser = (userOrContext = null) => {
 export const isOwnerOrAdminUser = isOwnerOrSystemAdminUser;
 
 /**
+ * Validates whether a company ID string is a valid, non-dummy operational company identifier.
+ * Specifically rejects null/undefined placeholders, "000000", "0", all-zero UUIDs, and legacy non-UUID codes.
+ */
+export const isValidCompanyId = (id) => {
+  if (id === undefined || id === null) return false;
+  const str = String(id).trim();
+  if (
+    !str ||
+    str === 'undefined' ||
+    str === 'null' ||
+    str === '000000' ||
+    str === '0' ||
+    str === '00000000-0000-0000-0000-000000000000' ||
+    /^0+$/.test(str)
+  ) {
+    return false;
+  }
+  return true;
+};
+
+/**
  * Resolves the active company ID.
  * Precedence:
  *   1. selected_company in localStorage (single source of truth for Owner & SystemAdmin)
@@ -248,11 +269,18 @@ export const isOwnerOrAdminUser = isOwnerOrSystemAdminUser;
  *   3. auth_user fallback in localStorage (assigned tenant company)
  */
 export const getActiveCompanyId = (userOrContext = null) => {
+  const sanitize = (raw) => {
+    if (!isValidCompanyId(raw)) return null;
+    return String(raw).trim();
+  };
+
   if (userOrContext) {
     const user = userOrContext.user || userOrContext;
-    const id = userOrContext.selectedCompany?.id || userOrContext.currentCompany?.id || user?.companyId || user?.companyCode;
-    if (id && id !== 'undefined' && id !== 'null') {
-      return String(id);
+    const directId = sanitize(userOrContext.selectedCompany?.id) ||
+      sanitize(userOrContext.currentCompany?.id) ||
+      sanitize(user?.companyId);
+    if (directId) {
+      return directId;
     }
   }
 
@@ -262,9 +290,9 @@ export const getActiveCompanyId = (userOrContext = null) => {
     const saved = localStorage.getItem('selected_company');
     if (saved) {
       const parsed = JSON.parse(saved);
-      const id = parsed?.id || parsed?.companyId;
-      if (id && id !== 'undefined' && id !== 'null') {
-        return String(id);
+      const savedId = sanitize(parsed?.id || parsed?.companyId);
+      if (savedId) {
+        return savedId;
       }
     }
   } catch (e) { }
@@ -273,9 +301,9 @@ export const getActiveCompanyId = (userOrContext = null) => {
     if (window.__REDUX_STORE__?.getState) {
       const state = window.__REDUX_STORE__.getState();
       const comp = state.company?.selectedCompany || state.auth?.currentCompany;
-      const id = comp?.id || comp?.companyId;
-      if (id && id !== 'undefined' && id !== 'null') {
-        return String(id);
+      const storeId = sanitize(comp?.id || comp?.companyId);
+      if (storeId) {
+        return storeId;
       }
     }
   } catch (e) { }
@@ -284,9 +312,9 @@ export const getActiveCompanyId = (userOrContext = null) => {
     const authUserStr = localStorage.getItem('auth_user');
     if (authUserStr) {
       const authUser = JSON.parse(authUserStr);
-      const id = authUser?.companyId || authUser?.companyCode;
-      if (id && id !== 'undefined' && id !== 'null') {
-        return String(id);
+      const authId = sanitize(authUser?.companyId);
+      if (authId) {
+        return authId;
       }
     }
   } catch (e) { }
@@ -298,7 +326,7 @@ export const getActiveCompanyId = (userOrContext = null) => {
  * Builds or filters query parameters according to user role.
  *
  * For OWNER and SystemAdmin:
- *   - Injects the active `companyId` query parameter.
+ *   - Injects the active `companyId` query parameter only if a valid, non-dummy company exists.
  *
  * For every other role (ACCOUNTANT, MEMBER, EMPLOYEE, etc.):
  *   - Completely OMITS `companyId`.
@@ -325,13 +353,13 @@ export const buildRoleBasedCompanyParams = (params = {}, options = {}) => {
     ? Boolean(explicitPrivileged)
     : isOwnerOrSystemAdminUser(user);
 
-  const activeCompanyId = companyId || getActiveCompanyId(user);
+  const activeCompanyId = isValidCompanyId(companyId)
+    ? String(companyId).trim()
+    : getActiveCompanyId(user);
 
   if (typeof URLSearchParams !== 'undefined' && params instanceof URLSearchParams) {
-    if (privileged || forceInclude) {
-      if (activeCompanyId) {
-        params.set('companyId', activeCompanyId);
-      }
+    if ((privileged || forceInclude) && isValidCompanyId(activeCompanyId)) {
+      params.set('companyId', activeCompanyId);
     } else {
       params.delete('companyId');
     }
@@ -341,7 +369,7 @@ export const buildRoleBasedCompanyParams = (params = {}, options = {}) => {
   const result = { ...(params || {}) };
 
   if (privileged || forceInclude) {
-    if (activeCompanyId) {
+    if (isValidCompanyId(activeCompanyId)) {
       result.companyId = activeCompanyId;
     } else {
       delete result.companyId;
@@ -351,13 +379,8 @@ export const buildRoleBasedCompanyParams = (params = {}, options = {}) => {
     delete result.companyId;
   }
 
-  // Guard against string or literal 'undefined' / 'null'
-  if (
-    result.companyId === undefined ||
-    result.companyId === null ||
-    result.companyId === 'undefined' ||
-    result.companyId === 'null'
-  ) {
+  // Guard against invalid companyIds or literal 'undefined' / 'null'
+  if (!isValidCompanyId(result.companyId)) {
     delete result.companyId;
   }
 
@@ -368,7 +391,7 @@ export const buildRoleBasedCompanyParams = (params = {}, options = {}) => {
  * Cleans query parameters inside a URL string itself.
  * If a URL string already has `?companyId=...` embedded:
  *   - For non-privileged users: removes `companyId` completely.
- *   - For OWNER/SystemAdmin: synchronizes `companyId` with `activeCompanyId`.
+ *   - For OWNER/SystemAdmin: synchronizes `companyId` with `activeCompanyId`, or removes if dummy/missing.
  *
  * @param {string} url - Target URL.
  * @param {boolean} isPrivileged - Whether user is OWNER or SystemAdmin.
@@ -388,8 +411,10 @@ export const cleanUrlRoleBasedCompany = (url, isPrivileged, activeCompanyId) => 
     const searchParams = new URLSearchParams(queryString);
 
     if (isPrivileged) {
-      if (activeCompanyId && searchParams.has('companyId')) {
+      if (isValidCompanyId(activeCompanyId) && searchParams.has('companyId')) {
         searchParams.set('companyId', activeCompanyId);
+      } else {
+        searchParams.delete('companyId');
       }
     } else {
       searchParams.delete('companyId');
@@ -401,3 +426,4 @@ export const cleanUrlRoleBasedCompany = (url, isPrivileged, activeCompanyId) => 
     return url;
   }
 };
+

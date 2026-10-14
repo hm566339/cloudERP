@@ -82,7 +82,7 @@ export default function CommonWorkspaceView() {
       localStorage.clear();
       sessionStorage.clear();
       dispatch(logoutAction());
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     }
   };
 

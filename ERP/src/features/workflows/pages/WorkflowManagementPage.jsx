@@ -25,6 +25,13 @@ import {
   saveWorkflowDefinitions,
   workflowAuditApi,
 } from '../services/workflowService';
+import useListQuery from '../../../hooks/useListQuery';
+import SearchInput from '../../../components/common/SearchInput';
+import Pagination from '../../../components/common/Pagination';
+import WorkflowDiagram from '../components/WorkflowDiagram';
+import WorkflowConfigurationForm from '../components/WorkflowConfigurationForm';
+import WorkflowAuditTrailPanel from '../components/WorkflowAuditTrailPanel';
+import WorkflowBuildingSelector from '../components/WorkflowBuildingSelector';
 
 export { extractRoles, resolveRoleId, resolveRoleName };
 
@@ -49,39 +56,6 @@ const moduleToDocumentType = (value) => {
   }
 };
 
-function Toggle({ checked, onChange, disabled, label }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={checked}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1 ${
-        checked ? 'bg-zinc-900' : 'bg-zinc-300'
-      } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
-    >
-      <span
-        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-          checked ? 'translate-x-4' : 'translate-x-0'
-        }`}
-      />
-    </button>
-  );
-}
-
-function Field({ label, children, hint }) {
-  return (
-    <div className="space-y-1">
-      <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-        {label}
-      </label>
-      {children}
-      {hint && <p className="text-[10px] text-zinc-400">{hint}</p>}
-    </div>
-  );
-}
-
 function StatusBadge({ active }) {
   return (
     <span
@@ -94,307 +68,6 @@ function StatusBadge({ active }) {
       <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
       {active ? 'Active' : 'Inactive'}
     </span>
-  );
-}
-
-function WorkflowDiagram({ workflow, canEdit, onUpdateStep, onRemoveStep, onMoveStep, onAddStep, roles = [] }) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-3.5 sm:p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-zinc-800">Workflow sequence</p>
-          <p className="text-[11px] text-zinc-500">Step ordering with explicit sequence controls</p>
-        </div>
-        <button
-          type="button"
-          className="btn-secondary h-7 px-2.5 text-xs inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 font-semibold shadow-sm"
-          disabled={!canEdit}
-          onClick={onAddStep}
-        >
-          <Plus size={13} />
-          <span>Add step</span>
-        </button>
-      </div>
-
-      <div className="relative space-y-3 pl-1 pr-1 before:absolute before:bottom-6 before:left-[18px] before:top-6 before:w-0.5 before:bg-zinc-200">
-        {workflow.steps.map((step, index) => (
-          <div key={step.id} className="relative flex items-start gap-3">
-            <div
-              className={`z-10 mt-2.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 bg-white text-xs font-bold transition-all ${
-                step.active
-                  ? 'border-zinc-900 text-zinc-900 shadow-sm'
-                  : 'border-zinc-300 text-zinc-400'
-              }`}
-            >
-              {index + 1}
-            </div>
-
-            <div className="min-w-0 flex-1 rounded-xl border border-zinc-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-sm">
-              <div className="flex flex-wrap items-start justify-between gap-2.5">
-                <div className="min-w-0 flex-1">
-                  <input
-                    aria-label={`Step ${index + 1} name`}
-                    disabled={!canEdit}
-                    value={step.title}
-                    onChange={(e) => onUpdateStep(step.id, { title: e.target.value })}
-                    className="w-full border-0 bg-transparent p-0 text-xs sm:text-sm font-semibold text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 rounded px-1 -mx-1"
-                  />
-                  <div className="mt-1.5 flex items-center gap-2 text-[11px] text-zinc-500 flex-wrap">
-                    <span className="inline-flex items-center gap-1 bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-md font-medium">
-                      <User size={11} className="text-zinc-500" />
-                      {resolveRoleName(step.role, roles) || 'Role not assigned'}
-                    </span>
-                    <span className="text-zinc-300">•</span>
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-zinc-50 border border-zinc-200 text-zinc-600 font-medium capitalize">
-                      {step.type}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <Toggle
-                    label={`Activate ${step.title}`}
-                    checked={step.active}
-                    disabled={!canEdit}
-                    onChange={(value) => onUpdateStep(step.id, { active: value })}
-                  />
-                  <div className="h-4 w-px bg-zinc-200 mx-0.5" />
-                  <button
-                    title="Move up"
-                    type="button"
-                    disabled={!canEdit || index === 0}
-                    onClick={() => onMoveStep(index, -1)}
-                    className="p-1 rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 disabled:opacity-30 disabled:hover:bg-transparent"
-                  >
-                    <ArrowUp size={14} />
-                  </button>
-                  <button
-                    title="Move down"
-                    type="button"
-                    disabled={!canEdit || index === workflow.steps.length - 1}
-                    onClick={() => onMoveStep(index, 1)}
-                    className="p-1 rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 disabled:opacity-30 disabled:hover:bg-transparent"
-                  >
-                    <ArrowDown size={14} />
-                  </button>
-                  <button
-                    title="Remove step"
-                    type="button"
-                    disabled={!canEdit || workflow.steps.length <= 1}
-                    onClick={() => onRemoveStep(step.id)}
-                    className="p-1 rounded-md text-zinc-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30 disabled:hover:bg-transparent"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ConfigurationForm({
-  workflow,
-  setWorkflow,
-  canEdit,
-  errors,
-  roles = [],
-  rolesLoading = false,
-  rolesError = null,
-  onRetryRoles,
-}) {
-  const update = (key, value) => setWorkflow((current) => ({ ...current, [key]: value }));
-
-  const currentInitiatedBy = resolveRoleId(workflow.initiatedBy, roles);
-  const currentApproverRole = resolveRoleId(workflow.approverRole, roles);
-
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Workflow name">
-          <input
-            className={`w-full h-8 px-2.5 rounded-lg border bg-white text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 ${
-              errors.name ? 'border-red-400' : 'border-zinc-200'
-            }`}
-            disabled={!canEdit}
-            value={workflow.name}
-            onChange={(e) => update('name', e.target.value)}
-          />
-          {errors.name && <p className="text-[11px] text-red-600 font-medium mt-1">{errors.name}</p>}
-        </Field>
-
-        <Field label="Initiated by role">
-          <select
-            className={`w-full h-8 px-2.5 rounded-lg border bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 ${
-              errors.initiatedBy ? 'border-red-400' : 'border-zinc-200'
-            }`}
-            disabled={!canEdit || rolesLoading}
-            value={currentInitiatedBy}
-            onChange={(e) => update('initiatedBy', e.target.value)}
-          >
-            {rolesLoading ? (
-              <option value="" disabled>Loading roles...</option>
-            ) : rolesError ? (
-              <option value="" disabled>Failed to load roles</option>
-            ) : roles.length === 0 ? (
-              <option value="" disabled>No roles available</option>
-            ) : (
-              <>
-                <option value="">Select role</option>
-                {roles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </>
-            )}
-          </select>
-          {errors.initiatedBy && <p className="text-[11px] text-red-600 font-medium mt-1">{errors.initiatedBy}</p>}
-          {rolesError && (
-            <p className="text-[11px] text-red-600 font-medium mt-1 flex items-center justify-between">
-              <span>Could not load roles.</span>
-              {onRetryRoles && (
-                <button
-                  type="button"
-                  onClick={onRetryRoles}
-                  className="text-zinc-800 underline hover:text-zinc-950 font-semibold"
-                >
-                  Retry
-                </button>
-              )}
-            </p>
-          )}
-          {!rolesLoading && !rolesError && roles.length === 0 && (
-            <p className="text-[10px] text-amber-600 mt-1">No roles found for this company.</p>
-          )}
-        </Field>
-      </div>
-
-      <Field label="Description">
-        <textarea
-          rows={2}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 resize-none"
-          disabled={!canEdit}
-          value={workflow.description}
-          onChange={(e) => update('description', e.target.value)}
-          placeholder="Workflow purpose and overview"
-        />
-      </Field>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Applicable customers">
-          <select
-            className="w-full h-8 px-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50"
-            disabled={!canEdit}
-            value={workflow.customerScope}
-            onChange={(e) => update('customerScope', e.target.value)}
-          >
-            <option value="all">All customers</option>
-            <option value="specific">Specific customers</option>
-          </select>
-        </Field>
-
-        <Field label="Approval threshold" hint="Amount in company base currency">
-          <div className="relative">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-zinc-400 font-semibold">₹</span>
-            <input
-              className="w-full h-8 pl-6 pr-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50"
-              disabled={!canEdit}
-              value={workflow.threshold}
-              onChange={(e) => update('threshold', e.target.value.replace(/[^0-9,]/g, ''))}
-              placeholder="0.00"
-            />
-          </div>
-        </Field>
-      </div>
-
-      <div className="divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
-        <SettingRow label="Workflow status" description="Allow this workflow to run for new transactions">
-          <Toggle label="Workflow status" checked={workflow.active} disabled={!canEdit} onChange={(value) => update('active', value)} />
-        </SettingRow>
-
-        <SettingRow label="Approval required" description="Require a role to approve before continuing">
-          <Toggle label="Approval required" checked={workflow.approvalRequired} disabled={!canEdit} onChange={(value) => update('approvalRequired', value)} />
-        </SettingRow>
-
-        <SettingRow label="Approver role" description="Default role responsible for approval">
-          <div className="flex flex-col items-end gap-1">
-            <select
-              className="w-36 sm:w-44 h-7.5 px-2 rounded-lg border border-zinc-200 bg-white text-[11px] text-zinc-900 focus:outline-none focus:border-zinc-900 transition-colors disabled:bg-zinc-50 disabled:text-zinc-400 shrink-0"
-              disabled={!canEdit || !workflow.approvalRequired || rolesLoading}
-              value={currentApproverRole}
-              onChange={(e) => update('approverRole', e.target.value)}
-            >
-              {rolesLoading ? (
-                <option value="" disabled>Loading roles...</option>
-              ) : rolesError ? (
-                <option value="" disabled>Failed to load roles</option>
-              ) : roles.length === 0 ? (
-                <option value="" disabled>No roles available</option>
-              ) : (
-                <>
-                  <option value="">Select role</option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </>
-              )}
-            </select>
-            {rolesError && onRetryRoles && (
-              <button
-                type="button"
-                onClick={onRetryRoles}
-                className="text-[10px] text-red-600 underline hover:text-red-700"
-              >
-                Retry loading roles
-              </button>
-            )}
-          </div>
-        </SettingRow>
-
-        <SettingRow label="Allow customer acceptance" description="Expose acceptance action on customer portal">
-          <Toggle label="Customer acceptance" checked={workflow.customerAcceptance} disabled={!canEdit} onChange={(value) => update('customerAcceptance', value)} />
-        </SettingRow>
-
-        <SettingRow label="Auto-create sales order" description="Create an order after customer acceptance">
-          <Toggle label="Auto-create sales order" checked={workflow.autoCreateOrder} disabled={!canEdit || !workflow.customerAcceptance} onChange={(value) => update('autoCreateOrder', value)} />
-        </SettingRow>
-
-        <SettingRow label="Email notifications" description="Notify participants when a step changes">
-          <Toggle label="Email notifications" checked={workflow.emailNotifications} disabled={!canEdit} onChange={(value) => update('emailNotifications', value)} />
-        </SettingRow>
-      </div>
-
-      <Field label="Notes">
-        <textarea
-          rows={2}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 resize-none"
-          disabled={!canEdit}
-          value={workflow.notes}
-          onChange={(e) => update('notes', e.target.value)}
-          placeholder="Add internal notes for administrators"
-        />
-      </Field>
-    </div>
-  );
-}
-
-function SettingRow({ label, description, children }) {
-  return (
-    <div className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-zinc-50/50 transition-colors">
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold text-zinc-800 leading-tight">{label}</p>
-        <p className="text-[11px] text-zinc-400 leading-tight mt-0.5 truncate">{description}</p>
-      </div>
-      <div className="shrink-0">
-        {children}
-      </div>
-    </div>
   );
 }
 
@@ -423,7 +96,9 @@ export default function WorkflowManagementPage() {
   const [module, setModule] = useState('Sales');
   const [selectedId, setSelectedId] = useState('');
   const [activeTab, setActiveTab] = useState('diagram');
-  const [query, setQuery] = useState('');
+  const workflowListQuery = useListQuery(null, { searchParam: 'search' });
+  const query = workflowListQuery.searchTerm;
+  const setQuery = workflowListQuery.setSearch;
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -674,7 +349,7 @@ export default function WorkflowManagementPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-          <BuildingSelector
+          <WorkflowBuildingSelector
             companies={companies}
             selectedCompany={selectedCompany}
             companyId={companyId}
@@ -755,13 +430,11 @@ export default function WorkflowManagementPage() {
               </div>
               <GitBranch size={16} className="text-zinc-400" />
             </div>
-            <div className="relative mt-2.5">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-              <input
-                className="w-full h-8 pl-8 pr-3 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors"
+            <div className="mt-2.5">
+              <SearchInput
                 placeholder="Search workflows..."
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={setQuery}
               />
             </div>
           </div>
@@ -912,7 +585,7 @@ export default function WorkflowManagementPage() {
                   </div>
                 )}
                 {selected && activeTab === 'audit' && (
-                  <AuditTrailPanel
+                  <WorkflowAuditTrailPanel
                     companyId={companyId}
                     module={selected.module}
                     selectedId={selected.id}
@@ -945,7 +618,7 @@ export default function WorkflowManagementPage() {
             ) : (
               <>
                 {selected ? (
-                  <ConfigurationForm
+                  <WorkflowConfigurationForm
                     workflow={selected}
                     setWorkflow={setSelected}
                     canEdit={canEdit}
@@ -1039,97 +712,3 @@ function Building2Icon() {
   );
 }
 
-function BuildingSelector({ companies, selectedCompany, companyId, onChange }) {
-  const options = companies.length ? companies : [{ id: companyId, name: selectedCompany?.name || 'Current company' }];
-  return (
-    <label className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 text-xs font-semibold text-zinc-700 hover:border-zinc-300 focus-within:border-zinc-900 focus-within:ring-1 focus-within:ring-zinc-900 transition-all shadow-sm cursor-pointer">
-      <Building2 size={13} className="text-zinc-500 shrink-0" />
-      <span className="hidden text-[10px] font-bold uppercase tracking-wider text-zinc-400 sm:inline">Company:</span>
-      <select
-        aria-label="Selected company"
-        value={companyId || ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="max-w-[140px] sm:max-w-[180px] border-0 bg-transparent p-0 text-xs font-semibold text-zinc-800 outline-none truncate cursor-pointer"
-      >
-        {options.map((company) => (
-          <option key={company.id || company.companyId || company.code} value={company.id || company.companyId || company.code}>
-            {company.name || company.companyName || company.code || company.id}
-          </option>
-        ))}
-      </select>
-      <ChevronDown size={12} className="text-zinc-400 shrink-0" />
-    </label>
-  );
-}
-
-const formatDateTime = (value) => {
-  if (!value) return 'Recently';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-};
-
-function AuditTrailPanel({ companyId, module, selectedId, currentUser }) {
-  const [status, setStatus] = useState('loading');
-  const [entries, setEntries] = useState([]);
-  const [pagination, setPagination] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [fetchKey, setFetchKey] = useState(0);
-
-  useEffect(() => {
-    let active = true;
-    setStatus('loading');
-    setEntries([]);
-    workflowAuditApi.getAuditTrail({ companyId, moduleName: module, entityId: selectedId, page: 0, size: 30 })
-      .then((result) => {
-        if (!active) return;
-        setEntries(result.entries || []);
-        setPagination(result.pagination || null);
-        setStatus('ready');
-      })
-      .catch((error) => {
-        if (!active) return;
-        console.error('Failed to load workflow audit trail', error);
-        setErrorMessage(error?.response?.data?.message || error?.message || 'Failed to load the audit trail.');
-        setStatus('error');
-      });
-    return () => { active = false; };
-  }, [companyId, module, selectedId, fetchKey]);
-
-  const latest = entries[entries.length - 1] || entries[0];
-
-  if (status === 'loading') return <div className="space-y-2"><ListSkeleton items={3} /></div>;
-  if (status === 'error') return <ErrorState title="Audit trail unavailable" message={errorMessage} onRetry={() => setFetchKey((key) => key + 1)} />;
-
-  return (
-    <div className="space-y-3">
-      <InfoRow icon={Activity} label="Last updated" value={latest ? formatDateTime(latest.performedAt) : 'No changes recorded yet'} />
-      <InfoRow icon={User} label="Updated by" value={latest?.performedBy || currentUser?.name || currentUser?.email || 'No changes recorded yet'} />
-      {entries.length === 0 && (
-        <p className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4 text-xs text-zinc-500 leading-relaxed">
-          No audit entries found for this workflow. Entries appear here via <span className="font-mono text-zinc-700">GET /api/account/audit-logs</span> once a step is approved, rejected, or changed under this company.
-        </p>
-      )}
-      {entries.length > 0 && (
-        <div className="divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
-          {entries.map((entry) => (
-            <div key={entry.id || `${entry.performedAt}-${entry.actionType}`} className="flex items-start gap-3 p-3 hover:bg-zinc-50/50 transition-colors">
-              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-zinc-900" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-zinc-900">{entry.performedBy || 'System'}</p>
-                <p className="mt-0.5 text-[11px] text-zinc-500">{(entry.entityName || module)} · {String(entry.actionType || 'ACTION').toUpperCase()}</p>
-                <p className="mt-0.5 text-[10px] text-zinc-400">{formatDateTime(entry.performedAt)}{entry.ipAddress ? ` · ${entry.ipAddress}` : ''}</p>
-                {entry.description && <p className="mt-1 text-xs text-zinc-600 bg-zinc-50 p-2 rounded-md">{entry.description}</p>}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      {pagination && pagination.totalPages > 1 && (
-        <p className="pt-1 text-right text-[10px] text-zinc-400">
-          Page {pagination.page + 1} of {pagination.totalPages} · {pagination.totalElements} record(s)
-        </p>
-      )}
-    </div>
-  );
-}

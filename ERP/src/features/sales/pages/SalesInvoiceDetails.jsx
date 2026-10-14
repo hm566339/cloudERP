@@ -14,10 +14,12 @@ import Modal from '../../../components/common/Modal';
 import ErrorState from '../../../components/common/ErrorState';
 import { PageLoader } from '../../../components/common/SkeletonLoader';
 import { useAppDispatch } from '../../../app/hooks';
-import { addAlert } from '../../notifications/notificationSlice';
 import { confirmDialog } from '../../../utils/confirmDialog';
 import PartialPaymentModal from '../components/PartialPaymentModal';
 import { useRoutePath } from "../../../hooks/useRoutePath";
+import SalesInvoiceOverviewTab from '../components/sales-invoice-details/SalesInvoiceOverviewTab';
+import SalesInvoiceItemsTab from '../components/sales-invoice-details/SalesInvoiceItemsTab';
+import SalesInvoiceEditModal from '../components/sales-invoice-details/SalesInvoiceEditModal';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
@@ -500,400 +502,30 @@ export default function SalesInvoiceDetails() {
 
             {/* ── OVERVIEW TAB ── */}
             {activeTab === 'overview' && (
-              <div className="space-y-6 max-w-4xl animate-in fade-in slide-in-from-bottom-2">
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                    <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Invoice Information</h3>
-                  </div>
-                  <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {[
-                      ['Invoice Number', inv.invoiceNumber || inv.invoiceNo],
-                      ['Invoice Date', inv.invoiceDate],
-                      ['Due Date', inv.dueDate],
-                      ['Status', <StatusBadge key="sb1" status={inv.status} />],
-                      ['Payment Status', <StatusBadge key="sb2" status={inv.paymentStatus || (outstandingAmount === 0 ? 'PAID' : 'UNPAID')} />],
-                      ['Currency', curr],
-                      ['Exchange Rate', inv.exchangeRate || 1],
-                      ['Base Currency Amount', `${inv.companyBaseCurrency || curr} ${fmt(inv.baseCurrencyAmount || totalAmount)}`],
-                      ['Place of Supply', inv.placeOfSupplyDisplayName
-                        || (inv.placeOfSupplyStateCode
-                          ? `${inv.placeOfSupplyStateCode} - ${inv.placeOfSupply || ''}`
-                          : (inv.placeOfSupply || '-'))],
-                      ['GL Posting Status', <StatusBadge key="glps" status={inv.glPostingStatus || inv.status || 'DRAFT'} />],
-                      ['Reference Number', inv.referenceNumber],
-                      ['Business Description', inv.businessDescription],
-                      ['Remarks', inv.remarks],
-                    ].map(([label, val]) => (
-                      <div key={label} className="flex flex-col gap-1">
-                        <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">{label}</p>
-                        <p className="text-sm font-medium text-zinc-900">{val || '-'}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                    <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Company Information</h3>
-                  </div>
-                  <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {[
-                      ['Company Name', companyInfo.companyName || inv.companyName],
-                      ['Company Code', companyInfo.companyCode || inv.companyCode],
-                      ['GSTIN', companyInfo.gstin || inv.companyGstin],
-                      ['PAN', companyInfo.pan || inv.companyPan],
-                      ['Address', companyInfo.address || inv.companyAddress],
-                      ['Contact Details', companyInfo.phone || companyInfo.email || '-'],
-                      ['Base Currency', companyInfo.baseCurrency || inv.companyBaseCurrency || 'INR'],
-                    ].map(([label, val]) => (
-                      <div key={label} className="flex flex-col gap-1">
-                        <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">{label}</p>
-                        <p className="text-sm font-medium text-zinc-900">{val || '-'}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                    <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Customer Information</h3>
-                  </div>
-                  <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {[
-                      ['Customer Code', customerInfo.customerCode || inv.customerCode],
-                      ['Customer Name', customerInfo.customerName || inv.customerName],
-                      ['GSTIN', customerInfo.gstin || inv.customerGstin],
-                      ['PAN', customerInfo.pan || inv.customerPan],
-                      ['Email', customerInfo.email || inv.customerEmail],
-                      ['Phone', customerInfo.phone || inv.customerPhone],
-                      ['Billing Address', customerInfo.billingAddress || inv.billingAddress],
-                      ['Shipping Address', customerInfo.shippingAddress || inv.shippingAddress],
-                      ['Credit Limit', customerInfo.creditLimit ? `₹${fmt(customerInfo.creditLimit)}` : '-'],
-                      ['Outstanding Balance', customerInfo.outstandingBalance ? `₹${fmt(customerInfo.outstandingBalance)}` : '-'],
-                      ['Available Credit', customerInfo.availableCredit ? `₹${fmt(customerInfo.availableCredit)}` : '-'],
-                      ['Payment Terms', customerInfo.paymentTerms || inv.paymentTerms],
-                    ].map(([label, val]) => (
-                      <div key={label} className="flex flex-col gap-1">
-                        <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">{label}</p>
-                        <p className="text-sm font-medium text-zinc-900">{val || '-'}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Transport & Delivery Information */}
-                {(inv.deliveryAddressLine1 || inv.deliveryCity || inv.deliveryState || inv.transporter || inv.transportDocNo || inv.vehicleNo || deliveryInfo.transporter) && (
-                  <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                    <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                      <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-2">
-                        <Truck size={15} className="text-zinc-500" /> Delivery & Transport Details
-                      </h3>
-                    </div>
-                    <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      {(inv.deliveryAddressLine1 || inv.deliveryCity || inv.deliveryState) && (
-                        <div>
-                          <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-2">Delivery Address</p>
-                          <address className="not-italic text-sm font-medium text-zinc-900 leading-6">
-                            {inv.deliveryAddressLine1 && <span className="block">{inv.deliveryAddressLine1}</span>}
-                            {inv.deliveryAddressLine2 && <span className="block">{inv.deliveryAddressLine2}</span>}
-                            {inv.deliveryCity && <span className="block">{inv.deliveryCity}{inv.deliveryState ? `, ${inv.deliveryState}` : ''}{inv.deliveryPostalCode ? ` ${inv.deliveryPostalCode}` : ''}</span>}
-                            {inv.deliveryCountry && <span className="block text-zinc-500">{inv.deliveryCountry}</span>}
-                          </address>
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-2">Transport Information</p>
-                        <dl className="space-y-2">
-                          <div>
-                            <dt className="text-[8px] font-bold text-zinc-400 uppercase">Transporter</dt>
-                            <dd className="text-sm font-semibold text-zinc-800">{inv.transporter || deliveryInfo.transporter || '-'}</dd>
-                          </div>
-                          <div>
-                            <dt className="text-[8px] font-bold text-zinc-400 uppercase">Transport Doc No</dt>
-                            <dd className="text-sm font-semibold text-zinc-800">{inv.transportDocNo || deliveryInfo.lrNumber || deliveryInfo.transportDocNo || '-'}</dd>
-                          </div>
-                          <div>
-                            <dt className="text-[8px] font-bold text-zinc-400 uppercase">Vehicle No</dt>
-                            <dd className="text-sm font-semibold text-zinc-800">{inv.vehicleNo || deliveryInfo.vehicleNumber || '-'}</dd>
-                          </div>
-                        </dl>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* E-Invoice & E-Way Bill */}
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50 flex items-center justify-between">
-                    <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-2">
-                      <QrCode size={16} className="text-blue-600" /> E-Invoice & E-Way Bill Information
-                    </h3>
-                  </div>
-                  <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {[
-                      ['IRN', eInvoiceInfo.irn],
-                      ['Ack Number', eInvoiceInfo.ackNumber || eInvoiceInfo.ackNo],
-                      ['Ack Date', eInvoiceInfo.ackDate || inv.ackDate],
-                      ['E-Way Bill Number', eInvoiceInfo.ewbNumber || inv.ewbNumber],
-                      ['E-Way Bill Validity', eInvoiceInfo.ewbValidity || inv.ewbValidity],
-                    ].map(([label, val]) => (
-                      <div key={label} className="flex flex-col gap-1">
-                        <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">{label}</p>
-                        <p className="text-sm font-mono font-medium text-zinc-900">{val || '-'}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <SalesInvoiceOverviewTab
+                inv={inv}
+                companyInfo={companyInfo}
+                customerInfo={customerInfo}
+                deliveryInfo={deliveryInfo}
+                eInvoiceInfo={eInvoiceInfo}
+                curr={curr}
+                fmt={fmt}
+                StatusBadge={StatusBadge}
+                totalAmount={totalAmount}
+                outstandingAmount={outstandingAmount}
+              />
             )}
 
             {/* ── LINE ITEMS TAB ── */}
             {activeTab === 'items' && (
-              <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden animate-in fade-in">
-                {isEmpty(lineItems) ? (
-                  <EmptyState icon={<ShoppingCart size={48} />} title="No Line Items" desc="There are no line items recorded for this invoice." />
-                ) : (
-                  <div className="w-full overflow-hidden rounded-lg border border-zinc-200">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-bold uppercase tracking-wider text-[8.8px]">
-                        <tr>
-                          <th className="p-4 w-10 text-center"></th>
-                          <th className="p-4 w-1/3">Item Name</th>
-                          <th className="p-4 hidden sm:table-cell">Item Code</th>
-                          <th className="p-4 hidden lg:table-cell">SKU</th>
-                          <th className="p-4 hidden lg:table-cell">HSN/SAC</th>
-                          <th className="p-4 hidden lg:table-cell">GST</th>
-                          <th className="p-4 text-right">Qty</th>
-                          <th className="p-4 hidden sm:table-cell">Unit</th>
-                          <th className="p-4 text-right">Price</th>
-                          <th className="p-4 text-right hidden sm:table-cell">Disc %</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-100 bg-white">
-                        {lineItems.map((item, idx) => {
-                          const isExpanded = !!expandedRows[idx];
-                          const invData = item.inventory;
-
-                          return (
-                            <React.Fragment key={idx}>
-                              <tr
-                                onClick={() => toggleRow(idx)}
-                                className={`hover:bg-zinc-50/80 cursor-pointer transition-colors group ${isExpanded ? 'bg-zinc-50' : ''}`}
-                              >
-                                <td className="p-4 text-zinc-400 group-hover:text-zinc-600 transition-colors">
-                                  {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                                </td>
-                                <td className="p-4">
-                                  <p className="font-medium text-zinc-900 truncate max-w-[120px] sm:max-w-[200px]" title={item.itemName || item.name}>
-                                    {item.itemName || item.name || '-'}
-                                  </p>
-                                </td>
-                                <td className="p-4 hidden sm:table-cell font-mono text-xs font-semibold text-zinc-700">
-                                  {item.itemCode || item.code || '-'}
-                                </td>
-                                <td className="p-4 hidden lg:table-cell text-zinc-500 font-mono text-xs">{item.sku || '-'}</td>
-                                <td className="p-4 hidden lg:table-cell text-zinc-500 font-mono text-xs">{item.hsnCode || item.hsnSac || '-'}</td>
-                                <td className="p-4 hidden lg:table-cell text-zinc-600">{item.gstSlab || `${item.gstRate || 0}%`}</td>
-                                <td className="p-4 text-right font-bold text-zinc-900">{item.quantity}</td>
-                                <td className="p-4 hidden sm:table-cell text-zinc-500">{item.unit || 'PCS'}</td>
-                                <td className="p-4 text-right font-mono">₹{fmt(item.unitPrice || item.price)}</td>
-                                <td className="p-4 text-right hidden sm:table-cell text-zinc-500">
-                                  {item.discountPercentage || item.discount || 0}%
-                                </td>
-                              </tr>
-
-                              {/* Expanded Inline Details */}
-                              {isExpanded && (
-                                <tr className="bg-zinc-50/50">
-                                  <td colSpan={10} className="p-0 border-t border-zinc-100">
-                                    <div className="p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-top-2 duration-200">
-
-                                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                                        <div className="space-y-6">
-                                          {/* Item Details */}
-                                          <div className="space-y-3">
-                                            <h4 className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-200 pb-2">Item Details</h4>
-                                            <dl className="grid grid-cols-2 gap-y-3 gap-x-4">
-                                              <div className="col-span-2">
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Item Name</dt>
-                                                <dd className="text-sm font-medium text-zinc-900">{item.itemName || item.name || '-'}</dd>
-                                              </div>
-                                              <div>
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Item ID</dt>
-                                                <dd className="text-xs font-mono text-zinc-700">{item.itemId || 'N/A'}</dd>
-                                              </div>
-                                              <div>
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Item Code</dt>
-                                                <dd className="text-sm font-mono font-medium text-zinc-900">{item.itemCode || item.code || 'N/A'}</dd>
-                                              </div>
-                                              <div>
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">SKU</dt>
-                                                <dd className="text-sm font-mono text-zinc-700">{item.sku || 'N/A'}</dd>
-                                              </div>
-                                              <div>
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">HSN/SAC</dt>
-                                                <dd className="text-sm font-mono text-zinc-700">{item.hsnCode || item.hsnSac || 'N/A'}</dd>
-                                              </div>
-                                              <div className="col-span-2">
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Description</dt>
-                                                <dd className="text-sm text-zinc-700">{item.description || 'N/A'}</dd>
-                                              </div>
-                                              <div>
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">GST Slab</dt>
-                                                <dd className="text-sm font-medium text-zinc-900">{item.gstSlab || `${item.gstRate || 0}%`}</dd>
-                                              </div>
-                                            </dl>
-                                          </div>
-
-                                          {/* Additional Information */}
-                                          <div className="space-y-3">
-                                            <h4 className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-200 pb-2">Additional Information</h4>
-                                            <dl className="grid grid-cols-2 gap-y-3 gap-x-4">
-                                              <div>
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Expiry Date</dt>
-                                                <dd className="text-sm text-zinc-700">{item.expiryDate || 'N/A'}</dd>
-                                              </div>
-                                              <div>
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Cost Center</dt>
-                                                <dd className="text-sm text-zinc-700">{item.costCenter || 'N/A'}</dd>
-                                              </div>
-                                              <div className="col-span-2">
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Line Remarks</dt>
-                                                <dd className="text-sm text-zinc-700">{item.lineRemarks || item.remarks || 'N/A'}</dd>
-                                              </div>
-                                            </dl>
-                                          </div>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                          {/* Pricing & Tax */}
-                                          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-                                            <div className="grid grid-cols-2 divide-x divide-zinc-100">
-
-                                              {/* Pricing */}
-                                              <div className="p-5 space-y-4">
-                                                <h4 className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-3">Pricing</h4>
-                                                <dl className="space-y-3">
-                                                  <div className="flex justify-between">
-                                                    <dt className="text-xs font-medium text-zinc-500">Quantity</dt>
-                                                    <dd className="text-xs font-bold text-zinc-900">{item.quantity} {item.unit || 'PCS'}</dd>
-                                                  </div>
-                                                  <div className="flex justify-between">
-                                                    <dt className="text-xs font-medium text-zinc-500">Unit Price</dt>
-                                                    <dd className="text-xs font-mono font-medium text-zinc-900">₹{fmt(item.unitPrice || item.price)}</dd>
-                                                  </div>
-                                                  <div className="flex justify-between">
-                                                    <dt className="text-xs font-medium text-zinc-500">Discount</dt>
-                                                    <dd className="text-xs font-medium text-zinc-700">{item.discountPercentage || item.discount || 0}% (₹{fmt(item.discountAmount)})</dd>
-                                                  </div>
-                                                  <div className="flex justify-between pt-2 border-t border-zinc-100">
-                                                    <dt className="text-xs font-bold text-zinc-700">Taxable Amt</dt>
-                                                    <dd className="text-sm font-mono font-bold text-zinc-900">₹{fmt(item.taxableAmount)}</dd>
-                                                  </div>
-                                                </dl>
-                                              </div>
-
-                                              {/* Tax */}
-                                              <div className="p-5 space-y-4 bg-zinc-50/50">
-                                                <h4 className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-3">Tax Details</h4>
-                                                <dl className="space-y-3">
-                                                  <div className="flex justify-between">
-                                                    <dt className="text-xs font-medium text-zinc-500">CGST</dt>
-                                                    <dd className="text-xs font-mono text-zinc-700">₹{fmt(item.cgst ?? item.cgstAmount ?? 0)}</dd>
-                                                  </div>
-                                                  <div className="flex justify-between">
-                                                    <dt className="text-xs font-medium text-zinc-500">SGST</dt>
-                                                    <dd className="text-xs font-mono text-zinc-700">₹{fmt(item.sgst ?? item.sgstAmount ?? 0)}</dd>
-                                                  </div>
-                                                  <div className="flex justify-between">
-                                                    <dt className="text-xs font-medium text-zinc-500">IGST</dt>
-                                                    <dd className="text-xs font-mono text-zinc-700">₹{fmt(item.igst ?? item.igstAmount ?? 0)}</dd>
-                                                  </div>
-                                                  <div className="flex justify-between">
-                                                    <dt className="text-xs font-medium text-zinc-500">CESS</dt>
-                                                    <dd className="text-xs font-mono text-zinc-700">₹{fmt(item.cess ?? item.cessAmount ?? 0)}</dd>
-                                                  </div>
-                                                  <div className="flex justify-between pt-2 border-t border-zinc-200 border-dashed">
-                                                    <dt className="text-xs font-bold text-zinc-700">Tax Amount</dt>
-                                                    <dd className="text-sm font-mono font-bold text-zinc-900">₹{fmt(item.taxAmount ?? 0)}</dd>
-                                                  </div>
-                                                </dl>
-                                              </div>
-
-                                            </div>
-                                            <div className="bg-zinc-900 p-4 flex justify-between items-center text-white">
-                                              <span className="text-xs font-bold uppercase tracking-widest">Total Amount</span>
-                                              <span className="text-lg font-mono font-black text-emerald-400">₹{fmt(item.totalAmount)}</span>
-                                            </div>
-                                          </div>
-
-                                          {/* Inventory Card */}
-                                          <div className="bg-amber-50/30 rounded-xl border border-amber-200 shadow-sm overflow-hidden relative">
-                                            <div className="absolute top-0 right-0 p-3">
-                                              <div className={`px-2 py-1 text-[7.2px] font-black uppercase tracking-widest rounded shadow-sm border ${!invData ? 'bg-zinc-100 text-zinc-500 border-zinc-200' :
-                                                  invData.inventoryFetchStatus === 'SUCCESS' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
-                                                    invData.inventoryFetchStatus === 'FAILED' ? 'bg-rose-100 text-rose-700 border-rose-200' :
-                                                      'bg-zinc-100 text-zinc-600 border-zinc-200'
-                                                }`}>
-                                                {!invData ? 'N/A' : (invData.inventoryFetchStatus || 'UNKNOWN')}
-                                              </div>
-                                            </div>
-                                            <div className="px-5 py-4 border-b border-amber-200/50 bg-amber-50/50">
-                                              <h4 className="text-[8.8px] font-bold text-amber-900 uppercase tracking-widest flex items-center gap-2">
-                                                <Package size={14} className="text-amber-600" /> Inventory Information
-                                              </h4>
-                                            </div>
-                                            <div className="p-5">
-                                              {!invData ? (
-                                                <p className="text-sm font-medium text-amber-700/70 text-center py-2">No inventory information available for this item.</p>
-                                              ) : (
-                                                <dl className="grid grid-cols-2 gap-y-4 gap-x-4">
-                                                  <div className="col-span-2">
-                                                    <dt className="text-[8px] font-bold text-amber-700/60 uppercase tracking-wider mb-1">Warehouse</dt>
-                                                    <dd className="text-sm font-semibold text-amber-950">{invData.warehouseName || 'N/A'}</dd>
-                                                    {invData.warehouseId && <p className="text-[8px] font-mono text-amber-700/50 mt-0.5">{invData.warehouseId}</p>}
-                                                  </div>
-                                                  <div className="col-span-2">
-                                                    <dt className="text-[8px] font-bold text-amber-700/60 uppercase tracking-wider mb-1">Location</dt>
-                                                    <dd className="text-sm font-semibold text-amber-950">{invData.locationName || 'N/A'}</dd>
-                                                    {invData.locationId && <p className="text-[8px] font-mono text-amber-700/50 mt-0.5">{invData.locationId}</p>}
-                                                  </div>
-                                                  <div>
-                                                    <dt className="text-[8px] font-bold text-amber-700/60 uppercase tracking-wider mb-1">Batch</dt>
-                                                    <dd className="text-sm font-mono text-amber-900">{invData.batchCode || 'N/A'}</dd>
-                                                  </div>
-                                                  <div>
-                                                    <dt className="text-[8px] font-bold text-amber-700/60 uppercase tracking-wider mb-1">Stock Qty</dt>
-                                                    <dd className="text-sm font-bold text-amber-950">{invData.stockQuantity ?? 'N/A'}</dd>
-                                                  </div>
-                                                  <div>
-                                                    <dt className="text-[8px] font-bold text-amber-700/60 uppercase tracking-wider mb-1">Reserved Qty</dt>
-                                                    <dd className="text-sm font-bold text-rose-700">{invData.reservedQuantity ?? 'N/A'}</dd>
-                                                  </div>
-                                                  <div>
-                                                    <dt className="text-[8px] font-bold text-amber-700/60 uppercase tracking-wider mb-1">Available Qty</dt>
-                                                    <dd className="text-sm font-bold text-emerald-700">{invData.availableQuantity ?? 'N/A'}</dd>
-                                                  </div>
-                                                </dl>
-                                              )}
-                                            </div>
-                                          </div>
-
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                            </React.Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
+              <SalesInvoiceItemsTab
+                lineItems={lineItems}
+                expandedRows={expandedRows}
+                toggleRow={toggleRow}
+                fmt={fmt}
+                isEmpty={isEmpty}
+                EmptyState={EmptyState}
+              />
             )}
 
             {/* ── TAX SUMMARY TAB ── */}
@@ -1289,83 +921,14 @@ export default function SalesInvoiceDetails() {
       </div>
 
       {/* Edit Modal */}
-      <Modal
+      <SalesInvoiceEditModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Edit Sales Invoice"
-        size="md"
-      >
-        <form onSubmit={handleEditSubmit} className="space-y-4">
-          <div className="space-y-3">
-            <div>
-              <label className="text-[10.4px] font-semibold text-zinc-700">Invoice Number</label>
-              <input
-                type="text"
-                value={formData.invoiceNumber}
-                onChange={(e) => setFormData(prev => ({ ...prev, invoiceNumber: e.target.value }))}
-                className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 outline-none"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10.4px] font-semibold text-zinc-700">Invoice Date</label>
-                <input
-                  type="date"
-                  value={formData.invoiceDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, invoiceDate: e.target.value }))}
-                  className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 outline-none"
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-[10.4px] font-semibold text-zinc-700">Due Date</label>
-                <input
-                  type="date"
-                  value={formData.dueDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-                  className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 outline-none"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-[10.4px] font-semibold text-zinc-700">Reference Number</label>
-              <input
-                type="text"
-                value={formData.referenceNumber}
-                onChange={(e) => setFormData(prev => ({ ...prev, referenceNumber: e.target.value }))}
-                className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-[10.4px] font-semibold text-zinc-700">Remarks</label>
-              <textarea
-                value={formData.remarks}
-                onChange={(e) => setFormData(prev => ({ ...prev, remarks: e.target.value }))}
-                className="w-full h-20 p-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100">
-            <button
-              type="button"
-              onClick={() => setIsEditModalOpen(false)}
-              className="px-5 py-1.5 text-[10.4px] font-semibold text-zinc-700 hover:text-zinc-900 bg-white border border-zinc-200 rounded-md"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={updateMutation.isLoading}
-              className="px-5 py-1.5 text-[10.4px] font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-md"
-            >
-              {updateMutation.isLoading ? 'Saving...' : 'Update Invoice'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+        formData={formData}
+        setFormData={setFormData}
+        onSubmit={handleEditSubmit}
+        isLoading={updateMutation.isLoading}
+      />
 
       {/* Partial Payment Modal */}
       {selectedInvoiceForPayment && (

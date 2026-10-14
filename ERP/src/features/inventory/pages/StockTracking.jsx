@@ -74,8 +74,8 @@ export default function StockTracking() {
   const pageable = useMemo(() => ({
     page,
     size: apiParams.size || 10,
-    sort: apiParams.sort ? `${apiParams.sort},${apiParams.direction}` : undefined
-  }), [page, apiParams.size, apiParams.sort, apiParams.direction]);
+    sort: apiParams.sort || undefined
+  }), [page, apiParams.size, apiParams.sort]);
 
   const { inventoryStocks: stocks, pagination: pageInfo, isLoading, isFetching, refetch } = useInventoryStockList(
     finalParams,

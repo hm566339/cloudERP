@@ -12,7 +12,7 @@ export function SettingsSelect({ label, id, description, options = [], ...props 
       <div className="relative">
         <select
           id={id}
-          className="w-full px-4 py-2 border border-slate-300 rounded-lg appearance-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white transition-colors cursor-pointer pr-10 text-slate-900"
+          className="w-full px-4 py-2 border border-zinc-300 rounded-xl appearance-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 outline-none bg-white transition-colors cursor-pointer pr-10 text-zinc-900"
           {...props}
         >
           {options.map((opt, i) => (

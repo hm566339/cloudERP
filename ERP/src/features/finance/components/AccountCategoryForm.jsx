@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import CustomSelect from '../../../components/common/CustomSelect';
-export default function AccountCategoryForm({ initialData, onSubmit, onCancel, isLoading, serverError }) {
+import { useApiMutation } from '../../../hooks/useApi';
+import { accountCategoriesApi } from '../../../api/account/accountCategories';
+
+export default function AccountCategoryForm({ initialData, onSubmit, onSuccess, onCancel, isLoading: externalLoading, serverError }) {
   const isEditing = !!(initialData?.id || initialData?.categoryId);
   const [formData, setFormData] = useState({
     name: '',
@@ -8,6 +11,10 @@ export default function AccountCategoryForm({ initialData, onSubmit, onCancel, i
   });
 
   const [errors, setErrors] = useState({});
+
+  const { mutate: createCategory, isLoading: isCreating } = useApiMutation(accountCategoriesApi.create);
+  const { mutate: updateCategory, isLoading: isUpdating } = useApiMutation(accountCategoriesApi.update);
+  const isLoading = externalLoading || isCreating || isUpdating;
 
   useEffect(() => {
     if (initialData) {
@@ -57,7 +64,34 @@ export default function AccountCategoryForm({ initialData, onSubmit, onCancel, i
       nature: formData.nature
     };
     
-    onSubmit({ data: payload }, resetForm);
+    if (typeof onSubmit === 'function') {
+      onSubmit({ data: payload }, resetForm);
+    } else {
+      if (isEditing) {
+        const id = initialData?.id || initialData?.categoryId;
+        updateCategory({ id, data: payload }, {
+          onSuccess: (res) => {
+            resetForm();
+            onSuccess?.(res?.data || res);
+          },
+          onError: (err) => {
+            const msg = err?.response?.data?.message || err?.message || 'Failed to update category';
+            setErrors(prev => ({ ...prev, form: msg }));
+          }
+        });
+      } else {
+        createCategory({ data: payload }, {
+          onSuccess: (res) => {
+            resetForm();
+            onSuccess?.(res?.data || res);
+          },
+          onError: (err) => {
+            const msg = err?.response?.data?.message || err?.message || 'Failed to create category';
+            setErrors(prev => ({ ...prev, form: msg }));
+          }
+        });
+      }
+    }
   };
 
   const resetForm = () => {
@@ -68,12 +102,14 @@ export default function AccountCategoryForm({ initialData, onSubmit, onCancel, i
     setErrors({});
   };
 
+  const displayError = serverError || errors.form;
+
   return (
     <>
       <form id="account-category-form" onSubmit={handleSubmit} className="flex flex-col gap-y-4">
-        {serverError && (
+        {displayError && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs font-medium text-red-700">
-            {serverError}
+            {displayError}
           </div>
         )}
 

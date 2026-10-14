@@ -29,14 +29,14 @@ export default function AuditLogsSettings() {
             <input
               type="text"
               placeholder="Search logs..."
-              className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              className="w-full pl-9 pr-4 py-2 border border-zinc-200 rounded-xl text-sm focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 outline-none"
             />
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
-            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm hover:bg-slate-50 transition-colors">
+            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-zinc-200 text-zinc-700 rounded-xl text-sm hover:bg-zinc-50 transition-colors">
               <Filter size={16} /> Filter
             </button>
-            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-sm hover:bg-indigo-100 transition-colors">
+            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-xl text-sm hover:bg-zinc-800 transition-colors">
               <Download size={16} /> Export
             </button>
           </div>
@@ -44,7 +44,7 @@ export default function AuditLogsSettings() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-slate-500 bg-slate-50 uppercase border-b border-slate-200">
+            <thead className="text-xs text-zinc-500 bg-zinc-50 uppercase border-b border-zinc-200">
               <tr>
                 <th className="px-4 py-3 font-medium">Action</th>
                 <th className="px-4 py-3 font-medium">User</th>
@@ -54,25 +54,25 @@ export default function AuditLogsSettings() {
             </thead>
             <tbody>
               {logs.map((log) => (
-                <tr key={log.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-slate-900">{log.action}</td>
-                  <td className="px-4 py-3 text-slate-600">{log.user}</td>
-                  <td className="px-4 py-3 text-slate-600">{log.date}</td>
-                  <td className="px-4 py-3 text-slate-500 font-mono text-xs">{log.ip}</td>
+                <tr key={log.id} className="border-b border-zinc-100 hover:bg-zinc-50/50 transition-colors">
+                  <td className="px-4 py-3 font-medium text-zinc-900">{log.action}</td>
+                  <td className="px-4 py-3 text-zinc-600">{log.user}</td>
+                  <td className="px-4 py-3 text-zinc-600">{log.date}</td>
+                  <td className="px-4 py-3 text-zinc-500 font-mono text-xs">{log.ip}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <div className="flex justify-between items-center mt-4 text-sm text-slate-500">
+        <div className="flex justify-between items-center mt-4 text-sm text-zinc-500">
           <span>Showing 1 to 5 of 248 entries</span>
           <div className="flex gap-1">
-            <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50">Prev</button>
-            <button className="px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded">1</button>
-            <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50">2</button>
-            <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50">3</button>
-            <button className="px-3 py-1 border border-slate-200 rounded hover:bg-slate-50">Next</button>
+            <button className="px-3 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-50">Prev</button>
+            <button className="px-3 py-1 bg-zinc-900 text-white rounded-lg font-bold">1</button>
+            <button className="px-3 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-50">2</button>
+            <button className="px-3 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-50">3</button>
+            <button className="px-3 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-50">Next</button>
           </div>
         </div>
       </SettingsCard>

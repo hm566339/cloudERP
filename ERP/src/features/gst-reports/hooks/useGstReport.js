@@ -15,29 +15,18 @@ export function useGstReport({ fetcher, autoFetch = false }) {
   fetcherRef.current = fetcher;
 
   const fetchReport = useCallback(async (payload) => {
-    console.log('[useGstReport] fetchReport called with payload:', payload);
-
-    if (!payload) {
-      console.warn('[useGstReport] SKIPPED: no payload provided');
-      return;
-    }
+    if (!payload) return;
 
     const fn = fetcherRef.current;
-    if (typeof fn !== 'function') {
-      console.error('[useGstReport] SKIPPED: fetcher is not a function:', fn);
-      return;
-    }
+    if (typeof fn !== 'function') return;
 
-    console.log('[useGstReport] Calling fetcher now...');
     setIsLoading(true);
     setError(null);
 
     try {
       const res = await fn(payload);
-      console.log('[useGstReport] SUCCESS - response:', res);
       setData(res);
     } catch (err) {
-      console.error('[useGstReport] ERROR:', err);
       setError(
         err?.response?.data?.message || err.message || 'Failed to fetch GST report'
       );

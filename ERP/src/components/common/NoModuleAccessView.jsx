@@ -26,7 +26,7 @@ export default function NoModuleAccessView() {
     localStorage.clear();
     sessionStorage.clear();
     dispatch(logoutAction());
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   };
 
   return (

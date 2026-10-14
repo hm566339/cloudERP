@@ -75,7 +75,7 @@ export default function ExpenseReportsTab({ companyId }) {
             setVehicleOptions(vehItems.map(v => ({ value: v.id, label: v.vehicleNumber || v.registrationNumber })));
           }
         } catch (vErr) {
-          console.debug('No vehicles API or failed to load:', vErr);
+          // Vehicles endpoint optional; ignore if unavailable
         }
 
       } catch (err) {
