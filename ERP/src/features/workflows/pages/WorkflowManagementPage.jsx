@@ -202,6 +202,13 @@ export default function WorkflowManagementPage() {
     [workflows, module, query]
   );
 
+  const existingCodes = useMemo(() => {
+    return workflows
+      .filter((w) => w.id !== selectedId && (!draftWorkflow || w.id !== draftWorkflow.id))
+      .map((w) => String(w.workflowCode || w.code || '').trim().toUpperCase())
+      .filter(Boolean);
+  }, [workflows, selectedId, draftWorkflow]);
+
   const isEditingDraft = Boolean(draftWorkflow && selectedId === draftWorkflow.id);
   const selected = isEditingDraft
     ? draftWorkflow
@@ -375,6 +382,16 @@ export default function WorkflowManagementPage() {
       return;
     }
 
+    if (isEditingDraft) {
+      const codeCandidate = String(payloadToSave.workflowCode || '').trim().toUpperCase();
+      if (existingCodes.includes(codeCandidate)) {
+        const errorMsg = `Workflow code "${payloadToSave.workflowCode}" already exists for this company. Please specify a unique code.`;
+        setErrors((prev) => ({ ...prev, workflowCode: errorMsg }));
+        dispatch(addAlert({ type: 'error', message: errorMsg }));
+        return;
+      }
+    }
+
     setErrors({});
     setIsSaving(true);
 
@@ -422,12 +439,18 @@ export default function WorkflowManagementPage() {
       }
     } catch (error) {
       console.error('Failed to save workflow definition', error);
+      const errorMsg = error?.response?.data?.message || error?.message || `Could not save ${selected.name}.`;
       if (error?.validationErrors) {
         setErrors(error.validationErrors);
+      } else if (errorMsg.toLowerCase().includes('already exists') || error?.response?.status === 409) {
+        setErrors((prev) => ({
+          ...prev,
+          workflowCode: errorMsg,
+        }));
       }
       dispatch(addAlert({
         type: 'error',
-        message: error?.message || `Could not save ${selected.name}.`,
+        message: errorMsg,
       }));
     } finally {
       setIsSaving(false);
@@ -828,6 +851,7 @@ export default function WorkflowManagementPage() {
                     rolesLoading={rolesLoading}
                     rolesError={rolesError}
                     onRetryRoles={() => fetchRoles(companyId)}
+                    existingCodes={existingCodes}
                   />
                 ) : (
                   <EmptyState onCreate={canCreate ? create : undefined} />

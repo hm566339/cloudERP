@@ -24,11 +24,14 @@ export default function WorkflowConfigurationForm({
   rolesLoading = false,
   rolesError = null,
   onRetryRoles,
+  existingCodes = [],
 }) {
   const update = (key, value) => setWorkflow((current) => ({ ...current, [key]: value }));
 
   const currentInitiatedBy = resolveRoleId(workflow.initiatedBy, roles);
   const currentApproverRole = resolveRoleId(workflow.approverRole, roles);
+  const currentCode = (workflow.workflowCode || '').trim().toUpperCase();
+  const isCodeDuplicate = Boolean(currentCode && existingCodes.includes(currentCode));
 
   return (
     <div className="space-y-4">
@@ -45,7 +48,14 @@ export default function WorkflowConfigurationForm({
               update('name', val);
               update('workflowName', val);
               if (!workflow.codeManuallyEdited) {
-                const autoCode = val.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+                let autoCode = val.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+                if (autoCode && existingCodes.includes(autoCode)) {
+                  let counter = 2;
+                  while (existingCodes.includes(`${autoCode}_${counter}`)) {
+                    counter++;
+                  }
+                  autoCode = `${autoCode}_${counter}`;
+                }
                 update('workflowCode', autoCode);
               }
             }}
@@ -59,7 +69,7 @@ export default function WorkflowConfigurationForm({
         <Field label="Workflow code" hint="Unique code, e.g. SALES_APPROVAL">
           <input
             className={`w-full h-8 px-2.5 rounded-lg border bg-white text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 font-mono text-[11px] ${
-              errors.workflowCode ? 'border-red-400' : 'border-zinc-200'
+              errors.workflowCode || isCodeDuplicate ? 'border-red-400' : 'border-zinc-200'
             }`}
             disabled={!canEdit}
             value={workflow.workflowCode || ''}
@@ -71,6 +81,11 @@ export default function WorkflowConfigurationForm({
           />
           {errors.workflowCode && (
             <p className="text-[11px] text-red-600 font-medium mt-1">{errors.workflowCode}</p>
+          )}
+          {!errors.workflowCode && isCodeDuplicate && (
+            <p className="text-[11px] text-amber-600 font-medium mt-1">
+              Workflow code already exists for this company. Please specify a unique code.
+            </p>
           )}
         </Field>
       </div>

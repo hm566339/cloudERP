@@ -77,6 +77,13 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Validation failed: " + errors, "VALIDATION_ERROR"));
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+        log.warn("Database integrity violation: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error("A workflow definition with this code and version already exists for this company.", "DUPLICATE_WORKFLOW_DEFINITION"));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(Exception ex) {
         log.error("Unhandled error: ", ex);

@@ -35,10 +35,18 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
     @Override
     @Transactional
     public WorkflowDefinitionResponse createDefinition(CreateWorkflowDefinitionRequest request) {
+        int targetVersion = request.getVersion() != null ? request.getVersion() : 1;
         if (definitionRepository.existsByCompanyIdAndWorkflowCodeAndVersionAndIsDeletedFalse(
-                request.getCompanyId(), request.getWorkflowCode(), request.getVersion())) {
+                request.getCompanyId(), request.getWorkflowCode(), targetVersion)) {
             throw new WorkflowValidationException("Workflow definition with code '" +
-                    request.getWorkflowCode() + "' and version " + request.getVersion() + " already exists.");
+                    request.getWorkflowCode() + "' and version " + targetVersion + " already exists.");
+        }
+
+        if (definitionRepository.existsByCompanyIdAndWorkflowCodeAndVersion(
+                request.getCompanyId(), request.getWorkflowCode(), targetVersion)) {
+            Integer maxVersion = definitionRepository.findMaxVersionByCompanyIdAndWorkflowCode(
+                    request.getCompanyId(), request.getWorkflowCode());
+            targetVersion = (maxVersion != null ? maxVersion : targetVersion) + 1;
         }
 
         // If this is set as default, unset other defaults for same doc type
@@ -60,7 +68,7 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                 .moduleName(request.getModuleName())
                 .documentType(request.getDocumentType())
                 .description(request.getDescription())
-                .version(request.getVersion() != null ? request.getVersion() : 1)
+                .version(targetVersion)
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
                 .isDefault(request.getIsDefault() != null ? request.getIsDefault() : false)
                 .effectiveFrom(request.getEffectiveFrom() != null ? request.getEffectiveFrom() : LocalDateTime.now())

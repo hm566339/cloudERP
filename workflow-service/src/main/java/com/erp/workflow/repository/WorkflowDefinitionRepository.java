@@ -45,4 +45,12 @@ public interface WorkflowDefinitionRepository extends JpaRepository<WorkflowDefi
 
     boolean existsByCompanyIdAndWorkflowCodeAndVersionAndIsDeletedFalse(
             UUID companyId, String workflowCode, Integer version);
+
+    boolean existsByCompanyIdAndWorkflowCodeAndVersion(
+            UUID companyId, String workflowCode, Integer version);
+
+    @Query("SELECT MAX(wd.version) FROM WorkflowDefinition wd WHERE wd.companyId = :companyId AND wd.workflowCode = :workflowCode")
+    Integer findMaxVersionByCompanyIdAndWorkflowCode(
+            @Param("companyId") UUID companyId,
+            @Param("workflowCode") String workflowCode);
 }
