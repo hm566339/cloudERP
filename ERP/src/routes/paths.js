@@ -9,7 +9,7 @@ export const PATHS = {
   LANDING: '/landing',
   TRY_FREE: '/try-free',
   LOGIN: '/login',
-  MODULES: '/modules',
+  MODULES: '/login',
   ADMIN_LOGIN: '/admin-login',
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',

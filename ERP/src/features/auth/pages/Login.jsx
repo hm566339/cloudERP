@@ -462,8 +462,8 @@ export default function Login() {
 
         {/* Back Link */}
         <Link
-          to={isOrgMode ? buildPath('/try-free') : buildPath('/modules')}
-          title={isOrgMode ? 'Back to Signup' : 'Back to Modules'}
+          to={isOrgMode ? buildPath('/try-free') : buildPath('/')}
+          title={isOrgMode ? 'Back to Signup' : 'Back to Home'}
           className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-colors mb-8"
         >
           <ChevronLeft size={20} />

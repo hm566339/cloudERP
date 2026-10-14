@@ -32,7 +32,7 @@ export default function LandingCta() {
               </Link>
 
               <Link
-                to="/modules"
+                to="/login"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 h-12 rounded-xl border border-zinc-700 text-white text-sm font-semibold hover:bg-zinc-800 transition-colors active:scale-[0.98]"
               >
                 <span>Sign In</span>

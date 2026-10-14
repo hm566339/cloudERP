@@ -29,9 +29,6 @@ import { RootIndexHandler, CompanyEntryRedirect } from "./RouteRedirects";
 
 // ─── Auth Pages ───────────────────────────────────────────────────────────────
 const Login = lazy(() => import("../features/auth/pages/Login"));
-const ModuleSelection = lazy(
-  () => import("../features/auth/pages/ModuleSelection"),
-);
 const AdminLogin = lazy(() => import("../features/auth/pages/AdminLogin"));
 const ForgotPassword = lazy(
   () => import("../features/auth/pages/ForgotPassword"),
@@ -530,7 +527,7 @@ export default function AppRoutes() {
 
         {/* ── PUBLIC (Auth Layout) ── */}
         <Route element={<AuthLayout />}>
-          <Route path="/modules" element={<ModuleSelection />} />
+          <Route path="/modules" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/:moduleCode/login" element={<Login />} />
           <Route path="/o/:organizationCode/login" element={<Login />} />
