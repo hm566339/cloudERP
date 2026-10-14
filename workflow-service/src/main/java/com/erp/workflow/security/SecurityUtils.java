@@ -56,9 +56,16 @@ public final class SecurityUtils {
         }
         Optional<AuthenticatedUser> authUser = getAuthenticatedUser();
         if (authUser.isPresent()) {
-            return Optional.ofNullable(authUser.get().getOrganizationId());
+            return Optional.ofNullable(authUser.get().getCompanyId());
         }
         return getCurrentUser().map(UserPrincipal::getCompanyId);
+    }
+
+    public static Optional<UUID> getCurrentOrganizationId() {
+        if (CurrentUserContext.getOrganizationId() != null) {
+            return Optional.of(CurrentUserContext.getOrganizationId());
+        }
+        return getAuthenticatedUser().map(AuthenticatedUser::getOrganizationId);
     }
 
     public static String getCurrentUsername() {

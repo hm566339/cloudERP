@@ -19,4 +19,10 @@ public interface SubscriptionBillingService {
     Subscription verifyAndActivatePayment(UUID organizationId, com.erp.auth_service.dto.subscription.PaymentVerificationRequest request);
 
     Subscription getOrganizationSubscription(UUID organizationId);
+
+    void assertOrganizationManagementAccess(UUID organizationId);
+
+    java.util.List<com.erp.auth_service.model.Payment> getOrganizationPayments(UUID organizationId);
+
+    java.util.List<com.erp.auth_service.model.Invoice> getOrganizationInvoices(UUID organizationId);
 }

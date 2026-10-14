@@ -79,6 +79,9 @@ public class WorkflowDefinitionController {
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
         UUID effectiveCompanyId = resolveCompanyId(companyId);
+        if (effectiveCompanyId == null) {
+            throw new com.erp.workflow.exception.WorkflowValidationException("Company ID is required to activate workflow definition");
+        }
         definitionService.activateDefinition(id, effectiveCompanyId);
         return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition activated"));
     }
@@ -89,6 +92,9 @@ public class WorkflowDefinitionController {
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
         UUID effectiveCompanyId = resolveCompanyId(companyId);
+        if (effectiveCompanyId == null) {
+            throw new com.erp.workflow.exception.WorkflowValidationException("Company ID is required to deactivate workflow definition");
+        }
         definitionService.deactivateDefinition(id, effectiveCompanyId);
         return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition deactivated"));
     }
@@ -102,8 +108,8 @@ public class WorkflowDefinitionController {
     }
 
     private UUID resolveCompanyId(UUID requestCompanyId) {
-        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
-        if (isSystemAdmin && requestCompanyId != null) {
+        boolean isPrivileged = SecurityUtils.hasRole("SYSTEM_ADMIN") || SecurityUtils.hasRole("OWNER");
+        if (isPrivileged && requestCompanyId != null) {
             return requestCompanyId;
         }
         return SecurityUtils.getCurrentCompanyId().orElse(requestCompanyId);

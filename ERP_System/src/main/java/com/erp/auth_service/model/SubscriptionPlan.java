@@ -17,6 +17,7 @@ import java.util.UUID;
 }, indexes = {
         @Index(name = "idx_subscription_plan_active", columnList = "active"),
         @Index(name = "idx_subscription_plan_is_trial", columnList = "is_trial"),
+        @Index(name = "idx_subscription_plan_deleted", columnList = "deleted"),
         @Index(name = "idx_subscription_plan_razorpay", columnList = "razorpay_plan_id")
 })
 @Getter
@@ -75,6 +76,10 @@ public class SubscriptionPlan {
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
 
     @Column(name = "is_trial", nullable = false)
     @Builder.Default

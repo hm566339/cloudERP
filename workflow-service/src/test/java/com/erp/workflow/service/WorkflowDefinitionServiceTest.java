@@ -121,4 +121,46 @@ class WorkflowDefinitionServiceTest {
         assertEquals("FY_WF", response.getWorkflowCode());
         assertEquals("FISCAL_YEAR", response.getDocumentType());
     }
+
+    @Test
+    void testActivateDefinition_Success() {
+        UUID companyId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+
+        WorkflowDefinition def = WorkflowDefinition.builder()
+                .id(defId)
+                .companyId(companyId)
+                .workflowCode("FY_WF")
+                .isActive(false)
+                .build();
+
+        when(definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(defId, companyId))
+                .thenReturn(Optional.of(def));
+
+        definitionService.activateDefinition(defId, companyId);
+
+        assertTrue(def.getIsActive());
+        verify(definitionRepository).save(def);
+    }
+
+    @Test
+    void testDeactivateDefinition_Success() {
+        UUID companyId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+
+        WorkflowDefinition def = WorkflowDefinition.builder()
+                .id(defId)
+                .companyId(companyId)
+                .workflowCode("FY_WF")
+                .isActive(true)
+                .build();
+
+        when(definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(defId, companyId))
+                .thenReturn(Optional.of(def));
+
+        definitionService.deactivateDefinition(defId, companyId);
+
+        assertFalse(def.getIsActive());
+        verify(definitionRepository).save(def);
+    }
 }

@@ -38,6 +38,13 @@ class SsoAuthorizationManagerTest {
                 "WORKFLOW_NOTIFICATIONS", List.of("/api/v1/workflow/notifications", "/api/v1/workflow/notifications/**"),
                 "WORKFLOW_ATTACHMENTS", List.of("/api/v1/workflow/attachments", "/api/v1/workflow/attachments/**")
         ));
+        properties.setFeatureGroups(Map.of(
+                "WORKFLOW_ADMIN", Map.of(
+                        "WORKFLOW", List.of("READ", "CREATE", "UPDATE", "WRITE", "DELETE", "ACTIVATE", "DEACTIVATE"),
+                        "WORKFLOW_DEFINITIONS", List.of("READ", "CREATE", "UPDATE", "WRITE", "DELETE", "ACTIVATE", "DEACTIVATE"),
+                        "WORKFLOW_TRANSACTIONS", List.of("READ", "CREATE", "UPDATE", "WRITE", "DELETE", "CANCEL")
+                )
+        ));
         properties.setWriteImpliesCreateUpdate(false);
         manager = new SsoAuthorizationManager(properties);
         CurrentUserContext.clear();
@@ -326,5 +333,73 @@ class SsoAuthorizationManagerTest {
         // When opt-in enabled, WRITE satisfies CREATE
         properties.setWriteImpliesCreateUpdate(true);
         assertThat(decide(user, "POST", "/api/v1/workflow/definitions").isGranted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("OWNER role can activate and deactivate workflow definitions")
+    void testOwnerCanActivateAndDeactivateWorkflowDefinition() {
+        AuthenticatedUser owner = buildUser(List.of("OWNER"), List.of());
+
+        assertThat(decide(owner, "PATCH", "/api/v1/workflow/definitions/7ac31517-e9b0-46ff-8164-3b6a62c8a977/activate").isGranted()).isTrue();
+        assertThat(decide(owner, "PATCH", "/api/v1/workflow/definitions/7ac31517-e9b0-46ff-8164-3b6a62c8a977/deactivate").isGranted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("User with WORKFLOW_DEFINITIONS:WRITE can activate and deactivate workflow definitions")
+    void testUserWithWritePermissionCanActivateWorkflowDefinition() {
+        PermissionResponse writePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS")
+                .action("WRITE")
+                .active(true)
+                .allowed(true)
+                .build();
+        AuthenticatedUser writer = buildUser(List.of(), List.of(writePerm));
+
+        assertThat(decide(writer, "PATCH", "/api/v1/workflow/definitions/123/activate").isGranted()).isTrue();
+        assertThat(decide(writer, "PATCH", "/api/v1/workflow/definitions/123/deactivate").isGranted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("User with WORKFLOW_DEFINITIONS:UPDATE can activate and deactivate workflow definitions")
+    void testUserWithUpdatePermissionCanActivateWorkflowDefinition() {
+        PermissionResponse updatePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS")
+                .action("UPDATE")
+                .active(true)
+                .allowed(true)
+                .build();
+        AuthenticatedUser updater = buildUser(List.of(), List.of(updatePerm));
+
+        assertThat(decide(updater, "PATCH", "/api/v1/workflow/definitions/123/activate").isGranted()).isTrue();
+        assertThat(decide(updater, "PATCH", "/api/v1/workflow/definitions/123/deactivate").isGranted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("User with only WORKFLOW_DEFINITIONS:READ CANNOT activate workflow definitions")
+    void testUserWithOnlyReadPermissionCannotActivateWorkflowDefinition() {
+        PermissionResponse readPerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS")
+                .action("READ")
+                .active(true)
+                .allowed(true)
+                .build();
+        AuthenticatedUser reader = buildUser(List.of(), List.of(readPerm));
+
+        assertThat(decide(reader, "PATCH", "/api/v1/workflow/definitions/123/activate").isGranted()).isFalse();
+        assertThat(decide(reader, "PATCH", "/api/v1/workflow/definitions/123/deactivate").isGranted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("User with permission for different module CANNOT activate workflow definitions")
+    void testUserWithDifferentModulePermissionCannotActivateWorkflowDefinition() {
+        PermissionResponse taskWritePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_TASKS")
+                .action("WRITE")
+                .active(true)
+                .allowed(true)
+                .build();
+        AuthenticatedUser taskUser = buildUser(List.of(), List.of(taskWritePerm));
+
+        assertThat(decide(taskUser, "PATCH", "/api/v1/workflow/definitions/123/activate").isGranted()).isFalse();
     }
 }

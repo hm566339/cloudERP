@@ -67,12 +67,29 @@ public class TrialExpiryServiceImpl implements TrialExpiryService {
                     && !subscription.getTrialEndsAt().isAfter(now)) {
                 subscription.setStatus(SubscriptionStatus.EXPIRED);
                 subscription.setAccessMode(AccessMode.READ_ONLY);
+                subscriptionRepository.save(subscription);
                 Organization organization = subscription.getOrganization();
                 if (organization != null) {
                     organization.setAccessMode(AccessMode.READ_ONLY);
                     organizationRepository.save(organization);
                 }
                 expired++;
+                log.info("Expired trial subscription [{}] for organization [{}] — set to EXPIRED / READ_ONLY",
+                        subscription.getId(), organization != null ? organization.getId() : null);
+            } else if (subscription.getStatus() == SubscriptionStatus.ACTIVE
+                    && subscription.getCurrentPeriodEnd() != null
+                    && subscription.getCurrentPeriodEnd().isBefore(now)) {
+                subscription.setStatus(SubscriptionStatus.PAST_DUE);
+                subscription.setAccessMode(AccessMode.READ_ONLY);
+                subscriptionRepository.save(subscription);
+                Organization organization = subscription.getOrganization();
+                if (organization != null) {
+                    organization.setAccessMode(AccessMode.READ_ONLY);
+                    organizationRepository.save(organization);
+                }
+                expired++;
+                log.info("Expired active subscription period [{}] for organization [{}] — set to PAST_DUE / READ_ONLY",
+                        subscription.getId(), organization != null ? organization.getId() : null);
             }
         }
 

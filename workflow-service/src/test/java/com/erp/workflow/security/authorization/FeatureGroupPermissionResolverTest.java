@@ -65,4 +65,24 @@ class FeatureGroupPermissionResolverTest {
         );
         assertThat(resolver.hasEffectivePermission(user, List.of(), "WORKFLOW_DEFINITIONS", "READ")).isFalse();
     }
+
+    @Test
+    @DisplayName("OWNER role automatically derives WORKFLOW_ADMIN feature group permissions")
+    void testOwnerRoleGrantsWorkflowAdminPermissions() {
+        AuthenticatedUser owner = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("owner.user")
+                .roles(List.of("OWNER"))
+                .build();
+
+        Set<FeatureGroupPermissionResolver.ModuleAction> effective = resolver.effectivePermissions(owner, List.of());
+
+        assertThat(effective).contains(
+                new FeatureGroupPermissionResolver.ModuleAction("WORKFLOW_DEFINITIONS", "READ"),
+                new FeatureGroupPermissionResolver.ModuleAction("WORKFLOW_DEFINITIONS", "ACTIVATE"),
+                new FeatureGroupPermissionResolver.ModuleAction("WORKFLOW_DEFINITIONS", "DEACTIVATE"),
+                new FeatureGroupPermissionResolver.ModuleAction("WORKFLOW_TRANSACTIONS", "CANCEL")
+        );
+        assertThat(resolver.hasEffectivePermission(owner, List.of(), "WORKFLOW_DEFINITIONS", "ACTIVATE")).isTrue();
+    }
 }

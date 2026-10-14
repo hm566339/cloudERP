@@ -15,17 +15,32 @@ public interface SubscriptionPlanRepository extends JpaRepository<SubscriptionPl
 
     Optional<SubscriptionPlan> findByCodeIgnoreCase(String code);
 
+    Optional<SubscriptionPlan> findByCodeIgnoreCaseAndDeletedFalse(String code);
+
     Optional<SubscriptionPlan> findByCodeIgnoreCaseAndActiveTrue(String code);
+
+    Optional<SubscriptionPlan> findByCodeIgnoreCaseAndActiveTrueAndDeletedFalse(String code);
 
     Optional<SubscriptionPlan> findFirstByIsTrialTrueAndActiveTrue();
 
+    Optional<SubscriptionPlan> findFirstByIsTrialTrueAndActiveTrueAndDeletedFalse();
+
     List<SubscriptionPlan> findByActiveTrue();
 
+    List<SubscriptionPlan> findByActiveTrueAndDeletedFalse();
+
+    List<SubscriptionPlan> findByDeletedFalse();
+
+    Optional<SubscriptionPlan> findByIdAndDeletedFalse(UUID id);
+
     boolean existsByCodeIgnoreCase(String code);
+
+    boolean existsByCodeIgnoreCaseAndDeletedFalse(String code);
 
     Optional<SubscriptionPlan> findByRazorpayPlanId(String razorpayPlanId);
 
     @Query("SELECT p FROM SubscriptionPlan p WHERE " +
+           "(p.deleted = false OR p.deleted IS NULL) AND " +
            "(:active IS NULL OR p.active = :active) AND " +
            "(:search IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(p.code) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<SubscriptionPlan> findAllWithFilter(@Param("search") String search, @Param("active") Boolean active, Pageable pageable);

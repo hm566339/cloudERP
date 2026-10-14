@@ -10,6 +10,8 @@ public final class SsoPublicEndpoints {
             "/api/sso/auth/login",
             "/api/billing/webhook/**",
             "/api/sso/billing/webhook/**",
+            "/api/webhooks/**",
+            "/api/sso/webhooks/**",
             "/api/sso/auth/select-company",
             "/api/sso/auth/admin-login",
             "/api/sso/auth/register",

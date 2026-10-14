@@ -95,7 +95,8 @@ class SecurityConfigIntegrationTest {
         assertThat(response.getContentType()).isEqualTo("application/json");
         assertThat(response.getContentAsString()).contains("\"success\":false");
         assertThat(response.getContentAsString()).contains("\"message\":\"Forbidden\"");
-        assertThat(response.getContentAsString()).contains("\"error\":\"User does not have permission to access this resource\"");
+        assertThat(response.getContentAsString()).contains("\"error\":\"User does not have permission to access");
+        assertThat(response.getContentAsString()).contains("\"path\":\"/api/v1/workflow/definitions\"");
     }
 
     @Test
