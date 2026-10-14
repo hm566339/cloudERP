@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import PropTypes from 'prop-types';
 import { Download, Printer, RefreshCw, AlertCircle, Calendar, Filter } from 'lucide-react';
 import api from '../../services/api';
 import { getReportConfig } from '../../metadata/reportRegistry';
@@ -296,9 +295,3 @@ export default function ReportView({
   );
 }
 
-ReportView.propTypes = {
-  report: PropTypes.string.isRequired,
-  title: PropTypes.string,
-  subtitle: PropTypes.string,
-  className: PropTypes.string,
-};

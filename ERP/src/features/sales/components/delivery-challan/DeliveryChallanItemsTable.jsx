@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Package, AlertCircle, CheckCircle } from 'lucide-react';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -232,17 +231,3 @@ export default function DeliveryChallanItemsTable({
     </div>
   );
 }
-
-DeliveryChallanItemsTable.propTypes = {
-  items: PropTypes.array,
-  isSourceLoading: PropTypes.bool,
-  isReceiptMode: PropTypes.bool,
-  selectedWarehouseId: PropTypes.string,
-  locations: PropTypes.array,
-  isLoadingStock: PropTypes.bool,
-  isLoadingLocations: PropTypes.bool,
-  isStatusConfirmed: PropTypes.bool,
-  isSubmittingInProgress: PropTypes.bool,
-  onLocationChange: PropTypes.func.isRequired,
-  onQtyChange: PropTypes.func.isRequired,
-};

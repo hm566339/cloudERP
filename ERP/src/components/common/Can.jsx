@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { useAuth } from '../../hooks/useAuth';
 
 /**
@@ -62,12 +61,3 @@ export default function Can({
 
   return <>{children}</>;
 }
-
-Can.propTypes = {
-  permission: PropTypes.string,
-  action: PropTypes.string,
-  roles: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)]),
-  module: PropTypes.string,
-  fallback: PropTypes.node,
-  children: PropTypes.node.isRequired,
-};

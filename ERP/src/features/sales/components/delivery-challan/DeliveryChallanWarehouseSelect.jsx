@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Warehouse, RefreshCw, MapPin } from 'lucide-react';
 
 export default function DeliveryChallanWarehouseSelect({
@@ -105,20 +104,3 @@ export default function DeliveryChallanWarehouseSelect({
     </div>
   );
 }
-
-DeliveryChallanWarehouseSelect.propTypes = {
-  selectedWarehouseId: PropTypes.string,
-  onWarehouseChange: PropTypes.func.isRequired,
-  isSubmittingInProgress: PropTypes.bool,
-  isStatusConfirmed: PropTypes.bool,
-  validationErrors: PropTypes.array,
-  availableWarehouses: PropTypes.array,
-  stockWarehouses: PropTypes.array,
-  isLoadingStock: PropTypes.bool,
-  isLoadingWarehouses: PropTypes.bool,
-  isStockError: PropTypes.bool,
-  stockQueryError: PropTypes.object,
-  refetchStock: PropTypes.func,
-  selectedWhObj: PropTypes.object,
-  locations: PropTypes.array,
-};

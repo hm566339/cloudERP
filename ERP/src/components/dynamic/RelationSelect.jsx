@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import PropTypes from 'prop-types';
 import { Search, Loader2, ChevronDown, X } from 'lucide-react';
 import api from '../../services/api';
 import { getResourceConfig } from '../../metadata/resourceRegistry';
@@ -273,19 +272,3 @@ export default function RelationSelect({
     </div>
   );
 }
-
-RelationSelect.propTypes = {
-  resource: PropTypes.string.isRequired,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  onChange: PropTypes.func,
-  valueKey: PropTypes.string,
-  labelKey: PropTypes.string,
-  codeKey: PropTypes.string,
-  placeholder: PropTypes.string,
-  filters: PropTypes.object,
-  disabled: PropTypes.bool,
-  required: PropTypes.bool,
-  className: PropTypes.string,
-  id: PropTypes.string,
-  name: PropTypes.string,
-};

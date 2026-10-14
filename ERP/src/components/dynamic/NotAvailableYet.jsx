@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Construction, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -46,10 +45,3 @@ export default function NotAvailableYet({
     </div>
   );
 }
-
-NotAvailableYet.propTypes = {
-  title: PropTypes.string,
-  description: PropTypes.string,
-  moduleName: PropTypes.string,
-  backPath: PropTypes.string,
-};

@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import PropTypes from 'prop-types';
 import {
   Search,
   Plus,
@@ -494,18 +493,3 @@ export default function ResourceList({
   );
 }
 
-ResourceList.propTypes = {
-  resource: PropTypes.string.isRequired,
-  title: PropTypes.string,
-  subtitle: PropTypes.string,
-  columns: PropTypes.array,
-  actions: PropTypes.func,
-  headerActions: PropTypes.node,
-  onRowClick: PropTypes.func,
-  onCreateClick: PropTypes.func,
-  onViewClick: PropTypes.func,
-  onEditClick: PropTypes.func,
-  onDeleteClick: PropTypes.func,
-  extraFilters: PropTypes.object,
-  className: PropTypes.string,
-};

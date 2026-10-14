@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import PropTypes from 'prop-types';
 import { Loader2, AlertCircle, CheckCircle2, Save, X } from 'lucide-react';
 import api from '../../services/api';
 import { getResourceConfig } from '../../metadata/resourceRegistry';
@@ -320,15 +319,3 @@ export default function ResourceForm({
   );
 }
 
-ResourceForm.propTypes = {
-  resource: PropTypes.string.isRequired,
-  mode: PropTypes.oneOf(['create', 'edit']),
-  initialData: PropTypes.object,
-  recordId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  onSubmit: PropTypes.func,
-  onSuccess: PropTypes.func,
-  onCancel: PropTypes.func,
-  customFields: PropTypes.array,
-  sections: PropTypes.array,
-  className: PropTypes.string,
-};

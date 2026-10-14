@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function DeliveryChallanConfirmModal({
@@ -86,12 +85,3 @@ export default function DeliveryChallanConfirmModal({
     </div>
   );
 }
-
-DeliveryChallanConfirmModal.propTypes = {
-  isOpen: PropTypes.bool,
-  dcNumber: PropTypes.string,
-  isConfirming: PropTypes.bool,
-  confirmError: PropTypes.string,
-  onCancelDraft: PropTypes.func.isRequired,
-  onConfirm: PropTypes.func.isRequired,
-};
