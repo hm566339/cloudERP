@@ -9,11 +9,13 @@ import com.erp.auth_service.dto.subscription.SubscriptionCheckoutRequest;
 import com.erp.auth_service.exception.BadRequestException;
 import com.erp.auth_service.exception.ForbiddenException;
 import com.erp.auth_service.exception.ResourceNotFoundException;
+import com.erp.auth_service.model.Invoice;
 import com.erp.auth_service.model.Organization;
 import com.erp.auth_service.model.OrganizationMember;
 import com.erp.auth_service.model.Payment;
 import com.erp.auth_service.model.Subscription;
 import com.erp.auth_service.model.SubscriptionPlan;
+import com.erp.auth_service.repository.InvoiceRepository;
 import com.erp.auth_service.repository.OrganizationMemberRepository;
 import com.erp.auth_service.repository.OrganizationRepository;
 import com.erp.auth_service.repository.PaymentRepository;
@@ -52,6 +54,7 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final PaymentRepository paymentRepository;
+    private final InvoiceRepository invoiceRepository;
     private final RazorpayService razorpayService;
     private final RazorpayProperties razorpayProperties;
 
@@ -61,6 +64,7 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                                          SubscriptionPlanRepository subscriptionPlanRepository,
                                          SubscriptionRepository subscriptionRepository,
                                          PaymentRepository paymentRepository,
+                                         InvoiceRepository invoiceRepository,
                                          RazorpayService razorpayService,
                                          RazorpayProperties razorpayProperties) {
         this.organizationRepository = organizationRepository;
@@ -68,8 +72,26 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         this.subscriptionPlanRepository = subscriptionPlanRepository;
         this.subscriptionRepository = subscriptionRepository;
         this.paymentRepository = paymentRepository;
+        this.invoiceRepository = invoiceRepository;
         this.razorpayService = razorpayService;
         this.razorpayProperties = razorpayProperties;
+    }
+
+    public SubscriptionBillingServiceImpl(OrganizationRepository organizationRepository,
+                                         OrganizationMemberRepository organizationMemberRepository,
+                                         SubscriptionPlanRepository subscriptionPlanRepository,
+                                         SubscriptionRepository subscriptionRepository,
+                                         PaymentRepository paymentRepository,
+                                         RazorpayService razorpayService,
+                                         RazorpayProperties razorpayProperties) {
+        this(organizationRepository,
+             organizationMemberRepository,
+             subscriptionPlanRepository,
+             subscriptionRepository,
+             paymentRepository,
+             null,
+             razorpayService,
+             razorpayProperties);
     }
 
     // Backward-compatible constructor for existing tests
@@ -83,6 +105,7 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
              organizationMemberRepository,
              subscriptionPlanRepository,
              subscriptionRepository,
+             null,
              null,
              razorpayService,
              razorpayProperties);
@@ -546,14 +569,57 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public Subscription getOrganizationSubscription(UUID organizationId) {
         if (!organizationRepository.existsById(organizationId)) {
             throw new ResourceNotFoundException("Organization not found: " + organizationId);
         }
         assertOrganizationManagementAccess(organizationId);
-        return subscriptionRepository.findEffectiveByOrganizationId(organizationId)
+        Subscription subscription = subscriptionRepository.findEffectiveByOrganizationId(organizationId)
                 .orElseThrow(() -> new ResourceNotFoundException("No subscription found for organization: " + organizationId));
+
+        LocalDateTime now = LocalDateTime.now();
+        // Check for automated trial expiration
+        if (subscription.getStatus() == SubscriptionStatus.TRIALING &&
+                subscription.getTrialEndsAt() != null &&
+                !subscription.getTrialEndsAt().isAfter(now)) {
+            subscription.setStatus(SubscriptionStatus.EXPIRED);
+            subscription.setAccessMode(AccessMode.READ_ONLY);
+            subscription = subscriptionRepository.save(subscription);
+            organizationRepository.findById(organizationId).ifPresent(org -> {
+                org.setAccessMode(AccessMode.READ_ONLY);
+                organizationRepository.save(org);
+            });
+            log.info("Lazy trial expiration applied for organization [{}]", organizationId);
+        }
+
+        return subscription;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Payment> getOrganizationPayments(UUID organizationId) {
+        if (!organizationRepository.existsById(organizationId)) {
+            throw new ResourceNotFoundException("Organization not found: " + organizationId);
+        }
+        assertOrganizationManagementAccess(organizationId);
+        if (paymentRepository == null) {
+            return List.of();
+        }
+        return paymentRepository.findBySubscription_Organization_IdOrderByCreatedAtDesc(organizationId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Invoice> getOrganizationInvoices(UUID organizationId) {
+        if (!organizationRepository.existsById(organizationId)) {
+            throw new ResourceNotFoundException("Organization not found: " + organizationId);
+        }
+        assertOrganizationManagementAccess(organizationId);
+        if (invoiceRepository == null) {
+            return List.of();
+        }
+        return invoiceRepository.findBySubscription_Organization_IdOrderByCreatedAtDesc(organizationId);
     }
 
     private SubscriptionPlan resolvePlan(String planIdOrCode) {
@@ -572,7 +638,8 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                 .orElseThrow(() -> new ResourceNotFoundException("Active subscription plan not found: " + planIdOrCode));
     }
 
-    private void assertOrganizationManagementAccess(UUID targetOrgId) {
+    @Override
+    public void assertOrganizationManagementAccess(UUID targetOrgId) {
         if (PlatformSecurityUtil.isElevatedAdmin()) {
             return;
         }

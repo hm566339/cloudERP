@@ -604,30 +604,47 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         subscription.setStatus(SubscriptionStatus.PAST_DUE);
         subscriptionRepository.save(subscription);
 
-        // Record failed payment (avoid duplicate)
-        if (paymentId != null && !paymentRepository.existsByProviderAndProviderPaymentId(provider, paymentId)) {
-            BigDecimal amount = paymentProvider.extractAmount(root);
-            if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-                amount = subscription.getPriceAtSubscription() != null
-                        ? subscription.getPriceAtSubscription()
-                        : (subscription.getPrice() != null ? subscription.getPrice() : BigDecimal.ZERO);
-            }
-            String currency = paymentProvider.extractCurrency(root);
-            if (currency == null) currency = (subscription.getCurrency() != null ? subscription.getCurrency() : "INR");
+        // Record or update failed payment without overwriting an already confirmed successful payment
+        if (paymentId != null) {
+            Optional<Payment> existingPaymentOpt = paymentRepository.findByProviderAndProviderPaymentId(provider, paymentId);
+            boolean exists = existingPaymentOpt.isPresent() || paymentRepository.existsByProviderAndProviderPaymentId(provider, paymentId);
+            if (exists) {
+                if (existingPaymentOpt.isPresent()) {
+                    Payment existingPayment = existingPaymentOpt.get();
+                    if ("SUCCESS".equalsIgnoreCase(existingPayment.getStatus())
+                            || "SUCCEEDED".equalsIgnoreCase(existingPayment.getStatus())
+                            || "PAID".equalsIgnoreCase(existingPayment.getStatus())) {
+                        log.warn("payment.failed received for already successful paymentId={} — not overwriting status", paymentId);
+                    } else {
+                        existingPayment.setStatus("FAILED");
+                        paymentRepository.save(existingPayment);
+                        log.info("Updated existing payment record id={} to FAILED", existingPayment.getId());
+                    }
+                }
+            } else {
+                BigDecimal amount = paymentProvider.extractAmount(root);
+                if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+                    amount = subscription.getPriceAtSubscription() != null
+                            ? subscription.getPriceAtSubscription()
+                            : (subscription.getPrice() != null ? subscription.getPrice() : BigDecimal.ZERO);
+                }
+                String currency = paymentProvider.extractCurrency(root);
+                if (currency == null) currency = (subscription.getCurrency() != null ? subscription.getCurrency() : "INR");
 
-            Payment failedPayment = Payment.builder()
-                    .subscription(subscription)
-                    .organization(subscription.getOrganization())
-                    .provider(provider)
-                    .providerPaymentId(paymentId)
-                    .razorpayPaymentId(paymentId)
-                    .razorpaySubscriptionId(paymentProvider.extractSubscriptionId(root))
-                    .amount(amount)
-                    .currency(currency)
-                    .status("FAILED")
-                    .paidAt(LocalDateTime.now())
-                    .build();
-            paymentRepository.save(failedPayment);
+                Payment failedPayment = Payment.builder()
+                        .subscription(subscription)
+                        .organization(subscription.getOrganization())
+                        .provider(provider)
+                        .providerPaymentId(paymentId)
+                        .razorpayPaymentId(paymentId)
+                        .razorpaySubscriptionId(paymentProvider.extractSubscriptionId(root))
+                        .amount(amount)
+                        .currency(currency)
+                        .status("FAILED")
+                        .paidAt(LocalDateTime.now())
+                        .build();
+                paymentRepository.save(failedPayment);
+            }
         }
 
         markEventProcessed(event);

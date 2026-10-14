@@ -39,9 +39,9 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
     public List<SubscriptionPlanResponse> getAllPlans(Boolean active, String search) {
         List<SubscriptionPlan> plans;
         if (active != null && active) {
-            plans = subscriptionPlanRepository.findByActiveTrue();
+            plans = subscriptionPlanRepository.findByActiveTrueAndDeletedFalse();
         } else {
-            plans = subscriptionPlanRepository.findAll();
+            plans = subscriptionPlanRepository.findByDeletedFalse();
         }
 
         if (search != null && !search.isBlank()) {
@@ -61,7 +61,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
     @Override
     @Transactional(readOnly = true)
     public SubscriptionPlanResponse getPlanById(UUID id) {
-        SubscriptionPlan plan = subscriptionPlanRepository.findById(id)
+        SubscriptionPlan plan = subscriptionPlanRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found with id: " + id));
         return toResponse(plan);
     }
@@ -69,7 +69,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
     @Override
     @Transactional(readOnly = true)
     public SubscriptionPlanResponse getPlanByCode(String code) {
-        SubscriptionPlan plan = subscriptionPlanRepository.findByCodeIgnoreCase(code.trim())
+        SubscriptionPlan plan = subscriptionPlanRepository.findByCodeIgnoreCaseAndDeletedFalse(code.trim())
                 .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found with code: " + code));
         return toResponse(plan);
     }
@@ -79,7 +79,10 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
     public SubscriptionPlanResponse createPlan(SubscriptionPlanRequest request) {
         String normalizedCode = request.getCode().trim().toUpperCase(Locale.ROOT);
         if (subscriptionPlanRepository.existsByCodeIgnoreCase(normalizedCode)) {
-            throw new DuplicateResourceException("Subscription plan with code '" + normalizedCode + "' already exists");
+            SubscriptionPlan existing = subscriptionPlanRepository.findByCodeIgnoreCase(normalizedCode).orElse(null);
+            if (existing == null || !Boolean.TRUE.equals(existing.getDeleted())) {
+                throw new DuplicateResourceException("Subscription plan with code '" + normalizedCode + "' already exists");
+            }
         }
 
         SubscriptionPlan plan = SubscriptionPlan.builder()
@@ -95,6 +98,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
                         ? request.getCurrency().trim().toUpperCase(Locale.ROOT)
                         : "INR")
                 .active(request.getActive() != null ? request.getActive() : true)
+                .deleted(false)
                 .isTrial(request.getIsTrial() != null ? request.getIsTrial() : false)
                 .build();
 
@@ -126,7 +130,7 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
 
         if (request.getCode() != null && !request.getCode().isBlank()) {
             String normalizedCode = request.getCode().trim().toUpperCase(Locale.ROOT);
-            if (!normalizedCode.equalsIgnoreCase(plan.getCode()) && subscriptionPlanRepository.existsByCodeIgnoreCase(normalizedCode)) {
+            if (!normalizedCode.equalsIgnoreCase(plan.getCode()) && subscriptionPlanRepository.existsByCodeIgnoreCaseAndDeletedFalse(normalizedCode)) {
                 throw new DuplicateResourceException("Subscription plan with code '" + normalizedCode + "' already exists");
             }
             plan.setCode(normalizedCode);
@@ -187,10 +191,11 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
         SubscriptionPlan plan = subscriptionPlanRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Subscription plan not found with id: " + id));
 
-        // Soft-delete / deactivate to preserve historical integrity for companies already subscribed
+        // Soft-delete: mark deleted = true and active = false to preserve historical integrity
+        plan.setDeleted(true);
         plan.setActive(false);
         subscriptionPlanRepository.save(plan);
-        log.info("Subscription plan [{}] deactivated successfully", plan.getCode());
+        log.info("Subscription plan [{}] soft-deleted successfully", plan.getCode());
     }
 
     @Override
@@ -399,7 +404,9 @@ public class SubscriptionPlanServiceImpl implements SubscriptionPlanService {
     }
 
     private SubscriptionPlanResponse toResponse(SubscriptionPlan plan) {
-        List<SubscriptionPlanModule> modules = subscriptionPlanModuleRepository.findByPlan_Id(plan.getId());
+        List<SubscriptionPlanModule> modules = subscriptionPlanModuleRepository != null
+                ? subscriptionPlanModuleRepository.findByPlan_Id(plan.getId())
+                : Collections.emptyList();
         List<SubscriptionPlanModuleResponse> moduleResponses = modules.stream()
                 .map(spm -> SubscriptionPlanModuleResponse.builder()
                         .id(spm.getId())

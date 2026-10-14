@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping({"/api/sso/billing/webhook", "/api/billing/webhook"})
+@RequestMapping({"/api/sso/webhooks", "/api/webhooks", "/api/sso/billing/webhook", "/api/billing/webhook"})
 @RequiredArgsConstructor
 @Slf4j
 public class BillingWebhookController {

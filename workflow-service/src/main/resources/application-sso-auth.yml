@@ -61,6 +61,7 @@ sso:
           - READ
           - CREATE
           - UPDATE
+          - WRITE
           - DELETE
           - APPROVE
           - REJECT
@@ -73,6 +74,7 @@ sso:
           - READ
           - CREATE
           - UPDATE
+          - WRITE
           - DELETE
           - ACTIVATE
           - DEACTIVATE
@@ -80,6 +82,7 @@ sso:
           - READ
           - CREATE
           - UPDATE
+          - WRITE
           - DELETE
           - CANCEL
         WORKFLOW_TASKS:
@@ -88,18 +91,76 @@ sso:
           - REJECT
           - RETURN
           - DELEGATE
+          - WRITE
         WORKFLOW_NOTIFICATIONS:
           - READ
           - UPDATE
+          - WRITE
         WORKFLOW_ATTACHMENTS:
           - READ
           - CREATE
+          - WRITE
+          - DELETE
+      WORKFLOW_DEFINITIONS:
+        WORKFLOW_DEFINITIONS:
+          - READ
+          - CREATE
+          - UPDATE
+          - WRITE
+          - DELETE
+          - ACTIVATE
+          - DEACTIVATE
+      WORKFLOW:
+        WORKFLOW:
+          - READ
+          - CREATE
+          - UPDATE
+          - WRITE
+          - DELETE
+          - APPROVE
+          - REJECT
+          - RETURN
+          - DELEGATE
+          - CANCEL
+          - ACTIVATE
+          - DEACTIVATE
+        WORKFLOW_DEFINITIONS:
+          - READ
+          - CREATE
+          - UPDATE
+          - WRITE
+          - DELETE
+          - ACTIVATE
+          - DEACTIVATE
+        WORKFLOW_TRANSACTIONS:
+          - READ
+          - CREATE
+          - UPDATE
+          - WRITE
+          - DELETE
+          - CANCEL
+        WORKFLOW_TASKS:
+          - READ
+          - APPROVE
+          - REJECT
+          - RETURN
+          - DELEGATE
+          - WRITE
+        WORKFLOW_NOTIFICATIONS:
+          - READ
+          - UPDATE
+          - WRITE
+        WORKFLOW_ATTACHMENTS:
+          - READ
+          - CREATE
+          - WRITE
           - DELETE
       SYSTEM_ADMIN:
         WORKFLOW:
           - READ
           - CREATE
           - UPDATE
+          - WRITE
           - DELETE
           - APPROVE
           - REJECT
@@ -112,6 +173,7 @@ sso:
           - READ
           - CREATE
           - UPDATE
+          - WRITE
           - DELETE
           - ACTIVATE
           - DEACTIVATE
@@ -119,6 +181,7 @@ sso:
           - READ
           - CREATE
           - UPDATE
+          - WRITE
           - DELETE
           - CANCEL
         WORKFLOW_TASKS:
@@ -127,12 +190,15 @@ sso:
           - REJECT
           - RETURN
           - DELEGATE
+          - WRITE
         WORKFLOW_NOTIFICATIONS:
           - READ
           - UPDATE
+          - WRITE
         WORKFLOW_ATTACHMENTS:
           - READ
           - CREATE
+          - WRITE
           - DELETE
 
     write-implies-create-update: false

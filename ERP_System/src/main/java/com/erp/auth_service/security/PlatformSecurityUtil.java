@@ -62,5 +62,20 @@ public final class PlatformSecurityUtil {
         }
         return false;
     }
+
+    public static boolean isOwnerOrAdmin() {
+        if (isElevatedAdmin() || isOwner()) {
+            return true;
+        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getAuthorities() != null) {
+            return auth.getAuthorities().stream().anyMatch(a -> {
+                String authStr = a.getAuthority();
+                return "ADMIN".equalsIgnoreCase(authStr)
+                        || "ROLE_ADMIN".equalsIgnoreCase(authStr);
+            });
+        }
+        return false;
+    }
 }
 

@@ -21,6 +21,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -139,10 +140,23 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         }
         if (user.getOrganizationId() != null) {
             CurrentUserContext.setOrganizationId(user.getOrganizationId());
-            CurrentUserContext.setCompanyId(user.getOrganizationId());
-        } else if (user.getCompanyId() != null) {
+        }
+        if (user.getCompanyId() != null) {
             CurrentUserContext.setCompanyId(user.getCompanyId());
-            CurrentUserContext.setOrganizationId(user.getCompanyId());
+            if (CurrentUserContext.getOrganizationId() == null) {
+                CurrentUserContext.setOrganizationId(user.getCompanyId());
+            }
+        } else {
+            // When user session is at organization level (e.g. OWNER with currentCompany: null),
+            // resolve tenant company context from the X-Company-Id header sent by the client.
+            String headerCompanyId = request.getHeader("X-Company-Id");
+            if (StringUtils.hasText(headerCompanyId)) {
+                try {
+                    CurrentUserContext.setCompanyId(UUID.fromString(headerCompanyId.trim()));
+                } catch (IllegalArgumentException ignored) {
+                    log.debug("Invalid UUID in X-Company-Id header: {}", headerCompanyId);
+                }
+            }
         }
         if (user.getOrganizationCode() != null) {
             CurrentUserContext.setOrganizationCode(user.getOrganizationCode());

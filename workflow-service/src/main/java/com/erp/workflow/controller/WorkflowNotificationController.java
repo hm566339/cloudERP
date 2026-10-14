@@ -69,8 +69,8 @@ public class WorkflowNotificationController {
     }
 
     private UUID resolveCompanyId(UUID requestCompanyId) {
-        boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
-        if (isSystemAdmin && requestCompanyId != null) {
+        boolean isPrivileged = SecurityUtils.hasRole("SYSTEM_ADMIN") || SecurityUtils.hasRole("OWNER");
+        if (isPrivileged && requestCompanyId != null) {
             return requestCompanyId;
         }
         return SecurityUtils.getCurrentCompanyId().orElse(requestCompanyId);

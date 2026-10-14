@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -143,8 +144,10 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
             }
         }
 
-        log.warn("AUTHORIZATION DENIED. URI: {} module: {} required actions: {} (no active+allowed SSO permission matched)",
-                uri, requestedModule, requiredActions);
+        String username = authenticatedUser != null ? authenticatedUser.getUsername() : "anonymous";
+        List<String> roles = authenticatedUser != null ? authenticatedUser.getRoles() : Collections.emptyList();
+        log.warn("AUTHORIZATION DENIED. User: {} Roles: {} Method: {} URI: {} Module: {} Required Actions: {} (no active+allowed SSO permission matched)",
+                username, roles, method, uri, requestedModule, requiredActions);
         return new AuthorizationDecision(false);
     }
 
@@ -173,6 +176,12 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
         String suffixAction = properties.actionForSuffix(uri);
         if (suffixAction != null && !suffixAction.isBlank()) {
             actions.add(suffixAction.toUpperCase());
+            // For mutation suffixes (like ACTIVATE/DEACTIVATE) or mutation methods, standard method actions
+            // (e.g. UPDATE, WRITE) also satisfy the requirement under standard FBAC.
+            if ("ACTIVATE".equalsIgnoreCase(suffixAction) || "DEACTIVATE".equalsIgnoreCase(suffixAction)
+                    || isMutationMethod(method)) {
+                actions.addAll(properties.actionsForMethod(method));
+            }
         } else {
             actions.addAll(properties.actionsForMethod(method));
         }

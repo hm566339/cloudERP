@@ -244,4 +244,67 @@ class AuthenticationFilterTest {
         MockHttpServletRequest workflowRequest = new MockHttpServletRequest("GET", "/api/v1/workflow/tasks");
         assertThat(filter.shouldNotFilter(workflowRequest)).isFalse();
     }
+
+    @Test
+    @DisplayName("OWNER with organizationId and null companyId does not clobber companyId")
+    void testOwnerPreservesOrganizationIdWithoutOverwritingCompanyId() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID orgId = UUID.randomUUID();
+        UserResponse user = buildActiveUser(userId, "owner.user", RoleResponse.builder().name("OWNER").status(true).build());
+        user.setOrganizationId(orgId);
+        user.setCompanyId(null);
+        TokenVerifyResponse verifyResponse = TokenVerifyResponse.builder().valid(true).user(user).build();
+
+        when(ssoService.verifyToken("owner-token")).thenReturn(verifyResponse);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/workflow/definitions");
+        request.addHeader("Authorization", "Bearer owner-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain() {
+            @Override
+            public void doFilter(jakarta.servlet.ServletRequest req, jakarta.servlet.ServletResponse res) {
+                assertThat(CurrentUserContext.getOrganizationId()).isEqualTo(orgId);
+                assertThat(CurrentUserContext.getCompanyId()).isNull();
+                assertThat(SecurityUtils.getCurrentOrganizationId()).contains(orgId);
+                assertThat(SecurityUtils.getCurrentCompanyId()).isEmpty();
+            }
+        };
+
+        filter.doFilter(request, response, chain);
+
+        org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        assertThat(auth).isNotNull();
+        AuthenticatedUser principal = (AuthenticatedUser) auth.getPrincipal();
+        assertThat(principal.getOrganizationId()).isEqualTo(orgId);
+        assertThat(principal.getCompanyId()).isNull();
+    }
+
+    @Test
+    @DisplayName("OWNER with organizationId resolves companyId from X-Company-Id header")
+    void testOwnerResolvesCompanyIdFromHeader() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID orgId = UUID.randomUUID();
+        UUID selectedCompanyId = UUID.randomUUID();
+        UserResponse user = buildActiveUser(userId, "owner.user", RoleResponse.builder().name("OWNER").status(true).build());
+        user.setOrganizationId(orgId);
+        user.setCompanyId(null);
+        TokenVerifyResponse verifyResponse = TokenVerifyResponse.builder().valid(true).user(user).build();
+
+        when(ssoService.verifyToken("owner-token-with-header")).thenReturn(verifyResponse);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("PATCH", "/api/v1/workflow/definitions/123/activate");
+        request.addHeader("Authorization", "Bearer owner-token-with-header");
+        request.addHeader("X-Company-Id", selectedCompanyId.toString());
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain() {
+            @Override
+            public void doFilter(jakarta.servlet.ServletRequest req, jakarta.servlet.ServletResponse res) {
+                assertThat(CurrentUserContext.getOrganizationId()).isEqualTo(orgId);
+                assertThat(CurrentUserContext.getCompanyId()).isEqualTo(selectedCompanyId);
+                assertThat(SecurityUtils.getCurrentCompanyId()).contains(selectedCompanyId);
+            }
+        };
+
+        filter.doFilter(request, response, chain);
+    }
 }

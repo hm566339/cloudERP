@@ -31,6 +31,7 @@ public class AuthenticatedUser implements Principal {
     private final UUID userId;
     private final String username;
     private final String companyCode;
+    private final UUID companyId;
     private final UUID organizationId;
     private final String organizationCode;
     private final String accessMode;
@@ -80,6 +81,7 @@ public class AuthenticatedUser implements Principal {
                 .userId(user.getId())
                 .username(user.getUsername())
                 .companyCode(user.getCompanyCode())
+                .companyId(user.getCompanyId())
                 .organizationId(user.getOrganizationId())
                 .organizationCode(user.getOrganizationCode())
                 .accessMode(user.getAccessMode())
