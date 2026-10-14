@@ -5,6 +5,7 @@ import com.erp.workflow.common.dto.ApiResponse;
 import com.erp.workflow.dto.request.CreateWorkflowDefinitionRequest;
 import com.erp.workflow.dto.response.WorkflowDefinitionResponse;
 import com.erp.workflow.dto.response.WorkflowFormSchema;
+import com.erp.workflow.exception.WorkflowValidationException;
 import com.erp.workflow.security.SecurityUtils;
 import com.erp.workflow.service.WorkflowDefinitionService;
 import com.erp.workflow.service.WorkflowFormSchemaService;
@@ -36,7 +37,8 @@ public class WorkflowDefinitionController {
         CreateWorkflowDefinitionRequest data = request.getData();
         data.setCompanyId(resolveCompanyId(data.getCompanyId()));
         WorkflowDefinitionResponse response = definitionService.createDefinition(data);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response, "Workflow definition created"));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(response, "Workflow definition created"));
     }
 
     @GetMapping("/{id}")
@@ -57,7 +59,8 @@ public class WorkflowDefinitionController {
             @RequestParam String documentType) {
         UUID effectiveCompanyId = resolveCompanyId(companyId);
         WorkflowDefinitionResponse response = moduleName != null
-                ? definitionService.getActiveDefinitionByModuleAndDocumentType(effectiveCompanyId, moduleName, documentType)
+                ? definitionService.getActiveDefinitionByModuleAndDocumentType(effectiveCompanyId, moduleName,
+                        documentType)
                 : definitionService.getActiveDefinitionByDocumentType(effectiveCompanyId, documentType);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -69,7 +72,8 @@ public class WorkflowDefinitionController {
             @RequestParam(required = false) String moduleName,
             Pageable pageable) {
         UUID effectiveCompanyId = resolveCompanyId(companyId);
-        Page<WorkflowDefinitionResponse> page = definitionService.listDefinitions(effectiveCompanyId, moduleName, pageable);
+        Page<WorkflowDefinitionResponse> page = definitionService.listDefinitions(effectiveCompanyId, moduleName,
+                pageable);
         return ResponseEntity.ok(ApiResponse.success(page));
     }
 
@@ -80,7 +84,8 @@ public class WorkflowDefinitionController {
             @RequestParam(required = false) UUID companyId) {
         UUID effectiveCompanyId = resolveCompanyId(companyId);
         if (effectiveCompanyId == null) {
-            throw new com.erp.workflow.exception.WorkflowValidationException("Company ID is required to activate workflow definition");
+            throw new com.erp.workflow.exception.WorkflowValidationException(
+                    "Company ID is required to activate workflow definition");
         }
         definitionService.activateDefinition(id, effectiveCompanyId);
         return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition activated"));
@@ -93,10 +98,24 @@ public class WorkflowDefinitionController {
             @RequestParam(required = false) UUID companyId) {
         UUID effectiveCompanyId = resolveCompanyId(companyId);
         if (effectiveCompanyId == null) {
-            throw new com.erp.workflow.exception.WorkflowValidationException("Company ID is required to deactivate workflow definition");
+            throw new com.erp.workflow.exception.WorkflowValidationException(
+                    "Company ID is required to deactivate workflow definition");
         }
         definitionService.deactivateDefinition(id, effectiveCompanyId);
         return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition deactivated"));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a workflow definition")
+    public ResponseEntity<ApiResponse<Void>> deleteDefinition(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId) {
+        UUID effectiveCompanyId = resolveCompanyId(companyId);
+        if (effectiveCompanyId == null) {
+            throw new WorkflowValidationException("Company ID is required to delete workflow definition");
+        }
+        definitionService.deleteDefinition(id, effectiveCompanyId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition deleted"));
     }
 
     @GetMapping("/schemas")

@@ -319,7 +319,11 @@ export default function WorkflowManagementPage() {
       setWorkflows(next);
       setSelectedId(next.find((item) => item.module === module)?.id || '');
       setDeleteTarget(null);
-      dispatch(addAlert({ type: 'info', message: `${deleteTarget.name} was removed from local state. ${result?.source === WORKFLOW_DATA_SOURCES.API ? 'Backend delete confirmed.' : 'Missing backend endpoint: DELETE /api/v1/workflow/definitions/{definitionId}.'}` }));
+      const isApi = result?.source === WORKFLOW_DATA_SOURCES.API;
+      dispatch(addAlert({
+        type: 'success',
+        message: `${deleteTarget.name} was ${isApi ? 'deleted' : 'removed'} successfully.`,
+      }));
     } catch (error) {
       console.error('Failed to delete workflow', error);
       dispatch(addAlert({ type: 'error', message: `Could not delete ${deleteTarget.name}. ${error?.message || 'Unexpected error.'}` }));

@@ -9,10 +9,10 @@
  * - POST /api/v1/workflow/definitions (with { data: payload })
  * - PATCH /api/v1/workflow/definitions/{id}/activate?companyId={...}
  * - PATCH /api/v1/workflow/definitions/{id}/deactivate?companyId={...}
+ * - DELETE /api/v1/workflow/definitions/{id}?companyId={...}
  *
  * The missing contract pieces are reported explicitly instead of faked:
  * - PUT/PATCH /api/v1/workflow/definitions/{definitionId}
- * - DELETE /api/v1/workflow/definitions/{definitionId}
  * - POST /api/v1/workflow/definitions/{definitionId}/stages
  *
  * Transaction actions documented in apiFormet.md are delegated to the existing
@@ -170,7 +170,6 @@ export const workflowDefinitionApi = {
   available: true,
   missingEndpoints: [
     'PUT/PATCH /api/v1/workflow/definitions/{definitionId}',
-    'DELETE /api/v1/workflow/definitions/{definitionId}',
     'POST /api/v1/workflow/definitions/{definitionId}/stages',
   ],
   list: async (companyId, documentType = 'GENERAL', options = {}) => {
@@ -289,7 +288,12 @@ export const workflowDefinitionApi = {
     return normalizeWorkflowDefinition(data);
   },
   update: async () => { throw new WorkflowApiNotImplementedError('PUT/PATCH /api/v1/workflow/definitions/{definitionId}'); },
-  remove: async () => { throw new WorkflowApiNotImplementedError('DELETE /api/v1/workflow/definitions/{definitionId}'); },
+  remove: async (definitionId, companyId) => {
+    if (!definitionId) throw new Error('Workflow definition ID is required.');
+    const params = companyId ? { companyId } : undefined;
+    const response = await apiClient.delete(`/api/v1/workflow/definitions/${definitionId}`, { params });
+    return unwrapApiData(response);
+  },
   addStage: async () => {
     throw new WorkflowApiNotImplementedError('POST /api/v1/workflow/definitions/{definitionId}/stages');
   },
@@ -368,8 +372,30 @@ export async function saveWorkflowDefinitions(companyId, definitions, options = 
 }
 
 export async function deleteWorkflowDefinition(companyId, definitions, id) {
-  // Never silently write to localStorage pretending server delete succeeded.
-  throw new WorkflowApiNotImplementedError('DELETE /api/v1/workflow/definitions/{definitionId}');
+  if (!id) {
+    throw new Error('Workflow definition ID is required to delete.');
+  }
+
+  const isDraftItem = !isUUID(id);
+  if (!isDraftItem) {
+    await workflowDefinitionApi.remove(id, companyId);
+  }
+
+  const list = Array.isArray(definitions) ? definitions : [];
+  const remaining = list.filter((item) => item && item.id !== id);
+
+  try {
+    const currentDrafts = readWorkflowDraft(companyId, []);
+    const filteredDrafts = currentDrafts.filter((item) => item && item.id !== id);
+    writeWorkflowDraft(companyId, filteredDrafts);
+  } catch {
+    // ignore draft storage issues
+  }
+
+  return {
+    definitions: remaining,
+    source: isDraftItem ? WORKFLOW_DATA_SOURCES.DRAFT : WORKFLOW_DATA_SOURCES.API,
+  };
 }
 
 const normalizeAuditEntries = (payload) => {

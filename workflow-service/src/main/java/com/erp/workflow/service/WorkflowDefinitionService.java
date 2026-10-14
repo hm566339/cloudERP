@@ -22,4 +22,6 @@ public interface WorkflowDefinitionService {
     void activateDefinition(UUID id, UUID companyId);
 
     void deactivateDefinition(UUID id, UUID companyId);
+
+    void deleteDefinition(UUID id, UUID companyId);
 }

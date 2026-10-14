@@ -127,4 +127,29 @@ class WorkflowDefinitionControllerTest {
         assertThat(response.getBody().getMessage()).isEqualTo("Workflow definition deactivated");
         verify(definitionService).deactivateDefinition(workflowId, selectedCompanyId);
     }
+
+    @Test
+    @DisplayName("Delete workflow definition succeeds with valid company context")
+    void testDeleteDefinitionSuccess() {
+        UUID selectedCompanyId = UUID.randomUUID();
+        UUID workflowId = UUID.randomUUID();
+
+        ResponseEntity<ApiResponse<Void>> response = controller.deleteDefinition(workflowId, selectedCompanyId);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isSuccess()).isTrue();
+        assertThat(response.getBody().getMessage()).isEqualTo("Workflow definition deleted");
+        verify(definitionService).deleteDefinition(workflowId, selectedCompanyId);
+    }
+
+    @Test
+    @DisplayName("Delete fails when companyId cannot be resolved")
+    void testDeleteFailsWhenCompanyIdMissing() {
+        UUID workflowId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> controller.deleteDefinition(workflowId, null))
+                .isInstanceOf(WorkflowValidationException.class)
+                .hasMessageContaining("Company ID is required to delete workflow definition");
+    }
 }

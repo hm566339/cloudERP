@@ -2,7 +2,8 @@ package com.erp.workflow.service;
 
 import com.erp.workflow.dto.request.CreateWorkflowDefinitionRequest;
 import com.erp.workflow.dto.response.WorkflowDefinitionResponse;
-import com.erp.workflow.entity.WorkflowDefinition;
+import com.erp.workflow.entity.*;
+import com.erp.workflow.enums.WorkflowActionType;
 import com.erp.workflow.enums.WorkflowExecutionType;
 import com.erp.workflow.enums.WorkflowRejectionAction;
 import com.erp.workflow.repository.*;
@@ -162,5 +163,45 @@ class WorkflowDefinitionServiceTest {
 
         assertFalse(def.getIsActive());
         verify(definitionRepository).save(def);
+    }
+
+    @Test
+    void testDeleteDefinition_Success() {
+        UUID companyId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+
+        WorkflowDefinition def = WorkflowDefinition.builder()
+                .id(defId)
+                .companyId(companyId)
+                .workflowCode("FY_WF")
+                .isActive(true)
+                .build();
+
+        WorkflowStage stage = WorkflowStage.builder()
+                .id(UUID.randomUUID())
+                .stageCode("STAGE_1")
+                .sequenceNo(1)
+                .build();
+
+        WorkflowTransition transition = WorkflowTransition.builder()
+                .id(UUID.randomUUID())
+                .actionType(WorkflowActionType.APPROVE)
+                .build();
+
+        when(definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(defId, companyId))
+                .thenReturn(Optional.of(def));
+        when(stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(defId))
+                .thenReturn(List.of(stage));
+        when(transitionRepository.findByWorkflowDefinitionIdAndIsDeletedFalse(defId))
+                .thenReturn(List.of(transition));
+
+        definitionService.deleteDefinition(defId, companyId);
+
+        assertTrue(def.getIsDeleted());
+        assertTrue(stage.getIsDeleted());
+        assertTrue(transition.getIsDeleted());
+        verify(definitionRepository).save(def);
+        verify(stageRepository).save(stage);
+        verify(transitionRepository).save(transition);
     }
 }

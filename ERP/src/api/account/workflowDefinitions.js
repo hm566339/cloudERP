@@ -35,6 +35,12 @@ export const workflowDefinitionsApi = {
     const response = await apiClient.patch(`/api/v1/workflow/definitions/${definitionId}/deactivate`, null, { params });
     return getData(response);
   },
+
+  delete: async (definitionId, companyId) => {
+    const params = companyId ? { companyId } : undefined;
+    const response = await apiClient.delete(`/api/v1/workflow/definitions/${definitionId}`, { params });
+    return getData(response);
+  },
 };
 
 export default workflowDefinitionsApi;

@@ -14,12 +14,14 @@ describe('Workflow Definitions API Routing & Service Verification', () => {
   let originalGet;
   let originalPost;
   let originalPatch;
+  let originalDelete;
   let lastRequest = null;
 
   beforeEach(() => {
     originalGet = apiClient.get;
     originalPost = apiClient.post;
     originalPatch = apiClient.patch;
+    originalDelete = apiClient.delete;
     lastRequest = null;
   });
 
@@ -27,6 +29,7 @@ describe('Workflow Definitions API Routing & Service Verification', () => {
     apiClient.get = originalGet;
     apiClient.post = originalPost;
     apiClient.patch = originalPatch;
+    apiClient.delete = originalDelete;
   };
 
   describe('1. API Route Alignment with workflow-service', () => {
@@ -202,6 +205,22 @@ describe('Workflow Definitions API Routing & Service Verification', () => {
         restoreClient();
       }
     });
+
+    it('remove sends DELETE to /api/v1/workflow/definitions/:id with companyId param', async () => {
+      try {
+        apiClient.delete = async (url, config) => {
+          lastRequest = { url, config };
+          return { data: { success: true, message: 'Workflow definition deleted' } };
+        };
+
+        await workflowDefinitionApi.remove('3fa85f64-5717-4562-b3fc-2c963f66afa6', 'comp-123');
+
+        assert.strictEqual(lastRequest.url, '/api/v1/workflow/definitions/3fa85f64-5717-4562-b3fc-2c963f66afa6');
+        assert.strictEqual(lastRequest.config.params.companyId, 'comp-123');
+      } finally {
+        restoreClient();
+      }
+    });
   });
 
   describe('2. Error Handling & Silent Fallback Removal', () => {
@@ -227,13 +246,51 @@ describe('Workflow Definitions API Routing & Service Verification', () => {
       }
     });
 
-    it('deleteWorkflowDefinition throws WorkflowApiNotImplementedError instead of silently persisting to draft', async () => {
-      await assert.rejects(
-        async () => {
-          await deleteWorkflowDefinition('comp-123', [{ id: 'wf-1' }], 'wf-1');
-        },
-        WorkflowApiNotImplementedError
-      );
+    it('deleteWorkflowDefinition deletes persistent definition via backend API and removes from list', async () => {
+      try {
+        const targetId = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
+        let deletedUrl = null;
+        let deletedParams = null;
+        apiClient.delete = async (url, config) => {
+          deletedUrl = url;
+          deletedParams = config?.params;
+          return { data: { success: true, message: 'Workflow definition deleted' } };
+        };
+
+        const existing = [
+          { id: targetId, name: 'To Delete' },
+          { id: '4fa85f64-5717-4562-b3fc-2c963f66afa7', name: 'Keep Me' },
+        ];
+
+        const result = await deleteWorkflowDefinition('comp-123', existing, targetId);
+
+        assert.strictEqual(deletedUrl, `/api/v1/workflow/definitions/${targetId}`);
+        assert.strictEqual(deletedParams.companyId, 'comp-123');
+        assert.strictEqual(result.definitions.length, 1);
+        assert.strictEqual(result.definitions[0].id, '4fa85f64-5717-4562-b3fc-2c963f66afa7');
+        assert.strictEqual(result.source, WORKFLOW_DATA_SOURCES.API);
+      } finally {
+        restoreClient();
+      }
+    });
+
+    it('deleteWorkflowDefinition removes local draft definition without calling server', async () => {
+      let serverCalled = false;
+      apiClient.delete = async () => {
+        serverCalled = true;
+      };
+
+      const existing = [
+        { id: 'workflow-123456789', name: 'Draft WF' },
+        { id: 'workflow-987654321', name: 'Other Draft' },
+      ];
+
+      const result = await deleteWorkflowDefinition('comp-123', existing, 'workflow-123456789');
+
+      assert.strictEqual(serverCalled, false);
+      assert.strictEqual(result.definitions.length, 1);
+      assert.strictEqual(result.definitions[0].id, 'workflow-987654321');
+      assert.strictEqual(result.source, WORKFLOW_DATA_SOURCES.DRAFT);
     });
   });
 

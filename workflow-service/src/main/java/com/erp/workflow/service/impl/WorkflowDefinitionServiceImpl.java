@@ -8,6 +8,7 @@ import com.erp.workflow.enums.WorkflowRejectionAction;
 import com.erp.workflow.exception.ResourceNotFoundException;
 import com.erp.workflow.exception.WorkflowValidationException;
 import com.erp.workflow.repository.*;
+import com.erp.workflow.security.SecurityUtils;
 import com.erp.workflow.service.WorkflowDefinitionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -205,6 +206,44 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                 .orElseThrow(() -> new ResourceNotFoundException("WorkflowDefinition", "id", id));
         def.setIsActive(false);
         definitionRepository.save(def);
+    }
+
+    @Override
+    @Transactional
+    public void deleteDefinition(UUID id, UUID companyId) {
+        WorkflowDefinition def = (companyId != null)
+                ? definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, companyId)
+                        .orElseThrow(() -> new ResourceNotFoundException("WorkflowDefinition", "id", id))
+                : definitionRepository.findById(id)
+                        .filter(d -> !Boolean.TRUE.equals(d.getIsDeleted()))
+                        .orElseThrow(() -> new ResourceNotFoundException("WorkflowDefinition", "id", id));
+
+        UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
+        String currentUsername = SecurityUtils.getCurrentUsername();
+
+        def.setIsDeleted(true);
+        def.setDeletedBy(currentUserId);
+        def.setDeletedByUsername(currentUsername);
+        def.setUpdatedAt(LocalDateTime.now());
+        definitionRepository.save(def);
+
+        List<WorkflowStage> stages = stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(id);
+        for (WorkflowStage stage : stages) {
+            stage.setIsDeleted(true);
+            stage.setDeletedBy(currentUserId);
+            stage.setDeletedByUsername(currentUsername);
+            stage.setUpdatedAt(LocalDateTime.now());
+            stageRepository.save(stage);
+        }
+
+        List<WorkflowTransition> transitions = transitionRepository.findByWorkflowDefinitionIdAndIsDeletedFalse(id);
+        for (WorkflowTransition transition : transitions) {
+            transition.setIsDeleted(true);
+            transition.setDeletedBy(currentUserId);
+            transition.setDeletedByUsername(currentUsername);
+            transition.setUpdatedAt(LocalDateTime.now());
+            transitionRepository.save(transition);
+        }
     }
 
     private WorkflowDefinitionResponse mapToResponse(WorkflowDefinition def) {
