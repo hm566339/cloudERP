@@ -1,6 +1,6 @@
 # Production Dockerfile for ERP Frontend (Vite / React)
-# Stage 1: Build static assets with /erp/ subpath base
-FROM node:20-alpine AS builder
+# Stage 1: Build static assets with glibc-compatible Node builder (required by Vite 8 / Rolldown native bindings)
+FROM node:20-slim AS builder
 
 WORKDIR /app
 

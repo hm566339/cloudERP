@@ -20,15 +20,11 @@ export default defineConfig(({ mode }) => {
       },
       dedupe: ["react", "react-dom", "react-is"],
     },
+    esbuild: {
+      drop: ['console', 'debugger'],
+    },
     build: {
       target: "es2020",
-      minify: "terser",
-      terserOptions: {
-        compress: {
-          drop_console: true,
-          drop_debugger: true,
-        },
-      },
       cssCodeSplit: true,
     },
     // Dev server configuration
