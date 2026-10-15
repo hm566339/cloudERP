@@ -92,7 +92,7 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                         .minimumApprovalsRequired(stageReq.getMinimumApprovalsRequired() != null ? stageReq.getMinimumApprovalsRequired() : 1)
                         .rejectionAction(stageReq.getRejectionAction() != null ? stageReq.getRejectionAction() : WorkflowRejectionAction.REJECT_DOCUMENT)
                         .isMandatory(stageReq.getIsMandatory() != null ? stageReq.getIsMandatory() : true)
-                        .isActive(true)
+                        .isActive(stageReq.getIsActive() != null ? stageReq.getIsActive() : true)
                         .build();
 
                 stage = stageRepository.save(stage);
@@ -196,6 +196,153 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                 : definitionRepository.findByCompanyIdAndIsDeletedFalse(companyId, pageable);
 
         return page.map(this::mapToResponse);
+    }
+
+    @Override
+    @Transactional
+    public WorkflowDefinitionResponse updateDefinition(UUID id, CreateWorkflowDefinitionRequest request) {
+        WorkflowDefinition definition = definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, request.getCompanyId())
+                .orElseThrow(() -> new ResourceNotFoundException("WorkflowDefinition", "id", id));
+
+        // If workflowCode is changed, check uniqueness
+        if (!definition.getWorkflowCode().equalsIgnoreCase(request.getWorkflowCode())) {
+            if (definitionRepository.existsByCompanyIdAndWorkflowCodeAndVersionAndIsDeletedFalse(
+                    request.getCompanyId(), request.getWorkflowCode(), definition.getVersion())) {
+                throw new WorkflowValidationException("Workflow definition with code '" +
+                        request.getWorkflowCode() + "' already exists for this company.");
+            }
+            definition.setWorkflowCode(request.getWorkflowCode());
+        }
+
+        definition.setWorkflowName(request.getWorkflowName());
+        if (request.getModuleName() != null) {
+            definition.setModuleName(request.getModuleName());
+        }
+        if (request.getDocumentType() != null) {
+            definition.setDocumentType(request.getDocumentType());
+        }
+        definition.setDescription(request.getDescription());
+        if (request.getIsActive() != null) {
+            definition.setIsActive(request.getIsActive());
+        }
+        if (request.getIsDefault() != null) {
+            definition.setIsDefault(request.getIsDefault());
+        }
+        if (request.getEffectiveFrom() != null) {
+            definition.setEffectiveFrom(request.getEffectiveFrom());
+        }
+        if (request.getEffectiveTo() != null) {
+            definition.setEffectiveTo(request.getEffectiveTo());
+        }
+
+        UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
+        String currentUsername = SecurityUtils.getCurrentUsername();
+        definition.setUpdatedBy(currentUserId);
+        definition.setUpdatedByUsername(currentUsername);
+        definition.setUpdatedAt(LocalDateTime.now());
+
+        definition = definitionRepository.save(definition);
+
+        // Soft-delete old stages, approvers, transitions, SLAs
+        List<WorkflowStage> oldStages = stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(id);
+        for (WorkflowStage s : oldStages) {
+            s.setIsDeleted(true);
+            s.setDeletedBy(currentUserId);
+            s.setDeletedByUsername(currentUsername);
+            s.setUpdatedAt(LocalDateTime.now());
+            stageRepository.save(s);
+        }
+
+        List<WorkflowTransition> oldTransitions = transitionRepository.findByWorkflowDefinitionIdAndIsDeletedFalse(id);
+        for (WorkflowTransition t : oldTransitions) {
+            t.setIsDeleted(true);
+            t.setDeletedBy(currentUserId);
+            t.setDeletedByUsername(currentUsername);
+            t.setUpdatedAt(LocalDateTime.now());
+            transitionRepository.save(t);
+        }
+
+        // Insert updated stages
+        Map<String, WorkflowStage> savedStagesByCode = new HashMap<>();
+        int seq = 1;
+
+        if (request.getStages() != null) {
+            for (CreateWorkflowDefinitionRequest.StageRequest stageReq : request.getStages()) {
+                WorkflowStage stage = WorkflowStage.builder()
+                        .workflowDefinition(definition)
+                        .stageCode(stageReq.getStageCode())
+                        .stageName(stageReq.getStageName())
+                        .stageOrder(stageReq.getStageOrder() != null ? stageReq.getStageOrder() : seq)
+                        .sequenceNo(stageReq.getSequenceNo() != null ? stageReq.getSequenceNo() : seq)
+                        .executionType(stageReq.getExecutionType() != null ? stageReq.getExecutionType() : WorkflowExecutionType.SEQUENTIAL)
+                        .minimumApprovalsRequired(stageReq.getMinimumApprovalsRequired() != null ? stageReq.getMinimumApprovalsRequired() : 1)
+                        .rejectionAction(stageReq.getRejectionAction() != null ? stageReq.getRejectionAction() : WorkflowRejectionAction.REJECT_DOCUMENT)
+                        .isMandatory(stageReq.getIsMandatory() != null ? stageReq.getIsMandatory() : true)
+                        .isActive(stageReq.getIsActive() != null ? stageReq.getIsActive() : true)
+                        .build();
+
+                stage = stageRepository.save(stage);
+                savedStagesByCode.put(stage.getStageCode(), stage);
+                seq++;
+
+                // Approvers
+                if (stageReq.getApprovers() != null) {
+                    int order = 1;
+                    for (CreateWorkflowDefinitionRequest.ApproverRequest appReq : stageReq.getApprovers()) {
+                        WorkflowApprover approver = WorkflowApprover.builder()
+                                .workflowStage(stage)
+                                .approverType(appReq.getApproverType())
+                                .userId(appReq.getUserId())
+                                .userName(appReq.getUserName())
+                                .roleId(appReq.getRoleId())
+                                .roleName(appReq.getRoleName())
+                                .departmentId(appReq.getDepartmentId())
+                                .departmentName(appReq.getDepartmentName())
+                                .ruleExpression(appReq.getRuleExpression())
+                                .approvalOrder(appReq.getApprovalOrder() != null ? appReq.getApprovalOrder() : order++)
+                                .isRequired(appReq.getIsRequired() != null ? appReq.getIsRequired() : true)
+                                .canDelegate(appReq.getCanDelegate() != null ? appReq.getCanDelegate() : true)
+                                .build();
+                        approverRepository.save(approver);
+                    }
+                }
+
+                // SLA
+                if (stageReq.getSla() != null) {
+                    WorkflowSla sla = WorkflowSla.builder()
+                            .workflowStage(stage)
+                            .durationHours(stageReq.getSla().getDurationHours())
+                            .reminderHours(stageReq.getSla().getReminderHours())
+                            .escalationAction(stageReq.getSla().getEscalationAction() != null ? stageReq.getSla().getEscalationAction() : "NOTIFY_MANAGER")
+                            .escalateToUserId(stageReq.getSla().getEscalateToUserId())
+                            .escalateToRoleName(stageReq.getSla().getEscalateToRoleName())
+                            .isActive(true)
+                            .build();
+                    slaRepository.save(sla);
+                }
+            }
+        }
+
+        // Transitions
+        if (request.getTransitions() != null) {
+            for (CreateWorkflowDefinitionRequest.TransitionRequest transReq : request.getTransitions()) {
+                WorkflowStage source = transReq.getSourceStageCode() != null ? savedStagesByCode.get(transReq.getSourceStageCode()) : null;
+                WorkflowStage target = transReq.getTargetStageCode() != null ? savedStagesByCode.get(transReq.getTargetStageCode()) : null;
+
+                WorkflowTransition transition = WorkflowTransition.builder()
+                        .workflowDefinition(definition)
+                        .actionType(transReq.getActionType())
+                        .sourceStage(source)
+                        .targetStage(target)
+                        .transitionCondition(transReq.getTransitionCondition())
+                        .allowedRoles(transReq.getAllowedRoles())
+                        .isActive(true)
+                        .build();
+                transitionRepository.save(transition);
+            }
+        }
+
+        return getDefinition(definition.getId(), definition.getCompanyId());
     }
 
     @Override

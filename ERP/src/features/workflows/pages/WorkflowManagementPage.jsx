@@ -104,6 +104,7 @@ export default function WorkflowManagementPage() {
   const query = workflowListQuery.searchTerm;
   const setQuery = workflowListQuery.setSearch;
   const [errors, setErrors] = useState({});
+  const [editingStepId, setEditingStepId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -338,6 +339,33 @@ export default function WorkflowManagementPage() {
   const save = async () => {
     if (isSaving || !selected) return;
 
+    // Validate Initiated By Role
+    if (!selected.initiatedBy) {
+      const err = { initiatedBy: 'Initiated by role is required.' };
+      setErrors((prev) => ({ ...prev, ...err }));
+      dispatch(addAlert({ type: 'error', message: 'Initiated by role is required.' }));
+      return;
+    }
+
+    // Validate Steps
+    const currentSteps = Array.isArray(selected.steps) ? selected.steps : [];
+    if (currentSteps.length === 0) {
+      setErrors((prev) => ({ ...prev, steps: 'At least one step is required.' }));
+      dispatch(addAlert({ type: 'error', message: 'At least one step is required in the workflow sequence.' }));
+      return;
+    }
+
+    for (let i = 0; i < currentSteps.length; i++) {
+      const st = currentSteps[i];
+      if (!st.title?.trim() && !st.stageName?.trim()) {
+        const msg = `Step ${i + 1} name is required.`;
+        setErrors((prev) => ({ ...prev, [`step_${i}_name`]: msg }));
+        dispatch(addAlert({ type: 'error', message: msg }));
+        setEditingStepId(st.id);
+        return;
+      }
+    }
+
     const initiatedByRoleId = resolveRoleId(selected.initiatedBy, roles);
     const initiatedByRoleName = resolveRoleName(selected.initiatedBy, roles);
     const approverRoleId = resolveRoleId(selected.approverRole, roles);
@@ -362,16 +390,17 @@ export default function WorkflowManagementPage() {
       approverRoleName,
       isActive: Boolean(selected.isActive !== undefined ? selected.isActive : selected.active),
       active: Boolean(selected.isActive !== undefined ? selected.isActive : selected.active),
-      steps: Array.isArray(selected.steps)
-        ? selected.steps.map((step, idx) => ({
-            ...step,
-            stageCode: step.stageCode || `STAGE_${idx + 1}`,
-            stageName: step.stageName || step.title || `Stage ${idx + 1}`,
-            role: resolveRoleId(step.role || approverRoleId, roles),
-            roleId: resolveRoleId(step.role || approverRoleId, roles),
-            roleName: resolveRoleName(step.role || approverRoleName, roles),
-          }))
-        : [],
+      steps: currentSteps.map((step, idx) => ({
+        ...step,
+        sequenceNo: idx + 1,
+        stageOrder: idx + 1,
+        stageCode: step.stageCode || `STAGE_${idx + 1}`,
+        stageName: step.stageName || step.title || `Stage ${idx + 1}`,
+        title: step.title || step.stageName || `Stage ${idx + 1}`,
+        role: resolveRoleId(step.role || approverRoleId, roles),
+        roleId: resolveRoleId(step.role || approverRoleId, roles),
+        roleName: resolveRoleName(step.role || approverRoleName, roles),
+      })),
     };
 
     const validation = validateWorkflowDefinition(payloadToSave, { companyId });
@@ -413,28 +442,20 @@ export default function WorkflowManagementPage() {
           setSelectedId(defs[0].id);
         }
       } else {
-        const existingOriginal = workflows.find((w) => w.id === selected.id);
-        const statusChanged = existingOriginal && (
-          Boolean(existingOriginal.active) !== Boolean(payloadToSave.active) ||
-          Boolean(existingOriginal.isActive) !== Boolean(payloadToSave.isActive)
-        );
+        const result = await saveWorkflowDefinitions(companyId, payloadToSave, { mode: 'update' });
+        const updatedDef = result?.definitions?.[0];
 
-        if (statusChanged) {
-          if (payloadToSave.active) {
-            await workflowDefinitionApi.setActive(selected.id, companyId);
-          } else {
-            await workflowDefinitionApi.deactivate(selected.id, companyId);
-          }
-          dispatch(addAlert({
-            type: 'success',
-            message: `Workflow "${selected.name}" status updated to ${payloadToSave.active ? 'active' : 'inactive'}.`,
-          }));
-          await reloadDefinitions();
-        } else {
-          dispatch(addAlert({
-            type: 'warning',
-            message: 'Updating existing workflow definition metadata/stages is not supported by the backend API. Status activation/deactivation is available.',
-          }));
+        dispatch(addAlert({
+          type: 'success',
+          message: `Workflow "${updatedDef?.name || payloadToSave.name}" updated successfully.`,
+        }));
+
+        const defs = await reloadDefinitions();
+        if (updatedDef?.id) {
+          setSelectedId(updatedDef.id);
+        } else if (defs && defs.length) {
+          const match = defs.find((d) => d.id === selected.id);
+          if (match) setSelectedId(match.id);
         }
       }
     } catch (error) {
@@ -457,28 +478,106 @@ export default function WorkflowManagementPage() {
     }
   };
 
-  const updateStep = (stepId, changes) => setSelected((item) => ({ ...item, steps: item.steps.map((step) => step.id === stepId ? { ...step, ...changes } : step) }));
-  const addStep = () => setSelected((item) => {
-    const defaultRole = item.approverRole || (roles[0]?.id || '');
-    const nextIdx = (item.steps?.length || 0) + 1;
-    return {
+  const updateStep = (stepId, changes) =>
+    setSelected((item) => ({
       ...item,
-      steps: [
-        ...(item.steps || []),
-        {
-          id: `${item.id}-${Date.now()}`,
-          stageCode: `STAGE_${nextIdx}`,
-          stageName: `Approval Stage ${nextIdx}`,
-          title: `Approval Stage ${nextIdx}`,
-          role: defaultRole,
-          type: 'approval',
-          active: true,
-        },
-      ],
-    };
-  });
-  const removeStep = (stepId) => setSelected((item) => ({ ...item, steps: item.steps.filter((step) => step.id !== stepId) }));
-  const moveStep = (index, offset) => setSelected((item) => { const steps = [...item.steps];[steps[index], steps[index + offset]] = [steps[index + offset], steps[index]]; return { ...item, steps }; });
+      steps: (item.steps || []).map((step) =>
+        step.id === stepId ? { ...step, ...changes } : step
+      ),
+    }));
+
+  const addStep = () => {
+    let newStepId = null;
+    setSelected((item) => {
+      const defaultRole = item.approverRole || (roles[0]?.id || '');
+      const currentSteps = Array.isArray(item.steps) ? item.steps : [];
+      const nextSeq = currentSteps.length + 1;
+      newStepId = `step-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const newStep = {
+        id: newStepId,
+        stageCode: `STAGE_${nextSeq}`,
+        stageName: `Step ${nextSeq}`,
+        title: `Step ${nextSeq}`,
+        role: defaultRole,
+        roleId: resolveRoleId(defaultRole, roles),
+        roleName: resolveRoleName(defaultRole, roles),
+        type: 'approval',
+        approvalRule: 'ANY_ONE',
+        minimumApprovalsRequired: 1,
+        active: true,
+      };
+      return {
+        ...item,
+        steps: [...currentSteps, newStep],
+      };
+    });
+    if (newStepId) {
+      setEditingStepId(newStepId);
+    }
+    return newStepId;
+  };
+
+  const duplicateStep = (stepId) => {
+    let copyId = null;
+    setSelected((item) => {
+      const currentSteps = Array.isArray(item.steps) ? item.steps : [];
+      const stepToCopy = currentSteps.find((s) => s.id === stepId);
+      if (!stepToCopy) return item;
+      const copyIndex = currentSteps.findIndex((s) => s.id === stepId);
+      copyId = `step-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const newStep = {
+        ...JSON.parse(JSON.stringify(stepToCopy)),
+        id: copyId,
+        title: `${stepToCopy.title || stepToCopy.stageName || 'Step'} (Copy)`,
+        stageName: `${stepToCopy.stageName || stepToCopy.title || 'Step'} (Copy)`,
+        stageCode: `STAGE_${currentSteps.length + 1}`,
+        sequenceNo: currentSteps.length + 1,
+        stageOrder: currentSteps.length + 1,
+      };
+      const nextSteps = [...currentSteps];
+      nextSteps.splice(copyIndex + 1, 0, newStep);
+      const resequenced = nextSteps.map((step, idx) => ({
+        ...step,
+        sequenceNo: idx + 1,
+        stageOrder: idx + 1,
+        stageCode: step.stageCode || `STAGE_${idx + 1}`,
+      }));
+      return { ...item, steps: resequenced };
+    });
+    if (copyId) {
+      setEditingStepId(copyId);
+    }
+    return copyId;
+  };
+
+  const removeStep = (stepId) =>
+    setSelected((item) => {
+      const filtered = (item.steps || []).filter((step) => step.id !== stepId);
+      const resequenced = filtered.map((step, idx) => ({
+        ...step,
+        sequenceNo: idx + 1,
+        stageOrder: idx + 1,
+        stageCode: step.stageCode || `STAGE_${idx + 1}`,
+      }));
+      return { ...item, steps: resequenced };
+    });
+
+  const moveStep = (index, offset) =>
+    setSelected((item) => {
+      const targetIdx = index + offset;
+      const currentSteps = Array.isArray(item.steps) ? item.steps : [];
+      if (targetIdx < 0 || targetIdx >= currentSteps.length) return item;
+      const newSteps = [...currentSteps];
+      const [moved] = newSteps.splice(index, 1);
+      newSteps.splice(targetIdx, 0, moved);
+      const resequenced = newSteps.map((step, idx) => ({
+        ...step,
+        sequenceNo: idx + 1,
+        stageOrder: idx + 1,
+        stageCode: step.stageCode || `STAGE_${idx + 1}`,
+      }));
+      return { ...item, steps: resequenced };
+    });
 
   const deleteWorkflow = () => {
     if (!selected) return;
@@ -783,14 +882,42 @@ export default function WorkflowManagementPage() {
                     onRemoveStep={removeStep}
                     onMoveStep={moveStep}
                     onAddStep={addStep}
+                    onDuplicateStep={duplicateStep}
                     roles={roles}
+                    editingStepId={editingStepId}
+                    setEditingStepId={setEditingStepId}
                   />
                 )}
                 {selected && activeTab === 'rules' && (
-                  <div className="space-y-3">
-                    <InfoRow icon={ShieldCheck} label="Approval threshold" value={`₹ ${selected.threshold || 'Not set'}`} />
-                    <InfoRow icon={Users} label="Approver" value={resolveRoleName(selected.approverRole, roles) || 'Not configured'} />
-                    <InfoRow icon={Clock3} label="Active approval steps" value={`${selected.steps.filter((step) => step.type === 'approval' && step.active).length} step(s)`} />
+                  <div className="space-y-3.5">
+                    <InfoRow icon={ShieldCheck} label="Approval threshold" value={`₹ ${selected.threshold || '0.00'}`} />
+                    <InfoRow icon={Users} label="Initiated by Role" value={resolveRoleName(selected.initiatedBy, roles) || 'Not selected'} />
+                    <InfoRow icon={Users} label="Default Approver" value={resolveRoleName(selected.approverRole, roles) || 'Not configured'} />
+                    <InfoRow icon={Clock3} label="Active approval steps" value={`${(selected.steps || []).filter((step) => step.active !== false).length} step(s)`} />
+
+                    <div className="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-sm space-y-2">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-700">Configured Step Rules</h3>
+                      <div className="divide-y divide-zinc-100">
+                        {(selected.steps || []).map((step, idx) => (
+                          <div key={step.id || idx} className="py-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-zinc-500">#{idx + 1}</span>
+                              <span className="font-semibold text-zinc-900">{step.title || step.stageName}</span>
+                              <span className="capitalize text-[10px] px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 font-medium text-zinc-600">
+                                {step.type || 'approval'}
+                              </span>
+                            </div>
+                            <div className="text-zinc-500 text-[11px] font-mono">
+                              {step.type === 'condition'
+                                ? `Condition: ${step.ruleExpression || 'None'}`
+                                : step.type === 'notification'
+                                ? `Channel: ${step.notificationChannel || 'IN_APP'}`
+                                : `Role: ${resolveRoleName(step.role, roles) || 'Unassigned'} (${step.approvalRule === 'ALL_MUST_APPROVE' ? 'All must approve' : step.approvalRule === 'MINIMUM_REQUIRED' ? `${step.minimumApprovalsRequired || 1} required` : 'Any can approve'})`}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                     {errors.steps && <p className="rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200">{errors.steps}</p>}
                   </div>
                 )}
@@ -801,11 +928,24 @@ export default function WorkflowManagementPage() {
                         <Mail size={18} className="mt-0.5 text-blue-600 shrink-0" />
                         <div>
                           <p className="text-sm font-semibold text-zinc-800">Email notification policy</p>
-                          <p className="mt-1 text-xs text-zinc-500">Notifications are sent to the initiator and the assigned approver when a workflow step changes.</p>
+                          <p className="mt-1 text-xs text-zinc-500">Notifications are sent to the initiator and assigned approvers when a workflow step changes or requires action.</p>
                         </div>
                       </div>
                     </div>
-                    <InfoRow icon={Bell} label="Status" value={selected.emailNotifications ? 'Enabled' : 'Disabled'} />
+                    <InfoRow icon={Bell} label="Email notifications status" value={selected.emailNotifications ? 'Enabled' : 'Disabled'} />
+                    <div className="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-sm space-y-2">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-700">Notification Channels &amp; Steps</h3>
+                      {(selected.steps || []).filter((s) => s.type === 'notification' || s.notificationChannel).length === 0 ? (
+                        <p className="text-xs text-zinc-400">No dedicated notification steps configured.</p>
+                      ) : (
+                        (selected.steps || []).filter((s) => s.type === 'notification' || s.notificationChannel).map((s, idx) => (
+                          <div key={s.id || idx} className="py-1.5 flex items-center justify-between text-xs">
+                            <span className="font-semibold text-zinc-800">{s.title || s.stageName}</span>
+                            <span className="text-[11px] text-zinc-500 font-mono">{s.notificationChannel || 'IN_APP'}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 )}
                 {selected && activeTab === 'audit' && (

@@ -19,6 +19,8 @@ public interface WorkflowDefinitionService {
 
     Page<WorkflowDefinitionResponse> listDefinitions(UUID companyId, String moduleName, Pageable pageable);
 
+    WorkflowDefinitionResponse updateDefinition(UUID id, CreateWorkflowDefinitionRequest request);
+
     void activateDefinition(UUID id, UUID companyId);
 
     void deactivateDefinition(UUID id, UUID companyId);

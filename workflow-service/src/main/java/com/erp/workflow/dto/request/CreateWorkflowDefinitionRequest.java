@@ -64,6 +64,8 @@ public class CreateWorkflowDefinitionRequest {
         private Integer minimumApprovalsRequired = 1;
         private WorkflowRejectionAction rejectionAction = WorkflowRejectionAction.REJECT_DOCUMENT;
         private Boolean isMandatory = true;
+        @Builder.Default
+        private Boolean isActive = true;
 
         private List<ApproverRequest> approvers;
         private SlaRequest sla;

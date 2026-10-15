@@ -93,6 +93,10 @@ export const saveWorkflowAdditionalSettings = (companyId, definitionId, settings
       initiatedByRoleId: settings.initiatedByRoleId,
       initiatedByRoleName: settings.initiatedByRoleName,
       approvalRequired: settings.approvalRequired ?? true,
+      approverRole: settings.approverRole || '',
+      approverRoleId: settings.approverRoleId,
+      approverRoleName: settings.approverRoleName,
+      steps: Array.isArray(settings.steps) ? settings.steps : (store[definitionId]?.steps || []),
     };
     if (typeof localStorage !== 'undefined' && localStorage?.setItem) {
       localStorage.setItem(key, JSON.stringify(store));
@@ -320,32 +324,191 @@ const normalizeWorkflowDefinition = (item = {}, companyId) => {
     transitions: Array.isArray(item.transitions) ? item.transitions : [],
     steps: Array.isArray(item.steps) && item.steps.length
       ? item.steps
-      : Array.isArray(item.stages)
-        ? item.stages.map((stage, idx) => ({
-            id: stage.id || `stage-${idx + 1}`,
-            stageCode: stage.stageCode || `STAGE_${idx + 1}`,
-            title: stage.stageName || `Stage ${idx + 1}`,
-            stageName: stage.stageName || `Stage ${idx + 1}`,
-            role: stage.approvers?.[0]?.roleId || stage.approvers?.[0]?.roleName || stage.approvers?.[0]?.userName || '',
-            roleId: stage.approvers?.[0]?.roleId,
-            roleName: stage.approvers?.[0]?.roleName,
-            approvers: stage.approvers,
-            sla: stage.sla,
-            executionType: stage.executionType || 'SEQUENTIAL',
-            minimumApprovalsRequired: stage.minimumApprovalsRequired || 1,
-            rejectionAction: stage.rejectionAction || 'REJECT_DOCUMENT',
-            isMandatory: stage.isMandatory !== false,
-            type: 'approval',
-            active: stage.isActive !== false,
-          }))
-        : [],
+      : Array.isArray(item.stages) && item.stages.length
+        ? item.stages.map((stage, idx) => {
+            const extraSteps = Array.isArray(extra.steps) ? extra.steps : [];
+            const extraStep = extraSteps.find((s) => s.id === stage.id || s.stageCode === stage.stageCode || s.sequenceNo === stage.sequenceNo);
+            const roleVal = stage.approvers?.[0]?.roleId || stage.approvers?.[0]?.roleName || stage.approvers?.[0]?.userName || extraStep?.role || '';
+            return {
+              id: stage.id || extraStep?.id || `stage-${idx + 1}`,
+              stageCode: stage.stageCode || extraStep?.stageCode || `STAGE_${idx + 1}`,
+              title: stage.stageName || extraStep?.title || `Stage ${idx + 1}`,
+              stageName: stage.stageName || extraStep?.stageName || `Stage ${idx + 1}`,
+              role: roleVal,
+              roleId: stage.approvers?.[0]?.roleId || extraStep?.roleId,
+              roleName: stage.approvers?.[0]?.roleName || extraStep?.roleName,
+              approvers: stage.approvers,
+              sla: stage.sla,
+              executionType: stage.executionType || 'SEQUENTIAL',
+              minimumApprovalsRequired: stage.minimumApprovalsRequired || 1,
+              rejectionAction: stage.rejectionAction || 'REJECT_DOCUMENT',
+              isMandatory: stage.isMandatory !== false,
+              type: extraStep?.type || 'approval',
+              approvalRule: extraStep?.approvalRule || (stage.minimumApprovalsRequired > 1 ? 'MINIMUM_REQUIRED' : (stage.executionType === 'PARALLEL' ? 'ALL_MUST_APPROVE' : 'ANY_ONE')),
+              ruleExpression: extraStep?.ruleExpression || stage.approvers?.[0]?.ruleExpression || '',
+              notificationChannel: extraStep?.notificationChannel || 'IN_APP',
+              notificationMessage: extraStep?.notificationMessage || '',
+              sequenceNo: stage.sequenceNo || idx + 1,
+              active: stage.isActive !== false,
+            };
+          })
+        : (Array.isArray(extra.steps) && extra.steps.length ? extra.steps : []),
   };
+};
+
+const mapApprover = (app, defaultOrder = 1) => {
+  if (!app) return null;
+  if (typeof app === 'string') {
+    const isRoleUUID = isUUID(app);
+    return {
+      approverType: 'ROLE',
+      approvalOrder: defaultOrder,
+      isRequired: true,
+      canDelegate: true,
+      roleId: isRoleUUID ? app : undefined,
+      roleName: !isRoleUUID ? app : undefined,
+    };
+  }
+
+  const approverType = app.approverType && APPROVER_TYPES.includes(String(app.approverType).toUpperCase())
+    ? String(app.approverType).toUpperCase()
+    : 'ROLE';
+
+  const mapped = {
+    approverType,
+    approvalOrder: typeof app.approvalOrder === 'number' ? app.approvalOrder : defaultOrder,
+    isRequired: app.isRequired ?? true,
+    canDelegate: app.canDelegate ?? true,
+  };
+
+  if (app.userId && isUUID(app.userId)) mapped.userId = app.userId;
+  if (app.userName) mapped.userName = app.userName;
+  if (app.roleId && isUUID(app.roleId)) mapped.roleId = app.roleId;
+  else if (app.role && isUUID(app.role)) mapped.roleId = app.role;
+  if (app.roleName) mapped.roleName = app.roleName;
+  else if (app.role && !isUUID(app.role)) mapped.roleName = app.role;
+  if (app.departmentId && isUUID(app.departmentId)) mapped.departmentId = app.departmentId;
+  if (app.departmentName) mapped.departmentName = app.departmentName;
+  if (app.ruleExpression) mapped.ruleExpression = app.ruleExpression;
+
+  return mapped;
+};
+
+const mapSla = (sla) => {
+  if (!sla || typeof sla !== 'object') return undefined;
+  const durationHours = parseInt(sla.durationHours, 10);
+  if (isNaN(durationHours) || durationHours <= 0) return undefined;
+  const mapped = {
+    durationHours,
+    escalationAction: sla.escalationAction || 'NOTIFY_MANAGER',
+  };
+  if (sla.reminderHours !== undefined && !isNaN(parseInt(sla.reminderHours, 10))) {
+    mapped.reminderHours = parseInt(sla.reminderHours, 10);
+  }
+  if (sla.escalateToUserId && isUUID(sla.escalateToUserId)) {
+    mapped.escalateToUserId = sla.escalateToUserId;
+  }
+  if (sla.escalateToRoleName) {
+    mapped.escalateToRoleName = sla.escalateToRoleName;
+  }
+  return mapped;
+};
+
+const mapTransition = (trans) => {
+  if (!trans || typeof trans !== 'object') return null;
+  const actionType = String(trans.actionType || 'APPROVE').toUpperCase();
+  if (!WORKFLOW_ACTION_TYPES.includes(actionType)) return null;
+
+  const mapped = { actionType };
+  if (trans.sourceStageCode) mapped.sourceStageCode = trans.sourceStageCode;
+  if (trans.targetStageCode) mapped.targetStageCode = trans.targetStageCode;
+  if (trans.transitionCondition) mapped.transitionCondition = trans.transitionCondition;
+  if (trans.allowedRoles) mapped.allowedRoles = trans.allowedRoles;
+  return mapped;
+};
+
+const buildStagesPayload = (source) => {
+  const rawStages = (Array.isArray(source.stages) && source.stages.length > 0)
+    ? source.stages
+    : (Array.isArray(source.steps) && source.steps.length > 0)
+      ? source.steps
+      : [];
+
+  if (rawStages.length === 0) {
+    return [{
+      stageCode: 'STAGE_1',
+      stageName: 'Initial Approval',
+      stageOrder: 1,
+      sequenceNo: 1,
+      executionType: 'SEQUENTIAL',
+      minimumApprovalsRequired: 1,
+      rejectionAction: 'REJECT_DOCUMENT',
+      isMandatory: true,
+      isActive: true,
+      approvers: [mapApprover({
+        approverType: 'ROLE',
+        roleId: source.approverRoleId || (isUUID(source.approverRole) ? source.approverRole : undefined),
+        roleName: source.approverRoleName || (!isUUID(source.approverRole) ? source.approverRole : undefined) || 'Approver Role',
+        approvalOrder: 1,
+        isRequired: true,
+        canDelegate: true,
+      })].filter(Boolean),
+    }];
+  }
+
+  return rawStages.map((stageItem, idx) => {
+    const stageCode = (stageItem.stageCode || `STAGE_${idx + 1}`).trim();
+    const stageName = (stageItem.stageName || stageItem.title || `Stage ${idx + 1}`).trim();
+    const stageOrder = typeof stageItem.stageOrder === 'number' ? stageItem.stageOrder : idx + 1;
+    const sequenceNo = typeof stageItem.sequenceNo === 'number' ? stageItem.sequenceNo : idx + 1;
+    const executionType = stageItem.executionType === 'PARALLEL' ? 'PARALLEL' : 'SEQUENTIAL';
+    const minimumApprovalsRequired = typeof stageItem.minimumApprovalsRequired === 'number' && stageItem.minimumApprovalsRequired > 0
+      ? stageItem.minimumApprovalsRequired
+      : 1;
+    const rejectionAction = stageItem.rejectionAction === 'RETURN_TO_INITIATOR' ? 'RETURN_TO_INITIATOR' : 'REJECT_DOCUMENT';
+    const isMandatory = stageItem.isMandatory !== false;
+    const isActive = stageItem.active !== false && stageItem.isActive !== false;
+
+    let approvers = [];
+    if (Array.isArray(stageItem.approvers) && stageItem.approvers.length > 0) {
+      approvers = stageItem.approvers.map((a, aIdx) => mapApprover(a, aIdx + 1)).filter(Boolean);
+    } else if (stageItem.role || stageItem.roleId || stageItem.roleName || source.approverRole || source.approverRoleId || source.approverRoleName) {
+      const roleVal = stageItem.role || stageItem.roleId || stageItem.roleName || source.approverRole || source.approverRoleId || source.approverRoleName;
+      const approver = mapApprover({
+        approverType: 'ROLE',
+        roleId: stageItem.roleId || source.approverRoleId || (isUUID(roleVal) ? roleVal : undefined),
+        roleName: stageItem.roleName || source.approverRoleName || (!isUUID(roleVal) ? roleVal : undefined),
+        ruleExpression: stageItem.ruleExpression || (stageItem.type === 'condition' ? stageItem.ruleExpression : undefined),
+        approvalOrder: 1,
+        isRequired: true,
+        canDelegate: true,
+      });
+      if (approver) approvers.push(approver);
+    }
+
+    const stage = {
+      stageCode,
+      stageName,
+      stageOrder,
+      sequenceNo,
+      executionType,
+      minimumApprovalsRequired,
+      rejectionAction,
+      isMandatory,
+      isActive,
+      approvers,
+    };
+
+    const sla = mapSla(stageItem.sla);
+    if (sla) stage.sla = sla;
+
+    return stage;
+  });
 };
 
 export const workflowDefinitionApi = {
   available: true,
   missingEndpoints: [
-    'PUT/PATCH /api/v1/workflow/definitions/{definitionId}',
     'POST /api/v1/workflow/definitions/{definitionId}/stages',
   ],
   list: async (companyId, documentType = 'GENERAL', options = {}) => {
@@ -386,148 +549,7 @@ export const workflowDefinitionApi = {
   },
   create: async (definitionPayload) => {
     const source = definitionPayload && typeof definitionPayload === 'object' && 'data' in definitionPayload ? definitionPayload.data : definitionPayload;
-
-    const mapApprover = (app, defaultOrder = 1) => {
-      if (!app) return null;
-      if (typeof app === 'string') {
-        const isRoleUUID = isUUID(app);
-        return {
-          approverType: 'ROLE',
-          approvalOrder: defaultOrder,
-          isRequired: true,
-          canDelegate: true,
-          roleId: isRoleUUID ? app : undefined,
-          roleName: !isRoleUUID ? app : undefined,
-        };
-      }
-
-      const approverType = app.approverType && APPROVER_TYPES.includes(String(app.approverType).toUpperCase())
-        ? String(app.approverType).toUpperCase()
-        : 'ROLE';
-
-      const mapped = {
-        approverType,
-        approvalOrder: typeof app.approvalOrder === 'number' ? app.approvalOrder : defaultOrder,
-        isRequired: app.isRequired ?? true,
-        canDelegate: app.canDelegate ?? true,
-      };
-
-      if (app.userId && isUUID(app.userId)) mapped.userId = app.userId;
-      if (app.userName) mapped.userName = app.userName;
-      if (app.roleId && isUUID(app.roleId)) mapped.roleId = app.roleId;
-      else if (app.role && isUUID(app.role)) mapped.roleId = app.role;
-      if (app.roleName) mapped.roleName = app.roleName;
-      else if (app.role && !isUUID(app.role)) mapped.roleName = app.role;
-      if (app.departmentId && isUUID(app.departmentId)) mapped.departmentId = app.departmentId;
-      if (app.departmentName) mapped.departmentName = app.departmentName;
-      if (app.ruleExpression) mapped.ruleExpression = app.ruleExpression;
-
-      return mapped;
-    };
-
-    const mapSla = (sla) => {
-      if (!sla || typeof sla !== 'object') return undefined;
-      const durationHours = parseInt(sla.durationHours, 10);
-      if (isNaN(durationHours) || durationHours <= 0) return undefined;
-      const mapped = {
-        durationHours,
-        escalationAction: sla.escalationAction || 'NOTIFY_MANAGER',
-      };
-      if (sla.reminderHours !== undefined && !isNaN(parseInt(sla.reminderHours, 10))) {
-        mapped.reminderHours = parseInt(sla.reminderHours, 10);
-      }
-      if (sla.escalateToUserId && isUUID(sla.escalateToUserId)) {
-        mapped.escalateToUserId = sla.escalateToUserId;
-      }
-      if (sla.escalateToRoleName) {
-        mapped.escalateToRoleName = sla.escalateToRoleName;
-      }
-      return mapped;
-    };
-
-    const mapTransition = (trans) => {
-      if (!trans || typeof trans !== 'object') return null;
-      const actionType = String(trans.actionType || 'APPROVE').toUpperCase();
-      if (!WORKFLOW_ACTION_TYPES.includes(actionType)) return null;
-
-      const mapped = { actionType };
-      if (trans.sourceStageCode) mapped.sourceStageCode = trans.sourceStageCode;
-      if (trans.targetStageCode) mapped.targetStageCode = trans.targetStageCode;
-      if (trans.transitionCondition) mapped.transitionCondition = trans.transitionCondition;
-      if (trans.allowedRoles) mapped.allowedRoles = trans.allowedRoles;
-      return mapped;
-    };
-
-    const rawStages = (Array.isArray(source.stages) && source.stages.length > 0)
-      ? source.stages
-      : (Array.isArray(source.steps) && source.steps.length > 0)
-        ? source.steps.filter((s) => s.active !== false)
-        : [];
-
-    const stages = rawStages.length > 0
-      ? rawStages.map((stageItem, idx) => {
-          const stageCode = (stageItem.stageCode || `STAGE_${idx + 1}`).trim();
-          const stageName = (stageItem.stageName || stageItem.title || `Stage ${idx + 1}`).trim();
-          const stageOrder = typeof stageItem.stageOrder === 'number' ? stageItem.stageOrder : idx + 1;
-          const sequenceNo = typeof stageItem.sequenceNo === 'number' ? stageItem.sequenceNo : idx + 1;
-          const executionType = stageItem.executionType === 'PARALLEL' ? 'PARALLEL' : 'SEQUENTIAL';
-          const minimumApprovalsRequired = typeof stageItem.minimumApprovalsRequired === 'number' && stageItem.minimumApprovalsRequired > 0
-            ? stageItem.minimumApprovalsRequired
-            : 1;
-          const rejectionAction = stageItem.rejectionAction === 'RETURN_TO_INITIATOR' ? 'RETURN_TO_INITIATOR' : 'REJECT_DOCUMENT';
-          const isMandatory = stageItem.isMandatory ?? true;
-
-          let approvers = [];
-          if (Array.isArray(stageItem.approvers) && stageItem.approvers.length > 0) {
-            approvers = stageItem.approvers.map((a, aIdx) => mapApprover(a, aIdx + 1)).filter(Boolean);
-          } else if (stageItem.role || stageItem.roleId || stageItem.roleName || source.approverRole || source.approverRoleId || source.approverRoleName) {
-            const roleVal = stageItem.role || stageItem.roleId || stageItem.roleName || source.approverRole || source.approverRoleId || source.approverRoleName;
-            const approver = mapApprover({
-              approverType: 'ROLE',
-              roleId: stageItem.roleId || source.approverRoleId || (isUUID(roleVal) ? roleVal : undefined),
-              roleName: stageItem.roleName || source.approverRoleName || (!isUUID(roleVal) ? roleVal : undefined),
-              approvalOrder: 1,
-              isRequired: true,
-              canDelegate: true,
-            });
-            if (approver) approvers.push(approver);
-          }
-
-          const stage = {
-            stageCode,
-            stageName,
-            stageOrder,
-            sequenceNo,
-            executionType,
-            minimumApprovalsRequired,
-            rejectionAction,
-            isMandatory,
-            approvers,
-          };
-
-          const sla = mapSla(stageItem.sla);
-          if (sla) stage.sla = sla;
-
-          return stage;
-        })
-      : [{
-          stageCode: 'STAGE_1',
-          stageName: 'Initial Approval',
-          stageOrder: 1,
-          sequenceNo: 1,
-          executionType: 'SEQUENTIAL',
-          minimumApprovalsRequired: 1,
-          rejectionAction: 'REJECT_DOCUMENT',
-          isMandatory: true,
-          approvers: [mapApprover({
-            approverType: 'ROLE',
-            roleId: source.approverRoleId || (isUUID(source.approverRole) ? source.approverRole : undefined),
-            roleName: source.approverRoleName || (!isUUID(source.approverRole) ? source.approverRole : undefined) || 'Approver Role',
-            approvalOrder: 1,
-            isRequired: true,
-            canDelegate: true,
-          })].filter(Boolean),
-        }];
+    const stages = buildStagesPayload(source);
 
     const workflowName = (source.workflowName || source.name || '').trim();
     if (!workflowName) {
@@ -562,7 +584,46 @@ export const workflowDefinitionApi = {
     const data = unwrapApiData(response);
     return normalizeWorkflowDefinition(data, source.companyId);
   },
-  update: async () => { throw new WorkflowApiNotImplementedError('PUT/PATCH /api/v1/workflow/definitions/{definitionId}'); },
+  update: async (definitionId, definitionPayload) => {
+    if (!definitionPayload) {
+      throw new WorkflowApiNotImplementedError('PUT/PATCH /api/v1/workflow/definitions/{definitionId}');
+    }
+    if (!definitionId) throw new Error('Workflow definition ID is required.');
+    const source = definitionPayload && typeof definitionPayload === 'object' && 'data' in definitionPayload ? definitionPayload.data : definitionPayload;
+    const stages = buildStagesPayload(source);
+
+    const workflowName = (source.workflowName || source.name || '').trim();
+    if (!workflowName) {
+      throw new Error('Workflow name is required to update a workflow definition.');
+    }
+
+    const workflowCode = (source.workflowCode || source.code || '').trim() || `${normalizeDocumentType(source.moduleName || source.module)}-${Date.now()}`;
+    const moduleName = (source.moduleName || source.module || 'GENERAL').toUpperCase();
+    const documentType = (source.documentType || normalizeDocumentType(source.moduleName || source.module)).toUpperCase();
+
+    const payload = {
+      companyId: source.companyId,
+      workflowCode,
+      workflowName,
+      moduleName,
+      documentType,
+      description: source.description || '',
+      version: typeof source.version === 'number' ? source.version : 1,
+      isActive: Boolean(source.isActive !== undefined ? source.isActive : source.active),
+      isDefault: Boolean(source.isDefault ?? false),
+      stages,
+      transitions: Array.isArray(source.transitions)
+        ? source.transitions.map(mapTransition).filter(Boolean)
+        : [],
+    };
+
+    if (source.effectiveFrom) payload.effectiveFrom = source.effectiveFrom;
+    if (source.effectiveTo) payload.effectiveTo = source.effectiveTo;
+
+    const response = await apiClient.put(`/api/v1/workflow/definitions/${definitionId}`, { data: payload });
+    const data = unwrapApiData(response);
+    return normalizeWorkflowDefinition(data, source.companyId);
+  },
   remove: async (definitionId, companyId) => {
     if (!definitionId) throw new Error('Workflow definition ID is required.');
     const params = companyId ? { companyId } : undefined;
@@ -632,20 +693,6 @@ export async function saveWorkflowDefinitions(companyId, definitions, options = 
     return { definitions: [], source: WORKFLOW_DATA_SOURCES.API };
   }
 
-  if (mode === 'update' && !isDraftItem(definitions)) {
-    if (definitions.id) {
-      if (definitions.active || definitions.isActive) {
-        await workflowDefinitionApi.setActive(definitions.id, companyId);
-      } else {
-        await workflowDefinitionApi.deactivate(definitions.id, companyId);
-      }
-      saveWorkflowAdditionalSettings(companyId, definitions.id, definitions);
-      return { definitions: [definitions], source: WORKFLOW_DATA_SOURCES.API };
-    }
-    throw new WorkflowApiNotImplementedError('PUT/PATCH /api/v1/workflow/definitions/{definitionId}');
-  }
-
-  // Create mode: validate first
   const payloadToValidate = {
     ...definitions,
     companyId,
@@ -659,6 +706,16 @@ export async function saveWorkflowDefinitions(companyId, definitions, options = 
     throw err;
   }
 
+  if (mode === 'update' && !isDraftItem(definitions)) {
+    if (definitions.id) {
+      const updated = await workflowDefinitionApi.update(definitions.id, { ...payloadToValidate, companyId });
+      saveWorkflowAdditionalSettings(companyId, definitions.id, definitions);
+      return { definitions: [updated], source: WORKFLOW_DATA_SOURCES.API };
+    }
+    throw new WorkflowApiNotImplementedError('PUT/PATCH /api/v1/workflow/definitions/{definitionId}');
+  }
+
+  // Create mode: validate first
   const created = await workflowDefinitionApi.create({ ...payloadToValidate, companyId });
   saveWorkflowAdditionalSettings(companyId, created.id, definitions);
   return { definitions: [created], source: WORKFLOW_DATA_SOURCES.API };

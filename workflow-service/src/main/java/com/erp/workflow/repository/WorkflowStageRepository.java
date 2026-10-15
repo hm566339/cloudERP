@@ -24,14 +24,14 @@ public interface WorkflowStageRepository extends JpaRepository<WorkflowStage, UU
             UUID workflowDefinitionId, String stageCode);
 
     @Query("SELECT s FROM WorkflowStage s WHERE s.workflowDefinition.id = :definitionId " +
-           "AND s.sequenceNo > :currentSeq AND s.isDeleted = false " +
+           "AND s.sequenceNo > :currentSeq AND s.isDeleted = false AND s.isActive = true " +
            "ORDER BY s.sequenceNo ASC LIMIT 1")
     Optional<WorkflowStage> findNextStage(
             @Param("definitionId") UUID definitionId,
             @Param("currentSeq") Integer currentSeq);
 
     @Query("SELECT s FROM WorkflowStage s WHERE s.workflowDefinition.id = :definitionId " +
-           "AND s.sequenceNo < :currentSeq AND s.isDeleted = false " +
+           "AND s.sequenceNo < :currentSeq AND s.isDeleted = false AND s.isActive = true " +
            "ORDER BY s.sequenceNo DESC LIMIT 1")
     Optional<WorkflowStage> findPreviousStage(
             @Param("definitionId") UUID definitionId,
