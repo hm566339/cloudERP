@@ -1,7 +1,9 @@
 import React from 'react';
-import { resolveRoleId } from '../services/workflowService';
+import { resolveRoleId, DOCUMENT_TYPES_BY_MODULE } from '../services/workflowService';
 import WorkflowToggle from './WorkflowToggle';
 import WorkflowSettingRow from './WorkflowSettingRow';
+
+export { DOCUMENT_TYPES_BY_MODULE };
 
 function Field({ label, children, hint }) {
   return (
@@ -14,42 +16,6 @@ function Field({ label, children, hint }) {
     </div>
   );
 }
-
-export const DOCUMENT_TYPES_BY_MODULE = {
-  Sales: [
-    { value: 'QUOTATION', label: 'Sales Quotation (QUOTATION)' },
-    { value: 'SALES_ORDER', label: 'Sales Order (SALES_ORDER)' },
-    { value: 'SALES_INVOICE', label: 'Sales Invoice (SALES_INVOICE)' },
-    { value: 'SALES', label: 'General Sales (SALES)' },
-  ],
-  Purchase: [
-    { value: 'PURCHASE_ORDER', label: 'Purchase Order (PURCHASE_ORDER)' },
-    { value: 'AP_INVOICE', label: 'Vendor Bill / AP Invoice (AP_INVOICE)' },
-    { value: 'PURCHASE', label: 'General Purchase (PURCHASE)' },
-  ],
-  Expenses: [
-    { value: 'EXPENSE_REQUEST', label: 'Expense Request (EXPENSE_REQUEST)' },
-    { value: 'EXPENSE', label: 'General Expense (EXPENSE)' },
-  ],
-  Invoices: [
-    { value: 'SALES_INVOICE', label: 'Sales Invoice (SALES_INVOICE)' },
-    { value: 'AP_INVOICE', label: 'AP Invoice (AP_INVOICE)' },
-    { value: 'INVOICE', label: 'General Invoice (INVOICE)' },
-  ],
-  Reimbursements: [
-    { value: 'REIMBURSEMENT', label: 'Reimbursement Request (REIMBURSEMENT)' },
-  ],
-  Inventory: [
-    { value: 'STOCK_TRANSFER', label: 'Stock Transfer (STOCK_TRANSFER)' },
-    { value: 'STOCK_ADJUSTMENT', label: 'Stock Adjustment (STOCK_ADJUSTMENT)' },
-    { value: 'INVENTORY', label: 'General Inventory (INVENTORY)' },
-  ],
-  Others: [
-    { value: 'RECEIPT_VOUCHER', label: 'Receipt Voucher (RECEIPT_VOUCHER)' },
-    { value: 'PAYMENT_VOUCHER', label: 'Payment Voucher (PAYMENT_VOUCHER)' },
-    { value: 'GENERAL', label: 'General Document (GENERAL)' },
-  ],
-};
 
 export default function WorkflowConfigurationForm({
   workflow,
@@ -295,8 +261,8 @@ export default function WorkflowConfigurationForm({
           <WorkflowToggle label="Customer acceptance" checked={workflow.customerAcceptance} disabled={!canEdit} onChange={(value) => update('customerAcceptance', value)} />
         </WorkflowSettingRow>
 
-        <WorkflowSettingRow label="Auto-create sales order" description="Create an order after customer acceptance">
-          <WorkflowToggle label="Auto-create sales order" checked={workflow.autoCreateOrder} disabled={!canEdit || !workflow.customerAcceptance} onChange={(value) => update('autoCreateOrder', value)} />
+        <WorkflowSettingRow label="Auto-create sales order" description="Create an order after customer acceptance or direct approval">
+          <WorkflowToggle label="Auto-create sales order" checked={workflow.autoCreateOrder} disabled={!canEdit} onChange={(value) => update('autoCreateOrder', value)} />
         </WorkflowSettingRow>
 
         <WorkflowSettingRow label="Email notifications" description="Notify participants when a step changes">

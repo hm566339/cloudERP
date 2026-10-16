@@ -34,6 +34,15 @@ public class QuotationAcceptanceTokenServiceTest {
     @Mock
     private QuotationRepository quotationRepository;
 
+    @Mock
+    private com.erp.account.modules.salesorder.service.SalesOrderService salesOrderService;
+
+    @Mock
+    private com.erp.account.modules.salesorder.repository.SalesOrderRepository salesOrderRepository;
+
+    @Mock
+    private com.erp.account.integration.workflow.client.WorkflowServiceClient workflowServiceClient;
+
     @InjectMocks
     private QuotationAcceptanceTokenServiceImpl tokenService;
 
@@ -109,5 +118,66 @@ public class QuotationAcceptanceTokenServiceTest {
         QuotationAcceptResponse response = tokenService.acceptQuotation("token");
         assertFalse(response.isSuccess());
         assertEquals("Quotation has already been accepted", response.getMessage());
+    }
+
+    @Test
+    void acceptQuotation_AutoCreateOrderEnabled_ShouldCreateSalesOrder() {
+        UUID companyId = UUID.randomUUID();
+        UUID quotationId = UUID.randomUUID();
+
+        Quotation quotation = new Quotation();
+        quotation.setId(quotationId);
+        quotation.setCompanyId(companyId);
+        quotation.setQuotationNumber("QT-2026-001");
+        quotation.setStatus(QuotationStatus.SENT);
+
+        QuotationAcceptanceToken token = new QuotationAcceptanceToken();
+        token.setId(UUID.randomUUID());
+        token.setQuotationId(quotationId);
+        token.setQuotation(quotation);
+        token.setExpiresAt(LocalDateTime.now().plusDays(1));
+
+        when(tokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(token));
+        when(salesOrderRepository.existsBySourceQuotationIdAndCompanyIdAndIsDeletedFalse(quotationId, companyId))
+                .thenReturn(false);
+
+        com.erp.account.integration.workflow.dto.WorkflowDefinitionDto defDto = com.erp.account.integration.workflow.dto.WorkflowDefinitionDto.builder()
+                .autoCreateOrder(true)
+                .build();
+        when(workflowServiceClient.getActiveDefinition(companyId, "SALES", "SALES"))
+                .thenReturn(com.erp.account.common.dto.response.ApiResponse.success(defDto));
+
+        QuotationAcceptResponse response = tokenService.acceptQuotation("valid-token");
+
+        assertTrue(response.isSuccess());
+        verify(salesOrderService, times(1)).createDirectFromQuotation(companyId, quotationId);
+    }
+
+    @Test
+    void acceptQuotation_AutoCreateOrderEnabled_DuplicatePrevented() {
+        UUID companyId = UUID.randomUUID();
+        UUID quotationId = UUID.randomUUID();
+
+        Quotation quotation = new Quotation();
+        quotation.setId(quotationId);
+        quotation.setCompanyId(companyId);
+        quotation.setQuotationNumber("QT-2026-001");
+        quotation.setStatus(QuotationStatus.SENT);
+
+        QuotationAcceptanceToken token = new QuotationAcceptanceToken();
+        token.setId(UUID.randomUUID());
+        token.setQuotationId(quotationId);
+        token.setQuotation(quotation);
+        token.setExpiresAt(LocalDateTime.now().plusDays(1));
+
+        when(tokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(token));
+        // Duplicate exists:
+        when(salesOrderRepository.existsBySourceQuotationIdAndCompanyIdAndIsDeletedFalse(quotationId, companyId))
+                .thenReturn(true);
+
+        QuotationAcceptResponse response = tokenService.acceptQuotation("valid-token");
+
+        assertTrue(response.isSuccess());
+        verify(salesOrderService, never()).createDirectFromQuotation(any(), any());
     }
 }

@@ -46,6 +46,12 @@ public interface WorkflowDefinitionRepository extends JpaRepository<WorkflowDefi
     Page<WorkflowDefinition> findByCompanyIdAndModuleNameAndIsDeletedFalse(
             UUID companyId, String moduleName, Pageable pageable);
 
+    Page<WorkflowDefinition> findByCompanyIdAndDocumentTypeAndIsDeletedFalse(
+            UUID companyId, String documentType, Pageable pageable);
+
+    Page<WorkflowDefinition> findByCompanyIdAndModuleNameAndDocumentTypeAndIsDeletedFalse(
+            UUID companyId, String moduleName, String documentType, Pageable pageable);
+
     boolean existsByCompanyIdAndWorkflowCodeAndVersionAndIsDeletedFalse(
             UUID companyId, String workflowCode, Integer version);
 

@@ -9,6 +9,8 @@ import workflowDefinitionApi, {
   validateWorkflowDefinition,
   getWorkflowAdditionalSettings,
   saveWorkflowAdditionalSettings,
+  workflowAuditApi,
+  DOCUMENT_TYPES_BY_MODULE,
   APPROVER_TYPES,
   WORKFLOW_ACTION_TYPES,
   WorkflowApiNotImplementedError,
@@ -657,6 +659,100 @@ describe('Workflow Definitions API Routing & Service Verification', () => {
         const savedSettings = getWorkflowAdditionalSettings('comp-123', 'wf-existing-1');
         assert.strictEqual(savedSettings.threshold, '50000');
         assert.strictEqual(savedSettings.steps.length, 2);
+      } finally {
+        restoreClient();
+      }
+    });
+  });
+
+  describe('6. Verified Gaps Regression Verification', () => {
+    it('supports Manufacturing module and canonical types in DOCUMENT_TYPES_BY_MODULE', () => {
+      assert.ok(DOCUMENT_TYPES_BY_MODULE.Manufacturing, 'Manufacturing module must exist');
+      const mfgValues = DOCUMENT_TYPES_BY_MODULE.Manufacturing.map((d) => d.value);
+      assert.deepStrictEqual(mfgValues, ['BOM', 'PRODUCTION_ORDER', 'WORK_ORDER', 'PRODUCTION_COMPLETION']);
+
+      const salesValues = DOCUMENT_TYPES_BY_MODULE.Sales.map((d) => d.value);
+      assert.ok(salesValues.includes('PROFORMA_INVOICE'));
+      assert.ok(salesValues.includes('DELIVERY_CHALLAN'));
+
+      const inventoryValues = DOCUMENT_TYPES_BY_MODULE.Inventory.map((d) => d.value);
+      assert.ok(inventoryValues.includes('STOCK_MOVEMENT'));
+      assert.ok(inventoryValues.includes('OPENING_STOCK'));
+      assert.ok(inventoryValues.includes('STOCK_RESERVATION'));
+
+      const purchaseValues = DOCUMENT_TYPES_BY_MODULE.Purchase.map((d) => d.value);
+      assert.ok(purchaseValues.includes('PURCHASE_REQUISITION'));
+      assert.ok(purchaseValues.includes('RFQ'));
+      assert.ok(purchaseValues.includes('SUPPLIER_QUOTATION'));
+      assert.ok(purchaseValues.includes('GOODS_RECEIPT'));
+      assert.ok(purchaseValues.includes('AP_PAYMENT'));
+
+      const othersValues = DOCUMENT_TYPES_BY_MODULE.Others.map((d) => d.value);
+      assert.ok(othersValues.includes('JOURNAL_ENTRY'));
+      assert.ok(othersValues.includes('CREDIT_NOTE'));
+      assert.ok(othersValues.includes('DEBIT_NOTE'));
+      assert.ok(othersValues.includes('FISCAL_YEAR'));
+    });
+
+    it('loadWorkflowDefinitions passes moduleName in query params', async () => {
+      try {
+        apiClient.get = async (url, config) => {
+          lastRequest = { url, config };
+          return { data: { data: [] } };
+        };
+
+        await loadWorkflowDefinitions('comp-123', undefined, { moduleName: 'MANUFACTURING' });
+        assert.strictEqual(lastRequest.url, '/api/v1/workflow/definitions');
+        assert.strictEqual(lastRequest.config.params.companyId, 'comp-123');
+        assert.strictEqual(lastRequest.config.params.moduleName, 'MANUFACTURING');
+      } finally {
+        restoreClient();
+      }
+    });
+
+    it('workflowAuditApi connects to /api/v1/workflow/transactions and formats genuine entries', async () => {
+      try {
+        apiClient.get = async (url, config) => {
+          lastRequest = { url, config };
+          return {
+            data: {
+              data: [
+                {
+                  id: 'tx-100',
+                  documentType: 'QUOTATION',
+                  documentNumber: 'QT-2026-001',
+                  status: 'APPROVED',
+                  initiatedByName: 'John Sales',
+                  createdAt: '2026-10-16T10:00:00Z',
+                  actions: [
+                    {
+                      id: 'act-1',
+                      actionType: 'APPROVE',
+                      performedByName: 'Sarah Manager',
+                      comments: 'Approved discount',
+                      performedAt: '2026-10-16T11:00:00Z',
+                    },
+                  ],
+                },
+              ],
+            },
+          };
+        };
+
+        const result = await workflowAuditApi.getAuditTrail({
+          companyId: 'comp-123',
+          moduleName: 'Sales',
+          page: 0,
+          size: 20,
+        });
+
+        assert.strictEqual(lastRequest.url, '/api/v1/workflow/transactions');
+        assert.strictEqual(lastRequest.config.params.companyId, 'comp-123');
+        assert.strictEqual(lastRequest.config.params.moduleName, 'SALES');
+        assert.strictEqual(result.entries.length, 1);
+        assert.strictEqual(result.entries[0].actionType, 'APPROVE');
+        assert.strictEqual(result.entries[0].performedBy, 'Sarah Manager');
+        assert.match(result.entries[0].description, /Approved discount/);
       } finally {
         restoreClient();
       }

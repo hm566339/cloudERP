@@ -53,6 +53,12 @@ public class SubmitWorkflowRequest {
     /** Initial submission comment */
     private String comments;
 
+    /** Monetary amount of the document (used for threshold validation) */
+    private java.math.BigDecimal amount;
+
+    /** Customer ID associated with document (used for customer scope validation) */
+    private UUID customerId;
+
     /** Optional custom metadata (JSON) */
     private Map<String, Object> metadata;
 }

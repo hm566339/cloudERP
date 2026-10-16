@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -225,9 +226,22 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
     @Override
     @Transactional(readOnly = true)
     public Page<WorkflowDefinitionResponse> listDefinitions(UUID companyId, String moduleName, Pageable pageable) {
-        Page<WorkflowDefinition> page = moduleName != null
-                ? definitionRepository.findByCompanyIdAndModuleNameAndIsDeletedFalse(companyId, moduleName, pageable)
-                : definitionRepository.findByCompanyIdAndIsDeletedFalse(companyId, pageable);
+        return listDefinitions(companyId, moduleName, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<WorkflowDefinitionResponse> listDefinitions(UUID companyId, String moduleName, String documentType, Pageable pageable) {
+        Page<WorkflowDefinition> page;
+        if (StringUtils.hasText(moduleName) && StringUtils.hasText(documentType)) {
+            page = definitionRepository.findByCompanyIdAndModuleNameAndDocumentTypeAndIsDeletedFalse(companyId, moduleName, documentType, pageable);
+        } else if (StringUtils.hasText(moduleName)) {
+            page = definitionRepository.findByCompanyIdAndModuleNameAndIsDeletedFalse(companyId, moduleName, pageable);
+        } else if (StringUtils.hasText(documentType)) {
+            page = definitionRepository.findByCompanyIdAndDocumentTypeAndIsDeletedFalse(companyId, documentType, pageable);
+        } else {
+            page = definitionRepository.findByCompanyIdAndIsDeletedFalse(companyId, pageable);
+        }
 
         return page.map(this::mapToResponse);
     }

@@ -40,6 +40,9 @@ public class WorkflowNotificationServiceImpl implements WorkflowNotificationServ
         if (recipientUserId == null) return;
 
         try {
+            WorkflowChannel effectiveChannel = channel != null ? channel : WorkflowChannel.IN_APP;
+            String deliveryStatus = (effectiveChannel == WorkflowChannel.IN_APP) ? "SENT" : "QUEUED";
+
             WorkflowNotification notif = WorkflowNotification.builder()
                     .companyId(companyId)
                     .workflowTransaction(transaction)
@@ -48,14 +51,14 @@ public class WorkflowNotificationServiceImpl implements WorkflowNotificationServ
                     .notificationType(type)
                     .title(title)
                     .message(message)
-                    .channel(channel != null ? channel : WorkflowChannel.IN_APP)
-                    .deliveryStatus("SENT")
+                    .channel(effectiveChannel)
+                    .deliveryStatus(deliveryStatus)
                     .createdAt(LocalDateTime.now())
                     .isRead(false)
                     .build();
 
             notificationRepository.save(notif);
-            log.info("Saved workflow notification for user: {}", recipientUserId);
+            log.info("Saved workflow notification for user: {} with channel {} and status {}", recipientUserId, effectiveChannel, deliveryStatus);
         } catch (Exception ex) {
             log.error("Failed to persist notification", ex);
         }

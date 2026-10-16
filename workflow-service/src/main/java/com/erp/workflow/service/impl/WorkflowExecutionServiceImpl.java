@@ -110,6 +110,56 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             throw new WorkflowValidationException("Cannot submit workflow for inactive definition '" + definition.getWorkflowName() + "'.");
         }
 
+        // Extract document amount for threshold evaluation
+        java.math.BigDecimal docAmount = request.getAmount();
+        if (docAmount == null && request.getMetadata() != null) {
+            Object val = request.getMetadata().get("amount");
+            if (val == null) val = request.getMetadata().get("totalAmount");
+            if (val instanceof Number) {
+                docAmount = java.math.BigDecimal.valueOf(((Number) val).doubleValue());
+            } else if (val instanceof String && StringUtils.hasText((String) val)) {
+                try {
+                    docAmount = new java.math.BigDecimal(((String) val).replace(",", "").trim());
+                } catch (Exception ignored) {}
+            }
+        }
+
+        // Extract customer ID for customer scope evaluation
+        UUID docCustomerId = request.getCustomerId();
+        if (docCustomerId == null && request.getMetadata() != null) {
+            Object val = request.getMetadata().get("customerId");
+            if (val instanceof UUID) {
+                docCustomerId = (UUID) val;
+            } else if (val instanceof String && StringUtils.hasText((String) val)) {
+                try {
+                    docCustomerId = UUID.fromString((String) val);
+                } catch (Exception ignored) {}
+            }
+        }
+
+        // Validate customer applicability if scope is specific
+        if ("specific".equalsIgnoreCase(definition.getCustomerScope())) {
+            if (docCustomerId == null) {
+                log.info("Workflow definition {} applies to specific customers, but submission has no customerId. Enforcing full approval sequence.", definition.getWorkflowCode());
+            }
+        }
+
+        // Determine if approval is required based on definition flag and threshold
+        boolean approvalRequired = definition.getIsApprovalRequired() == null || Boolean.TRUE.equals(definition.getIsApprovalRequired());
+        String autoApprovalReason = null;
+
+        if (!approvalRequired) {
+            autoApprovalReason = "Auto-approved: Approval is not required for this workflow configuration.";
+        } else if (definition.getApprovalThreshold() != null && definition.getApprovalThreshold().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            if (docAmount != null && docAmount.compareTo(definition.getApprovalThreshold()) < 0) {
+                approvalRequired = false;
+                autoApprovalReason = "Auto-approved: Document amount (" + docAmount + ") is below workflow approval threshold (" + definition.getApprovalThreshold() + ").";
+            } else if (docAmount == null) {
+                log.info("Workflow definition {} has approval threshold {}, but submission amount is null. Enforcing approval by safe default.",
+                        definition.getWorkflowCode(), definition.getApprovalThreshold());
+            }
+        }
+
         // Get first active stage
         final String wfCode = definition.getWorkflowCode();
         List<WorkflowStage> stages = stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(definition.getId());
@@ -131,24 +181,25 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 .documentNumber(request.getDocumentNumber())
                 .callbackUrl(request.getCallbackUrl())
                 .currentStage(firstStage)
-                .status("PENDING")
+                .status(approvalRequired ? "PENDING" : "APPROVED")
                 .initiatedBy(request.getInitiatedBy())
                 .initiatedByName(request.getInitiatedByName())
                 .initiatedAt(now)
                 .submittedAt(now)
+                .completedAt(approvalRequired ? null : now)
                 .version(0L)
                 .build();
 
         transaction = transactionRepository.save(transaction);
 
-        // Record initial action
+        // Record initial submit action
         WorkflowAction initialAction = WorkflowAction.builder()
                 .workflowTransaction(transaction)
                 .actionType(WorkflowActionType.SUBMIT)
                 .performedBy(request.getInitiatedBy())
                 .performedByName(request.getInitiatedByName())
                 .previousStatus(null)
-                .newStatus("PENDING")
+                .newStatus(approvalRequired ? "PENDING" : "APPROVED")
                 .comments(request.getComments())
                 .createdAt(now)
                 .build();
@@ -167,8 +218,28 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             commentRepository.save(initialComment);
         }
 
-        // Assign tasks for first stage
-        assignTasksForStage(transaction, firstStage);
+        if (!approvalRequired) {
+            // Record auto-approval action for complete immutable audit trail
+            String reason = autoApprovalReason != null ? autoApprovalReason : "Auto-approved: Approval is not required for this workflow configuration.";
+            WorkflowAction approveAction = WorkflowAction.builder()
+                    .workflowTransaction(transaction)
+                    .actionType(WorkflowActionType.APPROVE)
+                    .performedBy(request.getInitiatedBy())
+                    .performedByName(request.getInitiatedByName() != null ? request.getInitiatedByName() + " (System)" : "System")
+                    .previousStatus("PENDING")
+                    .newStatus("APPROVED")
+                    .comments(reason)
+                    .createdAt(now.plusNanos(1_000_000))
+                    .build();
+            actionRepository.save(approveAction);
+
+            // Notify downstream business service via callback webhook
+            callbackService.triggerCallback(transaction, "APPROVED", reason, request.getInitiatedBy(), request.getInitiatedByName());
+            log.info("Workflow transaction {} auto-approved without tasks: {}", transaction.getId(), reason);
+        } else {
+            // Assign tasks for first stage
+            assignTasksForStage(transaction, firstStage);
+        }
 
         return mapToTransactionResponse(transaction);
     }
@@ -184,10 +255,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         LocalDateTime now = LocalDateTime.now();
 
         // If sequential, assign only to the first order approvers; if parallel, assign to all
-        int targetOrder = approvers.get(0).getApprovalOrder();
+        int targetOrder = approvers.get(0).getApprovalOrder() != null ? approvers.get(0).getApprovalOrder() : 1;
 
         for (WorkflowApprover approver : approvers) {
-            if (stage.getExecutionType() == WorkflowExecutionType.SEQUENTIAL && approver.getApprovalOrder() != targetOrder) {
+            int approverOrder = approver.getApprovalOrder() != null ? approver.getApprovalOrder() : 1;
+            if (stage.getExecutionType() == WorkflowExecutionType.SEQUENTIAL && approverOrder != targetOrder) {
                 continue; // Sequential will assign remaining when current order completes
             }
 

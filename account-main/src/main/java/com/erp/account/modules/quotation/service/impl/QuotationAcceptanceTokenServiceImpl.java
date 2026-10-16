@@ -28,6 +28,11 @@ public class QuotationAcceptanceTokenServiceImpl implements QuotationAcceptanceT
 
     private final QuotationAcceptanceTokenRepository tokenRepository;
     private final QuotationRepository quotationRepository;
+    @org.springframework.context.annotation.Lazy
+    private final com.erp.account.modules.salesorder.service.SalesOrderService salesOrderService;
+    private final com.erp.account.modules.salesorder.repository.SalesOrderRepository salesOrderRepository;
+    @org.springframework.context.annotation.Lazy
+    private final com.erp.account.integration.workflow.client.WorkflowServiceClient workflowServiceClient;
     
     @Value("${quotation.acceptance.token.expiry-days:7}")
     private int expiryDays;
@@ -111,12 +116,58 @@ public class QuotationAcceptanceTokenServiceImpl implements QuotationAcceptanceT
 
         log.info("Quotation {} accepted via token {}", quotation.getId(), token.getId());
 
+        // Auto-create Sales Order if configured in workflow definition
+        triggerAutoCreateOrderIfEligible(quotation);
+
         return QuotationAcceptResponse.builder()
                 .success(true)
                 .message("Quotation accepted successfully")
                 .quotationId(quotation.getId())
                 .acceptedAt(now)
                 .build();
+    }
+
+    private void triggerAutoCreateOrderIfEligible(Quotation quotation) {
+        if (quotation.getCompanyId() == null || quotation.getId() == null) {
+            return;
+        }
+
+        // Idempotency: skip if Sales Order already exists for this quotation
+        boolean duplicateExists = salesOrderRepository != null && salesOrderRepository
+                .existsBySourceQuotationIdAndCompanyIdAndIsDeletedFalse(quotation.getId(), quotation.getCompanyId());
+        if (duplicateExists) {
+            log.info("Sales Order already exists for quotation {}; skipping auto-creation.", quotation.getQuotationNumber());
+            return;
+        }
+
+        boolean autoCreateConfigured = false;
+        try {
+            if (workflowServiceClient != null) {
+                var response = workflowServiceClient.getActiveDefinition(
+                        quotation.getCompanyId(), "SALES", "SALES");
+                if (response != null && response.getData() != null) {
+                    autoCreateConfigured = Boolean.TRUE.equals(response.getData().getAutoCreateOrder());
+                } else {
+                    var fallbackResponse = workflowServiceClient.getActiveDefinition(
+                            quotation.getCompanyId(), "SALES", "SALES_QUOTATION");
+                    if (fallbackResponse != null && fallbackResponse.getData() != null) {
+                        autoCreateConfigured = Boolean.TRUE.equals(fallbackResponse.getData().getAutoCreateOrder());
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Could not retrieve active workflow definition for quotation {}: {}", quotation.getQuotationNumber(), ex.getMessage());
+        }
+
+        if (autoCreateConfigured && salesOrderService != null) {
+            try {
+                log.info("Auto-creating Sales Order for customer-accepted quotation {}", quotation.getQuotationNumber());
+                salesOrderService.createDirectFromQuotation(quotation.getCompanyId(), quotation.getId());
+                log.info("Successfully auto-created Sales Order for quotation {}", quotation.getQuotationNumber());
+            } catch (Exception ex) {
+                log.warn("Auto-create Sales Order could not complete for quotation {}: {}", quotation.getQuotationNumber(), ex.getMessage());
+            }
+        }
     }
 
     @Override

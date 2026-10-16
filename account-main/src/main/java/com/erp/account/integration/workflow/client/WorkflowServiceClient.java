@@ -22,6 +22,12 @@ public interface WorkflowServiceClient {
     ApiResponse<WorkflowTransactionDto> submitWorkflow(
             @RequestBody ApiRequest<WorkflowSubmitRequestDto> request);
 
+    @GetMapping("/api/v1/workflow/definitions/active")
+    ApiResponse<com.erp.account.integration.workflow.dto.WorkflowDefinitionDto> getActiveDefinition(
+            @RequestParam(value = "companyId", required = false) UUID companyId,
+            @RequestParam(value = "moduleName", required = false) String moduleName,
+            @RequestParam("documentType") String documentType);
+
     @GetMapping("/api/v1/workflow/transactions/{id}")
     ApiResponse<WorkflowTransactionDto> getTransaction(
             @PathVariable("id") UUID id,

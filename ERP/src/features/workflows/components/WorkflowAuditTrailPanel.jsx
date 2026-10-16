@@ -62,7 +62,7 @@ export default function WorkflowAuditTrailPanel({ companyId, module, selectedId,
       <InfoRow icon={User} label="Updated by" value={latest?.performedBy || currentUser?.name || currentUser?.email || 'No changes recorded yet'} />
       {entries.length === 0 && (
         <p className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4 text-xs text-zinc-500 leading-relaxed">
-          No audit entries found for this workflow. Entries appear here via <span className="font-mono text-zinc-700">GET /api/account/audit-logs</span> once a step is approved, rejected, or changed under this company.
+          No transaction history recorded yet for this workflow configuration. Document approval actions, step reviews, and status transitions will appear here in real time as business documents (such as Quotations, Invoices, Purchase Orders, or Production Orders) are submitted for approval.
         </p>
       )}
       {entries.length > 0 && (

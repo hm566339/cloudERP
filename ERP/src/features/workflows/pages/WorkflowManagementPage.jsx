@@ -38,7 +38,7 @@ import WorkflowBuildingSelector from '../components/WorkflowBuildingSelector';
 
 export { extractRoles, resolveRoleId, resolveRoleName };
 
-const MODULES = ['Sales', 'Purchase', 'Expenses', 'Invoices', 'Reimbursements', 'Inventory', 'Others'];
+const MODULES = ['Sales', 'Purchase', 'Manufacturing', 'Inventory', 'Expenses', 'Invoices', 'Reimbursements', 'Others'];
 
 const moduleToDocumentType = (value) => {
   switch ((value || '').toLowerCase()) {
@@ -46,6 +46,8 @@ const moduleToDocumentType = (value) => {
       return 'SALES';
     case 'purchase':
       return 'PURCHASE';
+    case 'manufacturing':
+      return 'PRODUCTION_ORDER';
     case 'expenses':
       return 'EXPENSE';
     case 'invoices':
@@ -139,7 +141,7 @@ export default function WorkflowManagementPage() {
     }
     setDefinitionsStatus('loading');
     try {
-      const result = await loadWorkflowDefinitions(companyId, moduleToDocumentType(module));
+      const result = await loadWorkflowDefinitions(companyId, undefined, { moduleName: module.toUpperCase() });
       const defs = result?.definitions || [];
       setWorkflows(defs);
       setDefinitionsStatus('ready');
@@ -168,7 +170,7 @@ export default function WorkflowManagementPage() {
     }
 
     setDefinitionsStatus('loading');
-    loadWorkflowDefinitions(companyId, moduleToDocumentType(module))
+    loadWorkflowDefinitions(companyId, undefined, { moduleName: module.toUpperCase() })
       .then((result) => {
         if (!active) return;
         setWorkflows(result?.definitions || []);
@@ -185,7 +187,7 @@ export default function WorkflowManagementPage() {
   }, [companyId, module, dispatch]);
 
   const visibleWorkflows = useMemo(
-    () => workflows.filter((item) => item.module === module && item.name.toLowerCase().includes(query.toLowerCase())),
+    () => workflows.filter((item) => (item.module === module || (item.moduleName && item.moduleName.toUpperCase() === module.toUpperCase())) && item.name.toLowerCase().includes(query.toLowerCase())),
     [workflows, module, query]
   );
 
@@ -1050,7 +1052,7 @@ export default function WorkflowManagementPage() {
         message={deleteTarget ? `Delete "${deleteTarget.name}"?` : ''}
         confirmLabel="Delete"
         cancelLabel="Cancel"
-        details="This removes the approval configuration for the selected company. The workflow definition API is not documented yet, so only the local draft is affected."
+        details="This permanently removes the approval configuration for the selected company from the central workflow service."
         loading={isDeleting}
         loadingText="Deleting..."
         onConfirm={confirmDeleteWorkflow}

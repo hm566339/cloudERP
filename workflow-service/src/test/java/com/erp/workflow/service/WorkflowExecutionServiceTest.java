@@ -511,4 +511,174 @@ class WorkflowExecutionServiceTest {
                 () -> executionService.submitWorkflow(request)
         );
     }
+
+    @Test
+    void testSubmitWorkflow_WhenApprovalRequiredIsFalse_AutoApprovesWithoutTasks() {
+        UUID companyId = UUID.randomUUID();
+        UUID docId = UUID.randomUUID();
+        UUID initiatorId = UUID.randomUUID();
+
+        WorkflowDefinition def = WorkflowDefinition.builder()
+                .id(UUID.randomUUID())
+                .companyId(companyId)
+                .workflowCode("SALES_AUTO_APPROVAL")
+                .workflowName("Sales Auto Approval")
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .isActive(true)
+                .isApprovalRequired(false)
+                .build();
+
+        WorkflowStage stage = WorkflowStage.builder()
+                .id(UUID.randomUUID())
+                .stageCode("STAGE_1")
+                .stageName("Initial Stage")
+                .sequenceNo(1)
+                .isActive(true)
+                .build();
+
+        SubmitWorkflowRequest request = SubmitWorkflowRequest.builder()
+                .companyId(companyId)
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .documentId(docId)
+                .documentNumber("QT-AUTO-01")
+                .initiatedBy(initiatorId)
+                .initiatedByName("Sales User")
+                .build();
+
+        when(transactionRepository.findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(companyId, "QUOTATION", docId))
+                .thenReturn(Optional.empty());
+        when(definitionRepository.findActiveByModuleAndDocumentType(companyId, "SALES", "QUOTATION"))
+                .thenReturn(List.of(def));
+        when(stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(def.getId()))
+                .thenReturn(List.of(stage));
+        when(transactionRepository.save(any(WorkflowTransaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        WorkflowTransactionResponse response = executionService.submitWorkflow(request);
+
+        assertNotNull(response);
+        assertEquals("APPROVED", response.getStatus());
+        verify(callbackService, times(1)).triggerCallback(any(), eq("APPROVED"), anyString(), eq(initiatorId), eq("Sales User"));
+        verify(taskRepository, never()).save(any());
+    }
+
+    @Test
+    void testSubmitWorkflow_WhenAmountBelowThreshold_AutoApprovesWithoutTasks() {
+        UUID companyId = UUID.randomUUID();
+        UUID docId = UUID.randomUUID();
+        UUID initiatorId = UUID.randomUUID();
+
+        WorkflowDefinition def = WorkflowDefinition.builder()
+                .id(UUID.randomUUID())
+                .companyId(companyId)
+                .workflowCode("SALES_THRESHOLD_WF")
+                .workflowName("Sales Threshold Workflow")
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .isActive(true)
+                .isApprovalRequired(true)
+                .approvalThreshold(new java.math.BigDecimal("50000.00"))
+                .build();
+
+        WorkflowStage stage = WorkflowStage.builder()
+                .id(UUID.randomUUID())
+                .stageCode("STAGE_1")
+                .stageName("Initial Stage")
+                .sequenceNo(1)
+                .isActive(true)
+                .build();
+
+        SubmitWorkflowRequest request = SubmitWorkflowRequest.builder()
+                .companyId(companyId)
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .documentId(docId)
+                .documentNumber("QT-LOW-01")
+                .amount(new java.math.BigDecimal("15000.00"))
+                .initiatedBy(initiatorId)
+                .initiatedByName("Sales User")
+                .build();
+
+        when(transactionRepository.findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(companyId, "QUOTATION", docId))
+                .thenReturn(Optional.empty());
+        when(definitionRepository.findActiveByModuleAndDocumentType(companyId, "SALES", "QUOTATION"))
+                .thenReturn(List.of(def));
+        when(stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(def.getId()))
+                .thenReturn(List.of(stage));
+        when(transactionRepository.save(any(WorkflowTransaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        WorkflowTransactionResponse response = executionService.submitWorkflow(request);
+
+        assertNotNull(response);
+        assertEquals("APPROVED", response.getStatus());
+        verify(callbackService, times(1)).triggerCallback(any(), eq("APPROVED"), anyString(), eq(initiatorId), eq("Sales User"));
+        verify(taskRepository, never()).save(any());
+    }
+
+    @Test
+    void testSubmitWorkflow_WhenAmountAboveThreshold_EnforcesApprovalAndAssignsTasks() {
+        UUID companyId = UUID.randomUUID();
+        UUID docId = UUID.randomUUID();
+        UUID initiatorId = UUID.randomUUID();
+        UUID approverRoleId = UUID.randomUUID();
+
+        WorkflowDefinition def = WorkflowDefinition.builder()
+                .id(UUID.randomUUID())
+                .companyId(companyId)
+                .workflowCode("SALES_THRESHOLD_WF")
+                .workflowName("Sales Threshold Workflow")
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .isActive(true)
+                .isApprovalRequired(true)
+                .approvalThreshold(new java.math.BigDecimal("50000.00"))
+                .build();
+
+        WorkflowStage stage = WorkflowStage.builder()
+                .id(UUID.randomUUID())
+                .stageCode("STAGE_1")
+                .stageName("Manager Approval")
+                .sequenceNo(1)
+                .isActive(true)
+                .build();
+
+        WorkflowApprover approver = WorkflowApprover.builder()
+                .id(UUID.randomUUID())
+                .approverType(com.erp.workflow.enums.ApproverType.ROLE)
+                .roleId(approverRoleId)
+                .roleName("MANAGER")
+                .approvalOrder(1)
+                .build();
+
+        SubmitWorkflowRequest request = SubmitWorkflowRequest.builder()
+                .companyId(companyId)
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .documentId(docId)
+                .documentNumber("QT-HIGH-01")
+                .amount(new java.math.BigDecimal("85000.00"))
+                .initiatedBy(initiatorId)
+                .initiatedByName("Sales User")
+                .build();
+
+        when(transactionRepository.findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(companyId, "QUOTATION", docId))
+                .thenReturn(Optional.empty());
+        when(definitionRepository.findActiveByModuleAndDocumentType(companyId, "SALES", "QUOTATION"))
+                .thenReturn(List.of(def));
+        when(stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(def.getId()))
+                .thenReturn(List.of(stage));
+        when(approverRepository.findByWorkflowStageIdAndIsDeletedFalseOrderByApprovalOrderAsc(stage.getId()))
+                .thenReturn(List.of(approver));
+        when(transactionRepository.save(any(WorkflowTransaction.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        WorkflowTransactionResponse response = executionService.submitWorkflow(request);
+
+        assertNotNull(response);
+        assertEquals("PENDING", response.getStatus());
+        verify(taskRepository, times(1)).save(any(WorkflowTask.class));
+    }
 }

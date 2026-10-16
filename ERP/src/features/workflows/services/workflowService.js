@@ -52,6 +52,62 @@ export const WORKFLOW_ACTION_TYPES = Object.freeze([
 export const WORKFLOW_EXECUTION_TYPES = Object.freeze(['SEQUENTIAL', 'PARALLEL']);
 export const WORKFLOW_REJECTION_ACTIONS = Object.freeze(['REJECT_DOCUMENT', 'RETURN_TO_INITIATOR']);
 
+export const DOCUMENT_TYPES_BY_MODULE = Object.freeze({
+  Sales: [
+    { value: 'QUOTATION', label: 'Sales Quotation (QUOTATION)' },
+    { value: 'PROFORMA_INVOICE', label: 'Proforma Invoice (PROFORMA_INVOICE)' },
+    { value: 'SALES_ORDER', label: 'Sales Order (SALES_ORDER)' },
+    { value: 'DELIVERY_CHALLAN', label: 'Delivery Challan (DELIVERY_CHALLAN)' },
+    { value: 'SALES_INVOICE', label: 'Sales Invoice (SALES_INVOICE)' },
+    { value: 'SALES', label: 'General Sales (SALES)' },
+  ],
+  Purchase: [
+    { value: 'PURCHASE_REQUISITION', label: 'Purchase Requisition (PURCHASE_REQUISITION)' },
+    { value: 'RFQ', label: 'Request for Quotation (RFQ)' },
+    { value: 'SUPPLIER_QUOTATION', label: 'Supplier Quotation (SUPPLIER_QUOTATION)' },
+    { value: 'PURCHASE_ORDER', label: 'Purchase Order (PURCHASE_ORDER)' },
+    { value: 'GOODS_RECEIPT', label: 'Goods Receipt Note (GOODS_RECEIPT)' },
+    { value: 'AP_INVOICE', label: 'Vendor Bill / AP Invoice (AP_INVOICE)' },
+    { value: 'AP_PAYMENT', label: 'AP Payment (AP_PAYMENT)' },
+    { value: 'PURCHASE', label: 'General Purchase (PURCHASE)' },
+  ],
+  Manufacturing: [
+    { value: 'BOM', label: 'Bill of Materials (BOM)' },
+    { value: 'PRODUCTION_ORDER', label: 'Production Order (PRODUCTION_ORDER)' },
+    { value: 'WORK_ORDER', label: 'Work Order (WORK_ORDER)' },
+    { value: 'PRODUCTION_COMPLETION', label: 'Production Completion (PRODUCTION_COMPLETION)' },
+  ],
+  Inventory: [
+    { value: 'STOCK_TRANSFER', label: 'Stock Transfer (STOCK_TRANSFER)' },
+    { value: 'STOCK_ADJUSTMENT', label: 'Stock Adjustment (STOCK_ADJUSTMENT)' },
+    { value: 'STOCK_MOVEMENT', label: 'Stock Movement (STOCK_MOVEMENT)' },
+    { value: 'OPENING_STOCK', label: 'Opening Stock (OPENING_STOCK)' },
+    { value: 'STOCK_RESERVATION', label: 'Stock Reservation (STOCK_RESERVATION)' },
+    { value: 'INVENTORY', label: 'General Inventory (INVENTORY)' },
+  ],
+  Expenses: [
+    { value: 'EXPENSE_REQUEST', label: 'Expense Request (EXPENSE_REQUEST)' },
+    { value: 'EXPENSE', label: 'General Expense (EXPENSE)' },
+  ],
+  Invoices: [
+    { value: 'SALES_INVOICE', label: 'Sales Invoice (SALES_INVOICE)' },
+    { value: 'AP_INVOICE', label: 'AP Invoice (AP_INVOICE)' },
+    { value: 'INVOICE', label: 'General Invoice (INVOICE)' },
+  ],
+  Reimbursements: [
+    { value: 'REIMBURSEMENT', label: 'Reimbursement Request (REIMBURSEMENT)' },
+  ],
+  Others: [
+    { value: 'RECEIPT_VOUCHER', label: 'Receipt Voucher (RECEIPT_VOUCHER)' },
+    { value: 'PAYMENT_VOUCHER', label: 'Payment Voucher (PAYMENT_VOUCHER)' },
+    { value: 'JOURNAL_ENTRY', label: 'Journal Entry (JOURNAL_ENTRY)' },
+    { value: 'CREDIT_NOTE', label: 'Credit Note (CREDIT_NOTE)' },
+    { value: 'DEBIT_NOTE', label: 'Debit Note (DEBIT_NOTE)' },
+    { value: 'FISCAL_YEAR', label: 'Fiscal Year (FISCAL_YEAR)' },
+    { value: 'GENERAL', label: 'General Document (GENERAL)' },
+  ],
+});
+
 const settingsKey = (companyId) => `${WORKFLOW_SETTINGS_STORAGE_KEY}_${companyId || 'default'}`;
 const memorySettingsStore = {};
 
@@ -220,17 +276,57 @@ const normalizeDocumentType = (moduleName = 'GENERAL') => {
   return value;
 };
 
-const normalizeModuleName = (moduleName = 'GENERAL') => ({
-  SALES: 'Sales',
-  PURCHASE: 'Purchase',
-  EXPENSE: 'Expenses',
-  EXPENSES: 'Expenses',
-  INVOICE: 'Invoices',
-  INVOICES: 'Invoices',
-  REIMBURSEMENT: 'Reimbursements',
-  REIMBURSEMENTS: 'Reimbursements',
-  INVENTORY: 'Inventory',
-})[normalizeDocumentType(moduleName)] || 'Others';
+const normalizeModuleName = (moduleName = 'GENERAL') => {
+  const norm = normalizeDocumentType(moduleName);
+  const map = {
+    SALES: 'Sales',
+    QUOTATION: 'Sales',
+    PROFORMA_INVOICE: 'Sales',
+    SALES_ORDER: 'Sales',
+    DELIVERY_CHALLAN: 'Sales',
+    SALES_INVOICE: 'Sales',
+
+    PURCHASE: 'Purchase',
+    PURCHASE_REQUISITION: 'Purchase',
+    RFQ: 'Purchase',
+    SUPPLIER_QUOTATION: 'Purchase',
+    PURCHASE_ORDER: 'Purchase',
+    GOODS_RECEIPT: 'Purchase',
+    AP_INVOICE: 'Purchase',
+    AP_PAYMENT: 'Purchase',
+
+    MANUFACTURING: 'Manufacturing',
+    BOM: 'Manufacturing',
+    PRODUCTION_ORDER: 'Manufacturing',
+    WORK_ORDER: 'Manufacturing',
+    PRODUCTION_COMPLETION: 'Manufacturing',
+
+    INVENTORY: 'Inventory',
+    STOCK_TRANSFER: 'Inventory',
+    STOCK_ADJUSTMENT: 'Inventory',
+    STOCK_MOVEMENT: 'Inventory',
+    OPENING_STOCK: 'Inventory',
+    STOCK_RESERVATION: 'Inventory',
+
+    EXPENSE: 'Expenses',
+    EXPENSES: 'Expenses',
+    EXPENSE_REQUEST: 'Expenses',
+
+    INVOICE: 'Invoices',
+    INVOICES: 'Invoices',
+
+    REIMBURSEMENT: 'Reimbursements',
+    REIMBURSEMENTS: 'Reimbursements',
+
+    RECEIPT_VOUCHER: 'Others',
+    PAYMENT_VOUCHER: 'Others',
+    JOURNAL_ENTRY: 'Others',
+    CREDIT_NOTE: 'Others',
+    DEBIT_NOTE: 'Others',
+    FISCAL_YEAR: 'Others',
+  };
+  return map[norm] || 'Others';
+};
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isUUID = (val) => typeof val === 'string' && UUID_REGEX.test(val);
@@ -684,10 +780,10 @@ export const writeWorkflowDraft = (companyId, definitions) => {
   localStorage.setItem(draftKey(companyId), JSON.stringify(definitions));
 };
 
-export async function loadWorkflowDefinitions(companyId, documentType = 'GENERAL') {
+export async function loadWorkflowDefinitions(companyId, documentType = 'GENERAL', options = {}) {
   // Always query backend workflow-service directly.
   // Never silently fall back to localStorage drafts as server-persisted definitions.
-  const definitions = await workflowDefinitionApi.list(companyId, documentType);
+  const definitions = await workflowDefinitionApi.list(companyId, documentType, options);
   return { definitions: definitions || [], source: WORKFLOW_DATA_SOURCES.API };
 }
 
@@ -791,10 +887,11 @@ const normalizeAuditEntries = (payload) => {
 
 export const workflowAuditApi = {
   available: true,
-  endpoint: 'GET /api/account/audit-logs',
+  endpoint: 'GET /api/v1/workflow/transactions',
   async getAuditTrail({
     companyId,
     moduleName,
+    documentType,
     entityName,
     entityId,
     actionType,
@@ -806,22 +903,81 @@ export const workflowAuditApi = {
     sortBy = 'performedAt',
     sortDir = 'desc',
   } = {}) {
-    const params = { page, size, sortBy, sortDir };
+    const params = { page, size };
     if (companyId) params.companyId = companyId;
-    if (moduleName) params['filter.moduleName'] = moduleName;
-    if (entityName) params['filter.entityName'] = entityName;
-    if (entityId) params['filter.entityId'] = entityId;
-    if (actionType) params['filter.actionType'] = actionType;
-    if (performedBy) params['filter.performedBy'] = performedBy;
-    if (fromDate) params['filter.fromDate'] = fromDate;
-    if (toDate) params['filter.toDate'] = toDate;
+    if (moduleName) params.moduleName = moduleName.toUpperCase();
+    if (documentType) params.documentType = documentType;
 
-    const response = await apiClient.get('/api/account/audit-logs', { params });
-    const body = response?.data ?? response;
-    return {
-      entries: normalizeAuditEntries(body),
-      pagination: body && typeof body.pagination === 'object' ? body.pagination : null,
-    };
+    try {
+      const response = await apiClient.get('/api/v1/workflow/transactions', { params });
+      const payload = unwrapApiData(response);
+      const transactions = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.content)
+          ? payload.content
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : [];
+
+      const entries = [];
+      for (const tx of transactions) {
+        if (Array.isArray(tx.actions) && tx.actions.length > 0) {
+          for (const act of tx.actions) {
+            entries.push({
+              id: act.id || `${tx.id}-${act.actionType}-${act.performedAt}`,
+              type: 'TRANSACTION_ACTION',
+              actionType: act.actionType,
+              performedBy: act.performedByName || 'System',
+              entityName: `${tx.documentType || 'DOCUMENT'} #${tx.documentNumber || String(tx.id).slice(0, 8)}`,
+              performedAt: act.performedAt || tx.createdAt,
+              description: act.comments ? `[${act.actionType}] ${act.comments}` : `Transaction #${tx.documentNumber || String(tx.id).slice(0, 8)}: ${act.actionType}`,
+              status: tx.status,
+            });
+          }
+        } else {
+          entries.push({
+            id: tx.id,
+            type: 'TRANSACTION',
+            actionType: tx.status || 'SUBMITTED',
+            performedBy: tx.initiatedByName || 'System',
+            entityName: `${tx.documentType || 'DOCUMENT'} #${tx.documentNumber || String(tx.id).slice(0, 8)}`,
+            performedAt: tx.initiatedAt || tx.createdAt,
+            description: `Document submitted for approval. Status: ${tx.status}`,
+            status: tx.status,
+          });
+        }
+      }
+
+      return {
+        entries,
+        pagination: payload && typeof payload.totalPages === 'number' ? {
+          page: payload.number || page,
+          totalPages: payload.totalPages,
+          totalElements: payload.totalElements,
+        } : null,
+      };
+    } catch (err) {
+      try {
+        const fallbackParams = { page, size, sortBy, sortDir };
+        if (companyId) fallbackParams.companyId = companyId;
+        if (moduleName) fallbackParams['filter.moduleName'] = moduleName;
+        if (entityName) fallbackParams['filter.entityName'] = entityName;
+        if (entityId) fallbackParams['filter.entityId'] = entityId;
+        if (actionType) fallbackParams['filter.actionType'] = actionType;
+        if (performedBy) fallbackParams['filter.performedBy'] = performedBy;
+        if (fromDate) fallbackParams['filter.fromDate'] = fromDate;
+        if (toDate) fallbackParams['filter.toDate'] = toDate;
+
+        const fallbackRes = await apiClient.get('/api/account/audit-logs', { params: fallbackParams });
+        const body = fallbackRes?.data ?? fallbackRes;
+        return {
+          entries: normalizeAuditEntries(body),
+          pagination: body && typeof body.pagination === 'object' ? body.pagination : null,
+        };
+      } catch (innerErr) {
+        return { entries: [], pagination: null };
+      }
+    }
   },
 };
 

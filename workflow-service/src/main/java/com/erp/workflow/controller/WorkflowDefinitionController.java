@@ -81,9 +81,10 @@ public class WorkflowDefinitionController {
     public ResponseEntity<ApiResponse<Page<WorkflowDefinitionResponse>>> listDefinitions(
             @RequestParam(required = false) UUID companyId,
             @RequestParam(required = false) String moduleName,
+            @RequestParam(required = false) String documentType,
             Pageable pageable) {
         UUID effectiveCompanyId = resolveCompanyId(companyId);
-        Page<WorkflowDefinitionResponse> page = definitionService.listDefinitions(effectiveCompanyId, moduleName,
+        Page<WorkflowDefinitionResponse> page = definitionService.listDefinitions(effectiveCompanyId, moduleName, documentType,
                 pageable);
         return ResponseEntity.ok(ApiResponse.success(page));
     }
