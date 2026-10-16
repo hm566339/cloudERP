@@ -174,6 +174,7 @@ services:
       CORE_SERVICE_TOKEN: ${CORE_SERVICE_TOKEN:-}
       WORKFLOW_SERVICE_BASE_URL: http://workflow-service:8083
       INVENTORY_API_URL: http://inventory-service:8082
+      WORKFLOW_CALLBACK_SECRET: ${WORKFLOW_CALLBACK_SECRET}
     depends_on:
       db:
         condition: service_healthy
@@ -246,6 +247,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       AUTH_SERVICE_BASE_URL: http://auth-service:8090
       JWT_SECRET: ${JWT_SECRET}
+      WORKFLOW_CALLBACK_SECRET: ${WORKFLOW_CALLBACK_SECRET}
       WORKFLOW_CALLBACK_TIMEOUT_MS: ${WORKFLOW_CALLBACK_TIMEOUT_MS:-5000}
       WORKFLOW_CALLBACK_RETRY_ENABLED: ${WORKFLOW_CALLBACK_RETRY_ENABLED:-true}
       WORKFLOW_ATTACHMENT_STORAGE_PATH: ${WORKFLOW_ATTACHMENT_STORAGE_PATH:-uploads/workflow}
@@ -303,6 +305,8 @@ services:
       SSO_COOKIE_SAME_SITE: ${INVENTORY_SSO_COOKIE_SAME_SITE:-Lax}
       SSO_MODULE_NAME: ${INVENTORY_SSO_MODULE_NAME:-INVENTORY}
       CORE_SERVICE_URL: http://account-service:8081
+      WORKFLOW_SERVICE_URL: http://workflow-service:8083
+      WORKFLOW_CALLBACK_SECRET: ${WORKFLOW_CALLBACK_SECRET}
     depends_on:
       db:
         condition: service_healthy

@@ -67,6 +67,10 @@ public interface SalesInvoiceService {
     // WORKFLOW OPERATIONS
     // ============================================================
 
+    SalesInvoiceResponse submitForApproval(UUID invoiceId, String comments);
+
+    SalesInvoiceResponse submitForApproval(UUID companyId, UUID invoiceId, String comments);
+
     void approveInvoice(UUID invoiceId);
 
     void rejectInvoice(UUID invoiceId);

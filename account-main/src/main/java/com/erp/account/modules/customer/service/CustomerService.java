@@ -28,7 +28,11 @@ public interface CustomerService {
 
     CustomerResponse getCustomerByCode(String customerCode);
 
-    Page<CustomerResponse> getAllCustomers(CustomerFilterDto filter, Pageable pageable);
+    Page<CustomerResponse> getAllCustomers(CustomerFilterDto filter, Pageable pageable, UUID companyId);
+
+    default Page<CustomerResponse> getAllCustomers(CustomerFilterDto filter, Pageable pageable) {
+        return getAllCustomers(filter, pageable, null);
+    }
 
     void validateCustomer(CustomerRequest request);
 

@@ -19,6 +19,8 @@ import com.erp.account.modules.purchaseorder.repository.PurchaseOrderItemReposit
 import com.erp.account.modules.purchaseorder.repository.PurchaseOrderRepository;
 import com.erp.account.modules.purchaseorder.repository.spec.PurchaseOrderSpecification;
 import com.erp.account.modules.purchaseorder.service.PurchaseOrderService;
+import com.erp.account.integration.workflow.client.WorkflowClient;
+import com.erp.account.integration.workflow.dto.WorkflowTransactionDto;
 import com.erp.account.modules.supplierquotation.entity.SupplierQuotation;
 import com.erp.account.modules.supplierquotation.entity.SupplierQuotationItem;
 import com.erp.account.modules.supplierquotation.entity.SupplierQuotationStatus;
@@ -58,6 +60,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final com.erp.account.modules.paymentvoucher.service.PaymentVoucherService paymentVoucherService;
     private final com.erp.account.modules.bankaccount.repository.BankAccountRepository bankAccountRepository;
     private final com.erp.account.common.service.WarehouseLookupService warehouseLookupService;
+    private final WorkflowClient workflowClient;
 
     @Override
     @Transactional
@@ -262,6 +265,12 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Override
     @Transactional
     public PurchaseOrderResponse submitForApproval(UUID companyId, UUID poId) {
+        return submitForApproval(companyId, poId, null);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseOrderResponse submitForApproval(UUID companyId, UUID poId, String comments) {
         UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
         PurchaseOrder po = purchaseOrderRepository
                 .findWithItemsByIdAndCompanyIdAndIsDeletedFalse(poId, resolvedCompanyId)
@@ -270,6 +279,34 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         if (po.getStatus() != PurchaseOrderStatus.DRAFT) {
             throw new BadRequestException(
                     "Only DRAFT purchase orders can be submitted for approval. Current status: " + po.getStatus());
+        }
+
+        // Prevent duplicate workflow submission
+        try {
+            WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "PURCHASE_ORDER", po.getId());
+            if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
+                throw new BadRequestException("Purchase Order is already submitted for approval with transaction: " + existingTx.getId());
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("No existing workflow transaction found for purchase order {}", poId);
+        }
+
+        try {
+            workflowClient.submitWorkflow(
+                    resolvedCompanyId,
+                    "PURCHASE_ORDER",
+                    po.getId(),
+                    po.getPoNumber(),
+                    comments != null ? comments : "Submitted purchase order for approval"
+            );
+            log.info("Purchase Order {} submitted for approval to workflow-service", po.getPoNumber());
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Workflow engine submission failed for purchase order {}. Reverting to DRAFT. Error: {}", poId, e.getMessage());
+            throw new BadRequestException("Failed to submit purchase order for workflow approval: " + e.getMessage());
         }
 
         po.setStatus(PurchaseOrderStatus.PENDING_APPROVAL);
@@ -295,6 +332,18 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         if (po.getStatus() != PurchaseOrderStatus.PENDING_APPROVAL) {
             throw new BadRequestException(
                     "Only PENDING_APPROVAL purchase orders can be approved. Current status: " + po.getStatus());
+        }
+
+        // Prevent bypassing active pending workflow
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "PURCHASE_ORDER", poId);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Purchase Order cannot be approved directly while workflow approval is pending. Please approve via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for purchase order {}: {}", poId, e.getMessage());
         }
 
         boolean isAdminOrFinance = "SYSTEM_ADMIN".equalsIgnoreCase(currentUserRole)
@@ -326,6 +375,18 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         if (po.getStatus() != PurchaseOrderStatus.PENDING_APPROVAL) {
             throw new BadRequestException(
                     "Only PENDING_APPROVAL purchase orders can be rejected. Current status: " + po.getStatus());
+        }
+
+        // Prevent bypassing active pending workflow
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "PURCHASE_ORDER", poId);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Purchase Order cannot be rejected directly while workflow approval is pending. Please reject via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for purchase order {}: {}", poId, e.getMessage());
         }
 
         po.setStatus(PurchaseOrderStatus.REJECTED);

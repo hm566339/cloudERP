@@ -201,8 +201,14 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional(readOnly = true)
     public Page<CustomerResponse> getAllCustomers(CustomerFilterDto filter, Pageable pageable) {
+        return getAllCustomers(filter, pageable, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CustomerResponse> getAllCustomers(CustomerFilterDto filter, Pageable pageable, UUID companyId) {
         log.info("Fetching customers with filters: {}", filter);
-        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(filter.getCompanyId());
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
 
         log.info("Using companyId for filtering: {}", resolvedCompanyId);
 
@@ -312,83 +318,88 @@ public class CustomerServiceImpl implements CustomerService {
     private void enrichCustomerProfile(CustomerProfileResponse profile, Customer customer) {
         UUID companyId = customer.getCompany().getId();
         UUID customerId = customer.getId();
-        
+
         // 1. Ledger Information
-        BigDecimal outstanding = profile.getOutstandingBalance() != null ? profile.getOutstandingBalance() : BigDecimal.ZERO;
+        BigDecimal outstanding = profile.getOutstandingBalance() != null ? profile.getOutstandingBalance()
+                : BigDecimal.ZERO;
         CustomerLedgerInfoDto ledgerInfo = CustomerLedgerInfoDto.builder()
-            .creditLimit(customer.getCreditLimit() != null ? customer.getCreditLimit() : BigDecimal.ZERO)
-            .availableCredit(profile.getAvailableCredit() != null ? profile.getAvailableCredit() : BigDecimal.ZERO)
-            .currentBalance(outstanding)
-            .openingBalance(BigDecimal.ZERO)
-            .closingBalance(outstanding)
-            .build();
+                .creditLimit(customer.getCreditLimit() != null ? customer.getCreditLimit() : BigDecimal.ZERO)
+                .availableCredit(profile.getAvailableCredit() != null ? profile.getAvailableCredit() : BigDecimal.ZERO)
+                .currentBalance(outstanding)
+                .openingBalance(BigDecimal.ZERO)
+                .closingBalance(outstanding)
+                .build();
         profile.setLedgerInformation(ledgerInfo);
-        
+
         // 2. Sales Invoices
         java.util.List<SalesInvoice> invoices = salesInvoiceRepository.findByCustomerIdAndCompanyIdAndIsDeletedFalse(
-            customerId, companyId, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "invoiceDate"))).getContent();
-        
+                customerId, companyId, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "invoiceDate"))).getContent();
+
         java.util.List<CustomerInvoiceDto> invoiceDtos = invoices.stream().map(inv -> CustomerInvoiceDto.builder()
-            .invoiceId(inv.getId())
-            .invoiceNumber(inv.getInvoiceNumber())
-            .invoiceDate(inv.getInvoiceDate())
-            .dueDate(inv.getDueDate())
-            .invoiceAmount(inv.getTotalAmount())
-            .paidAmount(inv.getReceivedAmount())
-            .pendingAmount(inv.getOutstandingAmount())
-            .status(inv.getStatus() != null ? inv.getStatus().name() : null)
-            .build()).collect(Collectors.toList());
+                .invoiceId(inv.getId())
+                .invoiceNumber(inv.getInvoiceNumber())
+                .invoiceDate(inv.getInvoiceDate())
+                .dueDate(inv.getDueDate())
+                .invoiceAmount(inv.getTotalAmount())
+                .paidAmount(inv.getReceivedAmount())
+                .pendingAmount(inv.getOutstandingAmount())
+                .status(inv.getStatus() != null ? inv.getStatus().name() : null)
+                .build()).collect(Collectors.toList());
         profile.setSalesInvoices(invoiceDtos);
-        
+
         // 3. Receipts
-        java.util.List<ReceiptVoucher> receipts = receiptVoucherRepository.findByCustomerIdAndCompanyIdAndIsDeletedFalse(
-            customerId, companyId, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "receiptDate"))).getContent();
-            
+        java.util.List<ReceiptVoucher> receipts = receiptVoucherRepository
+                .findByCustomerIdAndCompanyIdAndIsDeletedFalse(
+                        customerId, companyId, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "receiptDate")))
+                .getContent();
+
         java.util.List<CustomerReceiptDto> receiptDtos = receipts.stream().map(rec -> CustomerReceiptDto.builder()
-            .receiptId(rec.getId())
-            .receiptNumber(rec.getReceiptNo())
-            .receiptDate(rec.getReceiptDate())
-            .amount(rec.getReceiptAmount())
-            .paymentMode(rec.getPaymentMode() != null ? rec.getPaymentMode().name() : null)
-            .referenceNumber(rec.getReferenceNo())
-            .build()).collect(Collectors.toList());
+                .receiptId(rec.getId())
+                .receiptNumber(rec.getReceiptNo())
+                .receiptDate(rec.getReceiptDate())
+                .amount(rec.getReceiptAmount())
+                .paymentMode(rec.getPaymentMode() != null ? rec.getPaymentMode().name() : null)
+                .referenceNumber(rec.getReferenceNo())
+                .build()).collect(Collectors.toList());
         profile.setReceipts(receiptDtos);
-        
+
         // 4. Outstanding Details & Ageing
-        BigDecimal overdue = salesInvoiceRepository.sumOverdueAmountByCustomerAndCompany(customerId, companyId, LocalDate.now());
-        if (overdue == null) overdue = BigDecimal.ZERO;
-        
+        BigDecimal overdue = salesInvoiceRepository.sumOverdueAmountByCustomerAndCompany(customerId, companyId,
+                LocalDate.now());
+        if (overdue == null)
+            overdue = BigDecimal.ZERO;
+
         CustomerOutstandingDto outstandingDto = CustomerOutstandingDto.builder()
-            .totalOutstanding(outstanding)
-            .overdueAmount(overdue)
-            .notYetDueAmount(outstanding.subtract(overdue).max(BigDecimal.ZERO))
-            .ageingSummary(new java.util.HashMap<>()) // placeholder for detailed buckets
-            .build();
+                .totalOutstanding(outstanding)
+                .overdueAmount(overdue)
+                .notYetDueAmount(outstanding.subtract(overdue).max(BigDecimal.ZERO))
+                .ageingSummary(new java.util.HashMap<>()) // placeholder for detailed buckets
+                .build();
         profile.setOutstandingDetails(outstandingDto);
-        
+
         // 5. Recent Transactions & Ledger Entries
         java.util.List<CustomerTransactionDto> transactions = new ArrayList<>();
         for (CustomerInvoiceDto inv : invoiceDtos) {
             transactions.add(CustomerTransactionDto.builder()
-                .date(inv.getInvoiceDate())
-                .transactionType("INVOICE")
-                .referenceNumber(inv.getInvoiceNumber())
-                .amount(inv.getInvoiceAmount())
-                .status(inv.getStatus())
-                .build());
+                    .date(inv.getInvoiceDate())
+                    .transactionType("INVOICE")
+                    .referenceNumber(inv.getInvoiceNumber())
+                    .amount(inv.getInvoiceAmount())
+                    .status(inv.getStatus())
+                    .build());
         }
         for (CustomerReceiptDto rec : receiptDtos) {
             transactions.add(CustomerTransactionDto.builder()
-                .date(rec.getReceiptDate())
-                .transactionType("RECEIPT")
-                .referenceNumber(rec.getReceiptNumber())
-                .amount(rec.getAmount())
-                .status("COMPLETED")
-                .build());
+                    .date(rec.getReceiptDate())
+                    .transactionType("RECEIPT")
+                    .referenceNumber(rec.getReceiptNumber())
+                    .amount(rec.getAmount())
+                    .status("COMPLETED")
+                    .build());
         }
         transactions.sort(Comparator.comparing(CustomerTransactionDto::getDate).reversed());
         profile.setRecentTransactions(transactions.stream().limit(20).collect(Collectors.toList()));
-        
+
         // Ledger Entries
         java.util.List<CustomerLedgerEntryDto> entries = new ArrayList<>();
         BigDecimal runningBalance = BigDecimal.ZERO;
@@ -396,51 +407,51 @@ public class CustomerServiceImpl implements CustomerService {
         ascTransactions.sort(Comparator.comparing(CustomerTransactionDto::getDate));
         for (CustomerTransactionDto tx : ascTransactions) {
             CustomerLedgerEntryDto entry = CustomerLedgerEntryDto.builder()
-                .date(tx.getDate())
-                .voucherType(tx.getTransactionType())
-                .voucherNumber(tx.getReferenceNumber())
-                .debit(tx.getTransactionType().equals("INVOICE") ? tx.getAmount() : BigDecimal.ZERO)
-                .credit(tx.getTransactionType().equals("RECEIPT") ? tx.getAmount() : BigDecimal.ZERO)
-                .build();
+                    .date(tx.getDate())
+                    .voucherType(tx.getTransactionType())
+                    .voucherNumber(tx.getReferenceNumber())
+                    .debit(tx.getTransactionType().equals("INVOICE") ? tx.getAmount() : BigDecimal.ZERO)
+                    .credit(tx.getTransactionType().equals("RECEIPT") ? tx.getAmount() : BigDecimal.ZERO)
+                    .build();
             runningBalance = runningBalance.add(entry.getDebit()).subtract(entry.getCredit());
             entry.setBalance(runningBalance);
             entries.add(entry);
         }
         java.util.Collections.reverse(entries); // newest first
         profile.setLedgerEntries(entries);
-        
+
         // 6. Statistics
         BigDecimal totalSales = salesInvoiceRepository.sumTotalAmountByCustomerAndCompany(customerId, companyId);
         BigDecimal totalReceipts = salesInvoiceRepository.sumReceivedAmountByCustomerAndCompany(customerId, companyId);
-        
+
         CustomerStatisticsDto stats = CustomerStatisticsDto.builder()
-            .totalSales(totalSales != null ? totalSales : BigDecimal.ZERO)
-            .totalReceipts(totalReceipts != null ? totalReceipts : BigDecimal.ZERO)
-            .totalPending(outstanding)
-            .totalInvoices(profile.getTotalInvoices())
-            .averagePaymentDays(0)
-            .lastInvoiceDate(invoiceDtos.isEmpty() ? null : invoiceDtos.get(0).getInvoiceDate())
-            .lastPaymentDate(receiptDtos.isEmpty() ? null : receiptDtos.get(0).getReceiptDate())
-            .build();
+                .totalSales(totalSales != null ? totalSales : BigDecimal.ZERO)
+                .totalReceipts(totalReceipts != null ? totalReceipts : BigDecimal.ZERO)
+                .totalPending(outstanding)
+                .totalInvoices(profile.getTotalInvoices())
+                .averagePaymentDays(0)
+                .lastInvoiceDate(invoiceDtos.isEmpty() ? null : invoiceDtos.get(0).getInvoiceDate())
+                .lastPaymentDate(receiptDtos.isEmpty() ? null : receiptDtos.get(0).getReceiptDate())
+                .build();
         profile.setStatistics(stats);
-        
+
         // 7. Contacts & Addresses
         CustomerContactDto contact = CustomerContactDto.builder()
-            .contactPerson(customer.getCustomerName())
-            .email(customer.getEmail())
-            .phone(customer.getPhone())
-            .build();
+                .contactPerson(customer.getCustomerName())
+                .email(customer.getEmail())
+                .phone(customer.getPhone())
+                .build();
         profile.setContacts(java.util.Collections.singletonList(contact));
-        
+
         profile.setAddresses(getAddressResponses(customer));
-        
+
         // 8. Audit Info
         CustomerAuditInfoDto auditInfo = CustomerAuditInfoDto.builder()
-            .createdBy(customer.getCreatedBy())
-            .createdAt(customer.getCreatedAt())
-            .updatedBy(customer.getUpdatedBy())
-            .updatedAt(customer.getUpdatedAt())
-            .build();
+                .createdBy(customer.getCreatedBy())
+                .createdAt(customer.getCreatedAt())
+                .updatedBy(customer.getUpdatedBy())
+                .updatedAt(customer.getUpdatedAt())
+                .build();
         profile.setAuditInformation(auditInfo);
     }
 
@@ -485,19 +496,20 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         java.util.Map<String, CustomerAddress> existingByType = customer.getAddresses().stream()
-            .filter(address -> !Boolean.TRUE.equals(address.getIsDeleted()))
-            .filter(address -> address.getAddressType() != null)
-            .collect(Collectors.toMap(address -> address.getAddressType().trim().toUpperCase(), address -> address,
-                (first, second) -> first));
+                .filter(address -> !Boolean.TRUE.equals(address.getIsDeleted()))
+                .filter(address -> address.getAddressType() != null)
+                .collect(Collectors.toMap(address -> address.getAddressType().trim().toUpperCase(), address -> address,
+                        (first, second) -> first));
         java.util.Set<String> retainedTypes = requests.stream()
-            .map(CustomerAddressRequest::getAddressType)
-            .filter(java.util.Objects::nonNull)
-            .map(String::trim)
-            .map(String::toUpperCase)
+                .map(CustomerAddressRequest::getAddressType)
+                .filter(java.util.Objects::nonNull)
+                .map(String::trim)
+                .map(String::toUpperCase)
                 .collect(Collectors.toSet());
 
         for (CustomerAddress address : customer.getAddresses()) {
-            String addressType = address.getAddressType() == null ? null : address.getAddressType().trim().toUpperCase();
+            String addressType = address.getAddressType() == null ? null
+                    : address.getAddressType().trim().toUpperCase();
             if (!retainedTypes.contains(addressType) && !Boolean.TRUE.equals(address.getIsDeleted())) {
                 address.setIsDeleted(true);
                 address.setIsActive(false);
@@ -516,9 +528,9 @@ public class CustomerServiceImpl implements CustomerService {
 
             GstStateCode gstState = request.getGstStateId() == null ? null
                     : gstStateCodeRepository.findById(request.getGstStateId())
-                    .filter(state -> !Boolean.TRUE.equals(state.getIsDeleted()))
-                    .orElseThrow(() -> new InvalidCustomerException(
-                            "GST state not found: " + request.getGstStateId()));
+                            .filter(state -> !Boolean.TRUE.equals(state.getIsDeleted()))
+                            .orElseThrow(() -> new InvalidCustomerException(
+                                    "GST state not found: " + request.getGstStateId()));
 
             address.setAddressType(request.getAddressType());
             address.setAddressLine1(request.getAddressLine1());
@@ -535,7 +547,7 @@ public class CustomerServiceImpl implements CustomerService {
         if (defaultCount == 1) {
             CustomerAddress selectedDefault = customer.getAddresses().stream()
                     .filter(address -> retainedTypes.contains(address.getAddressType() == null ? null
-                        : address.getAddressType().trim().toUpperCase()))
+                            : address.getAddressType().trim().toUpperCase()))
                     .filter(address -> Boolean.TRUE.equals(address.getIsDefault()))
                     .findFirst()
                     .orElse(null);

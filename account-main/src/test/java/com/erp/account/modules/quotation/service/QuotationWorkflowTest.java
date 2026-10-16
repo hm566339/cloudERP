@@ -23,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.erp.account.integration.workflow.client.WorkflowClient;
+import com.erp.account.integration.workflow.dto.WorkflowTransactionDto;
+
 @ExtendWith(MockitoExtension.class)
 class QuotationWorkflowTest {
 
@@ -31,6 +34,9 @@ class QuotationWorkflowTest {
 
     @Mock
     private QuotationMapper quotationMapper;
+
+    @Mock
+    private WorkflowClient workflowClient;
 
     @InjectMocks
     private QuotationServiceImpl quotationService;
@@ -47,6 +53,7 @@ class QuotationWorkflowTest {
         quotation = new Quotation();
         quotation.setId(quotationId);
         quotation.setCompanyId(companyId);
+        quotation.setQuotationNumber("QT-2026-001");
         quotation.setStatus(QuotationStatus.DRAFT);
         quotation.setIsDeleted(false);
     }
@@ -146,5 +153,79 @@ class QuotationWorkflowTest {
 
         quotation.setStatus(QuotationStatus.EXPIRED);
         assertFalse(quotation.isEditable());
+    }
+
+    @Test
+    void testSubmitForApproval_Success() {
+        try (MockedStatic<TenantUtils> tenantUtils = Mockito.mockStatic(TenantUtils.class)) {
+            tenantUtils.when(() -> TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
+
+            when(quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(quotationId, companyId))
+                    .thenReturn(Optional.of(quotation));
+            when(workflowClient.getWorkflowByDocument(companyId, "QUOTATION", quotationId))
+                    .thenReturn(null);
+
+            quotationService.submitForApproval(companyId, quotationId, "Please review quote");
+
+            Mockito.verify(workflowClient, Mockito.times(1)).submitWorkflow(
+                    companyId, "QUOTATION", quotationId, "QT-2026-001", "Please review quote");
+        }
+    }
+
+    @Test
+    void testSubmitForApproval_DuplicateFails() {
+        try (MockedStatic<TenantUtils> tenantUtils = Mockito.mockStatic(TenantUtils.class)) {
+            tenantUtils.when(() -> TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
+
+            when(quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(quotationId, companyId))
+                    .thenReturn(Optional.of(quotation));
+            WorkflowTransactionDto existingTx = WorkflowTransactionDto.builder()
+                    .id(UUID.randomUUID())
+                    .status("PENDING")
+                    .build();
+            when(workflowClient.getWorkflowByDocument(companyId, "QUOTATION", quotationId))
+                    .thenReturn(existingTx);
+
+            BadRequestException ex = assertThrows(BadRequestException.class, () ->
+                    quotationService.submitForApproval(companyId, quotationId, "Duplicate"));
+            assertTrue(ex.getMessage().contains("already submitted"));
+        }
+    }
+
+    @Test
+    void testApproveQuotation_BlockedWhenPendingWorkflow() {
+        try (MockedStatic<TenantUtils> tenantUtils = Mockito.mockStatic(TenantUtils.class)) {
+            tenantUtils.when(() -> TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
+
+            when(quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(quotationId, companyId))
+                    .thenReturn(Optional.of(quotation));
+            WorkflowTransactionDto activeTx = WorkflowTransactionDto.builder()
+                    .id(UUID.randomUUID())
+                    .status("PENDING")
+                    .build();
+            when(workflowClient.getWorkflowByDocument(companyId, "QUOTATION", quotationId))
+                    .thenReturn(activeTx);
+
+            BadRequestException ex = assertThrows(BadRequestException.class, () ->
+                    quotationService.approveQuotation(companyId, quotationId));
+            assertTrue(ex.getMessage().contains("workflow approval is pending"));
+        }
+    }
+
+    @Test
+    void testApproveQuotation_SuccessWhenNoPendingWorkflow() {
+        try (MockedStatic<TenantUtils> tenantUtils = Mockito.mockStatic(TenantUtils.class)) {
+            tenantUtils.when(() -> TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
+            tenantUtils.when(TenantUtils::getCurrentUserId).thenReturn(UUID.randomUUID());
+
+            when(quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(quotationId, companyId))
+                    .thenReturn(Optional.of(quotation));
+            when(workflowClient.getWorkflowByDocument(companyId, "QUOTATION", quotationId))
+                    .thenReturn(null);
+            when(quotationRepository.save(any())).thenReturn(quotation);
+
+            assertDoesNotThrow(() -> quotationService.approveQuotation(companyId, quotationId));
+            assertEquals(QuotationStatus.SENT, quotation.getStatus());
+        }
     }
 }

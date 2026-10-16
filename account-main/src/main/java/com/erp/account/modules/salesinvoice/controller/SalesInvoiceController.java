@@ -294,6 +294,19 @@ public class SalesInvoiceController {
         return ResponseEntity.ok(ApiResponse.success(report, "Aging report retrieved successfully"));
     }
 
+    @PostMapping({"/{invoiceId}/submit-for-approval", "/{invoiceId}/submit-approval", "/{invoiceId}/submit"})
+    @Operation(summary = "Submit sales invoice for approval", description = "Submits a DRAFT sales invoice for workflow approval")
+    public ResponseEntity<ApiResponse<SalesInvoiceResponse>> submitForApproval(
+            @PathVariable UUID invoiceId,
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) String comments,
+            @RequestBody(required = false) Map<String, String> body) {
+        log.info("REST: Submitting sales invoice for approval: {}", invoiceId);
+        String effectiveComments = comments != null ? comments : (body != null ? body.get("comments") : null);
+        SalesInvoiceResponse response = salesInvoiceService.submitForApproval(companyId, invoiceId, effectiveComments);
+        return ResponseEntity.ok(ApiResponse.success(response, "Sales invoice submitted for approval successfully"));
+    }
+
     @PostMapping("/{invoiceId}/approve")
     @Operation(summary = "Approve invoice", description = "Approves a DRAFT invoice")
     public ResponseEntity<Map<String, Object>> approveInvoice(

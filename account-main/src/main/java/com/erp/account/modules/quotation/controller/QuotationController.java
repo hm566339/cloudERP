@@ -89,6 +89,15 @@ public class QuotationController {
         return ResponseEntity.ok(quotationService.changeStatus(companyId, id, status));
     }
 
+    @Operation(summary = "Submit Quotation for Approval", description = "Submits a DRAFT quotation into the workflow approval system.")
+    @PostMapping("/{id}/submit-approval")
+    public ResponseEntity<QuotationResponse> submitForApproval(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) String comments) {
+        return ResponseEntity.ok(quotationService.submitForApproval(companyId, id, comments));
+    }
+
     @Operation(summary = "Approve Quotation", description = "Internal approval. Transitions DRAFT to SENT.")
     @PostMapping("/{id}/approve")
     public ResponseEntity<QuotationResponse> approveQuotation(

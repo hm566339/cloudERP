@@ -98,4 +98,10 @@ management:
 jwt:
   secret: ${JWT_SECRET:defaultSecretKeyWithAtLeast32CharactersForHmacSha256}
 
+workflow:
+  service:
+    url: ${WORKFLOW_SERVICE_URL:http://workflow-service:8083}
+  callback:
+    secret: ${WORKFLOW_CALLBACK_SECRET:erp-workflow-internal-callback-secret}
+
 

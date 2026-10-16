@@ -15,6 +15,8 @@ public interface StockAdjustmentLineRepository extends JpaRepository<StockAdjust
 
     List<StockAdjustmentLine> findAllByCompanyId(UUID companyId);
 
+    List<StockAdjustmentLine> findAllByStockAdjustmentIdAndCompanyId(UUID stockAdjustmentId, UUID companyId);
+
     boolean existsByBatchIdAndCompanyId(UUID batchId, UUID companyId);
 
     boolean existsBySerialIdAndCompanyId(UUID serialId, UUID companyId);

@@ -1,13 +1,13 @@
 package com.erp.account.modules.workflow.document.adapter;
 
-import com.erp.account.modules.expense.dto.ExpenseRequestApproveRequest;
-import com.erp.account.modules.expense.dto.ExpenseRequestRejectRequest;
+import com.erp.account.enums.ExpenseRequestStatus;
 import com.erp.account.modules.expense.entity.ExpenseRequest;
 import com.erp.account.modules.expense.repository.ExpenseRequestRepository;
-import com.erp.account.modules.expense.service.ExpenseRequestService;
 import com.erp.account.modules.workflow.document.WorkflowDocument;
 import com.erp.account.modules.workflow.document.WorkflowDocumentAdapter;
+import com.erp.account.security.CurrentUserContext;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ExpenseRequestWorkflowAdapter implements WorkflowDocumentAdapter {
     private static final String DOCUMENT_TYPE = "EXPENSE_REQUEST";
     private final ExpenseRequestRepository repository;
-    private final ExpenseRequestService service;
 
     @Override
     public String getDocumentType() { return DOCUMENT_TYPE; }
@@ -36,18 +35,51 @@ public class ExpenseRequestWorkflowAdapter implements WorkflowDocumentAdapter {
         public UUID getId() { return request.getId(); }
         public UUID getCompanyId() { return request.getCompany() == null ? null : request.getCompany().getId(); }
         public String getDocumentType() { return DOCUMENT_TYPE; }
-        public String getDocumentNumber() { return request.getId().toString(); }
+        public String getDocumentNumber() { return request.getRequestNumber() != null ? request.getRequestNumber() : request.getId().toString(); }
         public BigDecimal getAmount() { return request.getRequestedAmount(); }
         public UUID getOwnerId() { return request.getRequesterId(); }
-        public void onWorkflowSubmitted() { service.submitExpenseRequest(getCompanyId(), request.getId()); }
+
+        @Transactional
+        public void onWorkflowSubmitted() {
+            request.setStatus(ExpenseRequestStatus.PENDING_APPROVAL);
+            request.setApprovalStatus(ExpenseRequestStatus.PENDING_APPROVAL);
+            repository.save(request);
+        }
+
+        @Transactional
         public void onWorkflowApproved() {
-            service.approveExpenseRequest(getCompanyId(), request.getId(), ExpenseRequestApproveRequest.builder()
-                    .approvedAmount(request.getRequestedAmount()).remarks("Approved by workflow").build());
+            request.setStatus(ExpenseRequestStatus.APPROVED);
+            request.setApprovalStatus(ExpenseRequestStatus.APPROVED);
+            if (request.getApprovedAmount() == null) {
+                request.setApprovedAmount(request.getRequestedAmount());
+            }
+            request.setApprovedBy(CurrentUserContext.getUserId());
+            request.setApprovedAt(LocalDateTime.now());
+            repository.save(request);
         }
+
+        @Transactional
         public void onWorkflowRejected() {
-            service.rejectExpenseRequest(getCompanyId(), request.getId(), ExpenseRequestRejectRequest.builder()
-                    .reason("Rejected by workflow").build());
+            request.setStatus(ExpenseRequestStatus.REJECTED);
+            request.setApprovalStatus(ExpenseRequestStatus.REJECTED);
+            request.setRejectedBy(CurrentUserContext.getUserId());
+            request.setRejectedAt(LocalDateTime.now());
+            repository.save(request);
         }
-        public void onWorkflowCancelled() { service.cancelExpenseRequest(getCompanyId(), request.getId()); }
+
+        @Transactional
+        public void onWorkflowCancelled() {
+            request.setStatus(ExpenseRequestStatus.CANCELLED);
+            request.setApprovalStatus(ExpenseRequestStatus.CANCELLED);
+            repository.save(request);
+        }
+
+        @Transactional
+        public void onWorkflowReturned() {
+            request.setStatus(ExpenseRequestStatus.DRAFT);
+            request.setApprovalStatus(ExpenseRequestStatus.DRAFT);
+            repository.save(request);
+        }
     }
 }
+

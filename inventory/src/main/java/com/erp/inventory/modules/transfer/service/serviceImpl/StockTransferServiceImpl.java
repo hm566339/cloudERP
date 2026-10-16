@@ -46,6 +46,10 @@ import java.util.List;
 import java.util.UUID;
 import com.erp.inventory.common.util.TenantUtils;
 
+import com.erp.inventory.modules.workflow.client.WorkflowClient;
+import com.erp.inventory.modules.workflow.dto.WorkflowTransactionDto;
+import com.erp.inventory.common.security.CurrentUserContext;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -68,6 +72,7 @@ public class StockTransferServiceImpl implements StockTransferService {
     private final StockMovementLineRepository stockMovementLineRepository;
     private final com.erp.inventory.modules.valuation.service.InventoryCostLayerService inventoryCostLayerService;
     private final com.erp.inventory.modules.period.service.InventoryPeriodService inventoryPeriodService;
+    private final WorkflowClient workflowClient;
 
     @Override
     @Transactional
@@ -100,28 +105,17 @@ public class StockTransferServiceImpl implements StockTransferService {
             throw new BusinessValidationException("Destination warehouse is inactive or deleted");
         }
 
-        // Initialize StockMovement Header
-        StockMovement movement = new StockMovement();
-        movement.setCompanyId(company);
-        movement.setMovementDate(request.getTransferDate() != null ? request.getTransferDate() : LocalDateTime.now());
-        movement.setMovementType(StockMovementType.TRANSFER_OUT.name());
-        movement.setStatus("COMPLETED");
-        movement.setReferenceType(ReferenceType.STOCK_TRANSFER);
-        movement.setReferenceNumber(request.getTransferNo());
-        movement.setPostedAt(LocalDateTime.now());
-        movement.setPostedBy(request.getInitiatedBy()); // Optional fallback to security context if null
-        
-        StockMovement savedMovement = stockMovementRepository.save(movement);
+        boolean isDraft = request.getStatus() != null &&
+                ("DRAFT".equalsIgnoreCase(request.getStatus()) || "PENDING_APPROVAL".equalsIgnoreCase(request.getStatus()));
 
         // Initialize Transfer Header
         StockTransfer transfer = mapper.toEntity(request);
         transfer.setCompanyId(company);
-        transfer.setStatus("COMPLETED"); // Completing it implicitly according to business logic rules.
-        transfer.setStockMovementId(savedMovement.getId());
+        transfer.setStatus(isDraft ? request.getStatus().toUpperCase() : "COMPLETED");
+        if (isDraft) {
+            transfer.setStockMovementId(null);
+        }
         StockTransfer savedTransfer = repository.save(transfer);
-        
-        BigDecimal totalMovementQty = BigDecimal.ZERO;
-        BigDecimal totalMovementValue = BigDecimal.ZERO;
 
         List<StockTransferLine> savedLines = new ArrayList<>();
 
@@ -183,31 +177,71 @@ public class StockTransferServiceImpl implements StockTransferService {
                 if (!serial.getProductId().equals(product.getId()) || !"AVAILABLE".equalsIgnoreCase(serial.getStatus())) {
                     throw new BusinessValidationException("Serial is invalid or not available");
                 }
-                
             }
-
-            // Get source stock before removing
-            InventoryStock sourceStock = inventoryStockRepository.findUniqueStock(product.getId(), sourceWarehouse.getId(), sourceLocation.getId(), lineReq.getBatchId(), company)
-                    .orElseThrow(() -> new ResourceNotFoundException("Source stock not found"));
-            BigDecimal qtyBefore = sourceStock.getQuantity();
-
-            // Update Source Stock
-            inventoryStockService.removeStock(product.getId(), sourceWarehouse.getId(), sourceLocation.getId(), lineReq.getBatchId(), lineReq.getQuantity(), company);
-
-            // Update/Create Destination Stock
-            inventoryStockService.addStock(product.getId(), destWarehouse.getId(), destLocation.getId(), lineReq.getBatchId(), lineReq.getQuantity(), lineReq.getUnitCost(), company);
-
-
 
             // Save Transfer Line
             StockTransferLine transferLine = lineMapper.toEntity(lineReq);
             transferLine.setCompanyId(company);
             transferLine.setStockTransferId(savedTransfer.getId());
             savedLines.add(lineRepository.save(transferLine));
+        }
+
+        // Only execute stock movement immediately if NOT a draft/pending workflow document
+        if (!isDraft) {
+            executeTransferMovement(savedTransfer, savedLines, company, request.getInitiatedBy());
+        }
+
+        return mapper.toResponse(savedTransfer);
+    }
+
+    private void executeTransferMovement(StockTransfer transfer, List<StockTransferLine> lines, UUID company, UUID initiatedBy) {
+        if (transfer.getStockMovementId() != null) {
+            log.info("Stock movement already processed for transfer: {}", transfer.getTransferNo());
+            return;
+        }
+
+        Warehouse sourceWarehouse = warehouseRepository.findByIdAndCompanyId(transfer.getSourceWarehouseId(), company)
+                .orElseThrow(() -> new ResourceNotFoundException("Source warehouse not found"));
+        Warehouse destWarehouse = warehouseRepository.findByIdAndCompanyId(transfer.getDestinationWarehouseId(), company)
+                .orElseThrow(() -> new ResourceNotFoundException("Destination warehouse not found"));
+
+        StockMovement movement = new StockMovement();
+        movement.setCompanyId(company);
+        movement.setMovementDate(transfer.getTransferDate() != null ? transfer.getTransferDate() : LocalDateTime.now());
+        movement.setMovementType(StockMovementType.TRANSFER_OUT.name());
+        movement.setStatus("COMPLETED");
+        movement.setReferenceType(ReferenceType.STOCK_TRANSFER);
+        movement.setReferenceNumber(transfer.getTransferNo());
+        movement.setPostedAt(LocalDateTime.now());
+        movement.setPostedBy(initiatedBy != null ? initiatedBy : transfer.getInitiatedBy());
+
+        StockMovement savedMovement = stockMovementRepository.save(movement);
+
+        BigDecimal totalMovementQty = BigDecimal.ZERO;
+        BigDecimal totalMovementValue = BigDecimal.ZERO;
+
+        for (StockTransferLine transferLine : lines) {
+            WarehouseLocation sourceLocation = locationRepository.findByIdAndCompanyId(transferLine.getSourceLocationId(), company)
+                    .orElseThrow(() -> new ResourceNotFoundException("Source location not found"));
+            WarehouseLocation destLocation = locationRepository.findByIdAndCompanyId(transferLine.getDestinationLocationId(), company)
+                    .orElseThrow(() -> new ResourceNotFoundException("Destination location not found"));
+            Product product = productRepository.findByIdAndCompanyId(transferLine.getProductId(), company)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+            // Get source stock before removing
+            InventoryStock sourceStock = inventoryStockRepository.findUniqueStock(product.getId(), sourceWarehouse.getId(), sourceLocation.getId(), transferLine.getBatchId(), company)
+                    .orElseThrow(() -> new ResourceNotFoundException("Source stock not found"));
+            BigDecimal qtyBefore = sourceStock.getQuantity();
+
+            // Update Source Stock
+            inventoryStockService.removeStock(product.getId(), sourceWarehouse.getId(), sourceLocation.getId(), transferLine.getBatchId(), transferLine.getQuantity(), company);
+
+            // Update/Create Destination Stock
+            inventoryStockService.addStock(product.getId(), destWarehouse.getId(), destLocation.getId(), transferLine.getBatchId(), transferLine.getQuantity(), transferLine.getUnitCost(), company);
 
             // Save Movement Line
-            BigDecimal lineTotalValue = lineReq.getQuantity().multiply(lineReq.getUnitCost() != null ? lineReq.getUnitCost() : BigDecimal.ZERO);
-            
+            BigDecimal lineTotalValue = transferLine.getQuantity().multiply(transferLine.getUnitCost() != null ? transferLine.getUnitCost() : BigDecimal.ZERO);
+
             StockMovementLine movementLine = new StockMovementLine();
             movementLine.setCompanyId(company);
             movementLine.setStockMovementId(savedMovement.getId());
@@ -216,11 +250,11 @@ public class StockTransferServiceImpl implements StockTransferService {
             movementLine.setSourceLocationId(sourceLocation.getId());
             movementLine.setDestinationWarehouseId(destWarehouse.getId());
             movementLine.setDestinationLocationId(destLocation.getId());
-            movementLine.setBatchId(lineReq.getBatchId());
-            movementLine.setSerialId(lineReq.getSerialId());
-            movementLine.setUomId(lineReq.getUomId());
-            movementLine.setQuantity(lineReq.getQuantity());
-            movementLine.setUnitCost(lineReq.getUnitCost());
+            movementLine.setBatchId(transferLine.getBatchId());
+            movementLine.setSerialId(transferLine.getSerialId());
+            movementLine.setUomId(transferLine.getUomId());
+            movementLine.setQuantity(transferLine.getQuantity());
+            movementLine.setUnitCost(transferLine.getUnitCost());
             movementLine.setTotalCost(lineTotalValue);
             movementLine.setQuantityBefore(qtyBefore);
             movementLine.setQuantityAfter(sourceStock.getQuantity());
@@ -229,18 +263,161 @@ public class StockTransferServiceImpl implements StockTransferService {
 
             inventoryCostLayerService.processOutboundCost(movementLine, company);
             inventoryCostLayerService.processInboundCost(movementLine, company);
-            
-            totalMovementQty = totalMovementQty.add(lineReq.getQuantity());
+
+            totalMovementQty = totalMovementQty.add(transferLine.getQuantity());
             totalMovementValue = totalMovementValue.add(lineTotalValue);
         }
 
         // Update Movement Header Totals
         savedMovement.setTotalQuantity(totalMovementQty);
         savedMovement.setTotalValue(totalMovementValue);
-        savedMovement.setReferenceId(savedTransfer.getId());
+        savedMovement.setReferenceId(transfer.getId());
         stockMovementRepository.save(savedMovement);
 
-        return mapper.toResponse(savedTransfer);
+        transfer.setStockMovementId(savedMovement.getId());
+        repository.save(transfer);
+    }
+
+    @Override
+    @Transactional
+    public void processStockTransferMovement(UUID id, UUID companyId) {
+        UUID company = TenantUtils.resolveCompanyId(companyId);
+        StockTransfer transfer = repository.findByIdAndCompanyId(id, company)
+                .orElseThrow(() -> new ResourceNotFoundException("Stock Transfer not found"));
+        if (transfer.getStockMovementId() != null) {
+            log.info("Stock transfer {} movement already processed", transfer.getTransferNo());
+            return;
+        }
+        List<StockTransferLine> lines = lineRepository.findAllByStockTransferIdAndCompanyId(id, company);
+        executeTransferMovement(transfer, lines, company, CurrentUserContext.getUserId());
+        transfer.setStatus("APPROVED");
+        transfer.setApprovedAt(LocalDateTime.now());
+        transfer.setApprovedBy(CurrentUserContext.getUserId());
+        repository.save(transfer);
+    }
+
+    @Override
+    @Transactional
+    public StockTransferResponse submitForApproval(UUID id, UUID companyId, String comments) {
+        UUID company = TenantUtils.resolveCompanyId(companyId);
+        StockTransfer transfer = repository.findByIdAndCompanyId(id, company)
+                .orElseThrow(() -> new ResourceNotFoundException("Stock Transfer not found"));
+
+        if (!"DRAFT".equalsIgnoreCase(transfer.getStatus()) && !"RETURNED".equalsIgnoreCase(transfer.getStatus()) && !"REJECTED".equalsIgnoreCase(transfer.getStatus())) {
+            throw new BusinessValidationException("Only DRAFT stock transfers can be submitted for approval. Current status: " + transfer.getStatus());
+        }
+
+        // Duplicate workflow submission check
+        try {
+            WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(company, "STOCK_TRANSFER", id);
+            if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
+                throw new BusinessValidationException("Stock transfer is already submitted for approval with transaction: " + existingTx.getId());
+            }
+        } catch (BusinessValidationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("No existing workflow transaction found for stock transfer {}", id);
+        }
+
+        try {
+            workflowClient.submitWorkflow(
+                    company,
+                    "STOCK_TRANSFER",
+                    transfer.getId(),
+                    transfer.getTransferNo(),
+                    comments != null ? comments : "Submitted stock transfer for approval"
+            );
+            transfer.setStatus("PENDING_APPROVAL");
+            repository.save(transfer);
+            log.info("Stock transfer {} submitted for approval to workflow-service", transfer.getTransferNo());
+        } catch (BusinessValidationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Workflow engine submission failed for stock transfer {}. Error: {}", id, e.getMessage());
+            throw new BusinessValidationException("Failed to submit stock transfer for workflow approval: " + e.getMessage());
+        }
+
+        return mapper.toResponse(transfer);
+    }
+
+    @Override
+    @Transactional
+    public StockTransferResponse approveTransfer(UUID id, UUID companyId) {
+        UUID company = TenantUtils.resolveCompanyId(companyId);
+        StockTransfer transfer = repository.findByIdAndCompanyId(id, company)
+                .orElseThrow(() -> new ResourceNotFoundException("Stock Transfer not found"));
+
+        // Bypass check: Block direct approval if an active workflow is pending
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(company, "STOCK_TRANSFER", id);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BusinessValidationException("Stock transfer cannot be approved directly while workflow approval is pending. Please approve via the workflow.");
+            }
+        } catch (BusinessValidationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for stock transfer {}: {}", id, e.getMessage());
+        }
+
+        processStockTransferMovement(id, company);
+        transfer.setStatus("APPROVED");
+        transfer.setApprovedAt(LocalDateTime.now());
+        transfer.setApprovedBy(CurrentUserContext.getUserId());
+        StockTransfer saved = repository.save(transfer);
+        return mapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public StockTransferResponse rejectTransfer(UUID id, UUID companyId, String reason) {
+        UUID company = TenantUtils.resolveCompanyId(companyId);
+        StockTransfer transfer = repository.findByIdAndCompanyId(id, company)
+                .orElseThrow(() -> new ResourceNotFoundException("Stock Transfer not found"));
+
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(company, "STOCK_TRANSFER", id);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BusinessValidationException("Stock transfer cannot be rejected directly while workflow approval is pending. Please reject via the workflow.");
+            }
+        } catch (BusinessValidationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for stock transfer rejection {}: {}", id, e.getMessage());
+        }
+
+        transfer.setStatus("REJECTED");
+        if (reason != null && !reason.trim().isEmpty()) {
+            transfer.setRemarks((transfer.getRemarks() != null ? transfer.getRemarks() + " | " : "") + "Rejected: " + reason);
+        }
+        StockTransfer saved = repository.save(transfer);
+        return mapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public StockTransferResponse cancelTransfer(UUID id, UUID companyId) {
+        UUID company = TenantUtils.resolveCompanyId(companyId);
+        StockTransfer transfer = repository.findByIdAndCompanyId(id, company)
+                .orElseThrow(() -> new ResourceNotFoundException("Stock Transfer not found"));
+
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(company, "STOCK_TRANSFER", id);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BusinessValidationException("Stock transfer cannot be cancelled directly while workflow approval is pending. Please cancel via the workflow.");
+            }
+        } catch (BusinessValidationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for stock transfer cancellation {}: {}", id, e.getMessage());
+        }
+
+        if ("COMPLETED".equalsIgnoreCase(transfer.getStatus()) || transfer.getStockMovementId() != null) {
+            throw new BusinessValidationException("Completed transfers cannot be cancelled directly. Please reverse instead.");
+        }
+
+        transfer.setStatus("CANCELLED");
+        StockTransfer saved = repository.save(transfer);
+        return mapper.toResponse(saved);
     }
 
     @Override
@@ -264,11 +441,22 @@ public class StockTransferServiceImpl implements StockTransferService {
         StockTransfer transfer = repository.findByIdAndCompanyId(id, company)
                 .orElseThrow(() -> new ResourceNotFoundException("Stock Transfer not found"));
 
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(company, "STOCK_TRANSFER", id);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BusinessValidationException("Stock transfer cannot be reversed while workflow approval is pending.");
+            }
+        } catch (BusinessValidationException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for stock transfer reversal {}: {}", id, e.getMessage());
+        }
+
         if ("REVERSED".equalsIgnoreCase(transfer.getStatus()) || "CANCELLED".equalsIgnoreCase(transfer.getStatus())) {
             throw new BusinessValidationException("Stock Transfer is already reversed or cancelled.");
         }
         
-        if (!"COMPLETED".equalsIgnoreCase(transfer.getStatus())) {
+        if (!"COMPLETED".equalsIgnoreCase(transfer.getStatus()) && !"APPROVED".equalsIgnoreCase(transfer.getStatus())) {
             throw new BusinessValidationException("Only completed transfers can be reversed.");
         }
 

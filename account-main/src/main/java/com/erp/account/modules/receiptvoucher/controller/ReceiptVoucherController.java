@@ -61,9 +61,13 @@ public class ReceiptVoucherController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{id}/submit")
-    public ResponseEntity<Map<String, Object>> submit(@PathVariable UUID id) {
-        service.submitForApproval(id);
+    @PostMapping({"/{id}/submit", "/{id}/submit-approval", "/{id}/submit-for-approval"})
+    public ResponseEntity<Map<String, Object>> submit(
+            @PathVariable UUID id,
+            @RequestParam(required = false) String comments,
+            @RequestBody(required = false) Map<String, String> body) {
+        String effectiveComments = comments != null ? comments : (body != null ? body.get("comments") : null);
+        service.submitForApproval(id, effectiveComments);
         return ResponseEntity.ok(Map.of("success", true, "message", "Receipt submitted successfully."));
     }
 

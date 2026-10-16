@@ -99,12 +99,14 @@ public class PurchaseOrderController {
         return ResponseEntity.ok(ApiResponse.success(response, "Purchase Order updated successfully"));
     }
 
-    @Operation(summary = "Submit Purchase Order for Approval", description = "Transition status from DRAFT to PENDING_APPROVAL")
-    @PostMapping("/{id}/submit")
+    @Operation(summary = "Submit Purchase Order for Approval", description = "Transition status from DRAFT to PENDING_APPROVAL and initiate workflow")
+    @PostMapping({"/{id}/submit", "/{id}/submit-approval"})
     public ResponseEntity<ApiResponse<PurchaseOrderResponse>> submitForApproval(
             @PathVariable UUID id,
-            @RequestParam(required = false) UUID companyId) {
-        PurchaseOrderResponse response = purchaseOrderService.submitForApproval(companyId, id);
+            @RequestParam(required = false) UUID companyId,
+            @RequestBody(required = false) Map<String, String> body) {
+        String comments = body != null ? body.get("comments") : null;
+        PurchaseOrderResponse response = purchaseOrderService.submitForApproval(companyId, id, comments);
         return ResponseEntity.ok(ApiResponse.success(response, "Purchase Order submitted for approval"));
     }
 

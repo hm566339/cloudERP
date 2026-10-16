@@ -16,4 +16,13 @@ public interface StockAdjustmentService {
 
     Page<StockAdjustmentResponse> getAll(StockAdjustmentFilterRequest filter, Pageable pageable, UUID companyId);
 
+    StockAdjustmentResponse submitForApproval(UUID id, UUID companyId, String comments);
+
+    StockAdjustmentResponse approveAdjustment(UUID id, UUID companyId);
+
+    StockAdjustmentResponse rejectAdjustment(UUID id, UUID companyId, String reason);
+
+    StockAdjustmentResponse cancelAdjustment(UUID id, UUID companyId);
+
+    void processStockAdjustmentMovement(UUID id, UUID companyId);
 }

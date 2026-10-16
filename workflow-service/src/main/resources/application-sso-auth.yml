@@ -26,6 +26,9 @@ sso:
       WORKFLOW_ATTACHMENTS:
         - "/api/v1/workflow/attachments"
         - "/api/v1/workflow/attachments/**"
+      WORKFLOW_CALLBACKS:
+        - "/api/v1/workflow/callbacks"
+        - "/api/v1/workflow/callbacks/**"
 
     method-actions:
       GET:
@@ -54,6 +57,7 @@ sso:
       "/read": "UPDATE"
       "/upload": "CREATE"
       "/export": "EXPORT"
+      "/retry": "UPDATE"
 
     feature-groups:
       WORKFLOW_ADMIN:
@@ -101,6 +105,10 @@ sso:
           - CREATE
           - WRITE
           - DELETE
+        WORKFLOW_CALLBACKS:
+          - READ
+          - UPDATE
+          - WRITE
       WORKFLOW_DEFINITIONS:
         WORKFLOW_DEFINITIONS:
           - READ
@@ -155,6 +163,10 @@ sso:
           - CREATE
           - WRITE
           - DELETE
+        WORKFLOW_CALLBACKS:
+          - READ
+          - UPDATE
+          - WRITE
       SYSTEM_ADMIN:
         WORKFLOW:
           - READ
@@ -200,6 +212,10 @@ sso:
           - CREATE
           - WRITE
           - DELETE
+        WORKFLOW_CALLBACKS:
+          - READ
+          - UPDATE
+          - WRITE
 
     write-implies-create-update: false
 

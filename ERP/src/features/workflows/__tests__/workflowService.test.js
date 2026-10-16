@@ -500,14 +500,18 @@ describe('Workflow Definitions API Routing & Service Verification', () => {
         });
 
         const sentPayload = lastRequest.body.data;
-        assert.strictEqual(sentPayload.notes, undefined, 'notes must not be sent in backend payload');
-        assert.strictEqual(sentPayload.threshold, undefined, 'threshold must not be sent in backend payload');
-        assert.strictEqual(sentPayload.customerScope, undefined, 'customerScope must not be sent in backend payload');
-        assert.strictEqual(sentPayload.customerAcceptance, undefined, 'customerAcceptance must not be sent in backend payload');
-        assert.strictEqual(sentPayload.autoCreateOrder, undefined, 'autoCreateOrder must not be sent in backend payload');
-        assert.strictEqual(sentPayload.emailNotifications, undefined, 'emailNotifications must not be sent in backend payload');
+        assert.strictEqual(sentPayload.notes, undefined, 'raw notes string must not be sent directly (mapped to internalNotes)');
+        assert.strictEqual(sentPayload.threshold, undefined, 'raw threshold string must not be sent directly (mapped to approvalThreshold)');
         assert.strictEqual(sentPayload.steps, undefined, 'steps must not be sent in backend payload (stages is used)');
         assert.strictEqual(sentPayload.status, undefined, 'frontend status string must not be sent');
+
+        // Confirm Java DTO configuration persistence fields
+        assert.strictEqual(sentPayload.internalNotes, 'Internal secret notes');
+        assert.strictEqual(sentPayload.approvalThreshold, 50000);
+        assert.strictEqual(sentPayload.customerScope, 'specific');
+        assert.strictEqual(sentPayload.customerAcceptance, true);
+        assert.strictEqual(sentPayload.autoCreateOrder, true);
+        assert.strictEqual(sentPayload.emailNotifications, true);
 
         // Confirm Java DTO keys exist
         assert.strictEqual(sentPayload.companyId, 'ea811382-0afc-4908-a209-9bedcc63c445');

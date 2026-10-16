@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -35,11 +36,29 @@ public class CreateWorkflowDefinitionRequest {
     private String documentType; // e.g. FISCAL_YEAR, STOCK_ADJUSTMENT, PURCHASE_ORDER
 
     private String description;
+    @Builder.Default
     private Integer version = 1;
+    @Builder.Default
     private Boolean isActive = true;
+    @Builder.Default
     private Boolean isDefault = false;
     private LocalDateTime effectiveFrom;
     private LocalDateTime effectiveTo;
+
+    private UUID initiatedByRoleId;
+    private String initiatedByRoleName;
+    @Builder.Default
+    private String customerScope = "all";
+    private BigDecimal approvalThreshold;
+    @Builder.Default
+    private Boolean isApprovalRequired = true;
+    @Builder.Default
+    private Boolean customerAcceptance = false;
+    @Builder.Default
+    private Boolean autoCreateOrder = false;
+    @Builder.Default
+    private Boolean emailNotifications = true;
+    private String internalNotes;
 
     @NotEmpty(message = "At least one stage is required")
     private List<StageRequest> stages;

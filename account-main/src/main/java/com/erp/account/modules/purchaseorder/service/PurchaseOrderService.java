@@ -24,6 +24,7 @@ public interface PurchaseOrderService {
     Page<PurchaseOrderResponse> getAllPurchaseOrders(UUID companyId, Pageable pageable, PurchaseOrderFilterDto filter);
 
     PurchaseOrderResponse submitForApproval(UUID companyId, UUID poId);
+    PurchaseOrderResponse submitForApproval(UUID companyId, UUID poId, String comments);
 
     PurchaseOrderResponse approvePurchaseOrder(UUID companyId, UUID poId);
 

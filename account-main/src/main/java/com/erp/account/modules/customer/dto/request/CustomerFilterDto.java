@@ -16,8 +16,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CustomerFilterDto {
 
-    private UUID companyId;
-
     private String searchKey;
     private String customerCode;
     private String customerName;

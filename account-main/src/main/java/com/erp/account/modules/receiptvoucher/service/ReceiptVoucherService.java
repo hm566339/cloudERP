@@ -24,6 +24,8 @@ public interface ReceiptVoucherService {
 
     void submitForApproval(UUID id);
 
+    void submitForApproval(UUID id, String comments);
+
     void approveReceipt(UUID id);
 
     void rejectReceipt(UUID id);

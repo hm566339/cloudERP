@@ -5,7 +5,10 @@ import com.erp.account.modules.receiptvoucher.repository.ReceiptVoucherRepositor
 import com.erp.account.modules.receiptvoucher.service.ReceiptVoucherService;
 import com.erp.account.modules.workflow.document.WorkflowDocument;
 import com.erp.account.modules.workflow.document.WorkflowDocumentAdapter;
+import com.erp.account.enums.ReceiptVoucherStatus;
+import com.erp.account.security.CurrentUserContext;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -37,9 +40,49 @@ public class ReceiptVoucherWorkflowAdapter implements WorkflowDocumentAdapter {
         public String getDocumentNumber() { return voucher.getReceiptNo(); }
         public BigDecimal getAmount() { return voucher.getReceiptAmount(); }
         public UUID getOwnerId() { return voucher.getCreatedBy(); }
-        public void onWorkflowSubmitted() { service.submitForApproval(voucher.getId()); }
-        public void onWorkflowApproved() { service.approveReceipt(voucher.getId()); service.postReceipt(voucher.getId()); }
-        public void onWorkflowRejected() { service.rejectReceipt(voucher.getId()); }
-        public void onWorkflowCancelled() { service.cancelReceipt(voucher.getId()); }
+
+        @Transactional
+        public void onWorkflowSubmitted() {
+            voucher.setReceiptStatus(ReceiptVoucherStatus.SUBMITTED);
+            repository.save(voucher);
+        }
+
+        @Transactional
+        public void onWorkflowApproved() {
+            if (ReceiptVoucherStatus.POSTED.equals(voucher.getReceiptStatus())) {
+                return;
+            }
+            voucher.setReceiptStatus(ReceiptVoucherStatus.APPROVED);
+            voucher.setApprovedBy(CurrentUserContext.getUserId());
+            voucher.setApprovedDate(LocalDateTime.now());
+            repository.save(voucher);
+            service.postReceipt(voucher.getId());
+        }
+
+        @Transactional
+        public void onWorkflowRejected() {
+            if (ReceiptVoucherStatus.POSTED.equals(voucher.getReceiptStatus())) {
+                return;
+            }
+            voucher.setReceiptStatus(ReceiptVoucherStatus.REJECTED);
+            repository.save(voucher);
+        }
+
+        @Transactional
+        public void onWorkflowCancelled() {
+            if (ReceiptVoucherStatus.POSTED.equals(voucher.getReceiptStatus())) {
+                return;
+            }
+            service.cancelReceipt(voucher.getId());
+        }
+
+        @Transactional
+        public void onWorkflowReturned() {
+            if (ReceiptVoucherStatus.POSTED.equals(voucher.getReceiptStatus())) {
+                return;
+            }
+            voucher.setReceiptStatus(ReceiptVoucherStatus.DRAFT);
+            repository.save(voucher);
+        }
     }
 }

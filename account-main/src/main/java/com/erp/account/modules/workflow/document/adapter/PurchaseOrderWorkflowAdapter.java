@@ -1,6 +1,7 @@
 package com.erp.account.modules.workflow.document.adapter;
 
 import com.erp.account.modules.purchaseorder.entity.PurchaseOrder;
+import com.erp.account.modules.purchaseorder.entity.PurchaseOrderStatus;
 import com.erp.account.modules.purchaseorder.repository.PurchaseOrderRepository;
 import com.erp.account.modules.purchaseorder.service.PurchaseOrderService;
 import com.erp.account.modules.workflow.document.WorkflowDocument;
@@ -37,9 +38,27 @@ public class PurchaseOrderWorkflowAdapter implements WorkflowDocumentAdapter {
         public String getDocumentNumber() { return order.getPoNumber(); }
         public BigDecimal getAmount() { return order.getTotalAmount(); }
         public UUID getOwnerId() { return order.getCreatedBy(); }
-        public void onWorkflowSubmitted() { service.submitForApproval(order.getCompanyId(), order.getId()); }
-        public void onWorkflowApproved() { service.approvePurchaseOrder(order.getCompanyId(), order.getId()); }
-        public void onWorkflowRejected() { service.rejectPurchaseOrder(order.getCompanyId(), order.getId(), "Rejected by workflow"); }
-        public void onWorkflowCancelled() { service.cancelPurchaseOrder(order.getCompanyId(), order.getId(), "Cancelled by workflow"); }
+        @Transactional
+        public void onWorkflowSubmitted() {
+            order.setStatus(PurchaseOrderStatus.PENDING_APPROVAL);
+            repository.save(order);
+        }
+        @Transactional
+        public void onWorkflowReturned() {
+            order.setStatus(PurchaseOrderStatus.DRAFT);
+            repository.save(order);
+        }
+        @Transactional
+        public void onWorkflowApproved() {
+            service.approvePurchaseOrder(order.getCompanyId(), order.getId());
+        }
+        @Transactional
+        public void onWorkflowRejected() {
+            service.rejectPurchaseOrder(order.getCompanyId(), order.getId(), "Rejected by workflow");
+        }
+        @Transactional
+        public void onWorkflowCancelled() {
+            service.cancelPurchaseOrder(order.getCompanyId(), order.getId(), "Cancelled by workflow");
+        }
     }
 }

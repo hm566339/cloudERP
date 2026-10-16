@@ -6,6 +6,7 @@ import com.erp.workflow.enums.WorkflowExecutionType;
 import com.erp.workflow.enums.WorkflowRejectionAction;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -30,6 +31,17 @@ public class WorkflowDefinitionResponse {
     private LocalDateTime effectiveFrom;
     private LocalDateTime effectiveTo;
     private LocalDateTime createdAt;
+
+    private UUID initiatedByRoleId;
+    private String initiatedByRoleName;
+    private String customerScope;
+    private BigDecimal approvalThreshold;
+    private Boolean isApprovalRequired;
+    private Boolean customerAcceptance;
+    private Boolean autoCreateOrder;
+    private Boolean emailNotifications;
+    private String internalNotes;
+
     private List<StageResponse> stages;
     private List<TransitionResponse> transitions;
 

@@ -300,10 +300,13 @@ public class ApInvoiceController {
     // WORKFLOW ACTION ENDPOINTS
     // ============================================================
 
-    @PostMapping("/{id}/submit-for-approval")
-    @Operation(summary = "Submit for approval", description = "Submits a draft invoice for approval")
-    public ResponseEntity<ApiResponse<ApInvoiceResponse>> submitForApproval(@PathVariable UUID id) {
-        ApInvoiceResponse response = apInvoiceService.submitForApproval(id);
+    @PostMapping({"/{id}/submit-for-approval", "/{id}/submit-approval", "/{id}/submit"})
+    @Operation(summary = "Submit for approval", description = "Submits a draft invoice for approval and initiates workflow")
+    public ResponseEntity<ApiResponse<ApInvoiceResponse>> submitForApproval(
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, String> body) {
+        String comments = body != null ? body.get("comments") : null;
+        ApInvoiceResponse response = apInvoiceService.submitForApproval(id, comments);
         return ResponseEntity.ok(ApiResponse.success(response, "AP invoice submitted for approval"));
     }
 

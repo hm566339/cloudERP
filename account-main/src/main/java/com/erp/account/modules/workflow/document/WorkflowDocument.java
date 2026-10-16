@@ -15,4 +15,5 @@ public interface WorkflowDocument {
     default void onWorkflowApproved() { }
     default void onWorkflowRejected() { }
     default void onWorkflowCancelled() { }
+    default void onWorkflowReturned() { onWorkflowSubmitted(); }
 }

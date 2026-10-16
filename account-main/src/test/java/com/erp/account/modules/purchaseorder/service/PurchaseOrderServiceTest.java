@@ -14,6 +14,7 @@ import com.erp.account.modules.purchaseorder.mapper.PurchaseOrderMapper;
 import com.erp.account.modules.purchaseorder.repository.PurchaseOrderItemRepository;
 import com.erp.account.modules.purchaseorder.repository.PurchaseOrderRepository;
 import com.erp.account.modules.purchaseorder.service.impl.PurchaseOrderServiceImpl;
+import com.erp.account.integration.workflow.client.WorkflowClient;
 import com.erp.account.modules.vendor.entity.Vendor;
 import com.erp.account.modules.vendor.repository.VendorRepository;
 import com.erp.account.modules.vouchersequence.service.VoucherSequenceService;
@@ -72,6 +73,9 @@ public class PurchaseOrderServiceTest {
 
     @Mock
     private com.erp.account.common.service.WarehouseLookupService warehouseLookupService;
+
+    @Mock
+    private WorkflowClient workflowClient;
 
     @InjectMocks
     private PurchaseOrderServiceImpl purchaseOrderService;

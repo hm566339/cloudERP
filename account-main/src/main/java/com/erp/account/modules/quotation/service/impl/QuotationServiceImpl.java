@@ -51,6 +51,8 @@ import com.erp.account.modules.settings.repository.PaymentTermRepository;
 import com.erp.account.modules.settings.repository.TermsConditionRepository;
 import com.erp.account.email.service.QuotationEmailService;
 import com.erp.account.modules.quotation.service.QuotationPdfService;
+import com.erp.account.integration.workflow.client.WorkflowClient;
+import com.erp.account.integration.workflow.dto.WorkflowTransactionDto;
 
 @Slf4j
 @Service
@@ -71,6 +73,7 @@ public class QuotationServiceImpl implements QuotationService {
     private final com.erp.account.modules.settings.repository.WarrantyTermRepository warrantyTermRepository;
     private final QuotationEmailService quotationEmailService;
     private final QuotationPdfService quotationPdfService;
+    private final WorkflowClient workflowClient;
 
     @Override
     @Transactional
@@ -288,6 +291,18 @@ public class QuotationServiceImpl implements QuotationService {
             throw new BadRequestException("Only DRAFT quotations can be approved");
         }
 
+        // Prevent bypassing active pending workflow
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "QUOTATION", id);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Quotation cannot be approved directly while workflow approval is pending. Please approve via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped or completed for quotation {}: {}", id, e.getMessage());
+        }
+
         quotation.setStatus(QuotationStatus.SENT);
         quotation.setApprovedBy(TenantUtils.getCurrentUserId());
         quotation.setApprovedAt(LocalDateTime.now());
@@ -299,11 +314,57 @@ public class QuotationServiceImpl implements QuotationService {
 
     @Override
     @Transactional
+    public QuotationResponse submitForApproval(UUID companyId, UUID id, String comments) {
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        Quotation quotation = quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)
+                .orElseThrow(() -> new QuotationNotFoundException(id));
+
+        if (quotation.getStatus() != QuotationStatus.DRAFT) {
+            throw new BadRequestException("Only DRAFT quotations can be submitted for approval. Current status: " + quotation.getStatus());
+        }
+
+        // Prevent duplicate workflow submission
+        try {
+            WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "QUOTATION", quotation.getId());
+            if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
+                throw new BadRequestException("Quotation is already submitted for approval with transaction: " + existingTx.getId());
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("No existing workflow transaction found for quotation {}", id);
+        }
+
+        workflowClient.submitWorkflow(
+                resolvedCompanyId,
+                "QUOTATION",
+                quotation.getId(),
+                quotation.getQuotationNumber(),
+                comments != null ? comments : "Submitted quotation for approval"
+        );
+
+        log.info("Quotation {} submitted for approval to workflow-service", quotation.getQuotationNumber());
+        return quotationMapper.toResponse(quotation);
+    }
+
+    @Override
+    @Transactional
     public QuotationResponse sendQuotation(UUID companyId, UUID id) {
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "QUOTATION", id);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Quotation cannot be sent while workflow approval is pending.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for send quotation {}: {}", id, e.getMessage());
+        }
+
         QuotationResponse response = changeStatus(companyId, id, QuotationStatus.SENT);
 
         try {
-            UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
             Quotation quotation = quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)
                     .orElse(null);
 

@@ -204,4 +204,108 @@ class WorkflowDefinitionServiceTest {
         verify(stageRepository).save(stage);
         verify(transitionRepository).save(transition);
     }
+
+    @Test
+    void testUpdateDefinition_PreservesVersionAndPersistsConfigurationFields() {
+        UUID companyId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+        UUID roleId = UUID.randomUUID();
+
+        WorkflowDefinition existingDef = WorkflowDefinition.builder()
+                .id(defId)
+                .companyId(companyId)
+                .workflowCode("SALES_APPROVAL")
+                .workflowName("Old Name")
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .version(1)
+                .isActive(true)
+                .customerScope("all")
+                .build();
+
+        CreateWorkflowDefinitionRequest updateReq = CreateWorkflowDefinitionRequest.builder()
+                .companyId(companyId)
+                .workflowCode("SALES_APPROVAL")
+                .workflowName("Updated Name")
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .initiatedByRoleId(roleId)
+                .initiatedByRoleName("Accountant")
+                .customerScope("specific")
+                .approvalThreshold(new java.math.BigDecimal("50000.00"))
+                .isApprovalRequired(true)
+                .customerAcceptance(true)
+                .autoCreateOrder(true)
+                .emailNotifications(false)
+                .internalNotes("Persisted note")
+                .stages(List.of(
+                        CreateWorkflowDefinitionRequest.StageRequest.builder()
+                                .stageCode("APPROVAL_1")
+                                .stageName("Manager Approval")
+                                .sequenceNo(1)
+                                .executionType(WorkflowExecutionType.SEQUENTIAL)
+                                .rejectionAction(WorkflowRejectionAction.REJECT_DOCUMENT)
+                                .build()
+                ))
+                .build();
+
+        when(definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(defId, companyId))
+                .thenReturn(Optional.of(existingDef));
+        when(definitionRepository.save(any(WorkflowDefinition.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(stageRepository.save(any()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(defId))
+                .thenReturn(Collections.emptyList());
+        when(transitionRepository.findByWorkflowDefinitionIdAndIsDeletedFalse(defId))
+                .thenReturn(Collections.emptyList());
+
+        WorkflowDefinitionResponse response = definitionService.updateDefinition(defId, updateReq);
+
+        assertNotNull(response);
+        assertEquals(defId, response.getId());
+        assertEquals("Updated Name", response.getWorkflowName());
+        assertEquals(1, response.getVersion(), "Version should not be incremented on in-place update");
+        assertEquals("specific", response.getCustomerScope());
+        assertEquals(new java.math.BigDecimal("50000.00"), response.getApprovalThreshold());
+        assertTrue(response.getCustomerAcceptance());
+        assertTrue(response.getAutoCreateOrder());
+        assertFalse(response.getEmailNotifications());
+        assertEquals("Persisted note", response.getInternalNotes());
+        assertEquals(roleId, response.getInitiatedByRoleId());
+        assertEquals("Accountant", response.getInitiatedByRoleName());
+    }
+
+    @Test
+    void testCanonicalFallback_SalesAndQuotation() {
+        UUID companyId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+
+        WorkflowDefinition salesDef = WorkflowDefinition.builder()
+                .id(defId)
+                .companyId(companyId)
+                .workflowCode("SALES_APPROVAL")
+                .workflowName("Sales Approval")
+                .moduleName("SALES")
+                .documentType("SALES")
+                .version(1)
+                .isActive(true)
+                .build();
+
+        when(definitionRepository.findActiveByModuleAndDocumentType(companyId, "SALES", "QUOTATION"))
+                .thenReturn(Collections.emptyList());
+        when(definitionRepository.findActiveByModuleAndDocumentType(companyId, "SALES", "SALES"))
+                .thenReturn(List.of(salesDef));
+        when(stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(defId))
+                .thenReturn(Collections.emptyList());
+        when(transitionRepository.findByWorkflowDefinitionIdAndIsDeletedFalse(defId))
+                .thenReturn(Collections.emptyList());
+
+        WorkflowDefinitionResponse response = definitionService.getActiveDefinitionByModuleAndDocumentType(
+                companyId, "SALES", "QUOTATION");
+
+        assertNotNull(response);
+        assertEquals("SALES_APPROVAL", response.getWorkflowCode());
+        assertEquals("SALES", response.getDocumentType());
+    }
 }

@@ -68,8 +68,40 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                     ? definitionRepository.findActiveByModuleAndDocumentType(request.getCompanyId(), request.getModuleName(), request.getDocumentType())
                     : definitionRepository.findActiveByDocumentType(request.getCompanyId(), request.getDocumentType());
 
+            // If moduleName was specified but no direct match, check definitions by documentType that are compatible with the requested module
+            if (defs.isEmpty() && StringUtils.hasText(request.getModuleName())) {
+                List<WorkflowDefinition> candidateDefs = definitionRepository.findActiveByDocumentType(request.getCompanyId(), request.getDocumentType());
+                defs = candidateDefs.stream()
+                        .filter(d -> isModuleCompatible(request.getModuleName(), d.getModuleName(), request.getDocumentType()))
+                        .collect(Collectors.toList());
+            }
+
+            // Safe documentType alias for Quotation/Sales strictly bounded to SALES or ACCOUNT modules
+            if (defs.isEmpty() && "QUOTATION".equalsIgnoreCase(request.getDocumentType())) {
+                String safeModule = StringUtils.hasText(request.getModuleName()) ? request.getModuleName() : "SALES";
+                if ("SALES".equalsIgnoreCase(safeModule) || "ACCOUNT".equalsIgnoreCase(safeModule)) {
+                    defs = definitionRepository.findActiveByModuleAndDocumentType(request.getCompanyId(), safeModule, "SALES");
+                    if (defs.isEmpty()) {
+                        defs = definitionRepository.findActiveByDocumentType(request.getCompanyId(), "SALES").stream()
+                                .filter(d -> isModuleCompatible(safeModule, d.getModuleName(), "SALES"))
+                                .collect(Collectors.toList());
+                    }
+                }
+            } else if (defs.isEmpty() && "SALES".equalsIgnoreCase(request.getDocumentType())) {
+                String safeModule = StringUtils.hasText(request.getModuleName()) ? request.getModuleName() : "SALES";
+                if ("SALES".equalsIgnoreCase(safeModule) || "ACCOUNT".equalsIgnoreCase(safeModule)) {
+                    defs = definitionRepository.findActiveByModuleAndDocumentType(request.getCompanyId(), safeModule, "QUOTATION");
+                    if (defs.isEmpty()) {
+                        defs = definitionRepository.findActiveByDocumentType(request.getCompanyId(), "QUOTATION").stream()
+                                .filter(d -> isModuleCompatible(safeModule, d.getModuleName(), "QUOTATION"))
+                                .collect(Collectors.toList());
+                    }
+                }
+            }
+
             if (defs.isEmpty()) {
-                throw new ResourceNotFoundException("No active WorkflowDefinition found for documentType: " + request.getDocumentType());
+                throw new ResourceNotFoundException("No active WorkflowDefinition found for documentType: " + request.getDocumentType() +
+                        (request.getModuleName() != null ? " in module: " + request.getModuleName() : ""));
             }
             definition = defs.get(0);
         }
@@ -206,6 +238,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         LocalDateTime now = LocalDateTime.now();
         WorkflowTransaction txn = task.getWorkflowTransaction();
         WorkflowStage stage = task.getWorkflowStage();
+
+        // Enforce separation of duties: document initiator cannot approve their own workflow task
+        if (txn != null && txn.getInitiatedBy() != null && txn.getInitiatedBy().equals(userId)) {
+            log.warn("Separation of duties violation: user {} attempted to approve workflow transaction {} initiated by them", userId, txn.getId());
+            throw new UnauthorizedWorkflowActionException("Document initiator cannot approve their own workflow task (separation of duties).");
+        }
 
         // Mark task approved
         task.setTaskStatus(WorkflowTaskStatus.APPROVED);
@@ -928,5 +966,42 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 .auditTrail(auditTrail)
                 .formSchema(formSchema)
                 .build();
+    }
+
+    public static boolean isModuleCompatible(String requestedModule, String definitionModule, String documentType) {
+        if (!StringUtils.hasText(requestedModule) || !StringUtils.hasText(definitionModule)) {
+            return true;
+        }
+        if (requestedModule.equalsIgnoreCase(definitionModule)) {
+            return true;
+        }
+        String docType = documentType != null ? documentType.toUpperCase() : "";
+        switch (docType) {
+            case "QUOTATION":
+            case "SALES_ORDER":
+            case "SALES_INVOICE":
+            case "SALES":
+                return ("SALES".equalsIgnoreCase(requestedModule) || "ACCOUNT".equalsIgnoreCase(requestedModule))
+                        && ("SALES".equalsIgnoreCase(definitionModule) || "ACCOUNT".equalsIgnoreCase(definitionModule));
+            case "PURCHASE_ORDER":
+            case "AP_INVOICE":
+            case "PURCHASE":
+                return ("PURCHASE".equalsIgnoreCase(requestedModule) || "ACCOUNT".equalsIgnoreCase(requestedModule))
+                        && ("PURCHASE".equalsIgnoreCase(definitionModule) || "ACCOUNT".equalsIgnoreCase(definitionModule));
+            case "EXPENSE_REQUEST":
+            case "EXPENSE":
+                return ("EXPENSES".equalsIgnoreCase(requestedModule) || "EXPENSE".equalsIgnoreCase(requestedModule) || "ACCOUNT".equalsIgnoreCase(requestedModule))
+                        && ("EXPENSES".equalsIgnoreCase(definitionModule) || "EXPENSE".equalsIgnoreCase(definitionModule) || "ACCOUNT".equalsIgnoreCase(definitionModule));
+            case "RECEIPT_VOUCHER":
+            case "PAYMENT_VOUCHER":
+            case "JOURNAL_ENTRY":
+            case "FISCAL_YEAR":
+                return "ACCOUNT".equalsIgnoreCase(requestedModule) && "ACCOUNT".equalsIgnoreCase(definitionModule);
+            case "STOCK_TRANSFER":
+            case "STOCK_ADJUSTMENT":
+                return "INVENTORY".equalsIgnoreCase(requestedModule) && "INVENTORY".equalsIgnoreCase(definitionModule);
+            default:
+                return false;
+        }
     }
 }

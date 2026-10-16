@@ -73,6 +73,15 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                 .isDefault(request.getIsDefault() != null ? request.getIsDefault() : false)
                 .effectiveFrom(request.getEffectiveFrom() != null ? request.getEffectiveFrom() : LocalDateTime.now())
                 .effectiveTo(request.getEffectiveTo())
+                .initiatedByRoleId(request.getInitiatedByRoleId())
+                .initiatedByRoleName(request.getInitiatedByRoleName())
+                .customerScope(request.getCustomerScope() != null ? request.getCustomerScope() : "all")
+                .approvalThreshold(request.getApprovalThreshold())
+                .isApprovalRequired(request.getIsApprovalRequired() != null ? request.getIsApprovalRequired() : true)
+                .customerAcceptance(request.getCustomerAcceptance() != null ? request.getCustomerAcceptance() : false)
+                .autoCreateOrder(request.getAutoCreateOrder() != null ? request.getAutoCreateOrder() : false)
+                .emailNotifications(request.getEmailNotifications() != null ? request.getEmailNotifications() : true)
+                .internalNotes(request.getInternalNotes())
                 .build();
 
         definition = definitionRepository.save(definition);
@@ -172,6 +181,12 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
     public WorkflowDefinitionResponse getActiveDefinitionByDocumentType(UUID companyId, String documentType) {
         List<WorkflowDefinition> defs = definitionRepository.findActiveByDocumentType(companyId, documentType);
         if (defs.isEmpty()) {
+            String fallback = getCanonicalDocumentTypeFallback(documentType);
+            if (fallback != null) {
+                defs = definitionRepository.findActiveByDocumentType(companyId, fallback);
+            }
+        }
+        if (defs.isEmpty()) {
             throw new ResourceNotFoundException("Active WorkflowDefinition for documentType: " + documentType);
         }
         return mapToResponse(defs.get(0));
@@ -182,10 +197,29 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
     public WorkflowDefinitionResponse getActiveDefinitionByModuleAndDocumentType(UUID companyId, String moduleName, String documentType) {
         List<WorkflowDefinition> defs = definitionRepository.findActiveByModuleAndDocumentType(companyId, moduleName, documentType);
         if (defs.isEmpty()) {
-            // Fallback to documentType across modules
-            return getActiveDefinitionByDocumentType(companyId, documentType);
+            String fallback = getCanonicalDocumentTypeFallback(documentType);
+            if (fallback != null) {
+                defs = definitionRepository.findActiveByModuleAndDocumentType(companyId, moduleName, fallback);
+            }
+        }
+        if (defs.isEmpty()) {
+            // Find active definitions by documentType that are compatible with the requested module
+            List<WorkflowDefinition> candidateDefs = definitionRepository.findActiveByDocumentType(companyId, documentType);
+            defs = candidateDefs.stream()
+                    .filter(d -> WorkflowExecutionServiceImpl.isModuleCompatible(moduleName, d.getModuleName(), documentType))
+                    .collect(Collectors.toList());
+        }
+        if (defs.isEmpty()) {
+            throw new ResourceNotFoundException("Active WorkflowDefinition for documentType: " + documentType +
+                    (moduleName != null ? " in module: " + moduleName : ""));
         }
         return mapToResponse(defs.get(0));
+    }
+
+    private String getCanonicalDocumentTypeFallback(String documentType) {
+        if ("QUOTATION".equalsIgnoreCase(documentType)) return "SALES";
+        if ("SALES".equalsIgnoreCase(documentType)) return "QUOTATION";
+        return null;
     }
 
     @Override
@@ -233,6 +267,33 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         }
         if (request.getEffectiveTo() != null) {
             definition.setEffectiveTo(request.getEffectiveTo());
+        }
+        if (request.getInitiatedByRoleId() != null) {
+            definition.setInitiatedByRoleId(request.getInitiatedByRoleId());
+        }
+        if (request.getInitiatedByRoleName() != null) {
+            definition.setInitiatedByRoleName(request.getInitiatedByRoleName());
+        }
+        if (request.getCustomerScope() != null) {
+            definition.setCustomerScope(request.getCustomerScope());
+        }
+        if (request.getApprovalThreshold() != null) {
+            definition.setApprovalThreshold(request.getApprovalThreshold());
+        }
+        if (request.getIsApprovalRequired() != null) {
+            definition.setIsApprovalRequired(request.getIsApprovalRequired());
+        }
+        if (request.getCustomerAcceptance() != null) {
+            definition.setCustomerAcceptance(request.getCustomerAcceptance());
+        }
+        if (request.getAutoCreateOrder() != null) {
+            definition.setAutoCreateOrder(request.getAutoCreateOrder());
+        }
+        if (request.getEmailNotifications() != null) {
+            definition.setEmailNotifications(request.getEmailNotifications());
+        }
+        if (request.getInternalNotes() != null) {
+            definition.setInternalNotes(request.getInternalNotes());
         }
 
         UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
@@ -350,7 +411,54 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
     public void activateDefinition(UUID id, UUID companyId) {
         WorkflowDefinition def = definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkflowDefinition", "id", id));
+
+        // Enforce only one active workflow per company, module, and document type
+        List<WorkflowDefinition> otherActive = def.getModuleName() != null
+                ? definitionRepository.findActiveByModuleAndDocumentType(companyId, def.getModuleName(), def.getDocumentType())
+                : definitionRepository.findActiveByDocumentType(companyId, def.getDocumentType());
+
+        for (WorkflowDefinition other : otherActive) {
+            if (!other.getId().equals(def.getId())) {
+                other.setIsActive(false);
+                other.setIsDefault(false);
+                other.setUpdatedAt(LocalDateTime.now());
+                definitionRepository.save(other);
+            }
+        }
+
+        // Also check canonical documentType fallback (QUOTATION <-> SALES)
+        if ("QUOTATION".equalsIgnoreCase(def.getDocumentType()) || "SALES".equalsIgnoreCase(def.getDocumentType())) {
+            String altType = "QUOTATION".equalsIgnoreCase(def.getDocumentType()) ? "SALES" : "QUOTATION";
+            List<WorkflowDefinition> altActive = def.getModuleName() != null
+                    ? definitionRepository.findActiveByModuleAndDocumentType(companyId, def.getModuleName(), altType)
+                    : definitionRepository.findActiveByDocumentType(companyId, altType);
+            for (WorkflowDefinition alt : altActive) {
+                if (!alt.getId().equals(def.getId())) {
+                    alt.setIsActive(false);
+                    alt.setIsDefault(false);
+                    alt.setUpdatedAt(LocalDateTime.now());
+                    definitionRepository.save(alt);
+                }
+            }
+        }
+
+        // Deactivate other versions of same workflowCode
+        List<WorkflowDefinition> sameCodeDefs = definitionRepository.findByCompanyIdAndWorkflowCodeAndIsDeletedFalse(companyId, def.getWorkflowCode());
+        for (WorkflowDefinition other : sameCodeDefs) {
+            if (!other.getId().equals(def.getId()) && Boolean.TRUE.equals(other.getIsActive())) {
+                other.setIsActive(false);
+                other.setIsDefault(false);
+                other.setUpdatedAt(LocalDateTime.now());
+                definitionRepository.save(other);
+            }
+        }
+
         def.setIsActive(true);
+        UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
+        String currentUsername = SecurityUtils.getCurrentUsername();
+        def.setUpdatedBy(currentUserId);
+        def.setUpdatedByUsername(currentUsername);
+        def.setUpdatedAt(LocalDateTime.now());
         definitionRepository.save(def);
     }
 
@@ -360,6 +468,11 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         WorkflowDefinition def = definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkflowDefinition", "id", id));
         def.setIsActive(false);
+        UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
+        String currentUsername = SecurityUtils.getCurrentUsername();
+        def.setUpdatedBy(currentUserId);
+        def.setUpdatedByUsername(currentUsername);
+        def.setUpdatedAt(LocalDateTime.now());
         definitionRepository.save(def);
     }
 
@@ -474,6 +587,15 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                 .effectiveFrom(def.getEffectiveFrom())
                 .effectiveTo(def.getEffectiveTo())
                 .createdAt(def.getCreatedAt())
+                .initiatedByRoleId(def.getInitiatedByRoleId())
+                .initiatedByRoleName(def.getInitiatedByRoleName())
+                .customerScope(def.getCustomerScope())
+                .approvalThreshold(def.getApprovalThreshold())
+                .isApprovalRequired(def.getIsApprovalRequired())
+                .customerAcceptance(def.getCustomerAcceptance())
+                .autoCreateOrder(def.getAutoCreateOrder())
+                .emailNotifications(def.getEmailNotifications())
+                .internalNotes(def.getInternalNotes())
                 .stages(stageResponses)
                 .transitions(transitionResponses)
                 .build();

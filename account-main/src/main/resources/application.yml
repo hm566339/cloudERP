@@ -129,6 +129,8 @@ expense:
 workflow:
   service:
     base-url: ${WORKFLOW_SERVICE_BASE_URL:http://localhost:8083}
+  callback:
+    secret: ${WORKFLOW_CALLBACK_SECRET:erp-workflow-internal-callback-secret}
 
 account:
   service:

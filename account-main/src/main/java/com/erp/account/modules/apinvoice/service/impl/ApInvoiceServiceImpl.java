@@ -33,6 +33,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.erp.account.modules.company.repository.CompanyRepository;
 import com.erp.account.modules.apinvoice.service.ApInvoiceService;
 import com.erp.account.modules.integration.inventory.service.InventoryIntegrationService;
+import com.erp.account.integration.workflow.client.WorkflowClient;
+import com.erp.account.integration.workflow.dto.WorkflowTransactionDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -121,6 +123,7 @@ public class ApInvoiceServiceImpl implements ApInvoiceService {
         // Mappers
         private final ApInvoiceMapper apInvoiceMapper;
         private final ApInvoiceItemMapper apInvoiceItemMapper;
+        private final WorkflowClient workflowClient;
 
         // ============================================================
         // INVOICE LIFECYCLE MANAGEMENT
@@ -1120,18 +1123,69 @@ public class ApInvoiceServiceImpl implements ApInvoiceService {
 
         @Override
         public ApInvoiceResponse submitForApproval(UUID invoiceId) {
+                return submitForApproval(invoiceId, null);
+        }
+
+        @Override
+        public ApInvoiceResponse submitForApproval(UUID invoiceId, String comments) {
                 log.info("Submitting AP invoice for approval: {}", invoiceId);
                 ApInvoice invoice = getApInvoiceEntity(invoiceId);
+                UUID companyId = invoice.getCompany() != null ? invoice.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+
+                // Prevent duplicate workflow submission
+                try {
+                        WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(companyId, "AP_INVOICE", invoice.getId());
+                        if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
+                                throw new BadRequestException("AP Invoice is already submitted for approval with transaction: " + existingTx.getId());
+                        }
+                } catch (BadRequestException e) {
+                        throw e;
+                } catch (Exception e) {
+                        log.debug("No existing workflow transaction found for AP invoice {}", invoiceId);
+                }
+
+                try {
+                        workflowClient.submitWorkflow(
+                                        companyId,
+                                        "AP_INVOICE",
+                                        invoice.getId(),
+                                        invoice.getInvoiceNo(),
+                                        comments != null ? comments : "Submitted AP invoice for approval"
+                        );
+                        log.info("AP invoice {} submitted for approval to workflow-service", invoice.getInvoiceNo());
+                } catch (BadRequestException e) {
+                        throw e;
+                } catch (Exception e) {
+                        log.error("Workflow engine submission failed for AP invoice {}. Error: {}", invoiceId, e.getMessage());
+                        throw new BadRequestException("Failed to submit AP invoice for workflow approval: " + e.getMessage());
+                }
+
                 invoiceWorkflowService.submitForApproval(invoice);
+
                 return enrichInvoiceResponse(apInvoiceMapper.entityToResponse(apInvoiceRepository.save(invoice)));
         }
+
 
         @Override
         public ApInvoiceResponse approveInvoice(UUID invoiceId) {
                 log.info("Approving AP invoice: {}", invoiceId);
                 ApInvoice invoice = getApInvoiceEntity(invoiceId);
+                UUID companyId = invoice.getCompany() != null ? invoice.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+
                 if (invoice.getCreatedBy() != null && invoice.getCreatedBy().equals(TenantUtils.getCurrentUserId())) {
                         throw new SecurityException("Creator cannot approve their own document.");
+                }
+
+                // Prevent bypassing active pending workflow
+                try {
+                        WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "AP_INVOICE", invoiceId);
+                        if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                                throw new BadRequestException("AP Invoice cannot be approved directly while workflow approval is pending. Please approve via the workflow.");
+                        }
+                } catch (BadRequestException e) {
+                        throw e;
+                } catch (Exception e) {
+                        log.debug("Workflow check skipped for AP invoice {}: {}", invoiceId, e.getMessage());
                 }
 
                 // 3-Way match validation before approval
@@ -1211,9 +1265,24 @@ public class ApInvoiceServiceImpl implements ApInvoiceService {
         public ApInvoiceResponse rejectInvoice(UUID invoiceId) {
                 log.info("Rejecting AP invoice: {}", invoiceId);
                 ApInvoice invoice = getApInvoiceEntity(invoiceId);
+                UUID companyId = invoice.getCompany() != null ? invoice.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+
+                // Prevent bypassing active pending workflow
+                try {
+                        WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "AP_INVOICE", invoiceId);
+                        if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                                throw new BadRequestException("AP Invoice cannot be rejected directly while workflow approval is pending. Please reject via the workflow.");
+                        }
+                } catch (BadRequestException e) {
+                        throw e;
+                } catch (Exception e) {
+                        log.debug("Workflow check skipped for AP invoice {}: {}", invoiceId, e.getMessage());
+                }
+
                 invoiceWorkflowService.reject(invoice);
                 return enrichInvoiceResponse(apInvoiceMapper.entityToResponse(apInvoiceRepository.save(invoice)));
         }
+
 
         @Override
         public ApInvoiceResponse cancelInvoice(UUID invoiceId) {

@@ -20,6 +20,9 @@ public interface WorkflowDefinitionRepository extends JpaRepository<WorkflowDefi
     Optional<WorkflowDefinition> findByCompanyIdAndWorkflowCodeAndVersionAndIsDeletedFalse(
             UUID companyId, String workflowCode, Integer version);
 
+    List<WorkflowDefinition> findByCompanyIdAndWorkflowCodeAndIsDeletedFalse(
+            UUID companyId, String workflowCode);
+
     @Query("SELECT wd FROM WorkflowDefinition wd WHERE wd.companyId = :companyId " +
            "AND wd.documentType = :documentType " +
            "AND wd.isActive = true AND wd.isDeleted = false " +

@@ -37,9 +37,27 @@ public class QuotationWorkflowAdapter implements WorkflowDocumentAdapter {
         public String getDocumentNumber() { return quotation.getQuotationNumber(); }
         public BigDecimal getAmount() { return quotation.getTotalAmount(); }
         public UUID getOwnerId() { return quotation.getSalesManagerId() != null ? quotation.getSalesManagerId() : quotation.getCreatedBy(); }
-        public void onWorkflowSubmitted() { service.sendQuotation(quotation.getCompanyId(), quotation.getId()); }
-        public void onWorkflowApproved() { service.approveQuotation(quotation.getCompanyId(), quotation.getId()); }
-        public void onWorkflowRejected() { service.rejectQuotation(quotation.getCompanyId(), quotation.getId()); }
-        public void onWorkflowCancelled() { service.cancelQuotation(quotation.getCompanyId(), quotation.getId()); }
+        @Transactional
+        public void onWorkflowSubmitted() {
+            quotation.setStatus(com.erp.account.modules.quotation.entity.QuotationStatus.DRAFT);
+            repository.save(quotation);
+        }
+        @Transactional
+        public void onWorkflowApproved() {
+            service.approveQuotation(quotation.getCompanyId(), quotation.getId());
+        }
+        @Transactional
+        public void onWorkflowRejected() {
+            service.rejectQuotation(quotation.getCompanyId(), quotation.getId());
+        }
+        @Transactional
+        public void onWorkflowCancelled() {
+            service.cancelQuotation(quotation.getCompanyId(), quotation.getId());
+        }
+        @Transactional
+        public void onWorkflowReturned() {
+            quotation.setStatus(com.erp.account.modules.quotation.entity.QuotationStatus.DRAFT);
+            repository.save(quotation);
+        }
     }
 }
