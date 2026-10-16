@@ -43,6 +43,18 @@ public class BomController {
         return service.getAll().stream().map(mapper::toResponse).toList();
     }
 
+    @PostMapping("/{id}/submit")
+    public ResponseEntity<BomResponse> submit(@PathVariable UUID id, @RequestBody(required = false) java.util.Map<String, String> payload) {
+        UUID companyId = com.erp.manufacturing.util.TenantUtils.getCurrentCompanyId();
+        String comments = payload != null ? payload.get("comments") : null;
+        return ResponseEntity.ok(service.submitForApproval(id, companyId, comments));
+    }
+
+    @PostMapping("/{id}/submit-for-approval")
+    public ResponseEntity<BomResponse> submitForApproval(@PathVariable UUID id, @RequestBody(required = false) java.util.Map<String, String> payload) {
+        return submit(id, payload);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.delete(id);

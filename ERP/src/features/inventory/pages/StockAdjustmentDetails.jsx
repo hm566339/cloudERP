@@ -11,6 +11,7 @@ import {
 } from '../../../api/inventory';
 import { useAppDispatch } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
+import WorkflowActionButtons from '../../workflows/components/WorkflowActionButtons';
 
 export default function StockAdjustmentDetails() {
   const { id } = useParams();
@@ -151,6 +152,17 @@ export default function StockAdjustmentDetails() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {!isNew && id && (
+            <WorkflowActionButtons
+              module="INVENTORY"
+              documentType="STOCK_ADJUSTMENT"
+              documentId={id}
+              documentStatus={header.status}
+              onActionComplete={() => {
+                navigate(0);
+              }}
+            />
+          )}
           <button
             type="button"
             onClick={handleSave}

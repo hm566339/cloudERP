@@ -15,6 +15,8 @@ public interface OpeningStockLineRepository extends JpaRepository<OpeningStockLi
 
     List<OpeningStockLine> findAllByCompanyId(UUID companyId);
 
+    List<OpeningStockLine> findAllByOpeningStockIdAndCompanyId(UUID openingStockId, UUID companyId);
+
     boolean existsByBatchIdAndCompanyId(UUID batchId, UUID companyId);
 
     boolean existsBySerialIdAndCompanyId(UUID serialId, UUID companyId);

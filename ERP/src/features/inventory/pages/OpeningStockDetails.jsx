@@ -15,6 +15,7 @@ import {
 } from '../../../api/inventory';
 import { useWarehouseLocationList } from '../../../api/inventory/hooks/useWarehouseLocation';
 import useUrlFilters from '../../../hooks/useUrlFilters';
+import WorkflowActionButtons from '../../workflows/components/WorkflowActionButtons';
 
 export default function OpeningStockDetails() {
   const { id } = useParams();
@@ -237,6 +238,17 @@ export default function OpeningStockDetails() {
         </div>
 
         <div className="flex items-center gap-3">
+          {!isNew && id && (
+            <WorkflowActionButtons
+              module="INVENTORY"
+              documentType="OPENING_STOCK"
+              documentId={id}
+              documentStatus={formData.status}
+              onActionComplete={() => {
+                navigate(0);
+              }}
+            />
+          )}
           <button
             type="button"
             onClick={() => navigate(-1)}

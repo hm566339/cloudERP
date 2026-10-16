@@ -1,7 +1,7 @@
 import React from 'react'
 import { X, Edit, Trash2 } from 'lucide-react'
 
-export default function DataDetailsModal({ isOpen, onClose, data, title, onEdit, onDelete }) {
+export default function DataDetailsModal({ isOpen, onClose, data, title, onEdit, onDelete, actions }) {
   if (!isOpen || !data) return null
 
   // Function to format keys nicely (e.g. "customerName" -> "Customer Name")
@@ -84,7 +84,8 @@ export default function DataDetailsModal({ isOpen, onClose, data, title, onEdit,
         </div>
         
         {/* Footer */}
-        <div className="p-4 border-t border-zinc-100 flex justify-end shrink-0 bg-zinc-50/50">
+        <div className="p-4 border-t border-zinc-100 flex items-center justify-between shrink-0 bg-zinc-50/50">
+          <div>{actions}</div>
           <button onClick={onClose} className="btn-secondary">Close</button>
         </div>
 

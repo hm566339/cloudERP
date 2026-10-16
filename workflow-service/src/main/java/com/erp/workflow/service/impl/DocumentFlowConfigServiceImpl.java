@@ -212,6 +212,11 @@ public class DocumentFlowConfigServiceImpl implements DocumentFlowConfigService 
             case "EXPENSE":
             case "REIMBURSEMENT":
                 return "EXPENSES";
+            case "BOM":
+            case "PRODUCTION_ORDER":
+            case "WORK_ORDER":
+            case "PRODUCTION_COMPLETION":
+                return "MANUFACTURING";
             default:
                 return "SALES";
         }
@@ -223,6 +228,8 @@ public class DocumentFlowConfigServiceImpl implements DocumentFlowConfigService 
                 return buildDefaultPurchaseFlow(companyId);
             case "INVENTORY":
                 return buildDefaultInventoryFlow(companyId);
+            case "MANUFACTURING":
+                return buildDefaultManufacturingFlow(companyId);
             case "EXPENSES":
             case "EXPENSE":
                 return buildDefaultExpenseFlow(companyId);
@@ -330,6 +337,31 @@ public class DocumentFlowConfigServiceImpl implements DocumentFlowConfigService 
                 .isActive(true)
                 .isDefault(true)
                 .flowData(DocumentFlowDataDto.builder().nodes(nodes).transitions(Collections.emptyList()).build())
+                .build();
+    }
+
+    private DocumentFlowConfigDto buildDefaultManufacturingFlow(UUID companyId) {
+        List<DocumentFlowNodeDto> nodes = List.of(
+                DocumentFlowNodeDto.builder().documentType("BOM").displayName("Bill of Materials").tabKey("boms").routePath("/manufacturing/boms").iconName("Layers").orderIndex(1).isEnabled(true).requiredFeature("MANUFACTURING_BOM").requiredPermission("READ").build(),
+                DocumentFlowNodeDto.builder().documentType("PRODUCTION_ORDER").displayName("Production Orders").tabKey("orders").routePath("/manufacturing/production-orders").iconName("Cpu").orderIndex(2).isEnabled(true).requiredFeature("PRODUCTION_ORDERS").requiredPermission("READ").build(),
+                DocumentFlowNodeDto.builder().documentType("WORK_ORDER").displayName("Work Orders").tabKey("work-orders").routePath("/manufacturing/work-orders").iconName("Tool").orderIndex(3).isEnabled(true).requiredFeature("WORK_ORDERS").requiredPermission("READ").build(),
+                DocumentFlowNodeDto.builder().documentType("PRODUCTION_COMPLETION").displayName("Completions").tabKey("completions").routePath("/manufacturing/completions").iconName("CheckCircle").orderIndex(4).isEnabled(true).requiredFeature("PRODUCTION_COMPLETIONS").requiredPermission("READ").build()
+        );
+
+        List<DocumentFlowTransitionDto> transitions = List.of(
+                DocumentFlowTransitionDto.builder().sourceDocType("BOM").targetDocType("PRODUCTION_ORDER").actionName("Create Production Order").buttonLabel("Create Order").isAllowed(true).requiresApproval(true).conversionEndpoint("/api/manufacturing/production-orders/from-bom/{id}").requiredSourceStatuses(List.of("APPROVED", "ACTIVE")).build(),
+                DocumentFlowTransitionDto.builder().sourceDocType("PRODUCTION_ORDER").targetDocType("WORK_ORDER").actionName("Release to Work Order").buttonLabel("Release Work Order").isAllowed(true).requiresApproval(true).conversionEndpoint("/api/manufacturing/production-orders/{id}/release").requiredSourceStatuses(List.of("APPROVED", "CONFIRMED")).build(),
+                DocumentFlowTransitionDto.builder().sourceDocType("PRODUCTION_ORDER").targetDocType("PRODUCTION_COMPLETION").actionName("Record Completion").buttonLabel("Complete Production").isAllowed(true).requiresApproval(false).conversionEndpoint("/api/manufacturing/production-orders/{id}/complete").requiredSourceStatuses(List.of("RELEASED", "IN_PROGRESS", "PARTIALLY_COMPLETED")).build()
+        );
+
+        return DocumentFlowConfigDto.builder()
+                .companyId(companyId)
+                .moduleName("MANUFACTURING")
+                .flowName("Standard Manufacturing Flow")
+                .description("Default manufacturing lifecycle: BOM -> Production Order -> Work Order -> Completion")
+                .isActive(true)
+                .isDefault(true)
+                .flowData(DocumentFlowDataDto.builder().nodes(nodes).transitions(transitions).build())
                 .build();
     }
 }

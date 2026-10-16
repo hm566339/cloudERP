@@ -56,4 +56,9 @@ class ProductionStockOutCostIntegrationServiceTest {
         ProductionStockOutCostIntegrationService service = new ProductionStockOutCostIntegrationService(movementRepository, lineRepository);
         assertThrows(BusinessValidationException.class, () -> service.getCost(movementId, companyId, orderId, materialId));
     }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        CurrentUserContext.clear();
+    }
 }

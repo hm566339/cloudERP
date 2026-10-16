@@ -15,10 +15,12 @@ import java.util.UUID;
 public class BomServiceImpl implements BomService {
     private final BomRepository repository;
     private final BomMapper mapper;
+    private final com.erp.manufacturing.workflow.client.WorkflowClient workflowClient;
 
-    public BomServiceImpl(BomRepository repository, BomMapper mapper) {
+    public BomServiceImpl(BomRepository repository, BomMapper mapper, com.erp.manufacturing.workflow.client.WorkflowClient workflowClient) {
         this.repository = repository;
         this.mapper = mapper;
+        this.workflowClient = workflowClient;
     }
 
     @Override public BomResponse create(BomCreateRequest request) {
@@ -33,5 +35,26 @@ public class BomServiceImpl implements BomService {
 
     @Override public Optional<Bom> getById(UUID id) { return repository.findById(id); }
     @Override public List<Bom> getAll() { return repository.findAll(); }
+
+    @Override
+    public BomResponse submitForApproval(UUID id, UUID companyId, String comments) {
+        Bom bom = repository.findByIdAndCompanyId(id, companyId)
+                .orElseThrow(() -> new IllegalArgumentException("BOM not found with ID: " + id));
+
+        if (bom.getStatus() != null && bom.getStatus() != com.erp.manufacturing.common.enums.BomStatus.DRAFT) {
+            throw new IllegalStateException("BOM cannot be submitted from status: " + bom.getStatus());
+        }
+
+        workflowClient.submitWorkflow(
+                companyId,
+                "BOM",
+                bom.getId(),
+                bom.getBomNumber(),
+                comments != null ? comments : "Submitted BOM for approval"
+        );
+        bom.setStatus(com.erp.manufacturing.common.enums.BomStatus.PENDING_APPROVAL);
+        return mapper.toResponse(repository.save(bom));
+    }
+
     @Override public void delete(UUID id) { repository.deleteById(id); }
 }

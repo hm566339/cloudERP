@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom'
 import { useGetProductionSchedulesQuery, useCreateProductionScheduleMutation, useUpdateProductionScheduleStatusMutation } from '../../../api/inventory'
 import ProductionOrderFormModal from '../components/ProductionOrderFormModal'
 import DataDetailsModal from '../../../components/common/DataDetailsModal'
+import WorkflowActionButtons from '../../workflows/components/WorkflowActionButtons'
 import ApiFilterBar from '../../../components/common/ApiFilterBar'
 import SortableHeader from '../../../components/common/SortableHeader'
 import Pagination from '../../../components/common/Pagination'
@@ -180,7 +181,21 @@ export default function ProductionPage() {
    isOpen={!!viewingOrder} 
    onClose={() => setViewingOrder(null)} 
    data={viewingOrder} 
-   title="Production Order Details" 
+   title="Production Order Details"
+   actions={
+     viewingOrder && (
+       <WorkflowActionButtons
+         module="MANUFACTURING"
+         documentType="PRODUCTION_ORDER"
+         documentId={viewingOrder.id}
+         documentStatus={viewingOrder.status}
+         onActionComplete={() => {
+           refetch?.();
+           setViewingOrder(null);
+         }}
+       />
+     )
+   }
  />
  </div>
  )

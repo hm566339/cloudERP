@@ -8,5 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface BomRepository extends JpaRepository<Bom, UUID> {
+    Optional<Bom> findByIdAndCompanyId(UUID id, UUID companyId);
     Optional<Bom> findByCompanyIdAndBomNumber(UUID companyId, String bomNumber);
 }

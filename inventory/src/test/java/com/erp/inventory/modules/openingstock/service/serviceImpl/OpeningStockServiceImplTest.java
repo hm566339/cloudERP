@@ -50,6 +50,8 @@ class OpeningStockServiceImplTest {
     @Mock private StockMovementLineRepository stockMovementLineRepository;
     @Mock private InventoryStockService inventoryStockService;
     @Mock private ProductBatchRepository productBatchRepository;
+    @Mock private com.erp.inventory.modules.valuation.service.InventoryCostLayerService inventoryCostLayerService;
+    @Mock private com.erp.inventory.modules.period.service.InventoryPeriodService inventoryPeriodService;
 
     @InjectMocks
     private OpeningStockServiceImpl service;
@@ -102,6 +104,7 @@ class OpeningStockServiceImplTest {
         StockMovement mov = new StockMovement();
         mov.setId(UUID.randomUUID());
         lenient().when(stockMovementRepository.save(any(StockMovement.class))).thenReturn(mov);
+        lenient().when(stockMovementRepository.saveAndFlush(any(StockMovement.class))).thenReturn(mov);
 
         OpeningStock os = new OpeningStock();
         os.setId(UUID.randomUUID());
@@ -166,9 +169,9 @@ class OpeningStockServiceImplTest {
         service.create(request, companyId);
 
         ArgumentCaptor<StockMovement> movCaptor = ArgumentCaptor.forClass(StockMovement.class);
-        verify(stockMovementRepository, times(2)).save(movCaptor.capture());
+        verify(stockMovementRepository).save(movCaptor.capture());
         
-        StockMovement savedMov = movCaptor.getAllValues().get(1);
+        StockMovement savedMov = movCaptor.getValue();
         assertEquals(new BigDecimal("150"), savedMov.getTotalQuantity());
         assertEquals(new BigDecimal("165000"), savedMov.getTotalValue());
     }

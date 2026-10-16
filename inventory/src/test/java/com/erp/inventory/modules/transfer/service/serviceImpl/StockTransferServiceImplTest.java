@@ -81,6 +81,8 @@ class StockTransferServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        com.erp.inventory.common.security.CurrentUserContext.clear();
+        com.erp.inventory.common.security.CurrentUserContext.setCompanyId(companyId);
         lenient().doNothing().when(inventoryPeriodService).validateTransactionDate(any(), any());
 
         request = new StockTransferRequest();
@@ -240,5 +242,10 @@ class StockTransferServiceImplTest {
                 () -> service.reverse(transferId, companyId)
         );
         assertTrue(ex.getMessage().contains("already reversed or cancelled"));
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        com.erp.inventory.common.security.CurrentUserContext.clear();
     }
 }

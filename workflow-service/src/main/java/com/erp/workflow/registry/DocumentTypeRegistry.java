@@ -502,6 +502,23 @@ public class DocumentTypeRegistry {
 
         // --- MANUFACTURING MODULE DOCUMENTS ---
         register(DocumentTypeCapability.builder()
+                .documentType("BOM")
+                .displayName("Bill of Materials (BOM)")
+                .primaryModule("MANUFACTURING")
+                .compatibleModules(List.of("MANUFACTURING"))
+                .supportsWorkflowDefinition(true)
+                .supportsSubmission(true)
+                .supportsApproval(true)
+                .supportsRejection(true)
+                .supportsReturn(true)
+                .supportsCancellation(true)
+                .supportsCallbacks(true)
+                .supportsAutomation(false)
+                .defaultTargetDocType("PRODUCTION_ORDER")
+                .allowedTargetDocTypes(List.of("PRODUCTION_ORDER"))
+                .build());
+
+        register(DocumentTypeCapability.builder()
                 .documentType("PRODUCTION_ORDER")
                 .displayName("Production Order")
                 .primaryModule("MANUFACTURING")
@@ -514,8 +531,42 @@ public class DocumentTypeRegistry {
                 .supportsCancellation(true)
                 .supportsCallbacks(true)
                 .supportsAutomation(false)
-                .defaultTargetDocType(null)
-                .allowedTargetDocTypes(Collections.emptyList())
+                .defaultTargetDocType("WORK_ORDER")
+                .allowedTargetDocTypes(List.of("WORK_ORDER", "PRODUCTION_COMPLETION"))
+                .build());
+
+        register(DocumentTypeCapability.builder()
+                .documentType("WORK_ORDER")
+                .displayName("Work Order")
+                .primaryModule("MANUFACTURING")
+                .compatibleModules(List.of("MANUFACTURING"))
+                .supportsWorkflowDefinition(true)
+                .supportsSubmission(true)
+                .supportsApproval(true)
+                .supportsRejection(true)
+                .supportsReturn(true)
+                .supportsCancellation(true)
+                .supportsCallbacks(true)
+                .supportsAutomation(false)
+                .defaultTargetDocType("PRODUCTION_COMPLETION")
+                .allowedTargetDocTypes(List.of("PRODUCTION_COMPLETION"))
+                .build());
+
+        register(DocumentTypeCapability.builder()
+                .documentType("PRODUCTION_COMPLETION")
+                .displayName("Production Completion")
+                .primaryModule("MANUFACTURING")
+                .compatibleModules(List.of("MANUFACTURING", "INVENTORY"))
+                .supportsWorkflowDefinition(true)
+                .supportsSubmission(true)
+                .supportsApproval(true)
+                .supportsRejection(true)
+                .supportsReturn(true)
+                .supportsCancellation(true)
+                .supportsCallbacks(true)
+                .supportsAutomation(false)
+                .defaultTargetDocType("GOODS_RECEIPT")
+                .allowedTargetDocTypes(List.of("GOODS_RECEIPT"))
                 .build());
     }
 

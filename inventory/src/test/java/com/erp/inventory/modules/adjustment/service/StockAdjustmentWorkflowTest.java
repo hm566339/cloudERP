@@ -83,6 +83,8 @@ class StockAdjustmentWorkflowTest {
 
     @BeforeEach
     void setUp() {
+        com.erp.inventory.common.security.CurrentUserContext.clear();
+        com.erp.inventory.common.security.CurrentUserContext.setCompanyId(companyId);
         adapter = new StockAdjustmentWorkflowAdapter(repository, lineRepository, service);
 
         warehouse = new Warehouse();
@@ -360,5 +362,10 @@ class StockAdjustmentWorkflowTest {
         assertEquals("DRAFT", adjustment.getStatus());
         assertNull(adjustment.getStockMovementId());
         verify(inventoryStockService, never()).addStock(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        com.erp.inventory.common.security.CurrentUserContext.clear();
     }
 }

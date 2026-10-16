@@ -13,5 +13,6 @@ public interface BomService {
     BomResponse update(UUID id, BomUpdateRequest request);
     Optional<Bom> getById(UUID id);
     List<Bom> getAll();
+    BomResponse submitForApproval(UUID id, UUID companyId, String comments);
     void delete(UUID id);
 }

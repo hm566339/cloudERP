@@ -129,8 +129,10 @@ export default function WorkflowActionButtons({
     setErrorMsg(null);
     try {
       const targetType = transition.targetDocumentType;
-      // Use existing account conversion endpoints based on target
-      if (documentType === 'QUOTATION' && targetType === 'SALES_ORDER') {
+      if (transition.conversionEndpoint) {
+        const endpoint = transition.conversionEndpoint.replace('{id}', documentId);
+        await apiClient.post(endpoint);
+      } else if (documentType === 'QUOTATION' && targetType === 'SALES_ORDER') {
         await apiClient.post(`/api/account/sales/orders/from-quotation/${documentId}`);
       } else if (documentType === 'QUOTATION' && targetType === 'PROFORMA_INVOICE') {
         await apiClient.post(`/api/account/v1/proforma-invoices/from-quotation/${documentId}`);

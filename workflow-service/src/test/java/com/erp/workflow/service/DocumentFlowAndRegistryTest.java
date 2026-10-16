@@ -93,9 +93,16 @@ class DocumentFlowAndRegistryTest {
         assertTrue(DocumentTypeRegistry.isCompatible("INVENTORY", "INVENTORY", "STOCK_ADJUSTMENT"));
         assertTrue(DocumentTypeRegistry.isCompatible("INVENTORY", "INVENTORY", "STOCK_TRANSFER"));
 
+        // Manufacturing documents
+        assertTrue(DocumentTypeRegistry.isCompatible("MANUFACTURING", "MANUFACTURING", "BOM"));
+        assertTrue(DocumentTypeRegistry.isCompatible("MANUFACTURING", "MANUFACTURING", "PRODUCTION_ORDER"));
+        assertTrue(DocumentTypeRegistry.isCompatible("MANUFACTURING", "MANUFACTURING", "WORK_ORDER"));
+        assertTrue(DocumentTypeRegistry.isCompatible("MANUFACTURING", "MANUFACTURING", "PRODUCTION_COMPLETION"));
+
         // Incompatible cross-module checks
         assertFalse(DocumentTypeRegistry.isCompatible("INVENTORY", "SALES", "SALES_INVOICE"));
         assertFalse(DocumentTypeRegistry.isCompatible("SALES", "INVENTORY", "STOCK_TRANSFER"));
+        assertFalse(DocumentTypeRegistry.isCompatible("SALES", "MANUFACTURING", "PRODUCTION_ORDER"));
         assertFalse(DocumentTypeRegistry.isCompatible("UNKNOWN_MODULE", "UNKNOWN_MODULE", "QUOTATION"));
     }
 

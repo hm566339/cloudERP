@@ -11,6 +11,7 @@ import {
 import { useAppDispatch } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
 import RequirePermission from '../../../components/common/RequirePermission';
+import WorkflowActionButtons from '../../workflows/components/WorkflowActionButtons';
 
 export default function StockTransferDetails() {
   const { id } = useParams();
@@ -204,6 +205,17 @@ export default function StockTransferDetails() {
         </div>
         
         <div className="flex items-center gap-2">
+          {!isNew && id && (
+            <WorkflowActionButtons
+              module="INVENTORY"
+              documentType="STOCK_TRANSFER"
+              documentId={id}
+              documentStatus={header.status}
+              onActionComplete={() => {
+                refetch?.();
+              }}
+            />
+          )}
           {!isNew && header.status !== 'REVERSED' && (
             <RequirePermission module="INVENTORY" action="EDIT">
               <button

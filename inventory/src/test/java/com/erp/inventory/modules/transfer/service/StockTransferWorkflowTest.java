@@ -91,6 +91,8 @@ class StockTransferWorkflowTest {
 
     @BeforeEach
     void setUp() {
+        com.erp.inventory.common.security.CurrentUserContext.clear();
+        com.erp.inventory.common.security.CurrentUserContext.setCompanyId(companyId);
         adapter = new StockTransferWorkflowAdapter(repository, lineRepository, service);
 
         sourceWarehouse = new Warehouse();
@@ -397,5 +399,10 @@ class StockTransferWorkflowTest {
         assertEquals("DRAFT", transfer.getStatus());
         assertNull(transfer.getStockMovementId());
         verify(inventoryStockService, never()).removeStock(any(), any(), any(), any(), any(), any());
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        com.erp.inventory.common.security.CurrentUserContext.clear();
     }
 }

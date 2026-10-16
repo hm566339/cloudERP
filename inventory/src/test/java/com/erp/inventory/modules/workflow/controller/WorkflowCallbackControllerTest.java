@@ -130,7 +130,7 @@ class WorkflowCallbackControllerTest {
 
         assertNotNull(response);
         assertTrue(response.getBody().isSuccess());
-        verify(workflowDocument).onWorkflowApproved();
+        verify(workflowDocument).onWorkflowApproved(any());
     }
 
     @Test
@@ -188,6 +188,25 @@ class WorkflowCallbackControllerTest {
         assertNotNull(response);
         assertTrue(response.getBody().isSuccess());
         verify(workflowDocument).onWorkflowReturned();
+    }
+
+    @Test
+    void handleWorkflowCallback_OpeningStock_CallsOnWorkflowApproved() {
+        WorkflowCallbackEventDto event = WorkflowCallbackEventDto.builder()
+                .eventType("WORKFLOW_APPROVED")
+                .documentType("OPENING_STOCK")
+                .documentId(documentId)
+                .companyId(companyId)
+                .status("APPROVED")
+                .build();
+
+        when(documentRegistry.load("OPENING_STOCK", documentId, companyId)).thenReturn(workflowDocument);
+
+        ResponseEntity<ApiResponse<Void>> response = controller.handleWorkflowCallback(VALID_SECRET, event);
+
+        assertNotNull(response);
+        assertTrue(response.getBody().isSuccess());
+        verify(workflowDocument).onWorkflowApproved(any());
     }
 
     @Test

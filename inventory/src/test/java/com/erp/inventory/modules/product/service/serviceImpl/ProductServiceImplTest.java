@@ -53,6 +53,11 @@ class ProductServiceImplTest {
         com.erp.inventory.common.security.CurrentUserContext.setCompanyId(companyId);
     }
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        com.erp.inventory.common.security.CurrentUserContext.clear();
+    }
+
     @Test
     void getProductDetailById_shouldAggregateStockFromMultipleWarehouses() {
         Product product = new Product();
@@ -89,6 +94,8 @@ class ProductServiceImplTest {
         stock1_location2.setWarehouse(w1);
         stock1_location2.setQuantity(new BigDecimal("4"));
 
+        when(inventoryStockRepository.findByProductIdAndCompanyId(productId, companyId))
+                .thenReturn(Optional.of(stock1));
         when(inventoryStockRepository.findAllByProductIdAndCompanyId(productId, companyId))
                 .thenReturn(List.of(stock1, stock2, stock3, stock1_location2));
 
