@@ -115,7 +115,13 @@ export default function ProductManagement() {
       setIsFormOpen(false);
       refetch();
     } catch (error) {
-      dispatch(addAlert({ type: 'error', message: error?.response?.data?.message || 'Failed to save product' }));
+      const backendData = error?.response?.data?.data;
+      let errMsg = error?.response?.data?.message || 'Failed to save product';
+      if (backendData && typeof backendData === 'object') {
+        const details = Object.values(backendData).filter(Boolean).join(', ');
+        if (details) errMsg = details;
+      }
+      dispatch(addAlert({ type: 'error', message: errMsg }));
       throw error;
     }
   };

@@ -292,7 +292,7 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
                 type="button"
                 onClick={handlePrint}
                 disabled={isPrinting || !selectedPrinter || isLoadingPrinters}
-                className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg flex items-center justify-center gap-2 font-bold text-[12px] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
+                className="flex-[2] bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg shadow-md hover:shadow-lg flex items-center justify-center gap-2 font-bold text-[12px] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
               >
                 {isPrinting ? (
                   <>

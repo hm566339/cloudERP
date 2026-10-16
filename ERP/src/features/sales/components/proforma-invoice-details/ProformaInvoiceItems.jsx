@@ -17,43 +17,43 @@ export default function ProformaInvoiceItems({ items, currency = 'INR' }) {
           {lineItems.length} items
         </span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-white border-b border-zinc-200">
+      <div className="overflow-x-auto min-w-0 custom-scrollbar">
+        <table className="w-full text-left text-sm whitespace-nowrap" aria-label="Proforma Invoice Items">
+          <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
             <tr>
-              <th className="px-5 py-3 font-semibold text-zinc-600 text-xs w-12 text-center">#</th>
-              <th className="px-5 py-3 font-semibold text-zinc-600 text-xs">Item Details</th>
-              <th className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Qty</th>
-              <th className="px-5 py-3 font-semibold text-zinc-600 text-xs">Unit</th>
-              <th className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Unit Price</th>
-              <th className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Discount</th>
-              <th className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Taxable</th>
-              <th className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Tax</th>
-              <th className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Line Total</th>
+              <th scope="col" className="px-5 py-3 font-semibold text-zinc-600 text-xs w-12 text-center">#</th>
+              <th scope="col" className="px-5 py-3 font-semibold text-zinc-600 text-xs">Item Details</th>
+              <th scope="col" className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Qty</th>
+              <th scope="col" className="px-5 py-3 font-semibold text-zinc-600 text-xs">Unit</th>
+              <th scope="col" className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Unit Price</th>
+              <th scope="col" className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Discount</th>
+              <th scope="col" className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Taxable</th>
+              <th scope="col" className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Tax</th>
+              <th scope="col" className="px-5 py-3 font-semibold text-zinc-600 text-xs text-right">Line Total</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 bg-white">
             {lineItems.length > 0 ? (
               lineItems.map((it, i) => (
                 <tr key={i} className="hover:bg-zinc-50 transition-colors">
-                  <td className="px-5 py-3 text-center text-zinc-400 font-medium">{i + 1}</td>
+                  <td className="px-5 py-3 text-center text-zinc-400 font-medium tabular-nums">{i + 1}</td>
                   <td className="px-5 py-3">
                     <div className="font-medium text-zinc-900">{it.itemName || '—'}</div>
-                    <div className="text-[8.8px] text-zinc-500 mt-0.5">{it.description || ''}</div>
+                    {it.description && <div className="text-xs text-zinc-500 mt-0.5">{it.description}</div>}
                     {it.hsnSacCode && (
-                      <div className="text-[8px] text-zinc-400 font-mono mt-1">HSN/SAC: {it.hsnSacCode}</div>
+                      <div className="text-xs text-zinc-400 font-mono mt-0.5">HSN/SAC: {it.hsnSacCode}</div>
                     )}
                   </td>
-                  <td className="px-5 py-3 text-right font-medium text-zinc-900">{it.quantity || 0}</td>
+                  <td className="px-5 py-3 text-right font-medium text-zinc-900 tabular-nums">{it.quantity || 0}</td>
                   <td className="px-5 py-3 text-zinc-600">{it.unit || '—'}</td>
-                  <td className="px-5 py-3 text-right text-zinc-700">{fmt(it.unitPrice)}</td>
-                  <td className="px-5 py-3 text-right">
-                    <div className="text-zinc-700">{fmt(it.discountAmount || 0)}</div>
-                    {it.discountPercent > 0 && <div className="text-[8px] text-zinc-400">({it.discountPercent}%)</div>}
+                  <td className="px-5 py-3 text-right text-zinc-700 tabular-nums font-mono">₹{fmt(it.unitPrice)}</td>
+                  <td className="px-5 py-3 text-right tabular-nums font-mono">
+                    <div className="text-zinc-700">₹{fmt(it.discountAmount || 0)}</div>
+                    {it.discountPercent > 0 && <div className="text-xs text-zinc-400">({it.discountPercent}%)</div>}
                   </td>
-                  <td className="px-5 py-3 text-right text-zinc-700">{fmt(it.taxableAmount || 0)}</td>
-                  <td className="px-5 py-3 text-right text-zinc-700">{fmt(it.taxAmount || 0)}</td>
-                  <td className="px-5 py-3 text-right font-bold text-zinc-900">{fmt(it.totalAmount)}</td>
+                  <td className="px-5 py-3 text-right text-zinc-700 tabular-nums font-mono">₹{fmt(it.taxableAmount || 0)}</td>
+                  <td className="px-5 py-3 text-right text-zinc-700 tabular-nums font-mono">₹{fmt(it.taxAmount || 0)}</td>
+                  <td className="px-5 py-3 text-right font-bold text-zinc-900 tabular-nums font-mono">₹{fmt(it.totalAmount)}</td>
                 </tr>
               ))
             ) : (

@@ -127,7 +127,7 @@ export default function WorkflowRenderer({
               onClick={() => setActiveTab(tab.id)}
               className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
                 isActive
-                  ? 'border-blue-600 text-blue-600 bg-blue-50/20'
+                  ? 'border-zinc-900 text-blue-600 bg-blue-50/20'
                   : 'border-transparent text-zinc-500 hover:text-zinc-800 hover:border-zinc-300'
               }`}
             >

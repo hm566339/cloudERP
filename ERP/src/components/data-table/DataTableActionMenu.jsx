@@ -72,13 +72,13 @@ export default function DataTableActionMenu({ actions = [], row, index }) {
             aria-label={ariaLabel}
             aria-disabled={isDisabled || isLoading ? true : undefined}
             aria-pressed={action.active !== undefined ? isActive : undefined}
-            className={`w-7 h-7 flex items-center justify-center shrink-0 rounded-lg transition-colors duration-micro ease-enter active:scale-[0.96] disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500/40 focus-visible:ring-offset-1 focus-visible:ring-offset-white ${colorClass} ${customClass}`}
+            className={`w-8 h-8 sm:w-7 sm:h-7 min-w-[32px] min-h-[32px] sm:min-w-[28px] sm:min-h-[28px] flex items-center justify-center shrink-0 rounded-lg transition-colors duration-micro ease-enter active:scale-[0.96] disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500/40 focus-visible:ring-offset-1 focus-visible:ring-offset-white ${colorClass} ${customClass}`}
           >
             {RawIcon ? (
               React.isValidElement(RawIcon) ? (
                 RawIcon
               ) : (
-                <RawIcon size={15} />
+                <RawIcon size={16} />
               )
             ) : (
               <span className="text-xs font-semibold">{label}</span>

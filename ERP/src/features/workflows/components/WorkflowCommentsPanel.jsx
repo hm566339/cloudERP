@@ -72,7 +72,7 @@ export default function WorkflowCommentsPanel({
             placeholder="Write a comment or reviewer feedback..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="w-full rounded-lg border border-zinc-200 p-2.5 text-xs outline-none focus:border-blue-500 focus:bg-white transition-colors"
+            className="w-full rounded-lg border border-zinc-200 p-2.5 text-xs outline-none focus:border-zinc-400 focus:bg-white transition-colors"
           />
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-1.5 cursor-pointer text-xs text-zinc-600">
@@ -87,7 +87,7 @@ export default function WorkflowCommentsPanel({
             <button
               type="submit"
               disabled={isPosting || !newComment.trim()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-colors disabled:opacity-40"
             >
               {isPosting ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
               Send Comment

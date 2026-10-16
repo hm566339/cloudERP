@@ -265,7 +265,7 @@ export default function SalesOrdersPage() {
         'aria-label': 'Generate Delivery Challan',
         icon: <Truck size={14} />,
         onClick: () => setSoForDc(o),
-        className: 'text-indigo-600 hover:text-indigo-700'
+        className: 'text-zinc-900 hover:text-zinc-700'
       },
       {
         key: 'create-invoice',

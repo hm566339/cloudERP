@@ -601,7 +601,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                     placeholder="Search by SO number or customer..."
                     value={orderSearchKey}
                     onChange={(e) => setOrderSearchKey(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white shadow-2xs"
+                    className="w-full pl-9 pr-4 py-2 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-zinc-900/10 bg-white shadow-2xs"
                   />
                 </div>
                 <button
@@ -632,7 +632,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                         <tr>
                           <td colSpan={5} className="p-8 text-center text-zinc-400">
                             <div className="flex flex-col items-center justify-center gap-2">
-                              <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                              <div className="w-5 h-5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
                               <span>Loading confirmed sales orders...</span>
                             </div>
                           </td>
@@ -737,7 +737,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                   <div className="w-full sm:w-80">
                     {isLoadingWarehouses ? (
                       <div className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg">
-                        <div className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-3.5 h-3.5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
                         <span>Loading warehouses...</span>
                       </div>
                     ) : warehouseLoadError ? (
@@ -765,7 +765,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                         className={`w-full px-3 py-2 text-sm rounded-lg border bg-white text-zinc-800 font-medium transition-all outline-none ${
                           !selectedWarehouseId && validationErrors.length > 0
                             ? 'border-red-400 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                            : 'border-zinc-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                            : 'border-zinc-300 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
                         }`}
                       >
                         <option value="">Select Warehouse *</option>
@@ -840,7 +840,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                         <tr>
                           <td colSpan={7} className="px-4 py-8 text-center text-zinc-500 text-xs">
                             <div className="flex items-center justify-center gap-2">
-                              <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                              <div className="w-4 h-4 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
                               <span>Loading items from Sales Order...</span>
                             </div>
                           </td>
@@ -934,7 +934,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                                       ? 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed'
                                       : isMissingLocation
                                         ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/50 text-red-700'
-                                        : 'border-zinc-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-zinc-800'
+                                        : 'border-zinc-300 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 text-zinc-800'
                                   }`}
                                 >
                                   <option value="">Select Location *</option>
@@ -963,7 +963,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                                       ? 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed'
                                       : isQtyError 
                                         ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50 text-red-700' 
-                                        : 'border-zinc-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                                        : 'border-zinc-300 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
                                   } outline-none transition-all`}
                                 />
                                 {isExcessStock && (
@@ -1050,7 +1050,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                 type="button"
                 onClick={handleSubmit}
                 disabled={!isFormValid || isSubmittingInProgress || isLoadingDetail || isLoadingWarehouses}
-                className="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-5 py-2 text-sm font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isSubmittingInProgress ? (
                   <>

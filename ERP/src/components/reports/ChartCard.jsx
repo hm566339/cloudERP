@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { 
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend, AreaChart, Area, 
@@ -73,11 +73,34 @@ function ChartCard({
   height = 208,
   loading = false
 }) {
+  const containerRef = useRef(null);
+  const [hasDimensions, setHasDimensions] = useState(false);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    if (containerRef.current.clientWidth > 0 && containerRef.current.clientHeight > 0) {
+      setHasDimensions(true);
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+          setHasDimensions(true);
+        }
+      }
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const renderChart = () => {
     if (loading) {
       return (
-        <div className="h-full flex flex-col items-center justify-center text-gray-400">
-          <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin mb-3" />
+        <div className="h-full flex flex-col items-center justify-center text-zinc-400">
+          <div className="w-8 h-8 border-2 border-zinc-300 border-t-gray-700 rounded-full animate-spin mb-3" />
           <p className="text-sm font-medium">Loading chart data...</p>
         </div>
       );
@@ -85,7 +108,7 @@ function ChartCard({
 
     if (!data || data.length === 0) {
       return (
-        <div className="h-full flex flex-col items-center justify-center text-gray-400">
+        <div className="h-full flex flex-col items-center justify-center text-zinc-400">
           <BarChart3 size={32} className="opacity-50 mb-2" />
           <p className="text-sm font-medium">No data available for chart</p>
         </div>
@@ -173,14 +196,18 @@ function ChartCard({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-col h-full min-w-0">
+    <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-4 flex flex-col h-full min-w-0">
       <div className="mb-3">
-        <h3 className="text-sm font-bold text-gray-900">{title}</h3>
-        {description && <p className="text-xs text-gray-500 mt-1">{description}</p>}
+        <h3 className="text-sm font-bold text-zinc-900">{title}</h3>
+        {description && <p className="text-xs text-zinc-500 mt-1">{description}</p>}
       </div>
-      <div style={{ height: `${height}px`, minHeight: `${height}px`, minWidth: 0 }} className="w-full relative overflow-hidden">
-        {!loading && data && data.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={height} debounce={300}>
+      <div 
+        ref={containerRef}
+        style={{ height: `${height}px`, minHeight: `${height}px`, minWidth: 0 }} 
+        className="w-full relative overflow-hidden"
+      >
+        {!loading && data && data.length > 0 && hasDimensions ? (
+          <ResponsiveContainer width="100%" height={height} minWidth={0} minHeight={height}>
             {renderChart()}
           </ResponsiveContainer>
         ) : (

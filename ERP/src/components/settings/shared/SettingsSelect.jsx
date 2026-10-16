@@ -5,7 +5,7 @@ export function SettingsSelect({ label, id, description, options = [], ...props 
   return (
     <div className="mb-5">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-slate-700 mb-1.5">
+        <label htmlFor={id} className="block text-sm font-medium text-zinc-700 mb-1.5">
           {label}
         </label>
       )}
@@ -19,11 +19,11 @@ export function SettingsSelect({ label, id, description, options = [], ...props 
             <option key={i} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-500">
           <ChevronDown size={16} />
         </div>
       </div>
-      {description && <p className="text-xs text-slate-500 mt-1.5">{description}</p>}
+      {description && <p className="text-xs text-zinc-500 mt-1.5">{description}</p>}
     </div>
   );
 }

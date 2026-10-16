@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useGetActiveCustomersQuery, useCreateCustomerMutation, useGetCustomerByIdQuery } from '../../../api/sales-crm';
 import { useGetHsnSacsQuery, useGetGstSlabsQuery, useGetGstStatesQuery, useGetGstRegistrationsQuery } from '../../../api/account/accounting.api';
 import { fetchHsnSacs, selectHsnSacItems } from '../../account/store/hsnSacSlice';
-import { useGetGroupedStockQuery } from '../../../api/inventory/inventory.api';
+import { useGetGroupedStockQuery, useGetProductsQuery } from '../../../api/inventory/inventory.api';
 import { productsApi } from '../../../api/inventory/products';
 import CustomerCombobox from './CustomerCombobox';
 import CustomerFormModal from '../../account/components/CustomerFormModal';
@@ -81,7 +81,7 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
     return Array.from(map.values());
   }, [apiHsnList, reduxHsnItems]);
 
-  const { data: gstStatesData } = useGetGstStatesQuery({ companyId, active: true }, { skip: !isOpen });
+  const { data: gstStatesData } = useGetGstStatesQuery({ companyId, active: true, size: 100, pageSize: 100 }, { skip: !isOpen });
   const gstStates = useMemo(() => {
     if (Array.isArray(gstStatesData)) return gstStatesData;
     if (gstStatesData?.data?.records) return gstStatesData.data.records;
@@ -212,8 +212,74 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
 
   const [errors, setErrors] = useState({});
 
-  const { data: productsData, isLoading: productsLoading } = useGetGroupedStockQuery({ companyId, isSystemAdmin, search: debouncedItemSearchTerm, page: 0, size: 50 }, { skip: !isOpen });
-  const products = Array.isArray(productsData) ? productsData : productsData?.data?.content || productsData?.data || productsData?.content || [];
+  const { data: allProductsData, isLoading: allProductsLoading } = useGetProductsQuery({ companyId, isSystemAdmin, searchKey: debouncedItemSearchTerm, page: 0, size: 200 }, { skip: !isOpen });
+  const { data: stockData, isLoading: stockLoading } = useGetGroupedStockQuery({ companyId, isSystemAdmin, search: debouncedItemSearchTerm, page: 0, size: 200 }, { skip: !isOpen });
+  const productsLoading = allProductsLoading || stockLoading;
+
+  const masterProducts = useMemo(() => {
+    if (Array.isArray(allProductsData)) return allProductsData;
+    return allProductsData?.data?.content || allProductsData?.data?.records || allProductsData?.data || allProductsData?.content || [];
+  }, [allProductsData]);
+
+  const stockProducts = useMemo(() => {
+    if (Array.isArray(stockData)) return stockData;
+    return stockData?.data?.content || stockData?.data?.records || stockData?.data || stockData?.content || [];
+  }, [stockData]);
+
+  const products = useMemo(() => {
+    const productMap = new Map();
+
+    // 1. Populate from master products
+    masterProducts.forEach(p => {
+      if (!p) return;
+      const id = p.id || p.productId;
+      if (!id) return;
+      productMap.set(String(id), {
+        productId: id,
+        id: id,
+        productName: p.productName || p.name || '',
+        productCode: p.productCode || p.code || '',
+        sku: p.sku || '',
+        description: p.description || '',
+        sellingPrice: p.sellingPrice ?? p.pricing?.sellingPrice ?? p.standardCost ?? 0,
+        standardCost: p.standardCost ?? 0,
+        baseUomId: p.baseUomId || p.uom?.id,
+        baseUomCode: p.baseUomCode || p.uom?.code || p.unit || 'PCS',
+        baseUomName: p.baseUomName || p.uom?.name || '',
+        hsnSacId: p.hsnSacId || p.hsnSac?.id || '',
+        hsnSacCode: p.hsnSacCode || p.hsnSac?.code || '',
+        hsnSacName: p.hsnSacName || p.hsnSac?.description || '',
+        warehouses: []
+      });
+    });
+
+    // 2. Enrich from grouped stock (warehouses, location stock)
+    stockProducts.forEach(p => {
+      if (!p) return;
+      const id = p.productId || p.id || p.stockId;
+      if (!id) return;
+      const existing = productMap.get(String(id)) || {};
+      productMap.set(String(id), {
+        ...existing,
+        productId: id,
+        id: id,
+        productName: p.productName || p.name || p.itemName || existing.productName || '',
+        productCode: p.productCode || existing.productCode || '',
+        sku: p.sku || existing.sku || '',
+        description: p.description || existing.description || '',
+        sellingPrice: p.sellingPrice ?? p.pricing?.sellingPrice ?? existing.sellingPrice ?? 0,
+        baseUomCode: p.baseUomCode || p.uom?.code || p.unit || existing.baseUomCode || 'PCS',
+        hsnSacId: p.hsnSacId || p.hsnSac?.id || existing.hsnSacId || '',
+        hsnSacCode: p.hsnSacCode || p.hsnSac?.code || existing.hsnSacCode || '',
+        hsnSacName: p.hsnSacName || p.hsnSac?.description || existing.hsnSacName || '',
+        warehouses: (p.warehouses && p.warehouses.length > 0) ? p.warehouses : (existing.warehouses || []),
+        totalQuantity: p.totalQuantity,
+        availableQuantity: p.availableQuantity
+      });
+    });
+
+    return Array.from(productMap.values());
+  }, [masterProducts, stockProducts]);
 
   const [createCustomer] = useCreateCustomerMutation();
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
@@ -322,26 +388,116 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
     otherCharges: 0
   });
 
+  const activeCustomer = useMemo(() => {
+    if (!formData.customerId) return null;
+    return customers.find(c => String(c.id) === String(formData.customerId)) || null;
+  }, [customers, formData.customerId]);
+
   const { data: selectedCustomerData } = useGetCustomerByIdQuery({ id: formData.customerId, companyId }, { skip: !formData.customerId });
-  const customer = selectedCustomerData?.data || selectedCustomerData;
-  const rawAddresses = customer?.addresses || [];
+  const detailedCustomer = selectedCustomerData?.data || selectedCustomerData;
+  const currentCustomer = detailedCustomer || activeCustomer;
+  const rawAddresses = currentCustomer?.addresses || [];
 
   const customerAddresses = useMemo(() => {
-    return rawAddresses.length > 0 ? rawAddresses.map(a => ({ ...a, id: a.id || 'MASTER_ADDRESS' })) : (customer?.addressLine1 ? [{
-      id: 'MASTER_ADDRESS',
-      addressLine1: customer.addressLine1,
-      city: customer.city,
-      isDefault: true
-    }] : []);
-  }, [rawAddresses, customer]);
-
-  useEffect(() => {
-    // When a customer is selected and we don't have a delivery address selected yet
-    if (customerAddresses.length > 0 && !formData.deliveryAddressId) {
-      const defaultAddr = customerAddresses.find(a => a.isDefault) || customerAddresses[0];
-      setFormData(prev => ({ ...prev, deliveryAddressId: defaultAddr.id }));
+    if (rawAddresses.length > 0) {
+      return rawAddresses.map(a => ({ ...a, id: a.id || 'MASTER_ADDRESS' }));
     }
-  }, [customerAddresses, formData.customerId]);
+    if (currentCustomer?.addressLine1) {
+      return [{
+        id: 'MASTER_ADDRESS',
+        addressLine1: currentCustomer.addressLine1,
+        addressLine2: currentCustomer.addressLine2 || '',
+        city: currentCustomer.city,
+        state: currentCustomer.state || currentCustomer.gstStateName,
+        postalCode: currentCustomer.postalCode,
+        country: currentCustomer.country || 'India',
+        isDefault: true
+      }];
+    }
+    return [];
+  }, [rawAddresses, currentCustomer]);
+
+  // Track customer change to trigger auto-fill
+  useEffect(() => {
+    if (!formData.customerId || !currentCustomer) return;
+
+    // 1. Auto-select Delivery Address
+    if (customerAddresses.length > 0) {
+      const defaultAddr = customerAddresses.find(a => a.isDefault && a.isActive !== false) || customerAddresses.find(a => a.isActive !== false) || customerAddresses[0];
+      if (defaultAddr && defaultAddr.id) {
+        setFormData(prev => ({
+          ...prev,
+          deliveryAddressId: defaultAddr.id
+        }));
+      }
+    } else {
+      setFormData(prev => {
+        if (prev.deliveryAddressId && prev.deliveryAddressId !== 'NEW') return prev;
+        return { ...prev, deliveryAddressId: '' };
+      });
+    }
+
+    // Pre-fill newDeliveryAddress template with customer info if available
+    const firstAddr = customerAddresses[0] || {};
+    if (firstAddr.addressLine1 || currentCustomer.addressLine1) {
+      setFormData(prev => ({
+        ...prev,
+        newDeliveryAddress: {
+          addressLine1: firstAddr.addressLine1 || currentCustomer.addressLine1 || '',
+          addressLine2: firstAddr.addressLine2 || currentCustomer.addressLine2 || '',
+          city: firstAddr.city || currentCustomer.city || '',
+          gstStateId: firstAddr.gstStateId || prev.newDeliveryAddress?.gstStateId || '',
+          country: firstAddr.country || currentCustomer.country || 'India',
+          postalCode: firstAddr.postalCode || currentCustomer.postalCode || ''
+        }
+      }));
+    }
+
+    // 2. Auto-select Place of Supply
+    if (gstStates.length > 0) {
+      let custStateCode = '';
+      if (currentCustomer.gstin && currentCustomer.gstin.length >= 2) {
+        custStateCode = currentCustomer.gstin.substring(0, 2);
+      } else if (currentCustomer.stateCode) {
+        custStateCode = String(currentCustomer.stateCode);
+      } else if (firstAddr.gstStateCode) {
+        custStateCode = String(firstAddr.gstStateCode);
+      }
+
+      let matched = null;
+      if (custStateCode) {
+        const cleanCode = custStateCode.trim();
+        matched = gstStates.find(s => 
+          String(s.stateCode).trim() === cleanCode || 
+          String(s.stateCode).trim() === cleanCode.padStart(2, '0') ||
+          String(s.code).trim() === cleanCode
+        );
+      }
+
+      if (!matched) {
+        const stateName = currentCustomer.state || currentCustomer.stateName || firstAddr.state || firstAddr.gstStateName;
+        if (stateName) {
+          const lower = String(stateName).trim().toLowerCase();
+          matched = gstStates.find(s => 
+            String(s.stateName || s.name || '').trim().toLowerCase() === lower ||
+            String(s.displayName || '').toLowerCase().includes(lower)
+          );
+        }
+      }
+
+      if (matched && matched.id) {
+        setFormData(prev => ({
+          ...prev,
+          placeOfSupplyStateId: matched.id
+        }));
+      }
+    }
+
+    // 3. Auto-fill payment terms if customer has specific terms
+    if (currentCustomer.paymentTermId) {
+      setFormData(prev => ({ ...prev, paymentTermId: currentCustomer.paymentTermId }));
+    }
+  }, [formData.customerId, currentCustomer, customerAddresses, gstStates]);
 
   const [items, setItems] = useState([
     {
@@ -487,8 +643,8 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
       }
     }
 
-    if (!code && customer?.gstin) {
-      code = customer.gstin.substring(0, 2);
+    if (!code && currentCustomer?.gstin) {
+      code = currentCustomer.gstin.substring(0, 2);
     }
 
     if (!code) {
@@ -496,7 +652,7 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
     }
 
     return code;
-  }, [formData.placeOfSupplyStateId, formData.deliveryAddressId, gstStates, customerAddresses, customer, companyStateCode]);
+  }, [formData.placeOfSupplyStateId, formData.deliveryAddressId, gstStates, customerAddresses, currentCustomer, companyStateCode]);
 
   function resolveHsnTaxRates(item) {
     const rawCode = String(item.hsnSacCode || '').split('-')[0].trim();
@@ -695,30 +851,40 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
           let updatedItem = { ...item, [field]: value };
           if (field === 'itemId') {
             if (value) {
-              const selectedProduct = products.find(p => p.productId === value);
+              const selectedProduct = products.find(p => String(p.productId) === String(value) || String(p.id) === String(value));
 
               if (selectedProduct) {
-                updatedItem.itemName = selectedProduct.productName || '';
-                updatedItem.description = selectedProduct.description || '';
-                updatedItem.unitPrice = selectedProduct.sellingPrice || 0;
-                updatedItem.quantity = 1;
-                updatedItem.discountPercentage = 0;
+                updatedItem.itemName = selectedProduct.productName || selectedProduct.name || '';
+                updatedItem.description = selectedProduct.description || selectedProduct.productName || '';
+                updatedItem.unitPrice = Number(selectedProduct.sellingPrice ?? selectedProduct.standardCost ?? 0);
+                if (!updatedItem.quantity || Number(updatedItem.quantity) <= 0) {
+                  updatedItem.quantity = 1;
+                }
+                updatedItem.discountPercentage = updatedItem.discountPercentage || 0;
                 updatedItem.unit = selectedProduct.baseUomCode || selectedProduct.unit || 'PCS';
 
+                const rawHsnCode = selectedProduct.hsnSacCode || selectedProduct.hsnSac?.code || '';
+                const cleanHsnCode = String(rawHsnCode).split('-')[0].trim().substring(0, 15);
                 updatedItem.hsnSacId = selectedProduct.hsnSacId || '';
-                updatedItem.hsnSacCode = selectedProduct.hsnSacCode || '';
-                updatedItem.hsnSacName = selectedProduct.hsnSacName || '';
+                updatedItem.hsnSacCode = cleanHsnCode;
+                updatedItem.hsnSacName = selectedProduct.hsnSacName || selectedProduct.hsnSac?.description || '';
 
                 // Find matching HSN master to attach tax rates immediately
                 const matchedHsn = allHsnSacs.find(h =>
                   (selectedProduct.hsnSacId && String(h.id) === String(selectedProduct.hsnSacId)) ||
-                  (selectedProduct.hsnSacCode && String(h.code) === String(selectedProduct.hsnSacCode))
+                  (cleanHsnCode && String(h.code || '').split('-')[0].trim() === cleanHsnCode)
                 );
                 if (matchedHsn) {
                   updatedItem.hsnSac = matchedHsn;
+                  updatedItem.hsnSacId = matchedHsn.id || updatedItem.hsnSacId;
                   updatedItem.cgstRate = matchedHsn.cgstRate;
                   updatedItem.sgstRate = matchedHsn.sgstRate;
                   updatedItem.igstRate = matchedHsn.igstRate;
+                } else if (cleanHsnCode) {
+                  // Fallback standard rate if HSN master not explicitly registered
+                  updatedItem.cgstRate = 9;
+                  updatedItem.sgstRate = 9;
+                  updatedItem.igstRate = 18;
                 }
 
                 let defaultWarehouseId = '';
@@ -727,11 +893,11 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
 
                 if (selectedProduct.warehouses && selectedProduct.warehouses.length > 0) {
                   const firstWhs = selectedProduct.warehouses[0];
-                  defaultWarehouseId = firstWhs.warehouseId;
+                  defaultWarehouseId = firstWhs.warehouseId || firstWhs.id || '';
 
                   if (firstWhs.locations && firstWhs.locations.length > 0) {
                     const firstLoc = firstWhs.locations[0];
-                    defaultLocationId = firstLoc.locationId;
+                    defaultLocationId = firstLoc.locationId || firstLoc.id || '';
                     defaultBatchId = firstLoc.batchId || '';
                   }
                 }
@@ -803,8 +969,9 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
     }
 
     if (formData.deliveryAddressId === 'NEW') {
-      const { addressLine1, city, gstStateId, country, postalCode } = formData.newDeliveryAddress;
-      if (!addressLine1?.trim() || !city?.trim() || !gstStateId || !country?.trim() || !postalCode?.trim()) {
+      const { addressLine1, city, gstStateId, country, postalCode } = formData.newDeliveryAddress || {};
+      const hasAnyField = Boolean(addressLine1?.trim() || city?.trim() || gstStateId || postalCode?.trim());
+      if (hasAnyField && (!addressLine1?.trim() || !city?.trim() || !gstStateId || !country?.trim() || !postalCode?.trim())) {
         validationErrors.deliveryAddressId = 'Please fill all required fields for the New Delivery Address (Street, City, State, Country, Postal Code).';
       }
     }
@@ -844,27 +1011,30 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
       transportDocNo: formData.transportDocNo || null,
       vehicleNo: formData.vehicleNo || null,
       notes: formData.notes || null,
-      paymentTermId: formData.paymentTermId === 'CUSTOM' ? null : (formData.paymentTermId || null),
+      paymentTermId: (formData.paymentTermId && formData.paymentTermId !== 'CUSTOM' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(formData.paymentTermId)) ? formData.paymentTermId : null,
       paymentTerms: formData.paymentTerms || null,
       deliveryTerms: formData.deliveryTerms || null,
-      termsConditionId: formData.termsConditionId === 'CUSTOM' ? null : (formData.termsConditionId || null),
+      termsConditionId: (formData.termsConditionId && formData.termsConditionId !== 'CUSTOM' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(formData.termsConditionId)) ? formData.termsConditionId : null,
       termsAndConditions: formData.termsAndConditions || null,
       items: validItems.map(item => {
+        const isUuid = (str) => typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+        const rawHsn = item.hsnSacCode || item.hsnSac?.code || item.hsnSacId || '99';
+        const cleanHsn = String(rawHsn).split('-')[0].trim().substring(0, 15) || '99';
+
         const outItem = {
-          itemId: item.itemId,
-          hsnSacCode: item.hsnSacCode || null,
+          itemId: isUuid(item.itemId) ? item.itemId : null,
+          hsnSacCode: cleanHsn,
           itemName: item.itemName || null,
           description: item.description || null,
-          quantity: parseFloat(item.quantity),
-          unitPrice: parseFloat(item.unitPrice),
+          quantity: parseFloat(item.quantity) || 1,
+          unitPrice: parseFloat(item.unitPrice) || 0,
           discountPercentage: parseFloat(item.discountPercentage) || 0,
           unit: item.unit || 'PCS',
-          warehouseId: item.warehouseId,
-          locationId: item.locationId
+          warehouseId: isUuid(item.warehouseId) ? item.warehouseId : null,
+          locationId: isUuid(item.locationId) ? item.locationId : null
         };
-        if (item.batchId) outItem.batchId = item.batchId;
         // Include id only if it's a real UUID (for invoice line item updates)
-        if (item.id && typeof item.id === 'string' && item.id.length === 36) {
+        if (isUuid(item.id)) {
           outItem.id = item.id;
         }
         return outItem;
@@ -875,10 +1045,14 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
     if (formData.invoiceNumber) invoiceData.invoiceNumber = formData.invoiceNumber;
 
     // Delivery address: existing UUID vs new address (mutually exclusive)
-    if (formData.deliveryAddressId && formData.deliveryAddressId !== 'NEW' && formData.deliveryAddressId !== 'MASTER_ADDRESS') {
+    const isAddressUuid = typeof formData.deliveryAddressId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(formData.deliveryAddressId);
+    if (isAddressUuid) {
       invoiceData.deliveryAddressId = formData.deliveryAddressId;
     } else if (formData.deliveryAddressId === 'NEW') {
-      invoiceData.newDeliveryAddress = formData.newDeliveryAddress;
+      const { addressLine1, city, country } = formData.newDeliveryAddress || {};
+      if (addressLine1?.trim() && city?.trim() && country?.trim()) {
+        invoiceData.newDeliveryAddress = formData.newDeliveryAddress;
+      }
     }
 
     return { data: invoiceData };
@@ -899,14 +1073,23 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
     if (key === 'downloadPdf') { setDownloadPdfFlag(value); return; }
     if (key === 'sendEmail') { setSendEmailFlag(value); return; }
     if (key === 'customerId') {
-      setFormData(prev => ({
-        ...prev,
-        customerId: value,
-        deliveryAddressId: ''
-      }));
+      const activeCust = customers.find(c => String(c.id) === String(value));
+      setFormData(prev => {
+        const next = {
+          ...prev,
+          customerId: value,
+          deliveryAddressId: ''
+        };
+        if (activeCust?.gstin && gstStates.length > 0) {
+          const code = activeCust.gstin.substring(0, 2);
+          const match = gstStates.find(s => String(s.stateCode).trim() === code || String(s.stateCode).trim() === code.padStart(2, '0'));
+          if (match) next.placeOfSupplyStateId = match.id;
+        }
+        return next;
+      });
       return;
     }
-    handleInputChange({ target: { name: key, value, type: typeof value === 'number' ? 'number' : 'text' } });
+    setFormData(prev => ({ ...prev, [key]: value }));
   };
 
   const selectField = (field, options, placeholder, onValueChange = null, customKey = null, isLoading = false, isError = false) => {
@@ -1020,7 +1203,18 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
                     <label className="block text-xs font-bold text-zinc-800 tracking-wide mb-1">Customer <span className="text-rose-500">*</span></label>
                     <CustomerCombobox
                       value={formData.customerId}
-                      onChange={(val) => setFormData(prev => ({ ...prev, customerId: val }))}
+                      onChange={(val, custObj) => {
+                        setFormData(prev => {
+                          const next = { ...prev, customerId: val, deliveryAddressId: '' };
+                          const targetCust = custObj || customers.find(c => String(c.id) === String(val));
+                          if (targetCust?.gstin && gstStates.length > 0) {
+                            const code = targetCust.gstin.substring(0, 2);
+                            const match = gstStates.find(s => String(s.stateCode).trim() === code || String(s.stateCode).trim() === code.padStart(2, '0'));
+                            if (match) next.placeOfSupplyStateId = match.id;
+                          }
+                          return next;
+                        });
+                      }}
                       onAddNewCustomer={() => setIsAddCustomerOpen(true)}
                       error={!formData.customerId && isSubmitting}
                     />

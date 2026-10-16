@@ -52,11 +52,18 @@ export default function OwnerTopHeader({
   const dispatch = useAppDispatch();
 
   const getBreadcrumbLabel = () => {
-    if (location.pathname.includes('subscription')) return 'Subscription';
-    if (location.pathname.includes('settings')) return 'Settings';
-    if (location.pathname.includes('profile')) return 'Profile';
-    if (location.pathname.includes('companies')) return 'Companies';
-    if (location.pathname.includes('users')) return 'Users';
+    const stripped = location.pathname.replace(/^\/company\/[^/]+/, '');
+    if (location.pathname.startsWith('/owner/companies') || location.pathname.includes('companies')) return 'Companies';
+    if (location.pathname.startsWith('/subscription') || stripped.startsWith('/subscription')) return 'Subscription';
+    if (location.pathname.startsWith('/profile') || stripped.startsWith('/profile')) return 'Profile';
+    if (location.pathname.includes('/settings') || stripped.startsWith('/settings')) return 'Settings';
+    if (stripped.startsWith('/accounts') || stripped.startsWith('/finance') || stripped.startsWith('/accounting')) return 'Finance & Accounts';
+    if (stripped.startsWith('/inventory')) return 'Inventory';
+    if (stripped.startsWith('/crm') || stripped.startsWith('/sales')) return 'Sales & CRM';
+    if (stripped.startsWith('/purchases') || stripped.startsWith('/purchase-requisitions')) return 'Purchases';
+    if (stripped.startsWith('/workflows') || stripped.startsWith('/workflow')) return 'Workflows';
+    if (stripped.startsWith('/admin') || stripped.startsWith('/users') || stripped.startsWith('/roles')) return 'SSO & Admin';
+    if (stripped === '/modules') return 'Dashboard';
     return 'Dashboard';
   };
 
@@ -99,7 +106,7 @@ export default function OwnerTopHeader({
   }, [logoutApi, dispatch, navigate]);
 
   return (
-    <header className="h-[56px] sm:h-16 flex-none bg-white/90 backdrop-blur-md border-b border-zinc-200/80 px-4 sm:px-6 sticky top-0 z-20 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] flex items-center justify-between gap-4">
+    <header className="h-[56px] flex-none bg-white/80 backdrop-blur-md border-b border-zinc-200/80 px-4 sm:px-6 sticky top-0 z-50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] flex items-center justify-between gap-4">
       {/* ── Left: Hamburger + Collapse Toggle + Breadcrumbs ── */}
       <div className="flex items-center gap-3 min-w-0">
         {/* Mobile Hamburger Button */}
@@ -126,18 +133,18 @@ export default function OwnerTopHeader({
         )}
 
         {/* Breadcrumb Navigation */}
-        <nav className="flex items-center gap-2 text-[11px] text-zinc-500 font-medium">
+        <nav className="flex items-center gap-2 text-[10.4px] text-zinc-500 font-medium">
           <Link
             to="/owner/dashboard"
-            className="hover:text-primary transition-colors flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-md border border-zinc-200/60 shadow-2xs"
+            className="hover:text-primary transition-colors flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-md border border-zinc-200/60 shadow-sm"
           >
             <LayoutDashboard size={14} className="text-zinc-400" />
-            <span className="capitalize font-bold text-zinc-800 truncate max-w-[140px] sm:max-w-none">
+            <strong className="capitalize text-zinc-800 truncate max-w-[140px] sm:max-w-none">
               {orgName}
-            </span>
+            </strong>
           </Link>
           <ChevronRight size={14} className="text-zinc-300 shrink-0" />
-          <span className="text-zinc-900 font-bold bg-zinc-100/70 px-2 py-0.5 rounded-md">
+          <span className="text-zinc-900 font-bold bg-zinc-100/50 px-2 py-1 rounded-md">
             {getBreadcrumbLabel()}
           </span>
         </nav>
@@ -152,7 +159,7 @@ export default function OwnerTopHeader({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search modules, companies, settings..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-zinc-50/80 border border-zinc-200/80 rounded-xl placeholder:text-zinc-400 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:bg-white transition-all shadow-2xs"
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-zinc-50/80 border border-zinc-200/80 rounded-xl placeholder:text-zinc-400 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:bg-white transition-all shadow-xs"
           />
         </div>
       </div>
@@ -164,7 +171,7 @@ export default function OwnerTopHeader({
           <Link
             to="/subscription"
             title="View Subscription Details"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 transition-colors shrink-0 shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 transition-colors shrink-0 shadow-sm"
           >
             <Clock size={12} className="text-emerald-600" />
             <span className="hidden sm:inline">Trial • {daysRemaining !== null ? `${daysRemaining} days left` : 'Active'}</span>
@@ -175,7 +182,7 @@ export default function OwnerTopHeader({
           <Link
             to="/subscription"
             title="Trial Expired • Read-Only Mode"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition-colors shrink-0 shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition-colors shrink-0 shadow-sm"
           >
             <AlertTriangle size={12} className="text-amber-600" />
             <span className="hidden sm:inline">Trial Expired • Read-Only</span>
@@ -186,7 +193,7 @@ export default function OwnerTopHeader({
           <Link
             to="/subscription"
             title="Subscription Active — All Modules Enabled"
-            className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 transition-all shrink-0 shadow-2xs"
+            className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 transition-all shrink-0 shadow-sm"
           >
             <CheckCircle2 size={12} className="text-emerald-600" />
             <span>Active Plan</span>
@@ -247,6 +254,21 @@ export default function OwnerTopHeader({
                       );
                     })}
                   </div>
+                  {activeCompanyId && (
+                    <div className="p-2 border-t border-zinc-100 bg-zinc-50/50">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCompanyDropdownOpen(false);
+                          navigate(`/company/${activeCompanyId}/dashboard`);
+                        }}
+                        className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] font-semibold transition-colors shadow-xs"
+                      >
+                        <Building2 size={13} />
+                        <span>Open {activeCompanyName} Workspace</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -260,7 +282,7 @@ export default function OwnerTopHeader({
           className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-zinc-100 text-zinc-500 hover:text-zinc-700 transition-colors border border-transparent hover:border-zinc-200"
         >
           <Bell size={18} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white rounded-full shadow-2xs" />
+          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white rounded-full shadow-xs" />
         </button>
 
         {/* Settings Icon Button */}
@@ -280,9 +302,9 @@ export default function OwnerTopHeader({
             aria-label="User menu"
             aria-expanded={profileDropdownOpen}
             onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-            className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-zinc-50 rounded-xl transition-all duration-200 border border-transparent hover:border-zinc-200 hover:shadow-2xs group"
+            className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-zinc-50 rounded-xl transition-all duration-200 border border-transparent hover:border-zinc-200 hover:shadow-xs group"
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-700 text-white font-bold flex items-center justify-center text-[10.5px] shadow-2xs group-hover:shadow transition-all">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-700 text-white font-bold flex items-center justify-center text-[10.5px] shadow-xs group-hover:shadow transition-all">
               {ownerName.charAt(0).toUpperCase()}
             </div>
             <div className="hidden md:block text-left">

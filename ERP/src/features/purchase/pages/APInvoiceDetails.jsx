@@ -17,40 +17,13 @@ import { getWorkflowActions, isReadOnly, canEditInvoice } from '../../../utils/i
 import { addAlert } from '../../notifications/notificationSlice';
 import { confirmDialog } from '../../../utils/confirmDialog';
 import PaymentVoucherFormModal from '../components/PaymentVoucherFormModal';
+import StatusBadge from '../../../components/common/StatusBadge';
 import { useRoutePath } from "../../../hooks/useRoutePath";
 import APInvoiceItemsTable from '../components/APInvoiceItemsTable';
 import APInvoiceEditModal from '../components/APInvoiceEditModal';
 import APInvoiceKpiCards from '../components/APInvoiceKpiCards';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-
-const StatusBadge = ({ status, labelPrefix = '' }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    PAID: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    POSTED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    APPROVED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    SUCCESS: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    FAILED: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-    PARTIALLY_PAID: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    UNPAID: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-    OVERDUE: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-    DRAFT: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    PENDING_APPROVAL: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    PENDING: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    CANCELLED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-    VOIDED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-  }[s] || { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-bold tracking-wider uppercase rounded-md border ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`}></span>
-      {labelPrefix}{s.replace('_', ' ')}
-    </span>
-  );
-};
 
 export default function APInvoiceDetails() {
   const { id: paramId, invoiceId: routeInvoiceId } = useParams();

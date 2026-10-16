@@ -37,20 +37,20 @@ const getActionBadge = (action) => {
 
 // A simple syntax highlighted JSON viewer
 const JsonViewer = ({ data }) => {
-  if (!data) return <div className="text-gray-400 italic">No data</div>;
+  if (!data) return <div className="text-zinc-400 italic">No data</div>;
   let parsed;
   try {
     parsed = typeof data === 'string' ? JSON.parse(data) : data;
   } catch (e) {
-    return <pre className="text-sm bg-gray-50 p-4 rounded overflow-auto">{data}</pre>;
+    return <pre className="text-sm bg-zinc-50 p-4 rounded overflow-auto">{data}</pre>;
   }
 
   if (parsed && typeof parsed === 'object' && 'nodeType' in parsed && 'containerNode' in parsed) {
-    return <div className="text-gray-400 italic">Not visible</div>;
+    return <div className="text-zinc-400 italic">Not visible</div>;
   }
 
   return (
-    <pre className="text-sm bg-gray-50 p-4 rounded overflow-auto border border-gray-200 text-gray-800">
+    <pre className="text-sm bg-zinc-50 p-4 rounded overflow-auto border border-zinc-200 text-zinc-800">
       {JSON.stringify(parsed, null, 2)}
     </pre>
   );
@@ -245,7 +245,7 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
     { header: 'Performed At', accessor: row => formatDateTime(row.performedAt), id: 'performedAt', sortable: true },
     { header: 'Performed By', accessor: row => row.performedByUsername || row.performedBy, id: 'performedBy', sortable: true },
     { header: 'IP Address', id: 'ipAddress' },
-    { header: 'User Agent', id: 'userAgent', className: 'truncate max-w-xs', cellClassName: 'truncate max-w-xs text-xs text-gray-500' }
+    { header: 'User Agent', id: 'userAgent', className: 'truncate max-w-xs', cellClassName: 'truncate max-w-xs text-xs text-zinc-500' }
   ];
 
   const activeAdvancedFilterCount = ['performedBy', 'ipAddress'].filter(k => filters[k] !== '' && filters[k] !== null && filters[k] !== undefined).length;
@@ -563,12 +563,12 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
       </div>
 
       {/* Side Drawer */}
-      <div className={`fixed inset-y-0 right-0 w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 border-l border-gray-200 overflow-y-auto ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed inset-y-0 right-0 w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 border-l border-zinc-200 overflow-y-auto ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         {selectedLog && (
           <div className="flex flex-col h-full">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center sticky top-0 z-10">
-              <h2 className="text-lg font-semibold text-gray-900">Audit Log Details</h2>
-              <button onClick={closeDrawer} className="text-gray-400 hover:text-gray-600 focus:outline-none bg-white rounded-full p-1 border border-gray-200">
+            <div className="px-6 py-4 border-b border-zinc-200 bg-zinc-50 flex justify-between items-center sticky top-0 z-10">
+              <h2 className="text-lg font-semibold text-zinc-900">Audit Log Details</h2>
+              <button onClick={closeDrawer} className="text-zinc-400 hover:text-zinc-600 focus:outline-none bg-white rounded-full p-1 border border-zinc-200">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -577,43 +577,43 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase">Action</p>
+                  <p className="text-xs font-medium text-zinc-500 uppercase">Action</p>
                   <div className="mt-1">{getActionBadge(selectedLog.actionType)}</div>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase">Timestamp</p>
-                  <p className="mt-1 text-sm text-gray-900 font-medium">{formatDateTime(selectedLog.performedAt)}</p>
+                  <p className="text-xs font-medium text-zinc-500 uppercase">Timestamp</p>
+                  <p className="mt-1 text-sm text-zinc-900 font-medium">{formatDateTime(selectedLog.performedAt)}</p>
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+              <div className="bg-zinc-50 p-4 rounded-lg border border-zinc-100">
                 <div className="grid grid-cols-1 gap-y-4">
                   <div className="flex items-start">
-                    <HardDrive className="w-5 h-5 text-gray-400 mr-3 mt-0.5" />
+                    <HardDrive className="w-5 h-5 text-zinc-400 mr-3 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Entity Details</p>
-                      <p className="text-sm text-gray-500">Module: <span className="text-gray-900">{selectedLog.moduleName}</span></p>
-                      <p className="text-sm text-gray-500">Entity: <span className="text-gray-900">{selectedLog.entityName}</span></p>
+                      <p className="text-sm font-medium text-zinc-900">Entity Details</p>
+                      <p className="text-sm text-zinc-500">Module: <span className="text-zinc-900">{selectedLog.moduleName}</span></p>
+                      <p className="text-sm text-zinc-500">Entity: <span className="text-zinc-900">{selectedLog.entityName}</span></p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    <User className="w-5 h-5 text-gray-400 mr-3 mt-0.5" />
+                    <User className="w-5 h-5 text-zinc-400 mr-3 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Performed By</p>
-                      <p className="text-sm text-gray-500">{selectedLog.performedByUsername || selectedLog.performedBy}</p>
+                      <p className="text-sm font-medium text-zinc-900">Performed By</p>
+                      <p className="text-sm text-zinc-500">{selectedLog.performedByUsername || selectedLog.performedBy}</p>
                       {selectedLog.performedByUsername && selectedLog.performedBy && (
-                        <p className="text-xs text-gray-400 mt-1 break-all">ID: {selectedLog.performedBy}</p>
+                        <p className="text-xs text-zinc-400 mt-1 break-all">ID: {selectedLog.performedBy}</p>
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-start">
-                    <Monitor className="w-5 h-5 text-gray-400 mr-3 mt-0.5" />
+                    <Monitor className="w-5 h-5 text-zinc-400 mr-3 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">System Info</p>
-                      <p className="text-sm text-gray-500">IP: <span className="text-gray-900">{selectedLog.ipAddress}</span></p>
-                      <p className="text-sm text-gray-500 mt-1 break-words">{selectedLog.userAgent}</p>
+                      <p className="text-sm font-medium text-zinc-900">System Info</p>
+                      <p className="text-sm text-zinc-500">IP: <span className="text-zinc-900">{selectedLog.ipAddress}</span></p>
+                      <p className="text-sm text-zinc-500 mt-1 break-words">{selectedLog.userAgent}</p>
                     </div>
                   </div>
                 </div>
@@ -622,14 +622,14 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
               <div className="space-y-4">
                 {selectedLog.oldValue && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">Old Value</h3>
+                    <h3 className="text-sm font-semibold text-zinc-900 mb-2 border-b border-zinc-200 pb-1">Old Value</h3>
                     <JsonViewer data={selectedLog.oldValue} />
                   </div>
                 )}
                 
                 {selectedLog.newValue && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2 border-b border-gray-200 pb-1">New Value</h3>
+                    <h3 className="text-sm font-semibold text-zinc-900 mb-2 border-b border-zinc-200 pb-1">New Value</h3>
                     <JsonViewer data={selectedLog.newValue} />
                   </div>
                 )}
@@ -642,7 +642,7 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
       
       {/* Drawer Overlay */}
       {isDrawerOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-10 transition-opacity z-40" onClick={closeDrawer} />
+        <div className="fixed inset-0 bg-zinc-500 bg-opacity-10 transition-opacity z-40" onClick={closeDrawer} />
       )}
       
       <ExportModal

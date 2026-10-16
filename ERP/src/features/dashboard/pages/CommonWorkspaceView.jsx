@@ -127,7 +127,7 @@ export default function CommonWorkspaceView() {
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200/80',
-      buttonBg: 'bg-blue-600 hover:bg-blue-700 text-white',
+      buttonBg: 'bg-zinc-900 hover:bg-zinc-800 text-white',
       path: '/crm/dashboard',
       isEntitled: entitledModules.includes('CRM'),
     },

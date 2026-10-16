@@ -17,7 +17,7 @@ export default function GstRegistrationsDetails() {
       case 'REGULAR': return <span className="px-3 py-1 text-xs font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200">Regular</span>;
       case 'COMPOSITION': return <span className="px-3 py-1 text-xs font-semibold rounded-md border bg-purple-50 text-purple-700 border-purple-200">Composition</span>;
       case 'UNREGISTERED': return <span className="px-3 py-1 text-xs font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200">Unregistered</span>;
-      default: return <span className="px-3 py-1 text-xs font-semibold rounded-md border bg-gray-50 text-gray-700 border-gray-200">{type}</span>;
+      default: return <span className="px-3 py-1 text-xs font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200">{type}</span>;
     }
   };
 

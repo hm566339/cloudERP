@@ -69,14 +69,14 @@ export function ToastNotification() {
 
 export default function AuthLayout() {
   return (
-    <div className="h-screen w-screen flex font-sans overflow-hidden selection:bg-primary/30 selection:text-white bg-slate-50">
+    <div className="h-screen w-screen flex font-sans overflow-hidden selection:bg-primary/30 selection:text-white bg-zinc-50">
 
       {/* ── Left Side: Information Panel (Hidden on Mobile) ── */}
       <div className="hidden lg:flex lg:w-[45%] xl:w-1/2 relative bg-zinc-950 text-white flex-col justify-between p-6 lg:p-10 overflow-hidden">
         {/* Dynamic Background */}
         <div className="absolute inset-0 z-0">
           <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-primary-600/20 blur-[96px] mix-blend-screen animate-blob"></div>
-          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-600/10 blur-[96px] mix-blend-screen animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-zinc-900/10 blur-[96px] mix-blend-screen animate-blob animation-delay-2000"></div>
           <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay"></div>
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-950/50 to-zinc-950"></div>
         </div>

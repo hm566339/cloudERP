@@ -46,7 +46,7 @@ export default function SecuritySettings() {
           checked={mfaEnabled}
           onChange={setMfaEnabled}
         />
-        <div className="border-t border-slate-100 my-4"></div>
+        <div className="border-t border-zinc-100 my-4"></div>
         <SettingsSelect
           id="session-timeout"
           label="Session Timeout"
@@ -68,7 +68,7 @@ export default function SecuritySettings() {
           checked={enforcePasswordPolicy}
           onChange={setEnforcePasswordPolicy}
         />
-        <div className="border-t border-slate-100 my-4"></div>
+        <div className="border-t border-zinc-100 my-4"></div>
         <SettingsSelect
           id="password-expiration"
           label="Password Expiration"

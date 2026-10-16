@@ -527,7 +527,7 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "REVISED",
@@ -563,7 +563,7 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "REVISED",
@@ -2527,13 +2527,13 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "LOCKED",
         "label": "Locked",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       }
     ],
     "values": [
@@ -2556,13 +2556,13 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "LOCKED",
         "label": "Locked",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       }
     ],
     "values": [
@@ -2989,13 +2989,13 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "LOCKED",
         "label": "Locked",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       }
     ],
     "values": [
@@ -3018,13 +3018,13 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "LOCKED",
         "label": "Locked",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       }
     ],
     "values": [
@@ -3987,7 +3987,7 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "REJECTED",
@@ -4058,7 +4058,7 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "REJECTED",
@@ -4683,7 +4683,7 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "CANCELLED",
@@ -4740,7 +4740,7 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "CANCELLED",
@@ -5751,7 +5751,7 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       }
     ],
     "values": [
@@ -5787,7 +5787,7 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       }
     ],
     "values": [
@@ -5811,13 +5811,13 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "LOCKED",
         "label": "Locked",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       }
     ],
     "values": [
@@ -5840,13 +5840,13 @@ export const ENUMS_REGISTRY = {
         "value": "CLOSED",
         "label": "Closed",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       },
       {
         "value": "LOCKED",
         "label": "Locked",
         "color": "slate",
-        "className": "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+        "className": "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
       }
     ],
     "values": [

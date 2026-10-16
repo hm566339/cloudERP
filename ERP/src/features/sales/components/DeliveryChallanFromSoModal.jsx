@@ -870,7 +870,7 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
               <div className="w-full sm:w-80">
                 {isLoadingReceipt ? (
                   <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-500 bg-white border border-zinc-200 rounded-lg">
-                    <div className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3.5 h-3.5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
                     <span>Loading receipt allocations...</span>
                   </div>
                 ) : receiptAllocations.length === 0 ? (
@@ -891,7 +891,7 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
                     value={selectedSalesInvoiceId}
                     onChange={(e) => setSelectedSalesInvoiceId(e.target.value)}
                     disabled={isSubmittingInProgress}
-                    className="w-full px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-300 bg-white text-zinc-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    className="w-full px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-300 bg-white text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
                   >
                     {receiptAllocations.map(a => {
                       const invId = a.salesInvoiceId || a.salesInvoice?.id;
@@ -1051,7 +1051,7 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
               type="button"
               onClick={handleSubmit}
               disabled={!isFormValid || isSubmittingInProgress || isSourceLoading || isLoadingWarehouses || isLoadingStock}
-              className="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-xs"
+              className="px-5 py-2 text-sm font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-xs"
             >
               {isSubmittingInProgress ? (
                 <>

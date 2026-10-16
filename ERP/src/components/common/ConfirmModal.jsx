@@ -66,7 +66,7 @@ export default function ConfirmModal({
   return createPortal(
     <div 
       onClick={handleBackdropClick}
-      className="fixed inset-0 flex items-center justify-center bg-slate-900/55 backdrop-blur-xs p-4 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 flex items-center justify-center bg-zinc-900/55 backdrop-blur-xs p-4 overflow-y-auto animate-fade-in"
       style={{ zIndex }}
       role="dialog"
       aria-modal="true"

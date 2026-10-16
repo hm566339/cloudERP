@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback, createContext, useContext } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
-import { useAppSelector } from '../app/hooks';
+import React, { useMemo, createContext, useContext, Suspense, useEffect } from 'react';
+import { Outlet, Navigate, useParams, useLocation } from 'react-router-dom';
+import { useAppSelector, useAppDispatch } from '../app/hooks';
 import { selectAuthContext } from '../features/auth/authSlice';
-import { selectSelectedCompany } from '../features/company-management/companySlice';
+import { selectSelectedCompany, setSelectedCompany } from '../features/company-management/companySlice';
 import { useAccessMode } from '../hooks/useAccessMode';
-import { getEntitledModules } from '../utils/moduleNormalization';
+import { getEntitledModules, normalizeModuleName } from '../utils/moduleNormalization';
 import DashboardLayout from './DashboardLayout';
 import SubscriptionNoticeBanner from '../components/common/SubscriptionNoticeBanner';
 import { ToastNotification } from './AuthLayout';
@@ -12,6 +12,8 @@ import OwnerSidebar from './OwnerSidebar';
 import OwnerTopHeader from './OwnerTopHeader';
 import { useRBAC } from '../utils/rbac';
 import ErrorBoundary from '../components/common/ErrorBoundary';
+import RouteLoading from '../routes/RouteLoading';
+import { useSidebar } from './SidebarContext';
 
 export const OwnerLayoutContext = createContext(false);
 
@@ -27,6 +29,9 @@ export function useIsOwnerLayout() {
  * </DashboardLayout>
  */
 export default function OwnerLayout({ children }) {
+  const dispatch = useAppDispatch();
+  const params = useParams();
+  const location = useLocation();
   const authContext = useAppSelector(selectAuthContext);
   const selectedCompany = useAppSelector(selectSelectedCompany);
 
@@ -39,14 +44,36 @@ export default function OwnerLayout({ children }) {
     user,
   } = authContext;
 
+  const urlCompanyId = params.companyId || location.pathname.match(/\/company\/([^/]+)/)?.[1] || null;
+
   const activeCompanyId =
-    selectedCompany?.id || currentCompany?.id || (companies.length > 0 ? companies[0].id : null);
+    urlCompanyId ||
+    selectedCompany?.id ||
+    currentCompany?.id ||
+    (companies.length > 0 ? companies[0].id : null);
+
+  const matchedCompany =
+    (companies || []).find((c) => c.id === activeCompanyId) || selectedCompany || currentCompany;
+
   const activeCompanyCode =
-    selectedCompany?.code || currentCompany?.code || (companies.length > 0 ? companies[0].code : '');
+    matchedCompany?.code || (companies.length > 0 ? companies[0].code : '');
   const activeCompanyName =
-    selectedCompany?.name ||
-    currentCompany?.name ||
+    matchedCompany?.name ||
+    matchedCompany?.legalName ||
     (companies.length > 0 ? companies[0].name : 'Primary Company');
+
+  useEffect(() => {
+    if (urlCompanyId && selectedCompany?.id !== urlCompanyId) {
+      const found = (companies || []).find((c) => c.id === urlCompanyId);
+      dispatch(
+        setSelectedCompany({
+          id: urlCompanyId,
+          code: found?.code || '',
+          name: found?.name || found?.legalName || '',
+        })
+      );
+    }
+  }, [urlCompanyId, selectedCompany?.id, companies, dispatch]);
 
   const {
     isTrial,
@@ -56,41 +83,7 @@ export default function OwnerLayout({ children }) {
     daysRemaining,
   } = useAccessMode();
 
-  // Desktop sidebar collapse state
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem('owner_sidebar_collapsed') === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  // Mobile drawer state
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  const toggleCollapse = useCallback(() => {
-    setIsCollapsed((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem('owner_sidebar_collapsed', String(next));
-      } catch {
-        // ignore
-      }
-      return next;
-    });
-  }, []);
-
-  // Keyboard shortcut Ctrl+B / Cmd+B to toggle sidebar collapse
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
-        e.preventDefault();
-        toggleCollapse();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleCollapse]);
+  const { isCollapsed, toggleCollapse, mobileOpen, setMobileOpen } = useSidebar();
 
   // Owner Authorization Guard
   const { isOwner: rbacIsOwner, isSuperAdmin } = useRBAC();
@@ -114,7 +107,15 @@ export default function OwnerLayout({ children }) {
     return <Navigate to="/403" replace />;
   }
 
-  const entitledModules = useMemo(() => getEntitledModules(authContext), [authContext]);
+  const entitledModules = useMemo(() => {
+    if (Array.isArray(authContext?.modules) && authContext.modules.length > 0) {
+      return authContext.modules
+        .filter((m) => m.active !== false)
+        .map((m) => m.canonical || normalizeModuleName(m.name || m.code))
+        .filter(Boolean);
+    }
+    return getEntitledModules(authContext);
+  }, [authContext]);
 
   return (
     <OwnerLayoutContext.Provider value={true}>
@@ -158,7 +159,9 @@ export default function OwnerLayout({ children }) {
       >
         <ToastNotification />
         <ErrorBoundary>
-          {children || <Outlet />}
+          <Suspense fallback={<RouteLoading />}>
+            {children || <Outlet context={{ accessibleModuleKeys: entitledModules, accessLoading: false, authContext, isOwner: true }} />}
+          </Suspense>
         </ErrorBoundary>
       </DashboardLayout>
     </OwnerLayoutContext.Provider>

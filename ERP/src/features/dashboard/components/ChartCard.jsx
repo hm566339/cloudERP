@@ -27,15 +27,42 @@ function arePieChartPropsEqual(prevProps, nextProps) {
 }
 
 function ChartCard({ title, data, colors }) {
+  const containerRef = React.useRef(null);
+  const [hasDimensions, setHasDimensions] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+
+    if (containerRef.current.clientWidth > 0 && containerRef.current.clientHeight > 0) {
+      setHasDimensions(true);
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+          setHasDimensions(true);
+        }
+      }
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   // Ensure we only render chart if there is data > 0
   const hasData = data && data.some(d => d.value > 0);
 
   return (
     <div className="card p-5 h-[240px] flex flex-col bg-white border border-zinc-200 rounded-xl shadow-sm">
       <h3 className="text-sm font-bold text-zinc-700 mb-4">{title}</h3>
-      <div style={{ minHeight: '160px', minWidth: 0 }} className="flex-1 w-full relative overflow-hidden">
-        {hasData ? (
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={160} debounce={300}>
+      <div 
+        ref={containerRef}
+        style={{ height: '160px', minHeight: '160px', minWidth: 0 }} 
+        className="flex-1 w-full relative overflow-hidden"
+      >
+        {hasData && hasDimensions ? (
+          <ResponsiveContainer width="100%" height={160} minWidth={0} minHeight={160}>
             <PieChart>
               <Pie
                 data={data}

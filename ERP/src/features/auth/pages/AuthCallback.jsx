@@ -206,29 +206,29 @@ export default function AuthCallback() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-zinc-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
             <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Authentication Failed</h2>
+          <h2 className="text-2xl font-bold text-zinc-900 mb-2">Authentication Failed</h2>
           <p className="text-sm text-red-600 mb-4">{error}</p>
-          <p className="text-sm text-gray-500">Redirecting to login...</p>
+          <p className="text-sm text-zinc-500">Redirecting to login...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-zinc-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-zinc-900 border-t-transparent rounded-full animate-spin"></div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Authenticating...</h2>
-        <p className="text-sm text-gray-500">Please wait while we verify your session.</p>
+        <h2 className="text-2xl font-bold text-zinc-900 mb-2">Authenticating...</h2>
+        <p className="text-sm text-zinc-500">Please wait while we verify your session.</p>
       </div>
     </div>
   );

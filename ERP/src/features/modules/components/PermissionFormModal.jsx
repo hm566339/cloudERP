@@ -110,7 +110,7 @@ export default function PermissionFormModal({ isOpen, onClose, onSubmit }) {
               value={formData.featureCode}
               onChange={handleChange}
               disabled={isLoadingFeatures}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors bg-white ${
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-colors bg-white ${
                 errors.featureCode ? 'border-rose-300 bg-rose-50' : 'border-zinc-300'
               }`}
             >
@@ -138,7 +138,7 @@ export default function PermissionFormModal({ isOpen, onClose, onSubmit }) {
               name="action"
               value={formData.action}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors bg-white ${
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-colors bg-white ${
                 errors.action ? 'border-rose-300 bg-rose-50' : 'border-zinc-300'
               }`}
             >
@@ -159,7 +159,7 @@ export default function PermissionFormModal({ isOpen, onClose, onSubmit }) {
               onChange={handleChange}
               placeholder="Describe what this permission allows..."
               rows={3}
-              className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors resize-none"
+              className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-colors resize-none"
             />
           </div>
 
@@ -170,7 +170,7 @@ export default function PermissionFormModal({ isOpen, onClose, onSubmit }) {
               name="active"
               checked={formData.active}
               onChange={handleChange}
-              className="w-4 h-4 text-indigo-600 border-zinc-300 rounded focus:ring-indigo-500"
+              className="w-4 h-4 text-indigo-600 border-zinc-300 rounded focus:ring-zinc-900/10"
             />
             <label htmlFor="active" className="text-sm font-medium text-zinc-700">
               Active Permission
@@ -189,7 +189,7 @@ export default function PermissionFormModal({ isOpen, onClose, onSubmit }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

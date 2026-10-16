@@ -1,0 +1,68 @@
+import React from 'react';
+import { ChevronDown } from 'lucide-react';
+
+/**
+ * Standard native Select component.
+ * Follows ERP design tokens: zinc palette, standard h-8 height, crisp focus ring.
+ *
+ * @param {Object} props
+ * @param {'sm' | 'md' | 'lg'} [props.size='md']
+ * @param {boolean} [props.error=false]
+ * @param {Array<{value: any, label: string}>} [props.options]
+ * @param {string} [props.placeholder]
+ * @param {string} [props.className]
+ */
+const Select = React.forwardRef(function Select(
+  {
+    size = 'md',
+    error = false,
+    options,
+    placeholder,
+    className = '',
+    disabled = false,
+    children,
+    ...props
+  },
+  ref
+) {
+  const sizeClasses = {
+    sm: 'h-7 pl-2.5 pr-7 text-xs',
+    md: 'h-8 pl-3 pr-8 text-xs',
+    lg: 'h-9 pl-3.5 pr-9 text-sm',
+  };
+
+  return (
+    <div className="relative flex items-center w-full">
+      <select
+        ref={ref}
+        disabled={disabled}
+        className={`w-full appearance-none bg-white rounded-lg border font-medium text-zinc-900 transition-all duration-150 outline-none cursor-pointer disabled:bg-zinc-50 disabled:text-zinc-400 disabled:cursor-not-allowed ${
+          error
+            ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10'
+            : 'border-zinc-200 hover:border-zinc-300 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5'
+        } ${sizeClasses[size] || sizeClasses.md} ${className}`}
+        {...props}
+      >
+        {placeholder && (
+          <option value="" disabled>
+            {placeholder}
+          </option>
+        )}
+        {options
+          ? options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))
+          : children}
+      </select>
+      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400 flex items-center">
+        <ChevronDown size={14} />
+      </div>
+    </div>
+  );
+});
+
+Select.displayName = 'Select';
+
+export default Select;

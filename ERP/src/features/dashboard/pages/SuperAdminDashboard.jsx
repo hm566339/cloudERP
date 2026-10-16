@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users,
@@ -34,6 +34,8 @@ import {
 import { TableRowSkeleton, TableSkeleton } from '../../../components/common/SkeletonLoader';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
+import DataTablePagination from '../../../components/data-table/DataTablePagination';
+import { getSerialNumber } from '../../../utils/serialNumberHelper';
 
 import {
   useGetCompaniesQuery,
@@ -107,6 +109,21 @@ export default function SuperAdminDashboard() {
   const [orgFilter, setOrgFilter] = useState('ALL'); // ALL, ACTIVE, SUSPENDED
   const [moduleSearch, setModuleSearch] = useState('');
   const [selectedModuleFilter, setSelectedModuleFilter] = useState('ALL');
+
+  // ── Pagination state
+  const [orgPage, setOrgPage] = useState(0);
+  const [orgPageSize, setOrgPageSize] = useState(5);
+  const [modulePage, setModulePage] = useState(0);
+  const [modulePageSize, setModulePageSize] = useState(5);
+
+  // Reset page when search or filter changes
+  useEffect(() => {
+    setOrgPage(0);
+  }, [orgSearch, orgFilter]);
+
+  useEffect(() => {
+    setModulePage(0);
+  }, [moduleSearch, selectedModuleFilter]);
 
   const handleLoadLiveStats = async () => {
     if (!isSuperAdmin || companies.length === 0 || liveStatsLoading) return;
@@ -243,6 +260,32 @@ export default function SuperAdminDashboard() {
     });
   }, [companyModulesList, moduleSearch, selectedModuleFilter]);
 
+  // Clamping page indices when dataset shrinks
+  useEffect(() => {
+    const maxOrgPage = Math.max(0, Math.ceil(filteredOrganizations.length / orgPageSize) - 1);
+    if (orgPage > maxOrgPage) {
+      setOrgPage(maxOrgPage);
+    }
+  }, [filteredOrganizations.length, orgPageSize, orgPage]);
+
+  useEffect(() => {
+    const maxModulePage = Math.max(0, Math.ceil(filteredCompanyModules.length / modulePageSize) - 1);
+    if (modulePage > maxModulePage) {
+      setModulePage(maxModulePage);
+    }
+  }, [filteredCompanyModules.length, modulePageSize, modulePage]);
+
+  // Paginated slices for tables
+  const paginatedOrganizations = useMemo(() => {
+    const start = orgPage * orgPageSize;
+    return filteredOrganizations.slice(start, start + orgPageSize);
+  }, [filteredOrganizations, orgPage, orgPageSize]);
+
+  const paginatedCompanyModules = useMemo(() => {
+    const start = modulePage * modulePageSize;
+    return filteredCompanyModules.slice(start, start + modulePageSize);
+  }, [filteredCompanyModules, modulePage, modulePageSize]);
+
   const now = new Date();
   const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
   const formattedDate = now.toLocaleDateString('en-US', {
@@ -330,7 +373,7 @@ export default function SuperAdminDashboard() {
               <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">
                 Organizations
               </span>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/80 flex items-center justify-center group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/80 flex items-center justify-center group-hover:scale-105 group-hover:bg-zinc-900 group-hover:text-white transition-all shadow-2xs">
                 <Building2 size={18} />
               </div>
             </div>
@@ -487,7 +530,7 @@ export default function SuperAdminDashboard() {
 
                 <Link
                   to={buildPath('/super-admin/organizations')}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors group self-start sm:self-auto"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-900 hover:text-zinc-700 transition-colors group self-start sm:self-auto"
                 >
                   View All ({totalOrgs})
                   <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
@@ -503,7 +546,7 @@ export default function SuperAdminDashboard() {
                     value={orgSearch}
                     onChange={(e) => setOrgSearch(e.target.value)}
                     placeholder="Search organizations by name or code..."
-                    className="w-full h-9 pl-9 pr-3 text-xs bg-zinc-50/70 hover:bg-zinc-50 focus:bg-white rounded-lg border border-zinc-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-zinc-400"
+                    className="w-full h-9 pl-9 pr-3 text-xs bg-zinc-50/70 hover:bg-zinc-50 focus:bg-white rounded-lg border border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all placeholder:text-zinc-400"
                   />
                   {orgSearch && (
                     <button
@@ -556,7 +599,13 @@ export default function SuperAdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100">
-                      {filteredOrganizations.slice(0, 6).map((org, index) => {
+                      {paginatedOrganizations.map((org, index) => {
+                        const serialNumber = getSerialNumber({
+                          page: orgPage,
+                          pageSize: orgPageSize,
+                          rowIndex: index,
+                          pageBase: 0,
+                        });
                         const isSuspended = !org.active || org.status === 'SUSPENDED';
                         const initial = org?.name?.charAt(0)?.toUpperCase() || 'O';
                         const colorThemes = [
@@ -571,7 +620,7 @@ export default function SuperAdminDashboard() {
                         return (
                           <tr key={org.id || index} className="hover:bg-zinc-50/70 transition-colors">
                             <td className="py-3.5 px-4 text-center font-medium text-zinc-400">
-                              {index + 1}
+                              {serialNumber}
                             </td>
 
                             <td className="py-3.5 px-4">
@@ -661,6 +710,26 @@ export default function SuperAdminDashboard() {
                 </div>
               )}
             </div>
+
+            {/* Organizations Table Pagination */}
+            {!orgsLoading && organizations.length > 0 && filteredOrganizations.length > 0 && (
+              <DataTablePagination
+                pagination={{
+                  page: orgPage,
+                  pageSize: orgPageSize,
+                  total: filteredOrganizations.length,
+                  totalPages: Math.ceil(filteredOrganizations.length / orgPageSize),
+                }}
+                onPageChange={(p) => setOrgPage(p)}
+                onPageSizeChange={(s) => {
+                  setOrgPageSize(s);
+                  setOrgPage(0);
+                }}
+                pageSizeOptions={[5, 10, 20, 50]}
+                itemName="organizations"
+                pageIndexBase={0}
+              />
+            )}
           </div>
 
           {/* ── 2. Module Assignments Table ── */}
@@ -763,7 +832,13 @@ export default function SuperAdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100">
-                      {filteredCompanyModules.map((cm, idx) => {
+                      {paginatedCompanyModules.map((cm, idx) => {
+                        const serialNumber = getSerialNumber({
+                          page: modulePage,
+                          pageSize: modulePageSize,
+                          rowIndex: idx,
+                          pageBase: 0,
+                        });
                         const companyName = cm.company?.companyName || cm.companyName || 'Workspace';
                         const moduleName = cm.module?.name || cm.moduleName || 'Service';
                         const host = cm.module?.host;
@@ -783,7 +858,7 @@ export default function SuperAdminDashboard() {
                         return (
                           <tr key={cm.id || idx} className="hover:bg-zinc-50/70 transition-colors">
                             <td className="py-3.5 px-4 text-center font-medium text-zinc-400">
-                              {idx + 1}
+                              {serialNumber}
                             </td>
 
                             <td className="py-3.5 px-4 font-semibold text-zinc-900">
@@ -891,6 +966,26 @@ export default function SuperAdminDashboard() {
                 </div>
               )}
             </div>
+
+            {/* Module Allocations Table Pagination */}
+            {!modulesLoading && companyModulesList.length > 0 && filteredCompanyModules.length > 0 && (
+              <DataTablePagination
+                pagination={{
+                  page: modulePage,
+                  pageSize: modulePageSize,
+                  total: filteredCompanyModules.length,
+                  totalPages: Math.ceil(filteredCompanyModules.length / modulePageSize),
+                }}
+                onPageChange={(p) => setModulePage(p)}
+                onPageSizeChange={(s) => {
+                  setModulePageSize(s);
+                  setModulePage(0);
+                }}
+                pageSizeOptions={[5, 10, 20, 50]}
+                itemName="allocations"
+                pageIndexBase={0}
+              />
+            )}
           </div>
 
         </div>
@@ -978,7 +1073,7 @@ export default function SuperAdminDashboard() {
                       type="button"
                       onClick={handleLoadLiveStats}
                       disabled={liveStatsLoading}
-                      className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                      className="text-[10px] font-bold text-zinc-900 hover:text-zinc-700 hover:underline"
                     >
                       {liveStatsLoading ? 'Checking...' : 'Check Now'}
                     </button>

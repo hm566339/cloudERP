@@ -156,7 +156,7 @@ export default function ViewDeliveryChallanModal({
           {isLoading ? (
             <div className="py-16 text-center text-zinc-400">
               <div className="flex items-center justify-center gap-2">
-                <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
                 <span className="text-xs font-medium">Loading Delivery Challan...</span>
               </div>
             </div>
@@ -347,7 +347,7 @@ export default function ViewDeliveryChallanModal({
                   <button
                     type="button"
                     onClick={() => { onClose(); onGenerateInvoice(challan); }}
-                    className="px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-1.5 shadow-xs"
+                    className="px-3.5 py-1.5 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-colors flex items-center gap-1.5 shadow-xs"
                   >
                     <ReceiptText size={14} />
                     <span>Generate Sales Invoice</span>

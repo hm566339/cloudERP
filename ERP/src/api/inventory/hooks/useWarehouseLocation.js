@@ -41,9 +41,10 @@ export function useWarehouseLocationList(filter = {}, pageable = {}, options = {
     options,
   );
 
-  // getList returns full response.data: { success, data[], pagination }
-  const locations = responseData?.data || (Array.isArray(responseData) ? responseData : []);
-  const pagination = responseData?.pagination || null;
+  // getList returns full response.data: { success, data[], pagination } or { success, data: { data[], pagination } }
+  const rawLocations = responseData?.data?.data || responseData?.data?.content || responseData?.data || (Array.isArray(responseData) ? responseData : []);
+  const locations = Array.isArray(rawLocations) ? rawLocations : [];
+  const pagination = responseData?.pagination || responseData?.data?.pagination || null;
 
   return { locations, pagination, isLoading, isFetching, error, refetch };
 }

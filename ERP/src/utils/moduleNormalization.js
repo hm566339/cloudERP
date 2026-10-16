@@ -224,6 +224,33 @@ export function buildAuthContext(payload) {
   };
 }
 
+function isOwnerOrSuperAdmin(authContextOrUser) {
+  if (!authContextOrUser) return false;
+  const user = authContextOrUser?.user || authContextOrUser;
+  const role = typeof user?.role === 'string' ? user.role.toLowerCase() : '';
+  const memberType = String(
+    authContextOrUser?.membership?.memberType ||
+    authContextOrUser?.membership?.membershipType ||
+    user?.membership?.memberType ||
+    user?.memberType ||
+    ''
+  ).toUpperCase();
+
+  const isRoleOwner = role === 'owner' || role.includes('owner');
+  const isRoleSuper = role === 'super_admin' || role.includes('superadmin') || role === 'system_admin';
+  const isMemberOwner = memberType === 'OWNER';
+
+  const hasRoleOwner = (Array.isArray(user?.roles) && user.roles.some((r) => {
+    const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
+    return String(name).toUpperCase() === 'OWNER' || String(name).toUpperCase() === 'ROLE_OWNER';
+  })) || (Array.isArray(authContextOrUser?.roles) && authContextOrUser.roles.some((r) => {
+    const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
+    return String(name).toUpperCase() === 'OWNER' || String(name).toUpperCase() === 'ROLE_OWNER';
+  }));
+
+  return isRoleSuper || isRoleOwner || isMemberOwner || hasRoleOwner;
+}
+
 /**
  * Returns list of unique active canonical modules entitled to the user.
  * @param {object|Array} authContextOrModules
@@ -232,9 +259,8 @@ export function buildAuthContext(payload) {
 export function getEntitledModules(authContextOrModules) {
   if (!authContextOrModules) return [];
 
-  // Super admin has all modules
-  const user = authContextOrModules?.user;
-  if (user?.role === 'super_admin') {
+  // Super admin and Owners have all canonical modules
+  if (isOwnerOrSuperAdmin(authContextOrModules)) {
     return Object.values(CANONICAL_MODULES);
   }
 
@@ -289,6 +315,7 @@ export function hasModule(authContext, moduleName) {
  */
 export function hasFeature(authContext, featureName, moduleName) {
   if (!featureName) return false;
+  if (isOwnerOrSuperAdmin(authContext)) return true;
   if (moduleName && !hasModule(authContext, moduleName)) return false;
 
   const user = authContext?.user;
@@ -343,6 +370,7 @@ export function hasFeature(authContext, featureName, moduleName) {
  */
 export function hasPermission(authContext, featureName, action, moduleName) {
   if (!featureName) return false;
+  if (isOwnerOrSuperAdmin(authContext)) return true;
   if (moduleName && !hasModule(authContext, moduleName)) return false;
 
   const user = authContext?.user;
@@ -418,6 +446,7 @@ export function canDelete(authContext, featureName, moduleName) {
  */
 export function canViewModule(authContext, moduleOrFeature) {
   if (!moduleOrFeature) return false;
+  if (isOwnerOrSuperAdmin(authContext)) return true;
 
   const user = authContext?.user;
   if (user?.role === 'super_admin') return true;

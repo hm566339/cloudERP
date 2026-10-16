@@ -689,7 +689,7 @@ export default function QuotationsPage() {
         'aria-label': 'Send Quotation to Customer',
         icon: <Send size={14} />,
         onClick: () => handleSend(q.id),
-        className: 'text-blue-600 hover:text-blue-700'
+        className: 'text-zinc-900 hover:text-zinc-700'
       }
     ] : []),
     {
@@ -704,7 +704,7 @@ export default function QuotationsPage() {
         setQuotationToSendEmail(q);
         setIsSendEmailModalOpen(true);
       },
-      className: 'text-indigo-600 hover:text-indigo-700'
+      className: 'text-zinc-900 hover:text-zinc-700'
     },
     ...(q.status === 'SENT' && canApprove() ? [
       {
@@ -745,7 +745,7 @@ export default function QuotationsPage() {
           'aria-label': 'Convert to Sales Order',
           icon: <ArrowRightCircle size={14} />,
           onClick: () => handleCreateSO(q),
-          className: 'text-blue-600 hover:text-blue-700'
+          className: 'text-zinc-900 hover:text-zinc-700'
         }
       ] : []),
       ...(quotationToPiMap[q.id] ? [
@@ -767,7 +767,7 @@ export default function QuotationsPage() {
           'aria-label': `View Linked Sales Order ${quotationToSoMap[q.id].soNumber || ''}`,
           icon: <ShoppingCart size={14} />,
           onClick: () => navigate(`/accounts/transactions/sales-orders/${quotationToSoMap[q.id].soId}`),
-          className: 'text-blue-600 hover:text-blue-700'
+          className: 'text-zinc-900 hover:text-zinc-700'
         }
       ] : [])
     ] : []),

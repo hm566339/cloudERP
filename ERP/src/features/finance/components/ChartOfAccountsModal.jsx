@@ -230,14 +230,14 @@ export default function ChartOfAccountsModal({
           <form id="chart-of-accounts-form" onSubmit={handleSubmit} className="flex flex-col gap-y-6">
 
         {isReadOnly && (
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-wrap gap-4 justify-between items-center mb-6">
+          <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100 flex flex-wrap gap-4 justify-between items-center mb-6">
             <div className="text-sm">
-              <span className="text-slate-500 font-medium">Created: </span>
-              <span className="text-slate-900 font-semibold">{account?.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</span>
+              <span className="text-zinc-500 font-medium">Created: </span>
+              <span className="text-zinc-900 font-semibold">{account?.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</span>
             </div>
             <div className="text-sm">
-              <span className="text-slate-500 font-medium">Updated: </span>
-              <span className="text-slate-900 font-semibold">{account?.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</span>
+              <span className="text-zinc-500 font-medium">Updated: </span>
+              <span className="text-zinc-900 font-semibold">{account?.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</span>
             </div>
           </div>
         )}

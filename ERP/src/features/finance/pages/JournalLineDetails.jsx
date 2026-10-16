@@ -14,33 +14,11 @@ import { useAppDispatch } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
 import { confirmDialog } from '../../../utils/confirmDialog';
 import Modal from '../../../components/common/Modal';
+import StatusBadge from '../../../components/common/StatusBadge';
 import { useRoutePath } from "../../../hooks/useRoutePath";
 import CustomSelect from '../../../components/common/CustomSelect';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-
-const StatusBadge = ({ status }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    APPROVED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    POSTED: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    SUBMITTED: { cls: 'bg-indigo-50 text-indigo-700 border-indigo-200', dot: 'bg-indigo-500' },
-    DRAFT: { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-500' },
-    REVERSED: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    CANCELLED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    DELETED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    ACTIVE: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-  }[s] || { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`px-2.5 py-1 text-[8.8px] font-semibold rounded-md border inline-flex items-center gap-1.5 uppercase ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s}
-    </span>
-  );
-};
 
 const EmptyState = ({ title, message, icon: Icon }) => (
   <div className="flex flex-col items-center justify-center p-12 text-center bg-white border border-zinc-100 rounded-xl shadow-sm h-full min-h-[240px]">
@@ -327,7 +305,7 @@ export default function JournalLineDetails() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold whitespace-nowrap transition-colors border-b-2 ${
                       activeTab === tab.id
-                        ? 'border-blue-600 text-blue-700 bg-white'
+                        ? 'border-zinc-900 text-blue-700 bg-white'
                         : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100/50'
                     }`}
                   >

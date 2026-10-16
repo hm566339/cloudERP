@@ -81,6 +81,67 @@ export default function ProductForm({
       .map(acc => ({ value: acc.id, label: `${acc.accountCode || acc.code} - ${acc.accountName || acc.name}` }));
   }, [chartOfAccounts]);
 
+  // Auto-default accounting accounts if creating a new product
+  React.useEffect(() => {
+    if (!initialData) {
+      setFormData(prev => {
+        let updated = { ...prev };
+        let changed = false;
+
+        if (!updated.purchaseAccountId && purchaseAccountOptions.length > 0) {
+          const match = purchaseAccountOptions.find(o => 
+            o.label.toLowerCase().includes('500001') || 
+            o.label.toLowerCase().includes('purchase account') ||
+            o.label.toLowerCase().includes('purchase')
+          ) || purchaseAccountOptions[0];
+          if (match) {
+            updated.purchaseAccountId = match.value;
+            changed = true;
+          }
+        }
+
+        if (!updated.salesAccountId && salesAccountOptions.length > 0) {
+          const match = salesAccountOptions.find(o => 
+            o.label.toLowerCase().includes('400001') || 
+            o.label.toLowerCase().includes('sales account') ||
+            o.label.toLowerCase().includes('sales')
+          ) || salesAccountOptions[0];
+          if (match) {
+            updated.salesAccountId = match.value;
+            changed = true;
+          }
+        }
+
+        if (!updated.inventoryAccountId && inventoryAccountOptions.length > 0) {
+          const match = inventoryAccountOptions.find(o => 
+            o.label.toLowerCase().includes('140001') || 
+            o.label.toLowerCase().includes('inventory asset') ||
+            o.label.toLowerCase().includes('inventory') ||
+            o.label.toLowerCase().includes('stock')
+          ) || inventoryAccountOptions[0];
+          if (match) {
+            updated.inventoryAccountId = match.value;
+            changed = true;
+          }
+        }
+
+        if (!updated.cogsAccountId && cogsAccountOptions.length > 0) {
+          const match = cogsAccountOptions.find(o => 
+            o.label.toLowerCase().includes('500002') || 
+            o.label.toLowerCase().includes('cogs') ||
+            o.label.toLowerCase().includes('cost of goods sold')
+          ) || cogsAccountOptions[0];
+          if (match) {
+            updated.cogsAccountId = match.value;
+            changed = true;
+          }
+        }
+
+        return changed ? updated : prev;
+      });
+    }
+  }, [purchaseAccountOptions, salesAccountOptions, inventoryAccountOptions, cogsAccountOptions, initialData]);
+
   const [formData, setFormData] = useState({
     sku: initialData?.sku || '',
     productName: initialData?.productName || '',
@@ -135,6 +196,10 @@ export default function ProductForm({
     if (formData.standardCost < 0) newErrors.standardCost = 'Cost cannot be negative';
     if (formData.sellingPrice < 0) newErrors.sellingPrice = 'Price cannot be negative';
 
+    if (!formData.purchaseAccountId?.trim()) {
+      newErrors.purchaseAccountId = 'Purchase Account is required';
+    }
+
     setErrors(newErrors);
     
     // Auto-switch tab to where the error is
@@ -142,19 +207,23 @@ export default function ProductForm({
       setActiveTab('basic');
     } else if (newErrors.standardCost || newErrors.sellingPrice || newErrors.trackingType || newErrors.valuationMethod) {
       setActiveTab('config');
-    } else if (newErrors.inventoryAccountId || newErrors.cogsAccountId || newErrors.salesAccountId) {
+    } else if (newErrors.inventoryAccountId || newErrors.cogsAccountId || newErrors.salesAccountId || newErrors.purchaseAccountId) {
       setActiveTab('accounting');
     }
 
     return Object.keys(newErrors).length === 0;
   };
 
+  const hasBasicErrors = Boolean(errors.productName || errors.sku || errors.baseUomId || errors.categoryId);
+  const hasConfigErrors = Boolean(errors.standardCost || errors.sellingPrice || errors.trackingType || errors.valuationMethod);
+  const hasAccountingErrors = Boolean(errors.inventoryAccountId || errors.cogsAccountId || errors.salesAccountId || errors.purchaseAccountId);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
       // Clean up empty strings to null for optional UUIDs before submitting
       const payload = { ...formData };
-      const uuidFields = ['inventoryAccountId', 'cogsAccountId', 'salesAccountId', 'hsnSacId', 'categoryId', 'baseUomId'];
+      const uuidFields = ['inventoryAccountId', 'cogsAccountId', 'salesAccountId', 'hsnSacId'];
       uuidFields.forEach(field => {
         if (payload[field] === '') {
           payload[field] = null;
@@ -165,9 +234,9 @@ export default function ProductForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white min-h-0">
       {/* Tabs */}
-      <div className="flex px-5 border-b border-zinc-200 bg-zinc-50/50 shrink-0 gap-6">
+      <div className="flex px-5 border-b border-zinc-200 bg-white shrink-0 gap-6 z-10 sticky top-0">
         <button
           type="button"
           onClick={() => setActiveTab('basic')}
@@ -176,6 +245,7 @@ export default function ProductForm({
           }`}
         >
           <Package size={14} /> Basic Details
+          {hasBasicErrors && <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />}
         </button>
         <button
           type="button"
@@ -185,6 +255,7 @@ export default function ProductForm({
           }`}
         >
           <Settings size={14} /> Inventory & Config
+          {hasConfigErrors && <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />}
         </button>
         <button
           type="button"
@@ -194,10 +265,11 @@ export default function ProductForm({
           }`}
         >
           <BookOpen size={14} /> Accounting
+          {hasAccountingErrors && <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />}
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-5 py-5">
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-5 pb-40">
         
         {/* BASIC TAB */}
         <div className={activeTab === 'basic' ? 'block space-y-5' : 'hidden'}>
@@ -518,7 +590,7 @@ export default function ProductForm({
 
             <div>
               <label className="text-[9.6px] font-bold text-zinc-700 mb-1.5 block">
-                Purchase Account
+                Purchase Account <span className="text-rose-500">*</span>
               </label>
               <ComboBox
                 value={formData.purchaseAccountId}
@@ -538,7 +610,7 @@ export default function ProductForm({
 
       </div>
 
-      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto shrink-0">
+      <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-200 bg-white mt-auto shrink-0 z-20">
         <button
           type="button"
           onClick={onCancel}

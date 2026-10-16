@@ -19,30 +19,9 @@ const toNum = (v) => {
   return isNaN(n) ? 0 : n;
 };
 
+import StatusBadge from '../../../components/common/StatusBadge';
+
 const fmt = (v) => formatCurrency(toNum(v));
-
-const StatusBadge = ({ status }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    DRAFT: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    SUBMITTED: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    SENT: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    SHORTLISTED: { cls: 'bg-violet-50 text-violet-700 border-violet-200', dot: 'bg-violet-500' },
-    ACCEPTED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    AWARDED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    CANCELLED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    CLOSED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-  }[s] || { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-bold tracking-wider uppercase rounded-md border ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s.replace('_', ' ')}
-    </span>
-  );
-};
 
 export default function SupplierQuotationDetail() {
   const { id } = useParams();
@@ -373,21 +352,21 @@ export default function SupplierQuotationDetail() {
                 </div>
               </div>
             ) : (
-              <div className="overflow-x-auto px-6 pb-6">
-                <table className="w-full text-left border-collapse whitespace-nowrap text-sm">
-                  <thead className="bg-zinc-50/80 border-b border-zinc-200">
+              <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar px-6 pb-6">
+                <table className="w-full min-w-[850px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Quotation Items Table">
+                  <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                     <tr>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">#</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Item</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Description</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">Quantity</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Unit</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">Unit Price</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">Disc %</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">GST</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Delivery Date</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">HSN/SAC</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">Line Total</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">#</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Item</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Description</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">Quantity</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Unit</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">Unit Price</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">Disc %</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">GST</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Delivery Date</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">HSN/SAC</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">Line Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
@@ -403,16 +382,16 @@ export default function SupplierQuotationDetail() {
                           <td className="px-4 py-4 text-zinc-400 text-xs">{idx + 1}</td>
                           <td className="px-4 py-4 font-semibold text-zinc-900 text-xs">{item.itemName || '-'}</td>
                           <td className="px-4 py-4 text-zinc-600 text-xs max-w-[180px] truncate">{item.description || '-'}</td>
-                          <td className="px-4 py-4 text-right font-medium text-zinc-800 text-xs">{toNum(item.quantity) || '-'}</td>
+                          <td className="px-4 py-4 text-right font-medium text-zinc-800 text-xs tabular-nums">{toNum(item.quantity) || '-'}</td>
                           <td className="px-4 py-4 text-zinc-600 text-xs">{item.unit || '-'}</td>
-                          <td className="px-4 py-4 text-right text-zinc-600 text-xs">{fmt(item.unitPrice)}</td>
-                          <td className="px-4 py-4 text-right text-zinc-600 text-xs">{toNum(item.discount) > 0 ? `${toNum(item.discount)}%` : '-'}</td>
-                          <td className="px-4 py-4 text-right text-zinc-600 text-xs">
+                          <td className="px-4 py-4 text-right text-zinc-600 text-xs tabular-nums">{fmt(item.unitPrice)}</td>
+                          <td className="px-4 py-4 text-right text-zinc-600 text-xs tabular-nums">{toNum(item.discount) > 0 ? `${toNum(item.discount)}%` : '-'}</td>
+                          <td className="px-4 py-4 text-right text-zinc-600 text-xs tabular-nums">
                             {taxRate > 0 ? (gstParts.length ? gstParts.join(', ') : `${taxRate}%`) : '-'}
                           </td>
                           <td className="px-4 py-4 text-zinc-600 text-xs">{item.deliveryDate ? new Date(item.deliveryDate).toLocaleDateString() : '-'}</td>
                           <td className="px-4 py-4 font-mono text-xs text-zinc-600">{item.hsnSacId || item.hsnSacCode || '-'}</td>
-                          <td className="px-4 py-4 text-right font-semibold text-zinc-800 text-xs">{fmt(item.total)}</td>
+                          <td className="px-4 py-4 text-right font-semibold text-zinc-800 text-xs tabular-nums">{fmt(item.total)}</td>
                         </tr>
                       );
                     })}

@@ -194,25 +194,25 @@ export default function ModuleFormModal({ isOpen, onClose, initialData = null, o
         ) : (
           <div className="p-6">
             <div className="space-y-4 animate-fade-in">
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/60 space-y-4">
+              <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-200/60 space-y-4">
                 <div>
-                  <label className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Client ID</label>
+                  <label className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Client ID</label>
                   <div className="flex items-center justify-between gap-3">
-                    <code className="text-sm font-mono font-semibold text-slate-700 truncate">
+                    <code className="text-sm font-mono font-semibold text-zinc-700 truncate">
                       {newCredentials.clientId}
                     </code>
-                    <button onClick={() => handleCopy(newCredentials.clientId, 'Client ID')} className="p-1.5 text-slate-400 hover:text-slate-700 bg-white shadow-sm border border-slate-200 rounded-md transition-colors shrink-0">
+                    <button onClick={() => handleCopy(newCredentials.clientId, 'Client ID')} className="p-1.5 text-zinc-400 hover:text-zinc-700 bg-white shadow-sm border border-zinc-200 rounded-md transition-colors shrink-0">
                       <Copy size={14} />
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Client Secret</label>
+                  <label className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Client Secret</label>
                   <div className="flex items-center justify-between gap-3">
-                    <code className="text-sm font-mono font-semibold text-slate-700 truncate">
+                    <code className="text-sm font-mono font-semibold text-zinc-700 truncate">
                       {newCredentials.clientSecret}
                     </code>
-                    <button onClick={() => handleCopy(newCredentials.clientSecret, 'Client Secret')} className="p-1.5 text-slate-400 hover:text-slate-700 bg-white shadow-sm border border-slate-200 rounded-md transition-colors shrink-0">
+                    <button onClick={() => handleCopy(newCredentials.clientSecret, 'Client Secret')} className="p-1.5 text-zinc-400 hover:text-zinc-700 bg-white shadow-sm border border-zinc-200 rounded-md transition-colors shrink-0">
                       <Copy size={14} />
                     </button>
                   </div>

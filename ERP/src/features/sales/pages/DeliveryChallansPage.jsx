@@ -200,20 +200,20 @@ function DeliveryChallanOverview({ challan }) {
             Line Items ({challan.items?.length || 0})
           </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs whitespace-nowrap">
-            <thead className="bg-white border-b border-zinc-100 text-[10.5px]">
+        <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+          <table className="w-full min-w-[750px] sm:min-w-full text-left text-xs whitespace-nowrap" aria-label="Delivery Challan Line Items Table">
+            <thead className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold text-zinc-600 sticky top-0 z-10">
               <tr>
-                <th className="px-3 py-2 font-semibold text-zinc-600">Product</th>
-                <th className="px-3 py-2 font-semibold text-zinc-600">Description</th>
-                <th className="px-3 py-2 font-semibold text-zinc-600">HSN/SAC</th>
-                <th className="px-3 py-2 font-semibold text-zinc-600 text-right">Quantity</th>
-                <th className="px-3 py-2 font-semibold text-zinc-600">Unit</th>
-                <th className="px-3 py-2 font-semibold text-zinc-600 text-right">Unit Price</th>
-                <th className="px-3 py-2 font-semibold text-zinc-600 text-right">Discount</th>
-                <th className="px-3 py-2 font-semibold text-zinc-600 text-right">Taxable Amount</th>
-                <th className="px-3 py-2 font-semibold text-zinc-600 text-right">Tax</th>
-                <th className="px-3 py-2 font-semibold text-zinc-600 text-right">Total Amount</th>
+                <th scope="col" className="px-3 py-2 font-semibold">Product</th>
+                <th scope="col" className="px-3 py-2 font-semibold">Description</th>
+                <th scope="col" className="px-3 py-2 font-semibold">HSN/SAC</th>
+                <th scope="col" className="px-3 py-2 font-semibold text-right">Quantity</th>
+                <th scope="col" className="px-3 py-2 font-semibold">Unit</th>
+                <th scope="col" className="px-3 py-2 font-semibold text-right">Unit Price</th>
+                <th scope="col" className="px-3 py-2 font-semibold text-right">Discount</th>
+                <th scope="col" className="px-3 py-2 font-semibold text-right">Taxable Amount</th>
+                <th scope="col" className="px-3 py-2 font-semibold text-right">Tax</th>
+                <th scope="col" className="px-3 py-2 font-semibold text-right">Total Amount</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 bg-white">
@@ -222,13 +222,13 @@ function DeliveryChallanOverview({ challan }) {
                   <td className="px-3 py-2 font-semibold text-zinc-900">{it.itemName || '—'}</td>
                   <td className="px-3 py-2 text-zinc-500 max-w-[140px] truncate">{it.description || '—'}</td>
                   <td className="px-3 py-2 font-mono text-zinc-600">{it.hsnSacCode || '—'}</td>
-                  <td className="px-3 py-2 text-right font-medium text-zinc-900 font-mono">{it.quantity}</td>
+                  <td className="px-3 py-2 text-right font-medium text-zinc-900 font-mono tabular-nums">{it.quantity}</td>
                   <td className="px-3 py-2 text-zinc-600">{it.unit || 'Nos'}</td>
-                  <td className="px-3 py-2 text-right font-mono text-zinc-700">{fmtCurrency(it.unitPrice)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-zinc-500">{fmtCurrency(it.discountAmount)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-zinc-700">{fmtCurrency(it.taxableAmount)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-zinc-700">{fmtCurrency(it.taxAmount)}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-zinc-900">{fmtCurrency(it.totalAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono text-zinc-700 tabular-nums">{fmtCurrency(it.unitPrice)}</td>
+                  <td className="px-3 py-2 text-right font-mono text-zinc-500 tabular-nums">{fmtCurrency(it.discountAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono text-zinc-700 tabular-nums">{fmtCurrency(it.taxableAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono text-zinc-700 tabular-nums">{fmtCurrency(it.taxAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-zinc-900 tabular-nums">{fmtCurrency(it.totalAmount)}</td>
                 </tr>
               ))}
             </tbody>

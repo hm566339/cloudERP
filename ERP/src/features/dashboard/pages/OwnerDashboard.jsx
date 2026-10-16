@@ -501,7 +501,13 @@ function OwnerDashboardContent() {
                               <Building2 size={14} />
                             </div>
                             <div>
-                              <div className="font-bold text-zinc-900">{comp.name || comp.legalName}</div>
+                              <Link
+                                to={`/company/${comp.id}/dashboard`}
+                                onClick={() => handleSelectCompany(comp)}
+                                className="font-bold text-zinc-900 hover:text-zinc-700 transition-colors"
+                              >
+                                {comp.name || comp.legalName}
+                              </Link>
                               {comp.legalName && comp.legalName !== comp.name && (
                                 <div className="text-[10px] text-zinc-400 font-normal">{comp.legalName}</div>
                               )}
@@ -511,9 +517,13 @@ function OwnerDashboardContent() {
 
                         {/* Code */}
                         <td className="py-3.5 px-5">
-                          <span className="font-mono text-zinc-700 font-bold uppercase text-[11px] bg-zinc-100 px-2 py-0.5 rounded">
+                          <Link
+                            to={`/company/${comp.id}/dashboard`}
+                            onClick={() => handleSelectCompany(comp)}
+                            className="font-mono text-zinc-700 font-bold uppercase text-[11px] bg-zinc-100 hover:bg-zinc-200 px-2 py-0.5 rounded transition-colors inline-block"
+                          >
                             {comp.code || '—'}
-                          </span>
+                          </Link>
                         </td>
 
                         {/* Currency */}
@@ -544,39 +554,20 @@ function OwnerDashboardContent() {
                         {/* Actions */}
                         <td className="py-3.5 px-5 text-right">
                           <div className="inline-flex items-center gap-1.5 justify-end">
-                            {isCurrent ? (
-                              <>
-                                <Link
-                                  to="/accounts/dashboard"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-900 text-white text-[11px] font-semibold hover:bg-zinc-800 transition-colors shadow-2xs"
-                                >
-                                  <span>Open Dashboard</span>
-                                  <ArrowRight size={11} />
-                                </Link>
-                                <Link
-                                  to={`/company/${comp.id}/settings`}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-zinc-200 text-zinc-700 text-[11px] font-semibold hover:bg-zinc-50 transition-colors"
-                                >
-                                  <span>Manage</span>
-                                </Link>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => handleSelectCompany(comp)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-zinc-200 text-zinc-700 text-[11px] font-semibold hover:bg-zinc-50 transition-colors shadow-2xs"
-                                >
-                                  <span>Switch To</span>
-                                </button>
-                                <Link
-                                  to={`/company/${comp.id}/settings`}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-zinc-200 text-zinc-700 text-[11px] font-semibold hover:bg-zinc-50 transition-colors"
-                                >
-                                  <span>Manage</span>
-                                </Link>
-                              </>
-                            )}
+                            <Link
+                              to={`/company/${comp.id}/dashboard`}
+                              onClick={() => handleSelectCompany(comp)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-900 text-white text-[11px] font-semibold hover:bg-zinc-800 transition-colors shadow-2xs"
+                            >
+                              <span>Open Workspace</span>
+                              <ArrowRight size={11} />
+                            </Link>
+                            <Link
+                              to={`/company/${comp.id}/settings`}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-zinc-200 text-zinc-700 text-[11px] font-semibold hover:bg-zinc-50 transition-colors"
+                            >
+                              <span>Manage</span>
+                            </Link>
                           </div>
                         </td>
                       </tr>

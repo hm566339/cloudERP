@@ -97,7 +97,7 @@ export default function WorkflowAttachmentsPanel({
             type="button"
             disabled={isUploading || !selectedFile}
             onClick={handleUploadSubmit}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors disabled:opacity-40 shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-colors disabled:opacity-40 shrink-0"
           >
             {isUploading ? <Loader2 size={13} className="animate-spin" /> : <UploadCloud size={13} />}
             Upload

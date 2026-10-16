@@ -861,7 +861,7 @@ export default function ExpensesTab({
           icon: <ShieldCheck size={14} className="text-indigo-600" />,
           disabled: isProcessing,
           onClick: () => onPostToAccounting(exp),
-          className: 'text-indigo-600 hover:text-indigo-700',
+          className: 'text-zinc-900 hover:text-zinc-700',
         }
       ] : []),
       // Cancel: Only when DRAFT or SUBMITTED

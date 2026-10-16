@@ -13,6 +13,8 @@ import PurchaseNavigation from '../../../components/common/PurchaseNavigation';
 import { useRoutePath } from '../../../hooks/useRoutePath';
 import { formatCurrency } from '../../../utils/formatters';
 
+import StatusBadge from '../../../components/common/StatusBadge';
+
 const toNum = (v) => {
   if (v === null || v === undefined || v === '') return 0;
   const n = Number(v);
@@ -20,29 +22,6 @@ const toNum = (v) => {
 };
 
 const fmt = (v) => (v === null || v === undefined || v === '' ? '-' : formatCurrency(toNum(v)));
-
-const StatusBadge = ({ status }) => {
-  if (!status) return <span className="text-zinc-400">-</span>;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    DRAFT: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    SUBMITTED: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    SENT: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    SHORTLISTED: { cls: 'bg-violet-50 text-violet-700 border-violet-200', dot: 'bg-violet-500' },
-    ACCEPTED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    AWARDED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    CANCELLED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    CLOSED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-  }[s] || { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-bold tracking-wider uppercase rounded-md border ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s.replace('_', ' ')}
-    </span>
-  );
-};
 
 export default function QuotationComparison() {
   const { rfqId } = useParams();
@@ -235,13 +214,13 @@ export default function QuotationComparison() {
                     </div>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto px-6 pb-6">
-                    <table className="w-full text-left border-collapse whitespace-nowrap text-sm">
-                      <thead className="bg-zinc-50/80 border-b border-zinc-200">
+                  <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar px-6 pb-6">
+                    <table className="w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Quotation Item Comparison Table">
+                      <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-20">
                         <tr>
-                          <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 sticky left-0 bg-zinc-50/95 z-10">Item</th>
+                          <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 sticky left-0 bg-zinc-50/95 z-10">Item</th>
                           {quotations.map((q, idx) => (
-                            <th key={q.id} className={`px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right ${idx === 0 ? 'border-l border-zinc-200' : 'border-l border-zinc-100'}`}>
+                            <th scope="col" key={q.id} className={`px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right ${idx === 0 ? 'border-l border-zinc-200' : 'border-l border-zinc-100'}`}>
                               {vendorName(q)}<br />
                               <span className="text-zinc-400 font-medium normal-case">{q.quotationNumber}</span>
                             </th>
@@ -316,22 +295,22 @@ export default function QuotationComparison() {
                 <div className="p-6 pb-4">
                   <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Supplier Quotations</h3>
                 </div>
-                <div className="overflow-x-auto px-6 pb-6">
-                  <table className="w-full text-left border-collapse whitespace-nowrap text-sm">
-                    <thead className="bg-zinc-50/80 border-b border-zinc-200">
+                <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar px-6 pb-6">
+                  <table className="w-full min-w-[850px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Supplier Quotations Table">
+                    <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                       <tr>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Supplier</th>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Quotation Number</th>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Quotation Date</th>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Valid Until</th>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Delivery Terms</th>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Payment Terms</th>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">Freight</th>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">Discount</th>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">Taxable Amount</th>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">Grand Total</th>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-center">Status</th>
-                        <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">Actions</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Supplier</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Quotation Number</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Quotation Date</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Valid Until</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Delivery Terms</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Payment Terms</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">Freight</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">Discount</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">Taxable Amount</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">Grand Total</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-center">Status</th>
+                        <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100">
@@ -345,10 +324,10 @@ export default function QuotationComparison() {
                             <td className="px-4 py-3 text-zinc-600 text-xs">{q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '-'}</td>
                             <td className="px-4 py-3 text-zinc-600 text-xs max-w-[140px] truncate">{q.deliveryTerms || '-'}</td>
                             <td className="px-4 py-3 text-zinc-600 text-xs max-w-[140px] truncate">{q.paymentTerms || '-'}</td>
-                            <td className="px-4 py-3 text-right text-zinc-600 text-xs">{fmt(q.freight)}</td>
-                            <td className="px-4 py-3 text-right text-zinc-600 text-xs">{q.discount ? fmt(q.discount) : '-'}</td>
-                            <td className="px-4 py-3 text-right text-zinc-600 text-xs">{fmt(q.taxableAmount)}</td>
-                            <td className="px-4 py-3 text-right font-semibold text-zinc-800 text-xs">{fmt(q.grandTotal)}</td>
+                            <td className="px-4 py-3 text-right text-zinc-600 text-xs tabular-nums">{fmt(q.freight)}</td>
+                            <td className="px-4 py-3 text-right text-zinc-600 text-xs tabular-nums">{q.discount ? fmt(q.discount) : '-'}</td>
+                            <td className="px-4 py-3 text-right text-zinc-600 text-xs tabular-nums">{fmt(q.taxableAmount)}</td>
+                            <td className="px-4 py-3 text-right font-semibold text-zinc-800 text-xs tabular-nums">{fmt(q.grandTotal)}</td>
                             <td className="px-4 py-3 text-center"><StatusBadge status={q.status} /></td>
                             <td className="px-4 py-3 text-right">
                               <div className="flex items-center justify-end gap-1 flex-wrap">

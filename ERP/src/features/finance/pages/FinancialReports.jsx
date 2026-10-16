@@ -56,17 +56,17 @@ export default function FinancialReports() {
           {reports.map((report, idx) => (
             <div 
               key={idx} 
-              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col h-full"
+              className="bg-white rounded-lg shadow-sm border border-zinc-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col h-full"
               onClick={() => navigate(report.path)}
             >
               <div className="p-6 flex-grow">
                 <div className={`w-14 h-14 rounded-xl ${report.color} flex items-center justify-center mb-4`}>
                   {report.icon}
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{report.title}</h3>
-                <p className="text-gray-500">{report.description}</p>
+                <h3 className="text-xl font-bold text-zinc-900 mb-2">{report.title}</h3>
+                <p className="text-zinc-500">{report.description}</p>
               </div>
-              <div className="bg-gray-50 px-6 py-3 border-t border-gray-100 flex items-center justify-between text-indigo-600 font-medium">
+              <div className="bg-zinc-50 px-6 py-3 border-t border-zinc-100 flex items-center justify-between text-indigo-600 font-medium">
                 <span>View Report</span>
                 <ArrowRight size={16} />
               </div>

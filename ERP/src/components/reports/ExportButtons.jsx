@@ -52,9 +52,9 @@ export default function ExportButtons({ onExportPdf, onExportExcel, onPrint, isL
         <button
           onClick={onPrint}
           disabled={isLoading}
-          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+          className="inline-flex items-center px-3 py-2 border border-zinc-300 shadow-sm text-sm leading-4 font-medium rounded-md text-zinc-700 bg-white hover:bg-zinc-50 disabled:opacity-50"
         >
-          <Printer size={16} className="mr-2 text-gray-500" />
+          <Printer size={16} className="mr-2 text-zinc-500" />
           Print
         </button>
       )}
@@ -62,10 +62,10 @@ export default function ExportButtons({ onExportPdf, onExportExcel, onPrint, isL
         <button
           onClick={handlePdf}
           disabled={isLoading || exportingPdf}
-          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+          className="inline-flex items-center px-3 py-2 border border-zinc-300 shadow-sm text-sm leading-4 font-medium rounded-md text-zinc-700 bg-white hover:bg-zinc-50 disabled:opacity-50"
         >
           {exportingPdf ? (
-            <div className="w-4 h-4 mr-2 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-4 h-4 mr-2 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <FileText size={16} className="mr-2 text-red-500" />
           )}
@@ -76,10 +76,10 @@ export default function ExportButtons({ onExportPdf, onExportExcel, onPrint, isL
         <button
           onClick={handleExcel}
           disabled={isLoading || exportingExcel}
-          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+          className="inline-flex items-center px-3 py-2 border border-zinc-300 shadow-sm text-sm leading-4 font-medium rounded-md text-zinc-700 bg-white hover:bg-zinc-50 disabled:opacity-50"
         >
           {exportingExcel ? (
-            <div className="w-4 h-4 mr-2 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-4 h-4 mr-2 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <Download size={16} className="mr-2 text-green-600" />
           )}

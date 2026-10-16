@@ -437,7 +437,7 @@ export default function RFQs() {
         'aria-label': 'Mark RFQ as Sent',
         icon: <Send size={14} />,
         onClick: () => handleWorkflow('Send', sendMutation, rfq.id),
-        className: 'text-blue-600 hover:text-blue-700'
+        className: 'text-zinc-900 hover:text-zinc-700'
       }
     ] : []),
     ...(rfq.status === 'SENT' ? [
@@ -449,7 +449,7 @@ export default function RFQs() {
         icon: sendingEmailId === rfq.id ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />,
         disabled: sendingEmailId === rfq.id,
         onClick: (e) => handleSendEmail(rfq, e),
-        className: 'text-indigo-600 hover:text-indigo-700'
+        className: 'text-zinc-900 hover:text-zinc-700'
       }
     ] : []),
     ...(rfq.status === 'SENT' || rfq.status === 'OPEN' ? [

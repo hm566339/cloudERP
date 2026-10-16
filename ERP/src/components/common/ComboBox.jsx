@@ -18,7 +18,20 @@ export default function ComboBox({
 }) {
   const [isFocused, setIsFocused] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [openUpward, setOpenUpward] = useState(false);
   const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (isFocused && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      if (spaceBelow < 240 && rect.top > spaceBelow) {
+        setOpenUpward(true);
+      } else {
+        setOpenUpward(false);
+      }
+    }
+  }, [isFocused]);
 
   // Initialize search term from selected value
   // Do NOT overwrite if focused, so we don't erase user's active typing when API options return
@@ -125,7 +138,9 @@ export default function ComboBox({
 
       {/* Autocomplete Dropdown */}
       {isFocused && (filteredOptions.length > 0 || showCreateOption) && (
-        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100 max-h-60 overflow-y-auto z-50">
+        <div className={`absolute left-0 w-full bg-white border border-zinc-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 max-h-56 overflow-y-auto z-50 ${
+          openUpward ? 'bottom-full mb-1.5' : 'top-full mt-1'
+        }`}>
           <div className="py-1">
             {filteredOptions.length === 0 && !showCreateOption && (
               <div className="py-6 text-center text-sm text-zinc-500">

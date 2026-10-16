@@ -12,32 +12,12 @@ import { creditNotesApi } from '../../../api/account';
 import { PageLoader } from '../../../components/common/SkeletonLoader';
 import Modal from '../../../components/common/Modal';
 import { useAppDispatch } from '../../../app/hooks';
+import StatusBadge from '../../../components/common/StatusBadge';
 import { addAlert } from '../../notifications/notificationSlice';
 import { confirmDialog } from '../../../utils/confirmDialog';
 import { useRoutePath } from "../../../hooks/useRoutePath";
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-
-const StatusBadge = ({ status }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    APPROVED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    POSTED: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    SUBMITTED: { cls: 'bg-indigo-50 text-indigo-700 border-indigo-200', dot: 'bg-indigo-500' },
-    DRAFT: { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-500' },
-    REVERSED: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    CANCELLED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-  }[s] || { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`px-2.5 py-1 text-[8.8px] font-semibold rounded-md border inline-flex items-center gap-1.5 uppercase ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s}
-    </span>
-  );
-};
 
 const EmptyState = ({ title, message, icon: Icon }) => (
   <div className="flex flex-col items-center justify-center p-12 text-center bg-white border border-zinc-100 rounded-xl shadow-sm h-full">
@@ -403,22 +383,22 @@ export default function CreditNoteDetails() {
         </div>
 
         {/* Main Content (70%) */}
-        <div className="w-full lg:w-[70%] bg-white rounded-xl border border-zinc-200 shadow-sm flex flex-col overflow-hidden h-[calc(100vh-280px)] min-h-[400px]">
+        <div className="w-full lg:w-[70%] bg-white rounded-xl border border-zinc-200 shadow-sm flex flex-col overflow-hidden min-h-[400px] lg:h-[calc(100vh-280px)]">
           {/* Scrollable Tabs Header */}
-          <div className="bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm sticky top-0 z-10">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5">
+          <div className="bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm sticky top-0 z-10 overflow-x-auto no-scrollbar">
+            <div className="flex overflow-x-auto no-scrollbar gap-1.5 pb-0.5 min-w-max">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold rounded-md transition-all ${
+                  className={`flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all shrink-0 whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/50'
                       : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100/50'
                   }`}
                 >
                   {React.cloneElement(tab.icon, { 
-                    className: activeTab === tab.id ? 'text-blue-600' : 'text-zinc-400' 
+                    className: activeTab === tab.id ? 'text-zinc-900' : 'text-zinc-400' 
                   })}
                   {tab.label}
                 </button>
@@ -538,17 +518,17 @@ export default function CreditNoteDetails() {
                 {items.length === 0 ? (
                   <EmptyState title="No Line Items" message="There are no specific line items recorded for this credit note." icon={ShoppingCart} />
                 ) : (
-                  <div className="border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
-                    <table className="w-full text-left text-sm whitespace-nowrap">
-                      <thead className="bg-zinc-50 border-b border-zinc-200 text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">
+                  <div className="border border-zinc-200 rounded-xl overflow-x-auto min-w-0 max-w-full custom-scrollbar shadow-sm">
+                    <table className="w-full min-w-[640px] sm:min-w-full text-left text-sm whitespace-nowrap" aria-label="Credit Note Items Table">
+                      <thead className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold text-zinc-600 sticky top-0 z-10">
                         <tr>
-                          <th className="px-4 py-3">Item Code</th>
-                          <th className="px-4 py-3">Description</th>
-                          <th className="px-4 py-3 text-right">Qty</th>
-                          <th className="px-4 py-3 text-right">Unit Price</th>
-                          <th className="px-4 py-3 text-right">Taxable</th>
-                          <th className="px-4 py-3 text-right">Tax</th>
-                          <th className="px-4 py-3 text-right">Total</th>
+                          <th scope="col" className="px-4 py-3">Item Code</th>
+                          <th scope="col" className="px-4 py-3">Description</th>
+                          <th scope="col" className="px-4 py-3 text-right">Qty</th>
+                          <th scope="col" className="px-4 py-3 text-right">Unit Price</th>
+                          <th scope="col" className="px-4 py-3 text-right">Taxable</th>
+                          <th scope="col" className="px-4 py-3 text-right">Tax</th>
+                          <th scope="col" className="px-4 py-3 text-right">Total</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-100">
@@ -556,11 +536,11 @@ export default function CreditNoteDetails() {
                           <tr key={idx} className="hover:bg-zinc-50/50">
                             <td className="px-4 py-3 font-medium text-zinc-900">{item.itemCode || '-'}</td>
                             <td className="px-4 py-3 text-zinc-700">{item.description || item.itemName || '-'}</td>
-                            <td className="px-4 py-3 text-right text-zinc-900">{item.quantity || 1}</td>
-                            <td className="px-4 py-3 text-right text-zinc-900">{fmt(item.unitPrice || item.rate)}</td>
-                            <td className="px-4 py-3 text-right font-medium text-zinc-900">{fmt(item.taxableAmount || item.amount)}</td>
-                            <td className="px-4 py-3 text-right text-zinc-600">{fmt(item.taxAmount || item.gstAmount || (item.cgst + item.sgst + item.igst + item.cess))}</td>
-                            <td className="px-4 py-3 text-right font-bold text-zinc-900">{fmt(item.totalAmount)}</td>
+                            <td className="px-4 py-3 text-right text-zinc-900 tabular-nums">{item.quantity || 1}</td>
+                            <td className="px-4 py-3 text-right text-zinc-900 tabular-nums">{fmt(item.unitPrice || item.rate)}</td>
+                            <td className="px-4 py-3 text-right font-medium text-zinc-900 tabular-nums">{fmt(item.taxableAmount || item.amount)}</td>
+                            <td className="px-4 py-3 text-right text-zinc-600 tabular-nums">{fmt(item.taxAmount || item.gstAmount || (item.cgst + item.sgst + item.igst + item.cess))}</td>
+                            <td className="px-4 py-3 text-right font-bold text-zinc-900 tabular-nums">{fmt(item.totalAmount)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -668,19 +648,19 @@ export default function CreditNoteDetails() {
                 {allocations.length === 0 ? (
                   <EmptyState title="No Allocations" message="This credit note has not been allocated to any invoices." icon={CheckSquare} />
                 ) : (
-                  <div className="border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
-                    <table className="w-full text-left text-sm whitespace-nowrap">
-                      <thead className="bg-zinc-50 border-b border-zinc-200 text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">
+                  <div className="border border-zinc-200 rounded-xl overflow-x-auto min-w-0 max-w-full custom-scrollbar shadow-sm">
+                    <table className="w-full text-left text-sm whitespace-nowrap" aria-label="Credit Note Allocations Table">
+                      <thead className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold text-zinc-600 sticky top-0 z-10">
                         <tr>
-                          <th className="px-4 py-3">Applied Invoice</th>
-                          <th className="px-4 py-3 text-right">Allocated Amount</th>
+                          <th scope="col" className="px-4 py-3">Applied Invoice</th>
+                          <th scope="col" className="px-4 py-3 text-right">Allocated Amount</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-100">
                         {allocations.map((alloc, idx) => (
                           <tr key={idx} className="hover:bg-zinc-50/50">
                             <td className="px-4 py-3 font-semibold text-blue-600 hover:underline cursor-pointer">{alloc.invoiceNo || alloc.invoiceNumber || '-'}</td>
-                            <td className="px-4 py-3 text-right font-bold text-zinc-900">{curr} {fmt(alloc.allocatedAmount)}</td>
+                            <td className="px-4 py-3 text-right font-bold text-zinc-900 tabular-nums">{curr} {fmt(alloc.allocatedAmount)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -754,7 +734,7 @@ export default function CreditNoteDetails() {
                              <p className="text-sm font-medium text-zinc-900 truncate">Credit Note PDF</p>
                              <p className="text-[8px] text-zinc-500">System Generated</p>
                            </div>
-                           <button className="text-blue-600 hover:text-blue-700">
+                           <button className="text-zinc-900 hover:text-zinc-700">
                              <Download size={16} />
                            </button>
                         </div>
@@ -824,7 +804,7 @@ export default function CreditNoteDetails() {
                 required
                 value={formData.noteDate}
                 onChange={e => setFormData({ ...formData, noteDate: e.target.value })}
-                className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-all"
               />
             </div>
             <div>
@@ -833,7 +813,7 @@ export default function CreditNoteDetails() {
                 type="text"
                 value={formData.referenceNo}
                 onChange={e => setFormData({ ...formData, referenceNo: e.target.value })}
-                className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-all"
                 placeholder="Optional"
               />
             </div>
@@ -842,7 +822,7 @@ export default function CreditNoteDetails() {
               <textarea
                 value={formData.reason}
                 onChange={e => setFormData({ ...formData, reason: e.target.value })}
-                className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all min-h-[64px] resize-y"
+                className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-all min-h-[64px] resize-y"
                 placeholder="Reason for credit note"
               />
             </div>

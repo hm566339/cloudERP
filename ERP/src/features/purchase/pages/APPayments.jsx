@@ -17,6 +17,7 @@ import { useApiQuery } from '../../../hooks/useApi';
 import { vendorsApi } from '../../../api/account';
 import usePermission from '../../../hooks/usePermission';
 import RequirePermission from '../../../components/common/RequirePermission';
+import StatusBadge from '../../../components/common/StatusBadge';
 import Modal from '../../../components/common/Modal';
 import { confirmDialog } from '../../../utils/confirmDialog';
 import useUrlFilters from '../../../hooks/useUrlFilters';
@@ -54,37 +55,6 @@ const DEFAULT_COLUMNS = [
   'glPostingStatus'
 ];
 
-const STATUS_CONFIG = {
-  CREATED: { cls: 'bg-zinc-100 text-zinc-700 border-zinc-200', dot: 'bg-zinc-400' },
-  DRAFT: { cls: 'bg-zinc-100 text-zinc-700 border-zinc-200', dot: 'bg-zinc-400' },
-  PENDING: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  POSTED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-  PAID: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-  REVERSED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-  CANCELLED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-  FAILED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-};
-
-const GL_STATUS_CONFIG = {
-  POSTED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-  PENDING: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  FAILED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-  NOT_POSTED: { cls: 'bg-zinc-100 text-zinc-700 border-zinc-200', dot: 'bg-zinc-400' },
-};
-
-const StatusBadge = ({ status, isGl = false }) => {
-  if (!status) return <span className="text-zinc-400">-</span>;
-  const s = status.toString().toUpperCase();
-  const map = isGl ? GL_STATUS_CONFIG : STATUS_CONFIG;
-  const cfg = map[s] || { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold tracking-wide uppercase rounded-full border ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s.replace(/_/g, ' ')}
-    </span>
-  );
-};
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-';

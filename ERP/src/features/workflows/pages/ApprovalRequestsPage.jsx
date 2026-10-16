@@ -147,7 +147,7 @@ export default function ApprovalRequestsPage() {
               onChange={(event) => {
                 setPageSize(Number(event.target.value));
               }}
-              className="h-9 rounded-lg border border-zinc-200 bg-zinc-50 px-2 text-sm text-zinc-700 outline-none focus:border-blue-500"
+              className="h-9 rounded-lg border border-zinc-200 bg-zinc-50 px-2 text-sm text-zinc-700 outline-none focus:border-zinc-400"
             >
               {[10, 20, 50].map((size) => (
                 <option key={size} value={size}>{size}</option>
@@ -156,16 +156,16 @@ export default function ApprovalRequestsPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-zinc-50 text-[11px] uppercase tracking-wide text-zinc-500">
+        <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+          <table className="w-full min-w-[700px] sm:min-w-full text-left text-sm" aria-label="Approval Requests Table">
+            <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-600 border-b border-zinc-200 sticky top-0 z-10">
               <tr>
-                <th className="px-4 py-3 font-semibold">Document</th>
-                <th className="px-4 py-3 font-semibold">Transaction</th>
-                <th className="px-4 py-3 font-semibold">Assigned</th>
-                <th className="px-4 py-3 font-semibold">Due</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold text-right">Actions</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Document</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Transaction</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Assigned</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Due</th>
+                <th scope="col" className="px-4 py-3 font-semibold">Status</th>
+                <th scope="col" className="px-4 py-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">

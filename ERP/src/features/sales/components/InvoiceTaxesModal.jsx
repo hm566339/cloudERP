@@ -223,9 +223,9 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
               </div>
 
               <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 text-xs uppercase">
+                <div className="overflow-x-auto min-w-0 custom-scrollbar">
+                  <table className="w-full text-left text-sm whitespace-nowrap" aria-label="Invoice Taxes Table">
+                    <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 text-xs font-semibold uppercase sticky top-0 z-10">
                       <tr>
                         <SortableHeader field="gstSlabName" currentSortBy={sortBy} currentSortOrder={sortOrder} onSort={handleColumnSort} className="p-4">GST Slab</SortableHeader>
                         <SortableHeader field="taxableAmount" currentSortBy={sortBy} currentSortOrder={sortOrder} onSort={handleColumnSort} className="p-4 text-right">Taxable</SortableHeader>
@@ -234,7 +234,7 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
                         <SortableHeader field="igstAmount" currentSortBy={sortBy} currentSortOrder={sortOrder} onSort={handleColumnSort} className="p-4 text-right">IGST</SortableHeader>
                         <SortableHeader field="cessAmount" currentSortBy={sortBy} currentSortOrder={sortOrder} onSort={handleColumnSort} className="p-4 text-right">CESS</SortableHeader>
                         <SortableHeader field="createdAt" currentSortBy={sortBy} currentSortOrder={sortOrder} onSort={handleColumnSort} className="p-4">Created</SortableHeader>
-                        <th className="p-4 w-20 text-center">Actions</th>
+                        <th scope="col" className="p-4 w-20 text-center text-xs font-semibold uppercase">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100">
@@ -251,25 +251,25 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
                           <tr key={tax.id} className={`hover:bg-zinc-50/50 transition-colors ${tax.isDeleted ? 'opacity-50' : ''}`}>
                             <td className="p-4">
                               <span className="font-medium text-zinc-900">{tax.gstSlabName || 'Unknown'}</span>
-                              {tax.isDeleted && <span className="ml-2 badge badge-danger text-[8px]">Deleted</span>}
+                              {tax.isDeleted && <span className="ml-2 badge badge-danger text-[10px]">Deleted</span>}
                             </td>
-                            <td className="p-4 text-right font-medium text-zinc-900">{tax.taxableAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td className="p-4 text-right text-zinc-600">{tax.cgstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td className="p-4 text-right text-zinc-600">{tax.sgstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td className="p-4 text-right text-zinc-600">{tax.igstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td className="p-4 text-right text-zinc-600">{tax.cessAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td className="p-4 text-right font-medium text-zinc-900 tabular-nums font-mono">{tax.taxableAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td className="p-4 text-right text-zinc-600 tabular-nums font-mono">{tax.cgstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td className="p-4 text-right text-zinc-600 tabular-nums font-mono">{tax.sgstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td className="p-4 text-right text-zinc-600 tabular-nums font-mono">{tax.igstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td className="p-4 text-right text-zinc-600 tabular-nums font-mono">{tax.cessAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                             <td className="p-4 text-zinc-500 text-xs">{new Date(tax.createdAt).toLocaleDateString()}</td>
                             <td className="p-4">
                               <div className="flex items-center justify-center gap-2">
                                 {!tax.isDeleted && (
                                   <>
                                     <RequirePermission module="SALES_INVOICES" action="UPDATE">
-                                      <button onClick={() => handleOpenForm(tax)} className="text-zinc-400 hover:text-blue-600 transition-colors">
+                                      <button onClick={() => handleOpenForm(tax)} className="p-1.5 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" aria-label="Edit tax entry">
                                         <Edit2 size={16} />
                                       </button>
                                     </RequirePermission>
                                     <RequirePermission module="SALES_INVOICES" action="DELETE">
-                                      <button onClick={() => handleDelete(tax.id)} className="text-zinc-400 hover:text-red-600 transition-colors">
+                                      <button onClick={() => handleDelete(tax.id)} className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" aria-label="Delete tax entry">
                                         <Trash2 size={16} />
                                       </button>
                                     </RequirePermission>

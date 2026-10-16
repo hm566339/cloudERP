@@ -33,6 +33,7 @@ export const purchaseApiSlice = baseApi.injectEndpoints({
         url: "/api/account/purchase-orders",
         method: "POST",
         data: { data },
+        params: data?.companyId ? { companyId: data.companyId } : undefined,
       }),
       invalidatesTags: ["Purchase"],
     }),

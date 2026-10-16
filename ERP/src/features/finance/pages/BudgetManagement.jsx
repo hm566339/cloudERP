@@ -139,7 +139,7 @@ export default function BudgetManagement() {
                 <p className="font-semibold text-zinc-600 text-sm">No active budgets found</p>
                 <p className="text-xs text-zinc-400 mt-1 mb-4">Create your first budget to start tracking allocations</p>
                 <button onClick={() => navigate(buildPath('/accounts/finance/budget-headers'))}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-900 hover:text-zinc-700 transition-colors">
                   Create your first budget <ArrowRight size={14} />
                 </button>
               </div>

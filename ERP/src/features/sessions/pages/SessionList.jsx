@@ -253,15 +253,15 @@ export default function SessionList() {
               </span>
             </div>
             
-            <div className="overflow-x-auto">
-              <table className="w-full table-fixed divide-y divide-zinc-200 text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }}>
-                <thead>
-                  <tr className="bg-zinc-50/80 border-b border-zinc-200 text-[10px] font-bold text-zinc-500 uppercase tracking-wider select-none">
-                    <th className="w-[27%] min-w-[160px] px-4 py-3">Device & User</th>
-                    <th className="w-[25%] min-w-[140px] px-4 py-3">Network</th>
-                    <th className="w-[22%] min-w-[130px] px-4 py-3">Login Time</th>
-                    <th className="w-[16%] min-w-[100px] px-4 py-3">Status</th>
-                    <th className="w-[10%] min-w-[60px] px-4 py-3 text-right">Actions</th>
+            <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+              <table className="w-full min-w-[620px] sm:min-w-full table-fixed divide-y divide-zinc-200 text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="My Sessions Table">
+                <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
+                  <tr className="text-xs font-semibold text-zinc-600 uppercase tracking-wider select-none">
+                    <th scope="col" className="w-[27%] min-w-[160px] px-4 py-3">Device & User</th>
+                    <th scope="col" className="w-[25%] min-w-[140px] px-4 py-3">Network</th>
+                    <th scope="col" className="w-[22%] min-w-[130px] px-4 py-3">Login Time</th>
+                    <th scope="col" className="w-[16%] min-w-[100px] px-4 py-3">Status</th>
+                    <th scope="col" className="w-[10%] min-w-[60px] px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
@@ -300,15 +300,15 @@ export default function SessionList() {
                 </span>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full table-fixed divide-y divide-zinc-200 text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }}>
-                  <thead>
-                    <tr className="bg-zinc-50/80 border-b border-zinc-200 text-[10px] font-bold text-zinc-500 uppercase tracking-wider select-none">
-                      <th className="w-[27%] min-w-[160px] px-4 py-3">Device & User</th>
-                      <th className="w-[25%] min-w-[140px] px-4 py-3">Network</th>
-                      <th className="w-[22%] min-w-[130px] px-4 py-3">Login Time</th>
-                      <th className="w-[16%] min-w-[100px] px-4 py-3">Status</th>
-                      <th className="w-[10%] min-w-[60px] px-4 py-3 text-right">Actions</th>
+              <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+                <table className="w-full min-w-[620px] sm:min-w-full table-fixed divide-y divide-zinc-200 text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="Company Sessions Table">
+                  <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
+                    <tr className="text-xs font-semibold text-zinc-600 uppercase tracking-wider select-none">
+                      <th scope="col" className="w-[27%] min-w-[160px] px-4 py-3">Device & User</th>
+                      <th scope="col" className="w-[25%] min-w-[140px] px-4 py-3">Network</th>
+                      <th scope="col" className="w-[22%] min-w-[130px] px-4 py-3">Login Time</th>
+                      <th scope="col" className="w-[16%] min-w-[100px] px-4 py-3">Status</th>
+                      <th scope="col" className="w-[10%] min-w-[60px] px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">

@@ -316,20 +316,20 @@ export default function BankAccountDetails() {
         <div className="w-full lg:w-[70%] bg-white rounded-xl border border-zinc-200 shadow-sm flex flex-col min-h-[480px] overflow-hidden">
           
           {/* Tabs Header */}
-          <div className="bg-zinc-50/80 border-b border-zinc-200/80 p-1.5 sticky top-0 z-10">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1.5">
+          <div className="bg-zinc-50/80 border-b border-zinc-200/80 p-1.5 sticky top-0 z-10 overflow-x-auto no-scrollbar">
+            <div className="flex overflow-x-auto no-scrollbar gap-1.5 pb-0.5 min-w-max">
               {TABS.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-center gap-2 px-2 py-2 text-xs xl:text-[10.4px] font-semibold rounded-lg transition-all outline-none ${
+                  className={`flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all outline-none shrink-0 whitespace-nowrap ${
                     activeTab === tab.id 
                       ? 'bg-white text-zinc-900 shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-zinc-200/60' 
                       : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100/80 border border-transparent'
                   }`}
                 >
                   <tab.icon size={14} strokeWidth={activeTab === tab.id ? 2.5 : 2} className={activeTab === tab.id ? "text-zinc-900" : "text-zinc-400"} />
-                  <span className="truncate">{tab.label}</span>
+                  <span>{tab.label}</span>
                 </button>
               ))}
             </div>
@@ -462,36 +462,38 @@ export default function BankAccountDetails() {
             {activeTab === 'transactions' && (
               <div className="animate-in fade-in duration-300">
                 {profile.bankTransactions && profile.bankTransactions.length > 0 ? (
-                  <table className="w-full text-left border-collapse whitespace-nowrap text-sm">
-                    <thead className="bg-zinc-100/80 border-b border-zinc-200 sticky top-0 z-10">
-                      <tr>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Date</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Voucher No</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Description</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider text-right">Debit</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider text-right">Credit</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider text-right">Running Bal</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-100 bg-white">
-                      {profile.bankTransactions.map((trx, idx) => (
-                        <tr key={idx} className="hover:bg-zinc-50/50 transition-colors">
-                          <td className="px-4 py-3 text-zinc-600">{formatDate(trx.transactionDate)}</td>
-                          <td className="px-4 py-3 font-mono text-xs text-blue-600">{trx.voucherNumber || '-'}</td>
-                          <td className="px-4 py-3 text-zinc-800">{trx.description || '-'}</td>
-                          <td className="px-4 py-3 text-right text-red-600 font-medium">{trx.debit > 0 ? formatCurrency(trx.debit) : '-'}</td>
-                          <td className="px-4 py-3 text-right text-emerald-600 font-medium">{trx.credit > 0 ? formatCurrency(trx.credit) : '-'}</td>
-                          <td className="px-4 py-3 text-right text-zinc-900 font-medium">{formatCurrency(trx.runningBalance)}</td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded text-[8px] font-bold border ${trx.transactionStatus === 'CLEARED' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
-                              {trx.transactionStatus}
-                            </span>
-                          </td>
+                  <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar border border-zinc-200 rounded-xl shadow-sm">
+                    <table className="w-full min-w-[700px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Bank Transactions Table">
+                      <thead className="bg-zinc-100/80 border-b border-zinc-200 sticky top-0 z-10">
+                        <tr>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Date</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Voucher No</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Description</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs text-right">Debit</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs text-right">Credit</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs text-right">Running Bal</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100 bg-white">
+                        {profile.bankTransactions.map((trx, idx) => (
+                          <tr key={idx} className="hover:bg-zinc-50/50 transition-colors">
+                            <td className="px-4 py-3 text-zinc-600">{formatDate(trx.transactionDate)}</td>
+                            <td className="px-4 py-3 font-mono text-xs text-blue-600">{trx.voucherNumber || '-'}</td>
+                            <td className="px-4 py-3 text-zinc-800">{trx.description || '-'}</td>
+                            <td className="px-4 py-3 text-right text-red-600 font-medium tabular-nums">{trx.debit > 0 ? formatCurrency(trx.debit) : '-'}</td>
+                            <td className="px-4 py-3 text-right text-emerald-600 font-medium tabular-nums">{trx.credit > 0 ? formatCurrency(trx.credit) : '-'}</td>
+                            <td className="px-4 py-3 text-right text-zinc-900 font-medium tabular-nums">{formatCurrency(trx.runningBalance)}</td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-0.5 rounded text-xs font-medium border ${trx.transactionStatus === 'CLEARED' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
+                                {trx.transactionStatus}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 ) : renderEmptyState('No Transactions Found', 'This bank account has no recorded transactions yet.')}
               </div>
             )}
@@ -500,34 +502,36 @@ export default function BankAccountDetails() {
             {activeTab === 'payment-vouchers' && (
               <div className="animate-in fade-in duration-300">
                 {profile.paymentVouchers && profile.paymentVouchers.length > 0 ? (
-                  <table className="w-full text-left border-collapse whitespace-nowrap text-sm">
-                    <thead className="bg-zinc-100/80 border-b border-zinc-200 sticky top-0 z-10">
-                      <tr>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Voucher No</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Vendor Name</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider text-right">Amount</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Mode</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Status</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-100 bg-white">
-                      {profile.paymentVouchers.map((pv, idx) => (
-                        <tr key={idx} className="hover:bg-zinc-50/50 transition-colors">
-                          <td className="px-4 py-3 font-mono text-xs font-semibold text-zinc-900">{pv.voucherNumber}</td>
-                          <td className="px-4 py-3 text-zinc-700">{pv.vendorName}</td>
-                          <td className="px-4 py-3 text-right font-medium text-red-600">₹ {formatCurrency(pv.paymentAmount)}</td>
-                          <td className="px-4 py-3 text-zinc-600 text-[9.6px]">{pv.paymentMode}</td>
-                          <td className="px-4 py-3">
-                            <span className="badge badge-success">{pv.status}</span>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <button className="text-blue-600 hover:text-blue-800 font-medium text-[10.4px]">View</button>
-                          </td>
+                  <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar border border-zinc-200 rounded-xl shadow-sm">
+                    <table className="w-full min-w-[620px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Payment Vouchers Table">
+                      <thead className="bg-zinc-100/80 border-b border-zinc-200 sticky top-0 z-10">
+                        <tr>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Voucher No</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Vendor Name</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs text-right">Amount</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Mode</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Status</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs text-right">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100 bg-white">
+                        {profile.paymentVouchers.map((pv, idx) => (
+                          <tr key={idx} className="hover:bg-zinc-50/50 transition-colors">
+                            <td className="px-4 py-3 font-mono text-xs font-semibold text-zinc-900">{pv.voucherNumber}</td>
+                            <td className="px-4 py-3 text-zinc-700">{pv.vendorName}</td>
+                            <td className="px-4 py-3 text-right font-medium text-red-600 tabular-nums">₹ {formatCurrency(pv.paymentAmount)}</td>
+                            <td className="px-4 py-3 text-zinc-600 text-xs">{pv.paymentMode}</td>
+                            <td className="px-4 py-3">
+                              <span className="badge badge-success">{pv.status}</span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <button className="text-blue-600 hover:text-blue-800 font-medium text-xs">View</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 ) : renderEmptyState('No Payment Vouchers', 'No payment vouchers linked to this bank account.')}
               </div>
             )}
@@ -536,34 +540,36 @@ export default function BankAccountDetails() {
             {activeTab === 'receipt-vouchers' && (
               <div className="animate-in fade-in duration-300">
                 {profile.receiptVouchers && profile.receiptVouchers.length > 0 ? (
-                  <table className="w-full text-left border-collapse whitespace-nowrap text-sm">
-                    <thead className="bg-zinc-100/80 border-b border-zinc-200 sticky top-0 z-10">
-                      <tr>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Voucher No</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Customer Name</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider text-right">Amount</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Mode</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider">Status</th>
-                        <th className="px-4 py-3 text-zinc-500 font-semibold text-[9.6px] uppercase tracking-wider text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-100 bg-white">
-                      {profile.receiptVouchers.map((rv, idx) => (
-                        <tr key={idx} className="hover:bg-zinc-50/50 transition-colors">
-                          <td className="px-4 py-3 font-mono text-xs font-semibold text-zinc-900">{rv.voucherNumber}</td>
-                          <td className="px-4 py-3 text-zinc-700">{rv.customerName}</td>
-                          <td className="px-4 py-3 text-right font-medium text-emerald-600">₹ {formatCurrency(rv.receiptAmount)}</td>
-                          <td className="px-4 py-3 text-zinc-600 text-[9.6px]">{rv.receiptMode}</td>
-                          <td className="px-4 py-3">
-                            <span className="badge badge-success">{rv.status}</span>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <button className="text-blue-600 hover:text-blue-800 font-medium text-[10.4px]">View</button>
-                          </td>
+                  <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar border border-zinc-200 rounded-xl shadow-sm">
+                    <table className="w-full min-w-[620px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Receipt Vouchers Table">
+                      <thead className="bg-zinc-100/80 border-b border-zinc-200 sticky top-0 z-10">
+                        <tr>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Voucher No</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Customer Name</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs text-right">Amount</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Mode</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Status</th>
+                          <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs text-right">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100 bg-white">
+                        {profile.receiptVouchers.map((rv, idx) => (
+                          <tr key={idx} className="hover:bg-zinc-50/50 transition-colors">
+                            <td className="px-4 py-3 font-mono text-xs font-semibold text-zinc-900">{rv.voucherNumber}</td>
+                            <td className="px-4 py-3 text-zinc-700">{rv.customerName}</td>
+                            <td className="px-4 py-3 text-right font-medium text-emerald-600 tabular-nums">₹ {formatCurrency(rv.receiptAmount)}</td>
+                            <td className="px-4 py-3 text-zinc-600 text-xs">{rv.receiptMode}</td>
+                            <td className="px-4 py-3">
+                              <span className="badge badge-success">{rv.status}</span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <button className="text-blue-600 hover:text-blue-800 font-medium text-xs">View</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 ) : renderEmptyState('No Receipt Vouchers', 'No receipt vouchers linked to this bank account.')}
               </div>
             )}
@@ -580,18 +586,19 @@ export default function BankAccountDetails() {
                             <span className="font-mono text-xs font-bold px-2 py-1 bg-zinc-200 text-zinc-800 rounded">{gl.journalNumber}</span>
                             <span className="text-xs font-medium text-zinc-500">{formatDate(gl.postingDate)}</span>
                           </div>
-                          <span className="px-2 py-1 text-[8px] font-bold rounded-md border bg-blue-50 text-blue-700 border-blue-200">{gl.postingStatus}</span>
+                          <span className="px-2 py-0.5 text-xs font-medium rounded-md border bg-blue-50 text-blue-700 border-blue-200">{gl.postingStatus}</span>
                         </div>
-                        <table className="w-full text-sm">
-                           <thead className="bg-zinc-50 text-zinc-500 border-b border-zinc-100 text-left text-[8.8px] uppercase tracking-wider">
-                              <tr>
-                                <th className="px-4 py-2">Account Code</th>
-                                <th className="px-4 py-2">Account Name</th>
-                                <th className="px-4 py-2">Narration</th>
-                                <th className="px-4 py-2 text-right">Debit</th>
-                                <th className="px-4 py-2 text-right">Credit</th>
-                              </tr>
-                           </thead>
+                        <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+                          <table className="w-full min-w-[500px] sm:min-w-full text-sm" aria-label="Journal Entries Table">
+                             <thead className="bg-zinc-50 text-zinc-600 border-b border-zinc-100 text-left text-xs font-semibold">
+                                <tr>
+                                  <th scope="col" className="px-4 py-2">Account Code</th>
+                                  <th scope="col" className="px-4 py-2">Account Name</th>
+                                  <th scope="col" className="px-4 py-2">Narration</th>
+                                  <th scope="col" className="px-4 py-2 text-right">Debit</th>
+                                  <th scope="col" className="px-4 py-2 text-right">Credit</th>
+                                </tr>
+                             </thead>
                            <tbody className="divide-y divide-zinc-50">
                               {gl.debitEntries?.map((dr, i) => (
                                 <tr key={`dr-${i}`}>
@@ -613,6 +620,7 @@ export default function BankAccountDetails() {
                               ))}
                            </tbody>
                         </table>
+                        </div>
                       </div>
                     ))}
                   </div>

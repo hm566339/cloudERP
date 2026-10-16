@@ -21,13 +21,14 @@ const registry = new Map();
 
 /**
  * Builds a default ModuleConfig from a module name.
+ * All ERP modules share SSO authentication and refresh via /api/sso/token/refresh.
  * @param {string} name
  * @returns {import('./types').ModuleConfig}
  */
 const buildDefaultConfig = (name) => ({
   name,
   pathPrefix: `/api/${name}`,
-  refreshEndpoint: `/api/${name}/auth/refresh`,
+  refreshEndpoint: '/api/sso/token/refresh',
 });
 
 // Pre-register known modules
@@ -43,21 +44,11 @@ const KNOWN_MODULES = [
 ];
 
 KNOWN_MODULES.forEach((name) => {
-  if (name === 'sso') {
-    registry.set(name, {
-      name,
-      pathPrefix: '/api/sso',
-      refreshEndpoint: '/api/sso/token/refresh',
-    });
-  } else if (name === 'workflow') {
-    registry.set(name, {
-      name,
-      pathPrefix: '/api/v1/workflow',
-      refreshEndpoint: '/api/sso/token/refresh',
-    });
-  } else {
-    registry.set(name, buildDefaultConfig(name));
-  }
+  registry.set(name, {
+    name,
+    pathPrefix: name === 'workflow' ? '/api/v1/workflow' : `/api/${name}`,
+    refreshEndpoint: '/api/sso/token/refresh',
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -72,19 +63,28 @@ KNOWN_MODULES.forEach((name) => {
  * auto-registered with default conventions so the system scales without code changes.
  *
  * @param {string} url - The request URL (absolute or relative).
- * @returns {string | null} Module name, or null if the URL doesn't match `/api/{module}/...`.
+ * @returns {string} Module name, or 'sso' as fallback if the URL doesn't match `/api/{module}/...`.
  *
  * @example
  * detectModule('/api/inventory/stocks/company/abc')  // → 'inventory'
- * detectModule('/api/v1/workflow/definitions')        // → 'workflow'
- * detectModule('/health')                             // → null
+ * detectModule('http://localhost:3001/api/purchase/orders') // → 'purchase'
  */
 export const detectModule = (url) => {
-  if (!url || typeof url !== 'string') return null;
+  if (!url || typeof url !== 'string') return 'sso';
+
+  let path = url;
+  try {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      const parsed = new URL(url);
+      path = parsed.pathname;
+    }
+  } catch (e) {
+    path = url.replace(/^https?:\/\/[^\/]+/, '');
+  }
 
   // Match /api/{module-name}/ or /api/v{N}/{module-name}/ — supports hyphenated names like "sales-crm"
-  const match = url.match(/^\/api\/(?:v\d+\/)?([a-zA-Z0-9_-]+)/);
-  if (!match) return null;
+  const match = path.match(/^\/api\/(?:v\d+\/)?([a-zA-Z0-9_-]+)/);
+  if (!match) return 'sso';
 
   const moduleName = match[1].toLowerCase();
 
@@ -145,6 +145,7 @@ export const registerModule = (name, options = {}) => {
  */
 export const isRefreshEndpoint = (url) => {
   if (!url) return false;
+  if (url.includes('/api/sso/token/refresh') || url.includes('/api/sso/admin/token/refresh')) return true;
   // Check against all registered modules
   for (const config of registry.values()) {
     if (url.includes(config.refreshEndpoint)) return true;

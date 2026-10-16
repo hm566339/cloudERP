@@ -222,15 +222,15 @@ export default function SubscriptionTab({ organizationId, org }) {
             <p className="text-zinc-400 mt-0.5">Payments processed via checkout will appear here.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+            <table className="w-full text-left text-xs whitespace-nowrap min-w-[580px] sm:min-w-full" aria-label="Payment Transactions Table">
               <thead>
-                <tr className="border-b border-zinc-100 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                  <th className="py-2.5 px-3">Transaction / Order ID</th>
-                  <th className="py-2.5 px-3">Gateway Payment ID</th>
-                  <th className="py-2.5 px-3">Amount</th>
-                  <th className="py-2.5 px-3">Status</th>
-                  <th className="py-2.5 px-3">Date</th>
+                <tr className="border-b border-zinc-200 text-xs font-semibold text-zinc-600 uppercase tracking-wider bg-zinc-50/80 sticky top-0 z-10">
+                  <th scope="col" className="py-2.5 px-3">Transaction / Order ID</th>
+                  <th scope="col" className="py-2.5 px-3">Gateway Payment ID</th>
+                  <th scope="col" className="py-2.5 px-3">Amount</th>
+                  <th scope="col" className="py-2.5 px-3">Status</th>
+                  <th scope="col" className="py-2.5 px-3">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 text-zinc-700">
@@ -242,7 +242,7 @@ export default function SubscriptionTab({ organizationId, org }) {
                     <td className="py-2.5 px-3 font-mono text-zinc-600">
                       {p.paymentId || p.razorpayPaymentId || '—'}
                     </td>
-                    <td className="py-2.5 px-3 font-bold text-zinc-900">
+                    <td className="py-2.5 px-3 font-bold text-zinc-900 tabular-nums">
                       {p.amount ? formatINR(p.amount, false) : (p.amountInPaise ? formatINR(p.amountInPaise, true) : '—')}
                     </td>
                     <td className="py-2.5 px-3">
@@ -254,7 +254,7 @@ export default function SubscriptionTab({ organizationId, org }) {
                         {p.status || 'SUCCESS'}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-zinc-500">
+                    <td className="py-2.5 px-3 text-zinc-500 tabular-nums">
                       {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—'}
                     </td>
                   </tr>
@@ -289,15 +289,15 @@ export default function SubscriptionTab({ organizationId, org }) {
             <p className="text-zinc-400 mt-0.5">Invoices will automatically generate following successful recurring billing or checkout.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+            <table className="w-full text-left text-xs whitespace-nowrap min-w-[580px] sm:min-w-full" aria-label="Billing Invoices Table">
               <thead>
-                <tr className="border-b border-zinc-100 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                  <th className="py-2.5 px-3">Invoice Number</th>
-                  <th className="py-2.5 px-3">Period</th>
-                  <th className="py-2.5 px-3">Total Amount</th>
-                  <th className="py-2.5 px-3">Status</th>
-                  <th className="py-2.5 px-3">Issued Date</th>
+                <tr className="border-b border-zinc-200 text-xs font-semibold text-zinc-600 uppercase tracking-wider bg-zinc-50/80 sticky top-0 z-10">
+                  <th scope="col" className="py-2.5 px-3">Invoice Number</th>
+                  <th scope="col" className="py-2.5 px-3">Period</th>
+                  <th scope="col" className="py-2.5 px-3">Total Amount</th>
+                  <th scope="col" className="py-2.5 px-3">Status</th>
+                  <th scope="col" className="py-2.5 px-3">Issued Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 text-zinc-700">
@@ -309,7 +309,7 @@ export default function SubscriptionTab({ organizationId, org }) {
                     <td className="py-2.5 px-3 text-zinc-600">
                       {inv.period || 'Annual Cycle'}
                     </td>
-                    <td className="py-2.5 px-3 font-bold text-zinc-900">
+                    <td className="py-2.5 px-3 font-bold text-zinc-900 tabular-nums">
                       {inv.amount ? formatINR(inv.amount, false) : '—'}
                     </td>
                     <td className="py-2.5 px-3">
@@ -317,7 +317,7 @@ export default function SubscriptionTab({ organizationId, org }) {
                         {inv.status || 'PAID'}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-zinc-500">
+                    <td className="py-2.5 px-3 text-zinc-500 tabular-nums">
                       {inv.issuedAt ? new Date(inv.issuedAt).toLocaleDateString() : '—'}
                     </td>
                   </tr>

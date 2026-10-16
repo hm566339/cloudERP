@@ -78,8 +78,8 @@ function DataTableRow({
           const rawValue = row[colKey];
 
           const alignClass =
-            col.align === 'right'
-              ? 'text-right'
+            col.align === 'right' || col.isNumeric
+              ? 'text-right tabular-nums'
               : col.align === 'center'
               ? 'text-center'
               : 'text-left';
@@ -105,7 +105,15 @@ function DataTableRow({
 
         {/* Actions Column (Sticky Right) */}
         {hasRowActions && (
-          <td className="p-4 text-right sticky right-0 bg-white group-hover:bg-zinc-50/70 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] z-10">
+          <td
+            className={`p-4 text-right sticky right-0 z-10 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors ${
+              isSelected
+                ? 'bg-zinc-100'
+                : isExpanded
+                ? 'bg-zinc-50'
+                : 'bg-white group-hover:bg-zinc-50/70'
+            }`}
+          >
             <DataTableActionMenu actions={resolvedActions} row={row} index={index} />
           </td>
         )}
@@ -115,7 +123,7 @@ function DataTableRow({
       {isExpanded && renderExpandedRow && (
         <tr>
           <td colSpan={totalColSpan} className="p-0 border-b border-zinc-100">
-            <div className="bg-zinc-50/50 p-6 shadow-inner border-y border-zinc-100 animate-slide-down">
+            <div className="bg-zinc-50/50 p-6 shadow-inner border-y border-zinc-100 animate-slide-down whitespace-normal">
               {renderExpandedRow(row, index)}
             </div>
           </td>

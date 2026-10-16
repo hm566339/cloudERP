@@ -177,7 +177,7 @@ export default function FeatureFormModal({
                 value={formData.moduleName}
                 onChange={handleChange}
                 placeholder="e.g. ACCOUNT, CORE, SSO..."
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors ${
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-colors ${
                   errors.moduleName ? 'border-rose-300 bg-rose-50/50' : 'border-zinc-300'
                 }`}
               />
@@ -209,7 +209,7 @@ export default function FeatureFormModal({
               value={formData.name}
               onChange={handleChange}
               placeholder="e.g. Payment Operations"
-              className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors ${
+              className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-colors ${
                 errors.name ? 'border-rose-300 bg-rose-50/50' : 'border-zinc-300'
               }`}
             />
@@ -239,7 +239,7 @@ export default function FeatureFormModal({
               }
               placeholder="e.g. PAYMENTS"
               disabled={isEditMode}
-              className={`w-full px-3 py-2 text-sm border rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors ${
+              className={`w-full px-3 py-2 text-sm border rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-colors ${
                 isEditMode
                   ? 'bg-zinc-100 text-zinc-500 border-zinc-200 cursor-not-allowed'
                   : errors.code
@@ -290,7 +290,7 @@ export default function FeatureFormModal({
               onChange={handleChange}
               rows={3}
               placeholder="Provide context or purpose for this system feature..."
-              className="w-full px-3 py-2 text-sm border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors resize-none text-zinc-800 placeholder:text-zinc-400"
+              className="w-full px-3 py-2 text-sm border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-colors resize-none text-zinc-800 placeholder:text-zinc-400"
             />
           </div>
 

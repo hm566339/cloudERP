@@ -197,7 +197,7 @@ export default function SystemLogsPage() {
                 value={searchQuery}
                 onChange={(e) => filterBarProps.onSearchChange(e.target.value)}
                 placeholder="Search logs by message or context..."
-                className="w-full h-10 pl-9 pr-8 bg-zinc-50/50 hover:bg-white focus:bg-white border border-zinc-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 rounded-lg text-xs font-medium text-zinc-800 placeholder:text-zinc-400 outline-none transition-all"
+                className="w-full h-10 pl-9 pr-8 bg-zinc-50/50 hover:bg-white focus:bg-white border border-zinc-200 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10/15 rounded-lg text-xs font-medium text-zinc-800 placeholder:text-zinc-400 outline-none transition-all"
               />
               {searchQuery && (
                 <button
@@ -221,7 +221,7 @@ export default function SystemLogsPage() {
             <CustomSelect
               value={filterLevel}
               onChange={(e) => filterBarProps.onFilterChange('level', e.target.value)}
-              className="w-full h-10 px-3 bg-zinc-50/50 hover:bg-white focus:bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 transition-all cursor-pointer"
+              className="w-full h-10 px-3 bg-zinc-50/50 hover:bg-white focus:bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10/15 transition-all cursor-pointer"
             >
               <option value="all">All Levels</option>
               <option value="debug">Debug</option>

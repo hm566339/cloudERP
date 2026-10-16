@@ -85,7 +85,7 @@ export default function ProformaInvoiceDetails() {
         message={error?.message || "The requested PI could not be found."}
         onRetry={refetch}
         actionButton={
-           <button onClick={() => navigate('/accounts/transactions/proforma-invoices')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors">
+           <button onClick={() => navigate('/accounts/transactions/proforma-invoices')} className="mt-4 px-4 py-2 bg-zinc-900 text-white rounded-md text-sm hover:bg-zinc-800 transition-colors">
               &larr; Back to Proforma Invoices
            </button>
         }

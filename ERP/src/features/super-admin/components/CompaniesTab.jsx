@@ -95,16 +95,16 @@ export default function CompaniesTab({ organizationId, org, linkedCompanies, bui
       {isLoading ? (
         <div className="p-6"><TableSkeleton columns={5} rows={3} /></div>
       ) : filtered.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs whitespace-nowrap">
-            <thead className="bg-zinc-50/80 border-b border-zinc-100 text-zinc-500 font-semibold">
+        <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+          <table className="w-full text-left text-xs whitespace-nowrap min-w-[640px] sm:min-w-full" aria-label="Companies Table">
+            <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold sticky top-0 z-10">
               <tr>
-                <th className="py-3 px-4 w-12 text-center text-[10px] uppercase tracking-wider text-zinc-400">#</th>
-                <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Workspace Company</th>
-                <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Company Code</th>
-                <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Status</th>
-                <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Created</th>
-                <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider">Actions</th>
+                <th scope="col" className="py-3 px-4 w-12 text-center text-xs uppercase tracking-wider text-zinc-500">#</th>
+                <th scope="col" className="py-3 px-4 text-xs uppercase tracking-wider">Workspace Company</th>
+                <th scope="col" className="py-3 px-4 text-xs uppercase tracking-wider">Company Code</th>
+                <th scope="col" className="py-3 px-4 text-xs uppercase tracking-wider">Status</th>
+                <th scope="col" className="py-3 px-4 text-xs uppercase tracking-wider">Created</th>
+                <th scope="col" className="py-3 px-4 text-right text-xs uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
@@ -151,7 +151,7 @@ export default function CompaniesTab({ organizationId, org, linkedCompanies, bui
                             localStorage.setItem('selected_company', JSON.stringify(c));
                             dispatch(setSelectedCompany(c));
                           }}
-                          className="text-xs font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-blue-50 transition-colors"
+                          className="text-xs font-semibold text-zinc-900 hover:text-zinc-700 inline-flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-blue-50 transition-colors"
                         >
                           Launch <ExternalLink size={11} />
                         </Link>

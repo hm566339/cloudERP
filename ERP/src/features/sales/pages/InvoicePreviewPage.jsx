@@ -266,117 +266,120 @@ export default function InvoicePreviewPage() {
             </div>
           </div>
 
-          {/* 2. Items Table Header */}
-          <div className="w-full text-left bg-zinc-100 text-zinc-600 border-b border-zinc-200 sticky top-[36px] z-10 flex-none pr-1">
-            <div className="grid grid-cols-[18%_10%_12%_7%_10%_7%_7%_12%_12%_5%] w-full min-w-0">
-              <div className="p-1.5 font-semibold truncate text-[8.8px]">Product *</div>
-              <div className="p-1.5 font-semibold truncate text-[8.8px]">HSN / SAC</div>
-              <div className="p-1.5 font-semibold truncate text-[8.8px]">Description</div>
-              <div className="p-1.5 font-semibold text-center truncate text-[8.8px]">Qty *</div>
-              <div className="p-1.5 font-semibold text-right truncate text-[8.8px]">Price *</div>
-              <div className="p-1.5 font-semibold text-center truncate text-[8.8px]">Unit</div>
-              <div className="p-1.5 font-semibold text-right truncate text-[8.8px]">Disc %</div>
-              <div className="p-1.5 font-semibold truncate text-[8.8px]">GST</div>
-              <div className="p-1.5 font-semibold truncate text-[8.8px] text-right">Amount</div>
-              <div className="p-1.5 text-center flex items-center justify-center font-semibold text-[8.8px]">Action</div>
-            </div>
-          </div>
+          {/* 2. Items Table with Horizontal Scroll Container */}
+          <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar flex-1">
+            <div className="min-w-[720px]">
+              {/* Items Table Header */}
+              <div className="w-full text-left bg-zinc-100 text-zinc-600 border-b border-zinc-200 sticky top-0 z-10 flex-none pr-1">
+                <div className="grid grid-cols-[18%_10%_12%_7%_10%_7%_7%_12%_12%_5%] w-full min-w-0 text-xs font-semibold">
+                  <div className="p-2 truncate">Product *</div>
+                  <div className="p-2 truncate">HSN / SAC</div>
+                  <div className="p-2 truncate">Description</div>
+                  <div className="p-2 text-center truncate">Qty *</div>
+                  <div className="p-2 text-right truncate">Price *</div>
+                  <div className="p-2 text-center truncate">Unit</div>
+                  <div className="p-2 text-right truncate">Disc %</div>
+                  <div className="p-2 truncate">GST</div>
+                  <div className="p-2 truncate text-right">Amount</div>
+                  <div className="p-2 text-center flex items-center justify-center">Action</div>
+                </div>
+              </div>
 
-          {/* 3. Items Table Body */}
-          <div className="flex-none">
-            <div className="flex flex-col divide-y divide-zinc-100 pb-12">
-              {(order.items || []).map((item, idx) => {
-                const productName = item.item?.name || item.productName || item.itemName || item.productCode || item.itemCode || '—';
-                const hsnSac = item.item?.hsnCode || item.hsnSac || item.hsnSacCode || '—';
-                const unitPrice = Number(item.pricing?.unitPrice ?? item.unitPrice ?? 0);
-                const discountPct = Number(item.pricing?.discountPercent ?? item.discountPercent ?? 0);
-                const taxable = Number(item.pricing?.taxableAmount ?? (unitPrice * Number(item.quantity || 0)) ?? 0);
-                const taxAmt = Number(item.taxes?.taxAmount ?? item.taxAmount ?? 0);
-                const igstAmt = Number(item.taxes?.igstAmount ?? item.igstAmount ?? 0);
-                const cgstAmt = Number(item.taxes?.cgstAmount ?? item.cgstAmount ?? 0);
-                const sgstAmt = Number(item.taxes?.sgstAmount ?? item.sgstAmount ?? 0);
-                const igstRate = Number(item.igstPercent ?? item.igstRate ?? (taxable > 0 && igstAmt > 0 ? Math.round((igstAmt / taxable) * 100) : 0));
-                const cgstRate = Number(item.cgstPercent ?? item.cgstRate ?? (taxable > 0 && cgstAmt > 0 ? Math.round((cgstAmt / taxable) * 100) : 0));
-                const sgstRate = Number(item.sgstPercent ?? item.sgstRate ?? (taxable > 0 && sgstAmt > 0 ? Math.round((sgstAmt / taxable) * 100) : 0));
-                const totalTaxRate = Number(item.gstRate ?? (igstRate > 0 ? igstRate : (cgstRate + sgstRate > 0 ? (cgstRate + sgstRate) : (taxable > 0 && taxAmt > 0 ? Math.round((taxAmt / taxable) * 100) : 0))));
-                const isInterState = igstAmt > 0 || igstRate > 0;
-                const totalAmount = Number(item.totalAmount ?? (taxable + taxAmt) ?? 0);
-                
-                return (
-                  <div key={item.id || idx} className="grid grid-cols-[18%_10%_12%_7%_10%_7%_7%_12%_12%_5%] w-full bg-white hover:bg-zinc-50/50 min-w-0 border-b border-zinc-100 last:border-0 box-border">
-                    <div className="p-1.5 pt-2 min-w-0 flex items-center">
-                      <div className="text-[8.8px] text-zinc-700 font-medium truncate px-1" title={productName}>{productName}</div>
-                    </div>
-                    <div className="p-1.5 pt-2 min-w-0 flex items-center">
-                      <div className="text-[8.8px] text-zinc-600 truncate px-1">{hsnSac}</div>
-                    </div>
-                    <div className="p-1.5 pt-2 min-w-0 flex items-center">
-                      <div className="text-[8.8px] text-zinc-600 truncate px-1">{item.description || item.item?.description || '—'}</div>
-                    </div>
-                    <div className="p-1.5 pt-2 min-w-0 flex items-center justify-center">
-                      <div className="text-[8.8px] text-zinc-800 font-bold px-1">{item.quantity}</div>
-                    </div>
-                    <div className="p-1.5 pt-2 min-w-0 flex items-center justify-end">
-                      <div className="text-[8.8px] text-zinc-800 px-1">{fmtCurr(unitPrice)}</div>
-                    </div>
-                    <div className="p-1.5 pt-2 min-w-0 flex items-center justify-center">
-                      <div className="text-[8.8px] text-zinc-600 px-1">{item.unit || 'Pieces'}</div>
-                    </div>
-                    <div className="p-1.5 pt-2 min-w-0 flex items-center justify-end">
-                      <div className="text-[8.8px] text-zinc-600 px-1">{discountPct}%</div>
-                    </div>
-                    
-                    <div className="p-1.5 pt-2 min-w-0 flex flex-col justify-center text-[8px] leading-tight px-2">
-                      {totalTaxRate > 0 || taxAmt > 0 ? (
-                        <div className="flex flex-col gap-1 w-full px-1">
-                          <div className="text-zinc-800 font-semibold mb-0.5 border-b border-zinc-100 pb-0.5">
-                            {totalTaxRate > 0 ? `GST ${totalTaxRate}%` : `Tax`}
-                          </div>
-                          {isInterState ? (
-                            <div className="flex justify-between items-center w-full">
-                              <span className="text-zinc-500">{igstRate > 0 ? `IGST ${igstRate}%` : 'IGST'}</span>
-                              <span className="text-zinc-700 font-medium">{fmtCurr(igstAmt || taxAmt)}</span>
+              {/* Items Table Body */}
+              <div className="flex flex-col divide-y divide-zinc-100 pb-12">
+                {(order.items || []).map((item, idx) => {
+                  const productName = item.item?.name || item.productName || item.itemName || item.productCode || item.itemCode || '—';
+                  const hsnSac = item.item?.hsnCode || item.hsnSac || item.hsnSacCode || '—';
+                  const unitPrice = Number(item.pricing?.unitPrice ?? item.unitPrice ?? 0);
+                  const discountPct = Number(item.pricing?.discountPercent ?? item.discountPercent ?? 0);
+                  const taxable = Number(item.pricing?.taxableAmount ?? (unitPrice * Number(item.quantity || 0)) ?? 0);
+                  const taxAmt = Number(item.taxes?.taxAmount ?? item.taxAmount ?? 0);
+                  const igstAmt = Number(item.taxes?.igstAmount ?? item.igstAmount ?? 0);
+                  const cgstAmt = Number(item.taxes?.cgstAmount ?? item.cgstAmount ?? 0);
+                  const sgstAmt = Number(item.taxes?.sgstAmount ?? item.sgstAmount ?? 0);
+                  const igstRate = Number(item.igstPercent ?? item.igstRate ?? (taxable > 0 && igstAmt > 0 ? Math.round((igstAmt / taxable) * 100) : 0));
+                  const cgstRate = Number(item.cgstPercent ?? item.cgstRate ?? (taxable > 0 && cgstAmt > 0 ? Math.round((cgstAmt / taxable) * 100) : 0));
+                  const sgstRate = Number(item.sgstPercent ?? item.sgstRate ?? (taxable > 0 && sgstAmt > 0 ? Math.round((sgstAmt / taxable) * 100) : 0));
+                  const totalTaxRate = Number(item.gstRate ?? (igstRate > 0 ? igstRate : (cgstRate + sgstRate > 0 ? (cgstRate + sgstRate) : (taxable > 0 && taxAmt > 0 ? Math.round((taxAmt / taxable) * 100) : 0))));
+                  const isInterState = igstAmt > 0 || igstRate > 0;
+                  const totalAmount = Number(item.totalAmount ?? (taxable + taxAmt) ?? 0);
+                  
+                  return (
+                    <div key={item.id || idx} className="grid grid-cols-[18%_10%_12%_7%_10%_7%_7%_12%_12%_5%] w-full bg-white hover:bg-zinc-50/50 min-w-0 border-b border-zinc-100 last:border-0 box-border text-xs">
+                      <div className="p-2 min-w-0 flex items-center">
+                        <div className="text-zinc-700 font-medium truncate" title={productName}>{productName}</div>
+                      </div>
+                      <div className="p-2 min-w-0 flex items-center">
+                        <div className="text-zinc-600 truncate">{hsnSac}</div>
+                      </div>
+                      <div className="p-2 min-w-0 flex items-center">
+                        <div className="text-zinc-600 truncate">{item.description || item.item?.description || '—'}</div>
+                      </div>
+                      <div className="p-2 min-w-0 flex items-center justify-center">
+                        <div className="text-zinc-800 font-bold tabular-nums">{item.quantity}</div>
+                      </div>
+                      <div className="p-2 min-w-0 flex items-center justify-end">
+                        <div className="text-zinc-800 tabular-nums">{fmtCurr(unitPrice)}</div>
+                      </div>
+                      <div className="p-2 min-w-0 flex items-center justify-center">
+                        <div className="text-zinc-600">{item.unit || 'Pieces'}</div>
+                      </div>
+                      <div className="p-2 min-w-0 flex items-center justify-end">
+                        <div className="text-zinc-600 tabular-nums">{discountPct}%</div>
+                      </div>
+                      
+                      <div className="p-2 min-w-0 flex flex-col justify-center leading-tight">
+                        {totalTaxRate > 0 || taxAmt > 0 ? (
+                          <div className="flex flex-col gap-1 w-full">
+                            <div className="text-zinc-800 font-semibold mb-0.5 border-b border-zinc-100 pb-0.5">
+                              {totalTaxRate > 0 ? `GST ${totalTaxRate}%` : `Tax`}
                             </div>
-                          ) : (
-                            <>
-                              {cgstAmt > 0 && (
-                                <div className="flex justify-between items-center w-full">
-                                  <span className="text-zinc-500">{cgstRate > 0 ? `CGST ${cgstRate}%` : 'CGST'}</span>
-                                  <span className="text-zinc-700 font-medium">{fmtCurr(cgstAmt)}</span>
-                                </div>
-                              )}
-                              {sgstAmt > 0 && (
-                                <div className="flex justify-between items-center w-full">
-                                  <span className="text-zinc-500">{sgstRate > 0 ? `SGST ${sgstRate}%` : 'SGST'}</span>
-                                  <span className="text-zinc-700 font-medium">{fmtCurr(sgstAmt)}</span>
-                                </div>
-                              )}
-                              {cgstAmt === 0 && sgstAmt === 0 && (
-                                <div className="flex justify-between items-center w-full">
-                                  <span className="text-zinc-500">Tax</span>
-                                  <span className="text-zinc-700 font-medium">{fmtCurr(taxAmt)}</span>
-                                </div>
-                              )}
-                            </>
-                          )}
+                            {isInterState ? (
+                              <div className="flex justify-between items-center w-full">
+                                <span className="text-zinc-500">{igstRate > 0 ? `IGST ${igstRate}%` : 'IGST'}</span>
+                                <span className="text-zinc-700 font-medium tabular-nums">{fmtCurr(igstAmt || taxAmt)}</span>
+                              </div>
+                            ) : (
+                              <>
+                                {cgstAmt > 0 && (
+                                  <div className="flex justify-between items-center w-full">
+                                    <span className="text-zinc-500">{cgstRate > 0 ? `CGST ${cgstRate}%` : 'CGST'}</span>
+                                    <span className="text-zinc-700 font-medium tabular-nums">{fmtCurr(cgstAmt)}</span>
+                                  </div>
+                                )}
+                                {sgstAmt > 0 && (
+                                  <div className="flex justify-between items-center w-full">
+                                    <span className="text-zinc-500">{sgstRate > 0 ? `SGST ${sgstRate}%` : 'SGST'}</span>
+                                    <span className="text-zinc-700 font-medium tabular-nums">{fmtCurr(sgstAmt)}</span>
+                                  </div>
+                                )}
+                                {cgstAmt === 0 && sgstAmt === 0 && (
+                                  <div className="flex justify-between items-center w-full">
+                                    <span className="text-zinc-500">Tax</span>
+                                    <span className="text-zinc-700 font-medium tabular-nums">{fmtCurr(taxAmt)}</span>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-zinc-400 text-center">-</div>
+                        )}
+                      </div>
+                      
+                      <div className="p-2 min-w-0 flex items-center justify-end">
+                        <div className="font-bold text-zinc-800 tabular-nums">{fmtCurr(totalAmount)}</div>
+                      </div>
+                      
+                      <div className="p-2 min-w-0 flex items-center justify-center">
+                        <div className="text-zinc-300">
+                          <CheckCircle size={14} className="opacity-50" />
                         </div>
-                      ) : (
-                        <div className="text-zinc-400 text-center">-</div>
-                      )}
-                    </div>
-                    
-                    <div className="p-1.5 pt-2 min-w-0 flex items-center justify-end">
-                      <div className="text-[9.6px] font-bold text-zinc-800 px-1">{fmtCurr(totalAmount)}</div>
-                    </div>
-                    
-                    <div className="p-1.5 pt-2 pb-2 min-w-0 flex items-center justify-center">
-                      <div className="text-zinc-300">
-                        <CheckCircle size={14} className="opacity-50" />
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
           

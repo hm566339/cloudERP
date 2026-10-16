@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react'
 import { useLogoutApiMutation } from '../features/auth/services/authApi';
 import { Outlet, Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import {
@@ -30,6 +30,8 @@ import { useAccessMode } from '../hooks/useAccessMode'
 import AccountantLayout from './AccountantLayout'
 import OwnerLayout from './OwnerLayout'
 import { selectAuthContext } from '../features/auth/authSlice'
+import { useSidebar } from './SidebarContext'
+import RouteLoading from '../routes/RouteLoading'
 
 import SidebarNavItem from './SidebarNavItem'
 import { buildSidebarLinks } from './SidebarConfig'
@@ -71,8 +73,10 @@ export default function CompanyLayout() {
     organization,
   } = useAccessMode();
 
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true)
+  const { isCollapsed, toggleCollapse, mobileOpen, setMobileOpen, closeMobile } = useSidebar();
+  const desktopSidebarOpen = !isCollapsed;
+  const mobileSidebarOpen = mobileOpen;
+
   const [profileOpen, setProfileOpen] = useState(false)
   const [workspacePopupOpen, setWorkspacePopupOpen] = useState(false)
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false)
@@ -83,13 +87,13 @@ export default function CompanyLayout() {
 
   const handleToggleSidebar = useCallback(() => {
     if (window.innerWidth >= 1024) {
-      setDesktopSidebarOpen(prev => !prev);
+      toggleCollapse();
     } else {
-      setMobileSidebarOpen(true);
+      setMobileOpen(true);
     }
-  }, []);
+  }, [toggleCollapse, setMobileOpen]);
 
-  const closeMobileSidebar = useCallback(() => setMobileSidebarOpen(false), []);
+  const closeMobileSidebar = useCallback(() => closeMobile(), [closeMobile]);
 
   useEffect(() => {
     if (!workspacePopupOpen) return
@@ -162,8 +166,8 @@ export default function CompanyLayout() {
     if (isSuperAdminGlobal || !companyId) return
     if (accessLoading) return
 
-    // Super admins have global access — skip per-company module guard entirely
-    if (userRole === 'super_admin') return
+    // Super admins and Owners have global access — skip per-company module guard entirely
+    if (userRole === 'super_admin' || isOwnerUser) return
 
     const pathSegments = location.pathname.split('/').filter(Boolean)
     if (pathSegments.length < 3) return
@@ -255,23 +259,6 @@ export default function CompanyLayout() {
     return <AccountantLayout />
   }
 
-  const isOwner =
-    authContext?.membership?.memberType === 'OWNER' ||
-    authContext?.user?.role === 'owner' ||
-    authContext?.user?.membership?.memberType === 'OWNER' ||
-    (Array.isArray(authContext?.user?.roles) &&
-      authContext.user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
-    (Array.isArray(authContext?.roles) &&
-      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER'));
-
-  if (isOwner && location.pathname === '/subscription') {
-    return (
-      <OwnerLayout>
-        <Outlet />
-      </OwnerLayout>
-    );
-  }
-
   const sidebarContent = useMemo(() => (
     <>
       {/* Brand */}
@@ -280,12 +267,12 @@ export default function CompanyLayout() {
           <MarkLogo variant="light" className="w-full h-full object-contain object-left" />
         </div>
         {selectedCompany && !isSuperAdminGlobal && (
-          <span className="ml-auto text-[8px] font-bold bg-zinc-100 text-zinc-800 px-2.5 py-1 rounded-md border border-zinc-200/50 uppercase tracking-wider">
-            Tenant
+          <span className="ml-auto text-[10px] font-bold bg-zinc-100 text-zinc-800 px-2 py-0.5 rounded border border-zinc-200/50 uppercase tracking-wider">
+            {isOwnerUser ? 'Owner' : 'Tenant'}
           </span>
         )}
         {isSuperAdminGlobal && (
-          <span className="ml-auto text-[8px] font-bold bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-md border border-indigo-100/50 uppercase tracking-wider">
+          <span className="ml-auto text-[10px] font-bold bg-teal-50 text-teal-700 px-2 py-0.5 rounded border border-teal-200/50 uppercase tracking-wider">
             Admin
           </span>
         )}
@@ -315,6 +302,15 @@ export default function CompanyLayout() {
                 Switch Tenant
               </button>
             )}
+            {isOwnerUser && (
+              <Link
+                to="/owner/dashboard"
+                className="w-full flex items-center justify-center gap-2 text-[9.6px] font-semibold py-2 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-zinc-700 transition-all duration-200 shadow-sm active:scale-[0.98]"
+              >
+                <Building2 size={14} className="text-zinc-500" />
+                Exit to Owner Console
+              </Link>
+            )}
             {userRole === 'super_admin' && !isSuperAdminGlobal && (
               <Link
                 to="/super-admin/dashboard"
@@ -328,7 +324,7 @@ export default function CompanyLayout() {
         </div>
       )}
     </>
-  ), [selectedCompany, isSuperAdminGlobal, sidebarLinks, location, closeMobileSidebar, workspacePopupOpen, effectiveUser, handleSwitchCompany, userRole]);
+  ), [selectedCompany, isSuperAdminGlobal, sidebarLinks, location, closeMobileSidebar, workspacePopupOpen, effectiveUser, handleSwitchCompany, userRole, isOwnerUser]);
 
   return (
     <div className="h-screen bg-transparent flex font-sans selection:bg-zinc-200 selection:text-zinc-900 overflow-hidden">
@@ -346,7 +342,7 @@ export default function CompanyLayout() {
         <>
           <div
             className="fixed inset-0 bg-zinc-900/40 backdrop-blur-xs z-30 lg:hidden"
-            onClick={() => setMobileSidebarOpen(false)}
+            onClick={() => closeMobile()}
           />
           <aside
             className="fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] animate-slide-in-right lg:hidden shadow-xl overscroll-contain"
@@ -354,8 +350,9 @@ export default function CompanyLayout() {
           >
             <div className="absolute top-3 right-3">
               <button
-                onClick={() => setMobileSidebarOpen(false)}
+                onClick={() => closeMobile()}
                 className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-500 transition-colors duration-micro ease-enter"
+                aria-label="Close sidebar"
               >
                 <X size={18} />
               </button>
@@ -497,7 +494,7 @@ export default function CompanyLayout() {
                   </div>
                   <div className="hidden md:block text-left">
                     <p className="text-[10.4px] font-bold text-zinc-800 leading-none">{effectiveUser?.name}</p>
-                    <p className="text-[8px] font-medium text-zinc-400 leading-tight mt-0.5 capitalize">{userRole.replace('_', ' ')}</p>
+                    <p className="text-[10px] font-medium text-zinc-400 leading-tight mt-0.5 capitalize">{userRole.replace('_', ' ')}</p>
                   </div>
                   <ChevronDown size={14} className="text-zinc-400 hidden md:block ml-1 group-hover:text-zinc-600 transition-colors" />
                 </button>
@@ -584,9 +581,11 @@ export default function CompanyLayout() {
           <SubscriptionNoticeBanner />
 
           <main className={`flex-1 min-h-0 min-w-0 flex flex-col bg-zinc-50/30 overscroll-contain ${isFullHeightPage ? 'overflow-hidden p-0' : 'overflow-x-hidden overflow-y-auto'}`} >
-            <div className={`w-full flex-1 flex flex-col min-h-0 min-w-0 ${isFullHeightPage ? 'h-full' : ''}`}>
+            <div className={`w-full flex-1 flex flex-col min-h-0 min-w-0 ${isFullHeightPage ? 'h-full' : 'max-w-[2560px] 5xl:max-w-[3200px] mx-auto'}`}>
               <ErrorBoundary>
-                <Outlet context={{ accessibleModuleKeys, accessLoading, companyModulesData, authContext, isOwner: isOwnerUser }} />
+                <Suspense fallback={<RouteLoading />}>
+                  <Outlet context={{ accessibleModuleKeys, accessLoading, companyModulesData, authContext, isOwner: isOwnerUser }} />
+                </Suspense>
               </ErrorBoundary>
             </div>
           </main>

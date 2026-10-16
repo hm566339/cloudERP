@@ -32,12 +32,12 @@ export default function IntegrationsSettings() {
       <SettingsCard title="Connected Services" description="Manage connections to external applications.">
         <div className="space-y-4">
           {integrations.map(service => (
-            <div key={service.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+            <div key={service.id} className="flex items-center justify-between p-4 border border-zinc-200 rounded-lg">
               <div className="flex items-center gap-4">
                 <div className="text-2xl">{service.icon}</div>
                 <div>
-                  <h3 className="font-semibold text-slate-900">{service.name}</h3>
-                  <p className="text-sm text-slate-500">{service.description}</p>
+                  <h3 className="font-semibold text-zinc-900">{service.name}</h3>
+                  <p className="text-sm text-zinc-500">{service.description}</p>
                 </div>
               </div>
               <button

@@ -6,6 +6,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import CompanyLayout from "../layouts/CompanyLayout";
 import AccountantLayout from "../layouts/AccountantLayout";
 import OwnerLayout from "../layouts/OwnerLayout";
+import AppShellLayout from "../layouts/AppShellLayout";
 import PurchaseModuleLayout from "../components/common/PurchaseModuleLayout";
 import { SharedAccountsRoutes } from "./SharedAccountsRoutes";
 import { SharedInventoryRoutes } from "./SharedInventoryRoutes";
@@ -23,6 +24,7 @@ import AccountRedirectHandler from "./AccountRedirectHandler";
 import RouteLoading from "./RouteLoading";
 import ScrollToTop from "./ScrollToTop";
 import { RootIndexHandler, CompanyEntryRedirect } from "./RouteRedirects";
+import { SidebarProvider } from "../layouts/SidebarContext";
 
 
 
@@ -408,6 +410,9 @@ const GstReports = lazy(() => import("../features/reports/pages/GstReports"));
 const SettingsPage = lazy(
   () => import("../features/settings/pages/SettingsPage"),
 );
+const OrganizationSettingsPage = lazy(
+  () => import("../features/settings/pages/OrganizationSettingsPage"),
+);
 const AccountWorkflow = lazy(
   () => import("../features/settings/pages/AccountWorkflow"),
 );
@@ -519,7 +524,8 @@ export default function AppRoutes() {
   return (
     <Suspense fallback={<RouteLoading />}>
       <ScrollToTop />
-      <Routes>
+      <SidebarProvider>
+        <Routes>
         {/* ── PUBLIC SAAS LANDING & TRIAL SIGNUP ── */}
         <Route path="/" element={<RootIndexHandler />} />
         <Route path="/landing" element={<LandingPage />} />
@@ -705,110 +711,69 @@ export default function AppRoutes() {
           }
         />
 
-        {/* ── ORGANIZATION OWNER WORKSPACE & DASHBOARD ─────────────────── */}
+        {/* ── UNIFIED APP SHELL ROUTES (Persistent Layout: Owner / Accountant / Tenant) ── */}
         <Route
-          path="/owner"
           element={
             <ProtectedRoute requireCompany={false}>
-              <OwnerLayout />
+              <AppShellLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/owner/dashboard" replace />} />
-          <Route path="dashboard" element={<OwnerDashboard />} />
-          <Route path="companies" element={<CompanyList />} />
-          <Route path="companies/:id" element={<CompanyDetails />} />
-          <Route path="users" element={<Navigate to="/users" replace />} />
-          <Route path="modules" element={<Navigate to="/owner/dashboard" replace />} />
-          <Route path="modules/finance" element={<Navigate to="/accounts/dashboard" replace />} />
-          <Route path="modules/inventory" element={<Navigate to="/inventory/dashboard" replace />} />
-          <Route path="modules/sales" element={<Navigate to="/crm/dashboard" replace />} />
-          <Route path="modules/purchasing" element={<Navigate to="/purchase-requisitions" replace />} />
-          <Route path="workflows" element={<Navigate to="/workflows" replace />} />
-          <Route path="workflow" element={<Navigate to="/workflows" replace />} />
-          <Route path="workflows/approvals" element={<Navigate to="/workflows/approvals" replace />} />
-          <Route path="settings" element={<Navigate to="/accounts/settings" replace />} />
-          <Route path="settings/organization" element={<Navigate to="/accounts/settings" replace />} />
-          <Route path="subscription" element={<SubscriptionPage />} />
-          <Route path="settings/subscription" element={<Navigate to="/subscription" replace />} />
-          <Route path="profile" element={<Navigate to="/profile" replace />} />
-        </Route>
-        <Route
-          path="/organization/dashboard"
-          element={<Navigate to="/owner/dashboard" replace />}
-        />
+          {/* Owner workspace routes */}
+          <Route path="/owner" element={<Navigate to="/owner/dashboard" replace />} />
+          <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+          <Route path="/owner/companies" element={<CompanyList />} />
+          <Route path="/owner/companies/:id" element={<CompanyDetails />} />
+          <Route path="/owner/users" element={<Navigate to="/users" replace />} />
+          <Route path="/owner/modules" element={<Navigate to="/owner/dashboard" replace />} />
+          <Route path="/owner/modules/finance" element={<Navigate to="/accounts/dashboard" replace />} />
+          <Route path="/owner/modules/inventory" element={<Navigate to="/inventory/dashboard" replace />} />
+          <Route path="/owner/modules/sales" element={<Navigate to="/crm/dashboard" replace />} />
+          <Route path="/owner/modules/purchasing" element={<Navigate to="/purchase-requisitions" replace />} />
+          <Route path="/owner/workflows" element={<Navigate to="/workflows" replace />} />
+          <Route path="/owner/workflow" element={<Navigate to="/workflows" replace />} />
+          <Route path="/owner/settings" element={<OrganizationSettingsPage />} />
+          <Route path="/owner/settings/organization" element={<OrganizationSettingsPage />} />
+          <Route path="/owner/organization" element={<OrganizationSettingsPage />} />
+          <Route path="/organization/settings" element={<OrganizationSettingsPage />} />
+          <Route path="/owner/subscription" element={<SubscriptionPage />} />
+          <Route path="/owner/settings/subscription" element={<Navigate to="/subscription" replace />} />
+          <Route path="/owner/profile" element={<Navigate to="/profile" replace />} />
+          <Route path="/organization/dashboard" element={<Navigate to="/owner/dashboard" replace />} />
 
-        {/* ── ACCOUNTANT / USER ROUTES (Module Guard: ACCOUNT) ── */}
-        <Route
-          path="/accounts"
-          element={
-            <ProtectedRoute requireCompany={false} module="ACCOUNT">
-              <AccountantLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/accounts/dashboard" replace />} />
+          {/* Accounts & Finance */}
+          <Route path="/accounts" element={<Navigate to="/accounts/dashboard" replace />} />
+          <Route path="/accounts/dashboard" element={<AccountDashboard />} />
+          {SharedAccountsRoutes({ prefix: "accounts/" })}
           {SharedAccountsRoutes({ prefix: "" })}
-          {/* Profile & utility */}
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="*" element={<Navigate to="/accounts/dashboard" replace />} />
-        </Route>
+          <Route path="/accounts/profile" element={<ProfilePage />} />
+          <Route path="/accounts/settings" element={<SettingsPage />} />
+          <Route path="/account/*" element={<AccountRedirectHandler />} />
+          <Route path="/account" element={<Navigate to="/accounts/dashboard" replace />} />
 
-        {/* ── INVENTORY ROUTES (Module Guard: INVENTORY) ── */}
-        <Route
-          path="/inventory"
-          element={
-            <ProtectedRoute requireCompany={false} module="INVENTORY">
-              <AccountantLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/inventory/dashboard" replace />} />
+          {/* Inventory */}
+          <Route path="/inventory" element={<Navigate to="/inventory/dashboard" replace />} />
           {SharedInventoryRoutes({ prefix: "" })}
-        </Route>
+          {SharedInventoryRoutes({ prefix: "inventory/" })}
 
-        {/* ── CRM ROUTES (Module Guard: CRM) ── */}
-        <Route
-          path="/crm"
-          element={
-            <ProtectedRoute requireCompany={false} module="CRM">
-              <AccountantLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/crm/dashboard" replace />} />
-          <Route path="dashboard" element={<SalesCRMDashboard />} />
-          <Route path="customers" element={<CustomerManagement />} />
-          <Route path="customers/:id" element={<CustomerDetails />} />
-          <Route path="leads" element={<LeadTracking />} />
-          <Route path="quotations" element={<QuotationsPage />} />
-          <Route path="quotations/:id" element={<QuotationDetails />} />
-          <Route path="orders" element={<SalesOrders />} />
-          <Route path="communication" element={<CustomerCommunication />} />
-          <Route path="analytics" element={<SalesAnalytics />} />
-          <Route path="invoices" element={<SalesInvoices />} />
-          <Route path="invoices/:id" element={<SalesInvoiceDetails />} />
-          <Route path="audit" element={<AuditLogsPage />} />
-          <Route path="*" element={<Navigate to="/crm/dashboard" replace />} />
-        </Route>
+          {/* CRM & Sales */}
+          <Route path="/crm" element={<Navigate to="/crm/dashboard" replace />} />
+          <Route path="/crm/dashboard" element={<SalesCRMDashboard />} />
+          <Route path="/crm/customers" element={<CustomerManagement />} />
+          <Route path="/crm/customers/:id" element={<CustomerDetails />} />
+          <Route path="/crm/leads" element={<LeadTracking />} />
+          <Route path="/crm/quotations" element={<QuotationsPage />} />
+          <Route path="/crm/quotations/:id" element={<QuotationDetails />} />
+          <Route path="/crm/orders" element={<SalesOrders />} />
+          <Route path="/crm/communication" element={<CustomerCommunication />} />
+          <Route path="/crm/analytics" element={<SalesAnalytics />} />
+          <Route path="/crm/invoices" element={<SalesInvoices />} />
+          <Route path="/crm/invoices/:id" element={<SalesInvoiceDetails />} />
+          <Route path="/crm/audit" element={<AuditLogsPage />} />
+          <Route path="/sales-crm/*" element={<Navigate to="/crm" replace />} />
+          <Route path="/sales-crm" element={<Navigate to="/crm/dashboard" replace />} />
 
-        {/* Alias /sales-crm to /crm */}
-        <Route path="/sales-crm/*" element={<Navigate to="/crm" replace />} />
-        <Route path="/sales-crm" element={<Navigate to="/crm/dashboard" replace />} />
-
-        {/* Alias /account/* to /accounts/* to handle legacy bookmarks & backend redirects */}
-        <Route path="/account/*" element={<AccountRedirectHandler />} />
-        <Route path="/account" element={<Navigate to="/accounts/dashboard" replace />} />
-
-        {/* ── DIRECT PROCUREMENT ROUTES (Expected URLs) ── */}
-        <Route
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <AccountantLayout />
-            </ProtectedRoute>
-          }
-        >
+          {/* Direct Procurement Routes */}
           <Route element={<PurchaseModuleLayout />}>
             <Route path="/purchase-requisitions" element={<PurchaseRequests />} />
             <Route path="/purchase-requisitions/new" element={<PurchaseRequisitionForm />} />
@@ -833,81 +798,58 @@ export default function AppRoutes() {
             <Route path="/purchase-invoices/:id" element={<APInvoiceDetails />} />
             <Route path="/payments" element={<APPayments />} />
           </Route>
-        </Route>
 
-        {/* ── DIRECT WORKFLOW & APPROVALS ROUTES ── */}
-        <Route
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <CompanyLayout />
-            </ProtectedRoute>
-          }
-        >
+          {/* Direct Workflow & Approvals Routes */}
           <Route path="/workflows" element={<WorkflowManagementPage />} />
           <Route path="/workflows/approvals" element={<ApprovalRequestsPage />} />
           <Route path="/workflows/transactions/:transactionId" element={<DynamicWorkflowPage />} />
           <Route path="/workflows/document/:documentType/:documentId" element={<DynamicWorkflowPage />} />
           <Route path="/workflow" element={<Navigate to="/workflows" replace />} />
           <Route path="/workflow/approvals" element={<Navigate to="/workflows/approvals" replace />} />
-        </Route>
 
+          {/* Tenant Core Pages */}
+          <Route path="/modules" element={<CompanyModules />} />
+          <Route path="/modules/:id" element={<ModuleDetails />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/company-dashboard" element={<CompanyDashboard />} />
+          <Route path="/subscription" element={<SubscriptionPage />} />
 
-        {/* ── COMPANY TENANT ROUTES (NO COMPANY ID IN URL) ── */}
-        <Route
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <CompanyLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="modules" element={<CompanyModules />} />
-          <Route path="modules/:id" element={<ModuleDetails />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="company-dashboard" element={<CompanyDashboard />} />
-          <Route path="subscription" element={<SubscriptionPage />} />
-
-          {/* Finance & Accounts Module (Tenant) */}
-          {SharedAccountsRoutes({ prefix: "accounts/" })}
-
-          {/* All other modules (HR, Inventory, Sales, etc.) */}
+          {/* All other shared company routes (HR, Manufacturing, etc.) */}
           {SharedCompanyRoutes({ prefix: "" })}
 
-          {/* Workflow & Approvals Module (Tenant) */}
-          <Route path="workflows" element={<WorkflowManagementPage />} />
-          <Route path="workflows/approvals" element={<ApprovalRequestsPage />} />
-          <Route path="workflows/transactions/:transactionId" element={<DynamicWorkflowPage />} />
-          <Route path="workflows/document/:documentType/:documentId" element={<DynamicWorkflowPage />} />
-          <Route path="workflow" element={<Navigate to="/workflows" replace />} />
-          <Route path="workflow/approvals" element={<Navigate to="/workflows/approvals" replace />} />
+          {/* SSO & Administration */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/system-logs" element={<SystemLogsPage />} />
+          <Route path="/users" element={<UserList />} />
+          <Route path="/users/:id" element={<UserDetails />} />
+          <Route path="/roles" element={<RoleList />} />
+          <Route path="/portal-access" element={<PortalAccess />} />
+          <Route path="/sessions" element={<SessionList />} />
+          <Route path="/security/roles" element={<RolePermissionsSettings />} />
+          <Route path="/roles/permissions" element={<RolePermissionsSettings />} />
+          <Route path="/security/users" element={<UserPermissionsSettings />} />
+          <Route path="/security/features" element={<FeatureList />} />
+          <Route path="/security/permissions" element={<PermissionList />} />
+          <Route path="/features" element={<FeatureList />} />
 
-          {/* SSO & Administration Module (Tenant) */}
-          <Route path="admin" element={<AdminDashboard />} />
-          <Route path="admin/system-logs" element={<SystemLogsPage />} />
-          <Route path="users" element={<UserList />} />
-          <Route path="users/:id" element={<UserDetails />} />
-          <Route path="roles" element={<RoleList />} />
-          <Route path="portal-access" element={<PortalAccess />} />
-          <Route path="sessions" element={<SessionList />} />
-          <Route path="security/roles" element={<RolePermissionsSettings />} />
-          <Route path="roles/permissions" element={<RolePermissionsSettings />} />
-          <Route path="security/users" element={<UserPermissionsSettings />} />
-          <Route path="security/features" element={<FeatureList />} />
-          <Route path="security/permissions" element={<PermissionList />} />
-          <Route path="features" element={<FeatureList />} />
-
-          {/* Settings & Admin Configuration (Tenant) */}
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="settings/general" element={<GeneralSettings />} />
-          <Route path="settings/security" element={<SecuritySettings />} />
-          <Route path="settings/security/features" element={<FeatureList />} />
-          <Route path="settings/security/permissions" element={<PermissionList />} />
-          <Route path="settings/security/roles" element={<RolePermissionsSettings />} />
-          <Route path="settings/security/users" element={<UserPermissionsSettings />} />
-          <Route path="settings/notifications" element={<NotificationsSettings />} />
-          <Route path="settings/integrations" element={<IntegrationsSettings />} />
-          <Route path="settings/audit-logs" element={<AuditLogsSettings />} />
-          <Route path="settings/preferences" element={<PreferencesSettings />} />
-          <Route path="settings/plans" element={<SubscriptionPlansSettings />} />
+          {/* Settings */}
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings/general" element={<GeneralSettings />} />
+          <Route path="/settings/security" element={<SecuritySettings />} />
+          <Route path="/settings/security/features" element={<FeatureList />} />
+          <Route path="/settings/security/permissions" element={<PermissionList />} />
+          <Route path="/settings/security/roles" element={<RolePermissionsSettings />} />
+          <Route path="/settings/security/users" element={<UserPermissionsSettings />} />
+          <Route path="/settings/notifications" element={<NotificationsSettings />} />
+          <Route path="/settings/integrations" element={<IntegrationsSettings />} />
+          <Route path="/settings/audit-logs" element={<AuditLogsSettings />} />
+          <Route path="/settings/preferences" element={<PreferencesSettings />} />
+          <Route path="/settings/plans" element={<SubscriptionPlansSettings />} />
+          <Route path="/settings/roles" element={<Navigate to="/settings/security/roles" replace />} />
+          <Route path="/settings/users" element={<Navigate to="/settings/security/users" replace />} />
+          <Route path="/settings/features" element={<Navigate to="/settings/security/features" replace />} />
+          <Route path="/settings/permissions" element={<Navigate to="/settings/security/permissions" replace />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
         {/* ── SUPERADMIN COMPANY ROUTES ── */}
@@ -1045,38 +987,10 @@ export default function AppRoutes() {
           <Route path="profile" element={<ProfilePage />} />
         </Route>
 
-        {/* ⚙️ SYSTEM ADMIN SETTINGS ROUTES ⚙️ */}
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <RoleRoute allowedRoles={["super_admin", "owner", "company_admin"]}>
-                <CompanyLayout />
-              </RoleRoute>
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/settings/general" replace />} />
-          <Route path="general" element={<GeneralSettings />} />
-          <Route path="security" element={<SecuritySettings />} />
-          <Route path="security/features" element={<FeatureList />} />
-          <Route path="security/permissions" element={<PermissionList />} />
-          <Route path="security/roles" element={<RolePermissionsSettings />} />
-          <Route path="security/users" element={<UserPermissionsSettings />} />
-          <Route path="roles" element={<Navigate to="/settings/security/roles" replace />} />
-          <Route path="users" element={<Navigate to="/settings/security/users" replace />} />
-          <Route path="features" element={<Navigate to="/settings/security/features" replace />} />
-          <Route path="permissions" element={<Navigate to="/settings/security/permissions" replace />} />
-          <Route path="notifications" element={<NotificationsSettings />} />
-          <Route path="integrations" element={<IntegrationsSettings />} />
-          <Route path="audit-logs" element={<AuditLogsSettings />} />
-          <Route path="preferences" element={<PreferencesSettings />} />
-          <Route path="plans" element={<SubscriptionPlansSettings />} />
-        </Route>
-
         {/* ── Catch-all 404 Route ── */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </SidebarProvider>
     </Suspense>
   );
 }
