@@ -17,6 +17,12 @@ public interface SalesOrderService {
 
     SalesOrderResponse changeStatus(UUID companyId, UUID id, SalesOrderStatus newStatus);
 
+    SalesOrderResponse submitForApproval(UUID companyId, UUID id, String comments);
+
+    default SalesOrderResponse submitForApproval(UUID companyId, UUID id) {
+        return submitForApproval(companyId, id, null);
+    }
+
     SalesOrderResponse confirmSO(UUID companyId, UUID id);
 
     SalesOrderResponse cancelSO(UUID companyId, UUID id);

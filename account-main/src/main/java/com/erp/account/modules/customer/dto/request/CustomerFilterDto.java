@@ -16,8 +16,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CustomerFilterDto {
 
-    private UUID companyId;
-
     private String searchKey;
     private String customerCode;
     private String customerName;
@@ -36,4 +34,5 @@ public class CustomerFilterDto {
     private LocalDateTime updatedFrom;
     private LocalDateTime updatedTo;
     private List<UUID> ids;
+    private UUID companyId;
 }

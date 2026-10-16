@@ -75,6 +75,7 @@ workflow:
   callback:
     timeout-ms: ${WORKFLOW_CALLBACK_TIMEOUT_MS:5000}
     retry-enabled: ${WORKFLOW_CALLBACK_RETRY_ENABLED:true}
+    secret: ${WORKFLOW_CALLBACK_SECRET:erp-workflow-internal-callback-secret}
 
 app:
   jwt:

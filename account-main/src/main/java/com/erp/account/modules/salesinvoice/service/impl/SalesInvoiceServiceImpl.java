@@ -58,6 +58,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import com.erp.account.common.exception.BadRequestException;
+import com.erp.account.integration.workflow.client.WorkflowClient;
+import com.erp.account.integration.workflow.dto.WorkflowTransactionDto;
 import com.erp.account.modules.company.entity.Company;
 import com.erp.account.enums.PostingStatus;
 import com.erp.account.common.service.GstCalculationService;
@@ -86,6 +89,7 @@ public class SalesInvoiceServiceImpl implements SalesInvoiceService {
     private final GstRegistrationRepository gstRegistrationRepository;
     private final com.erp.account.modules.settings.repository.PaymentTermRepository paymentTermRepository;
     private final com.erp.account.modules.settings.repository.TermsConditionRepository termsConditionRepository;
+    private final WorkflowClient workflowClient;
 
     @Override
     public SalesInvoiceResponse createInvoice(RequestWrapper<SalesInvoiceRequest> requestWrapper, UUID companyId) {
@@ -941,6 +945,54 @@ public class SalesInvoiceServiceImpl implements SalesInvoiceService {
     // ============================================================
 
     @Override
+    public SalesInvoiceResponse submitForApproval(UUID invoiceId, String comments) {
+        return submitForApproval(null, invoiceId, comments);
+    }
+
+    @Override
+    public SalesInvoiceResponse submitForApproval(UUID companyId, UUID invoiceId, String comments) {
+        SalesInvoice invoice = getValidatedInvoice(invoiceId);
+        UUID resolvedCompanyId = companyId != null ? TenantUtils.resolveCompanyIdForQuery(companyId) : invoice.getCompanyId();
+
+        if (invoice.getStatus() != InvoiceStatus.DRAFT) {
+            throw new BadRequestException("Only DRAFT invoices can be submitted for approval. Current status: " + invoice.getStatus());
+        }
+
+        // Prevent duplicate workflow submission
+        try {
+            WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "SALES_INVOICE", invoice.getId());
+            if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
+                throw new BadRequestException("Sales Invoice is already submitted for approval with transaction: " + existingTx.getId());
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("No existing workflow transaction found for sales invoice {}", invoiceId);
+        }
+
+        try {
+            workflowClient.submitWorkflow(
+                    resolvedCompanyId,
+                    "SALES_INVOICE",
+                    invoice.getId(),
+                    invoice.getInvoiceNumber(),
+                    comments != null ? comments : "Submitted sales invoice for approval"
+            );
+            log.info("Sales Invoice {} submitted for approval to workflow-service", invoice.getInvoiceNumber());
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Workflow engine submission failed for sales invoice {}. Error: {}", invoiceId, e.getMessage());
+            throw new BadRequestException("Failed to submit sales invoice for workflow approval: " + e.getMessage());
+        }
+
+        invoice.setStatus(InvoiceStatus.PENDING_APPROVAL);
+        SalesInvoice saved = salesInvoiceRepository.save(invoice);
+        log.info("Sales Invoice {} submitted for approval to workflow-service", saved.getInvoiceNumber());
+        return enrichAndReturnResponse(salesInvoiceMapper.entityToResponse(saved), saved);
+    }
+
+    @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void approveInvoice(UUID invoiceId) {
         log.info("Approving sales invoice: {}", invoiceId);
@@ -949,8 +1001,8 @@ public class SalesInvoiceServiceImpl implements SalesInvoiceService {
         SalesInvoice invoice = transactionTemplate.execute(status -> {
             SalesInvoice inv = getValidatedInvoice(invoiceId);
 
-            if (!inv.getStatus().equals(InvoiceStatus.DRAFT)) {
-                throw new InvalidOperationException("Invoice must be in DRAFT status to approve");
+            if (!inv.getStatus().equals(InvoiceStatus.DRAFT) && !inv.getStatus().equals(InvoiceStatus.PENDING_APPROVAL)) {
+                throw new InvalidOperationException("Invoice must be in DRAFT or PENDING_APPROVAL status to approve");
             }
 
             // Temporarily commented out for testing so the same user can approve their own
@@ -961,6 +1013,18 @@ public class SalesInvoiceServiceImpl implements SalesInvoiceService {
             // }
             return inv;
         });
+
+        // Prevent direct approval if active workflow is pending
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(invoice.getCompanyId(), "SALES_INVOICE", invoiceId);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Sales Invoice cannot be approved directly while workflow approval is pending. Please approve via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for sales invoice approval {}: {}", invoiceId, e.getMessage());
+        }
 
         // 2. Update invoice status and schedule stock-out in a single write transaction
         transactionTemplate.execute(status -> {
@@ -994,6 +1058,18 @@ public class SalesInvoiceServiceImpl implements SalesInvoiceService {
                     "Invoice can only be rejected from DRAFT or PENDING_APPROVAL status");
         }
 
+        // Prevent direct rejection if active workflow is pending
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(invoice.getCompanyId(), "SALES_INVOICE", invoiceId);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Sales Invoice cannot be rejected directly while workflow approval is pending. Please reject via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for sales invoice rejection {}: {}", invoiceId, e.getMessage());
+        }
+
         invoice.setStatus(InvoiceStatus.REJECTED);
         salesInvoiceRepository.save(invoice);
         log.info("Sales invoice rejected successfully: {}", invoiceId);
@@ -1011,6 +1087,18 @@ public class SalesInvoiceServiceImpl implements SalesInvoiceService {
         }
         if (PostingStatus.POSTED.equals(invoice.getGlPostingStatus())) {
             throw new InvoiceAlreadyPostedException("Sales invoice is already posted");
+        }
+
+        // Prevent direct posting if active workflow is pending
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(invoice.getCompanyId(), "SALES_INVOICE", invoiceId);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Sales Invoice cannot be posted directly while workflow approval is pending. Please approve via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for sales invoice posting {}: {}", invoiceId, e.getMessage());
         }
 
         // if (invoice.getCreatedBy() != null &&
@@ -1047,6 +1135,18 @@ public class SalesInvoiceServiceImpl implements SalesInvoiceService {
         if (invoice.getStatus().equals(InvoiceStatus.POSTED)) {
             throw new InvalidInvoiceStatusException(
                     "POSTED invoices are immutable and cannot be cancelled directly. Please create a Credit Note (Reverse Entry).");
+        }
+
+        // Prevent direct cancellation if active workflow is pending
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(invoice.getCompanyId(), "SALES_INVOICE", invoiceId);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Sales Invoice cannot be cancelled directly while workflow approval is pending. Please cancel via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for sales invoice cancellation {}: {}", invoiceId, e.getMessage());
         }
 
         invoice.setStatus(InvoiceStatus.CANCELLED);

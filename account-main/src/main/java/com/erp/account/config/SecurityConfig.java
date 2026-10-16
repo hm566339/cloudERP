@@ -68,6 +68,8 @@ public class SecurityConfig {
                                                                 "/configuration/**",
                                                                 "/webjars/**",
                                                                 "/api/account/public/**",
+                                                                "/api/v1/account/workflow/callback/**",
+                                                                "/api/account/workflow/callback/**",
                                                                 "/error") // Added /error to prevent auth loop on 404s
                                                 .permitAll()
 

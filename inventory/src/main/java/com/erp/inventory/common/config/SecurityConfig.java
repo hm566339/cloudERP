@@ -47,7 +47,9 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**",
                                 "/api/inventory/auth/**",
-                                "/api/inventory/integration/**")
+                                "/api/inventory/integration/**",
+                                "/api/inventory/workflow/callback/**",
+                                "/api/v1/inventory/workflow/callback/**")
                         .permitAll()
 
                         // Dynamic SSO-only authorization (features + active+allowed permissions)

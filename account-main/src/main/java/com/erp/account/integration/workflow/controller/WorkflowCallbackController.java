@@ -8,14 +8,18 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/account/workflow")
+@RequestMapping({"/api/v1/account/workflow", "/api/account/workflow"})
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Workflow Callback", description = "Receives asynchronous workflow completion events from Workflow Service")
@@ -23,13 +27,34 @@ public class WorkflowCallbackController {
 
     private final WorkflowDocumentRegistry documentRegistry;
 
-    @PostMapping("/callback")
-    @Operation(summary = "Handle webhook callback from workflow-service")
-    public ResponseEntity<ApiResponse<Void>> handleWorkflowCallback(@RequestBody WorkflowCallbackEventDto event) {
-        log.info("Received workflow callback: eventType={}, docType={}, docId={}, status={}",
-                event.getEventType(), event.getDocumentType(), event.getDocumentId(), event.getStatus());
+    @Value("${workflow.callback.secret:erp-workflow-internal-callback-secret}")
+    private String expectedSecret;
 
-        if (event.getDocumentType() == null || event.getDocumentId() == null || event.getCompanyId() == null) {
+    @PostMapping({"/callback", ""})
+    @Operation(summary = "Handle webhook callback from workflow-service")
+    public ResponseEntity<ApiResponse<Void>> handleWorkflowCallback(
+            @RequestHeader(value = "X-Workflow-Secret", required = false) String secretHeader,
+            @RequestBody WorkflowCallbackEventDto event) {
+
+        if (!StringUtils.hasText(expectedSecret)) {
+            log.error("Workflow callback secret is not configured on this server. Rejecting callback.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Server configuration error: Workflow callback secret is not configured", (Void) null));
+        }
+
+        if (!StringUtils.hasText(secretHeader) || !expectedSecret.equals(secretHeader)) {
+            log.warn("Unauthorized workflow callback attempt. Invalid or missing secret header.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Unauthorized: Invalid workflow callback secret", (Void) null));
+        }
+
+        log.info("Received workflow callback: eventType={}, docType={}, docId={}, status={}",
+                event != null ? event.getEventType() : null,
+                event != null ? event.getDocumentType() : null,
+                event != null ? event.getDocumentId() : null,
+                event != null ? event.getStatus() : null);
+
+        if (event == null || event.getDocumentType() == null || event.getDocumentId() == null || event.getCompanyId() == null) {
             log.warn("Missing required document parameters in workflow callback: {}", event);
             return ResponseEntity.badRequest().body(ApiResponse.error("Missing required document identifiers", (Void) null));
         }
@@ -57,7 +82,7 @@ public class WorkflowCallbackController {
                     }
                     case "WORKFLOW_RETURNED" -> {
                         log.info("Applying return on document {} ({})", event.getDocumentType(), event.getDocumentId());
-                        document.onWorkflowSubmitted();
+                        document.onWorkflowReturned();
                     }
                     default -> log.debug("Unhandled workflow event type: {}", event.getEventType());
                 }

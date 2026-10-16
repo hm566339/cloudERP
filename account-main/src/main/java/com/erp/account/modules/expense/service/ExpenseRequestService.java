@@ -20,6 +20,8 @@ public interface ExpenseRequestService {
 
     ExpenseRequestResponse submitExpenseRequest(UUID requestCompanyId, UUID id);
 
+    ExpenseRequestResponse submitExpenseRequest(UUID requestCompanyId, UUID id, String comments);
+
     ExpenseRequestResponse approveExpenseRequest(UUID requestCompanyId, UUID id, ExpenseRequestApproveRequest request);
 
     ExpenseRequestResponse rejectExpenseRequest(UUID requestCompanyId, UUID id, ExpenseRequestRejectRequest request);

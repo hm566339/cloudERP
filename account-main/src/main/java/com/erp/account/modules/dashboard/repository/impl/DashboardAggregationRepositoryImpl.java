@@ -13,8 +13,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import com.erp.account.modules.auditlog.entity.AuditLog;
+import com.erp.account.modules.gljournal.entity.GlJournalEntry;
 
 @Slf4j
 @Repository
@@ -417,9 +421,26 @@ public class DashboardAggregationRepositoryImpl implements DashboardAggregationR
     public List<Object> getRecentActivities(UUID companyId, int limit) {
         try {
             String jpql = "SELECT a FROM AuditLog a " + companyFilter("a", companyId) + " ORDER BY a.performedAt DESC";
-            return setCompanyParam(entityManager.createQuery(jpql, Object.class), companyId)
+            List<AuditLog> logs = setCompanyParam(entityManager.createQuery(jpql, AuditLog.class), companyId)
                     .setMaxResults(limit)
                     .getResultList();
+            List<Object> result = new ArrayList<>(logs.size());
+            for (AuditLog a : logs) {
+                Map<String, Object> map = new LinkedHashMap<>();
+                map.put("id", a.getId());
+                map.put("companyId", a.getCompany() != null ? a.getCompany().getId() : null);
+                map.put("moduleName", a.getModuleName());
+                map.put("entityName", a.getEntityName());
+                map.put("entityId", a.getEntityId());
+                map.put("actionType", a.getActionType());
+                map.put("performedBy", a.getPerformedBy());
+                map.put("performedByUsername", a.getPerformedByUsername());
+                map.put("performedAt", a.getPerformedAt());
+                map.put("ipAddress", a.getIpAddress());
+                map.put("userAgent", a.getUserAgent());
+                result.add(map);
+            }
+            return result;
         } catch (Exception e) {
             log.warn("Error fetching recent activities: {}", e.getMessage());
             return Collections.emptyList();
@@ -431,9 +452,29 @@ public class DashboardAggregationRepositoryImpl implements DashboardAggregationR
     public List<Object> getRecentJournals(UUID companyId, int limit) {
         try {
             String jpql = "SELECT j FROM GlJournalEntry j " + companyFilter("j", companyId) + " ORDER BY j.createdAt DESC";
-            return setCompanyParam(entityManager.createQuery(jpql, Object.class), companyId)
+            List<GlJournalEntry> entries = setCompanyParam(entityManager.createQuery(jpql, GlJournalEntry.class), companyId)
                     .setMaxResults(limit)
                     .getResultList();
+            List<Object> result = new ArrayList<>(entries.size());
+            for (GlJournalEntry j : entries) {
+                Map<String, Object> map = new LinkedHashMap<>();
+                map.put("id", j.getId());
+                map.put("companyId", j.getCompany() != null ? j.getCompany().getId() : null);
+                map.put("voucherNo", j.getVoucherNo());
+                map.put("voucherDate", j.getVoucherDate());
+                map.put("referenceNo", j.getReferenceNo());
+                map.put("sourceModule", j.getSourceModule() != null ? j.getSourceModule().name() : null);
+                map.put("sourceId", j.getSourceId());
+                map.put("narration", j.getNarration());
+                map.put("status", j.getStatus() != null ? j.getStatus().name() : null);
+                map.put("totalDebit", j.getTotalDebit());
+                map.put("totalCredit", j.getTotalCredit());
+                map.put("postedBy", j.getPostedBy());
+                map.put("postedAt", j.getPostedAt());
+                map.put("createdAt", j.getCreatedAt());
+                result.add(map);
+            }
+            return result;
         } catch (Exception e) {
             log.warn("Error fetching recent journals: {}", e.getMessage());
             return Collections.emptyList();

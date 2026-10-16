@@ -364,4 +364,151 @@ class WorkflowExecutionServiceTest {
         assertTrue(ui.getPermittedActions().isCanDelegate());
         assertTrue(ui.getPermittedActions().isCanCancel());
     }
+
+    @Test
+    void testApproveTask_InitiatorSelfApproval_ThrowsUnauthorizedWorkflowActionException() {
+        UUID taskId = UUID.randomUUID();
+        UUID initiatorId = UUID.randomUUID();
+        UUID stageId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+
+        WorkflowDefinition def = WorkflowDefinition.builder().id(defId).build();
+        WorkflowStage stage = WorkflowStage.builder().id(stageId).sequenceNo(1).build();
+
+        WorkflowTransaction txn = WorkflowTransaction.builder()
+                .id(UUID.randomUUID())
+                .workflowDefinition(def)
+                .currentStage(stage)
+                .status("PENDING")
+                .initiatedBy(initiatorId)
+                .version(0L)
+                .build();
+
+        WorkflowTask task = WorkflowTask.builder()
+                .id(taskId)
+                .workflowTransaction(txn)
+                .workflowStage(stage)
+                .assignedUserId(initiatorId)
+                .taskStatus(WorkflowTaskStatus.PENDING)
+                .version(0L)
+                .build();
+
+        ApproveTaskRequest request = ApproveTaskRequest.builder().taskId(taskId).comments("Self approve attempt").build();
+        when(taskRepository.findByIdAndIsDeletedFalse(taskId)).thenReturn(Optional.of(task));
+
+        com.erp.workflow.exception.UnauthorizedWorkflowActionException ex = assertThrows(
+                com.erp.workflow.exception.UnauthorizedWorkflowActionException.class,
+                () -> executionService.approveTask(taskId, request, initiatorId, "Initiator User")
+        );
+
+        assertTrue(ex.getMessage().contains("Document initiator cannot approve their own workflow task (separation of duties)"));
+        verify(taskRepository, never()).save(argThat(t -> t.getTaskStatus() == WorkflowTaskStatus.APPROVED));
+    }
+
+    @Test
+    void testApproveTask_RoleBasedSelfApproval_ThrowsUnauthorizedWorkflowActionException() {
+        UUID taskId = UUID.randomUUID();
+        UUID initiatorId = UUID.randomUUID();
+        UUID stageId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+
+        WorkflowDefinition def = WorkflowDefinition.builder().id(defId).build();
+        WorkflowStage stage = WorkflowStage.builder().id(stageId).sequenceNo(1).build();
+
+        // Transaction initiated by user X
+        WorkflowTransaction txn = WorkflowTransaction.builder()
+                .id(UUID.randomUUID())
+                .workflowDefinition(def)
+                .currentStage(stage)
+                .status("PENDING")
+                .initiatedBy(initiatorId)
+                .version(0L)
+                .build();
+
+        // Task assigned to role "FINANCE_MANAGER" (not direct userId)
+        WorkflowTask task = WorkflowTask.builder()
+                .id(taskId)
+                .workflowTransaction(txn)
+                .workflowStage(stage)
+                .assignedRoleName("FINANCE_MANAGER")
+                .taskStatus(WorkflowTaskStatus.PENDING)
+                .version(0L)
+                .build();
+
+        ApproveTaskRequest request = ApproveTaskRequest.builder().taskId(taskId).comments("Role based self approve").build();
+        when(taskRepository.findByIdAndIsDeletedFalse(taskId)).thenReturn(Optional.of(task));
+
+        // Approver is the initiator who happens to hold the FINANCE_MANAGER role
+        com.erp.workflow.exception.UnauthorizedWorkflowActionException ex = assertThrows(
+                com.erp.workflow.exception.UnauthorizedWorkflowActionException.class,
+                () -> executionService.approveTask(taskId, request, initiatorId, "Finance Manager / Initiator")
+        );
+
+        assertTrue(ex.getMessage().contains("Document initiator cannot approve their own workflow task (separation of duties)"));
+        verify(taskRepository, never()).save(argThat(t -> t.getTaskStatus() == WorkflowTaskStatus.APPROVED));
+    }
+
+    @Test
+    void testSubmitWorkflow_ModuleMismatch_ThrowsResourceNotFoundException() {
+        UUID companyId = UUID.randomUUID();
+        UUID docId = UUID.randomUUID();
+
+        // Submit INVENTORY document with module INVENTORY
+        SubmitWorkflowRequest request = SubmitWorkflowRequest.builder()
+                .companyId(companyId)
+                .moduleName("INVENTORY")
+                .documentType("STOCK_TRANSFER")
+                .documentId(docId)
+                .documentNumber("TRF-100")
+                .build();
+
+        // Only an unrelated definition under module "ACCOUNT" exists
+        WorkflowDefinition defAccount = WorkflowDefinition.builder()
+                .id(UUID.randomUUID())
+                .companyId(companyId)
+                .workflowCode("ACC_WF")
+                .moduleName("ACCOUNT")
+                .documentType("STOCK_TRANSFER")
+                .build();
+
+        when(transactionRepository.findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(companyId, "STOCK_TRANSFER", docId))
+                .thenReturn(Optional.empty());
+        when(definitionRepository.findActiveByModuleAndDocumentType(companyId, "INVENTORY", "STOCK_TRANSFER"))
+                .thenReturn(Collections.emptyList());
+        when(definitionRepository.findActiveByDocumentType(companyId, "STOCK_TRANSFER"))
+                .thenReturn(List.of(defAccount));
+
+        com.erp.workflow.exception.ResourceNotFoundException ex = assertThrows(
+                com.erp.workflow.exception.ResourceNotFoundException.class,
+                () -> executionService.submitWorkflow(request)
+        );
+
+        assertTrue(ex.getMessage().contains("No active WorkflowDefinition found"));
+    }
+
+    @Test
+    void testSubmitWorkflow_NoMatchingWorkflow_ThrowsResourceNotFoundException() {
+        UUID companyId = UUID.randomUUID();
+        UUID docId = UUID.randomUUID();
+
+        SubmitWorkflowRequest request = SubmitWorkflowRequest.builder()
+                .companyId(companyId)
+                .moduleName("ACCOUNT")
+                .documentType("UNKNOWN_DOC")
+                .documentId(docId)
+                .documentNumber("UNK-001")
+                .build();
+
+        when(transactionRepository.findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(companyId, "UNKNOWN_DOC", docId))
+                .thenReturn(Optional.empty());
+        when(definitionRepository.findActiveByModuleAndDocumentType(companyId, "ACCOUNT", "UNKNOWN_DOC"))
+                .thenReturn(Collections.emptyList());
+        when(definitionRepository.findActiveByDocumentType(companyId, "UNKNOWN_DOC"))
+                .thenReturn(Collections.emptyList());
+
+        assertThrows(
+                com.erp.workflow.exception.ResourceNotFoundException.class,
+                () -> executionService.submitWorkflow(request)
+        );
+    }
 }

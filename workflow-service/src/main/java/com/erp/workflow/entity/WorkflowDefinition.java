@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -70,6 +71,38 @@ public class WorkflowDefinition extends BaseEntity {
 
     @Column(name = "effective_to")
     private LocalDateTime effectiveTo;
+
+    @Column(name = "initiated_by_role_id")
+    private UUID initiatedByRoleId;
+
+    @Column(name = "initiated_by_role_name", length = 100)
+    private String initiatedByRoleName;
+
+    @Builder.Default
+    @Column(name = "customer_scope", length = 50)
+    private String customerScope = "all";
+
+    @Column(name = "approval_threshold", precision = 19, scale = 4)
+    private BigDecimal approvalThreshold;
+
+    @Builder.Default
+    @Column(name = "is_approval_required")
+    private Boolean isApprovalRequired = true;
+
+    @Builder.Default
+    @Column(name = "customer_acceptance")
+    private Boolean customerAcceptance = false;
+
+    @Builder.Default
+    @Column(name = "auto_create_order")
+    private Boolean autoCreateOrder = false;
+
+    @Builder.Default
+    @Column(name = "email_notifications")
+    private Boolean emailNotifications = true;
+
+    @Column(name = "internal_notes", columnDefinition = "text")
+    private String internalNotes;
 
     @OneToMany(mappedBy = "workflowDefinition", fetch = FetchType.LAZY)
     @JsonIgnore

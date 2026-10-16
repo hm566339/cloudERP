@@ -67,6 +67,8 @@ import com.erp.account.modules.gst.repository.GstStateCodeRepository;
 import com.erp.account.modules.salesorder.dto.response.profile.SalesOrderAddressDto;
 import com.erp.account.modules.salesorder.dto.response.profile.SalesOrderCustomerDto;
 import com.erp.account.modules.salesorder.dto.response.profile.SalesOrderItemDto;
+import com.erp.account.integration.workflow.client.WorkflowClient;
+import com.erp.account.integration.workflow.dto.WorkflowTransactionDto;
 import java.util.ArrayList;
 
 @Slf4j
@@ -92,6 +94,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
     private final InventoryClient inventoryClient;
     private final com.erp.account.modules.receiptvoucher.repository.ReceiptVoucherRepository receiptVoucherRepository;
     private final com.erp.account.modules.deliverychallan.repository.DeliveryChallanItemRepository deliveryChallanItemRepository;
+    private final WorkflowClient workflowClient;
 
     private static final java.util.Set<com.erp.account.modules.deliverychallan.entity.DeliveryChallanStatus> ACTIVE_DISPATCH_STATUSES = java.util.Set.of(
             com.erp.account.modules.deliverychallan.entity.DeliveryChallanStatus.CONFIRMED,
@@ -830,6 +833,21 @@ public class SalesOrderServiceImpl implements SalesOrderService {
             throw new BadRequestException("Invalid SO status transition from " + current + " to " + newStatus);
         }
 
+        // Prevent bypassing active pending workflow when confirming or cancelling
+        if (newStatus == SalesOrderStatus.CONFIRMED || newStatus == SalesOrderStatus.CANCELLED) {
+            try {
+                WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "SALES_ORDER", id);
+                if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                    String action = newStatus == SalesOrderStatus.CONFIRMED ? "confirmed" : "cancelled";
+                    throw new BadRequestException("Sales Order cannot be " + action + " directly while workflow approval is pending. Please approve or reject via the workflow.");
+                }
+            } catch (BadRequestException e) {
+                throw e;
+            } catch (Exception e) {
+                log.debug("Workflow check skipped for sales order status change {}: {}", id, e.getMessage());
+            }
+        }
+
         so.setStatus(newStatus);
         so.setUpdatedBy(TenantUtils.getCurrentUserId());
         return salesOrderMapper.toResponse(salesOrderRepository.save(so));
@@ -837,7 +855,69 @@ public class SalesOrderServiceImpl implements SalesOrderService {
 
     @Override
     @Transactional
+    public SalesOrderResponse submitForApproval(UUID companyId, UUID id) {
+        return submitForApproval(companyId, id, null);
+    }
+
+    @Override
+    @Transactional
+    public SalesOrderResponse submitForApproval(UUID companyId, UUID id, String comments) {
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        SalesOrder so = salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Sales Order not found with ID: " + id));
+
+        if (so.getStatus() != SalesOrderStatus.DRAFT) {
+            throw new BadRequestException("Only DRAFT sales orders can be submitted for approval. Current status: " + so.getStatus());
+        }
+
+        // Prevent duplicate workflow submission
+        try {
+            WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "SALES_ORDER", so.getId());
+            if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
+                throw new BadRequestException("Sales Order is already submitted for approval with transaction: " + existingTx.getId());
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("No existing workflow transaction found for sales order {}", id);
+        }
+
+        try {
+            workflowClient.submitWorkflow(
+                    resolvedCompanyId,
+                    "SALES_ORDER",
+                    so.getId(),
+                    so.getSoNumber(),
+                    comments != null ? comments : "Submitted sales order for approval"
+            );
+            log.info("Sales Order {} submitted for approval to workflow-service", so.getSoNumber());
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Workflow engine submission failed for sales order {}. Error: {}", id, e.getMessage());
+            throw new BadRequestException("Failed to submit sales order for workflow approval: " + e.getMessage());
+        }
+
+        return salesOrderMapper.toResponse(so);
+    }
+
+    @Override
+    @Transactional
     public SalesOrderResponse confirmSO(UUID companyId, UUID id) {
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+
+        // Prevent bypassing active pending workflow
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "SALES_ORDER", id);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Sales Order cannot be confirmed directly while workflow approval is pending. Please approve via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for sales order {}: {}", id, e.getMessage());
+        }
+
         return changeStatus(companyId, id, SalesOrderStatus.CONFIRMED);
     }
 

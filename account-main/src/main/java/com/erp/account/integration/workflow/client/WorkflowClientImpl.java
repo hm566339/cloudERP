@@ -26,6 +26,38 @@ public class WorkflowClientImpl implements WorkflowClient {
     @Value("${account.service.callback-base-url:http://account-service:8081}")
     private String callbackBaseUrl;
 
+    private String resolveModuleName(String documentType) {
+        if (documentType == null) return "ACCOUNT";
+        switch (documentType.toUpperCase()) {
+            case "QUOTATION":
+            case "SALES_ORDER":
+            case "SALES_INVOICE":
+            case "SALES":
+                return "SALES";
+            case "PURCHASE_ORDER":
+            case "PURCHASE":
+            case "AP_INVOICE":
+                return "PURCHASE";
+            case "EXPENSE_REQUEST":
+            case "EXPENSE":
+            case "EXPENSES":
+                return "EXPENSES";
+            case "REIMBURSEMENT":
+            case "REIMBURSEMENTS":
+                return "REIMBURSEMENTS";
+            case "RECEIPT_VOUCHER":
+            case "PAYMENT_VOUCHER":
+            case "JOURNAL_ENTRY":
+            case "FISCAL_YEAR":
+                return "ACCOUNT";
+            case "INVENTORY":
+            case "STOCK_ADJUSTMENT":
+                return "INVENTORY";
+            default:
+                return "ACCOUNT";
+        }
+    }
+
     @Override
     public WorkflowTransactionDto submitWorkflow(UUID companyId, String documentType, UUID documentId, String documentNumber, String comments) {
         UUID effectiveCompanyId = companyId != null ? companyId : TenantUtils.getCurrentCompanyId();
@@ -34,7 +66,7 @@ public class WorkflowClientImpl implements WorkflowClient {
 
         WorkflowSubmitRequestDto payload = WorkflowSubmitRequestDto.builder()
                 .companyId(effectiveCompanyId)
-                .moduleName("ACCOUNT")
+                .moduleName(resolveModuleName(documentType))
                 .entityType(documentType)
                 .entityId(documentId)
                 .documentType(documentType)

@@ -12,6 +12,7 @@ import com.erp.account.modules.expense.dto.*;
 import com.erp.account.modules.expense.entity.ExpenseCategory;
 import com.erp.account.modules.expense.entity.ExpenseRequest;
 import com.erp.account.modules.expense.mapper.ExpenseRequestMapper;
+import com.erp.account.integration.workflow.client.WorkflowClient;
 import com.erp.account.modules.expense.repository.ExpenseCategoryRepository;
 import com.erp.account.modules.auditlog.service.AuditLogService;
 import com.erp.account.modules.expense.repository.ExpenseClaimRepository;
@@ -75,6 +76,9 @@ public class ExpenseRequestServiceTest {
 
     @Mock
     private ExpenseClaimRepository expenseClaimRepository;
+
+    @Mock
+    private WorkflowClient workflowClient;
 
     @Spy
     private ExpenseRequestMapper expenseRequestMapper = Mappers.getMapper(ExpenseRequestMapper.class);

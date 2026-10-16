@@ -1,342 +1,304 @@
-// package com.erp.account.modules.salesorder.service;
+package com.erp.account.modules.salesorder.service;
 
-// import com.erp.account.common.exception.BadRequestException;
-// import com.erp.account.modules.company.entity.Company;
-// import com.erp.account.modules.company.repository.CompanyRepository;
-// import com.erp.account.modules.proformainvoice.entity.ProformaInvoice;
-// import com.erp.account.modules.proformainvoice.entity.ProformaInvoiceItem;
-// import com.erp.account.modules.proformainvoice.entity.ProformaInvoiceStatus;
-// import
-// com.erp.account.modules.proformainvoice.repository.ProformaInvoiceItemRepository;
-// import
-// com.erp.account.modules.proformainvoice.repository.ProformaInvoiceRepository;
-// import com.erp.account.modules.salesorder.dto.request.SOConversionRequest;
-// import
-// com.erp.account.modules.salesorder.dto.request.SOItemConversionRequest;
-// import com.erp.account.modules.salesorder.entity.SalesOrder;
-// import com.erp.account.modules.salesorder.entity.SalesOrderStatus;
-// import com.erp.account.modules.salesorder.mapper.SalesOrderMapper;
-// import com.erp.account.modules.salesorder.repository.SalesOrderRepository;
-// import com.erp.account.modules.salesorder.service.impl.SalesOrderServiceImpl;
-// import
-// com.erp.account.modules.vouchersequence.service.VoucherSequenceService;
-// import com.erp.account.modules.quotation.entity.Quotation;
-// import com.erp.account.modules.quotation.entity.QuotationItem;
-// import com.erp.account.modules.quotation.entity.QuotationStatus;
-// import com.erp.account.modules.quotation.repository.QuotationRepository;
-// import
-// com.erp.account.modules.salesinvoice.repository.SalesInvoiceRepository;
-// import com.erp.account.util.TenantUtils;
-// import org.junit.jupiter.api.BeforeEach;
-// import org.junit.jupiter.api.Test;
-// import org.junit.jupiter.api.extension.ExtendWith;
-// import org.mockito.InjectMocks;
-// import org.mockito.Mock;
-// import org.mockito.MockedStatic;
-// import org.mockito.Mockito;
-// import org.mockito.junit.jupiter.MockitoExtension;
+import com.erp.account.common.exception.BadRequestException;
+import com.erp.account.integration.workflow.client.WorkflowClient;
+import com.erp.account.integration.workflow.dto.WorkflowTransactionDto;
+import com.erp.account.modules.salesorder.dto.response.SalesOrderResponse;
+import com.erp.account.modules.salesorder.entity.SalesOrder;
+import com.erp.account.modules.salesorder.entity.SalesOrderStatus;
+import com.erp.account.modules.salesorder.mapper.SalesOrderMapper;
+import com.erp.account.modules.salesorder.repository.SalesOrderRepository;
+import com.erp.account.modules.salesorder.service.impl.SalesOrderServiceImpl;
+import com.erp.account.modules.workflow.document.WorkflowDocument;
+import com.erp.account.modules.workflow.document.adapter.SalesOrderWorkflowAdapter;
+import com.erp.account.security.CurrentUserContext;
+import com.erp.account.util.TenantUtils;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-// import java.math.BigDecimal;
-// import java.time.LocalDate;
-// import java.util.Collections;
-// import java.util.List;
-// import java.util.Optional;
-// import java.util.UUID;
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
 
-// import static org.junit.jupiter.api.Assertions.*;
-// import static org.mockito.ArgumentMatchers.any;
-// import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-// @ExtendWith(MockitoExtension.class)
-// class SalesOrderWorkflowTest {
+@ExtendWith(MockitoExtension.class)
+class SalesOrderWorkflowTest {
 
-// @Mock
-// private SalesOrderRepository salesOrderRepository;
+    @Mock
+    private SalesOrderRepository salesOrderRepository;
 
-// @Mock
-// private ProformaInvoiceRepository proformaInvoiceRepository;
+    @Mock
+    private SalesOrderMapper salesOrderMapper;
 
-// @Mock
-// private ProformaInvoiceItemRepository proformaInvoiceItemRepository;
+    @Mock
+    private WorkflowClient workflowClient;
 
-// @Mock
-// private QuotationRepository quotationRepository;
+    @InjectMocks
+    private SalesOrderServiceImpl salesOrderService;
 
-// @Mock
-// private SalesInvoiceRepository salesInvoiceRepository;
+    private SalesOrderWorkflowAdapter adapter;
 
-// @Mock
-// private CompanyRepository companyRepository;
+    private static MockedStatic<TenantUtils> tenantUtilsMock;
+    private static MockedStatic<CurrentUserContext> currentUserContextMock;
 
-// @Mock
-// private VoucherSequenceService voucherSequenceService;
+    private UUID companyId;
+    private UUID soId;
+    private UUID userId;
+    private SalesOrder salesOrder;
 
-// @Mock
-// private SalesOrderMapper salesOrderMapper;
+    @BeforeAll
+    static void initStaticMocks() {
+        tenantUtilsMock = mockStatic(TenantUtils.class);
+        currentUserContextMock = mockStatic(CurrentUserContext.class);
+    }
 
-// @InjectMocks
-// private SalesOrderServiceImpl salesOrderService;
+    @AfterAll
+    static void closeStaticMocks() {
+        tenantUtilsMock.close();
+        currentUserContextMock.close();
+    }
 
-// private UUID companyId;
-// private UUID piId;
-// private UUID piItemId;
-// private UUID soId;
-// private ProformaInvoice pi;
-// private ProformaInvoiceItem piItem;
-// private SalesOrder so;
-// private SOConversionRequest conversionRequest;
+    @BeforeEach
+    void setUp() {
+        companyId = UUID.randomUUID();
+        soId = UUID.randomUUID();
+        userId = UUID.randomUUID();
 
-// @BeforeEach
-// void setUp() {
-// companyId = UUID.randomUUID();
-// piId = UUID.randomUUID();
-// piItemId = UUID.randomUUID();
-// soId = UUID.randomUUID();
+        salesOrder = SalesOrder.builder()
+                .id(soId)
+                .companyId(companyId)
+                .soNumber("SO-2026-001")
+                .totalAmount(new BigDecimal("15000.00"))
+                .status(SalesOrderStatus.DRAFT)
+                .build();
+        salesOrder.setCreatedBy(userId);
 
-// pi = new ProformaInvoice();
-// pi.setId(piId);
-// pi.setCompanyId(companyId);
-// pi.setStatus(ProformaInvoiceStatus.CONFIRMED);
-// pi.setIsDeleted(false);
-// pi.setSubtotal(new BigDecimal("1000.0000"));
+        lenient().when(TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
+        lenient().when(TenantUtils.resolveCompanyId(null)).thenReturn(companyId);
+        lenient().when(TenantUtils.getCurrentUserId()).thenReturn(userId);
+        lenient().when(CurrentUserContext.getUserId()).thenReturn(userId);
 
-// piItem = new ProformaInvoiceItem();
-// piItem.setId(piItemId);
-// piItem.setQuantity(new BigDecimal("10.0000"));
-// piItem.setConvertedQuantity(BigDecimal.ZERO);
-// piItem.calculateRemainingQuantity();
-// piItem.setUnitPrice(new BigDecimal("100.0000"));
+        adapter = new SalesOrderWorkflowAdapter(salesOrderRepository, salesOrderService);
+    }
 
-// so = new SalesOrder();
-// so.setId(soId);
-// so.setCompanyId(companyId);
-// so.setStatus(SalesOrderStatus.DRAFT);
-// so.setIsDeleted(false);
+    @Test
+    void testSubmitForApproval_Success() {
+        when(salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(soId, companyId))
+                .thenReturn(Optional.of(salesOrder));
+        when(workflowClient.getWorkflowByDocument(companyId, "SALES_ORDER", soId))
+                .thenReturn(null);
 
-// SOItemConversionRequest reqItem = new SOItemConversionRequest();
-// reqItem.setPiItemId(piItemId);
-// reqItem.setQuantity(new BigDecimal("6.0000")); // Partial conversion
+        SalesOrderResponse mockResponse = new SalesOrderResponse();
+        mockResponse.setId(soId);
+        mockResponse.setSoNumber("SO-2026-001");
+        mockResponse.setStatus(SalesOrderStatus.DRAFT);
+        when(salesOrderMapper.toResponse(salesOrder)).thenReturn(mockResponse);
 
-// conversionRequest = new SOConversionRequest();
-// conversionRequest.setSoDate(LocalDate.now());
-// conversionRequest.setItems(Collections.singletonList(reqItem));
-// }
+        SalesOrderResponse response = salesOrderService.submitForApproval(companyId, soId, "Review required");
 
-// @Test
-// void testCreateFromProformaInvoice_PartialConversion_Success() {
-// try (MockedStatic<TenantUtils> tenantUtils =
-// Mockito.mockStatic(TenantUtils.class)) {
-// tenantUtils.when(() ->
-// TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
-// tenantUtils.when(TenantUtils::getCurrentUserId).thenReturn(UUID.randomUUID());
+        assertNotNull(response);
+        assertEquals(soId, response.getId());
+        verify(workflowClient, times(1)).submitWorkflow(
+                eq(companyId),
+                eq("SALES_ORDER"),
+                eq(soId),
+                eq("SO-2026-001"),
+                eq("Review required")
+        );
+    }
 
-// when(proformaInvoiceRepository.findByIdAndCompanyIdAndIsDeletedFalse(piId,
-// companyId))
-// .thenReturn(Optional.of(pi));
-// when(companyRepository.findById(companyId)).thenReturn(Optional.of(new
-// Company()));
-// when(voucherSequenceService.generateNextSalesOrderNumber(any(), any()))
-// .thenReturn("SO-2026-001");
-// when(proformaInvoiceItemRepository.findLockedByProformaInvoiceIdAndCompanyIdAndIsDeletedFalse(piId,
-// companyId))
-// .thenReturn(List.of(piItem));
-// when(salesOrderRepository.save(any(SalesOrder.class))).thenReturn(so);
+    @Test
+    void testSubmitForApproval_FailsWhenNotDraft() {
+        salesOrder.setStatus(SalesOrderStatus.CONFIRMED);
+        when(salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(soId, companyId))
+                .thenReturn(Optional.of(salesOrder));
 
-// assertDoesNotThrow(() -> {
-// salesOrderService.createFromProformaInvoice(companyId, piId,
-// conversionRequest);
-// });
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+                salesOrderService.submitForApproval(companyId, soId, "Review required"));
 
-// assertEquals(new BigDecimal("6.0000"), piItem.getConvertedQuantity());
-// }
-// }
+        assertTrue(ex.getMessage().contains("Only DRAFT sales orders can be submitted for approval"));
+        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any());
+    }
 
-// @Test
-// void testCreateFromProformaInvoice_DraftPI_Fails() {
-// pi.setStatus(ProformaInvoiceStatus.DRAFT);
-// try (MockedStatic<TenantUtils> tenantUtils =
-// Mockito.mockStatic(TenantUtils.class)) {
-// tenantUtils.when(() ->
-// TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
+    @Test
+    void testSubmitForApproval_DuplicatePendingWorkflow_ThrowsBadRequest() {
+        when(salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(soId, companyId))
+                .thenReturn(Optional.of(salesOrder));
 
-// when(proformaInvoiceRepository.findByIdAndCompanyIdAndIsDeletedFalse(piId,
-// companyId))
-// .thenReturn(Optional.of(pi));
+        WorkflowTransactionDto pendingTx = WorkflowTransactionDto.builder()
+                .id(UUID.randomUUID())
+                .status("PENDING")
+                .build();
+        when(workflowClient.getWorkflowByDocument(companyId, "SALES_ORDER", soId))
+                .thenReturn(pendingTx);
 
-// BadRequestException exception = assertThrows(BadRequestException.class, () ->
-// {
-// salesOrderService.createFromProformaInvoice(companyId, piId,
-// conversionRequest);
-// });
-// assertTrue(exception.getMessage().contains("Only CONFIRMED Proforma
-// Invoices"));
-// }
-// }
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+                salesOrderService.submitForApproval(companyId, soId, "Review required"));
 
-// @Test
-// void testCreateFromProformaInvoice_OverConversion_Fails() {
-// // Request 15, but only 10 available
-// conversionRequest.getItems().get(0).setQuantity(new BigDecimal("15.0000"));
+        assertTrue(ex.getMessage().contains("already submitted for approval"));
+        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any());
+    }
 
-// try (MockedStatic<TenantUtils> tenantUtils =
-// Mockito.mockStatic(TenantUtils.class)) {
-// tenantUtils.when(() ->
-// TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
-// tenantUtils.when(TenantUtils::getCurrentUserId).thenReturn(UUID.randomUUID());
+    @Test
+    void testConfirmSO_ApprovalBypassProtection_ThrowsBadRequestWhenWorkflowPending() {
+        lenient().when(salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(soId, companyId))
+                .thenReturn(Optional.of(salesOrder));
 
-// when(proformaInvoiceRepository.findByIdAndCompanyIdAndIsDeletedFalse(piId,
-// companyId))
-// .thenReturn(Optional.of(pi));
-// when(companyRepository.findById(companyId)).thenReturn(Optional.of(new
-// Company()));
-// when(voucherSequenceService.generateNextSalesOrderNumber(any(), any()))
-// .thenReturn("SO-2026-001");
-// when(proformaInvoiceItemRepository.findLockedByProformaInvoiceIdAndCompanyIdAndIsDeletedFalse(piId,
-// companyId))
-// .thenReturn(List.of(piItem));
+        WorkflowTransactionDto activeTx = WorkflowTransactionDto.builder()
+                .id(UUID.randomUUID())
+                .status("PENDING")
+                .build();
+        when(workflowClient.getWorkflowByDocument(companyId, "SALES_ORDER", soId))
+                .thenReturn(activeTx);
 
-// BadRequestException exception = assertThrows(BadRequestException.class, () ->
-// {
-// salesOrderService.createFromProformaInvoice(companyId, piId,
-// conversionRequest);
-// });
-// assertTrue(exception.getMessage().contains("exceeds remaining quantity"));
-// }
-// }
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+                salesOrderService.confirmSO(companyId, soId));
 
-// @Test
-// void testCreateDirectFromQuotation_Success() {
-// UUID quotationId = UUID.randomUUID();
-// Quotation quotation = new Quotation();
-// quotation.setId(quotationId);
-// quotation.setCompanyId(companyId);
-// quotation.setStatus(QuotationStatus.ACCEPTED);
-// quotation.setIsDeleted(false);
-// quotation.setCustomerId(UUID.randomUUID());
-// quotation.setSubtotal(new BigDecimal("1000.0000"));
+        assertTrue(ex.getMessage().contains("cannot be confirmed directly while workflow approval is pending"));
+        assertEquals(SalesOrderStatus.DRAFT, salesOrder.getStatus());
+        verify(salesOrderRepository, never()).save(any());
+    }
 
-// QuotationItem qItem = new QuotationItem();
-// qItem.setId(UUID.randomUUID());
-// qItem.setQuantity(new BigDecimal("10.0000"));
-// qItem.setUnitPrice(new BigDecimal("100.0000"));
-// quotation.setQuotationItems(List.of(qItem));
+    @Test
+    void testConfirmSO_Success_WhenNoActiveWorkflow() {
+        when(salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(soId, companyId))
+                .thenReturn(Optional.of(salesOrder));
+        when(workflowClient.getWorkflowByDocument(companyId, "SALES_ORDER", soId))
+                .thenReturn(null);
+        when(salesOrderRepository.save(any(SalesOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-// try (MockedStatic<TenantUtils> tenantUtils =
-// Mockito.mockStatic(TenantUtils.class)) {
-// tenantUtils.when(() ->
-// TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
-// tenantUtils.when(TenantUtils::getCurrentUserId).thenReturn(UUID.randomUUID());
+        SalesOrderResponse mockResponse = new SalesOrderResponse();
+        mockResponse.setId(soId);
+        mockResponse.setStatus(SalesOrderStatus.CONFIRMED);
+        when(salesOrderMapper.toResponse(any(SalesOrder.class))).thenReturn(mockResponse);
 
-// when(quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(quotationId,
-// companyId))
-// .thenReturn(Optional.of(quotation));
-// when(salesInvoiceRepository.countFullyPaidInvoicesByCustomer(companyId,
-// quotation.getCustomerId()))
-// .thenReturn(1L);
-// when(salesOrderRepository.existsBySourceQuotationIdAndCompanyIdAndIsDeletedFalse(quotationId,
-// companyId))
-// .thenReturn(false);
-// when(companyRepository.findById(companyId)).thenReturn(Optional.of(new
-// Company()));
-// when(voucherSequenceService.generateNextSalesOrderNumber(any(), any()))
-// .thenReturn("SO-2026-002");
-// when(salesOrderRepository.save(any(SalesOrder.class))).thenReturn(so);
+        SalesOrderResponse response = salesOrderService.confirmSO(companyId, soId);
 
-// assertDoesNotThrow(() -> {
-// salesOrderService.createDirectFromQuotation(companyId, quotationId);
-// });
-// }
-// }
+        assertNotNull(response);
+        assertEquals(SalesOrderStatus.CONFIRMED, salesOrder.getStatus());
+        verify(salesOrderRepository).save(salesOrder);
+    }
 
-// @Test
-// void testCreateDirectFromQuotation_NotAccepted_Fails() {
-// UUID quotationId = UUID.randomUUID();
-// Quotation quotation = new Quotation();
-// quotation.setId(quotationId);
-// quotation.setCompanyId(companyId);
-// quotation.setStatus(QuotationStatus.DRAFT);
-// quotation.setIsDeleted(false);
+    @Test
+    void testSalesOrderWorkflowAdapter_LifecycleCallbacks() {
+        when(salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(soId, companyId))
+                .thenReturn(Optional.of(salesOrder));
+        when(salesOrderRepository.save(any(SalesOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-// try (MockedStatic<TenantUtils> tenantUtils =
-// Mockito.mockStatic(TenantUtils.class)) {
-// tenantUtils.when(() ->
-// TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
+        WorkflowDocument doc = adapter.find(soId, companyId);
+        assertNotNull(doc);
+        assertEquals("SALES_ORDER", doc.getDocumentType());
+        assertEquals("SO-2026-001", doc.getDocumentNumber());
+        assertEquals(new BigDecimal("15000.00"), doc.getAmount());
 
-// when(quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(quotationId,
-// companyId))
-// .thenReturn(Optional.of(quotation));
+        // 1. Submitted
+        doc.onWorkflowSubmitted();
+        assertEquals(SalesOrderStatus.DRAFT, salesOrder.getStatus());
 
-// BadRequestException exception = assertThrows(BadRequestException.class, () ->
-// {
-// salesOrderService.createDirectFromQuotation(companyId, quotationId);
-// });
-// assertTrue(exception.getMessage().contains("Only ACCEPTED quotations can be
-// converted"));
-// }
-// }
+        // 2. Approved
+        doc.onWorkflowApproved();
+        assertEquals(SalesOrderStatus.CONFIRMED, salesOrder.getStatus());
 
-// @Test
-// void testCreateDirectFromQuotation_NoPaidInvoices_Fails() {
-// UUID quotationId = UUID.randomUUID();
-// Quotation quotation = new Quotation();
-// quotation.setId(quotationId);
-// quotation.setCompanyId(companyId);
-// quotation.setStatus(QuotationStatus.ACCEPTED);
-// quotation.setIsDeleted(false);
-// quotation.setCustomerId(UUID.randomUUID());
+        // 3. Rejected
+        doc.onWorkflowRejected();
+        assertEquals(SalesOrderStatus.CANCELLED, salesOrder.getStatus());
 
-// try (MockedStatic<TenantUtils> tenantUtils =
-// Mockito.mockStatic(TenantUtils.class)) {
-// tenantUtils.when(() ->
-// TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
+        // 4. Returned
+        doc.onWorkflowReturned();
+        assertEquals(SalesOrderStatus.DRAFT, salesOrder.getStatus());
 
-// when(quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(quotationId,
-// companyId))
-// .thenReturn(Optional.of(quotation));
-// when(salesInvoiceRepository.countFullyPaidInvoicesByCustomer(companyId,
-// quotation.getCustomerId()))
-// .thenReturn(0L);
+        // 5. Cancelled
+        doc.onWorkflowCancelled();
+        assertEquals(SalesOrderStatus.CANCELLED, salesOrder.getStatus());
 
-// BadRequestException exception = assertThrows(BadRequestException.class, () ->
-// {
-// salesOrderService.createDirectFromQuotation(companyId, quotationId);
-// });
-// assertTrue(exception.getMessage().contains("At least one previous Sales
-// Invoice must be fully paid"));
-// }
-// }
+        verify(salesOrderRepository, times(5)).save(salesOrder);
+    }
 
-// @Test
-// void testCreateDirectFromQuotation_DuplicateSO_Fails() {
-// UUID quotationId = UUID.randomUUID();
-// Quotation quotation = new Quotation();
-// quotation.setId(quotationId);
-// quotation.setCompanyId(companyId);
-// quotation.setStatus(QuotationStatus.ACCEPTED);
-// quotation.setIsDeleted(false);
-// quotation.setCustomerId(UUID.randomUUID());
+    @Test
+    void testSubmitForApproval_WorkflowEngineFailure_ThrowsBadRequest() {
+        when(salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(soId, companyId))
+                .thenReturn(Optional.of(salesOrder));
+        when(workflowClient.getWorkflowByDocument(companyId, "SALES_ORDER", soId))
+                .thenReturn(null);
+        doThrow(new RuntimeException("Workflow service unreachable"))
+                .when(workflowClient)
+                .submitWorkflow(any(), any(), any(), any(), any());
 
-// try (MockedStatic<TenantUtils> tenantUtils =
-// Mockito.mockStatic(TenantUtils.class)) {
-// tenantUtils.when(() ->
-// TenantUtils.resolveCompanyId(companyId)).thenReturn(companyId);
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+                salesOrderService.submitForApproval(companyId, soId, "Review required"));
 
-// when(quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(quotationId,
-// companyId))
-// .thenReturn(Optional.of(quotation));
-// when(salesInvoiceRepository.countFullyPaidInvoicesByCustomer(companyId,
-// quotation.getCustomerId()))
-// .thenReturn(1L);
-// when(salesOrderRepository.existsBySourceQuotationIdAndCompanyIdAndIsDeletedFalse(quotationId,
-// companyId))
-// .thenReturn(true);
+        assertTrue(ex.getMessage().contains("Failed to submit sales order for workflow approval"));
+        assertEquals(SalesOrderStatus.DRAFT, salesOrder.getStatus());
+        verify(salesOrderRepository, never()).save(any());
+    }
 
-// BadRequestException exception = assertThrows(BadRequestException.class, () ->
-// {
-// salesOrderService.createDirectFromQuotation(companyId, quotationId);
-// });
-// assertTrue(exception.getMessage().contains("Sales Order already exists for
-// this quotation"));
-// }
-// }
-// }
+    @Test
+    void testCancelSO_BypassProtection_ThrowsBadRequestWhenWorkflowPending() {
+        lenient().when(salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(soId, companyId))
+                .thenReturn(Optional.of(salesOrder));
+
+        WorkflowTransactionDto activeTx = WorkflowTransactionDto.builder()
+                .id(UUID.randomUUID())
+                .status("PENDING")
+                .build();
+        when(workflowClient.getWorkflowByDocument(companyId, "SALES_ORDER", soId))
+                .thenReturn(activeTx);
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+                salesOrderService.cancelSO(companyId, soId));
+
+        assertTrue(ex.getMessage().contains("cannot be cancelled directly while workflow approval is pending"));
+        assertEquals(SalesOrderStatus.DRAFT, salesOrder.getStatus());
+        verify(salesOrderRepository, never()).save(any());
+    }
+
+    @Test
+    void testCancelSO_Success_WhenNoActiveWorkflow() {
+        when(salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(soId, companyId))
+                .thenReturn(Optional.of(salesOrder));
+        when(workflowClient.getWorkflowByDocument(companyId, "SALES_ORDER", soId))
+                .thenReturn(null);
+        when(salesOrderRepository.save(any(SalesOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        SalesOrderResponse mockResponse = new SalesOrderResponse();
+        mockResponse.setId(soId);
+        mockResponse.setStatus(SalesOrderStatus.CANCELLED);
+        when(salesOrderMapper.toResponse(any(SalesOrder.class))).thenReturn(mockResponse);
+
+        SalesOrderResponse response = salesOrderService.cancelSO(companyId, soId);
+
+        assertNotNull(response);
+        assertEquals(SalesOrderStatus.CANCELLED, salesOrder.getStatus());
+        verify(salesOrderRepository).save(salesOrder);
+    }
+
+    @Test
+    void testChangeStatus_ConfirmationBypassProtection_ThrowsBadRequestWhenWorkflowPending() {
+        lenient().when(salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(soId, companyId))
+                .thenReturn(Optional.of(salesOrder));
+
+        WorkflowTransactionDto activeTx = WorkflowTransactionDto.builder()
+                .id(UUID.randomUUID())
+                .status("IN_PROGRESS")
+                .build();
+        when(workflowClient.getWorkflowByDocument(companyId, "SALES_ORDER", soId))
+                .thenReturn(activeTx);
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+                salesOrderService.changeStatus(companyId, soId, SalesOrderStatus.CONFIRMED));
+
+        assertTrue(ex.getMessage().contains("cannot be confirmed directly while workflow approval is pending"));
+        assertEquals(SalesOrderStatus.DRAFT, salesOrder.getStatus());
+        verify(salesOrderRepository, never()).save(any());
+    }
+}

@@ -49,6 +49,7 @@ public interface ApInvoiceService {
         ApInvoiceResponse updatePostingStatus(UUID invoiceId, com.erp.account.enums.PostingStatus postingStatus);
 
         ApInvoiceResponse submitForApproval(UUID invoiceId);
+        ApInvoiceResponse submitForApproval(UUID invoiceId, String comments);
 
         ApInvoiceResponse approveInvoice(UUID invoiceId);
 

@@ -15,4 +15,10 @@ public interface WorkflowCallbackLogRepository extends JpaRepository<WorkflowCal
 
     List<WorkflowCallbackLog> findBySucceededFalseAndAttemptCountLessThanAndLastAttemptedAtBefore(
             Integer maxAttempts, LocalDateTime cutoff);
+
+    @org.springframework.data.jpa.repository.Query("SELECT c FROM WorkflowCallbackLog c WHERE c.succeeded = false AND c.attemptCount >= :minAttempts ORDER BY c.lastAttemptedAt DESC")
+    List<WorkflowCallbackLog> findExhaustedCallbacks(@org.springframework.data.repository.query.Param("minAttempts") Integer minAttempts);
+
+    @org.springframework.data.jpa.repository.Query("SELECT c FROM WorkflowCallbackLog c WHERE c.succeeded = false AND c.attemptCount >= :minAttempts AND c.workflowTransaction.companyId = :companyId ORDER BY c.lastAttemptedAt DESC")
+    List<WorkflowCallbackLog> findExhaustedCallbacksByCompanyId(@org.springframework.data.repository.query.Param("minAttempts") Integer minAttempts, @org.springframework.data.repository.query.Param("companyId") UUID companyId);
 }

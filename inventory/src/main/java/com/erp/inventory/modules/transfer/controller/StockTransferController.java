@@ -54,4 +54,38 @@ public class StockTransferController {
         StockTransferResponse response = service.reverse(id, companyId);
         return ResponseEntity.ok(ApiResponse.success(response, "StockTransfer reversed successfully"));
     }
+
+    @PostMapping({"/{id}/submit-for-approval", "/{id}/submit"})
+    public ResponseEntity<ApiResponse<StockTransferResponse>> submitForApproval(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) String comments) {
+        StockTransferResponse response = service.submitForApproval(id, companyId, comments);
+        return ResponseEntity.ok(ApiResponse.success(response, "StockTransfer submitted for approval successfully"));
+    }
+
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<StockTransferResponse>> approve(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId) {
+        StockTransferResponse response = service.approveTransfer(id, companyId);
+        return ResponseEntity.ok(ApiResponse.success(response, "StockTransfer approved successfully"));
+    }
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<ApiResponse<StockTransferResponse>> reject(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) String reason) {
+        StockTransferResponse response = service.rejectTransfer(id, companyId, reason);
+        return ResponseEntity.ok(ApiResponse.success(response, "StockTransfer rejected successfully"));
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<StockTransferResponse>> cancel(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId) {
+        StockTransferResponse response = service.cancelTransfer(id, companyId);
+        return ResponseEntity.ok(ApiResponse.success(response, "StockTransfer cancelled successfully"));
+    }
 }

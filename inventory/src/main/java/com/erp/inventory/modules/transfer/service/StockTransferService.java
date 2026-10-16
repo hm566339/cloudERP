@@ -17,4 +17,14 @@ public interface StockTransferService {
     Page<StockTransferResponse> getAll(StockTransferFilterRequest filter, UUID companyId, Pageable pageable);
 
     StockTransferResponse reverse(UUID id, UUID companyId);
+
+    StockTransferResponse submitForApproval(UUID id, UUID companyId, String comments);
+
+    StockTransferResponse approveTransfer(UUID id, UUID companyId);
+
+    StockTransferResponse rejectTransfer(UUID id, UUID companyId, String reason);
+
+    StockTransferResponse cancelTransfer(UUID id, UUID companyId);
+
+    void processStockTransferMovement(UUID id, UUID companyId);
 }

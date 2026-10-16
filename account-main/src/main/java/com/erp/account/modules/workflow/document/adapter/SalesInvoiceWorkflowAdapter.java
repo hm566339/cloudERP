@@ -47,6 +47,9 @@ public class SalesInvoiceWorkflowAdapter implements WorkflowDocumentAdapter {
         }
         @Transactional
         public void onWorkflowApproved() {
+            if (InvoiceStatus.POSTED.equals(invoice.getStatus()) || com.erp.account.enums.PostingStatus.POSTED.equals(invoice.getGlPostingStatus())) {
+                return;
+            }
             invoice.setStatus(InvoiceStatus.APPROVED);
             invoice.setApprovedBy(CurrentUserContext.getUserId());
             invoice.setApprovedAt(LocalDateTime.now());
@@ -55,12 +58,26 @@ public class SalesInvoiceWorkflowAdapter implements WorkflowDocumentAdapter {
         }
         @Transactional
         public void onWorkflowRejected() {
+            if (com.erp.account.enums.PostingStatus.POSTED.equals(invoice.getGlPostingStatus())) {
+                return;
+            }
             invoice.setStatus(InvoiceStatus.REJECTED);
             repository.save(invoice);
         }
         @Transactional
         public void onWorkflowCancelled() {
+            if (com.erp.account.enums.PostingStatus.POSTED.equals(invoice.getGlPostingStatus())) {
+                return;
+            }
             service.cancelInvoice(invoice.getId());
+        }
+        @Transactional
+        public void onWorkflowReturned() {
+            if (com.erp.account.enums.PostingStatus.POSTED.equals(invoice.getGlPostingStatus())) {
+                return;
+            }
+            invoice.setStatus(InvoiceStatus.DRAFT);
+            repository.save(invoice);
         }
     }
 }

@@ -46,18 +46,35 @@ public class ApInvoiceWorkflowAdapter implements WorkflowDocumentAdapter {
             repository.save(invoice);
         }
         @Transactional
+        public void onWorkflowReturned() {
+            if (invoice.getStatus() == InvoiceStatus.APPROVED || invoice.getStatus() == InvoiceStatus.POSTED) {
+                return;
+            }
+            invoice.setStatus(InvoiceStatus.DRAFT);
+            repository.save(invoice);
+        }
+        @Transactional
         public void onWorkflowApproved() {
+            if (invoice.getStatus() == InvoiceStatus.APPROVED || invoice.getStatus() == InvoiceStatus.POSTED) {
+                return;
+            }
             invoiceWorkflowService.approve(invoice);
             repository.save(invoice);
             service.postInvoice(invoice.getId());
         }
         @Transactional
         public void onWorkflowRejected() {
+            if (invoice.getStatus() == InvoiceStatus.APPROVED || invoice.getStatus() == InvoiceStatus.POSTED) {
+                return;
+            }
             invoice.setStatus(InvoiceStatus.REJECTED);
             repository.save(invoice);
         }
         @Transactional
         public void onWorkflowCancelled() {
+            if (invoice.getStatus() == InvoiceStatus.APPROVED || invoice.getStatus() == InvoiceStatus.POSTED) {
+                return;
+            }
             invoiceWorkflowService.cancel(invoice);
             repository.save(invoice);
         }

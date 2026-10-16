@@ -64,27 +64,37 @@ public class CustomerController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get customer by ID with full profile")
-    public ResponseEntity<ApiResponse<com.erp.account.modules.customer.dto.response.CustomerProfileResponse>> getCustomerById(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<com.erp.account.modules.customer.dto.response.CustomerProfileResponse>> getCustomerById(
+            @PathVariable UUID id) {
         log.info("Fetching customer profile: {}", id);
-        com.erp.account.modules.customer.dto.response.CustomerProfileResponse response = customerService.getCustomerById(id);
+        com.erp.account.modules.customer.dto.response.CustomerProfileResponse response = customerService
+                .getCustomerById(id);
         return ResponseEntity.ok(ApiResponse.success(response, "Customer profile retrieved successfully"));
     }
 
     @GetMapping("/{id}/addresses")
     @Operation(summary = "Get customer addresses")
-    public ResponseEntity<ApiResponse<java.util.List<com.erp.account.modules.customer.dto.response.CustomerAddressResponse>>> getCustomerAddresses(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<java.util.List<com.erp.account.modules.customer.dto.response.CustomerAddressResponse>>> getCustomerAddresses(
+            @PathVariable UUID id) {
         log.info("Fetching customer addresses: {}", id);
-        com.erp.account.modules.customer.dto.response.CustomerProfileResponse response = customerService.getCustomerById(id);
-        return ResponseEntity.ok(ApiResponse.success(response.getAddresses(), "Customer addresses retrieved successfully"));
+        com.erp.account.modules.customer.dto.response.CustomerProfileResponse response = customerService
+                .getCustomerById(id);
+        return ResponseEntity
+                .ok(ApiResponse.success(response.getAddresses(), "Customer addresses retrieved successfully"));
     }
 
     @GetMapping
     @Operation(summary = "Get customers with optional filters and pagination")
     public ResponseEntity<ApiResponse<java.util.List<CustomerResponse>>> getAllCustomers(
             @ModelAttribute CustomerFilterDto filter,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        log.info("Fetching customers with filters: {}", filter);
-        Page<CustomerResponse> page = customerService.getAllCustomers(filter, pageable);
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestParam(name = "companyId", required = false) UUID companyId) {
+        UUID effectiveCompanyId = companyId != null ? companyId : (filter != null ? filter.getCompanyId() : null);
+        if (filter != null && effectiveCompanyId != null) {
+            filter.setCompanyId(effectiveCompanyId);
+        }
+        log.info("Fetching customers with filters: {}, companyId: {}", filter, effectiveCompanyId);
+        Page<CustomerResponse> page = customerService.getAllCustomers(filter, pageable, effectiveCompanyId);
         return ResponseEntity.ok(ApiResponse.paginated(page, "Customers retrieved successfully"));
     }
 

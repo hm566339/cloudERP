@@ -106,14 +106,15 @@ public class ExpenseRequestController {
         return ResponseEntity.ok(ApiResponse.success(response, "Expense request updated successfully"));
     }
 
-    @PostMapping("/{id}/submit")
+    @PostMapping(value = {"/{id}/submit", "/{id}/submit-approval", "/{id}/submit-for-approval"})
     @Operation(summary = "Submit Expense Request", description = "Submits a DRAFT expense request for approval")
     public ResponseEntity<ApiResponse<ExpenseRequestResponse>> submitExpenseRequest(
             @PathVariable UUID id,
-            @RequestParam(required = false) UUID companyId) {
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) String comments) {
 
         log.info("POST /api/account/v1/expense-requests/{}/submit - Submitting request", id);
-        ExpenseRequestResponse response = expenseRequestService.submitExpenseRequest(companyId, id);
+        ExpenseRequestResponse response = expenseRequestService.submitExpenseRequest(companyId, id, comments);
         return ResponseEntity.ok(ApiResponse.success(response, "Expense request submitted successfully"));
     }
 

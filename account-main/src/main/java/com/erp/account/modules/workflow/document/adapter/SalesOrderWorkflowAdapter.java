@@ -5,6 +5,8 @@ import com.erp.account.modules.salesorder.repository.SalesOrderRepository;
 import com.erp.account.modules.salesorder.service.SalesOrderService;
 import com.erp.account.modules.workflow.document.WorkflowDocument;
 import com.erp.account.modules.workflow.document.WorkflowDocumentAdapter;
+import com.erp.account.modules.salesorder.entity.SalesOrderStatus;
+import com.erp.account.security.CurrentUserContext;
 import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +39,39 @@ public class SalesOrderWorkflowAdapter implements WorkflowDocumentAdapter {
         public String getDocumentNumber() { return order.getSoNumber(); }
         public BigDecimal getAmount() { return order.getTotalAmount(); }
         public UUID getOwnerId() { return order.getCreatedBy(); }
-        public void onWorkflowApproved() { service.confirmSO(order.getCompanyId(), order.getId()); }
-        public void onWorkflowRejected() { service.cancelSO(order.getCompanyId(), order.getId()); }
-        public void onWorkflowCancelled() { service.cancelSO(order.getCompanyId(), order.getId()); }
+
+        @Transactional
+        public void onWorkflowSubmitted() {
+            order.setStatus(SalesOrderStatus.DRAFT);
+            repository.save(order);
+        }
+
+        @Transactional
+        public void onWorkflowApproved() {
+            order.setStatus(SalesOrderStatus.CONFIRMED);
+            order.setUpdatedBy(CurrentUserContext.getUserId());
+            repository.save(order);
+        }
+
+        @Transactional
+        public void onWorkflowRejected() {
+            order.setStatus(SalesOrderStatus.CANCELLED);
+            order.setUpdatedBy(CurrentUserContext.getUserId());
+            repository.save(order);
+        }
+
+        @Transactional
+        public void onWorkflowCancelled() {
+            order.setStatus(SalesOrderStatus.CANCELLED);
+            order.setUpdatedBy(CurrentUserContext.getUserId());
+            repository.save(order);
+        }
+
+        @Transactional
+        public void onWorkflowReturned() {
+            order.setStatus(SalesOrderStatus.DRAFT);
+            order.setUpdatedBy(CurrentUserContext.getUserId());
+            repository.save(order);
+        }
     }
 }

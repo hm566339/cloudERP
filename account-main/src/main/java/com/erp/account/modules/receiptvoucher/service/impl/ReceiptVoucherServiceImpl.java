@@ -31,6 +31,9 @@ import com.erp.account.modules.receiptvoucher.service.ReceiptVoucherValidationSe
 import com.erp.account.modules.receiptvoucher.service.ReceiptWorkflowValidator;
 import com.erp.account.modules.receiptvoucher.specification.ReceiptVoucherSpecification;
 import com.erp.account.util.TenantUtils;
+import com.erp.account.common.exception.BadRequestException;
+import com.erp.account.integration.workflow.client.WorkflowClient;
+import com.erp.account.integration.workflow.dto.WorkflowTransactionDto;
 import com.erp.account.util.CustomerAddressUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -64,6 +67,7 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     private final VoucherSequenceService voucherSequenceService;
     private final ProformaInvoiceRepository proformaInvoiceRepository;
     private final ReceiptAllocationRepository receiptAllocationRepository;
+    private final WorkflowClient workflowClient;
 
 
     @Override
@@ -159,7 +163,46 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
 
     @Override
     public void submitForApproval(UUID id) {
+        submitForApproval(id, null);
+    }
+
+    @Override
+    public void submitForApproval(UUID id, String comments) {
         ReceiptVoucher voucher = getReceiptVoucher(id);
+        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+
+        if (voucher.getReceiptStatus() != ReceiptVoucherStatus.DRAFT) {
+            throw new BadRequestException("Only DRAFT receipt vouchers can be submitted for approval. Current status: " + voucher.getReceiptStatus());
+        }
+
+        // Prevent duplicate workflow submission
+        try {
+            WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", voucher.getId());
+            if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
+                throw new BadRequestException("Receipt Voucher is already submitted for approval with transaction: " + existingTx.getId());
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("No existing workflow transaction found for receipt voucher {}", id);
+        }
+
+        try {
+            workflowClient.submitWorkflow(
+                    companyId,
+                    "RECEIPT_VOUCHER",
+                    voucher.getId(),
+                    voucher.getReceiptNo(),
+                    comments != null ? comments : "Submitted receipt voucher for approval"
+            );
+            log.info("Receipt Voucher {} submitted for approval to workflow-service", voucher.getReceiptNo());
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Workflow engine submission failed for receipt voucher {}. Error: {}", id, e.getMessage());
+            throw new BadRequestException("Failed to submit receipt voucher for workflow approval: " + e.getMessage());
+        }
+
         transition(voucher, ReceiptVoucherStatus.SUBMITTED, "SUBMIT");
         receiptVoucherRepository.save(voucher);
     }
@@ -167,11 +210,24 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     @Override
     public void approveReceipt(UUID id) {
         ReceiptVoucher voucher = getReceiptVoucher(id);
-        
+        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+
+        // Prevent direct approval if active workflow is pending
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", id);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Receipt Voucher cannot be approved directly while workflow approval is pending. Please approve via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for receipt voucher approval {}: {}", id, e.getMessage());
+        }
+
         // if (voucher.getCreatedBy() != null && voucher.getCreatedBy().equals(TenantUtils.getCurrentUserId())) {
         //     throw new SecurityException("Creator cannot approve their own document.");
         // }
-        
+
         validationService.validateApprove(voucher);
         transition(voucher, ReceiptVoucherStatus.APPROVED, "APPROVE");
         voucher.setApprovedBy(TenantUtils.getCurrentUserId());
@@ -182,6 +238,20 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     @Override
     public void rejectReceipt(UUID id) {
         ReceiptVoucher voucher = getReceiptVoucher(id);
+        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+
+        // Prevent direct rejection if active workflow is pending
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", id);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Receipt Voucher cannot be rejected directly while workflow approval is pending. Please reject via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for receipt voucher rejection {}: {}", id, e.getMessage());
+        }
+
         validationService.validateReject(voucher);
         transition(voucher, ReceiptVoucherStatus.REJECTED, "REJECT");
         receiptVoucherRepository.save(voucher);
@@ -190,11 +260,24 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     @Override
     public void postReceipt(UUID id) {
         ReceiptVoucher voucher = getReceiptVoucher(id);
-        
+        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+
+        // Prevent direct posting if active workflow is pending
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", id);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Receipt Voucher cannot be posted directly while workflow approval is pending. Please approve via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for receipt voucher posting {}: {}", id, e.getMessage());
+        }
+
         // if (voucher.getCreatedBy() != null && voucher.getCreatedBy().equals(TenantUtils.getCurrentUserId())) {
         //     throw new SecurityException("Creator cannot post their own document.");
         // }
-        
+
         validationService.validatePostingRules(voucher);
         postingService.post(voucher);
         receiptVoucherRepository.save(voucher);
@@ -214,6 +297,20 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
         if (voucher.getGlPostingStatus() == PostingStatus.POSTED) {
             throw new PaymentValidationException("POSTED receipts are immutable and cannot be cancelled directly.");
         }
+        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+
+        // Prevent direct cancellation if active workflow is pending
+        try {
+            WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", id);
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException("Receipt Voucher cannot be cancelled directly while workflow approval is pending. Please cancel via the workflow.");
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("Workflow check skipped for receipt voucher cancellation {}: {}", id, e.getMessage());
+        }
+
         validationService.validateCancel(voucher);
         transition(voucher, ReceiptVoucherStatus.CANCELLED, "CANCEL");
         voucher.setGlPostingStatus(PostingStatus.CANCELLED);

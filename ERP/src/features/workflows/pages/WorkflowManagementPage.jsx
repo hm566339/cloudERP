@@ -237,7 +237,7 @@ export default function WorkflowManagementPage() {
   const create = () => {
     const draftId = `draft-${Date.now()}`;
     const defaultRole = roles[0]?.id || '';
-    const docType = moduleToDocumentType(module);
+    const docType = module === 'Sales' ? 'QUOTATION' : moduleToDocumentType(module);
     const newDraft = {
       id: draftId,
       workflowCode: `${docType}_APPROVAL_${Date.now().toString().slice(-4)}`,
@@ -245,7 +245,7 @@ export default function WorkflowManagementPage() {
       workflowName: 'New workflow',
       description: '',
       module,
-      moduleName: docType,
+      moduleName: (module || 'GENERAL').toUpperCase(),
       documentType: docType,
       active: false,
       isActive: false,
@@ -360,6 +360,9 @@ export default function WorkflowManagementPage() {
     const docType = selected.documentType || moduleToDocumentType(selected.module || module);
     const moduleName = (selected.moduleName || selected.module || module).toUpperCase();
 
+    const desiredActive = Boolean(selected.active ?? selected.isActive ?? false);
+    const isNewWorkflow = Boolean(isEditingDraft || !selected.id || String(selected.id).startsWith('draft-') || String(selected.id).startsWith('workflow-'));
+
     const payloadToSave = {
       ...selected,
       companyId,
@@ -374,8 +377,18 @@ export default function WorkflowManagementPage() {
       approverRole: approverRoleId,
       approverRoleId,
       approverRoleName,
-      isActive: Boolean(selected.isActive !== undefined ? selected.isActive : selected.active),
-      active: Boolean(selected.isActive !== undefined ? selected.isActive : selected.active),
+      isActive: desiredActive,
+      active: desiredActive,
+      customerScope: selected.customerScope || 'all',
+      threshold: selected.threshold || '',
+      approvalThreshold: selected.threshold ? Number(String(selected.threshold).replace(/,/g, '')) : undefined,
+      isApprovalRequired: selected.approvalRequired !== undefined ? Boolean(selected.approvalRequired) : true,
+      approvalRequired: selected.approvalRequired !== undefined ? Boolean(selected.approvalRequired) : true,
+      customerAcceptance: Boolean(selected.customerAcceptance),
+      autoCreateOrder: Boolean(selected.autoCreateOrder),
+      emailNotifications: selected.emailNotifications !== undefined ? Boolean(selected.emailNotifications) : true,
+      notes: selected.notes || '',
+      internalNotes: selected.notes || '',
       steps: currentSteps.map((step, idx) => ({
         ...step,
         sequenceNo: idx + 1,
@@ -397,7 +410,7 @@ export default function WorkflowManagementPage() {
       return;
     }
 
-    if (isEditingDraft) {
+    if (isNewWorkflow) {
       const codeCandidate = String(payloadToSave.workflowCode || '').trim().toUpperCase();
       if (existingCodes.includes(codeCandidate)) {
         const errorMsg = `Workflow code "${payloadToSave.workflowCode}" already exists for this company. Please specify a unique code.`;
@@ -411,9 +424,19 @@ export default function WorkflowManagementPage() {
     setIsSaving(true);
 
     try {
-      if (isEditingDraft) {
+      if (isNewWorkflow) {
         const result = await saveWorkflowDefinitions(companyId, payloadToSave, { mode: 'create' });
         const createdDef = result?.definitions?.[0];
+        const targetId = createdDef?.id;
+
+        if (targetId) {
+          if (desiredActive) {
+            await workflowDefinitionApi.setActive(targetId, companyId);
+          } else {
+            await workflowDefinitionApi.deactivate(targetId, companyId);
+          }
+          await workflowDefinitionApi.get(targetId, companyId);
+        }
 
         dispatch(addAlert({
           type: 'success',
@@ -422,14 +445,24 @@ export default function WorkflowManagementPage() {
 
         setDraftWorkflow(null);
         const defs = await reloadDefinitions();
-        if (createdDef?.id) {
-          setSelectedId(createdDef.id);
+        if (targetId) {
+          setSelectedId(targetId);
         } else if (defs && defs.length) {
           setSelectedId(defs[0].id);
         }
       } else {
+        const targetId = selected.id;
         const result = await saveWorkflowDefinitions(companyId, payloadToSave, { mode: 'update' });
         const updatedDef = result?.definitions?.[0];
+
+        if (targetId) {
+          if (desiredActive) {
+            await workflowDefinitionApi.setActive(targetId, companyId);
+          } else {
+            await workflowDefinitionApi.deactivate(targetId, companyId);
+          }
+          await workflowDefinitionApi.get(targetId, companyId);
+        }
 
         dispatch(addAlert({
           type: 'success',
@@ -437,8 +470,8 @@ export default function WorkflowManagementPage() {
         }));
 
         const defs = await reloadDefinitions();
-        if (updatedDef?.id) {
-          setSelectedId(updatedDef.id);
+        if (targetId) {
+          setSelectedId(targetId);
         } else if (defs && defs.length) {
           const match = defs.find((d) => d.id === selected.id);
           if (match) setSelectedId(match.id);

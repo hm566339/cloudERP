@@ -25,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -72,6 +73,19 @@ public class SalesOrderController {
             @Parameter(description = "Company ID") @RequestParam(required = false) UUID companyId) {
         SalesOrderProfileResponse response = salesOrderService.getSalesOrderById(companyId, id);
         return ResponseEntity.ok(ApiResponse.success(response, "Sales Order retrieved successfully"));
+    }
+
+    @Operation(summary = "Submit Sales Order for Approval", description = "Submit a DRAFT Sales Order for workflow approval.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Sales Order submitted for approval successfully")
+    @PostMapping({"/{id}/submit-approval", "/{id}/submit", "/{id}/submit-for-approval"})
+    public ResponseEntity<ApiResponse<SalesOrderResponse>> submitForApproval(
+            @Parameter(description = "Sales Order ID", required = true) @PathVariable UUID id,
+            @Parameter(description = "Company ID") @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) String comments,
+            @RequestBody(required = false) Map<String, String> body) {
+        String effectiveComments = comments != null ? comments : (body != null ? body.get("comments") : null);
+        SalesOrderResponse response = salesOrderService.submitForApproval(companyId, id, effectiveComments);
+        return ResponseEntity.ok(ApiResponse.success(response, "Sales Order submitted for approval successfully"));
     }
 
     @Operation(summary = "Confirm Sales Order", description = "Confirm a DRAFT Sales Order.")

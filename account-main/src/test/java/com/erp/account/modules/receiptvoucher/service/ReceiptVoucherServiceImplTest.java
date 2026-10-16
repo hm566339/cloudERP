@@ -52,6 +52,8 @@ class ReceiptVoucherServiceImplTest {
     private ReceiptVoucherValidationService validationService;
     @Mock
     private VoucherSequenceService voucherSequenceService;
+    @Mock
+    private com.erp.account.integration.workflow.client.WorkflowClient workflowClient;
 
     @InjectMocks
     private ReceiptVoucherServiceImpl receiptVoucherService;

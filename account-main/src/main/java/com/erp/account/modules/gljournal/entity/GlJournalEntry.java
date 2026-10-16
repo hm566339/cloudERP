@@ -1,6 +1,8 @@
 package com.erp.account.modules.gljournal.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.erp.account.enums.PostingStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -51,6 +53,7 @@ import com.erp.account.util.Invoice;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class GlJournalEntry extends BaseEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -65,21 +68,39 @@ public class GlJournalEntry extends BaseEntity implements Serializable {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
+    @JsonIgnore
     private Company company;
+
+    @JsonProperty("companyId")
+    public UUID getCompanyId() {
+        return company != null ? company.getId() : null;
+    }
 
     /**
      * Fiscal year context for GL reporting
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fiscal_year_id")
+    @JsonIgnore
     private FiscalYear fiscalYear;
+
+    @JsonProperty("fiscalYearId")
+    public UUID getFiscalYearId() {
+        return fiscalYear != null ? fiscalYear.getId() : null;
+    }
 
     /**
      * Accounting period - validates period closure and cutoff rules
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "accounting_period_id")
+    @JsonIgnore
     private AccountingPeriod accountingPeriod;
+
+    @JsonProperty("accountingPeriodId")
+    public UUID getAccountingPeriodId() {
+        return accountingPeriod != null ? accountingPeriod.getId() : null;
+    }
 
     /**
      * Auto-generated unique voucher number per company

@@ -17,6 +17,8 @@ import com.erp.account.modules.expense.repository.ExpenseRequestRepository;
 import com.erp.account.modules.expense.service.ExpenseRequestService;
 import com.erp.account.modules.expense.specification.ExpenseRequestSpecification;
 import com.erp.account.modules.salesorder.repository.SalesOrderRepository;
+import com.erp.account.integration.workflow.client.WorkflowClient;
+import com.erp.account.integration.workflow.dto.WorkflowTransactionDto;
 import com.erp.account.modules.vouchersequence.service.VoucherSequenceService;
 import com.erp.account.modules.auditlog.entity.AuditLog;
 import com.erp.account.modules.auditlog.service.AuditLogService;
@@ -52,6 +54,7 @@ public class ExpenseRequestServiceImpl implements ExpenseRequestService {
     private final VoucherSequenceService voucherSequenceService;
     private final ExpenseRequestMapper expenseRequestMapper;
     private final AuditLogService auditLogService;
+    private final WorkflowClient workflowClient;
 
     @Override
     @Transactional
@@ -470,6 +473,12 @@ public class ExpenseRequestServiceImpl implements ExpenseRequestService {
     @Override
     @Transactional
     public ExpenseRequestResponse submitExpenseRequest(UUID requestCompanyId, UUID id) {
+        return submitExpenseRequest(requestCompanyId, id, null);
+    }
+
+    @Override
+    @Transactional
+    public ExpenseRequestResponse submitExpenseRequest(UUID requestCompanyId, UUID id, String comments) {
         UUID companyId = TenantUtils.resolveCompanyId(requestCompanyId);
         ExpenseRequest entity = expenseRequestRepository.findByIdAndCompanyId(id, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Expense Request not found with id: " + id));
@@ -508,6 +517,36 @@ public class ExpenseRequestServiceImpl implements ExpenseRequestService {
                 entity.setAdditionalNotes(existingNotes + "Automatically approved based on user role.");
             }
         } else {
+            // Prevent duplicate workflow submission
+            if (workflowClient != null) {
+                try {
+                    WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(companyId, "EXPENSE_REQUEST", entity.getId());
+                    if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
+                        throw new ValidationException("Expense Request is already submitted for approval with transaction: " + existingTx.getId());
+                    }
+                } catch (ValidationException e) {
+                    throw e;
+                } catch (Exception e) {
+                    log.debug("No existing workflow transaction found for expense request {}", id);
+                }
+
+                try {
+                    workflowClient.submitWorkflow(
+                            companyId,
+                            "EXPENSE_REQUEST",
+                            entity.getId(),
+                            entity.getRequestNumber(),
+                            comments != null ? comments : "Submitted expense request for approval"
+                    );
+                    log.info("Expense Request {} submitted for approval to workflow-service", entity.getRequestNumber());
+                } catch (ValidationException e) {
+                    throw e;
+                } catch (Exception e) {
+                    log.error("Workflow engine submission failed for expense request {}. Error: {}", id, e.getMessage());
+                    throw new ValidationException("Failed to submit expense request for workflow approval: " + e.getMessage());
+                }
+            }
+
             entity.setStatus(ExpenseRequestStatus.PENDING_APPROVAL);
             entity.setApprovalStatus(ExpenseRequestStatus.PENDING_APPROVAL);
         }
@@ -548,6 +587,20 @@ public class ExpenseRequestServiceImpl implements ExpenseRequestService {
 
         if (entity.getStatus() != ExpenseRequestStatus.PENDING_APPROVAL) {
             throw new ValidationException("Request must be in PENDING_APPROVAL status to approve. Current status: " + entity.getStatus());
+        }
+
+        // Prevent bypassing active pending workflow
+        if (workflowClient != null) {
+            try {
+                WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "EXPENSE_REQUEST", id);
+                if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                    throw new ValidationException("Expense Request cannot be approved directly while workflow approval is pending. Please approve via the workflow.");
+                }
+            } catch (ValidationException e) {
+                throw e;
+            } catch (Exception e) {
+                log.debug("Workflow check skipped for expense request approval {}: {}", id, e.getMessage());
+            }
         }
 
         UUID currentUserId = TenantUtils.getCurrentUserId();
@@ -603,6 +656,20 @@ public class ExpenseRequestServiceImpl implements ExpenseRequestService {
             throw new ValidationException("Cannot reject request in status: " + entity.getStatus());
         }
 
+        // Prevent bypassing active pending workflow
+        if (workflowClient != null) {
+            try {
+                WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "EXPENSE_REQUEST", id);
+                if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                    throw new ValidationException("Expense Request cannot be rejected directly while workflow approval is pending. Please reject via the workflow.");
+                }
+            } catch (ValidationException e) {
+                throw e;
+            } catch (Exception e) {
+                log.debug("Workflow check skipped for expense request rejection {}: {}", id, e.getMessage());
+            }
+        }
+
         if (request == null || request.getReason() == null || request.getReason().isBlank()) {
             throw new ValidationException("Rejection reason is required.");
         }
@@ -629,6 +696,20 @@ public class ExpenseRequestServiceImpl implements ExpenseRequestService {
         if (entity.getStatus() == ExpenseRequestStatus.CANCELLED
                 || entity.getStatus() == ExpenseRequestStatus.CONVERTED_TO_EXPENSE) {
             throw new ValidationException("Cannot cancel request in status: " + entity.getStatus());
+        }
+
+        // Prevent bypassing active pending workflow
+        if (workflowClient != null) {
+            try {
+                WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "EXPENSE_REQUEST", id);
+                if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                    throw new ValidationException("Expense Request cannot be cancelled directly while workflow approval is pending. Please cancel via the workflow.");
+                }
+            } catch (ValidationException e) {
+                throw e;
+            } catch (Exception e) {
+                log.debug("Workflow check skipped for expense request cancellation {}: {}", id, e.getMessage());
+            }
         }
 
         entity.setStatus(ExpenseRequestStatus.CANCELLED);

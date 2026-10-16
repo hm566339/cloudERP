@@ -19,6 +19,7 @@ import com.erp.account.modules.apinvoice.service.InvoiceWorkflowService;
 import com.erp.account.modules.apinvoice.service.PurchaseInvoiceValidationService;
 import com.erp.account.modules.apinvoice.service.ThreeWayMatchingService;
 import com.erp.account.modules.apinvoice.service.impl.ApInvoiceServiceImpl;
+import com.erp.account.integration.workflow.client.WorkflowClient;
 import com.erp.account.modules.company.entity.Company;
 import com.erp.account.modules.company.repository.CompanyRepository;
 import com.erp.account.modules.goodsreceipt.entity.GoodsReceipt;
@@ -100,6 +101,7 @@ public class PurchaseInvoiceStockInOwnershipTest {
 
     @Mock private InventorySyncTaskRepository inventorySyncTaskRepository;
     @Mock private InventoryClient inventoryClient;
+    @Mock private WorkflowClient workflowClient;
 
     @InjectMocks
     private ApInvoiceServiceImpl apInvoiceService;

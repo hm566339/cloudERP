@@ -15,6 +15,42 @@ function Field({ label, children, hint }) {
   );
 }
 
+export const DOCUMENT_TYPES_BY_MODULE = {
+  Sales: [
+    { value: 'QUOTATION', label: 'Sales Quotation (QUOTATION)' },
+    { value: 'SALES_ORDER', label: 'Sales Order (SALES_ORDER)' },
+    { value: 'SALES_INVOICE', label: 'Sales Invoice (SALES_INVOICE)' },
+    { value: 'SALES', label: 'General Sales (SALES)' },
+  ],
+  Purchase: [
+    { value: 'PURCHASE_ORDER', label: 'Purchase Order (PURCHASE_ORDER)' },
+    { value: 'AP_INVOICE', label: 'Vendor Bill / AP Invoice (AP_INVOICE)' },
+    { value: 'PURCHASE', label: 'General Purchase (PURCHASE)' },
+  ],
+  Expenses: [
+    { value: 'EXPENSE_REQUEST', label: 'Expense Request (EXPENSE_REQUEST)' },
+    { value: 'EXPENSE', label: 'General Expense (EXPENSE)' },
+  ],
+  Invoices: [
+    { value: 'SALES_INVOICE', label: 'Sales Invoice (SALES_INVOICE)' },
+    { value: 'AP_INVOICE', label: 'AP Invoice (AP_INVOICE)' },
+    { value: 'INVOICE', label: 'General Invoice (INVOICE)' },
+  ],
+  Reimbursements: [
+    { value: 'REIMBURSEMENT', label: 'Reimbursement Request (REIMBURSEMENT)' },
+  ],
+  Inventory: [
+    { value: 'STOCK_TRANSFER', label: 'Stock Transfer (STOCK_TRANSFER)' },
+    { value: 'STOCK_ADJUSTMENT', label: 'Stock Adjustment (STOCK_ADJUSTMENT)' },
+    { value: 'INVENTORY', label: 'General Inventory (INVENTORY)' },
+  ],
+  Others: [
+    { value: 'RECEIPT_VOUCHER', label: 'Receipt Voucher (RECEIPT_VOUCHER)' },
+    { value: 'PAYMENT_VOUCHER', label: 'Payment Voucher (PAYMENT_VOUCHER)' },
+    { value: 'GENERAL', label: 'General Document (GENERAL)' },
+  ],
+};
+
 export default function WorkflowConfigurationForm({
   workflow,
   setWorkflow,
@@ -32,6 +68,10 @@ export default function WorkflowConfigurationForm({
   const currentApproverRole = resolveRoleId(workflow.approverRole, roles);
   const currentCode = (workflow.workflowCode || '').trim().toUpperCase();
   const isCodeDuplicate = Boolean(currentCode && existingCodes.includes(currentCode));
+  const currentModule = workflow.module || 'Sales';
+  const docTypeOptions = DOCUMENT_TYPES_BY_MODULE[currentModule] || [
+    { value: workflow.documentType || 'GENERAL', label: workflow.documentType || 'General' },
+  ];
 
   return (
     <div className="space-y-4">
@@ -59,7 +99,7 @@ export default function WorkflowConfigurationForm({
                 update('workflowCode', autoCode);
               }
             }}
-            placeholder="e.g. Sales Invoice Approval"
+            placeholder="e.g. Sales Quotation Approval"
           />
           {(errors.name || errors.workflowName) && (
             <p className="text-[11px] text-red-600 font-medium mt-1">{errors.name || errors.workflowName}</p>
@@ -89,6 +129,25 @@ export default function WorkflowConfigurationForm({
           )}
         </Field>
       </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Document Type" hint="Canonical ERP document target">
+          <select
+            className="w-full h-8 px-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50"
+            disabled={!canEdit}
+            value={workflow.documentType || docTypeOptions[0]?.value || 'GENERAL'}
+            onChange={(e) => {
+              const val = e.target.value;
+              update('documentType', val);
+            }}
+          >
+            {docTypeOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </Field>
 
         <Field label="Initiated by role">
           <select
@@ -135,6 +194,7 @@ export default function WorkflowConfigurationForm({
             <p className="text-[10px] text-amber-600 mt-1">No roles found for this company.</p>
           )}
         </Field>
+      </div>
 
       <Field label="Description">
         <textarea
@@ -152,7 +212,7 @@ export default function WorkflowConfigurationForm({
           <select
             className="w-full h-8 px-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50"
             disabled={!canEdit}
-            value={workflow.customerScope}
+            value={workflow.customerScope || 'all'}
             onChange={(e) => update('customerScope', e.target.value)}
           >
             <option value="all">All customers</option>
@@ -166,7 +226,7 @@ export default function WorkflowConfigurationForm({
             <input
               className="w-full h-8 pl-6 pr-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50"
               disabled={!canEdit}
-              value={workflow.threshold}
+              value={workflow.threshold || ''}
               onChange={(e) => update('threshold', e.target.value.replace(/[^0-9,]/g, ''))}
               placeholder="0.00"
             />
@@ -176,7 +236,18 @@ export default function WorkflowConfigurationForm({
 
       <div className="divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
         <WorkflowSettingRow label="Workflow status" description="Allow this workflow to run for new transactions">
-          <WorkflowToggle label="Workflow status" checked={workflow.active} disabled={!canEdit} onChange={(value) => update('active', value)} />
+          <WorkflowToggle
+            label="Workflow status"
+            checked={Boolean(workflow.active ?? workflow.isActive ?? false)}
+            disabled={!canEdit}
+            onChange={(value) => {
+              setWorkflow((current) => ({
+                ...current,
+                active: value,
+                isActive: value,
+              }));
+            }}
+          />
         </WorkflowSettingRow>
 
         <WorkflowSettingRow label="Approval required" description="Require a role to approve before continuing">

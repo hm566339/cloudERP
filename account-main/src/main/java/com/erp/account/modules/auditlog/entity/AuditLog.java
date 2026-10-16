@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import com.erp.account.modules.common.entity.BaseEntity;
 import com.erp.account.modules.company.entity.Company;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -24,6 +27,7 @@ import org.hibernate.type.SqlTypes;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AuditLog extends BaseEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -35,7 +39,13 @@ public class AuditLog extends BaseEntity implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
+    @JsonIgnore
     private Company company;
+
+    @JsonProperty("companyId")
+    public UUID getCompanyId() {
+        return company != null ? company.getId() : null;
+    }
 
     @Column(name = "module_name")
     private String moduleName;

@@ -28,6 +28,8 @@ public interface QuotationService {
     
     QuotationResponse approveQuotation(UUID companyId, UUID id);
     
+    QuotationResponse submitForApproval(UUID companyId, UUID id, String comments);
+    
     QuotationResponse sendQuotation(UUID companyId, UUID id);
     
     QuotationResponse acceptQuotation(UUID companyId, UUID id);
