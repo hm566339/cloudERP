@@ -188,10 +188,13 @@ export function getAccessibleModuleKeys({ userRole, memberType, permissions, com
   const combinedBackendKeys = [...new Set([...companyKeys, ...authModuleKeys])];
 
   const isOwner = memberType === 'OWNER' || String(userRole).toLowerCase() === 'owner';
+  if (isOwner || userRole === 'super_admin') {
+    return [...new Set([...MODULE_DEFINITIONS.map((m) => m.key), ...permissionKeys, ...combinedBackendKeys])];
+  }
   if (combinedBackendKeys.length === 0) {
     return permissionKeys;
   }
-  if (isOwner || userRole === 'company_admin' || userRole === 'super_admin') {
+  if (userRole === 'company_admin') {
     return combinedBackendKeys;
   }
 

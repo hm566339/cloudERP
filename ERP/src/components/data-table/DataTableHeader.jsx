@@ -76,7 +76,7 @@ export default function DataTableHeader({
         </div>
 
         {/* Right Side: Toolbar Action Buttons */}
-        <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0">
+        <div className="flex items-center gap-2 flex-wrap shrink-0 pt-2 sm:pt-0">
           {/* Selected Count Indicator */}
           {selectable && selectedCount > 0 && (
             <div className="flex items-center gap-1.5 px-2.5 h-9 bg-zinc-900 text-white rounded-lg text-[11px] font-medium animate-in fade-in slide-in-from-left-2 duration-150 shadow-2xs">

@@ -11,26 +11,7 @@ import ErrorState from '../../../components/common/ErrorState';
 import { PageLoader } from '../../../components/common/SkeletonLoader';
 import PurchaseNavigation, { getRfqBasePath } from '../../../components/common/PurchaseNavigation';
 import { useRoutePath } from '../../../hooks/useRoutePath';
-
-const StatusBadge = ({ status }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    DRAFT: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    SENT: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    OPEN: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    CLOSED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-    CANCELLED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    AWARDED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-  }[s] || { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-bold tracking-wider uppercase rounded-md border ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s.replace('_', ' ')}
-    </span>
-  );
-};
+import StatusBadge from '../../../components/common/StatusBadge';
 
 const SupplierStatusBadge = ({ status }) => {
   if (!status) return <span className="text-xs text-zinc-400">-</span>;
@@ -279,15 +260,15 @@ export default function RFQDetail() {
                 </div>
               </div>
             ) : (
-              <div className="overflow-x-auto px-6 pb-6">
-                <table className="w-full text-left border-collapse whitespace-nowrap text-sm">
-                  <thead className="bg-zinc-50/80 border-b border-zinc-200">
+              <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar px-6 pb-6">
+                <table className="w-full min-w-[650px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Invited Suppliers Table">
+                  <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                     <tr>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Supplier</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Status</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Invited At</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Response Date</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Remarks</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Supplier</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Status</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Invited At</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Response Date</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Remarks</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
@@ -318,17 +299,17 @@ export default function RFQDetail() {
                 </div>
               </div>
             ) : (
-              <div className="overflow-x-auto px-6 pb-6">
-                <table className="w-full text-left border-collapse whitespace-nowrap text-sm">
-                  <thead className="bg-zinc-50/80 border-b border-zinc-200">
+              <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar px-6 pb-6">
+                <table className="w-full min-w-[700px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Requested RFQ Items Table">
+                  <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                     <tr>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">#</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Item</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Description</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">Quantity</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Unit</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Required Date</th>
-                      <th className="px-4 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Specifications</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">#</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Item</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Description</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">Quantity</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Unit</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Required Date</th>
+                      <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Specifications</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
@@ -337,7 +318,7 @@ export default function RFQDetail() {
                         <td className="px-4 py-4 text-zinc-400 text-xs">{idx + 1}</td>
                         <td className="px-4 py-4 font-semibold text-zinc-900 text-xs">{item.itemName || '-'}</td>
                         <td className="px-4 py-4 text-zinc-600 text-xs max-w-[200px] truncate">{item.description || '-'}</td>
-                        <td className="px-4 py-4 text-right font-medium text-zinc-800 text-xs">{item.quantity ?? 0}</td>
+                        <td className="px-4 py-4 text-right font-medium text-zinc-800 text-xs tabular-nums">{item.quantity ?? 0}</td>
                         <td className="px-4 py-4 text-zinc-600 text-xs">{item.unit || '-'}</td>
                         <td className="px-4 py-4 text-zinc-600 text-xs">{item.requiredDate ? new Date(item.requiredDate).toLocaleDateString() : '-'}</td>
                         <td className="px-4 py-4 text-zinc-600 text-xs max-w-[200px] truncate">{item.specifications || '-'}</td>

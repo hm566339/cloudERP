@@ -25,7 +25,7 @@ export default function AuditLogsSettings() {
       <SettingsCard>
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
             <input
               type="text"
               placeholder="Search logs..."
@@ -42,23 +42,23 @@ export default function AuditLogsSettings() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-zinc-500 bg-zinc-50 uppercase border-b border-zinc-200">
+        <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+          <table className="w-full text-sm text-left border-collapse min-w-[540px] sm:min-w-full" aria-label="Audit Logs Table">
+            <thead className="text-xs font-semibold text-zinc-600 bg-zinc-50 uppercase border-b border-zinc-200 sticky top-0 z-10">
               <tr>
-                <th className="px-4 py-3 font-medium">Action</th>
-                <th className="px-4 py-3 font-medium">User</th>
-                <th className="px-4 py-3 font-medium">Date & Time</th>
-                <th className="px-4 py-3 font-medium">IP Address</th>
+                <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">Action</th>
+                <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">User</th>
+                <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">Date & Time</th>
+                <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">IP Address</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-zinc-100">
               {logs.map((log) => (
-                <tr key={log.id} className="border-b border-zinc-100 hover:bg-zinc-50/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-zinc-900">{log.action}</td>
-                  <td className="px-4 py-3 text-zinc-600">{log.user}</td>
-                  <td className="px-4 py-3 text-zinc-600">{log.date}</td>
-                  <td className="px-4 py-3 text-zinc-500 font-mono text-xs">{log.ip}</td>
+                <tr key={log.id} className="hover:bg-zinc-50/70 transition-colors">
+                  <td className="px-4 py-3.5 font-medium text-zinc-900 whitespace-nowrap">{log.action}</td>
+                  <td className="px-4 py-3.5 text-zinc-600 whitespace-nowrap">{log.user}</td>
+                  <td className="px-4 py-3.5 text-zinc-600 whitespace-nowrap tabular-nums">{log.date}</td>
+                  <td className="px-4 py-3.5 text-zinc-500 font-mono text-xs whitespace-nowrap tabular-nums">{log.ip}</td>
                 </tr>
               ))}
             </tbody>

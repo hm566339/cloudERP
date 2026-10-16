@@ -20,14 +20,23 @@ export const CustomMessageSquare = MessageSquare;
 
 export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdminGlobal, accessibleModuleKeys = [], canViewModule, isOwner = false) {
   const base = companyId ? `/company/${companyId}` : ``
+  const isOwnerUser = isOwner || String(userRole).toLowerCase() === 'owner';
+
+  const rawCanViewModule = canViewModule;
+  canViewModule = (mod) => {
+    if (isOwnerUser) return true;
+    if (typeof rawCanViewModule === 'function') return rawCanViewModule(mod);
+    return true;
+  };
 
   const hasGstExport = () =>
-    Array.isArray(permissions) &&
+    isOwnerUser ||
+    (Array.isArray(permissions) &&
     permissions.some((p) => {
       const code = typeof p === 'string' ? p : (p?.permissionCode || p?.featureCode || '');
       const up = String(code).toUpperCase();
       return up === 'GST_REPORTS:EXPORT' || up === 'ALL' || up === 'ALL_MODULES';
-    });
+    }));
 
   const gstChildren = (gstBase) => [
     { id: 'acc-rep-gst-summary', label: 'GST Summary', path: `${gstBase}/summary`, icon: LayoutDashboard },
@@ -61,18 +70,6 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
             label: 'All Organizations',
             path: '/super-admin/organizations',
             icon: Building2,
-          },
-          {
-            id: 'sa-orgs-active',
-            label: 'Active Organizations',
-            path: '/super-admin/organizations?status=ACTIVE',
-            icon: ShieldCheck,
-          },
-          {
-            id: 'sa-orgs-suspended',
-            label: 'Suspended',
-            path: '/super-admin/organizations?status=SUSPENDED',
-            icon: ShieldAlert,
           },
         ],
       },
@@ -481,7 +478,6 @@ export function buildSidebarLinks(userRole, companyId, permissions, isSuperAdmin
   }
 
   // Admin & SSO sections
-  const isOwnerUser = isOwner || String(userRole).toLowerCase() === 'owner';
   const hasSsoAccess =
     isSuperAdminGlobal ||
     isOwnerUser ||

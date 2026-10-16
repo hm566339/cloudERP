@@ -160,11 +160,14 @@ export const authApi = baseApi.injectEndpoints({
 
     /** POST /api/sso/token/refresh — Refresh access token */
     refreshToken: builder.mutation({
-      query: (data) => ({
-        url: '/api/sso/token/refresh',
-        method: 'POST',
-        data: { data },
-      }),
+      query: (data) => {
+        const payload = data?.data ? data : { data, ...data };
+        return {
+          url: '/api/sso/token/refresh',
+          method: 'POST',
+          data: payload,
+        };
+      },
     }),
 
     /** POST /api/sso/admin/token/refresh — Refresh admin access token */

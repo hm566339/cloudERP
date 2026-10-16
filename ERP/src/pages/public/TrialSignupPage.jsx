@@ -212,7 +212,7 @@ export default function TrialSignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 relative flex flex-col justify-between font-sans selection:bg-primary/20 selection:text-zinc-900 overflow-x-hidden">
+    <div className="min-h-screen bg-zinc-50 relative flex flex-col justify-between font-sans selection:bg-primary/20 selection:text-zinc-900 overflow-x-hidden">
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-[-15%] right-[-10%] w-[55vw] h-[55vw] rounded-full bg-primary/5 blur-[120px] mix-blend-multiply" />

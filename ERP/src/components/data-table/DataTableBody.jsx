@@ -97,13 +97,13 @@ export default function DataTableBody({
   };
 
   return (
-    <div className={`flex-1 overflow-auto min-h-0 ${tableClassName}`}>
-      <table className="w-full text-left text-sm whitespace-nowrap">
-        <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-medium sticky top-0 z-20">
+    <div className={`flex-1 overflow-auto min-h-0 min-w-0 custom-scrollbar ${tableClassName}`}>
+      <table className="w-full text-left text-sm whitespace-nowrap" aria-label="Data table">
+        <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-medium sticky top-0 z-20">
           <tr>
             {/* Selection Checkbox Header */}
             {selectable && (
-              <th className="px-4 py-3 w-10 text-center select-none">
+              <th scope="col" className="px-4 py-3 w-10 text-center select-none">
                 <div className="flex items-center justify-center">
                   <input
                     ref={selectAllRef}
@@ -120,7 +120,7 @@ export default function DataTableBody({
 
             {/* Index Header */}
             {showIndex && (
-              <th className="px-4 py-3 w-12 text-center text-[8.8px] font-semibold text-zinc-500 uppercase tracking-wider select-none">
+              <th scope="col" className="px-4 py-3 w-12 text-center text-xs font-semibold text-zinc-600 uppercase tracking-wider select-none">
                 #
               </th>
             )}
@@ -148,7 +148,7 @@ export default function DataTableBody({
                     onSort={handleSort}
                     align={col.align}
                     width={col.width}
-                    className={`p-4 text-[8.8px] font-semibold uppercase tracking-wider text-zinc-500 ${col.headerClassName || ''}`}
+                    className={`p-4 text-xs font-semibold uppercase tracking-wider text-zinc-600 ${col.headerClassName || ''}`}
                     label={col.label || col.header || colKey}
                   />
                 );
@@ -156,9 +156,10 @@ export default function DataTableBody({
 
               return (
                 <th
+                  scope="col"
                   key={colKey}
                   style={col.width ? { width: col.width, minWidth: col.width } : undefined}
-                  className={`p-4 text-[8.8px] font-semibold uppercase tracking-wider text-zinc-500 select-none ${alignClass} ${col.headerClassName || ''}`}
+                  className={`p-4 text-xs font-semibold uppercase tracking-wider text-zinc-600 select-none ${alignClass} ${col.headerClassName || ''}`}
                 >
                   {col.label || col.header || colKey}
                 </th>
@@ -167,7 +168,7 @@ export default function DataTableBody({
 
             {/* Actions Header */}
             {hasRowActions && (
-              <th className="p-4 text-right sticky right-0 bg-zinc-50 z-30 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] text-[8.8px] font-semibold uppercase tracking-wider text-zinc-500 select-none">
+              <th scope="col" className="p-4 text-right sticky right-0 bg-zinc-50 z-30 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] text-xs font-semibold uppercase tracking-wider text-zinc-600 select-none">
                 Actions
               </th>
             )}

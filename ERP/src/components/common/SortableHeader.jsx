@@ -33,15 +33,18 @@ export default function SortableHeader({
 
   return (
     <Component 
-      className={`px-4 py-3 text-[8.8px] font-semibold text-zinc-500 uppercase tracking-wider cursor-pointer hover:text-zinc-800 transition-colors group select-none ${width ? `w-[${width}]` : ''} ${className} ${alignClass}`}
+      scope={Component === "th" ? "col" : undefined}
+      aria-sort={isSorted ? (activeSortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+      style={width ? { width, minWidth: width } : undefined}
+      className={`px-4 py-3 text-xs font-semibold text-zinc-600 uppercase tracking-wider cursor-pointer hover:text-zinc-900 transition-colors group select-none whitespace-nowrap ${className} ${alignClass}`}
       onClick={() => onSort && onSort(field)}
     >
       <div className={`flex items-center gap-1 ${justifyClass}`}>
         <span>{displayText}</span>
         {isSorted ? (
-          activeSortOrder === 'asc' ? <ArrowUp size={12} className="text-zinc-900 shrink-0" /> : <ArrowDown size={12} className="text-zinc-900 shrink-0" />
+          activeSortOrder === 'asc' ? <ArrowUp size={13} className="text-zinc-900 shrink-0" /> : <ArrowDown size={13} className="text-zinc-900 shrink-0" />
         ) : (
-          <ArrowUpDown size={12} className="text-zinc-300 group-hover:text-zinc-500 transition-colors shrink-0" />
+          <ArrowUpDown size={13} className="text-zinc-300 group-hover:text-zinc-500 transition-colors shrink-0" />
         )}
       </div>
     </Component>

@@ -21,14 +21,14 @@ export default function NotFound() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6">
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-50 p-6">
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-zinc-200 max-w-md w-full text-center">
         <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <FileQuestion size={32} />
         </div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">404</h1>
-        <h2 className="text-lg font-semibold text-slate-800 mb-2">Page Not Found</h2>
-        <p className="text-slate-500 mb-8 leading-relaxed text-sm">
+        <h1 className="text-3xl font-bold text-zinc-900 mb-2">404</h1>
+        <h2 className="text-lg font-semibold text-zinc-800 mb-2">Page Not Found</h2>
+        <p className="text-zinc-500 mb-8 leading-relaxed text-sm">
           The requested page could not be found or may have been moved.
           Please check the URL or return to your dashboard.
         </p>
@@ -36,7 +36,7 @@ export default function NotFound() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-5 py-2.5 rounded-lg border border-slate-200 font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center text-sm"
+            className="px-5 py-2.5 rounded-lg border border-zinc-200 font-medium text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center text-sm"
           >
             <ArrowLeft size={16} className="mr-2" />
             Go Back
@@ -44,7 +44,7 @@ export default function NotFound() {
           <button
             type="button"
             onClick={handleHomeNavigation}
-            className="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 font-medium text-white transition-colors flex items-center text-sm shadow-sm"
+            className="px-5 py-2.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 font-medium text-white transition-colors flex items-center text-sm shadow-sm"
           >
             <Home size={16} className="mr-2" />
             Home

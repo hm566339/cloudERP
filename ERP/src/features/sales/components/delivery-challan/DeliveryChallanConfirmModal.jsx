@@ -66,7 +66,7 @@ export default function DeliveryChallanConfirmModal({
             type="button"
             disabled={isConfirming}
             onClick={onConfirm}
-            className="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-xs"
+            className="px-5 py-2 text-sm font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-xs"
           >
             {isConfirming ? (
               <>

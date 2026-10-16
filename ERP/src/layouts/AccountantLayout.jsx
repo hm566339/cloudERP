@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react'
 import { useLogoutApiMutation } from '../features/auth/services/authApi';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import {
@@ -31,6 +31,9 @@ import { selectAuthContext } from '../features/auth/authSlice'
 import { getEntitledModules } from '../utils/moduleNormalization'
 import NoModuleAccessView from '../components/common/NoModuleAccessView'
 import ErrorBoundary from '../components/common/ErrorBoundary'
+import RouteLoading from '../routes/RouteLoading'
+import OwnerLayout from './OwnerLayout'
+import { useSidebar } from './SidebarContext'
 
 export default function AccountantLayout() {
   const dispatch = useAppDispatch()
@@ -45,6 +48,20 @@ export default function AccountantLayout() {
   const currentUser = reduxUser;
   const userRole = currentUser?.role || 'accountant'
 
+  const authContext = useAppSelector(selectAuthContext);
+  const isOwner =
+    authContext?.membership?.memberType === 'OWNER' ||
+    authContext?.user?.role === 'owner' ||
+    authContext?.user?.membership?.memberType === 'OWNER' ||
+    (Array.isArray(authContext?.user?.roles) &&
+      authContext.user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
+    (Array.isArray(authContext?.roles) &&
+      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER'));
+
+  const { isCollapsed, toggleCollapse, mobileOpen, setMobileOpen, closeMobile } = useSidebar();
+  const desktopSidebarOpen = !isCollapsed;
+  const mobileSidebarOpen = mobileOpen;
+
   const {
     isTrial,
     isActive,
@@ -55,8 +72,6 @@ export default function AccountantLayout() {
   } = useAccessMode();
 
   const [workspacePopupOpen, setWorkspacePopupOpen] = useState(false)
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true)
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false)
   const [activeSetting, setActiveSetting] = useState('general')
@@ -64,11 +79,13 @@ export default function AccountantLayout() {
 
   const handleToggleSidebar = useCallback(() => {
     if (window.innerWidth >= 1024) {
-      setDesktopSidebarOpen(prev => !prev)
+      toggleCollapse()
     } else {
-      setMobileSidebarOpen(true)
+      setMobileOpen(true)
     }
-  }, []);
+  }, [toggleCollapse, setMobileOpen]);
+
+  const closeMobileSidebar = useCallback(() => closeMobile(), [closeMobile]);
 
   useEffect(() => {
     if (!workspacePopupOpen) return
@@ -99,7 +116,6 @@ export default function AccountantLayout() {
   }, [currentUser, accountCompanies.length, dispatch])
 
   const { canViewModule, hasModule } = useRBAC();
-  const authContext = useAppSelector(selectAuthContext);
 
   const canAccess = useCallback(
     (feature, action, mod) => {
@@ -110,8 +126,6 @@ export default function AccountantLayout() {
     },
     [canViewModule, authContext]
   );
-
-  const closeMobileSidebar = useCallback(() => setMobileSidebarOpen(false), []);
 
   const sidebarLinks = useMemo(() => {
     const links = [];
@@ -192,7 +206,7 @@ export default function AccountantLayout() {
         <div className="w-24 h-10 flex items-center justify-start transform transition-transform hover:scale-105">
           <MarkLogo variant="light" className="w-full h-full object-contain object-left" />
         </div>
-        <span className="ml-auto text-[8px] font-bold bg-zinc-100 text-zinc-800 px-2.5 py-1 rounded-md border border-zinc-200/50 uppercase tracking-wider">
+        <span className="ml-auto text-[10px] font-bold bg-zinc-100 text-zinc-800 px-2 py-0.5 rounded border border-zinc-200/50 uppercase tracking-wider">
           Accountant
         </span>
       </div>
@@ -227,6 +241,10 @@ export default function AccountantLayout() {
     </>
   ), [sidebarLinks, location, closeMobileSidebar, selectedCompany, workspacePopupOpen, currentUser, handleSwitchCompany]);
 
+  if (isOwner) {
+    return <OwnerLayout />;
+  }
+
   if (entitledModules.length === 0 && authContext.user && (authContext.organization || authContext.currentCompany)) {
     return <NoModuleAccessView />;
   }
@@ -247,7 +265,7 @@ export default function AccountantLayout() {
         <>
           <div
             className="fixed inset-0 bg-zinc-900/40 backdrop-blur-sm z-30 lg:hidden"
-            onClick={() => setMobileSidebarOpen(false)}
+            onClick={() => closeMobile()}
           />
           <aside
             className="fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] animate-slide-in-right lg:hidden shadow-xl will-change-transform"
@@ -255,8 +273,9 @@ export default function AccountantLayout() {
           >
             <div className="absolute top-3 right-3">
               <button
-                onClick={() => setMobileSidebarOpen(false)}
+                onClick={() => closeMobile()}
                 className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-500"
+                aria-label="Close sidebar"
               >
                 <X size={18} />
               </button>
@@ -387,7 +406,7 @@ export default function AccountantLayout() {
                   </div>
                   <div className="hidden md:block text-left">
                     <p className="text-[10.4px] font-bold text-zinc-800 leading-none">{currentUser?.fullName || currentUser?.username || 'User'}</p>
-                    <p className="text-[8px] font-medium text-zinc-400 leading-tight mt-0.5 capitalize">{userRole.replace(/_/g, ' ')}</p>
+                    <p className="text-[10px] font-medium text-zinc-400 leading-tight mt-0.5 capitalize">{userRole.replace(/_/g, ' ')}</p>
                   </div>
                   <ChevronDown size={14} className="text-zinc-400 hidden md:block ml-1 group-hover:text-zinc-600 transition-colors" />
                 </button>
@@ -466,9 +485,11 @@ export default function AccountantLayout() {
           <SubscriptionNoticeBanner />
 
           <main className="flex-1 overflow-x-hidden flex flex-col min-h-0 min-w-0">
-            <div className="w-full flex-1 flex flex-col min-h-0 min-w-0">
+            <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 max-w-[2560px] 5xl:max-w-[3200px] mx-auto">
               <ErrorBoundary>
-                <Outlet key={location.pathname} />
+                <Suspense fallback={<RouteLoading />}>
+                  <Outlet context={{ accessibleModuleKeys: ['account', 'inventory', 'crm', 'purchases', 'workflow'], accessLoading: false, authContext, isOwner: false }} />
+                </Suspense>
               </ErrorBoundary>
             </div>
           </main>

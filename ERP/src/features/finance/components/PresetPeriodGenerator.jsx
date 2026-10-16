@@ -127,13 +127,13 @@ export default function PresetPeriodGenerator({ onSubmit, onCancel, isLoading })
       </div>
 
       {formData.periodType === 'CUSTOM' && (
-        <div className="mt-4 border border-gray-200 rounded-lg p-4 bg-gray-50">
-          <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
-            <h4 className="font-medium text-gray-900">Custom Periods</h4>
+        <div className="mt-4 border border-zinc-200 rounded-lg p-4 bg-zinc-50">
+          <div className="flex justify-between items-center mb-4 border-b border-zinc-200 pb-2">
+            <h4 className="font-medium text-zinc-900">Custom Periods</h4>
             <button
               type="button"
               onClick={addCustomPeriod}
-              className="px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded text-sm hover:bg-gray-100 flex items-center"
+              className="px-3 py-1 bg-white border border-zinc-300 text-zinc-700 rounded text-sm hover:bg-zinc-100 flex items-center"
             >
               <Plus size={16} className="mr-1" /> Add Period
             </button>
@@ -145,39 +145,39 @@ export default function PresetPeriodGenerator({ onSubmit, onCancel, isLoading })
 
           <div className="space-y-3">
             {formData.customPeriods.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-4">No custom periods added. Click 'Add Period' to create one.</p>
+              <p className="text-sm text-zinc-500 text-center py-4">No custom periods added. Click 'Add Period' to create one.</p>
             ) : (
               formData.customPeriods.map((cp, idx) => (
-                <div key={idx} className="flex flex-col md:flex-row gap-3 items-start bg-white p-3 rounded border border-gray-200 shadow-sm">
+                <div key={idx} className="flex flex-col md:flex-row gap-3 items-start bg-white p-3 rounded border border-zinc-200 shadow-sm">
                   <div className="w-full md:w-1/3">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Period Name *</label>
+                    <label className="block text-xs font-medium text-zinc-700 mb-1">Period Name *</label>
                     <input
                       type="text"
                       value={cp.periodName}
                       onChange={(e) => updateCustomPeriod(idx, 'periodName', e.target.value)}
-                      className={`w-full p-2 text-sm border rounded focus:ring-blue-500 ${errors[`cp_${idx}_name`] ? 'border-red-500' : 'border-gray-300'}`}
+                      className={`w-full p-2 text-sm border rounded focus:ring-zinc-900/10 ${errors[`cp_${idx}_name`] ? 'border-red-500' : 'border-zinc-300'}`}
                       placeholder="e.g. Phase 1"
                     />
                     {errors[`cp_${idx}_name`] && <p className="text-red-500 text-xs mt-1">{errors[`cp_${idx}_name`]}</p>}
                   </div>
                   <div className="w-full md:w-1/3">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Start Date *</label>
+                    <label className="block text-xs font-medium text-zinc-700 mb-1">Start Date *</label>
                     <input
                       type="date"
                       value={cp.startDate}
                       onChange={(e) => updateCustomPeriod(idx, 'startDate', e.target.value)}
-                      className={`w-full p-2 text-sm border rounded focus:ring-blue-500 ${errors[`cp_${idx}_start`] ? 'border-red-500' : 'border-gray-300'}`}
+                      className={`w-full p-2 text-sm border rounded focus:ring-zinc-900/10 ${errors[`cp_${idx}_start`] ? 'border-red-500' : 'border-zinc-300'}`}
                     />
                     {errors[`cp_${idx}_start`] && <p className="text-red-500 text-xs mt-1">{errors[`cp_${idx}_start`]}</p>}
                   </div>
                   <div className="w-full md:w-1/3 flex items-start gap-2">
                     <div className="flex-1">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">End Date *</label>
+                      <label className="block text-xs font-medium text-zinc-700 mb-1">End Date *</label>
                       <input
                         type="date"
                         value={cp.endDate}
                         onChange={(e) => updateCustomPeriod(idx, 'endDate', e.target.value)}
-                        className={`w-full p-2 text-sm border rounded focus:ring-blue-500 ${errors[`cp_${idx}_end`] ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full p-2 text-sm border rounded focus:ring-zinc-900/10 ${errors[`cp_${idx}_end`] ? 'border-red-500' : 'border-zinc-300'}`}
                       />
                       {errors[`cp_${idx}_end`] && <p className="text-red-500 text-xs mt-1">{errors[`cp_${idx}_end`]}</p>}
                     </div>
@@ -204,14 +204,14 @@ export default function PresetPeriodGenerator({ onSubmit, onCancel, isLoading })
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded hover:bg-zinc-50 disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center"
+          className="px-4 py-2 text-sm font-medium text-white bg-zinc-900 rounded hover:bg-zinc-800 disabled:opacity-50 flex items-center"
         >
           {isLoading ? (
             <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />

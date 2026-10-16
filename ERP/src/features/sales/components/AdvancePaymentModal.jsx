@@ -173,7 +173,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
                   value={formData.receiptDate}
                   onChange={handleChange}
                   required
-                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow"
+                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
                 />
               </div>
               <div>
@@ -188,7 +188,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
                     required
                     min="0.01"
                     step="0.01"
-                    className="w-full h-9 pl-10 pr-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow font-semibold text-zinc-900"
+                    className="w-full h-9 pl-10 pr-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow font-semibold text-zinc-900"
                   />
                 </div>
               </div>
@@ -200,7 +200,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
                   value={formData.paymentMode}
                   onChange={handleChange}
                   required
-                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow"
+                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
                 >
                   {PAYMENT_MODES.map(m => (
                     <option key={m.value} value={m.value}>{m.label}</option>
@@ -247,7 +247,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
                   value={formData.referenceNo}
                   onChange={handleChange}
                   placeholder="e.g. Cheque No / UTR"
-                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow"
+                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
                 />
               </div>
               <div>
@@ -258,7 +258,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
                   value={formData.remarks}
                   onChange={handleChange}
                   placeholder="Add a note..."
-                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-shadow"
+                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
                 />
               </div>
             </div>
@@ -277,7 +277,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
             type="submit"
             form="advance-payment-form"
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+            className="flex items-center gap-2 px-6 py-2 text-sm font-semibold text-white bg-zinc-900 rounded-md hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
           >
             {isSubmitting ? (
               <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />

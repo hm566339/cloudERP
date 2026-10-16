@@ -204,7 +204,7 @@ function FeatureAccessTab({ user, onRefresh }) {
               placeholder="Search feature codes, names, modules..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full pl-8 pr-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10/20"
             />
           </div>
           <div className="flex items-center bg-zinc-100 p-0.5 rounded-lg text-xs font-medium text-zinc-600 shrink-0">
@@ -229,7 +229,7 @@ function FeatureAccessTab({ user, onRefresh }) {
             </button>
             <button
               onClick={() => setShowGrantSection(!showGrantSection)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold transition-all shadow-2xs"
             >
               <Plus size={14} /> Grant Feature
             </button>
@@ -250,7 +250,7 @@ function FeatureAccessTab({ user, onRefresh }) {
             <select
               value={selectedFeatureId}
               onChange={(e) => setSelectedFeatureId(e.target.value)}
-              className="flex-1 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 cursor-pointer"
+              className="flex-1 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10/20 cursor-pointer"
             >
               <option value="">Select feature to grant...</option>
               {availableToGrant.map((feat) => (
@@ -262,7 +262,7 @@ function FeatureAccessTab({ user, onRefresh }) {
             <button
               type="submit"
               disabled={!selectedFeatureId || isSubmitting}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all disabled:opacity-50 whitespace-nowrap"
+              className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold transition-all disabled:opacity-50 whitespace-nowrap"
             >
               {isSubmitting ? 'Granting...' : 'Confirm Grant'}
             </button>
@@ -626,13 +626,13 @@ function ActionPermissionsTab({ user, allFeatures }) {
               placeholder="Search features or permissions..."
               value={permSearch}
               onChange={(e) => setPermSearch(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full pl-8 pr-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10/20"
             />
           </div>
           <select
             value={moduleFilter}
             onChange={(e) => setModuleFilter(e.target.value)}
-            className="px-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 outline-none focus:border-indigo-500 cursor-pointer min-w-[120px]"
+            className="px-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 outline-none focus:border-zinc-400 cursor-pointer min-w-[120px]"
           >
             <option value="ALL">All Modules</option>
             {availableModules.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -647,7 +647,7 @@ function ActionPermissionsTab({ user, allFeatures }) {
             <button
               onClick={handleSyncPermissions}
               disabled={isSubmitting}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
             >
               <Save size={13} /> {isSubmitting ? 'Syncing...' : 'Sync Changes'}
             </button>
@@ -829,7 +829,7 @@ function ActionPermissionsTab({ user, allFeatures }) {
                                   role="switch"
                                   aria-checked={stagedOn}
                                   onClick={() => handleStagedToggle(feature.featureCode, action)}
-                                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${stagedOn ? 'bg-indigo-600' : 'bg-zinc-200'}`}
+                                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${stagedOn ? 'bg-zinc-900' : 'bg-zinc-200'}`}
                                 >
                                   <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${stagedOn ? 'translate-x-4' : 'translate-x-0'}`} />
                                 </button>
@@ -949,7 +949,7 @@ export default function UserFeaturePermissionModal({ user, isOpen, onClose, onSu
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 py-3 px-4 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
                   activeTab === tab.id
-                    ? 'border-indigo-600 text-indigo-600'
+                    ? 'border-zinc-900 text-indigo-600'
                     : 'border-transparent text-zinc-500 hover:text-zinc-800 hover:border-zinc-300'
                 }`}
               >

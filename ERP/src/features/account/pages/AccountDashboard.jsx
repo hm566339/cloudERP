@@ -259,30 +259,30 @@ function AccountDashboard() {
       <div className="flex-1 overflow-auto space-y-4 p-4">
         {/* Profile + Security Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm md:col-span-2 overflow-hidden min-w-0">
-            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 shrink-0">
+          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm md:col-span-2 overflow-hidden min-w-0">
+            <div className="px-4 py-3 border-b border-zinc-100 bg-zinc-50 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 shrink-0">
                 <User size={16} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-gray-900">Personal Information</h3>
-                <p className="text-xs text-gray-500">Your profile details</p>
+                <h3 className="text-sm font-bold text-zinc-900">Personal Information</h3>
+                <p className="text-xs text-zinc-500">Your profile details</p>
               </div>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Full Name</label>
-                  <p className="text-sm font-semibold text-gray-900 mt-1">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Full Name</label>
+                  <p className="text-sm font-semibold text-zinc-900 mt-1">
                     {currentUser?.fullName || currentUser?.name || currentUser?.displayName || (currentUser?.firstName || currentUser?.lastName ? `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() : null) || currentUser?.username || 'Unknown'}
                   </p>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email Address</label>
-                  <p className="text-sm font-semibold text-gray-900 mt-1 truncate">{currentUser?.email || 'N/A'}</p>
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Email Address</label>
+                  <p className="text-sm font-semibold text-zinc-900 mt-1 truncate">{currentUser?.email || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Role</label>
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Role</label>
                   <div className="mt-1">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${isSuperAdmin ? 'bg-sky-100 text-sky-800' : 'bg-blue-100 text-blue-800'}`}>
                       {roleLabel}
@@ -290,42 +290,42 @@ function AccountDashboard() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Modules</label>
-                  <p className="text-sm font-semibold text-gray-900 mt-1">{rbac.modules.length} accessible</p>
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Modules</label>
+                  <p className="text-sm font-semibold text-zinc-900 mt-1">{rbac.modules.length} accessible</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-w-0">
-            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden min-w-0">
+            <div className="px-4 py-3 border-b border-zinc-100 bg-zinc-50 flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
                 <Shield size={16} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-gray-900">Security Status</h3>
-                <p className="text-xs text-gray-500">Account protection</p>
+                <h3 className="text-sm font-bold text-zinc-900">Security Status</h3>
+                <p className="text-xs text-zinc-500">Account protection</p>
               </div>
             </div>
             <div className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
-                <span className="text-sm font-semibold text-gray-800">Account is secure</span>
+                <span className="text-sm font-semibold text-zinc-800">Account is secure</span>
               </div>
               <div className="flex flex-wrap gap-2 mb-5">
                 {rbac.permissions.slice(0, 3).map(p => (
-                  <span key={p} className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                  <span key={p} className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-zinc-100 text-zinc-600 border border-zinc-200">
                     {p}
                   </span>
                 ))}
                 {rbac.permissions.length > 3 && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-zinc-100 text-zinc-600 border border-zinc-200">
                     +{rbac.permissions.length - 3} MORE
                   </span>
                 )}
               </div>
-              <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                <Key size={14} className="mr-2 text-gray-400" />
+              <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-zinc-300 shadow-sm text-sm font-medium rounded-md text-zinc-700 bg-white hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-900/10 transition-colors">
+                <Key size={14} className="mr-2 text-zinc-400" />
                 Change Password
               </button>
             </div>
@@ -368,9 +368,9 @@ function AccountDashboard() {
                   })}
                 </div>
               ) : (
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center flex flex-col items-center justify-center">
-                  <BarChart3 className="mx-auto text-gray-300 mb-2" size={32} />
-                  <p className="text-sm text-gray-500 font-medium">No metric cards available for your role.</p>
+                <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-8 text-center flex flex-col items-center justify-center">
+                  <BarChart3 className="mx-auto text-zinc-300 mb-2" size={32} />
+                  <p className="text-sm text-zinc-500 font-medium">No metric cards available for your role.</p>
                 </div>
               )}
             </DashboardSection>
@@ -457,10 +457,10 @@ function AccountDashboard() {
 
           </>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
-            <Building2 className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-            <h3 className="text-base font-bold text-gray-900">No company selected</h3>
-            <p className="text-sm text-gray-500 mt-1">Please select a company to view its accounting dashboard.</p>
+          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-12 text-center">
+            <Building2 className="mx-auto h-12 w-12 text-zinc-300 mb-4" />
+            <h3 className="text-base font-bold text-zinc-900">No company selected</h3>
+            <p className="text-sm text-zinc-500 mt-1">Please select a company to view its accounting dashboard.</p>
           </div>
         )}
       </div>

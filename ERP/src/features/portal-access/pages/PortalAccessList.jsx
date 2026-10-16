@@ -476,7 +476,7 @@ export default function PortalAccessList() {
 
             {isModalLoading ? (
               <div className="py-8 text-center text-zinc-500 text-xs font-medium flex flex-col items-center gap-2">
-                <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
                 <span>Loading users and modules...</span>
               </div>
             ) : (
@@ -486,7 +486,7 @@ export default function PortalAccessList() {
                   <CustomSelect
                     value={selectedUserId}
                     onChange={(e) => setSelectedUserId(e.target.value)}
-                    className="w-full h-10 px-3 bg-zinc-50 hover:bg-white focus:bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 transition-all"
+                    className="w-full h-10 px-3 bg-zinc-50 hover:bg-white focus:bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10/15 transition-all"
                     required
                   >
                     <option value="">— Select User —</option>
@@ -503,7 +503,7 @@ export default function PortalAccessList() {
                   <CustomSelect
                     value={selectedModuleId}
                     onChange={(e) => setSelectedModuleId(e.target.value)}
-                    className="w-full h-10 px-3 bg-zinc-50 hover:bg-white focus:bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 transition-all"
+                    className="w-full h-10 px-3 bg-zinc-50 hover:bg-white focus:bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10/15 transition-all"
                     required
                   >
                     <option value="">— Select Module —</option>

@@ -38,8 +38,24 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
   const activeCustomers = Array.isArray(activeCustomersData) ? activeCustomersData : activeCustomersData?.data || activeCustomersData?.content || [];
   const searchResults = Array.isArray(searchData) ? searchData : searchData?.data || searchData?.content || [];
 
-  // Determine which list to show
-  const displayCustomers = debouncedSearch.trim() !== '' ? searchResults : activeCustomers;
+  // Determine which list to show: locally filter activeCustomers and merge with any API search results
+  const displayCustomers = useMemo(() => {
+    if (!debouncedSearch.trim()) return activeCustomers;
+    const term = debouncedSearch.trim().toLowerCase();
+    const localFiltered = activeCustomers.filter(c => {
+      const name = (c.customerName || c.companyName || c.name || '').toLowerCase();
+      const code = (c.customerCode || c.code || '').toLowerCase();
+      const phone = (c.phone || c.mobile || '').toLowerCase();
+      const email = (c.email || '').toLowerCase();
+      return name.includes(term) || code.includes(term) || phone.includes(term) || email.includes(term);
+    });
+    const map = new Map();
+    [...localFiltered, ...searchResults].forEach(c => {
+      if (c && c.id) map.set(c.id, c);
+    });
+    return Array.from(map.values());
+  }, [activeCustomers, searchResults, debouncedSearch]);
+
   const isFetching = isSearching || (debouncedSearch.trim() === '' && isActiveFetching);
 
   // Find selected customer for display
@@ -91,7 +107,7 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (activeIndex >= 0 && activeIndex < displayCustomers.length) {
-        onChange(displayCustomers[activeIndex].id);
+        onChange(displayCustomers[activeIndex].id, displayCustomers[activeIndex]);
         setIsOpen(false);
       }
     } else if (e.key === 'Escape') {
@@ -179,7 +195,7 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
                 <div
                   key={customer.id}
                   onClick={() => {
-                    onChange(customer.id);
+                    onChange(customer.id, customer);
                     setIsOpen(false);
                   }}
                   className={`relative flex w-full cursor-pointer select-none items-center rounded-lg px-2 py-2 text-sm outline-none transition-colors

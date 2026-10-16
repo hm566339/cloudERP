@@ -85,7 +85,7 @@ function QuickActionWidget({ widget }) {
       className="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-indigo-300 dark:hover:border-indigo-800 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 rounded-xl flex items-center justify-between text-left transition-all group"
     >
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+        <div className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
           <WidgetIcon name={widget.icon} className="w-4 h-4" />
         </div>
         <div>
@@ -144,7 +144,7 @@ function ApprovalWidget({ widget }) {
               <button
                 type="button"
                 onClick={() => it.actionUrl && navigate(it.actionUrl)}
-                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                className="text-xs text-zinc-900 hover:text-zinc-700 font-medium"
               >
                 Review &rarr;
               </button>

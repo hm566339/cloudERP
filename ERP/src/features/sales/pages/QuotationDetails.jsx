@@ -18,31 +18,12 @@ import ErrorState from '../../../components/common/ErrorState';
 import { PageLoader } from '../../../components/common/SkeletonLoader';
 import { useAppDispatch } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
+import StatusBadge from '../../../components/common/StatusBadge';
 import { useRBAC } from '../../../utils/rbac';
 
 import PIConversionFormModal from '../components/PIConversionFormModal';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-
-const StatusBadge = ({ status }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    ACCEPTED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    SENT: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    EXPIRED: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-    REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    CANCELLED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-    DRAFT: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  }[s] || { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border inline-flex items-center gap-1.5 ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s}
-    </span>
-  );
-};
 
 export default function QuotationDetails() {
   const { id: paramId, quotationId: routeQuotationId } = useParams();
@@ -194,7 +175,7 @@ export default function QuotationDetails() {
   return (
     <div className="flex flex-col h-full bg-zinc-50/50">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white border-b border-zinc-200 shadow-sm">
+      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-6 bg-white border-b border-zinc-200 shadow-sm">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
@@ -283,31 +264,31 @@ export default function QuotationDetails() {
       </div>
 
       {/* Top KPI Cards */}
-      <div className="p-6 bg-white border-b border-zinc-200">
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-          <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
-            <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Grand Total</p>
-            <p className="text-base font-black text-zinc-900">{curr} {fmt(totalAmount)}</p>
+      <div className="p-4 sm:p-6 bg-white border-b border-zinc-200">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Grand Total</p>
+            <p className="text-sm sm:text-base font-black text-zinc-900">{curr} {fmt(totalAmount)}</p>
           </div>
-          <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
-            <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Taxable Amount</p>
-            <p className="text-base font-black text-zinc-900">{curr} {fmt(taxableAmount)}</p>
+          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Taxable Amount</p>
+            <p className="text-sm sm:text-base font-black text-zinc-900">{curr} {fmt(taxableAmount)}</p>
           </div>
-          <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
-            <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Total Tax</p>
-            <p className="text-base font-black text-zinc-900">{curr} {fmt(totalTax)}</p>
+          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Total Tax</p>
+            <p className="text-sm sm:text-base font-black text-zinc-900">{curr} {fmt(totalTax)}</p>
           </div>
-          <div className="p-3.5 rounded-xl border border-amber-100 bg-amber-50/30 flex flex-col">
-            <p className="text-[8px] font-bold text-amber-600 uppercase tracking-wider mb-1">Validity</p>
-            <p className="text-base font-black text-amber-700">{validityDays} Days</p>
+          <div className="p-3 sm:p-3.5 rounded-xl border border-amber-100 bg-amber-50/30 flex flex-col">
+            <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-1">Validity</p>
+            <p className="text-sm sm:text-base font-black text-amber-700">{validityDays} Days</p>
           </div>
-          <div className="p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
-            <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Item Count</p>
-            <p className="text-base font-black text-zinc-900">{stats.itemCount || lineItems.length}</p>
+          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Item Count</p>
+            <p className="text-sm sm:text-base font-black text-zinc-900">{stats.itemCount || lineItems.length}</p>
           </div>
-          <div className="p-3.5 rounded-xl border border-emerald-100 bg-emerald-50/30 flex flex-col">
-            <p className="text-[8px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Conversion %</p>
-            <p className="text-base font-black text-emerald-700">{quotation.status === 'ACCEPTED' ? '100%' : '0%'}</p>
+          <div className="p-3 sm:p-3.5 rounded-xl border border-emerald-100 bg-emerald-50/30 flex flex-col">
+            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Conversion %</p>
+            <p className="text-sm sm:text-base font-black text-emerald-700">{quotation.status === 'ACCEPTED' ? '100%' : '0%'}</p>
           </div>
         </div>
       </div>
@@ -353,18 +334,18 @@ export default function QuotationDetails() {
 
         {/* Main Content Tabs */}
         <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/50">
-          <div className="sticky top-0 z-10 bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm">
-            <div className="flex gap-1.5 flex-wrap">
+          <div className="sticky top-0 z-10 bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm overflow-x-auto no-scrollbar">
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 min-w-max">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold rounded-md transition-all ${activeTab === tab.id
+                  className={`flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all shrink-0 whitespace-nowrap ${activeTab === tab.id
                     ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/50'
                     : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100/50'
                     }`}
                 >
-                  <span className={activeTab === tab.id ? "text-blue-600" : "text-zinc-400"}>
+                  <span className={activeTab === tab.id ? "text-zinc-900" : "text-zinc-400"}>
                     {tab.icon}
                   </span>
                   {tab.label}
@@ -500,19 +481,19 @@ export default function QuotationDetails() {
                      <p className="text-sm text-zinc-500">There are no line items recorded for this quotation.</p>
                   </div>
                 ) : (
-                  <div className="w-full overflow-hidden rounded-lg border border-zinc-200">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-bold uppercase tracking-wider text-[8.8px]">
+                  <div className="w-full overflow-x-auto min-w-0 custom-scrollbar rounded-lg border border-zinc-200">
+                    <table className="w-full min-w-[640px] sm:min-w-full text-left text-sm" aria-label="Quotation Items Table">
+                      <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold uppercase tracking-wider text-xs sticky top-0 z-10">
                         <tr>
-                          <th className="p-4 w-10 text-center"></th>
-                          <th className="p-4 w-1/3">Item Name</th>
-                          <th className="p-4 hidden sm:table-cell">Item Code</th>
-                          <th className="p-4 hidden lg:table-cell">HSN/SAC</th>
-                          <th className="p-4 hidden lg:table-cell">GST</th>
-                          <th className="p-4 text-right">Qty</th>
-                          <th className="p-4 hidden sm:table-cell">Unit</th>
-                          <th className="p-4 text-right">Price</th>
-                          <th className="p-4 text-right hidden sm:table-cell">Disc %</th>
+                          <th scope="col" className="p-4 w-10 text-center"></th>
+                          <th scope="col" className="p-4 w-1/3">Item Name</th>
+                          <th scope="col" className="p-4 hidden sm:table-cell">Item Code</th>
+                          <th scope="col" className="p-4 hidden lg:table-cell">HSN/SAC</th>
+                          <th scope="col" className="p-4 hidden lg:table-cell">GST</th>
+                          <th scope="col" className="p-4 text-right">Qty</th>
+                          <th scope="col" className="p-4 hidden sm:table-cell">Unit</th>
+                          <th scope="col" className="p-4 text-right">Price</th>
+                          <th scope="col" className="p-4 text-right hidden sm:table-cell">Disc %</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-100 bg-white">

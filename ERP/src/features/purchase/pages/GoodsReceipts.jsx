@@ -25,28 +25,8 @@ import { confirmDialog } from '../../../utils/confirmDialog';
 import { useAppDispatch } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
 import { useRoutePath } from '../../../hooks/useRoutePath';
+import StatusBadge from '../../../components/common/StatusBadge';
 
-const STATUS_CONFIG = {
-  DRAFT: { cls: 'bg-zinc-100 text-zinc-700 border-zinc-200', dot: 'bg-zinc-400' },
-  CONFIRMED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-  VERIFIED: { cls: 'bg-indigo-50 text-indigo-700 border-indigo-200', dot: 'bg-indigo-500' },
-  POSTED: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-  REVERSED: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  CANCELLED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-};
-
-const StatusBadge = ({ status }) => {
-  if (!status) return <span className="text-zinc-400">-</span>;
-  const s = status.toString().toUpperCase();
-  const cfg = STATUS_CONFIG[s] || { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold tracking-wide uppercase rounded-full border ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s.replace(/_/g, ' ')}
-    </span>
-  );
-};
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-';

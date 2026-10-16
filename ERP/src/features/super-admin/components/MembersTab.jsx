@@ -81,15 +81,15 @@ export default function MembersTab({ organizationId, org, buildPath }) {
       {isLoading ? (
         <div className="p-6"><TableSkeleton columns={4} rows={3} /></div>
       ) : filtered.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs whitespace-nowrap">
-            <thead className="bg-zinc-50/80 border-b border-zinc-100 text-zinc-500 font-semibold">
+        <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+          <table className="w-full text-left text-xs whitespace-nowrap min-w-[560px] sm:min-w-full" aria-label="Organization Members Table">
+            <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold sticky top-0 z-10">
               <tr>
-                <th className="py-3 px-4 w-12 text-center text-[10px] uppercase tracking-wider text-zinc-400">#</th>
-                <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Member</th>
-                <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Role</th>
-                <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Status</th>
-                <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Joined Date</th>
+                <th scope="col" className="py-3 px-4 w-12 text-center text-xs uppercase tracking-wider text-zinc-500">#</th>
+                <th scope="col" className="py-3 px-4 text-xs uppercase tracking-wider">Member</th>
+                <th scope="col" className="py-3 px-4 text-xs uppercase tracking-wider">Role</th>
+                <th scope="col" className="py-3 px-4 text-xs uppercase tracking-wider">Status</th>
+                <th scope="col" className="py-3 px-4 text-xs uppercase tracking-wider">Joined Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">

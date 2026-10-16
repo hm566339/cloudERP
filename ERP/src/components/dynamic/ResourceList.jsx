@@ -46,7 +46,7 @@ function DynamicFilterInput({ filter, value, onChange }) {
       <select
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        className="text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+        className="text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20"
       >
         <option value="">All {filter.label}</option>
         {options.map((opt) => (
@@ -64,7 +64,7 @@ function DynamicFilterInput({ filter, value, onChange }) {
         type="date"
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        className="text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+        className="text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20"
       />
     );
   }
@@ -75,7 +75,7 @@ function DynamicFilterInput({ filter, value, onChange }) {
       placeholder={`Filter by ${filter.label}...`}
       value={value || ''}
       onChange={(e) => onChange(e.target.value)}
-      className="text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+      className="text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20"
     />
   );
 }
@@ -211,7 +211,7 @@ export default function ResourceList({
                 type="button"
                 onClick={onCreateClick}
                 disabled={isReadOnly}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>New {config?.name || 'Item'}</span>
@@ -232,7 +232,7 @@ export default function ResourceList({
               placeholder={`Search ${resourceTitle.toLowerCase()}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 pl-8 pr-3 py-2 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full text-xs rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 pl-8 pr-3 py-2 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20"
             />
           </div>
 
@@ -283,7 +283,7 @@ export default function ResourceList({
             <button
               type="button"
               onClick={refetch}
-              className="mt-4 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 border border-indigo-200 dark:border-indigo-800 rounded-lg"
+              className="mt-4 px-3 py-1.5 text-xs font-semibold text-zinc-900 hover:text-zinc-700 border border-indigo-200 dark:border-indigo-800 rounded-lg"
             >
               Try Again
             </button>
@@ -357,7 +357,7 @@ export default function ResourceList({
                         <button
                           type="button"
                           onClick={resetFilters}
-                          className="mt-2 text-indigo-600 hover:text-indigo-700 text-xs font-semibold underline"
+                          className="mt-2 text-zinc-900 hover:text-zinc-700 text-xs font-semibold underline"
                         >
                           Clear active filters
                         </button>

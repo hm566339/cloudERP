@@ -639,7 +639,7 @@ export default function RoleList() {
               placeholder="e.g. SALES_COORDINATOR"
               value={roleName}
               onChange={(e) => setRoleName(e.target.value.toUpperCase())}
-              className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 font-mono transition-all"
+              className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10/20 font-mono transition-all"
               autoFocus
             />
             <p className="text-[10px] text-zinc-400 mt-1">Allowed: 3-20 characters, A-Z and _ only.</p>
@@ -888,13 +888,13 @@ export default function RoleList() {
                 placeholder="Search features by name, code..."
                 value={permissionSearch}
                 onChange={(e) => setPermissionSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                className="w-full pl-8 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10/20"
               />
             </div>
             <CustomSelect
               value={selectedModuleFilter}
               onChange={(e) => setSelectedModuleFilter(e.target.value)}
-              className="px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 cursor-pointer min-w-[140px]"
+              className="px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10/20 cursor-pointer min-w-[140px]"
             >
               <option value="ALL">All Modules</option>
               {availableModules.map(mod => (

@@ -256,7 +256,7 @@ export function ButtonSpinner({ size = 16, className = '' }) {
   );
 }
 
-export const DetailsSkeleton = () => <div className='animate-pulse h-4 bg-gray-200 rounded w-full'></div>;
+export const DetailsSkeleton = () => <div className='animate-pulse h-4 bg-zinc-200 rounded w-full'></div>;
 
 export default function SkeletonLoader() {
   return <PageLoader />;

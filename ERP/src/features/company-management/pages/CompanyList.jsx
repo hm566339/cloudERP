@@ -16,7 +16,8 @@ import {
   Phone,
   Globe,
   MapPin,
-  FileText
+  FileText,
+  ExternalLink
 } from "lucide-react";
 import { useAppDispatch } from "../../../app/hooks";
 import { addAlert } from "../../notifications/notificationSlice";
@@ -370,7 +371,14 @@ export default function CompanyList() {
       label: 'Code',
       sortable: true,
       render: (val, row) => (
-        <span className="font-mono text-xs bg-zinc-100 px-2 py-1 rounded text-zinc-700 font-medium">
+        <span 
+          className="font-mono text-xs bg-zinc-100 hover:bg-zinc-200 px-2 py-1 rounded text-zinc-700 font-medium cursor-pointer transition-colors"
+          onClick={() => {
+            dispatch(setSelectedCompany(row));
+            navigate(`/company/${row.id}/dashboard`);
+          }}
+          title="Open Company Workspace"
+        >
           {row.code || '-'}
         </span>
       )
@@ -381,11 +389,12 @@ export default function CompanyList() {
       sortable: true,
       render: (val, row) => (
         <span 
-          className="font-semibold text-zinc-900 cursor-pointer hover:text-indigo-600 transition-colors"
+          className="font-semibold text-zinc-900 cursor-pointer hover:text-zinc-700 transition-colors"
           onClick={() => {
             dispatch(setSelectedCompany(row));
-            navigate(`/company/${row.id}/modules`);
+            navigate(`/company/${row.id}/dashboard`);
           }}
+          title="Open Company Workspace"
         >
           {row.name || '-'}
         </span>
@@ -464,6 +473,17 @@ export default function CompanyList() {
   const rowActions = useMemo(() => {
     const actions = [
       {
+        key: 'workspace',
+        label: 'Open Workspace',
+        icon: ExternalLink,
+        onClick: (row) => {
+          dispatch(setSelectedCompany(row));
+          navigate(`/company/${row.id}/dashboard`);
+        },
+        tooltip: 'Open Company Workspace',
+        className: 'hover:text-indigo-600 hover:bg-indigo-50 text-indigo-600'
+      },
+      {
         key: 'view',
         label: 'View Details',
         icon: Eye,
@@ -533,38 +553,55 @@ export default function CompanyList() {
 
   // Expanded Row
   const renderExpandedRow = (company) => {
-    const location = [
+    const addressParts = [
       company.address,
       company.addressLine2,
       company.city,
       company.state,
       company.country,
       company.postalCode,
-    ].filter(Boolean).join(', ');
+    ].filter(Boolean);
+    const location = addressParts.length > 0 ? addressParts.join(', ') : '—';
 
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Legal Name</span>
-          <p className="text-sm font-semibold text-zinc-900">{company.legalName || '-'}</p>
-        </div>
-        <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Base Currency</span>
-          <p className="text-sm font-medium text-zinc-700">{company.baseCurrency || '-'}</p>
-        </div>
-        <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Website</span>
-          <p className="text-sm font-medium text-zinc-700">{company.website || '-'}</p>
-        </div>
-        <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Full Address</span>
-          <p className="text-sm font-medium text-zinc-700">{location || '-'}</p>
-        </div>
-        <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Created At</span>
-          <p className="text-sm font-medium text-zinc-700">
-            {company.createdAt ? new Date(company.createdAt).toLocaleDateString() : '-'}
-          </p>
+      <div className="p-4 bg-zinc-50/80 border border-zinc-200/80 rounded-xl whitespace-normal break-words">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="space-y-1 bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Legal Name</span>
+            <p className="text-xs font-semibold text-zinc-900 break-words">{company.legalName || '—'}</p>
+          </div>
+          <div className="space-y-1 bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Base Currency</span>
+            <p className="text-xs font-semibold text-zinc-800">{company.baseCurrency || '—'}</p>
+          </div>
+          <div className="space-y-1 bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Website</span>
+            <div className="text-xs font-medium text-blue-600 truncate">
+              {company.website ? (
+                <a
+                  href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:underline inline-flex items-center gap-1 max-w-full"
+                >
+                  <span className="truncate">{company.website}</span>
+                  <ExternalLink size={11} className="shrink-0 text-blue-500" />
+                </a>
+              ) : '—'}
+            </div>
+          </div>
+          <div className="space-y-1 bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs sm:col-span-2 lg:col-span-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Full Address</span>
+            <p className="text-xs font-medium text-zinc-700 break-words leading-relaxed">{location}</p>
+          </div>
+          <div className="space-y-1 bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Created At</span>
+            <p className="text-xs font-medium text-zinc-700">
+              {company.createdAt
+                ? new Date(company.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : '—'}
+            </p>
+          </div>
         </div>
       </div>
     );

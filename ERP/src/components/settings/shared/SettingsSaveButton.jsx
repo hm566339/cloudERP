@@ -3,7 +3,7 @@ import { Save, Check } from 'lucide-react';
 
 export function SettingsSaveButton({ onClick, isSaving = false, isSuccess = false, label = "Save Changes" }) {
   return (
-    <div className="flex justify-end mt-6 pt-6 border-t border-slate-100">
+    <div className="flex justify-end mt-6 pt-6 border-t border-zinc-100">
       <button
         type="button"
         onClick={onClick}

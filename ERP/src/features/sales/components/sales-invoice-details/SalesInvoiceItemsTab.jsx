@@ -14,20 +14,20 @@ export default function SalesInvoiceItemsTab({
       {isEmpty(lineItems) ? (
         <EmptyState icon={<ShoppingCart size={48} />} title="No Line Items" desc="There are no line items recorded for this invoice." />
       ) : (
-        <div className="w-full overflow-hidden rounded-lg border border-zinc-200">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-bold uppercase tracking-wider text-[8.8px]">
+        <div className="w-full overflow-x-auto min-w-0 custom-scrollbar rounded-lg border border-zinc-200">
+          <table className="w-full min-w-[640px] sm:min-w-full text-left text-sm" aria-label="Invoice Line Items">
+            <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold uppercase tracking-wider text-xs sticky top-0 z-10">
               <tr>
-                <th className="p-4 w-10 text-center"></th>
-                <th className="p-4 w-1/3">Item Name</th>
-                <th className="p-4 hidden sm:table-cell">Item Code</th>
-                <th className="p-4 hidden lg:table-cell">SKU</th>
-                <th className="p-4 hidden lg:table-cell">HSN/SAC</th>
-                <th className="p-4 hidden lg:table-cell">GST</th>
-                <th className="p-4 text-right">Qty</th>
-                <th className="p-4 hidden sm:table-cell">Unit</th>
-                <th className="p-4 text-right">Price</th>
-                <th className="p-4 text-right hidden sm:table-cell">Disc %</th>
+                <th scope="col" className="p-4 w-10 text-center"></th>
+                <th scope="col" className="p-4 w-1/3">Item Name</th>
+                <th scope="col" className="p-4 hidden sm:table-cell">Item Code</th>
+                <th scope="col" className="p-4 hidden lg:table-cell">SKU</th>
+                <th scope="col" className="p-4 hidden lg:table-cell">HSN/SAC</th>
+                <th scope="col" className="p-4 hidden lg:table-cell">GST</th>
+                <th scope="col" className="p-4 text-right">Qty</th>
+                <th scope="col" className="p-4 hidden sm:table-cell">Unit</th>
+                <th scope="col" className="p-4 text-right">Price</th>
+                <th scope="col" className="p-4 text-right hidden sm:table-cell">Disc %</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 bg-white">

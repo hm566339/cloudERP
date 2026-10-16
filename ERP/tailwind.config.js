@@ -6,11 +6,22 @@ export default {
   ],
   darkMode: 'class',
   theme: {
+    screens: {
+      'xs': '420px',
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1536px',
+      '3xl': '1920px',
+      '4xl': '2560px',
+      '5xl': '3840px',
+    },
     extend: {
       fontFamily: {
-        sans: ['"Inter"', 'sans-serif'],
-        display: ['"Inter"', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       colors: {
         primary: {
@@ -26,7 +37,7 @@ export default {
       spacing: {
         'sidebar': 'var(--sidebar-width)',
         'sidebar-collapsed': '72px',
-        'sidebar-expanded': '260px',
+        'sidebar-expanded': '250px',
       },
       transitionDuration: {
         'micro': '120ms',
@@ -79,6 +90,8 @@ export default {
         },
       },
       boxShadow: {
+        '2xs':        '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        'xs':         '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
         'card':       '0 1px 4px rgba(15, 23, 42, 0.06)',
         'card-hover': '0 4px 16px rgba(15, 23, 42, 0.1)',
         'soft-xl':    '0 20px 40px -15px rgba(0,0,0,0.05)',

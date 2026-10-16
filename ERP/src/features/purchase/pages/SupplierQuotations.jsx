@@ -498,7 +498,7 @@ export default function SupplierQuotations() {
         icon: convertingId === q.id ? <Loader2 size={14} className="animate-spin" /> : <ShoppingCart size={14} />,
         disabled: convertingId === q.id,
         onClick: (e) => handleCreatePO(e, q),
-        className: 'text-blue-600 hover:text-blue-700'
+        className: 'text-zinc-900 hover:text-zinc-700'
       }
     ] : [])
   ];

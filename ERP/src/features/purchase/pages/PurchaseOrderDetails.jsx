@@ -13,31 +13,9 @@ import { addAlert } from '../../notifications/notificationSlice';
 import { confirmDialog } from '../../../utils/confirmDialog';
 import { useRoutePath } from '../../../hooks/useRoutePath';
 import CreateGrnModal from '../components/CreateGrnModal';
+import StatusBadge from '../../../components/common/StatusBadge';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-
-const StatusBadge = ({ status, labelPrefix = '' }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    APPROVED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    RECEIVED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    CLOSED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    PARTIALLY_RECEIVED: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    SENT: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    DRAFT: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    PENDING_APPROVAL: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    CANCELLED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-  }[s] || { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-bold tracking-wider uppercase rounded-md border ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`}></span>
-      {labelPrefix}{s.replace('_', ' ')}
-    </span>
-  );
-};
 
 export default function PurchaseOrderDetails() {
   const { id } = useParams();
@@ -348,16 +326,16 @@ export default function PurchaseOrderDetails() {
         )}
 
         {activeTab === 'items' && (
-          <div className="card bg-white border border-zinc-200 rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500">
+          <div className="card bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+              <table className="w-full min-w-[650px] sm:min-w-full text-left text-sm whitespace-nowrap" aria-label="Purchase Order Items Table">
+                <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 text-xs font-semibold sticky top-0 z-10">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">Item / Product</th>
-                    <th className="px-4 py-3 font-semibold text-right">Quantity</th>
-                    <th className="px-4 py-3 font-semibold text-right">Unit Price</th>
-                    <th className="px-4 py-3 font-semibold text-right">Tax (%)</th>
-                    <th className="px-4 py-3 font-semibold text-right">Total ({curr})</th>
+                    <th scope="col" className="px-4 py-3">Item / Product</th>
+                    <th scope="col" className="px-4 py-3 text-right">Quantity</th>
+                    <th scope="col" className="px-4 py-3 text-right">Unit Price</th>
+                    <th scope="col" className="px-4 py-3 text-right">Tax (%)</th>
+                    <th scope="col" className="px-4 py-3 text-right">Total ({curr})</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
@@ -372,10 +350,10 @@ export default function PurchaseOrderDetails() {
                           <p className="font-semibold text-zinc-900">{item.itemName}</p>
                           {item.description && <p className="text-xs text-zinc-500">{item.description}</p>}
                         </td>
-                        <td className="px-4 py-3 text-right font-medium">{fmt(item.orderedQuantity)} {item.unit}</td>
-                        <td className="px-4 py-3 text-right">{fmt(item.unitPrice)}</td>
-                        <td className="px-4 py-3 text-right">{itemTaxRate > 0 ? `${itemTaxRate}%` : '-'}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-zinc-800">{fmt(grandItemTotal)}</td>
+                        <td className="px-4 py-3 text-right font-medium tabular-nums">{fmt(item.orderedQuantity)} {item.unit}</td>
+                        <td className="px-4 py-3 text-right tabular-nums">{fmt(item.unitPrice)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums">{itemTaxRate > 0 ? `${itemTaxRate}%` : '-'}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-zinc-800 tabular-nums">{fmt(grandItemTotal)}</td>
                       </tr>
                     );
                   })}

@@ -193,7 +193,7 @@ export default function ProductSerialForm({
                   value="SOLD"
                   checked={formData.status === 'SOLD'}
                   onChange={handleChange}
-                  className="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-blue-600"
+                  className="w-4 h-4 text-blue-600 border-zinc-300 focus:ring-zinc-900/10"
                 />
                 <span className="text-[10.4px] font-medium text-zinc-700">Sold</span>
               </label>

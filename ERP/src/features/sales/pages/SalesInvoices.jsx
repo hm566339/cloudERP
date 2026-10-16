@@ -913,6 +913,8 @@ export default function SalesInvoices() {
             await approveInvoice({ invoiceId: createdInvoiceContext.id });
             await postInvoice({ invoiceId: createdInvoiceContext.id });
             setIsReceiptConfirmOpen(false);
+            setIsFormOpen(false);
+            setSelectedInvoice(null);
             setIsReceiptFormOpen(true);
           } catch (error) {
             dispatch(addAlert({ type: 'error', message: getErrorMessage(error, 'Failed to process invoice for receipt') }));
@@ -923,6 +925,8 @@ export default function SalesInvoices() {
         onCancel={() => {
           setIsReceiptConfirmOpen(false);
           setCreatedInvoiceContext(null);
+          setIsFormOpen(false);
+          setSelectedInvoice(null);
         }}
       />
 

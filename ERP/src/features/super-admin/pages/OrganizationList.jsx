@@ -188,18 +188,18 @@ export default function OrganizationList() {
             )}
           </div>
         ) : (
-          <div className={`overflow-x-auto transition-opacity ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
-            <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead className="bg-zinc-50/80 border-b border-zinc-200 text-zinc-500">
+          <div className={`overflow-x-auto min-w-0 max-w-full custom-scrollbar transition-opacity ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
+            <table className="w-full min-w-[750px] sm:min-w-full text-left text-xs whitespace-nowrap" aria-label="Organizations Table">
+              <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 sticky top-0 z-10">
                 <tr>
-                  <th className="p-3.5 w-10 text-center text-[10px] uppercase font-bold tracking-wider">#</th>
-                  <th className="p-3.5 text-[10px] uppercase font-bold tracking-wider">Organization</th>
-                  <th className="p-3.5 text-[10px] uppercase font-bold tracking-wider">Code</th>
-                  <th className="p-3.5 text-[10px] uppercase font-bold tracking-wider">Status</th>
-                  <th className="p-3.5 text-[10px] uppercase font-bold tracking-wider">Companies</th>
-                  <th className="p-3.5 text-[10px] uppercase font-bold tracking-wider">Members</th>
-                  <th className="p-3.5 text-[10px] uppercase font-bold tracking-wider">Created</th>
-                  <th className="p-3.5 text-right text-[10px] uppercase font-bold tracking-wider">Actions</th>
+                  <th scope="col" className="p-3.5 w-10 text-center text-xs uppercase font-semibold tracking-wider">#</th>
+                  <th scope="col" className="p-3.5 text-xs uppercase font-semibold tracking-wider">Organization</th>
+                  <th scope="col" className="p-3.5 text-xs uppercase font-semibold tracking-wider">Code</th>
+                  <th scope="col" className="p-3.5 text-xs uppercase font-semibold tracking-wider">Status</th>
+                  <th scope="col" className="p-3.5 text-xs uppercase font-semibold tracking-wider">Companies</th>
+                  <th scope="col" className="p-3.5 text-xs uppercase font-semibold tracking-wider">Members</th>
+                  <th scope="col" className="p-3.5 text-xs uppercase font-semibold tracking-wider">Created</th>
+                  <th scope="col" className="p-3.5 text-right text-xs uppercase font-semibold tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">

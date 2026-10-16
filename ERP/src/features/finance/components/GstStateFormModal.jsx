@@ -108,7 +108,7 @@ const GstStateFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
               name="unionTerritory"
               checked={formData.unionTerritory}
               onChange={handleChange}
-              className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+              className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-zinc-900/10"
             />
             <span className="text-sm font-medium text-zinc-700">Is Union Territory?</span>
           </label>

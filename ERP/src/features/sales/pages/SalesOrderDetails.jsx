@@ -8,32 +8,18 @@ import {
 } from 'lucide-react';
 import DeliveryChallanFromSoModal from '../components/DeliveryChallanFromSoModal';
 import AuditLogHover from '../../../components/common/AuditLogHover';
+import StatusBadge from '../../../components/common/StatusBadge';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 const fmtDateTime = (d) => d ? new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
-function StatusBadge({ status }) {
-  const s = (status || 'DRAFT').toUpperCase();
-  const map = {
-    DRAFT:     'bg-amber-50 text-amber-700 border-amber-200',
-    CONFIRMED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    COMPLETED: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    CANCELLED: 'bg-red-50 text-red-700 border-red-200',
-  };
-  return (
-    <span className={`px-2.5 py-1 text-xs font-bold rounded-md border ${map[s] || 'bg-zinc-50 text-zinc-700 border-zinc-200'}`}>
-      {s}
-    </span>
-  );
-}
-
 function Section({ title, icon, children, className = '' }) {
   return (
     <div className={`bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden ${className}`}>
       <div className="px-5 py-3 border-b border-zinc-100 bg-zinc-50/80 flex items-center gap-2">
-        {icon && <span className="text-indigo-500">{icon}</span>}
+        {icon && <span className="text-zinc-600">{icon}</span>}
         <h2 className="text-xs font-bold text-zinc-700 uppercase tracking-wider">{title}</h2>
       </div>
       <div className="p-5">{children}</div>
@@ -162,7 +148,7 @@ export default function SalesOrderDetails() {
             <>
               <button
                 onClick={() => setDcOpen(true)}
-                className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-sm"
+                className="px-4 py-2 text-sm font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-all flex items-center gap-2 shadow-sm"
               >
                 <Truck size={15} /> Delivery Challan
               </button>
@@ -256,12 +242,12 @@ export default function SalesOrderDetails() {
             <span className="text-indigo-500"><Package size={15} /></span>
             <h2 className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Order Items</h2>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left whitespace-nowrap">
-              <thead className="bg-zinc-50/60 border-b border-zinc-200">
+          <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+            <table className="w-full min-w-[750px] sm:min-w-full text-sm text-left whitespace-nowrap" aria-label="Order Items Table">
+              <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                 <tr>
                   {['#', 'Item', 'Description', 'Qty', 'Unit', 'Unit Price', 'Discount', 'Tax', 'Total'].map(h => (
-                    <th key={h} className="px-4 py-3 text-xs font-semibold text-zinc-500 text-right first:text-left second:text-left">{h}</th>
+                    <th scope="col" key={h} className="px-4 py-3 text-xs font-semibold text-zinc-600 text-right first:text-left second:text-left">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -279,10 +265,10 @@ export default function SalesOrderDetails() {
                       <td className="px-4 py-3 text-zinc-500 text-right">{idx + 1}</td>
                       <td className="px-4 py-3 font-semibold text-zinc-900 min-w-[112px]">{item.item?.name || '—'}</td>
                       <td className="px-4 py-3 text-zinc-500 max-w-[160px] whitespace-normal text-xs">{item.description || '—'}</td>
-                      <td className="px-4 py-3 text-right font-medium">{fmt(item.quantity)}</td>
+                      <td className="px-4 py-3 text-right font-medium tabular-nums">{fmt(item.quantity)}</td>
                       <td className="px-4 py-3 text-right text-zinc-500">{item.unit || 'Nos'}</td>
-                      <td className="px-4 py-3 text-right">{fmt(pricing.unitPrice)}</td>
-                      <td className="px-4 py-3 text-right text-red-600">{discount > 0 ? `-${fmt(discount)}` : '—'}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{fmt(pricing.unitPrice)}</td>
+                      <td className="px-4 py-3 text-right text-red-600 tabular-nums">{discount > 0 ? `-${fmt(discount)}` : '—'}</td>
                       <td className="px-4 py-3 text-right">
                         {taxes.taxAmount > 0 ? (
                           <div className="relative group inline-flex flex-col items-end">

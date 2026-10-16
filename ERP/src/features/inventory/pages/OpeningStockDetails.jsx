@@ -1,22 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ExpandedRowDetails from '../components/ExpandedRowDetails';
 import { 
   ArrowLeft, Save, Plus, Trash2, PackageOpen, Info, AlertCircle 
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAppDispatch } from '../../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
 import { 
   useOpeningStockDetail, 
   useOpeningStockCreate, 
-  useOpeningStockUpdate 
+  useOpeningStockUpdate,
+  useWarehouseList,
+  useProductList
 } from '../../../api/inventory';
+import { useWarehouseLocationList } from '../../../api/inventory/hooks/useWarehouseLocation';
 import useUrlFilters from '../../../hooks/useUrlFilters';
 
 export default function OpeningStockDetails() {
   const { id } = useParams();
-  const navigate = useNavigate();  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { prefix } = useUrlFilters();
+  const currentUser = useAppSelector(state => state.auth?.user);
   
   const isNew = id === 'new';
 
@@ -33,6 +38,14 @@ export default function OpeningStockDetails() {
     lines: []
   });
 
+  const { warehouses } = useWarehouseList({ status: 'ACTIVE' }, { size: 100 });
+  const { products } = useProductList({ status: 'ACTIVE' }, { size: 200 });
+  const { locations } = useWarehouseLocationList(
+    { warehouseId: formData.warehouseId }, 
+    { size: 200 }, 
+    { skip: !formData.warehouseId }
+  );
+
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -48,13 +61,32 @@ export default function OpeningStockDetails() {
     }
   }, [openingStock, isNew]);
 
+  // Default warehouse if only one or first available
+  useEffect(() => {
+    if (isNew && !formData.warehouseId && warehouses?.length > 0) {
+      setFormData(prev => ({ ...prev, warehouseId: warehouses[0].id }));
+    }
+  }, [warehouses, isNew, formData.warehouseId]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'warehouseId') {
+        // Reset location on lines if warehouse changes
+        updated.lines = prev.lines.map(line => ({ ...line, warehouseLocationId: '' }));
+      }
+      return updated;
+    });
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
   };
 
+  const validLocations = useMemo(() => {
+    return (locations || []).filter(l => !formData.warehouseId || l.warehouseId === formData.warehouseId);
+  }, [locations, formData.warehouseId]);
+
   const handleAddLine = () => {
+    const defaultLocId = validLocations?.length > 0 ? validLocations[0].id : '';
     setFormData(prev => ({
       ...prev,
       lines: [
@@ -62,10 +94,10 @@ export default function OpeningStockDetails() {
         {
           id: Date.now().toString(), // Temporary client-side ID
           productId: '',
-          warehouseLocationId: '',
-          batchId: '',
-          serialId: '',
-          quantity: 0,
+          warehouseLocationId: defaultLocId,
+          batchId: null,
+          serialId: null,
+          quantity: 1,
           unitCost: 0,
           totalValue: 0,
           uomId: ''
@@ -85,18 +117,27 @@ export default function OpeningStockDetails() {
     setFormData(prev => {
       const newLines = [...prev.lines];
       
-      // Handle numeric fields
-      if (['quantity', 'unitCost', 'totalValue'].includes(field)) {
+      if (field === 'productId') {
+        const prod = products?.find(p => p.id === value);
+        const qty = newLines[index].quantity || 1;
+        const cost = prod?.standardCost || 0;
+        newLines[index] = {
+          ...newLines[index],
+          productId: value,
+          uomId: prod?.baseUomId || '',
+          unitCost: cost,
+          quantity: qty,
+          totalValue: qty * cost
+        };
+      } else if (['quantity', 'unitCost', 'totalValue'].includes(field)) {
         newLines[index][field] = Number(value);
+        if (field === 'quantity' || field === 'unitCost') {
+          const qty = field === 'quantity' ? Number(value) : newLines[index].quantity;
+          const cost = field === 'unitCost' ? Number(value) : newLines[index].unitCost;
+          newLines[index].totalValue = qty * cost;
+        }
       } else {
         newLines[index][field] = value;
-      }
-      
-      // Auto-compute totalValue if quantity or unitCost changes
-      if (field === 'quantity' || field === 'unitCost') {
-        const qty = field === 'quantity' ? Number(value) : newLines[index].quantity;
-        const cost = field === 'unitCost' ? Number(value) : newLines[index].unitCost;
-        newLines[index].totalValue = qty * cost;
       }
 
       return { ...prev, lines: newLines };
@@ -113,8 +154,9 @@ export default function OpeningStockDetails() {
       newErrors.lines = 'At least one line item is required.';
     } else {
       formData.lines.forEach((line, idx) => {
-        if (!line.productId) newErrors[`line_${idx}_productId`] = 'Required';
-        if (line.quantity <= 0) newErrors[`line_${idx}_quantity`] = 'Must be > 0';
+        if (!line.productId) newErrors[`line_${idx}_productId`] = 'Product is required';
+        if (!line.warehouseLocationId) newErrors[`line_${idx}_locationId`] = 'Location is required';
+        if (Number(line.quantity) <= 0) newErrors[`line_${idx}_quantity`] = 'Must be > 0';
       });
     }
 
@@ -132,16 +174,41 @@ export default function OpeningStockDetails() {
     if (!validate()) return;
 
     try {
+      const payload = {
+        openingStockNo: formData.openingStockNo,
+        openingDate: formData.openingDate,
+        warehouseId: formData.warehouseId,
+        status: formData.status || 'DRAFT',
+        remarks: formData.remarks || '',
+        approvedBy: currentUser?.id,
+        lines: formData.lines.map(line => ({
+          productId: line.productId,
+          warehouseLocationId: line.warehouseLocationId,
+          uomId: line.uomId,
+          quantity: Number(line.quantity),
+          unitCost: Number(line.unitCost),
+          totalValue: Number(line.totalValue || (Number(line.quantity) * Number(line.unitCost))),
+          batchId: line.batchId || null,
+          serialId: line.serialId || null
+        }))
+      };
+
       if (isNew) {
-        await createMutation.mutateAsync(formData);
+        await createMutation.mutateAsync(payload);
         dispatch(addAlert({ type: 'success', message: 'Opening Stock created successfully' }));
         navigate(`${prefix}inventory/opening-stocks`);
       } else {
-        await updateMutation.mutateAsync([id, formData]);
+        await updateMutation.mutateAsync([id, payload]);
         dispatch(addAlert({ type: 'success', message: 'Opening Stock updated successfully' }));
       }
     } catch (error) {
-      dispatch(addAlert({ type: 'error', message: error.response?.data?.message || 'Operation failed' }));
+      const backendData = error?.response?.data?.data;
+      let errMsg = error?.response?.data?.message || 'Operation failed';
+      if (backendData && typeof backendData === 'object') {
+        const details = Object.values(backendData).filter(Boolean).join(', ');
+        if (details) errMsg = details;
+      }
+      dispatch(addAlert({ type: 'error', message: errMsg }));
     }
   };
 
@@ -180,7 +247,7 @@ export default function OpeningStockDetails() {
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="px-4 py-2 text-[10.4px] font-semibold text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-sm"
+            className="px-4 py-2 text-[10.4px] font-semibold text-white bg-zinc-900 border border-transparent rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-sm"
           >
             {isLoading ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -217,17 +284,23 @@ export default function OpeningStockDetails() {
 
             <div>
               <label className="text-[9.6px] font-bold text-zinc-700 mb-1.5 block">
-                Warehouse ID <span className="text-rose-500">*</span>
+                Warehouse <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
+              <select
                 name="warehouseId"
                 value={formData.warehouseId}
                 onChange={handleChange}
                 className={`w-full h-9 px-3 rounded-md border text-[10.4px] outline-none transition-all focus:ring-2 focus:ring-primary/20 ${
                   errors.warehouseId ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
                 }`}
-              />
+              >
+                <option value="">Select Warehouse</option>
+                {warehouses?.map(w => (
+                  <option key={w.id} value={w.id}>
+                    {w.warehouseName || w.name} ({w.warehouseCode || w.code || 'WH'})
+                  </option>
+                ))}
+              </select>
               {errors.warehouseId && <p className="text-[8.8px] text-rose-500 mt-1 font-medium">{errors.warehouseId}</p>}
             </div>
 
@@ -315,8 +388,8 @@ export default function OpeningStockDetails() {
                   <thead>
                     <tr className="border-b border-zinc-200 text-[8.8px] uppercase tracking-wider text-zinc-500 font-bold bg-zinc-50/50">
                     <th className="px-3 py-2 w-10 text-center">#</th>
-                      <th className="px-3 py-2 min-w-[120px]">Product ID *</th>
-                      <th className="px-3 py-2 min-w-[96px]">Location ID</th>
+                      <th className="px-3 py-2 min-w-[150px]">Product *</th>
+                      <th className="px-3 py-2 min-w-[130px]">Location *</th>
                       <th className="px-3 py-2 w-24">Qty *</th>
                       <th className="px-3 py-2 w-28">Unit Cost</th>
                       <th className="px-3 py-2 w-28">Total Value</th>
@@ -330,24 +403,36 @@ export default function OpeningStockDetails() {
                           {index + 1}
                         </td>
                         <td className="px-3 py-2">
-                          <input
-                            type="text"
+                          <select
                             value={line.productId}
                             onChange={(e) => handleLineChange(index, 'productId', e.target.value)}
                             className={`w-full h-8 px-2 rounded border text-xs outline-none focus:border-primary ${
                               errors[`line_${index}_productId`] ? 'border-rose-300 bg-rose-50' : 'border-zinc-200 bg-white'
                             }`}
-                            placeholder="Product ID"
-                          />
+                          >
+                            <option value="">Select Product</option>
+                            {products?.map(p => (
+                              <option key={p.id} value={p.id}>
+                                {p.productName} ({p.sku || 'No SKU'})
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td className="px-3 py-2">
-                          <input
-                            type="text"
+                          <select
                             value={line.warehouseLocationId}
                             onChange={(e) => handleLineChange(index, 'warehouseLocationId', e.target.value)}
-                            className="w-full h-8 px-2 rounded border border-zinc-200 bg-white text-xs outline-none focus:border-primary"
-                            placeholder="Loc ID"
-                          />
+                            className={`w-full h-8 px-2 rounded border text-xs outline-none focus:border-primary ${
+                              errors[`line_${index}_locationId`] ? 'border-rose-300 bg-rose-50' : 'border-zinc-200 bg-white'
+                            }`}
+                          >
+                            <option value="">Select Location</option>
+                            {validLocations?.map(l => (
+                              <option key={l.id} value={l.id}>
+                                {l.locationName || l.locationCode} ({l.locationType || 'ZONE'})
+                              </option>
+                            ))}
+                          </select>
                         </td>
                         <td className="px-3 py-2">
                           <input

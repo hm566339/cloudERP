@@ -318,7 +318,7 @@ export default function ProvisionOrganization() {
                 <select
                   value={adminInfo.role}
                   onChange={e => setAdminInfo({ ...adminInfo, role: e.target.value })}
-                  className="w-full h-9 px-3 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-white text-zinc-900"
+                  className="w-full h-9 px-3 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-blue-400 bg-white text-zinc-900"
                 >
                   <option value="org_admin">Organization Admin</option>
                   <option value="org_member">Organization Member</option>
@@ -570,7 +570,7 @@ function Input({ className = '', ...props }) {
   return (
     <input
       {...props}
-      className={`w-full h-9 px-3 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-white text-zinc-900 placeholder-zinc-400 ${className}`}
+      className={`w-full h-9 px-3 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-blue-400 bg-white text-zinc-900 placeholder-zinc-400 ${className}`}
     />
   );
 }

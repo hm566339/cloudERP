@@ -277,7 +277,7 @@ export default function BankAccountForm({ isOpen, onClose, initialData, onSubmit
                   name="isActive"
                   checked={formData.isActive}
                   onChange={handleChange}
-                  className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-zinc-900/10"
                 />
                 <span className="text-sm font-medium text-zinc-700">Account is Active</span>
               </label>
@@ -288,7 +288,7 @@ export default function BankAccountForm({ isOpen, onClose, initialData, onSubmit
                   name="isPrimary"
                   checked={formData.isPrimary}
                   onChange={handleChange}
-                  className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-zinc-900/10"
                 />
                 <span className="text-sm font-medium text-zinc-700">Primary Account</span>
               </label>

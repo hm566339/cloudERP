@@ -82,9 +82,9 @@ export default function DateRangeFilter({ value, onChange, label }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="relative flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-1 hover:bg-slate-100 transition-colors focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 w-full overflow-hidden">
-        <CalendarDays size={14} className="text-slate-400 shrink-0" />
-        {label && <span className="text-sm font-medium text-slate-500 whitespace-nowrap shrink-0">{label}:</span>}
+      <div className="relative flex items-center gap-1.5 bg-zinc-50 border border-zinc-200 rounded-lg pl-3 pr-1 hover:bg-zinc-100/70 transition-colors focus-within:ring-2 focus-within:ring-zinc-900/10 focus-within:border-zinc-400 w-full overflow-hidden">
+        <CalendarDays size={14} className="text-zinc-400 shrink-0" />
+        {label && <span className="text-xs font-medium text-zinc-500 whitespace-nowrap shrink-0">{label}:</span>}
         <CustomSelect 
           value={mode}
           onChange={handleModeChange}
@@ -95,8 +95,8 @@ export default function DateRangeFilter({ value, onChange, label }) {
             { value: 'month', label: 'This Month' },
             { value: 'custom', label: 'Custom Range...' }
           ]}
-          buttonClassName="w-full bg-transparent border-none text-sm font-semibold text-slate-800 p-0 py-2 cursor-pointer focus:outline-none flex justify-between items-center"
-          dropdownClassName="bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 max-h-[200px] overflow-y-auto w-[160px]"
+          buttonClassName="w-full bg-transparent border-none text-xs font-semibold text-zinc-800 p-0 py-2 cursor-pointer focus:outline-none flex justify-between items-center"
+          dropdownClassName="bg-white border border-zinc-200 rounded-xl shadow-xl py-1.5 max-h-[200px] overflow-y-auto w-[160px]"
         />
       </div>
 
@@ -106,14 +106,14 @@ export default function DateRangeFilter({ value, onChange, label }) {
             type="date" 
             value={customStart}
             onChange={(e) => handleCustomChange('start', e.target.value)}
-            className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5 text-[8.8px] text-slate-800 focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 min-w-0 bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-800 focus:outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5 font-medium"
           />
-          <span className="text-slate-400 text-xs">to</span>
+          <span className="text-zinc-400 text-xs font-medium">to</span>
           <input 
             type="date" 
             value={customEnd}
             onChange={(e) => handleCustomChange('end', e.target.value)}
-            className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5 text-[8.8px] text-slate-800 focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 min-w-0 bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-800 focus:outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5 font-medium"
           />
         </div>
       )}

@@ -631,51 +631,51 @@ export default function UserList() {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Name</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Name</span>
           <p className="text-sm font-semibold text-zinc-900">{user.name || '-'}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Employee ID</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Employee ID</span>
           <p className="text-sm font-semibold text-zinc-900">{user.empId || '-'}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Status</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Status</span>
           <div>
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${user.active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider ${user.active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
               {user.active ? 'Active' : 'Inactive'}
             </span>
           </div>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Email</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Email</span>
           <p className="text-sm font-medium text-zinc-700">{user.email || '-'}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">System Role</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">System Role</span>
           <p className="text-sm font-medium text-zinc-700">{user.role === 'company_admin' ? 'Company Admin' : user.role === 'employee' ? 'Employee' : user.role || 'User'}</p>
         </div>
         {isSuperAdminGlobal && (
           <div className="space-y-1">
-            <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Company</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Company</span>
             <p className="text-sm font-medium text-zinc-700">
               {user.companyId ? ((Array.isArray(companies) ? companies : []).find(c => (c.id || c.companyId) === user.companyId)?.name || (Array.isArray(companies) ? companies : []).find(c => (c.id || c.companyId) === user.companyId)?.companyName || user.companyId) : user.companyCode || 'N/A'}
             </p>
           </div>
         )}
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Registered At</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Registered At</span>
           <p className="text-sm font-medium text-zinc-700">
             {user.created || '-'}
           </p>
         </div>
         {user.role === 'employee' && user.permissions?.length > 0 && (
           <div className="space-y-1 col-span-2">
-            <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Module Access</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Module Access</span>
             <div className="flex flex-wrap gap-1 mt-1">
               {user.permissions.map(p => {
                 const modName = availableModules.find(m => m.id === p || m.globalId === p || m.label === p)?.label || p;
                 return (
-                  <span key={p} className="text-[8.5px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200/50 px-1.5 py-0.5 rounded">
+                  <span key={p} className="text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200/50 px-2 py-0.5 rounded">
                     {modName}
                   </span>
                 );

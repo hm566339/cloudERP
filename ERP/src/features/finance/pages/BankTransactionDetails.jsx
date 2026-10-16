@@ -486,7 +486,7 @@ export default function BankTransactionDetails() {
                 id="reconciled-edit"
                 checked={formData.reconciled}
                 onChange={handleEditChange}
-                className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-zinc-900/10"
               />
               <label htmlFor="reconciled-edit" className="text-sm font-medium text-zinc-700">
                 Mark as Reconciled

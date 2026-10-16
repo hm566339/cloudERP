@@ -63,10 +63,11 @@ export function CompanyEntryRedirect() {
     return <RouteLoading />;
   }
 
+  const isOwner = authContext?.membership?.memberType === 'OWNER' || user?.role === 'owner';
   const isAdmin = user?.role === 'super_admin';
 
-  // Admins get the general overview dashboard
-  if (isAdmin) {
+  // Admins and Owners get the general overview dashboard with all accessible company modules
+  if (isAdmin || isOwner) {
     return <Navigate to={`/company/${companyId}/dashboard`} replace />;
   }
 

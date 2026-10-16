@@ -11,26 +11,7 @@ import ErrorState from '../../../components/common/ErrorState';
 import { PageLoader } from '../../../components/common/SkeletonLoader';
 import PurchaseNavigation, { getRfqBasePath } from '../../../components/common/PurchaseNavigation';
 import { useRoutePath } from '../../../hooks/useRoutePath';
-
-const StatusBadge = ({ status }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    APPROVED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    DRAFT: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    SUBMITTED: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    PENDING: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    CANCELLED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-  }[s] || { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-bold tracking-wider uppercase rounded-md border ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s.replace('_', ' ')}
-    </span>
-  );
-};
+import StatusBadge from '../../../components/common/StatusBadge';
 
 const PriorityBadge = ({ priority }) => {
   if (!priority) return <span className="text-xs text-zinc-500">-</span>;
@@ -286,17 +267,17 @@ export default function PurchaseRequisitionDetail() {
             <div className="p-6 pb-4">
               <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Requested Items</h3>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse whitespace-nowrap text-sm">
-                <thead className="bg-zinc-50/80 border-b border-zinc-200">
+            <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+              <table className="w-full min-w-[700px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Requested Items Table">
+                <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">#</th>
-                    <th className="px-6 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Item</th>
-                    <th className="px-6 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Description</th>
-                    <th className="px-6 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500 text-right">Quantity</th>
-                    <th className="px-6 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Unit</th>
-                    <th className="px-6 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Required Date</th>
-                    <th className="px-6 py-3 text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Specifications/Remarks</th>
+                    <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">#</th>
+                    <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Item</th>
+                    <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Description</th>
+                    <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600 text-right">Quantity</th>
+                    <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Unit</th>
+                    <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Required Date</th>
+                    <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Specifications/Remarks</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
@@ -313,7 +294,7 @@ export default function PurchaseRequisitionDetail() {
                         <td className="px-6 py-4 text-zinc-400 text-xs">{idx + 1}</td>
                         <td className="px-6 py-4 font-semibold text-zinc-900 text-xs">{item.itemName || '-'}</td>
                         <td className="px-6 py-4 text-zinc-600 text-xs max-w-[200px] truncate">{item.description || '-'}</td>
-                        <td className="px-6 py-4 text-right font-medium text-zinc-800 text-xs">{item.quantity || item.requestedQuantity || 0}</td>
+                        <td className="px-6 py-4 text-right font-medium text-zinc-800 text-xs tabular-nums">{item.quantity || item.requestedQuantity || 0}</td>
                         <td className="px-6 py-4 text-zinc-600 text-xs">{item.unit || '-'}</td>
                         <td className="px-6 py-4 text-zinc-600 text-xs">{item.requiredDate ? new Date(item.requiredDate).toLocaleDateString() : '-'}</td>
                         <td className="px-6 py-4 text-zinc-600 text-xs max-w-[200px] truncate">{item.specifications || item.remarks || '-'}</td>

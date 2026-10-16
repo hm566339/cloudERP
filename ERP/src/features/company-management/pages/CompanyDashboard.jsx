@@ -141,8 +141,8 @@ export default function CompanyDashboard() {
           title="Configured Roles" 
           icon={ShieldCheck} 
           total={roles.total} 
-          colorClass="text-slate-500" 
-          bgClass="bg-slate-100" 
+          colorClass="text-zinc-500" 
+          bgClass="bg-zinc-100" 
         />
       </div>
 

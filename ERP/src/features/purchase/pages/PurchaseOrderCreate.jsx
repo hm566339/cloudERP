@@ -63,16 +63,16 @@ export default function PurchaseOrderCreate({ initialData }) {
   const [updatePurchaseOrder, { isLoading: isUpdating }] = useUpdatePurchaseOrderMutation();
 
   const { data: vendorsData } = useGetVendorsQuery({ companyId, size: 500 });
-  const vendors = vendorsData?.data?.content || vendorsData?.content || [];
+  const vendors = Array.isArray(vendorsData) ? vendorsData : (vendorsData?.data?.content || vendorsData?.data?.data || vendorsData?.data || vendorsData?.content || []);
 
   const { data: productsData } = useGetProductsQuery({ companyId, size: 500 });
-  const products = productsData?.data?.content || productsData?.content || productsData || [];
+  const products = Array.isArray(productsData) ? productsData : (productsData?.data?.content || productsData?.data?.data || productsData?.data || productsData?.content || []);
 
   const { data: warehousesData } = useGetWarehousesQuery({ companyId, size: 500 });
-  const warehouses = warehousesData?.data?.content || warehousesData?.content || warehousesData || [];
+  const warehouses = Array.isArray(warehousesData) ? warehousesData : (warehousesData?.data?.content || warehousesData?.data?.data || warehousesData?.data || warehousesData?.content || []);
 
   const { data: gstStatesData } = useGetGstStatesQuery({}, { skip: false });
-  const gstStates = gstStatesData?.data || gstStatesData || [];
+  const gstStates = Array.isArray(gstStatesData) ? gstStatesData : (gstStatesData?.data?.data || gstStatesData?.data || gstStatesData?.content || []);
 
   const [formData, setFormData] = useState({
     vendorId: '',
@@ -270,7 +270,7 @@ export default function PurchaseOrderCreate({ initialData }) {
   };
 
   const doCancelNavigation = () => {
-    navigate(buildPath('/accounts/transactions/purchase-orders'));
+    navigate(buildPath('/purchases/purchase-orders'));
   };
 
   const handleCancel = () => {
@@ -296,34 +296,50 @@ export default function PurchaseOrderCreate({ initialData }) {
         const taxPct = parseFloat(i.taxPercent) || 0;
         const orderedQty = parseFloat(i.orderedQuantity) || 0;
         const unitPrice = parseFloat(i.unitPrice) || 0;
-        const { lineTax, lineTotal } = calculateLine(i);
 
-        return {
-          ...i,
+        const itemObj = {
+          itemId: i.itemId || undefined,
+          itemName: i.itemName || 'Product Item',
+          description: i.description || undefined,
           orderedQuantity: orderedQty,
           unitPrice: unitPrice,
+          unit: i.unit || 'NOS',
           taxPercent: taxPct,
           discountPercent: parseFloat(i.discountPercent) || 0,
           cgstRate: parseFloat(i.cgstRate) || (taxPct / 2),
           sgstRate: parseFloat(i.sgstRate) || (taxPct / 2),
           igstRate: parseFloat(i.igstRate) || taxPct,
           cessRate: parseFloat(i.cessRate) || 0,
-          taxAmount: lineTax,
-          lineTotal: lineTotal,
-          total: lineTotal
+          warehouseId: i.warehouseId || undefined,
+          locationId: i.locationId || undefined,
+          notes: i.notes || undefined,
         };
+
+        if (initialData?.id && i.id && typeof i.id === 'string' && i.id.length === 36) {
+          itemObj.id = i.id;
+        }
+
+        return itemObj;
       });
 
       const payload = {
-        ...formData,
+        vendorId: formData.vendorId,
+        poDate: formData.poDate,
+        ...(formData.poNumber ? { poNumber: formData.poNumber } : {}),
+        ...(formData.expectedDeliveryDate ? { expectedDeliveryDate: formData.expectedDeliveryDate } : {}),
+        currency: formData.currency || 'INR',
+        exchangeRate: parseFloat(formData.exchangeRate) || 1,
+        ...(formData.placeOfSupplyStateId ? { placeOfSupplyStateId: formData.placeOfSupplyStateId } : {}),
+        ...(formData.placeOfSupplyStateCode ? { placeOfSupplyStateCode: formData.placeOfSupplyStateCode } : {}),
+        ...(formData.shippingAddressSnapshot ? { shippingAddressSnapshot: formData.shippingAddressSnapshot } : {}),
+        ...(formData.referenceNumber ? { referenceNumber: formData.referenceNumber } : {}),
+        ...(formData.paymentTerms ? { paymentTerms: formData.paymentTerms } : {}),
+        ...(formData.deliveryTerms ? { deliveryTerms: formData.deliveryTerms } : {}),
+        ...(formData.termsAndConditions ? { termsAndConditions: formData.termsAndConditions } : {}),
+        ...(formData.notes ? { notes: formData.notes } : {}),
+        freightCharges: totals.freight || 0,
+        otherCharges: totals.otherCharges || 0,
         companyId,
-        subtotal: totals.subtotal,
-        taxableAmount: totals.taxableAmount,
-        taxAmount: totals.tax,
-        freightCharges: totals.freight,
-        otherCharges: totals.otherCharges,
-        grandTotal: totals.grandTotal,
-        totalAmount: totals.grandTotal,
         items: payloadItems
       };
 

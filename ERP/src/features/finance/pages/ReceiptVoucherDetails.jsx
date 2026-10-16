@@ -329,13 +329,13 @@ export default function ReceiptVoucherDetails() {
             <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden flex flex-col h-full min-h-[480px]">
               
               {/* Sticky Tabs */}
-              <div className="bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm sticky top-0 z-10">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5">
+              <div className="bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm sticky top-0 z-10 overflow-x-auto no-scrollbar">
+                <div className="flex overflow-x-auto no-scrollbar gap-1.5 pb-0.5 min-w-max">
                   {TABS.map(tab => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold rounded-md transition-all ${
+                      className={`flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all shrink-0 whitespace-nowrap ${
                         activeTab === tab.id 
                           ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/50' 
                           : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100/50'
@@ -455,18 +455,18 @@ export default function ReceiptVoucherDetails() {
                 {activeTab === 'allocations' && (
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                     {receipt.invoiceAllocations?.length > 0 ? (
-                      <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-x-auto">
-                        <table className="w-full text-left text-sm whitespace-nowrap">
-                          <thead className="bg-zinc-50 border-b border-zinc-200">
+                      <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+                        <table className="w-full min-w-[720px] sm:min-w-full text-left text-sm whitespace-nowrap" aria-label="Invoice Allocations Table">
+                          <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                             <tr>
-                              <th className="px-4 py-3 font-semibold text-zinc-600">Invoice Number</th>
-                              <th className="px-4 py-3 font-semibold text-zinc-600">Invoice Date</th>
-                              <th className="px-4 py-3 font-semibold text-zinc-600">Due Date</th>
-                              <th className="px-4 py-3 text-right font-semibold text-zinc-600">Invoice Amount</th>
-                              <th className="px-4 py-3 text-right font-semibold text-zinc-600">Previously Received</th>
-                              <th className="px-4 py-3 text-right font-semibold text-zinc-600">Allocated Amount</th>
-                              <th className="px-4 py-3 text-right font-semibold text-zinc-600">Remaining</th>
-                              <th className="px-4 py-3 text-center font-semibold text-zinc-600">Status</th>
+                              <th scope="col" className="px-4 py-3 text-xs font-semibold text-zinc-600">Invoice Number</th>
+                              <th scope="col" className="px-4 py-3 text-xs font-semibold text-zinc-600">Invoice Date</th>
+                              <th scope="col" className="px-4 py-3 text-xs font-semibold text-zinc-600">Due Date</th>
+                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600">Invoice Amount</th>
+                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600">Previously Received</th>
+                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600">Allocated Amount</th>
+                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600">Remaining</th>
+                              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-zinc-600">Status</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-zinc-100">
@@ -475,12 +475,12 @@ export default function ReceiptVoucherDetails() {
                                 <td className="px-4 py-3 font-medium text-blue-600 cursor-pointer hover:underline">{alloc.invoiceNumber || '-'}</td>
                                 <td className="px-4 py-3 text-zinc-600">{alloc.invoiceDate ? new Date(alloc.invoiceDate).toLocaleDateString() : '-'}</td>
                                 <td className="px-4 py-3 text-zinc-600">{alloc.dueDate ? new Date(alloc.dueDate).toLocaleDateString() : '-'}</td>
-                                <td className="px-4 py-3 text-right text-zinc-600">{alloc.invoiceAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                                <td className="px-4 py-3 text-right text-zinc-600">{alloc.previouslyReceivedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</td>
-                                <td className="px-4 py-3 text-right font-semibold text-emerald-600">{alloc.allocatedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                                <td className="px-4 py-3 text-right font-medium text-orange-500">{alloc.remainingOutstanding?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                <td className="px-4 py-3 text-right text-zinc-600 tabular-nums">{alloc.invoiceAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                <td className="px-4 py-3 text-right text-zinc-600 tabular-nums">{alloc.previouslyReceivedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</td>
+                                <td className="px-4 py-3 text-right font-semibold text-emerald-600 tabular-nums">{alloc.allocatedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                <td className="px-4 py-3 text-right font-medium text-orange-500 tabular-nums">{alloc.remainingOutstanding?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                                 <td className="px-4 py-3 text-center">
-                                  <span className={`px-2 py-0.5 text-[8px] font-bold rounded-md border ${
+                                  <span className={`px-2 py-0.5 text-xs font-medium rounded-md border ${
                                     alloc.allocationStatus === 'FULLY_ALLOCATED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-blue-50 text-blue-700 border-blue-200'
                                   }`}>{alloc.allocationStatus}</span>
                                 </td>

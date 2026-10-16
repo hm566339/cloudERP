@@ -13,6 +13,7 @@ import { useRBAC } from '../../../utils/rbac';
 import ExistingEmptyState from '../../../components/common/EmptyState';
 import ConfirmModal from '../../../components/common/ConfirmModal';
 import ErrorState from '../../../components/common/ErrorState';
+import StatusBadge from '../../../components/common/StatusBadge';
 import { ListSkeleton } from '../../../components/common/SkeletonLoader';
 import { getRoles } from '../../../api/sso/role';
 import {
@@ -57,21 +58,6 @@ const moduleToDocumentType = (value) => {
       return 'GENERAL';
   }
 };
-
-function StatusBadge({ active }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase border ${
-        active
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-          : 'border-zinc-200 bg-zinc-100 text-zinc-500'
-      }`}
-    >
-      <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
-      {active ? 'Active' : 'Inactive'}
-    </span>
-  );
-}
 
 export default function WorkflowManagementPage() {
   const { companyId: routeCompanyId } = useParams();

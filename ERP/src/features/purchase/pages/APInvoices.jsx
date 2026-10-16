@@ -25,33 +25,7 @@ import APInvoiceFormModal from '../components/APInvoiceFormModal';
 import VendorFormModal from '../../account/components/VendorFormModal';
 import ExportModal from '../../../components/common/ExportModal';
 import { useRoutePath } from "../../../hooks/useRoutePath";
-
-const STATUS_CONFIG = {
-  DRAFT: { cls: 'bg-zinc-100 text-zinc-700 border-zinc-200', dot: 'bg-zinc-400' },
-  SUBMITTED: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  PENDING_APPROVAL: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  APPROVED: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-  POSTED: { cls: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' },
-  PARTIAL_PAID: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  PARTIALLY_PAID: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  PAID: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-  OVERDUE: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-  CANCELLED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-  REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-};
-
-const StatusBadge = ({ status }) => {
-  if (!status) return <span className="text-zinc-400">-</span>;
-  const s = status.toString().toUpperCase();
-  const cfg = STATUS_CONFIG[s] || { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold tracking-wide uppercase rounded-full border ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s.replace(/_/g, ' ')}
-    </span>
-  );
-};
+import StatusBadge from '../../../components/common/StatusBadge';
 
 const PurchaseInvoiceOverview = ({ inv }) => {
   const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });

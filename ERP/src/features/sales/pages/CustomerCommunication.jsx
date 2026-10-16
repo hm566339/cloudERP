@@ -140,7 +140,7 @@ export default function CustomerCommunication() {
                     <Plus size={20} />
                   </button>
                   <input type="text" placeholder="Type your message or log note..." className="flex-1 input-field bg-zinc-50" />
-                  <button className="p-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition-colors">
+                  <button className="p-2.5 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 shadow-sm transition-colors">
                     <Send size={18} />
                   </button>
                 </div>

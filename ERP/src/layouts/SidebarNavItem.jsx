@@ -1,35 +1,57 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
+import { useSidebar } from './SidebarContext'
+
+export function isItemOrChildActive(item, currentPath) {
+  if (!item) return false;
+
+  if (item.path) {
+    if (currentPath === item.path) return true;
+
+    // Exact or sub-path matching without greedy prefix collision
+    if (item.path !== '/' && item.path !== '/super-admin/dashboard' && item.path !== '/owner/dashboard' && item.path !== '/dashboard') {
+      if (currentPath.startsWith(item.path + '/')) return true;
+    }
+
+    // Special module patterns
+    if (item.path.includes('/transactions/expenses') && currentPath.includes('/transactions/expenses')) return true;
+    if (item.path === '/workflows' && (currentPath === '/workflows' || currentPath.startsWith('/workflows/'))) return true;
+    if (item.path === '/workflows/approvals' && (currentPath === '/workflows/approvals' || currentPath.startsWith('/workflows/approvals/'))) return true;
+  }
+
+  if (Array.isArray(item.children) && item.children.length > 0) {
+    return item.children.some(child => isItemOrChildActive(child, currentPath));
+  }
+
+  return false;
+}
 
 function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
-  const hasChildren = Array.isArray(item.children) && item.children.length > 0
-  const isParentActive = (item.path && location.pathname.startsWith(item.path)) || (hasChildren && item.children.some(c => {
-    if (!c.path) return false
-    if (location.pathname === c.path || location.pathname.startsWith(c.path)) return true
-    if (c.path?.includes('/transactions/expenses') && location.pathname.includes('/transactions/expenses')) return true
-    if (c.path === '/workflows' && location.pathname.includes('/workflows')) return true
-    if (c.path === '/workflows/approvals' && location.pathname.includes('/workflows/approvals')) return true
-    return false
-  }))
+  const { isMenuOpen, toggleMenu, setMenuOpen } = useSidebar();
+  const hasChildren = Array.isArray(item.children) && item.children.length > 0;
 
-  const [open, setOpen] = useState(isParentActive)
-  const Icon = item.icon
+  const currentPath = location?.pathname || '';
+  const isParentActive = isItemOrChildActive(item, currentPath);
+
+  const open = isMenuOpen(item.id, isParentActive);
+  const Icon = item.icon;
 
   useEffect(() => {
     if (isParentActive) {
-      setOpen(true)
+      setMenuOpen(item.id, true);
     }
-  }, [isParentActive])
+  }, [isParentActive, item.id, setMenuOpen]);
 
   if (!hasChildren) {
-    const isExpenseMenu = item.id === 'expense' || item.id === 'txn-exp' || (typeof item.path === 'string' && item.path.includes('/transactions/expenses'))
-    const isWorkflowMenu = item.id === 'workflow-approvals' || item.id === 'workflow-approval-requests' || (typeof item.path === 'string' && item.path.includes('/workflows'))
-    const isActive = location.pathname === item.path ||
-      (item.path !== '/super-admin/dashboard' && item.path !== '/' &&
-        location.pathname.startsWith(item.path + '/') && item.path.split('/').length > 3)
-      || (isExpenseMenu && location.pathname.includes('/transactions/expenses'))
-      || (isWorkflowMenu && (location.pathname === item.path || location.pathname.endsWith(item.path)))
+    const isExpenseMenu = item.id === 'expense' || item.id === 'txn-exp' || (typeof item.path === 'string' && item.path.includes('/transactions/expenses'));
+    const isWorkflowMenu = item.id === 'workflow-approvals' || item.id === 'workflow-approval-requests' || (typeof item.path === 'string' && item.path.includes('/workflows'));
+
+    const isActive = currentPath === item.path ||
+      (item.path !== '/super-admin/dashboard' && item.path !== '/' && item.path !== '/owner/dashboard' && item.path !== '/dashboard' &&
+        currentPath.startsWith(item.path + '/'))
+      || (isExpenseMenu && currentPath.includes('/transactions/expenses'))
+      || (isWorkflowMenu && (currentPath === item.path || currentPath.startsWith(item.path + '/')));
 
     return (
       <Link
@@ -47,7 +69,8 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
   return (
     <div className={level === 0 ? "mb-1" : "mt-0.5"}>
       <button
-        onClick={() => setOpen((v) => !v)}
+        type="button"
+        onClick={() => toggleMenu(item.id)}
         className={`sidebar-item ${level > 0 ? 'sidebar-child-item' : ''} ${isParentActive ? (level === 0 ? 'text-zinc-900 font-bold bg-white border border-zinc-300 shadow-sm' : 'text-zinc-900 font-medium') : (level > 0 ? 'sidebar-child-inactive' : 'sidebar-item-inactive')}`}
       >
         {Icon && <Icon size={level > 0 ? 16 : 18} className={`shrink-0 transition-colors ${isParentActive ? 'text-zinc-900' : 'text-zinc-400'}`} />}

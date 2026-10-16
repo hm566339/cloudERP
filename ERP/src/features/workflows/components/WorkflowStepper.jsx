@@ -56,7 +56,7 @@ export default function WorkflowStepper({
               badgeText = 'Rejected';
               badgeColor = 'bg-red-50 text-red-700 border-red-200';
             } else if (isCurrent) {
-              stepColor = 'bg-blue-600 text-white border-blue-600 ring-4 ring-blue-50 shadow-sm shadow-blue-200';
+              stepColor = 'bg-zinc-900 text-white border-zinc-900 ring-4 ring-blue-50 shadow-sm shadow-blue-200';
               badgeText = 'In Review';
               badgeColor = 'bg-blue-50 text-blue-700 border-blue-200 font-bold';
             }

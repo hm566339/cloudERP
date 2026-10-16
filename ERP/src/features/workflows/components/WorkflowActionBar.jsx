@@ -92,7 +92,7 @@ export default function WorkflowActionBar({
               type="button"
               disabled={isSubmitting}
               onClick={() => handleOpenModal('DELEGATE')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-900 text-white hover:bg-zinc-800 shadow-sm transition-colors disabled:opacity-50"
             >
               <UserCheck size={14} strokeWidth={2.5} />
               Delegate Task
@@ -104,7 +104,7 @@ export default function WorkflowActionBar({
               type="button"
               disabled={isSubmitting}
               onClick={() => handleOpenModal('SUBMIT')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-zinc-900 text-white hover:bg-zinc-800 shadow-sm transition-colors disabled:opacity-50"
             >
               <Send size={14} strokeWidth={2.5} />
               Submit Workflow
@@ -152,7 +152,7 @@ export default function WorkflowActionBar({
                   placeholder="Enter User UUID or Username"
                   value={targetUserId}
                   onChange={(e) => setTargetUserId(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
+                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-xs outline-none focus:border-zinc-400"
                 />
               </div>
             )}
@@ -166,7 +166,7 @@ export default function WorkflowActionBar({
                 placeholder={`Provide reason or instructions for ${activeModal.toLowerCase()}...`}
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-xs outline-none focus:border-blue-500"
+                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-xs outline-none focus:border-zinc-400"
               />
             </div>
 
@@ -188,7 +188,7 @@ export default function WorkflowActionBar({
                     ? 'bg-red-600 hover:bg-red-700'
                     : activeModal === 'RETURN'
                     ? 'bg-amber-600 hover:bg-amber-700'
-                    : 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-zinc-900 hover:bg-zinc-800'
                 }`}
               >
                 {isSubmitting && <Loader2 size={13} className="animate-spin" />}

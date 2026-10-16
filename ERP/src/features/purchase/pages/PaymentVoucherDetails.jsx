@@ -15,33 +15,13 @@ import RequirePermission from '../../../components/common/RequirePermission';
 import { useAppDispatch } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
 import PaymentVoucherFormModal from '../components/PaymentVoucherFormModal';
+import StatusBadge from '../../../components/common/StatusBadge';
 import { useRoutePath } from "../../../hooks/useRoutePath";
 import usePermission from '../../../hooks/usePermission';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
 const displayValue = (val) => (val === null || val === undefined || val === '') ? '-' : val;
-
-const StatusBadge = ({ status }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    POSTED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    APPROVED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    DRAFT: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    SUBMITTED: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    REVERSED: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    CANCELLED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-  }[s] || { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border inline-flex items-center gap-1.5 ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s}
-    </span>
-  );
-};
 
 const PostingBadge = ({ status }) => {
   if (!status) return <span className="px-2 py-1 bg-zinc-100 text-zinc-600 text-xs rounded-full font-medium border border-zinc-200">UNPOSTED</span>;
@@ -386,8 +366,8 @@ export default function PaymentVoucherDetails() {
             <div className="flex-1 bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden flex flex-col min-h-[480px]">
               
               {/* Tabs Navigation */}
-              <div className="bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm sticky top-0 z-10">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5">
+              <div className="bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm sticky top-0 z-10 overflow-x-auto no-scrollbar">
+                <div className="flex overflow-x-auto no-scrollbar gap-1.5 pb-0.5 min-w-max">
                 {[
                   { id: 'overview', label: 'Overview', icon: FileText },
                   { id: 'allocations', label: 'Allocations', icon: CheckSquare },
@@ -405,16 +385,16 @@ export default function PaymentVoucherDetails() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold rounded-md transition-all ${
+                    className={`flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all shrink-0 whitespace-nowrap ${
                       activeTab === tab.id 
-                        ? 'bg-white text-primary shadow-sm border border-zinc-200/50' 
+                        ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/50' 
                         : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/50'
                     }`}
                   >
-                    <tab.icon size={16} className={activeTab === tab.id ? 'text-primary' : 'text-zinc-400'} />
+                    <tab.icon size={16} className={activeTab === tab.id ? 'text-zinc-900' : 'text-zinc-400'} />
                     {tab.label}
                     {tab.id === 'allocations' && allocCount > 0 && (
-                      <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-zinc-100 text-zinc-600 text-[8px] font-bold border border-zinc-200">{allocCount}</span>
+                      <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-zinc-100 text-zinc-600 text-[10px] font-bold border border-zinc-200">{allocCount}</span>
                     )}
                   </button>
                 ))}
@@ -507,16 +487,16 @@ export default function PaymentVoucherDetails() {
                   <div className="animate-in fade-in slide-in-from-bottom-2">
                     <h3 className="text-lg font-bold text-zinc-900 mb-4">Invoice Allocations</h3>
                     {v.invoiceAllocations && v.invoiceAllocations.length > 0 ? (
-                      <div className="border border-zinc-200 rounded-xl overflow-hidden">
-                        <table className="w-full text-left text-sm whitespace-nowrap">
-                          <thead className="bg-zinc-50/80 border-b border-zinc-200 text-zinc-500 font-medium">
+                      <div className="border border-zinc-200 rounded-xl overflow-x-auto min-w-0 max-w-full custom-scrollbar shadow-sm">
+                        <table className="w-full min-w-[700px] sm:min-w-full text-left text-sm whitespace-nowrap" aria-label="Invoice Allocations Table">
+                          <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 text-xs font-semibold sticky top-0 z-10">
                             <tr>
-                              <th className="px-4 py-3">Invoice No</th>
-                              <th className="px-4 py-3">Date</th>
-                              <th className="px-4 py-3 text-right">Invoice Amount</th>
-                              <th className="px-4 py-3 text-right">Prev. Paid</th>
-                              <th className="px-4 py-3 text-right">Allocated Amount</th>
-                              <th className="px-4 py-3 text-right">Remaining Balance</th>
+                              <th scope="col" className="px-4 py-3">Invoice No</th>
+                              <th scope="col" className="px-4 py-3">Date</th>
+                              <th scope="col" className="px-4 py-3 text-right">Invoice Amount</th>
+                              <th scope="col" className="px-4 py-3 text-right">Prev. Paid</th>
+                              <th scope="col" className="px-4 py-3 text-right">Allocated Amount</th>
+                              <th scope="col" className="px-4 py-3 text-right">Remaining Balance</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-zinc-100">
@@ -738,7 +718,7 @@ export default function PaymentVoucherDetails() {
                                           <p className="text-xs text-zinc-500 font-mono mt-0.5">{line.accountCode}</p>
                                           {line.narration && <p className="text-[8px] text-zinc-400 mt-1 italic">{line.narration}</p>}
                                         </td>
-                                        <td className="py-2.5 text-right font-bold text-emerald-600 align-top">
+                                        <td className="py-2.5 text-right font-bold text-emerald-600 align-top tabular-nums">
                                           {fmt(line.amount)}
                                         </td>
                                       </tr>
@@ -757,7 +737,7 @@ export default function PaymentVoucherDetails() {
                                           <p className="text-xs text-zinc-500 font-mono mt-0.5">{line.accountCode}</p>
                                           {line.narration && <p className="text-[8px] text-zinc-400 mt-1 italic">{line.narration}</p>}
                                         </td>
-                                        <td className="py-2.5 text-right font-bold text-red-600 align-top">
+                                        <td className="py-2.5 text-right font-bold text-red-600 align-top tabular-nums">
                                           {fmt(line.amount)}
                                         </td>
                                       </tr>
@@ -920,12 +900,12 @@ export default function PaymentVoucherDetails() {
                       <Network size={20} className="text-primary" /> Related Documents
                     </h3>
                     {relatedDocs.length > 0 ? (
-                      <div className="border border-zinc-200 rounded-xl overflow-hidden">
-                        <table className="w-full text-left text-sm whitespace-nowrap">
-                          <thead className="bg-zinc-50/80 border-b border-zinc-200 text-zinc-500 font-medium">
+                      <div className="border border-zinc-200 rounded-xl overflow-x-auto min-w-0 max-w-full custom-scrollbar shadow-sm">
+                        <table className="w-full text-left text-sm whitespace-nowrap" aria-label="Related Documents Table">
+                          <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 text-xs font-semibold sticky top-0 z-10">
                             <tr>
-                              <th className="px-4 py-3">Document Type</th>
-                              <th className="px-4 py-3">Document Number / ID</th>
+                              <th scope="col" className="px-4 py-3">Document Type</th>
+                              <th scope="col" className="px-4 py-3">Document Number / ID</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-zinc-100">
@@ -961,14 +941,14 @@ export default function PaymentVoucherDetails() {
                     </div>
                     
                     {v.attachments && v.attachments.length > 0 ? (
-                      <div className="border border-zinc-200 rounded-xl overflow-hidden">
-                        <table className="w-full text-left text-sm whitespace-nowrap">
-                          <thead className="bg-zinc-50/80 border-b border-zinc-200 text-zinc-500 font-medium">
+                      <div className="border border-zinc-200 rounded-xl overflow-x-auto min-w-0 max-w-full custom-scrollbar shadow-sm">
+                        <table className="w-full min-w-[500px] sm:min-w-full text-left text-sm whitespace-nowrap" aria-label="Attachments Table">
+                          <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 text-xs font-semibold sticky top-0 z-10">
                             <tr>
-                              <th className="px-4 py-3">Document Type</th>
-                              <th className="px-4 py-3">File Name</th>
-                              <th className="px-4 py-3">Uploaded At</th>
-                              <th className="px-4 py-3 text-right">Actions</th>
+                              <th scope="col" className="px-4 py-3">Document Type</th>
+                              <th scope="col" className="px-4 py-3">File Name</th>
+                              <th scope="col" className="px-4 py-3">Uploaded At</th>
+                              <th scope="col" className="px-4 py-3 text-right">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-zinc-100">

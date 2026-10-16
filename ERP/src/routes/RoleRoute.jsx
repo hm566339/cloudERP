@@ -17,7 +17,7 @@ export default function RoleRoute({ children, allowedRoles = [], requiredPermiss
   // During initial bootstrap/session verification, display loader instead of premature redirect
   if (sessionStatus === 'idle' || sessionStatus === 'checking') {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
+      <div className="flex h-screen items-center justify-center bg-zinc-50">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
       </div>
     )

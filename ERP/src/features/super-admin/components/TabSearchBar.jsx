@@ -17,8 +17,8 @@ export default function TabSearchBar({
   );
 
   const focusColors = {
-    blue: 'focus:border-blue-500 focus:ring-blue-100',
-    indigo: 'focus:border-indigo-500 focus:ring-indigo-100',
+    blue: 'focus:border-zinc-400 focus:ring-blue-100',
+    indigo: 'focus:border-zinc-400 focus:ring-indigo-100',
     emerald: 'focus:border-emerald-500 focus:ring-emerald-100',
     amber: 'focus:border-amber-500 focus:ring-amber-100',
     violet: 'focus:border-violet-500 focus:ring-violet-100',

@@ -1,27 +1,9 @@
 import React from 'react';
 import { FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import StatusBadge from '../../../../components/common/StatusBadge';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-
-const StatusBadge = ({ status }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    CONFIRMED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    SENT: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    EXPIRED: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-    CANCELLED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-    DRAFT: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  }[s] || { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border inline-flex items-center gap-1.5 ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s}
-    </span>
-  );
-};
 
 export default function SourceQuotationCard({ quotation, sourceQuotationId, sourceQuotationNumber }) {
   const navigate = useNavigate();
@@ -36,13 +18,13 @@ export default function SourceQuotationCard({ quotation, sourceQuotationId, sour
     <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden mb-6">
       <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50 flex items-center justify-between">
         <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-2">
-          <FileText size={16} className="text-blue-500" />
+          <FileText size={16} className="text-zinc-600" />
           Source Quotation
         </h3>
         {quoteId && (
           <button 
             onClick={() => navigate(`/accounts/transactions/quotations/${quoteId}`)}
-            className="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-white border border-zinc-200 shadow-sm px-3 py-1.5 rounded-md transition-colors"
+            className="text-xs font-semibold text-zinc-900 hover:text-zinc-700 bg-white border border-zinc-200 shadow-sm px-3 py-1.5 rounded-md transition-colors"
           >
             View Quotation
           </button>
@@ -54,7 +36,7 @@ export default function SourceQuotationCard({ quotation, sourceQuotationId, sour
             <p className="text-xs font-medium text-zinc-500 mb-1">Quotation No.</p>
             {quoteId ? (
               <span 
-                className="font-mono text-sm font-semibold text-blue-600 cursor-pointer hover:underline"
+                className="font-mono text-sm font-semibold text-zinc-900 cursor-pointer hover:underline"
                 onClick={() => navigate(`/accounts/transactions/quotations/${quoteId}`)}
               >
                 {quoteNumber}

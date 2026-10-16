@@ -77,12 +77,15 @@ export default function TableRowActions({
       {onView && (
         <div className="relative group/tooltip">
           <button
+            type="button"
             onClick={(e) => { e.stopPropagation(); onView(); }}
-            className="p-1.5 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors"
+            aria-label="View Details"
+            title="View Details"
+            className="p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 rounded-lg transition-colors cursor-pointer"
           >
             <Eye size={size} />
           </button>
-          <div className="absolute bottom-full right-0 mb-2 hidden group-hover/tooltip:block px-2 py-1 bg-zinc-800 text-white text-[8px] font-medium rounded whitespace-nowrap z-[100]">
+          <div className="absolute bottom-full right-0 mb-1.5 hidden group-hover/tooltip:block px-2 py-0.5 bg-zinc-900 text-white text-[10px] font-medium rounded shadow-sm whitespace-nowrap z-[100] pointer-events-none">
             View Details
           </div>
         </div>
@@ -91,12 +94,15 @@ export default function TableRowActions({
       {onEdit && (
         <div className="relative group/tooltip">
           <button
+            type="button"
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="p-1.5 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors"
+            aria-label="Edit"
+            title="Edit"
+            className="p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 rounded-lg transition-colors cursor-pointer"
           >
             <Edit size={size} />
           </button>
-          <div className="absolute bottom-full right-0 mb-2 hidden group-hover/tooltip:block px-2 py-1 bg-zinc-800 text-white text-[8px] font-medium rounded whitespace-nowrap z-[100]">
+          <div className="absolute bottom-full right-0 mb-1.5 hidden group-hover/tooltip:block px-2 py-0.5 bg-zinc-900 text-white text-[10px] font-medium rounded shadow-sm whitespace-nowrap z-[100] pointer-events-none">
             Edit
           </div>
         </div>
@@ -105,12 +111,15 @@ export default function TableRowActions({
       {onDelete && (
         <div className="relative group/tooltip">
           <button
+            type="button"
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="p-1.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-lg transition-colors"
+            aria-label="Delete"
+            title="Delete"
+            className="p-1.5 text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded-lg transition-colors cursor-pointer"
           >
             <Trash2 size={size} />
           </button>
-          <div className="absolute bottom-full right-0 mb-2 hidden group-hover/tooltip:block px-2 py-1 bg-zinc-800 text-white text-[8px] font-medium rounded whitespace-nowrap z-[100]">
+          <div className="absolute bottom-full right-0 mb-1.5 hidden group-hover/tooltip:block px-2 py-0.5 bg-zinc-900 text-white text-[10px] font-medium rounded shadow-sm whitespace-nowrap z-[100] pointer-events-none">
             Delete
           </div>
         </div>

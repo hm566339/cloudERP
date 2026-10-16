@@ -468,14 +468,7 @@ export const attachResponseInterceptor = (instance) => {
       }
 
       // Detect which module this request belongs to
-      const moduleName = detectModule(requestUrl);
-
-      // If we can't detect a module, we can't refresh — logout
-      if (!moduleName) {
-        console.error('[Auth] Cannot detect module from URL:', requestUrl);
-        dispatchLogout();
-        return Promise.reject(error);
-      }
+      const moduleName = detectModule(requestUrl) || 'sso';
 
       // If the REFRESH endpoint itself returned 401, token is irrecoverably expired — logout
       if (isRefreshEndpoint(requestUrl)) {
@@ -492,7 +485,11 @@ export const attachResponseInterceptor = (instance) => {
           const newToken = await enqueue(moduleName);
           const freshToken = newToken || getFreshAccessToken();
           if (freshToken && originalRequest?.headers) {
-            originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
+            if (typeof originalRequest.headers.set === 'function') {
+              originalRequest.headers.set('Authorization', `Bearer ${freshToken}`);
+            } else {
+              originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
+            }
           }
           // Refresh succeeded — retry the original request
           return instance(originalRequest);
@@ -506,10 +503,39 @@ export const attachResponseInterceptor = (instance) => {
       setRefreshing(moduleName, true);
       originalRequest._retry = true;
 
-      const isSystemAdmin = isOwnerOrSystemAdminUser();
+      // Only platform super/system admin (loginType === 'ADMIN') uses /admin/token/refresh.
+      // Organization owners and regular members use the canonical SSO /api/sso/token/refresh.
+      const isPlatformSuperAdmin = () => {
+        try {
+          if (typeof window !== 'undefined' && window.__REDUX_STORE__?.getState) {
+            const state = window.__REDUX_STORE__.getState();
+            const user = state.auth?.user;
+            if (user?.loginType === 'ADMIN') return true;
+            const role = String(user?.role || '').toLowerCase().replace(/[\s_]/g, '');
+            if (role === 'superadmin' || role === 'systemadmin' || role === 'rolesuperadmin' || role === 'rolesystemadmin') {
+              return true;
+            }
+          }
+        } catch (e) {}
+
+        if (typeof localStorage !== 'undefined') {
+          try {
+            const userStr = localStorage.getItem('auth_user') || localStorage.getItem('user');
+            if (userStr) {
+              const u = JSON.parse(userStr);
+              if (u?.loginType === 'ADMIN') return true;
+              const role = String(u?.role || '').toLowerCase().replace(/[\s_]/g, '');
+              if (role === 'superadmin' || role === 'systemadmin') return true;
+            }
+          } catch (e) {}
+        }
+        return false;
+      };
+
+      const isSystemAdmin = isPlatformSuperAdmin();
       let refreshEndpoint = isSystemAdmin
         ? '/api/sso/admin/token/refresh'
-        : getRefreshEndpoint(moduleName);
+        : (getRefreshEndpoint(moduleName) || '/api/sso/token/refresh');
       let requestBody = {};
       let refreshToken = null;
 
@@ -531,7 +557,10 @@ export const attachResponseInterceptor = (instance) => {
       }
 
       if (refreshToken) {
-        requestBody = { data: { refreshToken } };
+        requestBody = {
+          refreshToken,
+          data: { refreshToken },
+        };
       }
 
       try {
@@ -555,21 +584,47 @@ export const attachResponseInterceptor = (instance) => {
           const data = refreshResponse.data.data;
           newAccessToken = data.access_token || data.accessToken;
           newRefreshToken = data.refresh_token || data.refreshToken;
+        } else if (refreshResponse.data) {
+          const data = refreshResponse.data;
+          newAccessToken = data.access_token || data.accessToken;
+          newRefreshToken = data.refresh_token || data.refreshToken;
         }
+
+        const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+        const secureAttr = isHttps ? '; Secure' : '';
 
         if (typeof document !== 'undefined') {
           if (newAccessToken) {
-            document.cookie = `ACCESS_TOKEN=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
-            document.cookie = `auth_token=${newAccessToken}; path=/; max-age=86400; SameSite=Lax`;
+            document.cookie = `ACCESS_TOKEN=${newAccessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+            document.cookie = `auth_token=${newAccessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
           }
           if (newRefreshToken) {
-            document.cookie = `ACCESS_TOKEN_REFRESH=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
+            document.cookie = `ACCESS_TOKEN_REFRESH=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax${secureAttr}`;
+          }
+        }
+
+        if (typeof localStorage !== 'undefined') {
+          if (newAccessToken) {
+            localStorage.setItem('ACCESS_TOKEN', newAccessToken);
+            localStorage.setItem('auth_token', newAccessToken);
+          }
+          if (newRefreshToken) {
+            localStorage.setItem('ACCESS_TOKEN_REFRESH', newRefreshToken);
           }
         }
 
         const freshToken = newAccessToken || getFreshAccessToken();
-        if (freshToken && originalRequest?.headers) {
-          originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
+        if (freshToken) {
+          if (originalRequest?.headers) {
+            if (typeof originalRequest.headers.set === 'function') {
+              originalRequest.headers.set('Authorization', `Bearer ${freshToken}`);
+            } else {
+              originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
+            }
+          }
+          if (instance.defaults?.headers?.common) {
+            instance.defaults.headers.common['Authorization'] = `Bearer ${freshToken}`;
+          }
         }
 
         // Token refreshed successfully
@@ -587,22 +642,14 @@ export const attachResponseInterceptor = (instance) => {
 
         const status = refreshError?.response?.status;
 
-        // 500 or 502 -> Server error during refresh, NOT a session expiry.
+        // Server error (5xx) or network offline / timeout during refresh: NOT a confirmed session expiry.
         // DO NOT delete cookies, DO NOT call logout, DO NOT clear Redux.
-        if (status === 500 || status === 502) {
+        if (!status || status >= 500) {
           processQueue(moduleName, refreshError);
-          // Server error during refresh — preserve current path and redirect to login
-          if (typeof window !== 'undefined' && !isAuthPage(window.location.pathname)) {
-            sessionStorage.setItem('auth_return_to', window.location.pathname + window.location.search + window.location.hash);
-            const basePath = (typeof import.meta !== 'undefined' && (import.meta?.env?.VITE_BASE_PATH || import.meta?.env?.BASE_URL))
-              ? (import.meta.env.VITE_BASE_PATH || import.meta.env.BASE_URL).replace(/\/$/, '')
-              : '/erp';
-            window.location.href = `${basePath}/login`;
-          }
           return Promise.reject(refreshError);
         }
 
-        // 401, 403 or other -> genuine refresh failure (session expired).
+        // 401, 403 or genuine client rejection -> session is expired or revoked.
         // Reject all queued requests for this module
         processQueue(moduleName, refreshError);
 

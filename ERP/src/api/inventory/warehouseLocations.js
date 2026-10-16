@@ -21,33 +21,40 @@ export const warehouseLocationsApi = {
   getList: async (filter = {}, pageable = {}) => {
     const params = new URLSearchParams();
 
-    // Filter fields (Spring binds as filter.xxx via @ModelAttribute)
-    if (filter?.companyId)        params.append('filter.companyId',        filter.companyId);
-    if (filter?.searchKey)        params.append('filter.searchKey',        filter.searchKey.trim());
-    if (filter?.warehouseId)      params.append('filter.warehouseId',      filter.warehouseId);
-    if (filter?.parentLocationId) params.append('filter.parentLocationId', filter.parentLocationId);
-    if (filter?.locationCode)     params.append('filter.locationCode',     filter.locationCode.trim());
-    if (filter?.locationName)     params.append('filter.locationName',     filter.locationName.trim());
+    // Filter fields (binds both flat and filter. prefixed)
+    if (filter?.companyId)        { params.append('companyId', filter.companyId); params.append('filter.companyId', filter.companyId); }
+    if (filter?.searchKey)        { params.append('searchKey', filter.searchKey.trim()); params.append('filter.searchKey', filter.searchKey.trim()); }
+    if (filter?.warehouseId)      { params.append('warehouseId', filter.warehouseId); params.append('filter.warehouseId', filter.warehouseId); }
+    if (filter?.parentLocationId) { params.append('parentLocationId', filter.parentLocationId); params.append('filter.parentLocationId', filter.parentLocationId); }
+    if (filter?.locationCode)     { params.append('locationCode', filter.locationCode.trim()); params.append('filter.locationCode', filter.locationCode.trim()); }
+    if (filter?.locationName)     { params.append('locationName', filter.locationName.trim()); params.append('filter.locationName', filter.locationName.trim()); }
     
     if (filter?.isActive !== undefined && filter?.isActive !== '') {
+      params.append('isActive', filter.isActive);
       params.append('filter.isActive', filter.isActive);
     }
 
-    if (filter?.createdFrom)   params.append('filter.createdFrom',   filter.createdFrom);
-    if (filter?.createdTo)     params.append('filter.createdTo',     filter.createdTo);
-    if (filter?.updatedFrom)   params.append('filter.updatedFrom',   filter.updatedFrom);
-    if (filter?.updatedTo)     params.append('filter.updatedTo',     filter.updatedTo);
+    if (filter?.createdFrom)   params.append('createdFrom',   filter.createdFrom);
+    if (filter?.createdTo)     params.append('createdTo',     filter.createdTo);
+    if (filter?.updatedFrom)   params.append('updatedFrom',   filter.updatedFrom);
+    if (filter?.updatedTo)     params.append('updatedTo',     filter.updatedTo);
     
     if (Array.isArray(filter?.ids) && filter.ids.length > 0) {
-      filter.ids.forEach(id => params.append('filter.ids', id));
+      filter.ids.forEach(id => {
+        params.append('ids', id);
+        params.append('filter.ids', id);
+      });
     }
 
     // Pageable fields
-    if (pageable?.page !== undefined) params.append('pageable.page', pageable.page);
-    if (pageable?.size !== undefined) params.append('pageable.size', pageable.size);
+    if (pageable?.page !== undefined) { params.append('page', pageable.page); params.append('pageable.page', pageable.page); }
+    if (pageable?.size !== undefined) { params.append('size', pageable.size); params.append('pageable.size', pageable.size); }
     if (pageable?.sort) {
       const sorts = Array.isArray(pageable.sort) ? pageable.sort : [pageable.sort];
-      sorts.forEach(s => params.append('pageable.sort', s));
+      sorts.forEach(s => {
+        params.append('sort', s);
+        params.append('pageable.sort', s);
+      });
     }
 
     const response = await apiClient.get(`/api/inventory/warehouse-locations?${params.toString()}`);

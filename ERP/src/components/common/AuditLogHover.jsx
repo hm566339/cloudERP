@@ -182,8 +182,8 @@ export default function AuditLogHover({ audit, className = '' }) {
                 {/* Updated */}
                 {(audit.updated || audit.updatedBy || audit.updatedAt) && (
                   <div className="relative">
-                    <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center shadow-sm">
-                      <div className="w-1 h-1 rounded-full bg-blue-500" />
+                    <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-zinc-200 border-2 border-white flex items-center justify-center shadow-xs">
+                      <div className="w-1 h-1 rounded-full bg-zinc-600" />
                     </div>
                     <div className="text-[9px] text-zinc-400 font-bold mb-1.5 uppercase tracking-wider">Last Updated</div>
                     <div className="bg-zinc-50/50 rounded-lg border border-zinc-100/80 p-2.5 space-y-1.5 hover:border-zinc-200 transition-colors">

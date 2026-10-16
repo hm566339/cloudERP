@@ -163,7 +163,7 @@ export default function GenericEntityDetails({ endpoint, entityName }) {
           >
             <LayoutDashboard size={16} /> Overview
             {activeTab === 'overview' && (
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-md"></span>
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-zinc-900 rounded-t-md"></span>
             )}
           </button>
           
@@ -175,7 +175,7 @@ export default function GenericEntityDetails({ endpoint, entityName }) {
           >
             <FileText size={16} /> Audit Log
             {activeTab === 'audit' && (
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 rounded-t-md"></span>
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-zinc-900 rounded-t-md"></span>
             )}
           </button>
         </div>

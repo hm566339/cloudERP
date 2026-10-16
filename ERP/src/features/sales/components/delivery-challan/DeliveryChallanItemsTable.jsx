@@ -28,8 +28,8 @@ export default function DeliveryChallanItemsTable({
         </span>
       </div>
 
-      <div className="w-full">
-        <table className="w-full text-left text-xs table-fixed border-collapse">
+      <div className="w-full overflow-x-auto min-w-0 custom-scrollbar">
+        <table className="w-full min-w-[700px] text-left text-xs table-fixed border-collapse" aria-label="Dispatch Items Table">
           <colgroup>
             <col className="w-[28%]" />
             <col className="w-[8.5%]" />
@@ -39,15 +39,15 @@ export default function DeliveryChallanItemsTable({
             <col className="w-[19%]" />
             <col className="w-[14%]" />
           </colgroup>
-          <thead className="bg-zinc-50/80 border-b border-zinc-200 text-xs font-semibold text-zinc-600">
+          <thead className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold text-zinc-600 sticky top-0 z-10">
             <tr>
-              <th className="px-3 py-2.5 text-left">Product</th>
-              <th className="px-2 py-2.5 text-right">Ordered</th>
-              <th className="px-2 py-2.5 text-right">Delivered</th>
-              <th className="px-2 py-2.5 text-right">Pending</th>
-              <th className="px-2 py-2.5 text-right">Avail. Stock</th>
-              <th className="px-2.5 py-2.5 text-left">Warehouse Location</th>
-              <th className="px-3 py-2.5 text-right">Dispatch Qty</th>
+              <th scope="col" className="px-3 py-2.5 text-left">Product</th>
+              <th scope="col" className="px-2 py-2.5 text-right">Ordered</th>
+              <th scope="col" className="px-2 py-2.5 text-right">Delivered</th>
+              <th scope="col" className="px-2 py-2.5 text-right">Pending</th>
+              <th scope="col" className="px-2 py-2.5 text-right">Avail. Stock</th>
+              <th scope="col" className="px-2.5 py-2.5 text-left">Warehouse Location</th>
+              <th scope="col" className="px-3 py-2.5 text-right">Dispatch Qty</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 bg-white">
@@ -55,7 +55,7 @@ export default function DeliveryChallanItemsTable({
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-zinc-500">
                   <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
                     <span className="text-xs font-medium">
                       Loading items from {isReceiptMode ? 'linked Sales Invoice' : 'Sales Order'}...
                     </span>
@@ -159,7 +159,7 @@ export default function DeliveryChallanItemsTable({
                             ? 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed'
                             : isMissingLocation
                               ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/50 text-red-700'
-                              : 'border-zinc-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-zinc-800'
+                              : 'border-zinc-300 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 text-zinc-800'
                         }`}
                       >
                         <option value="">Select Location *</option>
@@ -188,7 +188,7 @@ export default function DeliveryChallanItemsTable({
                             ? 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed'
                             : isQtyError 
                               ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50 text-red-700' 
-                              : 'border-zinc-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                              : 'border-zinc-300 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
                         } outline-none transition-all`}
                       />
                       {it.available === 0 ? (

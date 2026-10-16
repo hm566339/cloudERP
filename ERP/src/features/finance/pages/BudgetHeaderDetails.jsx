@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -209,7 +209,7 @@ export default function BudgetHeaderDetails() {
   return (
     <div className="flex flex-col min-h-full bg-zinc-50">
       <div className="sticky top-0 z-20 bg-white border-b border-zinc-200 shadow-sm">
-        <div className="mx-auto max-w-7xl px-6 py-5">
+        <div className="mx-auto max-w-7xl 3xl:max-w-[1800px] px-4 sm:px-6 py-4 sm:py-5">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="space-y-3">
@@ -254,23 +254,23 @@ export default function BudgetHeaderDetails() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-7xl space-y-6 px-6 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-[8.8px] uppercase tracking-[0.24em] text-zinc-500">Total Budget</p>
+      <div className="mx-auto w-full max-w-7xl 3xl:max-w-[1800px] space-y-6 px-4 sm:px-6 py-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="rounded-3xl border border-zinc-200 bg-white p-5 sm:p-6 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Total Budget</p>
             <p className="mt-4 text-3xl font-semibold text-zinc-900">{formatCurrency(metrics.totalBudget)}</p>
           </div>
-          <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-[8.8px] uppercase tracking-[0.24em] text-zinc-500">Total Allocated</p>
-            <p className="mt-4 text-3xl font-semibold text-blue-700">{formatCurrency(metrics.totalAllocated)}</p>
+          <div className="rounded-3xl border border-zinc-200 bg-white p-5 sm:p-6 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Total Allocated</p>
+            <p className="mt-4 text-2xl sm:text-3xl font-semibold text-zinc-900">{formatCurrency(metrics.totalAllocated)}</p>
           </div>
-          <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-[8.8px] uppercase tracking-[0.24em] text-zinc-500">Total Utilized</p>
-            <p className="mt-4 text-3xl font-semibold text-emerald-700">{formatCurrency(metrics.totalUtilized)}</p>
+          <div className="rounded-3xl border border-zinc-200 bg-white p-5 sm:p-6 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Total Utilized</p>
+            <p className="mt-4 text-2xl sm:text-3xl font-semibold text-emerald-700">{formatCurrency(metrics.totalUtilized)}</p>
           </div>
-          <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-            <p className="text-[8.8px] uppercase tracking-[0.24em] text-zinc-500">Remaining Budget</p>
-            <p className="mt-4 text-3xl font-semibold text-amber-700">{formatCurrency(effectiveRemaining)}</p>
+          <div className="rounded-3xl border border-zinc-200 bg-white p-5 sm:p-6 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">Remaining Budget</p>
+            <p className="mt-4 text-2xl sm:text-3xl font-semibold text-amber-700">{formatCurrency(effectiveRemaining)}</p>
           </div>
         </div>
 
@@ -327,10 +327,10 @@ export default function BudgetHeaderDetails() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm text-zinc-700">
                     <span>Allocation %</span>
-                    <span className="font-semibold text-blue-700">{formatPct(metrics.overallAllocation)}</span>
+                    <span className="font-semibold text-teal-700">{formatPct(metrics.overallAllocation)}</span>
                   </div>
                   <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
-                    <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${Math.min(metrics.overallAllocation, 100)}%` }} />
+                    <div className="h-full bg-teal-600 transition-all duration-500" style={{ width: `${Math.min(metrics.overallAllocation, 100)}%` }} />
                   </div>
                 </div>
                 <div className="space-y-2">

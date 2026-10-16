@@ -12,33 +12,13 @@ import { useApiQuery, useApiMutation } from '../../../hooks/useApi';
 import { glJournalEntriesApi, chartOfAccountsApi, periodsApi, financeApi } from '../../../api/account';
 import { PageLoader } from '../../../components/common/SkeletonLoader';
 import { useAppDispatch } from '../../../app/hooks';
+import StatusBadge from '../../../components/common/StatusBadge';
 import { addAlert } from '../../notifications/notificationSlice';
 import { confirmDialog } from '../../../utils/confirmDialog';
 import JournalEntryForm from '../components/JournalEntryForm';
 import { useRoutePath } from "../../../hooks/useRoutePath";
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-
-const StatusBadge = ({ status }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    APPROVED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    POSTED: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    SUBMITTED: { cls: 'bg-indigo-50 text-indigo-700 border-indigo-200', dot: 'bg-indigo-500' },
-    DRAFT: { cls: 'bg-zinc-50 text-zinc-600 border-zinc-200', dot: 'bg-zinc-500' },
-    REVERSED: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    CANCELLED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-  }[s] || { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`px-2.5 py-1 text-[8.8px] font-semibold rounded-md border inline-flex items-center gap-1.5 uppercase ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s}
-    </span>
-  );
-};
 
 const EmptyState = ({ title, message, icon: Icon }) => (
   <div className="flex flex-col items-center justify-center p-12 text-center bg-white border border-zinc-100 rounded-xl shadow-sm h-full">
@@ -251,10 +231,10 @@ export default function JournalEntryDetails() {
       </div>
 
         <div className="flex px-6 md:px-8 border-t border-zinc-200 bg-zinc-50/50 gap-6 overflow-x-auto no-scrollbar">
-          <button onClick={() => setActiveTab('overview')} className={`py-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-zinc-500 hover:text-zinc-900'}`}>
+          <button onClick={() => setActiveTab('overview')} className={`py-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'overview' ? 'border-zinc-900 text-indigo-600' : 'border-transparent text-zinc-500 hover:text-zinc-900'}`}>
             <Info size={16} strokeWidth={2.5} /> Overview
           </button>
-          <button onClick={() => setActiveTab('lines')} className={`py-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'lines' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-zinc-500 hover:text-zinc-900'}`}>
+          <button onClick={() => setActiveTab('lines')} className={`py-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'lines' ? 'border-zinc-900 text-indigo-600' : 'border-transparent text-zinc-500 hover:text-zinc-900'}`}>
             <FileText size={16} strokeWidth={2.5} /> Line Items ({journal.lineCount || 0})
           </button>
         </div>
@@ -342,7 +322,7 @@ export default function JournalEntryDetails() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-5 py-3.5 text-[10.4px] font-semibold whitespace-nowrap border-b-2 transition-all ${
                   activeTab === tab.id
-                    ? 'border-blue-600 text-blue-700 bg-white shadow-[0_-2px_0_0_rgba(37,99,235,0.02)_inset]'
+                    ? 'border-zinc-900 text-blue-700 bg-white shadow-[0_-2px_0_0_rgba(37,99,235,0.02)_inset]'
                     : 'border-transparent text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100/50 hover:border-zinc-300'
                 }`}
               >

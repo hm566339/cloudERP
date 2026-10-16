@@ -67,7 +67,40 @@ export default function DataTablePagination({
 
   return (
     <div className="w-full px-4 py-3 sm:px-6 border-t border-zinc-200/80 bg-white">
-      <div className="flex flex-wrap gap-4 items-center justify-between">
+      {/* Mobile view (< sm) */}
+      <div className="flex sm:hidden items-center justify-between gap-2">
+        <p className="text-xs text-zinc-500 truncate">
+          <span className="font-semibold text-zinc-800">{from}–{to}</span> of{' '}
+          <span className="font-semibold text-zinc-800">{total.toLocaleString()}</span>
+        </p>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-xs text-zinc-500 mr-1">
+            {displayPage}/{totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => canPrev && handlePageClick(displayPage - 1)}
+            disabled={!canPrev}
+            aria-label="Previous page"
+            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={() => canNext && handlePageClick(displayPage + 1)}
+            disabled={!canNext}
+            aria-label="Next page"
+            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop / Tablet view (>= sm) */}
+      <div className="hidden sm:flex flex-wrap gap-4 items-center justify-between">
         {/* Left: summary */}
         <div className="flex items-center justify-center md:justify-start">
           <p className="text-xs text-zinc-500 whitespace-nowrap">

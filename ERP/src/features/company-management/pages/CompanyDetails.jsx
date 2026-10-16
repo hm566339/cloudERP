@@ -99,8 +99,8 @@ export default function CompanyDetails() {
 
   if (isError || !tenant) {
     return (
-      <div className="p-12 text-center text-slate-500 card">
-        <Building2 size={32} className="mx-auto mb-4 text-slate-300" />
+      <div className="p-12 text-center text-zinc-500 card">
+        <Building2 size={32} className="mx-auto mb-4 text-zinc-300" />
         <p>Error loading company details or company not found.</p>
         <button onClick={() => navigate(-1)} className="mt-4 btn-secondary mx-auto">Go Back</button>
       </div>

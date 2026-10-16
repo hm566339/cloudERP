@@ -434,7 +434,7 @@ export default function ExpenseReportsTab({ companyId }) {
           >
             <User size={14} />
             Staff & Driver Analysis
-            {activeTab === 'staff-driver' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600" />}
+            {activeTab === 'staff-driver' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900" />}
           </button>
           <button
             onClick={() => { setActiveTab('category'); setPagination(p => ({...p, page: 0})); }}
@@ -444,7 +444,7 @@ export default function ExpenseReportsTab({ companyId }) {
           >
             <Tag size={14} />
             Category-wise Breakdown
-            {activeTab === 'category' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600" />}
+            {activeTab === 'category' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900" />}
           </button>
           <button
             onClick={() => { setActiveTab('vehicles'); setPagination(p => ({...p, page: 0})); }}
@@ -454,7 +454,7 @@ export default function ExpenseReportsTab({ companyId }) {
           >
             <Truck size={14} />
             Vehicle & Fleet Expenses
-            {activeTab === 'vehicles' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600" />}
+            {activeTab === 'vehicles' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900" />}
           </button>
           <button
             onClick={() => { setActiveTab('sales-order-dc'); setPagination(p => ({...p, page: 0})); }}
@@ -464,7 +464,7 @@ export default function ExpenseReportsTab({ companyId }) {
           >
             <ShoppingCart size={14} />
             Sales Order / DC Linked Expenses
-            {activeTab === 'sales-order-dc' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600" />}
+            {activeTab === 'sales-order-dc' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900" />}
           </button>
         </div>
 

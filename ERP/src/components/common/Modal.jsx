@@ -2,7 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl' }) => {
+const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl', bodyClassName }) => {
   if (!isOpen) return null;
 
   return createPortal(
@@ -19,7 +19,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = 'max-w-2xl' }) => 
           </button>
         </div>
 
-        <div className="p-4 sm:p-6 overflow-y-auto overscroll-contain bg-white">
+        <div className={bodyClassName || "p-4 sm:p-6 overflow-y-auto overscroll-contain bg-white"}>
           {children}
         </div>
       </div>

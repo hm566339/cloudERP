@@ -17,35 +17,12 @@ import { useAppDispatch } from '../../../app/hooks';
 import { confirmDialog } from '../../../utils/confirmDialog';
 import PartialPaymentModal from '../components/PartialPaymentModal';
 import { useRoutePath } from "../../../hooks/useRoutePath";
+import StatusBadge from '../../../components/common/StatusBadge';
 import SalesInvoiceOverviewTab from '../components/sales-invoice-details/SalesInvoiceOverviewTab';
 import SalesInvoiceItemsTab from '../components/sales-invoice-details/SalesInvoiceItemsTab';
 import SalesInvoiceEditModal from '../components/sales-invoice-details/SalesInvoiceEditModal';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-
-const StatusBadge = ({ status }) => {
-  if (!status) return null;
-  const s = status.toString().toUpperCase();
-  const cfg = {
-    PAID: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    POSTED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    APPROVED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    PARTIALLY_PAID: { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
-    UNPAID: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-    OVERDUE: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-    DRAFT: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    PENDING_APPROVAL: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    CANCELLED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-    REJECTED: { cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-  }[s] || { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
-
-  return (
-    <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border inline-flex items-center gap-1.5 ${cfg.cls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {s}
-    </span>
-  );
-};
 
 export default function SalesInvoiceDetails() {
   const { id: paramId, invoiceId: routeInvoiceId } = useParams();
@@ -585,15 +562,15 @@ export default function SalesInvoiceDetails() {
                   {isEmpty(paymentHistory) ? (
                     <EmptyState icon={<CreditCard size={48} />} title="No Payments Recorded" desc="No payments have been received for this invoice yet." />
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-bold uppercase tracking-wider text-[8.8px]">
+                    <div className="overflow-x-auto min-w-0 custom-scrollbar">
+                      <table className="w-full text-left text-sm whitespace-nowrap" aria-label="Payment History Table">
+                        <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold uppercase tracking-wider text-xs sticky top-0 z-10">
                           <tr>
-                            <th className="p-4">Receipt Number</th>
-                            <th className="p-4">Receipt Date</th>
-                            <th className="p-4 text-right">Amount</th>
-                            <th className="p-4">Payment Mode</th>
-                            <th className="p-4">Reference Number</th>
+                            <th scope="col" className="p-4">Receipt Number</th>
+                            <th scope="col" className="p-4">Receipt Date</th>
+                            <th scope="col" className="p-4 text-right">Amount</th>
+                            <th scope="col" className="p-4">Payment Mode</th>
+                            <th scope="col" className="p-4">Reference Number</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-100">
@@ -601,7 +578,7 @@ export default function SalesInvoiceDetails() {
                             <tr key={idx} className="hover:bg-zinc-50/50">
                               <td className="p-4 font-mono text-xs font-semibold text-blue-600">{p.receiptNumber || p.id}</td>
                               <td className="p-4 text-zinc-600">{p.receiptDate || p.date}</td>
-                              <td className="p-4 text-right font-bold text-emerald-600">{curr} {fmt(p.amount)}</td>
+                              <td className="p-4 text-right font-bold text-emerald-600 tabular-nums font-mono">{curr} {fmt(p.amount)}</td>
                               <td className="p-4 text-zinc-700 font-medium">{p.paymentMode || 'BANK_TRANSFER'}</td>
                               <td className="p-4 font-mono text-xs text-zinc-500">{p.referenceNumber || '-'}</td>
                             </tr>
@@ -619,27 +596,27 @@ export default function SalesInvoiceDetails() {
               <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden animate-in fade-in max-w-4xl">
                 <div className="p-5 border-b border-zinc-100 bg-zinc-50/50 flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">Voucher Number</p>
+                    <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Voucher Number</p>
                     <p className="text-base font-mono font-bold text-zinc-900">{journalEntry.voucherNumber || `JV-${inv.invoiceNumber || 'INV'}`}</p>
                   </div>
                   <div>
-                    <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">Posting Date</p>
+                    <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Posting Date</p>
                     <p className="text-sm font-medium text-zinc-800">{journalEntry.postingDate || inv.invoiceDate}</p>
                   </div>
                   <div>
-                    <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">GL Posting Status</p>
+                    <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">GL Posting Status</p>
                     <StatusBadge status={inv.glPostingStatus || 'DRAFT'} />
                   </div>
                 </div>
                 <div className="p-6 space-y-6">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm whitespace-nowrap">
-                      <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-bold uppercase tracking-wider text-[8.8px]">
+                  <div className="overflow-x-auto min-w-0 custom-scrollbar">
+                    <table className="w-full text-left text-sm whitespace-nowrap" aria-label="Journal Entries Table">
+                      <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold uppercase tracking-wider text-xs sticky top-0 z-10">
                         <tr>
-                          <th className="p-4">Account Code</th>
-                          <th className="p-4">Account Name</th>
-                          <th className="p-4 text-right">Debit ({curr})</th>
-                          <th className="p-4 text-right">Credit ({curr})</th>
+                          <th scope="col" className="p-4">Account Code</th>
+                          <th scope="col" className="p-4">Account Name</th>
+                          <th scope="col" className="p-4 text-right">Debit ({curr})</th>
+                          <th scope="col" className="p-4 text-right">Credit ({curr})</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-100">

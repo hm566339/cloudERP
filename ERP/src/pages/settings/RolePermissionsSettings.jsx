@@ -494,21 +494,21 @@ export default function RolePermissionsSettings() {
               </div>
 
               {/* Table Container */}
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-auto min-w-0 max-w-full custom-scrollbar">
                 {isLoadingMatrix ? (
                   <div className="p-12 flex justify-center text-zinc-400"><Loader2 className="animate-spin w-8 h-8" /></div>
                 ) : (
-                  <table className="w-full text-left border-collapse min-w-[800px]">
-                    <thead className="sticky top-0 bg-white z-10 shadow-sm shadow-zinc-100">
+                  <table className="w-full text-left border-collapse min-w-[800px]" aria-label="Role Permissions Matrix">
+                    <thead className="sticky top-0 bg-zinc-50 z-20 border-b border-zinc-200">
                       <tr>
-                        <th className="py-3 px-6 text-[11px] font-bold text-zinc-500 uppercase tracking-wider border-b border-zinc-200">
+                        <th scope="col" className="py-3 px-6 text-xs font-semibold text-zinc-600 uppercase tracking-wider border-b border-zinc-200">
                           Feature
                         </th>
-                        <th className="py-3 px-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider text-center border-b border-zinc-200 w-24">
+                        <th scope="col" className="py-3 px-4 text-xs font-semibold text-zinc-600 uppercase tracking-wider text-center border-b border-zinc-200 w-24">
                           Select all
                         </th>
                         {ACTIONS.map(action => (
-                          <th key={action.value} className="py-3 px-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider text-center border-b border-zinc-200 w-24">
+                          <th key={action.value} scope="col" className="py-3 px-4 text-xs font-semibold text-zinc-600 uppercase tracking-wider text-center border-b border-zinc-200 w-24">
                             {action.label}
                           </th>
                         ))}

@@ -88,7 +88,7 @@ const ProformaInvoiceOverview = ({ pi, isLoading, isError, onRetry }) => {
               {quotationId && (
                 <button
                   onClick={() => navigate(`/accounts/transactions/quotations/${quotationId}`)}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-white border border-zinc-200 shadow-sm px-2.5 py-1 rounded-md transition-colors"
+                  className="text-xs font-semibold text-zinc-900 hover:text-zinc-700 bg-white border border-zinc-200 shadow-sm px-2.5 py-1 rounded-md transition-colors"
                 >
                   View Quotation
                 </button>
@@ -613,7 +613,7 @@ export default function ProformaInvoicesPage() {
           'aria-label': 'Send Proforma Invoice to Customer',
           icon: <Send size={14} />,
           onClick: () => handleSend(pi),
-          className: 'text-blue-600 hover:text-blue-700'
+          className: 'text-zinc-900 hover:text-zinc-700'
         }
       ] : []),
       ...(rowStatus === 'ISSUED' && canApprove() ? [
@@ -645,7 +645,7 @@ export default function ProformaInvoicesPage() {
           'aria-label': 'Convert Proforma Invoice to Sales Order',
           icon: <ShoppingCart size={14} />,
           onClick: () => setSoPiForModal(pi),
-          className: 'text-indigo-600 hover:text-indigo-700'
+          className: 'text-zinc-900 hover:text-zinc-700'
         }
       ] : []),
       ...(rowStatus === 'CONFIRMED' && pi.advanceRequired ? [

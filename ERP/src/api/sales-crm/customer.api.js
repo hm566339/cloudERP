@@ -82,11 +82,12 @@ export const customerApiSlice = baseApi.injectEndpoints({
       query: (arg) => {
         const isString = typeof arg === 'string';
         const companyId = isString ? arg : arg?.companyId;
-        const params = isString ? { companyId } : { ...arg };
+        const search = isString ? undefined : (arg?.search || arg?.searchKey);
+        const { search: _s, searchKey: _sk, ...rest } = isString ? {} : arg;
         return {
-          url: `/api/account/customers/search`,
-        headers: { 'X-Company-Id': companyId },
-        params,
+          url: `/api/account/customers`,
+          headers: companyId ? { 'X-Company-Id': companyId } : undefined,
+          params: { ...rest, searchKey: search, isActive: true, size: 50 },
         };
       },
       providesTags: ['Customer'],

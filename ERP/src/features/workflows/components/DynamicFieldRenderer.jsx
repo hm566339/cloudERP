@@ -27,7 +27,7 @@ export default function DynamicFieldRenderer({
             className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
               error
                 ? 'border-red-400 bg-red-50/20 focus:border-red-500'
-                : 'border-zinc-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
             } ${isFieldReadOnly ? 'bg-zinc-50 text-zinc-700 cursor-not-allowed border-zinc-200' : 'bg-white'}`}
           />
         );
@@ -44,7 +44,7 @@ export default function DynamicFieldRenderer({
             className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
               error
                 ? 'border-red-400 bg-red-50/20 focus:border-red-500'
-                : 'border-zinc-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
             } ${isFieldReadOnly ? 'bg-zinc-50 text-zinc-700 cursor-not-allowed border-zinc-200' : 'bg-white'}`}
           />
         );
@@ -59,7 +59,7 @@ export default function DynamicFieldRenderer({
             className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
               error
                 ? 'border-red-400 bg-red-50/20 focus:border-red-500'
-                : 'border-zinc-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
             } ${isFieldReadOnly ? 'bg-zinc-50 text-zinc-700 cursor-not-allowed border-zinc-200' : 'bg-white'}`}
           >
             <option value="">{field.placeholder || 'Select option'}</option>
@@ -80,7 +80,7 @@ export default function DynamicFieldRenderer({
               disabled={isFieldReadOnly}
               checked={Boolean(currentValue)}
               onChange={(e) => onChange?.(field.name, e.target.checked)}
-              className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+              className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-zinc-900/10 disabled:opacity-50"
             />
             <span className="text-xs text-zinc-700 select-none">{field.label}</span>
           </label>
@@ -98,7 +98,7 @@ export default function DynamicFieldRenderer({
                   value={opt.value}
                   checked={String(currentValue) === String(opt.value)}
                   onChange={(e) => onChange?.(field.name, e.target.value)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                  className="h-4 w-4 text-blue-600 focus:ring-zinc-900/10 disabled:opacity-50"
                 />
                 <span>{opt.label || opt.value}</span>
               </label>
@@ -118,7 +118,7 @@ export default function DynamicFieldRenderer({
             className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
               error
                 ? 'border-red-400 bg-red-50/20 focus:border-red-500'
-                : 'border-zinc-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
             } ${isFieldReadOnly ? 'bg-zinc-50 text-zinc-700 cursor-not-allowed border-zinc-200' : 'bg-white'}`}
           />
         );
@@ -155,7 +155,7 @@ export default function DynamicFieldRenderer({
             className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
               error
                 ? 'border-red-400 bg-red-50/20 focus:border-red-500'
-                : 'border-zinc-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
             } ${isFieldReadOnly ? 'bg-zinc-50 text-zinc-700 cursor-not-allowed border-zinc-200' : 'bg-white'}`}
           />
         );

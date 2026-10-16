@@ -11,7 +11,7 @@ export default function LandingPricing() {
   };
 
   return (
-    <section id="pricing" className="scroll-mt-24 py-20 sm:py-28 bg-slate-50/70 border-t border-zinc-200/80">
+    <section id="pricing" className="scroll-mt-24 py-20 sm:py-28 bg-zinc-50/70 border-t border-zinc-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">

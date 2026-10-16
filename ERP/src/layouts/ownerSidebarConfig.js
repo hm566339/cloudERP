@@ -43,6 +43,66 @@ export function getOwnerSidebarNavGroups({
   const isWorkflowEntitled = entitledModules.includes('WORKFLOW');
   const isSsoEntitled = entitledModules.includes('SSO');
 
+  const allModules = [
+    {
+      id: 'finance',
+      label: 'Finance & Accounts',
+      icon: Calculator,
+      isEntitled: isFinanceEntitled,
+      moduleKey: 'ACCOUNT',
+      accentColor: 'text-emerald-600',
+      isNonClickable: true,
+    },
+    {
+      id: 'inventory',
+      label: 'Inventory Management',
+      icon: Boxes,
+      isEntitled: isInventoryEntitled,
+      moduleKey: 'INVENTORY',
+      accentColor: 'text-amber-600',
+      isNonClickable: true,
+    },
+    {
+      id: 'sales',
+      label: 'Sales & CRM',
+      icon: ShoppingCart,
+      isEntitled: isCrmEntitled,
+      moduleKey: 'CRM',
+      accentColor: 'text-blue-600',
+      isNonClickable: true,
+    },
+    {
+      id: 'purchases',
+      label: 'Purchasing & Procurement',
+      icon: Briefcase,
+      isEntitled: isPurchasesEntitled,
+      moduleKey: 'PURCHASES',
+      accentColor: 'text-rose-600',
+      isNonClickable: true,
+    },
+    {
+      id: 'workflow',
+      label: 'Workflow Automation',
+      icon: Workflow,
+      isEntitled: isWorkflowEntitled,
+      moduleKey: 'WORKFLOW',
+      accentColor: 'text-purple-600',
+      isNonClickable: true,
+    },
+    {
+      id: 'sso',
+      label: 'SSO & Administration',
+      icon: ShieldCheck,
+      isEntitled: isSsoEntitled,
+      moduleKey: 'SSO',
+      accentColor: 'text-indigo-600',
+      isNonClickable: true,
+    },
+  ];
+
+  // ONLY include modules that are available in this organization
+  const availableOrgModules = allModules.filter((m) => m.isEntitled);
+
   return [
     {
       id: 'dashboard-group',
@@ -75,62 +135,8 @@ export function getOwnerSidebarNavGroups({
     {
       id: 'modules-group',
       title: 'MODULES',
-      items: [
-        {
-          id: 'finance',
-          label: 'Finance & Accounts',
-          path: '/accounts/dashboard',
-          icon: Calculator,
-          isEntitled: isFinanceEntitled,
-          moduleKey: 'ACCOUNT',
-          accentColor: 'text-emerald-600',
-        },
-        {
-          id: 'inventory',
-          label: 'Inventory Management',
-          path: '/inventory/dashboard',
-          icon: Boxes,
-          isEntitled: isInventoryEntitled,
-          moduleKey: 'INVENTORY',
-          accentColor: 'text-amber-600',
-        },
-        {
-          id: 'sales',
-          label: 'Sales & CRM',
-          path: '/crm/dashboard',
-          icon: ShoppingCart,
-          isEntitled: isCrmEntitled,
-          moduleKey: 'CRM',
-          accentColor: 'text-blue-600',
-        },
-        {
-          id: 'purchases',
-          label: 'Purchasing & Procurement',
-          path: '/purchase-requisitions',
-          icon: Briefcase,
-          isEntitled: isPurchasesEntitled,
-          moduleKey: 'PURCHASES',
-          accentColor: 'text-rose-600',
-        },
-        {
-          id: 'workflow',
-          label: 'Workflow Automation',
-          path: '/workflows',
-          icon: Workflow,
-          isEntitled: isWorkflowEntitled,
-          moduleKey: 'WORKFLOW',
-          accentColor: 'text-purple-600',
-        },
-        {
-          id: 'sso',
-          label: 'SSO & Administration',
-          path: activeCompanyId ? `/company/${activeCompanyId}/admin` : '/admin',
-          icon: ShieldCheck,
-          isEntitled: isSsoEntitled,
-          moduleKey: 'SSO',
-          accentColor: 'text-indigo-600',
-        },
-      ],
+      isDisplayOnly: true,
+      items: availableOrgModules,
     },
     {
       id: 'settings-group',
@@ -139,7 +145,7 @@ export function getOwnerSidebarNavGroups({
         {
           id: 'organization-settings',
           label: 'Organization Settings',
-          path: '/accounts/settings',
+          path: '/owner/settings',
           icon: Settings,
           isEntitled: true,
         },

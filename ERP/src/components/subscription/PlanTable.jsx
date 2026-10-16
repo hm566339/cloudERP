@@ -21,20 +21,20 @@ export default function PlanTable({
   onDelete,
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-2xs overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse text-xs">
+    <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-2xs overflow-hidden max-w-full min-w-0">
+      <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+        <table className="w-full min-w-[760px] sm:min-w-full text-left border-collapse text-xs md:text-sm" aria-label="Subscription Plans Table">
           <thead>
-            <tr className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
-              <th className="py-3.5 px-4">Plan Name</th>
-              <th className="py-3.5 px-4">Code</th>
-              <th className="py-3.5 px-4">Duration</th>
-              <th className="py-3.5 px-4">Max Companies</th>
-              <th className="py-3.5 px-4">Max Users / Co.</th>
-              <th className="py-3.5 px-4">Price</th>
-              <th className="py-3.5 px-4">Modules</th>
-              <th className="py-3.5 px-4">Status</th>
-              <th className="py-3.5 px-4 text-right">Actions</th>
+            <tr className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold text-zinc-600 uppercase tracking-wider sticky top-0 z-10">
+              <th scope="col" className="py-3.5 px-4">Plan Name</th>
+              <th scope="col" className="py-3.5 px-4">Code</th>
+              <th scope="col" className="py-3.5 px-4">Duration</th>
+              <th scope="col" className="py-3.5 px-4">Max Companies</th>
+              <th scope="col" className="py-3.5 px-4">Max Users / Co.</th>
+              <th scope="col" className="py-3.5 px-4">Price</th>
+              <th scope="col" className="py-3.5 px-4">Modules</th>
+              <th scope="col" className="py-3.5 px-4">Status</th>
+              <th scope="col" className="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 text-zinc-800">

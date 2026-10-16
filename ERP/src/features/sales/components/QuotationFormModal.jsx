@@ -11,7 +11,7 @@ import CustomSelect from '../../../components/common/CustomSelect';
 import { useGetHsnSacsQuery, useGetGstStatesQuery, useGetGstSlabsQuery, useGetGstRegistrationsQuery } from '../../../api/account/accounting.api';
 import { fetchHsnSacs, selectHsnSacItems } from '../../account/store/hsnSacSlice';
 import HsnSacSelect from '../../../components/common/HsnSacSelect';
-import { useGetGroupedStockQuery } from '../../../api/inventory/inventory.api';
+import { useGetGroupedStockQuery, useGetProductsQuery } from '../../../api/inventory/inventory.api';
 import { productsApi } from '../../../api/inventory/products';
 import ProductForm from '../../inventory/components/ProductForm';
 import useDebounce from '../../../hooks/useDebounce';
@@ -266,17 +266,68 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
     { skip: !quotationId }
   );
 
-  const { data: productsData, isLoading: productsLoading } = useGetGroupedStockQuery({ companyId, page: 0, size: 50 }, { skip: !isOpen });
-  const fetchedProducts = useMemo(() => Array.isArray(productsData) ? productsData : productsData?.data || productsData?.content || [], [productsData]);
+  const { data: allProductsData, isLoading: allProductsLoading } = useGetProductsQuery({ companyId, page: 0, size: 200 }, { skip: !isOpen });
+  const { data: stockData, isLoading: stockLoading } = useGetGroupedStockQuery({ companyId, page: 0, size: 200 }, { skip: !isOpen });
+  const productsLoading = allProductsLoading || stockLoading;
+
+  const masterProducts = useMemo(() => {
+    if (Array.isArray(allProductsData)) return allProductsData;
+    return allProductsData?.data?.content || allProductsData?.data?.records || allProductsData?.data || allProductsData?.content || [];
+  }, [allProductsData]);
+
+  const fetchedProducts = useMemo(() => {
+    if (Array.isArray(stockData)) return stockData;
+    return stockData?.data?.content || stockData?.data?.records || stockData?.data || stockData?.content || [];
+  }, [stockData]);
+
   const [createdProducts, setCreatedProducts] = useState([]);
   const products = useMemo(() => {
     const productMap = new Map();
-    [...fetchedProducts, ...createdProducts].forEach((product) => {
-      const productId = product?.productId || product?.id;
-      if (productId) productMap.set(String(productId), { ...product, productId });
+
+    masterProducts.forEach(p => {
+      if (!p) return;
+      const id = p.id || p.productId;
+      if (!id) return;
+      productMap.set(String(id), {
+        productId: id,
+        id: id,
+        productName: p.productName || p.name || '',
+        productCode: p.productCode || p.code || '',
+        sku: p.sku || '',
+        description: p.description || '',
+        sellingPrice: p.sellingPrice ?? p.pricing?.sellingPrice ?? p.standardCost ?? 0,
+        standardCost: p.standardCost ?? 0,
+        baseUomId: p.baseUomId || p.uom?.id,
+        baseUomCode: p.baseUomCode || p.uom?.code || p.unit || 'PCS',
+        baseUomName: p.baseUomName || p.uom?.name || '',
+        hsnSacId: p.hsnSacId || p.hsnSac?.id || '',
+        hsnSacCode: p.hsnSacCode || p.hsnSac?.code || '',
+        hsnSacName: p.hsnSacName || p.hsnSac?.description || '',
+        warehouses: []
+      });
     });
+
+    [...fetchedProducts, ...createdProducts].forEach(p => {
+      if (!p) return;
+      const id = p.productId || p.id;
+      if (!id) return;
+      const existing = productMap.get(String(id)) || {};
+      productMap.set(String(id), {
+        ...existing,
+        ...p,
+        productId: id,
+        id: id,
+        productName: p.productName || p.name || existing.productName || '',
+        sellingPrice: p.sellingPrice ?? p.pricing?.sellingPrice ?? existing.sellingPrice ?? 0,
+        baseUomCode: p.baseUomCode || p.uom?.code || p.unit || existing.baseUomCode || 'PCS',
+        hsnSacId: p.hsnSacId || p.hsnSac?.id || existing.hsnSacId || '',
+        hsnSacCode: p.hsnSacCode || p.hsnSac?.code || existing.hsnSacCode || '',
+        hsnSacName: p.hsnSacName || p.hsnSac?.description || existing.hsnSacName || ''
+      });
+    });
+
     return Array.from(productMap.values());
-  }, [createdProducts, fetchedProducts]);
+  }, [masterProducts, createdProducts, fetchedProducts]);
 
   // ── GST DATA SOURCES (mirroring InvoiceFormModal) ──
   // 1. Redux HSN/SAC items
@@ -497,12 +548,63 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
 
   useEffect(() => {
     if (customer && formData.customerId && !quotationId) {
-      setFormData(prev => ({
-        ...prev,
-        customerName: customer.customerName || customer.companyName || customer.name || prev.customerName
-      }));
+      setFormData(prev => {
+        const next = {
+          ...prev,
+          customerName: customer.customerName || customer.companyName || customer.name || prev.customerName
+        };
+
+        // Auto-select Place of Supply
+        if (gstStates.length > 0) {
+          let custStateCode = '';
+          if (customer.gstin && customer.gstin.length >= 2) {
+            custStateCode = customer.gstin.substring(0, 2);
+          } else if (customer.stateCode) {
+            custStateCode = String(customer.stateCode);
+          } else if (customer.addresses?.[0]?.gstStateCode) {
+            custStateCode = String(customer.addresses[0].gstStateCode);
+          }
+
+          let matched = null;
+          if (custStateCode) {
+            const cleanCode = custStateCode.trim();
+            matched = gstStates.find(s => 
+              String(s.stateCode).trim() === cleanCode || 
+              String(s.stateCode).trim() === cleanCode.padStart(2, '0') ||
+              String(s.code).trim() === cleanCode
+            );
+          }
+
+          if (!matched) {
+            const stateName = customer.state || customer.stateName || customer.addresses?.[0]?.state || customer.addresses?.[0]?.gstStateName;
+            if (stateName) {
+              const lower = String(stateName).trim().toLowerCase();
+              matched = gstStates.find(s => 
+                String(s.stateName || s.name || '').trim().toLowerCase() === lower ||
+                String(s.displayName || '').toLowerCase().includes(lower)
+              );
+            }
+          }
+
+          if (matched && matched.id) {
+            next.placeOfSupplyStateId = matched.id;
+          }
+        }
+
+        // Auto-select delivery address
+        const addresses = (customer.addresses || []).filter(a => a.isActive !== false);
+        if (addresses.length > 0) {
+          const defaultAddr = addresses.find(a => a.isDefault) || addresses[0];
+          if (defaultAddr?.id) {
+            next.deliveryAddressId = defaultAddr.id;
+            next.billingAddressId = defaultAddr.id;
+          }
+        }
+
+        return next;
+      });
     }
-  }, [customer, formData.customerId, quotationId]);
+  }, [customer, formData.customerId, quotationId, gstStates]);
 
   useEffect(() => {
     if (!quotationId && isOpen && paymentTermsList.length > 0 && !formData.paymentTermId) {
