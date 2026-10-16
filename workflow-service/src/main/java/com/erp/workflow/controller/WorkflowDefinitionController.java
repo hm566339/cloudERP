@@ -41,6 +41,17 @@ public class WorkflowDefinitionController {
                 .body(ApiResponse.success(response, "Workflow definition created"));
     }
 
+    @PutMapping("/{id}")
+    @Operation(summary = "Update an existing workflow definition with stages and transitions")
+    public ResponseEntity<ApiResponse<WorkflowDefinitionResponse>> updateDefinition(
+            @PathVariable UUID id,
+            @Valid @RequestBody ApiRequest<CreateWorkflowDefinitionRequest> request) {
+        CreateWorkflowDefinitionRequest data = request.getData();
+        data.setCompanyId(resolveCompanyId(data.getCompanyId()));
+        WorkflowDefinitionResponse response = definitionService.updateDefinition(id, data);
+        return ResponseEntity.ok(ApiResponse.success(response, "Workflow definition updated"));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get a workflow definition by ID")
     public ResponseEntity<ApiResponse<WorkflowDefinitionResponse>> getDefinition(

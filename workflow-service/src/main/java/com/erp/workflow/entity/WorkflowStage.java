@@ -52,13 +52,16 @@ public class WorkflowStage extends BaseEntity {
     @Column(name = "minimum_approvals_required", nullable = false)
     private Integer minimumApprovalsRequired = 1;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "rejection_action", nullable = false, length = 50)
     private WorkflowRejectionAction rejectionAction = WorkflowRejectionAction.REJECT_DOCUMENT;
 
+    @Builder.Default
     @Column(name = "is_mandatory", nullable = false)
     private Boolean isMandatory = true;
 
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 

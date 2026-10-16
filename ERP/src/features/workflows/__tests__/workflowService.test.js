@@ -556,5 +556,106 @@ describe('Workflow Definitions API Routing & Service Verification', () => {
         }
       );
     });
+
+    it('update sends PUT to /api/v1/workflow/definitions/:id with payload and stages', async () => {
+      try {
+        apiClient.put = async (url, body, config) => {
+          lastRequest = { url, body, config };
+          return {
+            data: {
+              data: {
+                id: 'wf-42',
+                companyId: 'comp-123',
+                workflowCode: 'WF_UPDATED',
+                workflowName: 'Updated Flow',
+                moduleName: 'SALES',
+                documentType: 'SALES',
+                isActive: true,
+                stages: [
+                  {
+                    id: 'stage-1',
+                    stageCode: 'STAGE_1',
+                    stageName: 'Initial Approval',
+                    sequenceNo: 1,
+                    isActive: true,
+                  },
+                  {
+                    id: 'stage-2',
+                    stageCode: 'STAGE_2',
+                    stageName: 'Step 2',
+                    sequenceNo: 2,
+                    isActive: true,
+                  },
+                ],
+              },
+            },
+          };
+        };
+
+        const result = await workflowDefinitionApi.update('wf-42', {
+          companyId: 'comp-123',
+          workflowCode: 'WF_UPDATED',
+          workflowName: 'Updated Flow',
+          moduleName: 'SALES',
+          steps: [
+            { id: 's1', title: 'Initial Approval', stageCode: 'STAGE_1', sequenceNo: 1, active: true },
+            { id: 's2', title: 'Step 2', stageCode: 'STAGE_2', sequenceNo: 2, active: true },
+          ],
+        });
+
+        assert.strictEqual(lastRequest.url, '/api/v1/workflow/definitions/wf-42');
+        assert.ok(lastRequest.body.data);
+        assert.strictEqual(lastRequest.body.data.stages.length, 2);
+        assert.strictEqual(result.id, 'wf-42');
+        assert.strictEqual(result.steps.length, 2);
+      } finally {
+        restoreClient();
+      }
+    });
+
+    it('saveWorkflowDefinitions in update mode persists updated definition and additional settings', async () => {
+      try {
+        apiClient.put = async (url, body, config) => {
+          lastRequest = { url, body, config };
+          return {
+            data: {
+              data: {
+                id: 'wf-existing-1',
+                companyId: 'comp-123',
+                workflowCode: 'WF_EXISTING',
+                workflowName: 'Existing Flow',
+                moduleName: 'SALES',
+                documentType: 'SALES',
+                isActive: true,
+              },
+            },
+          };
+        };
+
+        const result = await saveWorkflowDefinitions(
+          'comp-123',
+          {
+            id: 'wf-existing-1',
+            workflowCode: 'WF_EXISTING',
+            workflowName: 'Existing Flow',
+            moduleName: 'SALES',
+            threshold: '50000',
+            steps: [
+              { id: 'step-1', title: 'Step 1', stageCode: 'STAGE_1', sequenceNo: 1, active: true },
+              { id: 'step-2', title: 'Step 2', stageCode: 'STAGE_2', sequenceNo: 2, active: true },
+            ],
+          },
+          { mode: 'update' }
+        );
+
+        assert.strictEqual(lastRequest.url, '/api/v1/workflow/definitions/wf-existing-1');
+        assert.strictEqual(result.definitions[0].id, 'wf-existing-1');
+        const savedSettings = getWorkflowAdditionalSettings('comp-123', 'wf-existing-1');
+        assert.strictEqual(savedSettings.threshold, '50000');
+        assert.strictEqual(savedSettings.steps.length, 2);
+      } finally {
+        restoreClient();
+      }
+    });
   });
 });

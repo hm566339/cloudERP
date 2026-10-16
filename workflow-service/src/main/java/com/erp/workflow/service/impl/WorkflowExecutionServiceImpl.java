@@ -59,7 +59,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
 
         // Resolve workflow definition
-        WorkflowDefinition definition = null;
+        final WorkflowDefinition definition;
         if (request.getWorkflowDefinitionId() != null) {
             definition = definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(request.getWorkflowDefinitionId(), request.getCompanyId())
                     .orElseThrow(() -> new ResourceNotFoundException("WorkflowDefinition", "id", request.getWorkflowDefinitionId()));
@@ -74,12 +74,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             definition = defs.get(0);
         }
 
-        // Get first stage
-        List<WorkflowStage> stages = stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(definition.getId());
-        if (stages.isEmpty()) {
-            throw new WorkflowValidationException("Workflow definition " + definition.getWorkflowCode() + " has no stages configured.");
+        if (Boolean.FALSE.equals(definition.getIsActive())) {
+            throw new WorkflowValidationException("Cannot submit workflow for inactive definition '" + definition.getWorkflowName() + "'.");
         }
-        WorkflowStage firstStage = stages.get(0);
+
+        // Get first active stage
+        final String wfCode = definition.getWorkflowCode();
+        List<WorkflowStage> stages = stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(definition.getId());
+        WorkflowStage firstStage = stages.stream()
+                .filter(s -> !Boolean.FALSE.equals(s.getIsActive()))
+                .findFirst()
+                .orElseThrow(() -> new WorkflowValidationException("Workflow definition " + wfCode + " has no active stages configured."));
 
         LocalDateTime now = LocalDateTime.now();
 
