@@ -61,6 +61,14 @@ public class WorkflowCallbackServiceImpl implements WorkflowCallbackService {
             return;
         }
 
+        java.util.Map<String, Object> metadata = new java.util.HashMap<>();
+        if (transaction.getWorkflowDefinition() != null) {
+            metadata.put("autoCreateOrder", Boolean.TRUE.equals(transaction.getWorkflowDefinition().getAutoCreateOrder()));
+            metadata.put("customerAcceptance", Boolean.TRUE.equals(transaction.getWorkflowDefinition().getCustomerAcceptance()));
+            metadata.put("isApprovalRequired", Boolean.TRUE.equals(transaction.getWorkflowDefinition().getIsApprovalRequired()));
+            metadata.put("workflowCode", transaction.getWorkflowDefinition().getWorkflowCode());
+        }
+
         WorkflowCallbackPayload payload = WorkflowCallbackPayload.builder()
                 .transactionId(transaction.getId())
                 .companyId(transaction.getCompanyId())
@@ -78,6 +86,7 @@ public class WorkflowCallbackServiceImpl implements WorkflowCallbackService {
                 .actionByUserName(actionByUserName)
                 .comments(comments)
                 .timestamp(LocalDateTime.now())
+                .metadata(metadata)
                 .build();
 
         executeCallback(transaction, callbackUrl, eventType, payload);

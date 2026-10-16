@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FileText, Clock, ShoppingCart, Truck, Receipt, ClipboardList, FileSearch, CreditCard, BarChart3, Book, BookMarked, FileMinus, FilePlus, FileSpreadsheet, Scale, TrendingUp, Wallet, Users, ShieldAlert, Key, Layout, Shield } from 'lucide-react';
 import { useRoutePath } from '../../hooks/useRoutePath';
+import { documentFlowApi } from '../../api/common/documentFlow.api';
 
 export const salesTabs = [
   {
@@ -321,16 +322,97 @@ export const userTabs = [
   }
 ];
 
-export default function ModuleTabs({ tabs = salesTabs, activeKey, activeTab, onTabChange }) {
+const DOC_TYPE_TO_KEY = {
+  QUOTATION: 'quotations',
+  PROFORMA_INVOICE: 'proforma',
+  SALES_ORDER: 'orders',
+  DELIVERY_CHALLAN: 'delivery-challans',
+  SALES_INVOICE: 'sales-invoices',
+  RECEIPT_VOUCHER: 'receipt-vouchers',
+  PURCHASE_REQUISITION: 'requisitions',
+  RFQ: 'rfqs',
+  SUPPLIER_QUOTATION: 'supplier-quotes',
+  PURCHASE_ORDER: 'purchase-orders',
+  GOODS_RECEIPT: 'goods-receipts',
+  AP_INVOICE: 'purchase-invoices',
+  AP_PAYMENT: 'payments',
+  PAYMENT_VOUCHER: 'payments',
+  CREDIT_NOTE: 'credit-notes',
+  DEBIT_NOTE: 'debit-notes',
+  JOURNAL_ENTRY: 'journal',
+  EXPENSE_REQUEST: 'requests',
+  EXPENSE: 'expenses'
+};
+
+function detectModuleFromTabs(tabs) {
+  if (!Array.isArray(tabs) || tabs.length === 0) return null;
+  const keys = new Set(tabs.map((t) => (t.key || '').toLowerCase()));
+  if (keys.has('quotations') || keys.has('orders') || keys.has('delivery-challans')) return 'SALES';
+  if (keys.has('requisitions') || keys.has('rfqs') || keys.has('purchase-orders')) return 'PURCHASE';
+  if (keys.has('requests') || keys.has('reimbursements')) return 'EXPENSES';
+  if (keys.has('journal') || keys.has('credit-notes') || keys.has('debit-notes')) return 'ACCOUNT';
+  return null;
+}
+
+export default function ModuleTabs({ tabs = salesTabs, module, activeKey, activeTab, onTabChange }) {
   const location = useLocation();
   const { buildPath } = useRoutePath();
+
+  const detectedModule = module || detectModuleFromTabs(tabs);
+  const [dynamicTabs, setDynamicTabs] = useState(null);
+
+  useEffect(() => {
+    if (!detectedModule) return;
+    let isMounted = true;
+    documentFlowApi.getTabs(detectedModule)
+      .then((data) => {
+        if (!isMounted) return;
+        const flowTabs = data?.tabs || [];
+        if (flowTabs.length > 0) {
+          const tabMap = new Map();
+          tabs.forEach((t) => {
+            tabMap.set(t.key, t);
+          });
+
+          const ordered = [];
+          flowTabs.forEach((item) => {
+            if (item.isActive === false) return;
+            const mappedKey = DOC_TYPE_TO_KEY[item.documentType] || item.key;
+            const existing = tabMap.get(mappedKey);
+            if (existing) {
+              ordered.push({
+                ...existing,
+                label: item.label || existing.label,
+                orderIndex: item.orderIndex
+              });
+              tabMap.delete(mappedKey);
+            }
+          });
+
+          // Append any non-document tabs that remain in tabMap (e.g. analytical/reporting tabs)
+          tabMap.forEach((v) => ordered.push(v));
+
+          if (ordered.length > 0) {
+            setDynamicTabs(ordered);
+          }
+        }
+      })
+      .catch(() => {
+        // Fallback gracefully to default static tabs on network error or missing config
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [detectedModule, tabs]);
+
+  const effectiveTabs = dynamicTabs || tabs;
 
   const currentPath = (location.pathname || '').replace(/\/+$/, '').toLowerCase();
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const queryTab = searchParams.get('tab')?.toLowerCase();
 
   // Strip company prefix for clean normalized comparison: /company/[id]/path -> /path
-  const stripCompanyPrefix = (p) => p ? p.replace(/^\/company\/[^/]+/, '') : '';
+  const stripCompanyPrefix = (p) => (p ? p.replace(/^\/company\/[^/]+/, '') : '');
   const cleanCurrentPath = stripCompanyPrefix(currentPath);
 
   // Compute the single best active tab key
@@ -338,13 +420,13 @@ export default function ModuleTabs({ tabs = salesTabs, activeKey, activeTab, onT
     // 1. Explicit prop passed
     const explicit = activeKey || activeTab;
     if (explicit) {
-      const match = tabs.find(t => (t.key || t.label)?.toLowerCase() === explicit.toLowerCase());
+      const match = effectiveTabs.find((t) => (t.key || t.label)?.toLowerCase() === explicit.toLowerCase());
       if (match) return match.key || match.label;
     }
 
     // 2. Query param matching (e.g. ?tab=reports)
     if (queryTab) {
-      const match = tabs.find(t => t.key?.toLowerCase() === queryTab || t.label?.toLowerCase() === queryTab);
+      const match = effectiveTabs.find((t) => t.key?.toLowerCase() === queryTab || t.label?.toLowerCase() === queryTab);
       if (match) return match.key || match.label;
     }
 
@@ -352,7 +434,7 @@ export default function ModuleTabs({ tabs = salesTabs, activeKey, activeTab, onT
     let bestKey = null;
     let highestScore = -1;
 
-    tabs.forEach((item) => {
+    effectiveTabs.forEach((item) => {
       const key = item.key || item.label;
       const targetPath = buildPath(item.path);
       const allPaths = [
@@ -361,8 +443,8 @@ export default function ModuleTabs({ tabs = salesTabs, activeKey, activeTab, onT
         stripCompanyPrefix(item.path),
         stripCompanyPrefix(targetPath),
         ...(item.aliases || []),
-        ...(item.aliases ? item.aliases.map(a => buildPath(a)) : []),
-        ...(item.aliases ? item.aliases.map(a => stripCompanyPrefix(a)) : [])
+        ...(item.aliases ? item.aliases.map((a) => buildPath(a)) : []),
+        ...(item.aliases ? item.aliases.map((a) => stripCompanyPrefix(a)) : [])
       ].filter(Boolean);
 
       allPaths.forEach((p) => {
@@ -379,18 +461,18 @@ export default function ModuleTabs({ tabs = salesTabs, activeKey, activeTab, onT
         }
         // Sub-path match: currentPath starts with norm + '/'
         else if (currentPath.startsWith(`${norm}/`) || cleanCurrentPath.startsWith(`${norm}/`)) {
-          // If it's a generic parent route (e.g. /accounts/transactions/expenses), give it a low fallback score
-          const isGenericParent = norm === '/accounts/transactions/expenses' ||
+          const isGenericParent =
+            norm === '/accounts/transactions/expenses' ||
             norm.endsWith('/transactions/expenses') ||
             norm === '/finance/expenses' ||
             norm.endsWith('/finance/expenses');
-          const score = isGenericParent ? 10 : (200 + norm.length);
+          const score = isGenericParent ? 10 : 200 + norm.length;
           if (score > highestScore) {
             highestScore = score;
             bestKey = key;
           }
         }
-        // Tab key segment match: e.g. currentPath ends with `/${item.key}` or includes `/${item.key}/`
+        // Tab key segment match
         else if (
           item.key &&
           (cleanCurrentPath.endsWith(`/${item.key.toLowerCase()}`) ||
@@ -406,26 +488,27 @@ export default function ModuleTabs({ tabs = salesTabs, activeKey, activeTab, onT
     });
 
     // 4. Default fallback: if in expenses module but on base route, default to first tab (requests)
-    if (!bestKey && tabs.length > 0 && cleanCurrentPath.includes('expenses')) {
-      return tabs[0].key || tabs[0].label;
+    if (!bestKey && effectiveTabs.length > 0 && cleanCurrentPath.includes('expenses')) {
+      return effectiveTabs[0].key || effectiveTabs[0].label;
     }
 
     return bestKey;
-  }, [tabs, currentPath, cleanCurrentPath, queryTab, activeKey, activeTab, buildPath]);
+  }, [effectiveTabs, currentPath, cleanCurrentPath, queryTab, activeKey, activeTab, buildPath]);
 
   return (
     <div className="bg-white/80 backdrop-blur-md border-b border-zinc-200 px-6 py-2.5 overflow-x-auto hide-scrollbar shrink-0 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.02)]">
       <div className="flex items-center gap-1 min-w-max">
-        {tabs.map((item) => {
+        {effectiveTabs.map((item) => {
           const Icon = item.icon;
           const targetPath = buildPath(item.path);
           const itemKey = item.key || item.label;
           const isActive = itemKey === activeItemKey;
 
-          const tabClassName = `flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10.4px] font-semibold transition-all duration-200 ${isActive
-            ? 'bg-zinc-900 text-white shadow-xs border border-zinc-900'
-            : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 border border-transparent'
-            }`;
+          const tabClassName = `flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10.4px] font-semibold transition-all duration-200 ${
+            isActive
+              ? 'bg-zinc-900 text-white shadow-xs border border-zinc-900'
+              : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 border border-transparent'
+          }`;
 
           if (onTabChange) {
             return (

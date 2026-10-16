@@ -24,4 +24,5 @@ public class WorkflowCallbackEventDto {
     private UUID performedBy;
     private String performedByName;
     private LocalDateTime timestamp;
+    private java.util.Map<String, Object> metadata;
 }

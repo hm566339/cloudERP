@@ -59,7 +59,7 @@ public class WorkflowCallbackController {
         }
 
         switch (event.getEventType()) {
-            case "WORKFLOW_APPROVED" -> document.onWorkflowApproved();
+            case "WORKFLOW_APPROVED" -> document.onWorkflowApproved(event.getMetadata());
             case "WORKFLOW_REJECTED" -> document.onWorkflowRejected();
             case "WORKFLOW_CANCELLED" -> document.onWorkflowCancelled();
             case "WORKFLOW_RETURNED" -> document.onWorkflowReturned();

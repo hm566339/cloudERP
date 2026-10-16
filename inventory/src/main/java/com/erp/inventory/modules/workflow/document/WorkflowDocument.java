@@ -13,6 +13,9 @@ public interface WorkflowDocument {
 
     void onWorkflowSubmitted();
     void onWorkflowApproved();
+    default void onWorkflowApproved(java.util.Map<String, Object> metadata) {
+        onWorkflowApproved();
+    }
     void onWorkflowRejected();
     void onWorkflowCancelled();
     void onWorkflowReturned();

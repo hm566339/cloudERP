@@ -29,6 +29,11 @@ sso:
       WORKFLOW_CALLBACKS:
         - "/api/v1/workflow/callbacks"
         - "/api/v1/workflow/callbacks/**"
+      WORKFLOW_DOCUMENT_FLOWS:
+        - "/api/v1/workflow/document-flows"
+        - "/api/v1/workflow/document-flows/**"
+        - "/api/v1/workflow/document-types"
+        - "/api/v1/workflow/document-types/**"
 
     method-actions:
       GET:
@@ -109,6 +114,12 @@ sso:
           - READ
           - UPDATE
           - WRITE
+        WORKFLOW_DOCUMENT_FLOWS:
+          - READ
+          - CREATE
+          - UPDATE
+          - WRITE
+          - DELETE
       WORKFLOW_DEFINITIONS:
         WORKFLOW_DEFINITIONS:
           - READ
@@ -118,6 +129,12 @@ sso:
           - DELETE
           - ACTIVATE
           - DEACTIVATE
+        WORKFLOW_DOCUMENT_FLOWS:
+          - READ
+          - CREATE
+          - UPDATE
+          - WRITE
+          - DELETE
       WORKFLOW:
         WORKFLOW:
           - READ
@@ -167,6 +184,12 @@ sso:
           - READ
           - UPDATE
           - WRITE
+        WORKFLOW_DOCUMENT_FLOWS:
+          - READ
+          - CREATE
+          - UPDATE
+          - WRITE
+          - DELETE
       SYSTEM_ADMIN:
         WORKFLOW:
           - READ
@@ -216,6 +239,12 @@ sso:
           - READ
           - UPDATE
           - WRITE
+        WORKFLOW_DOCUMENT_FLOWS:
+          - READ
+          - CREATE
+          - UPDATE
+          - WRITE
+          - DELETE
 
     write-implies-create-update: false
 

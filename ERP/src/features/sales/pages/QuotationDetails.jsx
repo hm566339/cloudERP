@@ -22,6 +22,7 @@ import StatusBadge from '../../../components/common/StatusBadge';
 import { useRBAC } from '../../../utils/rbac';
 
 import PIConversionFormModal from '../components/PIConversionFormModal';
+import WorkflowActionButtons from '../../workflows/components/WorkflowActionButtons';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
@@ -261,6 +262,17 @@ export default function QuotationDetails() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Dynamic Workflow-Driven Action and Next-Document Transition Bar */}
+      <div className="px-4 sm:px-6 pt-4">
+        <WorkflowActionButtons
+          module="SALES"
+          documentType="QUOTATION"
+          documentId={quotationId}
+          documentStatus={quotation.status}
+          onActionComplete={refetch}
+        />
       </div>
 
       {/* Top KPI Cards */}

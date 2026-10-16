@@ -969,39 +969,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     public static boolean isModuleCompatible(String requestedModule, String definitionModule, String documentType) {
-        if (!StringUtils.hasText(requestedModule) || !StringUtils.hasText(definitionModule)) {
-            return true;
-        }
-        if (requestedModule.equalsIgnoreCase(definitionModule)) {
-            return true;
-        }
-        String docType = documentType != null ? documentType.toUpperCase() : "";
-        switch (docType) {
-            case "QUOTATION":
-            case "SALES_ORDER":
-            case "SALES_INVOICE":
-            case "SALES":
-                return ("SALES".equalsIgnoreCase(requestedModule) || "ACCOUNT".equalsIgnoreCase(requestedModule))
-                        && ("SALES".equalsIgnoreCase(definitionModule) || "ACCOUNT".equalsIgnoreCase(definitionModule));
-            case "PURCHASE_ORDER":
-            case "AP_INVOICE":
-            case "PURCHASE":
-                return ("PURCHASE".equalsIgnoreCase(requestedModule) || "ACCOUNT".equalsIgnoreCase(requestedModule))
-                        && ("PURCHASE".equalsIgnoreCase(definitionModule) || "ACCOUNT".equalsIgnoreCase(definitionModule));
-            case "EXPENSE_REQUEST":
-            case "EXPENSE":
-                return ("EXPENSES".equalsIgnoreCase(requestedModule) || "EXPENSE".equalsIgnoreCase(requestedModule) || "ACCOUNT".equalsIgnoreCase(requestedModule))
-                        && ("EXPENSES".equalsIgnoreCase(definitionModule) || "EXPENSE".equalsIgnoreCase(definitionModule) || "ACCOUNT".equalsIgnoreCase(definitionModule));
-            case "RECEIPT_VOUCHER":
-            case "PAYMENT_VOUCHER":
-            case "JOURNAL_ENTRY":
-            case "FISCAL_YEAR":
-                return "ACCOUNT".equalsIgnoreCase(requestedModule) && "ACCOUNT".equalsIgnoreCase(definitionModule);
-            case "STOCK_TRANSFER":
-            case "STOCK_ADJUSTMENT":
-                return "INVENTORY".equalsIgnoreCase(requestedModule) && "INVENTORY".equalsIgnoreCase(definitionModule);
-            default:
-                return false;
-        }
+        return com.erp.workflow.registry.DocumentTypeRegistry.isCompatible(requestedModule, definitionModule, documentType);
     }
 }

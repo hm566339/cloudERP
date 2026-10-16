@@ -70,7 +70,7 @@ public class WorkflowCallbackController {
                 switch (event.getEventType()) {
                     case "WORKFLOW_APPROVED" -> {
                         log.info("Applying approval on document {} ({})", event.getDocumentType(), event.getDocumentId());
-                        document.onWorkflowApproved();
+                        document.onWorkflowApproved(event.getMetadata());
                     }
                     case "WORKFLOW_REJECTED" -> {
                         log.info("Applying rejection on document {} ({})", event.getDocumentType(), event.getDocumentId());
