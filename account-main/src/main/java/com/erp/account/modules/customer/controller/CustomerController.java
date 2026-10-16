@@ -88,9 +88,13 @@ public class CustomerController {
     public ResponseEntity<ApiResponse<java.util.List<CustomerResponse>>> getAllCustomers(
             @ModelAttribute CustomerFilterDto filter,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
-            UUID companyId) {
-        log.info("Fetching customers with filters: {}", filter);
-        Page<CustomerResponse> page = customerService.getAllCustomers(filter, pageable, companyId);
+            @RequestParam(name = "companyId", required = false) UUID companyId) {
+        UUID effectiveCompanyId = companyId != null ? companyId : (filter != null ? filter.getCompanyId() : null);
+        if (filter != null && effectiveCompanyId != null) {
+            filter.setCompanyId(effectiveCompanyId);
+        }
+        log.info("Fetching customers with filters: {}, companyId: {}", filter, effectiveCompanyId);
+        Page<CustomerResponse> page = customerService.getAllCustomers(filter, pageable, effectiveCompanyId);
         return ResponseEntity.ok(ApiResponse.paginated(page, "Customers retrieved successfully"));
     }
 

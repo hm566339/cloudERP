@@ -34,4 +34,5 @@ public class CustomerFilterDto {
     private LocalDateTime updatedFrom;
     private LocalDateTime updatedTo;
     private List<UUID> ids;
+    private UUID companyId;
 }

@@ -21,8 +21,6 @@ public final class CustomerSpecification {
     public static Specification<Customer> getFilterSpecification(CustomerFilterDto filter, UUID companyId) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            query.distinct(true);
-            Join<Customer, CustomerAddress> addressJoin = root.join("addresses", JoinType.LEFT);
 
             // Implicit filters
             if (companyId != null) {
@@ -34,6 +32,19 @@ public final class CustomerSpecification {
                 return cb.and(predicates.toArray(new Predicate[0]));
             }
 
+            boolean needsAddressJoin = (filter.getSearchKey() != null && !filter.getSearchKey().isBlank())
+                    || (filter.getCity() != null && !filter.getCity().isBlank())
+                    || (filter.getState() != null && !filter.getState().isBlank())
+                    || (filter.getCountry() != null && !filter.getCountry().isBlank());
+
+            Join<Customer, CustomerAddress> addressJoin = null;
+            if (needsAddressJoin) {
+                addressJoin = root.join("addresses", JoinType.LEFT);
+                if (query != null) {
+                    query.distinct(true);
+                }
+            }
+
             // Global search
             if (filter.getSearchKey() != null && !filter.getSearchKey().isBlank()) {
                 String searchPattern = "%" + filter.getSearchKey().trim().toLowerCase() + "%";
@@ -43,13 +54,16 @@ public final class CustomerSpecification {
                 Predicate phoneLike = cb.like(cb.lower(root.get("phone")), searchPattern);
                 Predicate gstinLike = cb.like(cb.lower(root.get("gstin")), searchPattern);
                 Predicate panLike = cb.like(cb.lower(root.get("panNo")), searchPattern);
-                Predicate cityLike = cb.like(cb.lower(addressJoin.get("city")), searchPattern);
-                Predicate stateLike = cb.or(
-                    cb.like(cb.lower(addressJoin.get("gstState").get("stateName")), searchPattern),
-                    cb.like(cb.lower(addressJoin.get("gstState").get("stateCode")), searchPattern));
-                Predicate countryLike = cb.like(cb.lower(addressJoin.get("country")), searchPattern);
-                
-                predicates.add(cb.or(codeLike, nameLike, emailLike, phoneLike, gstinLike, panLike, cityLike, stateLike, countryLike));
+                if (addressJoin != null) {
+                    Predicate cityLike = cb.like(cb.lower(addressJoin.get("city")), searchPattern);
+                    Predicate stateLike = cb.or(
+                        cb.like(cb.lower(addressJoin.get("gstState").get("stateName")), searchPattern),
+                        cb.like(cb.lower(addressJoin.get("gstState").get("stateCode")), searchPattern));
+                    Predicate countryLike = cb.like(cb.lower(addressJoin.get("country")), searchPattern);
+                    predicates.add(cb.or(codeLike, nameLike, emailLike, phoneLike, gstinLike, panLike, cityLike, stateLike, countryLike));
+                } else {
+                    predicates.add(cb.or(codeLike, nameLike, emailLike, phoneLike, gstinLike, panLike));
+                }
             }
 
             // String filters
@@ -71,15 +85,15 @@ public final class CustomerSpecification {
             if (filter.getPan() != null && !filter.getPan().isBlank()) {
                 predicates.add(cb.like(cb.lower(root.get("panNo")), "%" + filter.getPan().trim().toLowerCase() + "%"));
             }
-            if (filter.getCity() != null && !filter.getCity().isBlank()) {
+            if (addressJoin != null && filter.getCity() != null && !filter.getCity().isBlank()) {
                 predicates.add(cb.like(cb.lower(addressJoin.get("city")), "%" + filter.getCity().trim().toLowerCase() + "%"));
             }
-            if (filter.getState() != null && !filter.getState().isBlank()) {
+            if (addressJoin != null && filter.getState() != null && !filter.getState().isBlank()) {
                 predicates.add(cb.or(
                     cb.like(cb.lower(addressJoin.get("gstState").get("stateName")), "%" + filter.getState().trim().toLowerCase() + "%"),
                     cb.like(cb.lower(addressJoin.get("gstState").get("stateCode")), "%" + filter.getState().trim().toLowerCase() + "%")));
             }
-            if (filter.getCountry() != null && !filter.getCountry().isBlank()) {
+            if (addressJoin != null && filter.getCountry() != null && !filter.getCountry().isBlank()) {
                 predicates.add(cb.like(cb.lower(addressJoin.get("country")), "%" + filter.getCountry().trim().toLowerCase() + "%"));
             }
 

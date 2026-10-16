@@ -1,6 +1,7 @@
 package com.erp.account.modules.company.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,7 @@ import com.erp.account.modules.ledger.entity.ChartOfAccount;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Company extends BaseEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;

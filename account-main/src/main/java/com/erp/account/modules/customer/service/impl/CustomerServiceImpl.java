@@ -43,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -207,10 +208,28 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional(readOnly = true)
     public Page<CustomerResponse> getAllCustomers(CustomerFilterDto filter, Pageable pageable, UUID companyId) {
-        log.info("Fetching customers with filters: {}", filter);
-        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        UUID requestedCompanyId = companyId != null ? companyId : (filter != null ? filter.getCompanyId() : null);
+        log.info("Fetching customers with filters: {}, requestedCompanyId: {}", filter, requestedCompanyId);
 
-        log.info("Using companyId for filtering: {}", resolvedCompanyId);
+        UUID resolvedCompanyId;
+        if (TenantUtils.isSystemAdmin()) {
+            resolvedCompanyId = requestedCompanyId;
+        } else {
+            UUID currentCompanyId = TenantUtils.getCurrentCompanyId();
+            if (currentCompanyId != null) {
+                if (requestedCompanyId != null && !requestedCompanyId.equals(currentCompanyId)) {
+                    log.warn("Unauthorized cross-company customer access attempt: user company={}, requested company={}",
+                            currentCompanyId, requestedCompanyId);
+                    throw new AccessDeniedException(
+                            "Access denied: User does not have access to company " + requestedCompanyId);
+                }
+                resolvedCompanyId = currentCompanyId;
+            } else {
+                resolvedCompanyId = requestedCompanyId;
+            }
+        }
+
+        log.info("Using companyId for customer filtering: {}", resolvedCompanyId);
 
         Specification<Customer> spec = CustomerSpecification.getFilterSpecification(filter, resolvedCompanyId);
 
