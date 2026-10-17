@@ -20,6 +20,7 @@ import {
 import { resolveRoleId, resolveRoleName } from '../services/workflowService';
 import WorkflowToggle from './WorkflowToggle';
 import ConfirmModal from '../../../components/common/ConfirmModal';
+import CustomSelect from '../../../components/common/CustomSelect';
 
 const STEP_TYPES = [
   { id: 'approval', label: 'Approval', icon: ShieldCheck, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
@@ -336,46 +337,48 @@ export default function WorkflowDiagram({
                           <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                             Assigned Role or Approver <span className="text-red-500">*</span>
                           </label>
-                          <select
-                            className="w-full h-8 px-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50"
+                          <CustomSelect
+                            id="step-assigned-role"
                             disabled={!canEdit}
+                            searchable
+                            placeholder="Select assigned role"
+                            emptyMessage="No roles available"
                             value={currentRoleId}
-                            onChange={(e) =>
+                            onChange={(e, val) => {
+                              const selectedVal = val !== undefined ? val : e?.target?.value;
                               onUpdateStep(step.id, {
-                                role: e.target.value,
-                                roleId: e.target.value,
-                                roleName: resolveRoleName(e.target.value, roles),
-                              })
-                            }
-                          >
-                            <option value="">Select assigned role</option>
-                            {roles.map((r) => (
-                              <option key={r.id} value={r.id}>
-                                {r.name}
-                              </option>
-                            ))}
-                          </select>
+                                role: selectedVal,
+                                roleId: selectedVal,
+                                roleName: resolveRoleName(selectedVal, roles),
+                              });
+                            }}
+                            options={roles.map((r) => ({ value: r.id, label: r.name }))}
+                            size="sm"
+                          />
                         </div>
 
                         <div className="space-y-1">
                           <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                             Approval Rule
                           </label>
-                          <select
-                            className="w-full h-8 px-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50"
+                          <CustomSelect
+                            id="step-approval-rule"
                             disabled={!canEdit}
                             value={step.approvalRule || 'ANY_ONE'}
-                            onChange={(e) =>
+                            onChange={(e, val) => {
+                              const selectedVal = val !== undefined ? val : e?.target?.value;
                               onUpdateStep(step.id, {
-                                approvalRule: e.target.value,
-                                executionType: e.target.value === 'ALL_MUST_APPROVE' ? 'PARALLEL' : 'SEQUENTIAL',
-                              })
-                            }
-                          >
-                            <option value="ANY_ONE">Any single approver can approve</option>
-                            <option value="ALL_MUST_APPROVE">Everyone assigned must approve</option>
-                            <option value="MINIMUM_REQUIRED">Minimum required approvals threshold</option>
-                          </select>
+                                approvalRule: selectedVal,
+                                executionType: selectedVal === 'ALL_MUST_APPROVE' ? 'PARALLEL' : 'SEQUENTIAL',
+                              });
+                            }}
+                            options={[
+                              { value: 'ANY_ONE', label: 'Any single approver can approve' },
+                              { value: 'ALL_MUST_APPROVE', label: 'Everyone assigned must approve' },
+                              { value: 'MINIMUM_REQUIRED', label: 'Minimum required approvals threshold' },
+                            ]}
+                            size="sm"
+                          />
                         </div>
 
                         {step.approvalRule === 'MINIMUM_REQUIRED' && (
@@ -449,16 +452,21 @@ export default function WorkflowDiagram({
                           <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                             If Condition Fails
                           </label>
-                          <select
-                            className="w-full h-8 px-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900"
+                          <CustomSelect
+                            id="step-if-condition-fails"
                             disabled={!canEdit}
                             value={step.rejectionAction || 'REJECT_DOCUMENT'}
-                            onChange={(e) => onUpdateStep(step.id, { rejectionAction: e.target.value })}
-                          >
-                            <option value="REJECT_DOCUMENT">Reject document</option>
-                            <option value="RETURN_TO_INITIATOR">Return to initiator for correction</option>
-                            <option value="SKIP_STEP">Skip to next approval step</option>
-                          </select>
+                            onChange={(e, val) => {
+                              const selectedVal = val !== undefined ? val : e?.target?.value;
+                              onUpdateStep(step.id, { rejectionAction: selectedVal });
+                            }}
+                            options={[
+                              { value: 'REJECT_DOCUMENT', label: 'Reject document' },
+                              { value: 'RETURN_TO_INITIATOR', label: 'Return to initiator for correction' },
+                              { value: 'SKIP_STEP', label: 'Skip to next approval step' },
+                            ]}
+                            size="sm"
+                          />
                         </div>
                       </div>
                     )}
@@ -470,16 +478,21 @@ export default function WorkflowDiagram({
                           <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                             Notification Channel
                           </label>
-                          <select
-                            className="w-full h-8 px-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900"
+                          <CustomSelect
+                            id="step-notification-channel"
                             disabled={!canEdit}
                             value={step.notificationChannel || 'IN_APP'}
-                            onChange={(e) => onUpdateStep(step.id, { notificationChannel: e.target.value })}
-                          >
-                            <option value="IN_APP">In-App Notification</option>
-                            <option value="EMAIL">Email Alert</option>
-                            <option value="IN_APP_AND_EMAIL">Email &amp; In-App Notification</option>
-                          </select>
+                            onChange={(e, val) => {
+                              const selectedVal = val !== undefined ? val : e?.target?.value;
+                              onUpdateStep(step.id, { notificationChannel: selectedVal });
+                            }}
+                            options={[
+                              { value: 'IN_APP', label: 'In-App Notification' },
+                              { value: 'EMAIL', label: 'Email Alert' },
+                              { value: 'IN_APP_AND_EMAIL', label: 'Email & In-App Notification' },
+                            ]}
+                            size="sm"
+                          />
                         </div>
 
                         <div className="space-y-1">

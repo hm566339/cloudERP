@@ -2,6 +2,7 @@ import React from 'react';
 import { resolveRoleId, DOCUMENT_TYPES_BY_MODULE } from '../services/workflowService';
 import WorkflowToggle from './WorkflowToggle';
 import WorkflowSettingRow from './WorkflowSettingRow';
+import CustomSelect from '../../../components/common/CustomSelect';
 
 export { DOCUMENT_TYPES_BY_MODULE };
 
@@ -98,50 +99,39 @@ export default function WorkflowConfigurationForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Document Type" hint="Canonical ERP document target">
-          <select
-            className="w-full h-8 px-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50"
+          <CustomSelect
+            id="wf-doc-type"
             disabled={!canEdit}
             value={workflow.documentType || docTypeOptions[0]?.value || 'GENERAL'}
-            onChange={(e) => {
-              const val = e.target.value;
-              update('documentType', val);
-            }}
-          >
-            {docTypeOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            onChange={(e, val) => update('documentType', val !== undefined ? val : e.target.value)}
+            options={docTypeOptions}
+            size="sm"
+          />
         </Field>
 
         <Field label="Initiated by role">
-          <select
-            className={`w-full h-8 px-2.5 rounded-lg border bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 ${
-              errors.initiatedBy ? 'border-red-400' : 'border-zinc-200'
-            }`}
+          <CustomSelect
+            id="wf-initiated-by-role"
             disabled={!canEdit || rolesLoading}
+            isLoading={rolesLoading}
+            searchable
+            placeholder={rolesLoading ? 'Loading roles...' : rolesError ? 'Failed to load roles' : 'Select role'}
+            emptyMessage={rolesError ? 'Could not load roles from server' : 'No roles available'}
+            emptyStateAction={rolesError && onRetryRoles ? (
+              <button
+                type="button"
+                onClick={onRetryRoles}
+                className="text-[11px] text-zinc-900 underline font-semibold hover:text-zinc-700"
+              >
+                Retry loading roles
+              </button>
+            ) : null}
+            error={errors.initiatedBy}
             value={currentInitiatedBy}
-            onChange={(e) => update('initiatedBy', e.target.value)}
-          >
-            {rolesLoading ? (
-              <option value="" disabled>Loading roles...</option>
-            ) : rolesError ? (
-              <option value="" disabled>Failed to load roles</option>
-            ) : roles.length === 0 ? (
-              <option value="" disabled>No roles available</option>
-            ) : (
-              <>
-                <option value="">Select role</option>
-                {roles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </>
-            )}
-          </select>
-          {errors.initiatedBy && <p className="text-[11px] text-red-600 font-medium mt-1">{errors.initiatedBy}</p>}
+            onChange={(e, val) => update('initiatedBy', val !== undefined ? val : e.target.value)}
+            options={roles.map((r) => ({ value: r.id, label: r.name }))}
+            size="sm"
+          />
           {rolesError && (
             <p className="text-[11px] text-red-600 font-medium mt-1 flex items-center justify-between">
               <span>Could not load roles.</span>
@@ -175,15 +165,17 @@ export default function WorkflowConfigurationForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Applicable customers">
-          <select
-            className="w-full h-8 px-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50"
+          <CustomSelect
+            id="wf-applicable-customers"
             disabled={!canEdit}
             value={workflow.customerScope || 'all'}
-            onChange={(e) => update('customerScope', e.target.value)}
-          >
-            <option value="all">All customers</option>
-            <option value="specific">Specific customers</option>
-          </select>
+            onChange={(e, val) => update('customerScope', val !== undefined ? val : e.target.value)}
+            options={[
+              { value: 'all', label: 'All customers' },
+              { value: 'specific', label: 'Specific customers' },
+            ]}
+            size="sm"
+          />
         </Field>
 
         <Field label="Approval threshold" hint="Amount in company base currency">
@@ -222,29 +214,28 @@ export default function WorkflowConfigurationForm({
 
         <WorkflowSettingRow label="Approver role" description="Default role responsible for approval">
           <div className="flex flex-col items-end gap-1">
-            <select
-              className="w-36 sm:w-44 h-7.5 px-2 rounded-lg border border-zinc-200 bg-white text-[11px] text-zinc-900 focus:outline-none focus:border-zinc-900 transition-colors disabled:bg-zinc-50 disabled:text-zinc-400 shrink-0"
+            <CustomSelect
+              id="wf-approver-role"
               disabled={!canEdit || !workflow.approvalRequired || rolesLoading}
+              isLoading={rolesLoading}
+              searchable
+              placeholder={rolesLoading ? 'Loading roles...' : rolesError ? 'Failed to load roles' : 'Select role'}
+              emptyMessage={rolesError ? 'Could not load roles' : 'No roles available'}
+              emptyStateAction={rolesError && onRetryRoles ? (
+                <button
+                  type="button"
+                  onClick={onRetryRoles}
+                  className="text-[10px] text-zinc-900 underline font-semibold hover:text-zinc-700"
+                >
+                  Retry loading roles
+                </button>
+              ) : null}
               value={currentApproverRole}
-              onChange={(e) => update('approverRole', e.target.value)}
-            >
-              {rolesLoading ? (
-                <option value="" disabled>Loading roles...</option>
-              ) : rolesError ? (
-                <option value="" disabled>Failed to load roles</option>
-              ) : roles.length === 0 ? (
-                <option value="" disabled>No roles available</option>
-              ) : (
-                <>
-                  <option value="">Select role</option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </>
-              )}
-            </select>
+              onChange={(e, val) => update('approverRole', val !== undefined ? val : e.target.value)}
+              options={roles.map((r) => ({ value: r.id, label: r.name }))}
+              size="sm"
+              className="w-40 sm:w-52"
+            />
             {rolesError && onRetryRoles && (
               <button
                 type="button"

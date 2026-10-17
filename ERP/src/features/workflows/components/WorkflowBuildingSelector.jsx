@@ -1,25 +1,43 @@
 import React from 'react';
-import { Building2, ChevronDown } from 'lucide-react';
+import { Building2 } from 'lucide-react';
+import CustomSelect from '../../../components/common/CustomSelect';
 
-export default function WorkflowBuildingSelector({ companies, selectedCompany, companyId, onChange }) {
-  const options = companies.length ? companies : [{ id: companyId, name: selectedCompany?.name || 'Current company' }];
+export default function WorkflowBuildingSelector({ companies = [], selectedCompany, companyId, onChange }) {
+  const options = companies.length
+    ? companies.map((c) => ({
+        value: String(c.id || c.companyId || c.code),
+        label: c.name || c.companyName || c.code || c.id,
+        subLabel: c.code ? `Code: ${c.code}` : undefined,
+      }))
+    : [
+        {
+          value: String(companyId || ''),
+          label: selectedCompany?.name || 'Current company',
+          subLabel: companyId ? `ID: ${companyId}` : undefined,
+        },
+      ];
+
+  const handleCompanyChange = (e, val) => {
+    const selectedVal = val !== undefined ? val : e?.target?.value;
+    if (selectedVal && onChange) {
+      onChange(String(selectedVal));
+    }
+  };
+
   return (
-    <label className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 text-xs font-semibold text-zinc-700 hover:border-zinc-300 focus-within:border-zinc-900 focus-within:ring-1 focus-within:ring-zinc-900 transition-all shadow-sm cursor-pointer">
-      <Building2 size={13} className="text-zinc-500 shrink-0" />
-      <span className="hidden text-[10px] font-bold uppercase tracking-wider text-zinc-400 sm:inline">Company:</span>
-      <select
+    <div className="flex items-center gap-1.5 min-w-[180px] sm:min-w-[220px]">
+      <CustomSelect
         aria-label="Selected company"
-        value={companyId || ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="max-w-[140px] sm:max-w-[180px] border-0 bg-transparent p-0 text-xs font-semibold text-zinc-800 outline-none truncate cursor-pointer"
-      >
-        {options.map((company) => (
-          <option key={company.id || company.companyId || company.code} value={company.id || company.companyId || company.code}>
-            {company.name || company.companyName || company.code || company.id}
-          </option>
-        ))}
-      </select>
-      <ChevronDown size={12} className="text-zinc-400 shrink-0" />
-    </label>
+        size="sm"
+        searchable
+        icon={<Building2 size={13} className="text-zinc-500 shrink-0" />}
+        value={String(companyId || '')}
+        onChange={handleCompanyChange}
+        options={options}
+        placeholder="Select company"
+        className="w-full"
+        buttonClassName="h-8 px-2.5 text-xs font-semibold text-zinc-800 bg-white border border-zinc-200 rounded-lg hover:border-zinc-300 shadow-2xs"
+      />
+    </div>
   );
 }

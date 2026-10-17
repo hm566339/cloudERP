@@ -35,6 +35,7 @@ import WorkflowDiagram from '../components/WorkflowDiagram';
 import WorkflowConfigurationForm from '../components/WorkflowConfigurationForm';
 import WorkflowAuditTrailPanel from '../components/WorkflowAuditTrailPanel';
 import WorkflowBuildingSelector from '../components/WorkflowBuildingSelector';
+import CustomSelect from '../../../components/common/CustomSelect';
 
 export { extractRoles, resolveRoleId, resolveRoleName };
 
@@ -88,6 +89,7 @@ export default function WorkflowManagementPage() {
   const [module, setModule] = useState('Sales');
   const [selectedId, setSelectedId] = useState('');
   const [activeTab, setActiveTab] = useState('diagram');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const workflowListQuery = useListQuery(null, { searchParam: 'search' });
   const query = workflowListQuery.searchTerm;
   const setQuery = workflowListQuery.setSearch;
@@ -161,6 +163,7 @@ export default function WorkflowManagementPage() {
     setDraftWorkflow(null);
     setErrors({});
     setQuery('');
+    setStatusFilter('ALL');
     setActiveTab('diagram');
     setDeleteTarget(null);
 
@@ -187,8 +190,18 @@ export default function WorkflowManagementPage() {
   }, [companyId, module, dispatch]);
 
   const visibleWorkflows = useMemo(
-    () => workflows.filter((item) => (item.module === module || (item.moduleName && item.moduleName.toUpperCase() === module.toUpperCase())) && item.name.toLowerCase().includes(query.toLowerCase())),
-    [workflows, module, query]
+    () =>
+      workflows.filter((item) => {
+        const matchesModule =
+          item.module === module ||
+          (item.moduleName && item.moduleName.toUpperCase() === module.toUpperCase());
+        const matchesQuery = item.name.toLowerCase().includes(query.toLowerCase());
+        const matchesStatus =
+          statusFilter === 'ALL' ||
+          (statusFilter === 'ACTIVE' ? Boolean(item.active) : !Boolean(item.active));
+        return matchesModule && matchesQuery && matchesStatus;
+      }),
+    [workflows, module, query, statusFilter]
   );
 
   const existingCodes = useMemo(() => {
@@ -742,11 +755,22 @@ export default function WorkflowManagementPage() {
               </div>
               <GitBranch size={16} className="text-zinc-400" />
             </div>
-            <div className="mt-2.5">
+            <div className="mt-2.5 space-y-2">
               <SearchInput
                 placeholder="Search workflows..."
                 value={query}
                 onChange={setQuery}
+              />
+              <CustomSelect
+                id="workflow-status-filter"
+                value={statusFilter}
+                onChange={(_, val) => setStatusFilter(val)}
+                size="sm"
+                options={[
+                  { value: 'ALL', label: 'All Statuses' },
+                  { value: 'ACTIVE', label: 'Active Only' },
+                  { value: 'INACTIVE', label: 'Inactive Only' },
+                ]}
               />
             </div>
           </div>

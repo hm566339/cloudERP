@@ -1,5 +1,6 @@
 import React from 'react';
 import { Paperclip } from 'lucide-react';
+import CustomSelect from '../../../components/common/CustomSelect';
 
 export default function DynamicFieldRenderer({
   field,
@@ -51,24 +52,20 @@ export default function DynamicFieldRenderer({
 
       case 'select':
         return (
-          <select
+          <CustomSelect
             id={`field-${field.name}`}
             disabled={isFieldReadOnly}
             value={currentValue}
-            onChange={(e) => onChange?.(field.name, e.target.value)}
-            className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
-              error
-                ? 'border-red-400 bg-red-50/20 focus:border-red-500'
-                : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
-            } ${isFieldReadOnly ? 'bg-zinc-50 text-zinc-700 cursor-not-allowed border-zinc-200' : 'bg-white'}`}
-          >
-            <option value="">{field.placeholder || 'Select option'}</option>
-            {(field.options || []).map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label || opt.value}
-              </option>
+            onChange={(e, val) => onChange?.(field.name, val !== undefined ? val : e?.target?.value)}
+            placeholder={field.placeholder || 'Select option'}
+            error={error}
+            size="md"
+            options={(field.options || []).map((opt) => (
+              typeof opt === 'object'
+                ? { value: opt.value, label: opt.label || opt.value }
+                : { value: opt, label: opt }
             ))}
-          </select>
+          />
         );
 
       case 'checkbox':

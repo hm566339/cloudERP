@@ -12,6 +12,7 @@ import { useApiMutation, useApiQuery } from '../../../hooks/useApi';
 import useListQuery from '../../../hooks/useListQuery';
 import SearchInput from '../../../components/common/SearchInput';
 import Pagination from '../../../components/common/Pagination';
+import CustomSelect from '../../../components/common/CustomSelect';
 
 const formatType = (value) => {
   if (!value) return 'General';
@@ -57,6 +58,8 @@ export default function ApprovalRequestsPage() {
     debouncedSearch,
   } = useListQuery(null, { defaultPageSize: 10, searchParam: 'search' });
 
+  const [statusFilter, setStatusFilter] = useState('ALL');
+
   const { data, isLoading, refetch } = useApiQuery(workflowTasksApi.getPending, {
     companyId,
     page,
@@ -72,13 +75,20 @@ export default function ApprovalRequestsPage() {
   }, [data]);
 
   const filteredTasks = useMemo(() => {
+    let result = tasks;
+    if (statusFilter !== 'ALL') {
+      result = result.filter((task) => {
+        const s = (task.status || task.taskStatus || '').toUpperCase();
+        return s === statusFilter;
+      });
+    }
     const query = searchTerm.trim().toLowerCase();
-    if (!query) return tasks;
-    return tasks.filter((task) => {
-      const text = [task.documentType, task.documentId, task.transactionId, task.status].filter(Boolean).join(' ').toLowerCase();
+    if (!query) return result;
+    return result.filter((task) => {
+      const text = [task.documentType, task.documentId, task.transactionId, task.status, task.taskStatus].filter(Boolean).join(' ').toLowerCase();
       return text.includes(query);
     });
-  }, [tasks, searchTerm]);
+  }, [tasks, searchTerm, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredTasks.length / pageSize));
   const pageItems = filteredTasks.slice(page * pageSize, (page + 1) * pageSize);
@@ -130,29 +140,48 @@ export default function ApprovalRequestsPage() {
       />
 
       <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-zinc-200 p-4 md:flex-row md:items-center md:justify-between">
-          <div className="w-full max-w-md">
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearch}
-              placeholder="Search by document, ID, or status"
-              isLoading={isLoading}
-            />
+        <div className="flex flex-col gap-3 border-b border-zinc-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2.5 max-w-lg">
+            <div className="flex-1 min-w-[200px]">
+              <SearchInput
+                value={searchTerm}
+                onChange={setSearch}
+                placeholder="Search by document, ID, or status"
+                isLoading={isLoading}
+              />
+            </div>
+            <div className="w-full sm:w-36">
+              <CustomSelect
+                id="approval-status-filter"
+                value={statusFilter}
+                onChange={(e, val) => setStatusFilter(val !== undefined ? val : e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'All Statuses' },
+                  { value: 'PENDING', label: 'Pending' },
+                  { value: 'APPROVED', label: 'Approved' },
+                  { value: 'REJECTED', label: 'Rejected' },
+                  { value: 'RETURNED', label: 'Returned' },
+                ]}
+                size="sm"
+              />
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-zinc-500">
-            <span>Rows</span>
-            <select
-              value={pageSize}
-              onChange={(event) => {
-                setPageSize(Number(event.target.value));
-              }}
-              className="h-9 rounded-lg border border-zinc-200 bg-zinc-50 px-2 text-sm text-zinc-700 outline-none focus:border-zinc-400"
-            >
-              {[10, 20, 50].map((size) => (
-                <option key={size} value={size}>{size}</option>
-              ))}
-            </select>
+          <div className="flex items-center gap-2 text-xs text-zinc-500 self-end sm:self-auto">
+            <span className="font-medium">Rows:</span>
+            <div className="w-20">
+              <CustomSelect
+                id="approval-rows-per-page"
+                value={pageSize}
+                onChange={(e, val) => setPageSize(Number(val !== undefined ? val : e.target.value))}
+                options={[
+                  { value: 10, label: '10' },
+                  { value: 20, label: '20' },
+                  { value: 50, label: '50' },
+                ]}
+                size="sm"
+              />
+            </div>
           </div>
         </div>
 
