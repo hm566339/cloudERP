@@ -122,8 +122,8 @@ public final class SsoAuthorities {
 
     public static boolean isActiveAndAllowed(PermissionResponse permission) {
         return permission != null
-                && (permission.getActive() == null || Boolean.TRUE.equals(permission.getActive()))
-                && (permission.getAllowed() == null || Boolean.TRUE.equals(permission.getAllowed()));
+                && Boolean.TRUE.equals(permission.getActive())
+                && Boolean.TRUE.equals(permission.getAllowed());
     }
 
     public static boolean isSystemAdmin(Collection<? extends GrantedAuthority> authorities) {

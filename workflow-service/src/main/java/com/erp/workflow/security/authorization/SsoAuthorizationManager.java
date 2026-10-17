@@ -63,6 +63,8 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
 
         Authentication authentication = authenticationSupplier.get();
         if (authentication == null || !authentication.isAuthenticated()) {
+            log.warn("SSO Authorization [DENIED] -> method: {}, uri: {}, reason: 'Unauthenticated or missing authentication token'",
+                    request.getMethod(), request.getRequestURI());
             return new AuthorizationDecision(false);
         }
 
@@ -73,53 +75,16 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
         }
 
         if ("OPTIONS".equals(method)) {
+            log.debug("SSO Authorization [GRANTED] -> method: {}, uri: {}, reason: 'CORS preflight OPTIONS permitted'",
+                    method, uri);
             return new AuthorizationDecision(true);
         }
 
         Object principal = authentication.getPrincipal();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
-        String accessMode = CurrentUserContext.getAccessMode();
-        if (accessMode == null && principal instanceof AuthenticatedUser user) {
-            accessMode = user.getAccessMode();
-        }
-
-        if ("BLOCKED".equalsIgnoreCase(accessMode)) {
-            log.warn("BLOCKED access mode denied for URI: {}", uri);
-            return new AuthorizationDecision(false);
-        }
-
-        if ("READ_ONLY".equalsIgnoreCase(accessMode) && isMutationMethod(method)) {
-            log.warn("READ_ONLY access mode denied for mutation URI: {}", uri);
-            return new AuthorizationDecision(false);
-        }
-
-        // Active SYSTEM_ADMIN bypass
-        boolean systemAdmin = (principal instanceof AuthenticatedUser authenticatedUser && authenticatedUser.isSystemAdmin())
-                || (principal instanceof com.erp.workflow.security.UserPrincipal userPrincipal && userPrincipal.isSystemAdmin())
-                || SsoAuthorities.isSystemAdmin(authorities);
-        if (systemAdmin) {
-            log.debug("Active SYSTEM_ADMIN access granted for URI: {}", uri);
-            return new AuthorizationDecision(true);
-        }
-
-        // Module routing
-        String requestedModule = getRequestedModule(uri);
-        if (requestedModule == null) {
-            log.warn("No SSO authorization module mapped for URI: {}. Denying access (fail closed).", uri);
-            return new AuthorizationDecision(false);
-        }
-
-        List<String> requiredActions = getRequiredActions(uri, method);
-        if (requiredActions.isEmpty()) {
-            log.warn("No authorization action could be derived for [{}] {} {}. Denying access (fail closed).", method, uri, requestedModule);
-            return new AuthorizationDecision(false);
-        }
-
         AuthenticatedUser authenticatedUser = (principal instanceof AuthenticatedUser user) ? user : null;
-        Set<FeatureGroupPermissionResolver.ModuleAction> effectivePermissions =
-                groupPermissionResolver.effectivePermissions(authenticatedUser, authorities);
-
+        UUID userId = authenticatedUser != null ? authenticatedUser.getUserId() : CurrentUserContext.getUserId();
         String username = authenticatedUser != null ? authenticatedUser.getUsername() : "anonymous";
         List<String> roles = authenticatedUser != null ? authenticatedUser.getRoles() : Collections.emptyList();
 
@@ -140,34 +105,82 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
             organizationContext = authenticatedUser.getOrganizationId();
         }
 
+        String accessMode = CurrentUserContext.getAccessMode();
+        if (accessMode == null && authenticatedUser != null) {
+            accessMode = authenticatedUser.getAccessMode();
+        }
+
+        if ("BLOCKED".equalsIgnoreCase(accessMode)) {
+            log.warn("SSO Authorization [DENIED] -> method: {}, uri: {}, reason: 'User access mode is BLOCKED', user: {}, userId: {}, roles: {}, companyId: {}, organizationId: {}",
+                    method, uri, username, userId, roles, companyContext, organizationContext);
+            return new AuthorizationDecision(false);
+        }
+
+        if ("READ_ONLY".equalsIgnoreCase(accessMode) && isMutationMethod(method)) {
+            log.warn("SSO Authorization [DENIED] -> method: {}, uri: {}, reason: 'User access mode is READ_ONLY for mutation method', user: {}, userId: {}, roles: {}, companyId: {}, organizationId: {}",
+                    method, uri, username, userId, roles, companyContext, organizationContext);
+            return new AuthorizationDecision(false);
+        }
+
+        // Active SYSTEM_ADMIN bypass
+        boolean systemAdmin = (authenticatedUser != null && authenticatedUser.isSystemAdmin())
+                || (principal instanceof com.erp.workflow.security.UserPrincipal userPrincipal && userPrincipal.isSystemAdmin())
+                || SsoAuthorities.isSystemAdmin(authorities);
+        if (systemAdmin) {
+            log.info("SSO Authorization [GRANTED] -> method: {}, uri: {}, module: WORKFLOW, feature: ALL, action: ALL, reason: 'Active SYSTEM_ADMIN bypass', user: {}, userId: {}, roles: {}, companyId: {}, organizationId: {}",
+                    method, uri, username, userId, roles, companyContext, organizationContext);
+            return new AuthorizationDecision(true);
+        }
+
+        // Module routing
+        String requestedModule = getRequestedModule(uri);
+        if (requestedModule == null) {
+            log.warn("SSO Authorization [DENIED] -> method: {}, uri: {}, reason: 'No SSO authorization module mapped for URI (fail closed)', user: {}, userId: {}, roles: {}, companyId: {}, organizationId: {}",
+                    method, uri, username, userId, roles, companyContext, organizationContext);
+            return new AuthorizationDecision(false);
+        }
+
+        List<String> requiredActions = getRequiredActions(uri, method);
+        if (requiredActions.isEmpty()) {
+            log.warn("SSO Authorization [DENIED] -> method: {}, uri: {}, module: WORKFLOW, feature: {}, reason: 'No authorization action could be derived for method/suffix (fail closed)', user: {}, userId: {}, roles: {}, companyId: {}, organizationId: {}",
+                    method, uri, requestedModule, username, userId, roles, companyContext, organizationContext);
+            return new AuthorizationDecision(false);
+        }
+
+        Set<FeatureGroupPermissionResolver.ModuleAction> effectivePermissions =
+                groupPermissionResolver.effectivePermissions(authenticatedUser, authorities);
+
         for (String action : requiredActions) {
-            boolean granted = false;
+            boolean directGranted = false;
+            boolean authorityGranted = false;
+            boolean groupGranted = false;
+
             if (authenticatedUser != null) {
-                granted = authenticatedUser.hasPermission(requestedModule, action);
-                if (!granted) {
-                    granted = SsoAuthorities.hasModuleAction(authorities, requestedModule, action)
+                directGranted = authenticatedUser.hasPermission(requestedModule, action);
+                if (!directGranted) {
+                    authorityGranted = SsoAuthorities.hasModuleAction(authorities, requestedModule, action)
                             || SsoAuthorities.hasFeatureAction(authorities, requestedModule, action);
                 }
             } else {
-                granted = SsoAuthorities.hasModuleAction(authorities, requestedModule, action)
+                authorityGranted = SsoAuthorities.hasModuleAction(authorities, requestedModule, action)
                         || SsoAuthorities.hasFeatureAction(authorities, requestedModule, action);
             }
 
-            // Group-derived permission
-            if (!granted) {
-                granted = effectivePermissions.contains(new FeatureGroupPermissionResolver.ModuleAction(
+            if (!directGranted && !authorityGranted) {
+                groupGranted = effectivePermissions.contains(new FeatureGroupPermissionResolver.ModuleAction(
                         SsoAuthorities.normalize(requestedModule), SsoAuthorities.normalize(action)));
             }
 
+            boolean granted = directGranted || authorityGranted || groupGranted;
             if (granted) {
-                log.info("SSO Authorization [GRANTED] -> user: {}, roles: {}, module: WORKFLOW, feature: {}, action: {}, companyId: {}, organizationId: {}, method: {}, uri: {}",
-                        username, roles, requestedModule, action, companyContext, organizationContext, method, uri);
+                log.info("SSO Authorization [GRANTED] -> method: {}, uri: {}, module: WORKFLOW, feature: {}, action: {}, lookupResult: [direct={}, authority={}, group={}], user: {}, userId: {}, roles: {}, companyId: {}, organizationId: {}",
+                        method, uri, requestedModule, action, directGranted, authorityGranted, groupGranted, username, userId, roles, companyContext, organizationContext);
                 return new AuthorizationDecision(true);
             }
         }
 
-        log.warn("SSO Authorization [DENIED] -> user: {}, roles: {}, module: WORKFLOW, feature: {}, requiredActions: {}, companyId: {}, organizationId: {}, method: {}, uri: {}",
-                username, roles, requestedModule, requiredActions, companyContext, organizationContext, method, uri);
+        log.warn("SSO Authorization [DENIED] -> method: {}, uri: {}, module: WORKFLOW, feature: {}, requiredActions: {}, reason: 'User lacks required permission/role for action(s)', user: {}, userId: {}, roles: {}, companyId: {}, organizationId: {}",
+                method, uri, requestedModule, requiredActions, username, userId, roles, companyContext, organizationContext);
         return new AuthorizationDecision(false);
     }
 
@@ -196,8 +209,10 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
         String suffixAction = properties.actionForSuffix(uri);
         if (suffixAction != null && !suffixAction.isBlank()) {
             actions.add(suffixAction.toUpperCase());
+            log.debug("Action resolution for [{}] {}: matched custom suffix action '{}'", method, uri, suffixAction);
         } else {
             actions.addAll(properties.actionsForMethod(method));
+            log.debug("Action resolution for [{}] {}: using default method actions {}", method, uri, actions);
         }
 
         if (properties.isWriteImpliesCreateUpdate() && !actions.contains("WRITE")) {

@@ -24,7 +24,7 @@ public class CorsConfig {
                 Arrays.asList(allowedOrigins.split(",")));
 
         corsConfig.setAllowedMethods(
-                Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
 
         corsConfig.addAllowedHeader("*");
 

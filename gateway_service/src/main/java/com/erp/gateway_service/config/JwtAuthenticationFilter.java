@@ -6,6 +6,8 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -30,6 +32,8 @@ import reactor.core.publisher.Mono;
 public class JwtAuthenticationFilter
                 extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config>
                 implements GlobalFilter, Ordered {
+
+        private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
         private PublicKey publicKey;
 
@@ -147,14 +151,18 @@ public class JwtAuthenticationFilter
                 String method = exchange.getRequest()
                                 .getMethod() != null ? exchange.getRequest().getMethod().name() : "";
 
+                log.info("Gateway [INCOMING] -> [{}] {}", method, path);
+
                 // Public APIs skip JWT validation
                 if (isPublicEndpoint(method, path)) {
+                        log.debug("Gateway [PUBLIC] -> skipping JWT authentication for [{}] {}", method, path);
                         return chain.filter(exchange);
                 }
 
                 String token = extractToken(exchange);
 
                 if (token == null) {
+                        log.warn("Gateway [UNAUTHORIZED] -> [{}] {} Missing Authorization Header or Cookie", method, path);
                         return Mono.error(
                                         new ResponseStatusException(
                                                         HttpStatus.UNAUTHORIZED,
@@ -176,29 +184,36 @@ public class JwtAuthenticationFilter
                         String roles = rolesObj != null ? rolesObj.toString() : "";
                         String scope = claims.get("scope", String.class);
 
+                        log.info("Gateway [AUTHENTICATED] -> user: {}, userId: {}, roles: {}, companyId: {}, method: {}, uri: {}",
+                                        username, userId, roles, companyId, method, path);
+
                         final String finalToken = token;
 
-                        return chain.filter(
-                                        exchange.mutate()
-                                                        .request(
-                                                                        exchange.getRequest()
-                                                                                        .mutate()
-                                                                                        .headers(headers -> headers.set(
-                                                                                                        HttpHeaders.AUTHORIZATION,
-                                                                                                        "Bearer " + finalToken))
-                                                                                        .header("X-USER-ID", userId == null ? "" : userId)
-                                                                                        .header("X-COMPANY-CODE", companyCode == null ? "" : companyCode)
-                                                                                        .header("X-COMPANY-ID", companyId == null ? "" : companyId)
-                                                                                        .header("X-USERNAME", username == null ? "" : username)
-                                                                                        .header("X-ROLES", roles == null ? "" : roles)
-                                                                                        .header("X-SCOPE", scope == null ? "" : scope)
-                                                                                        .build())
-                                                        .build());
+                        ServerWebExchange mutatedExchange = exchange.mutate()
+                                        .request(
+                                                        exchange.getRequest()
+                                                                        .mutate()
+                                                                        .headers(headers -> headers.set(
+                                                                                        HttpHeaders.AUTHORIZATION,
+                                                                                        "Bearer " + finalToken))
+                                                                        .header("X-USER-ID", userId == null ? "" : userId)
+                                                                        .header("X-COMPANY-CODE", companyCode == null ? "" : companyCode)
+                                                                        .header("X-COMPANY-ID", companyId == null ? "" : companyId)
+                                                                        .header("X-USERNAME", username == null ? "" : username)
+                                                                        .header("X-ROLES", roles == null ? "" : roles)
+                                                                        .header("X-SCOPE", scope == null ? "" : scope)
+                                                                        .build())
+                                        .build();
+
+                        return chain.filter(mutatedExchange)
+                                        .doFinally(signalType -> {
+                                                var statusCode = exchange.getResponse().getStatusCode();
+                                                log.info("Gateway [COMPLETED] -> [{}] {} responseStatus: {}, signal: {}",
+                                                                method, path, statusCode, signalType);
+                                        });
 
                 } catch (Exception ex) {
-                        System.out.println(
-                                        "❌ JWT Verification failed: "
-                                                        + ex.getMessage());
+                        log.warn("Gateway [JWT_FAILED] -> [{}] {} JWT verification failed: {}", method, path, ex.getMessage());
 
                         return Mono.error(
                                         new ResponseStatusException(

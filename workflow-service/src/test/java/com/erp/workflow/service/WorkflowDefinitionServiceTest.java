@@ -308,4 +308,70 @@ class WorkflowDefinitionServiceTest {
         assertEquals("SALES_APPROVAL", response.getWorkflowCode());
         assertEquals("SALES", response.getDocumentType());
     }
+
+    @Test
+    void testActivateDefinition_DeactivatesConcurrentActiveWorkflows() {
+        UUID companyId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+        UUID otherDefId = UUID.randomUUID();
+
+        WorkflowDefinition targetDef = WorkflowDefinition.builder()
+                .id(defId)
+                .companyId(companyId)
+                .workflowCode("WF_ACT")
+                .workflowName("Activate Target")
+                .moduleName("ACCOUNT")
+                .documentType("PURCHASE_ORDER")
+                .version(1)
+                .isActive(false)
+                .build();
+
+        WorkflowDefinition otherActive = WorkflowDefinition.builder()
+                .id(otherDefId)
+                .companyId(companyId)
+                .workflowCode("WF_CONCURRENT")
+                .workflowName("Concurrent Active")
+                .moduleName("ACCOUNT")
+                .documentType("PURCHASE_ORDER")
+                .version(1)
+                .isActive(true)
+                .build();
+
+        when(definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(defId, companyId))
+                .thenReturn(Optional.of(targetDef));
+        when(definitionRepository.findActiveByModuleAndDocumentType(companyId, "ACCOUNT", "PURCHASE_ORDER"))
+                .thenReturn(List.of(otherActive));
+        when(definitionRepository.findByCompanyIdAndWorkflowCodeAndIsDeletedFalse(companyId, "WF_ACT"))
+                .thenReturn(List.of(targetDef));
+
+        definitionService.activateDefinition(defId, companyId);
+
+        assertTrue(targetDef.getIsActive());
+        assertFalse(otherActive.getIsActive());
+        verify(definitionRepository).save(otherActive);
+        verify(definitionRepository).save(targetDef);
+    }
+
+    @Test
+    void testActivateDefinition_CompanyMismatch_ThrowsResourceNotFoundException() {
+        UUID requestedCompanyId = UUID.randomUUID();
+        UUID actualCompanyId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+
+        WorkflowDefinition existingUnderOtherCompany = WorkflowDefinition.builder()
+                .id(defId)
+                .companyId(actualCompanyId)
+                .workflowCode("WF_OTHER_COMPANY")
+                .workflowName("Other Company WF")
+                .isActive(true)
+                .build();
+
+        when(definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(defId, requestedCompanyId))
+                .thenReturn(Optional.empty());
+        when(definitionRepository.findById(defId))
+                .thenReturn(Optional.of(existingUnderOtherCompany));
+
+        assertThrows(com.erp.workflow.exception.ResourceNotFoundException.class, () ->
+                definitionService.activateDefinition(defId, requestedCompanyId));
+    }
 }

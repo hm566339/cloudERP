@@ -74,37 +74,50 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.clearContext();
 
         String path = request.getRequestURI();
+        String method = request.getMethod() == null ? "" : request.getMethod().toUpperCase();
         String accessToken = extractAccessToken(request);
+
+        log.info("AuthenticationFilter [INCOMING] -> [{}] {} from remote: {}, companyIdParam: {}, xCompanyIdHeader: {}",
+                method, path, request.getRemoteAddr(), request.getParameter("companyId"), request.getHeader("X-Company-Id"));
 
         try {
             if (accessToken != null && !accessToken.isBlank()) {
                 boolean authenticated = false;
                 try {
-                    log.debug("Verifying access token with SSO for path [{}]", path);
+                    log.debug("Verifying access token with SSO for [{}] {}", method, path);
                     TokenVerifyResponse verifyResponse = ssoService.verifyToken(accessToken);
 
                     if (isVerificationResponseUsable(verifyResponse)) {
                         authenticateUser(request, verifyResponse);
                         authenticated = true;
                     } else {
-                        log.warn("SSO verification response rejected for path [{}] (invalid/empty/inactive account).", path);
+                        log.warn("AuthenticationFilter [REJECTED] -> SSO verification response rejected for [{}] {} (invalid/empty/inactive account).",
+                                method, path);
                     }
                 } catch (UnauthorizedException ex) {
-                    log.warn("SSO token verification failed for path [{}]: {}", path, ex.getMessage());
+                    log.warn("AuthenticationFilter [UNAUTHORIZED] -> SSO token verification failed for [{}] {}: {}",
+                            method, path, ex.getMessage());
                 } catch (Exception ex) {
-                    log.warn("SSO verification error for path [{}]: {}", path, ex.getMessage());
+                    log.warn("AuthenticationFilter [ERROR] -> SSO verification error for [{}] {}: {}",
+                            method, path, ex.getMessage());
                 }
 
                 // Fallback to local JWT verification with public key or HMAC if SSO did not authenticate
                 if (!authenticated && jwtTokenProvider != null && jwtTokenProvider.validateToken(accessToken)) {
-                    log.debug("SSO unavailable or rejected; authenticating via verified JWT token for path [{}]", path);
+                    log.info("AuthenticationFilter [FALLBACK] -> SSO unavailable/rejected; authenticating via verified JWT token for [{}] {}",
+                            method, path);
                     authenticateUserFromJwt(request, accessToken);
                 }
             } else {
-                log.debug("No access token provided for path [{}]", path);
+                log.warn("AuthenticationFilter [NO_TOKEN] -> No access token provided for [{}] {}", method, path);
             }
 
-            filterChain.doFilter(request, response);
+            try {
+                filterChain.doFilter(request, response);
+            } finally {
+                log.info("AuthenticationFilter [COMPLETED] -> [{}] {} responseStatus: {}",
+                        method, path, response.getStatus());
+            }
         } finally {
             CurrentUserContext.clear();
         }
@@ -197,7 +210,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        log.debug("Authenticated user [{}] with {} authorities", username, authorities.size());
+        log.info("AuthenticationFilter [AUTHENTICATED] -> user: {}, userId: {}, role: {}, companyId: {}, orgId: {}, authoritiesCount: {} for [{}] {}",
+                username, userId, CurrentUserContext.getUserRole() != null ? CurrentUserContext.getUserRole() : "NONE", CurrentUserContext.getCompanyId(), CurrentUserContext.getOrganizationId(), authorities.size(), request.getMethod(), request.getRequestURI());
     }
 
     private void authenticateUserFromJwt(HttpServletRequest request, String token) {

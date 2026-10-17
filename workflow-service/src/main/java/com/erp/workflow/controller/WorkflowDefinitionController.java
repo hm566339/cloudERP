@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/workflow/definitions")
 @RequiredArgsConstructor
@@ -94,13 +96,38 @@ public class WorkflowDefinitionController {
     public ResponseEntity<ApiResponse<Void>> activateDefinition(
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
+        String method = "PATCH";
+        String endpoint = "/api/v1/workflow/definitions/" + id + "/activate";
+        UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
+        String currentUsername = SecurityUtils.getCurrentUsername();
+        java.util.List<String> currentRoles = SecurityUtils.getCurrentRoles();
+        log.info("WorkflowDefinitionController -> [{}] {} started. definitionId={}, requestedCompanyId={}, userId={}, username={}, roles={}",
+                method, endpoint, id, companyId, currentUserId, currentUsername, currentRoles);
+
         UUID effectiveCompanyId = resolveCompanyId(companyId);
-        if (effectiveCompanyId == null) {
+        boolean companyResolved = effectiveCompanyId != null;
+        log.info("WorkflowDefinitionController -> Company resolution for [{}] {}: requestedCompanyId={}, effectiveCompanyId={}, resolvedSuccess={}",
+                method, endpoint, companyId, effectiveCompanyId, companyResolved);
+
+        if (!companyResolved) {
+            log.warn("WorkflowDefinitionController -> Company ID resolution failed for [{}] {}: definitionId={}, requestedCompanyId={}",
+                    method, endpoint, id, companyId);
             throw new com.erp.workflow.exception.WorkflowValidationException(
                     "Company ID is required to activate workflow definition");
         }
-        definitionService.activateDefinition(id, effectiveCompanyId);
-        return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition activated"));
+
+        try {
+            log.info("WorkflowDefinitionController -> Invoking definitionService.activateDefinition(definitionId={}, effectiveCompanyId={}) for [{}] {}",
+                    id, effectiveCompanyId, method, endpoint);
+            definitionService.activateDefinition(id, effectiveCompanyId);
+            log.info("WorkflowDefinitionController -> Successfully activated workflow definition id={} for effectiveCompanyId={}",
+                    id, effectiveCompanyId);
+            return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition activated"));
+        } catch (Exception ex) {
+            log.error("WorkflowDefinitionController -> Exception in activateDefinition(definitionId={}, effectiveCompanyId={}): {}",
+                    id, effectiveCompanyId, ex.getMessage(), ex);
+            throw ex;
+        }
     }
 
     @PatchMapping("/{id}/deactivate")
@@ -108,13 +135,38 @@ public class WorkflowDefinitionController {
     public ResponseEntity<ApiResponse<Void>> deactivateDefinition(
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
+        String method = "PATCH";
+        String endpoint = "/api/v1/workflow/definitions/" + id + "/deactivate";
+        UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
+        String currentUsername = SecurityUtils.getCurrentUsername();
+        java.util.List<String> currentRoles = SecurityUtils.getCurrentRoles();
+        log.info("WorkflowDefinitionController -> [{}] {} started. definitionId={}, requestedCompanyId={}, userId={}, username={}, roles={}",
+                method, endpoint, id, companyId, currentUserId, currentUsername, currentRoles);
+
         UUID effectiveCompanyId = resolveCompanyId(companyId);
-        if (effectiveCompanyId == null) {
+        boolean companyResolved = effectiveCompanyId != null;
+        log.info("WorkflowDefinitionController -> Company resolution for [{}] {}: requestedCompanyId={}, effectiveCompanyId={}, resolvedSuccess={}",
+                method, endpoint, companyId, effectiveCompanyId, companyResolved);
+
+        if (!companyResolved) {
+            log.warn("WorkflowDefinitionController -> Company ID resolution failed for [{}] {}: definitionId={}, requestedCompanyId={}",
+                    method, endpoint, id, companyId);
             throw new com.erp.workflow.exception.WorkflowValidationException(
                     "Company ID is required to deactivate workflow definition");
         }
-        definitionService.deactivateDefinition(id, effectiveCompanyId);
-        return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition deactivated"));
+
+        try {
+            log.info("WorkflowDefinitionController -> Invoking definitionService.deactivateDefinition(definitionId={}, effectiveCompanyId={}) for [{}] {}",
+                    id, effectiveCompanyId, method, endpoint);
+            definitionService.deactivateDefinition(id, effectiveCompanyId);
+            log.info("WorkflowDefinitionController -> Successfully deactivated workflow definition id={} for effectiveCompanyId={}",
+                    id, effectiveCompanyId);
+            return ResponseEntity.ok(ApiResponse.success(null, "Workflow definition deactivated"));
+        } catch (Exception ex) {
+            log.error("WorkflowDefinitionController -> Exception in deactivateDefinition(definitionId={}, effectiveCompanyId={}): {}",
+                    id, effectiveCompanyId, ex.getMessage(), ex);
+            throw ex;
+        }
     }
 
     @DeleteMapping("/{id}")

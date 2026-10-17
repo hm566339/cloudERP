@@ -423,20 +423,40 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
     @Override
     @Transactional
     public void activateDefinition(UUID id, UUID companyId) {
-        WorkflowDefinition def = definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("WorkflowDefinition", "id", id));
+        log.info("WorkflowDefinitionService -> activateDefinition requested. definitionId={}, companyId={}", id, companyId);
+
+        Optional<WorkflowDefinition> defOpt = definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, companyId);
+        if (defOpt.isEmpty()) {
+            Optional<WorkflowDefinition> anyDef = definitionRepository.findById(id);
+            if (anyDef.isPresent()) {
+                WorkflowDefinition existing = anyDef.get();
+                log.warn("WorkflowDefinitionService -> activateDefinition failed: Definition id={} found but belongs to companyId={} (deleted={}), requested companyId={}",
+                        id, existing.getCompanyId(), existing.getIsDeleted(), companyId);
+            } else {
+                log.warn("WorkflowDefinitionService -> activateDefinition failed: Definition id={} does not exist in repository", id);
+            }
+            throw new ResourceNotFoundException("WorkflowDefinition", "id", id);
+        }
+
+        WorkflowDefinition def = defOpt.get();
+        log.info("WorkflowDefinitionService -> activateDefinition: Found definition id={}, code={}, name={}, module={}, documentType={}, currentIsActive={}",
+                def.getId(), def.getWorkflowCode(), def.getWorkflowName(), def.getModuleName(), def.getDocumentType(), def.getIsActive());
 
         // Enforce only one active workflow per company, module, and document type
         List<WorkflowDefinition> otherActive = def.getModuleName() != null
                 ? definitionRepository.findActiveByModuleAndDocumentType(companyId, def.getModuleName(), def.getDocumentType())
                 : definitionRepository.findActiveByDocumentType(companyId, def.getDocumentType());
 
+        int deactivatedCount = 0;
         for (WorkflowDefinition other : otherActive) {
             if (!other.getId().equals(def.getId())) {
+                log.info("WorkflowDefinitionService -> activateDefinition: Deactivating concurrent active definition id={}, code={}",
+                        other.getId(), other.getWorkflowCode());
                 other.setIsActive(false);
                 other.setIsDefault(false);
                 other.setUpdatedAt(LocalDateTime.now());
                 definitionRepository.save(other);
+                deactivatedCount++;
             }
         }
 
@@ -448,10 +468,13 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
                     : definitionRepository.findActiveByDocumentType(companyId, altType);
             for (WorkflowDefinition alt : altActive) {
                 if (!alt.getId().equals(def.getId())) {
+                    log.info("WorkflowDefinitionService -> activateDefinition: Deactivating canonical fallback active definition id={}, code={}, type={}",
+                            alt.getId(), alt.getWorkflowCode(), alt.getDocumentType());
                     alt.setIsActive(false);
                     alt.setIsDefault(false);
                     alt.setUpdatedAt(LocalDateTime.now());
                     definitionRepository.save(alt);
+                    deactivatedCount++;
                 }
             }
         }
@@ -460,10 +483,13 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         List<WorkflowDefinition> sameCodeDefs = definitionRepository.findByCompanyIdAndWorkflowCodeAndIsDeletedFalse(companyId, def.getWorkflowCode());
         for (WorkflowDefinition other : sameCodeDefs) {
             if (!other.getId().equals(def.getId()) && Boolean.TRUE.equals(other.getIsActive())) {
+                log.info("WorkflowDefinitionService -> activateDefinition: Deactivating other version with same code id={}, code={}, version={}",
+                        other.getId(), other.getWorkflowCode(), other.getVersion());
                 other.setIsActive(false);
                 other.setIsDefault(false);
                 other.setUpdatedAt(LocalDateTime.now());
                 definitionRepository.save(other);
+                deactivatedCount++;
             }
         }
 
@@ -474,13 +500,30 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         def.setUpdatedByUsername(currentUsername);
         def.setUpdatedAt(LocalDateTime.now());
         definitionRepository.save(def);
+        log.info("WorkflowDefinitionService -> activateDefinition completed successfully: definitionId={}, companyId={}, isActive=true, concurrentDeactivatedCount={}",
+                id, companyId, deactivatedCount);
     }
 
     @Override
     @Transactional
     public void deactivateDefinition(UUID id, UUID companyId) {
-        WorkflowDefinition def = definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("WorkflowDefinition", "id", id));
+        log.info("WorkflowDefinitionService -> deactivateDefinition requested. definitionId={}, companyId={}", id, companyId);
+        Optional<WorkflowDefinition> defOpt = definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, companyId);
+        if (defOpt.isEmpty()) {
+            Optional<WorkflowDefinition> anyDef = definitionRepository.findById(id);
+            if (anyDef.isPresent()) {
+                WorkflowDefinition existing = anyDef.get();
+                log.warn("WorkflowDefinitionService -> deactivateDefinition failed: Definition id={} found but belongs to companyId={} (deleted={}), requested companyId={}",
+                        id, existing.getCompanyId(), existing.getIsDeleted(), companyId);
+            } else {
+                log.warn("WorkflowDefinitionService -> deactivateDefinition failed: Definition id={} does not exist in repository", id);
+            }
+            throw new ResourceNotFoundException("WorkflowDefinition", "id", id);
+        }
+
+        WorkflowDefinition def = defOpt.get();
+        log.info("WorkflowDefinitionService -> deactivateDefinition: Found definition id={}, code={}, name={}, currentIsActive={}",
+                def.getId(), def.getWorkflowCode(), def.getWorkflowName(), def.getIsActive());
         def.setIsActive(false);
         UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
         String currentUsername = SecurityUtils.getCurrentUsername();
@@ -488,6 +531,8 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         def.setUpdatedByUsername(currentUsername);
         def.setUpdatedAt(LocalDateTime.now());
         definitionRepository.save(def);
+        log.info("WorkflowDefinitionService -> deactivateDefinition completed successfully: definitionId={}, companyId={}, isActive=false",
+                id, companyId);
     }
 
     @Override

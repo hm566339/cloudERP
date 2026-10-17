@@ -757,4 +757,28 @@ class SsoAuthorizationManagerTest {
 
         assertThat(decision.isGranted()).isTrue();
     }
+
+    @Test
+    @DisplayName("PATCH /activate maps to ACTIVATE action before generic UPDATE; user with only UPDATE is DENIED")
+    void testPatchActivationResolvesToActivateNotGenericUpdate() {
+        PermissionResponse updateOnly = PermissionResponse.builder()
+                .moduleName("WORKFLOW")
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("UPDATE")
+                .active(true)
+                .allowed(true)
+                .build();
+
+        AuthenticatedUser userWithUpdate = buildUser(List.of("USER"), List.of(updateOnly));
+
+        MockHttpServletRequest request = new MockHttpServletRequest("PATCH", "/api/v1/workflow/definitions/test-id/activate");
+        request.setParameter("companyId", UUID.randomUUID().toString());
+
+        AuthorizationDecision decision = manager.authorize(
+                () -> new UsernamePasswordAuthenticationToken(userWithUpdate, null, List.of()),
+                new RequestAuthorizationContext(request, null));
+
+        // Must be denied because /activate requires ACTIVATE, not UPDATE
+        assertThat(decision.isGranted()).isFalse();
+    }
 }
