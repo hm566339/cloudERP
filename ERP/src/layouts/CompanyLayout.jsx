@@ -34,7 +34,7 @@ import { useSidebar } from './SidebarContext'
 import RouteLoading from '../routes/RouteLoading'
 
 import SidebarNavItem from './SidebarNavItem'
-import { buildSidebarLinks } from './SidebarConfig'
+import { buildDynamicSidebar } from './dynamicSidebarConfig'
 
 import WorkspaceCard from '../features/account/components/WorkspaceCard'
 import CompanyDetailsPopup from '../features/account/components/CompanyDetailsPopup'
@@ -142,8 +142,14 @@ export default function CompanyLayout() {
   })
 
   const sidebarLinks = useMemo(() => {
-    return buildSidebarLinks(userRole, companyId, permissions, isSuperAdminGlobal, accessibleModuleKeys, canViewModule, isOwnerUser)
-  }, [userRole, companyId, permissions, isSuperAdminGlobal, accessibleModuleKeys, canViewModule, isOwnerUser]);
+    return buildDynamicSidebar({
+      authContext,
+      userRole,
+      companyId,
+      isSuperAdminGlobal,
+      permissions,
+    });
+  }, [authContext, userRole, companyId, isSuperAdminGlobal, permissions]);
 
   useEffect(() => {
     if (userRole === 'super_admin' && companyId === '000000' && !location.pathname.startsWith('/super-admin')) {

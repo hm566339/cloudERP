@@ -15,9 +15,7 @@ import { ToastNotification } from './AuthLayout'
 import { removeCookie } from '../utils/cookieHelper'
 
 import SidebarNavItem from './SidebarNavItem'
-import { buildAccountantSidebarLinks as buildSidebarLinks } from './AccountantSidebarConfig'
-import { buildInventorySidebarLinks } from './InventorySidebarConfig'
-import { buildCrmSidebarLinks } from './CrmSidebarConfig'
+import { buildDynamicSidebar } from './dynamicSidebarConfig'
 import { useRBAC } from '../utils/rbac'
 import { hasPermission } from '../utils/rbacUtils'
 import { useAccessMode } from '../hooks/useAccessMode'
@@ -133,18 +131,13 @@ export default function AccountantLayout() {
   );
 
   const sidebarLinks = useMemo(() => {
-    const links = [];
-    if (hasModule('ACCOUNT')) {
-      links.push(...buildSidebarLinks(userRole, (f, a) => canAccess(f, a, 'ACCOUNT')));
-    }
-    if (hasModule('INVENTORY')) {
-      links.push(...buildInventorySidebarLinks(userRole, (f, a) => canAccess(f, a, 'INVENTORY')));
-    }
-    if (hasModule('CRM')) {
-      links.push(...buildCrmSidebarLinks(userRole, (f, a) => canAccess(f, a, 'CRM')));
-    }
-    return links;
-  }, [hasModule, userRole, canAccess]);
+    return buildDynamicSidebar({
+      authContext,
+      userRole,
+      companyId: selectedCompany?.id || currentUser?.companyCode || null,
+      isSuperAdminGlobal: false,
+    });
+  }, [authContext, userRole, selectedCompany, currentUser]);
 
   const entitledModules = useMemo(() => getEntitledModules(authContext), [authContext]);
 
