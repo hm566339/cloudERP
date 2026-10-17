@@ -49,7 +49,6 @@ import {
 } from '../../utils/subscriptionPermissions';
 import { formatPlanLimit } from '../../utils/subscriptionPlanHelper';
 import { getEntitledModules } from '../../utils/moduleNormalization';
-import OwnerLayout, { useIsOwnerLayout } from '../../layouts/OwnerLayout';
 import SubscriptionCheckoutModal from '../../components/subscription/SubscriptionCheckoutModal';
 
 /**
@@ -1068,29 +1067,8 @@ function SubscriptionContent() {
 
 /**
  * Main SubscriptionPage export.
- * If user is an Owner and rendered outside OwnerLayout, wraps with OwnerLayout.
- * Otherwise renders cleanly inside the active layout context.
+ * Renders cleanly inside the active layout context without duplicate wrappers.
  */
 export default function SubscriptionPage() {
-  const isInsideOwnerLayout = useIsOwnerLayout();
-  const authContext = useAppSelector(selectAuthContext);
-
-  const isOwner =
-    authContext?.membership?.memberType === 'OWNER' ||
-    authContext?.user?.role === 'owner' ||
-    authContext?.user?.membership?.memberType === 'OWNER' ||
-    (Array.isArray(authContext?.user?.roles) &&
-      authContext.user.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER')) ||
-    (Array.isArray(authContext?.roles) &&
-      authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER'));
-
-  if (!isInsideOwnerLayout && isOwner) {
-    return (
-      <OwnerLayout>
-        <SubscriptionContent />
-      </OwnerLayout>
-    );
-  }
-
   return <SubscriptionContent />;
 }

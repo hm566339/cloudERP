@@ -15,6 +15,7 @@ function AppShellContent() {
   const userRole = String(Array.isArray(rawRole) ? (rawRole[0]?.name || rawRole[0]) : (rawRole?.name || rawRole)).toLowerCase();
 
   const isOwner =
+    userRole === 'owner' ||
     authContext?.membership?.memberType === 'OWNER' ||
     authContext?.user?.role === 'owner' ||
     authContext?.user?.membership?.memberType === 'OWNER' ||
@@ -32,7 +33,8 @@ function AppShellContent() {
 
   const isOwnerWorkspace =
     location.pathname.startsWith('/owner') ||
-    location.pathname.startsWith('/organization');
+    location.pathname.startsWith('/organization') ||
+    location.pathname.startsWith('/subscription');
 
   if (isOwner && isOwnerWorkspace) {
     return <OwnerLayout />;
