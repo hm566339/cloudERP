@@ -77,6 +77,21 @@ export default function OwnerTopHeader({
   const orgCode = (organization?.code || '').toUpperCase();
   const ownerName = user?.fullName || user?.username || 'Organization Owner';
   const ownerEmail = user?.email || user?.username || '';
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      if (q.includes('compan') || q.includes('org')) navigate('/owner/companies');
+      else if (q.includes('finance') || q.includes('account')) navigate(activeCompanyId ? `/company/${activeCompanyId}/accounts/dashboard` : '/accounts/dashboard');
+      else if (q.includes('inventor') || q.includes('stock')) navigate(activeCompanyId ? `/company/${activeCompanyId}/inventory/dashboard` : '/inventory/dashboard');
+      else if (q.includes('crm') || q.includes('sale') || q.includes('customer')) navigate(activeCompanyId ? `/company/${activeCompanyId}/crm/dashboard` : '/crm/dashboard');
+      else if (q.includes('purchas') || q.includes('rfq') || q.includes('procure')) navigate(activeCompanyId ? `/company/${activeCompanyId}/purchases` : '/purchase-requisitions');
+      else if (q.includes('workflow') || q.includes('approv')) navigate(activeCompanyId ? `/company/${activeCompanyId}/workflows` : '/workflows');
+      else if (q.includes('subscript') || q.includes('plan') || q.includes('bill')) navigate('/subscription');
+      else if (q.includes('setting')) navigate('/owner/settings');
+      else if (q.includes('profile') || q.includes('user')) navigate('/profile');
+      else navigate('/owner/dashboard');
+    }
+  };
 
   const handleSelectCompany = (comp) => {
     dispatch(
@@ -158,6 +173,7 @@ export default function OwnerTopHeader({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
             placeholder="Search modules, companies, settings..."
             className="w-full pl-9 pr-3 py-1.5 text-xs bg-zinc-50/80 border border-zinc-200/80 rounded-xl placeholder:text-zinc-400 text-zinc-800 focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:bg-white transition-all shadow-xs"
           />
@@ -200,9 +216,17 @@ export default function OwnerTopHeader({
           </Link>
         )}
 
+        {/* Single Company Workspace Context Indicator */}
+        {companies.length === 1 && (
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-zinc-200/80 bg-zinc-50/70 text-zinc-700 text-xs font-semibold">
+            <Building2 size={13} className="text-zinc-500 shrink-0" />
+            <span className="max-w-[130px] truncate" title={activeCompanyName}>{activeCompanyName}</span>
+          </div>
+        )}
+
         {/* Company Quick-Switch Dropdown (if multiple companies) */}
         {companies.length > 1 && (
-          <div className="relative hidden xl:block">
+          <div className="relative hidden lg:block">
             <button
               type="button"
               onClick={() => setCompanyDropdownOpen(!companyDropdownOpen)}
@@ -287,7 +311,7 @@ export default function OwnerTopHeader({
 
         {/* Settings Icon Button */}
         <Link
-          to="/accounts/settings"
+          to="/owner/settings"
           aria-label="Organization Settings"
           title="Organization Settings"
           className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-zinc-100 text-zinc-500 hover:text-zinc-700 transition-colors group border border-transparent hover:border-zinc-200"
@@ -383,7 +407,7 @@ export default function OwnerTopHeader({
                   Subscription & Billing
                 </Link>
                 <Link
-                  to="/accounts/settings"
+                  to="/owner/settings"
                   onClick={() => setProfileDropdownOpen(false)}
                   className="flex items-center gap-3 px-4 py-2 text-[11px] font-semibold text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 transition-colors mx-1 rounded-lg"
                 >

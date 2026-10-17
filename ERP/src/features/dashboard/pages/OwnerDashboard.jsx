@@ -15,6 +15,8 @@ import {
   Boxes,
   ShoppingCart,
   Briefcase,
+  Workflow,
+  Factory,
   RefreshCw,
   ChevronRight,
   Lock,
@@ -27,14 +29,120 @@ import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { selectAuthContext } from '../../auth/authSlice';
 import { setSelectedCompany, selectSelectedCompany } from '../../company-management/companySlice';
 import { useAccessMode } from '../../../hooks/useAccessMode';
-import { getEntitledModules } from '../../../utils/moduleNormalization';
+import { getEntitledModules, normalizeModuleName } from '../../../utils/moduleNormalization';
 import OwnerLayout, { useIsOwnerLayout } from '../../../layouts/OwnerLayout';
 import { useRBAC } from '../../../utils/rbac';
 
 /**
- * Redesigned OwnerDashboardContent.
- * Follows the exact design system, spacing, cards, typography, and clean SaaS aesthetics
- * of the Mark2 ERP Company Dashboard.
+ * Master catalog metadata for canonical ERP business modules.
+ */
+const MODULE_CATALOG_DETAILED = {
+  ACCOUNT: {
+    id: 'ACCOUNT',
+    name: 'Finance & Accounts',
+    code: 'accounts',
+    shortName: 'Finance',
+    description: 'General ledger, charts of accounts, journal vouchers, invoices, receivables & payables, and taxation reports.',
+    icon: Calculator,
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-50',
+    borderColor: 'hover:border-emerald-300',
+    path: (companyId) => (companyId ? `/company/${companyId}/accounts/dashboard` : '/accounts/dashboard'),
+  },
+  INVENTORY: {
+    id: 'INVENTORY',
+    name: 'Inventory Management',
+    code: 'inventory',
+    shortName: 'Inventory',
+    description: 'Real-time stock tracking, warehouses, product batches, inventory adjustments, and valuation analytics.',
+    icon: Boxes,
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    borderColor: 'hover:border-amber-300',
+    path: (companyId) => (companyId ? `/company/${companyId}/inventory/dashboard` : '/inventory/dashboard'),
+  },
+  CRM: {
+    id: 'CRM',
+    name: 'Sales & CRM',
+    code: 'crm',
+    shortName: 'Sales CRM',
+    description: 'Customer lifecycle, sales quotations, customer orders, lead pipelines, and commercial revenue performance.',
+    icon: ShoppingCart,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    borderColor: 'hover:border-blue-300',
+    path: (companyId) => (companyId ? `/company/${companyId}/crm/dashboard` : '/crm/dashboard'),
+  },
+  PURCHASES: {
+    id: 'PURCHASES',
+    name: 'Purchasing & Procurement',
+    code: 'purchase',
+    shortName: 'Purchasing',
+    description: 'Purchase requisitions, supplier requests for quotation (RFQs), purchase orders, and vendor invoice settlements.',
+    icon: Briefcase,
+    color: 'text-rose-600',
+    bgColor: 'bg-rose-50',
+    borderColor: 'hover:border-rose-300',
+    path: (companyId) => (companyId ? `/company/${companyId}/purchases` : '/purchase-requisitions'),
+  },
+  WORKFLOW: {
+    id: 'WORKFLOW',
+    name: 'Workflow Automation',
+    code: 'workflow',
+    shortName: 'Workflows',
+    description: 'Multi-stage business process approvals, SLA monitoring, routing rules, and document lifecycle triggers.',
+    icon: Workflow,
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+    borderColor: 'hover:border-purple-300',
+    path: (companyId) => (companyId ? `/company/${companyId}/workflows` : '/workflows'),
+  },
+  SSO: {
+    id: 'SSO',
+    name: 'SSO & Administration',
+    code: 'sso',
+    shortName: 'SSO & Admin',
+    description: 'Single sign-on, identity management, user provisioning, role-based access control, and organization audit logs.',
+    icon: ShieldCheck,
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-50',
+    borderColor: 'hover:border-indigo-300',
+    path: (companyId) => (companyId ? `/company/${companyId}/admin` : '/admin'),
+  },
+  HR: {
+    id: 'HR',
+    name: 'HR & Employees',
+    code: 'hr',
+    shortName: 'HR & Staff',
+    description: 'Employee records, attendance, payroll processing, department assignments, and leave management.',
+    icon: Users,
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-50',
+    borderColor: 'hover:border-teal-300',
+    path: (companyId) => (companyId ? `/company/${companyId}/hr` : '/hr'),
+  },
+  MANUFACTURING: {
+    id: 'MANUFACTURING',
+    name: 'Manufacturing',
+    code: 'manufacturing',
+    shortName: 'Manufacturing',
+    description: 'Bill of materials (BOM), production work orders, shop floor tracking, and job costing operations.',
+    icon: Factory,
+    color: 'text-cyan-600',
+    bgColor: 'bg-cyan-50',
+    borderColor: 'hover:border-cyan-300',
+    path: (companyId) => (companyId ? `/company/${companyId}/manufacturing` : '/manufacturing'),
+  },
+};
+
+/**
+ * Standard default core enterprise modules displayed in owner workspace.
+ */
+const DEFAULT_CORE_MODULE_KEYS = ['ACCOUNT', 'INVENTORY', 'CRM', 'PURCHASES', 'SSO'];
+
+/**
+ * OwnerDashboardContent.
+ * Responsive, aligned, dynamic enterprise SaaS dashboard for Organization Owners.
  */
 function OwnerDashboardContent() {
   const navigate = useNavigate();
@@ -85,81 +193,121 @@ function OwnerDashboardContent() {
   const orgCurrency = organization?.currency || 'INR';
   const orgStatus = organization?.status || 'ACTIVE';
 
-  // Module launcher mapping with entitlements
-  const availableModuleLaunchers = [
-    {
-      id: 'ACCOUNT',
-      name: 'Finance & Accounts',
-      code: 'accounts',
-      shortName: 'Finance',
-      description: 'General ledger, charts of accounts, journal vouchers, invoices, receivables & payables, and taxation reports.',
-      icon: Calculator,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
-      borderColor: 'hover:border-emerald-300',
-      path: '/accounts/dashboard',
-      isEntitled: entitledModules.includes('ACCOUNT'),
-    },
-    {
-      id: 'INVENTORY',
-      name: 'Inventory Management',
-      code: 'inventory',
-      shortName: 'Inventory',
-      description: 'Real-time stock tracking, warehouses, product batches, inventory adjustments, and valuation analytics.',
-      icon: Boxes,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
-      borderColor: 'hover:border-amber-300',
-      path: '/inventory/dashboard',
-      isEntitled: entitledModules.includes('INVENTORY'),
-    },
-    {
-      id: 'CRM',
-      name: 'Sales & CRM',
-      code: 'crm',
-      shortName: 'Sales CRM',
-      description: 'Customer lifecycle, sales quotations, customer orders, lead pipelines, and commercial revenue performance.',
-      icon: ShoppingCart,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'hover:border-blue-300',
-      path: '/crm/dashboard',
-      isEntitled: entitledModules.includes('CRM'),
-    },
-    {
-      id: 'PURCHASES',
-      name: 'Purchasing & Procurement',
-      code: 'purchase',
-      shortName: 'Purchasing',
-      description: 'Purchase requisitions, supplier requests for quotation (RFQs), purchase orders, and vendor invoice settlements.',
-      icon: Briefcase,
-      color: 'text-rose-600',
-      bgColor: 'bg-rose-50',
-      borderColor: 'hover:border-rose-300',
-      path: '/purchase-requisitions',
-      isEntitled: entitledModules.includes('PURCHASES') || entitledModules.includes('ACCOUNT'),
-    },
-    {
-      id: 'SSO',
-      name: 'SSO & Administration',
-      code: 'sso',
-      shortName: 'SSO & Admin',
-      description: 'Single sign-on, identity management, user provisioning, role-based access control, and organization audit logs.',
-      icon: ShieldCheck,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
-      borderColor: 'hover:border-indigo-300',
-      path: activeCompanyId ? `/company/${activeCompanyId}/admin` : '/admin',
-      isEntitled: entitledModules.includes('SSO'),
-    },
-  ];
+  // Subscription plan label formatting
+  const planDisplay = subscription?.planName || (subscription?.planCode ? subscription.planCode.replace(/_/g, ' ') : (isTrial ? 'Free Trial' : 'Enterprise Plan'));
+
+  // ── DYNAMIC MODULE LAUNCHERS GENERATION ────────────────────────────────────
+  // Does not hardcode to 5 cards: generates dynamically from existing organization API data.
+  const availableModuleLaunchers = useMemo(() => {
+    const rawModules = Array.isArray(authContext?.modules) ? authContext.modules : [];
+    const moduleMap = new Map();
+
+    // 1. Process any modules explicitly registered under the organization
+    rawModules.forEach((m) => {
+      const canonical = m?.canonical || normalizeModuleName(m);
+      if (canonical) {
+        moduleMap.set(canonical, m);
+      }
+    });
+
+    // 2. Ensure all entitled active modules are represented
+    (entitledModules || []).forEach((canonical) => {
+      if (canonical && !moduleMap.has(canonical)) {
+        moduleMap.set(canonical, { canonical, active: true });
+      }
+    });
+
+    // 3. Ensure standard core modules are present so inactive/unprovisioned modules can be upgraded
+    if (moduleMap.size === 0) {
+      DEFAULT_CORE_MODULE_KEYS.forEach((key) => {
+        moduleMap.set(key, { canonical: key });
+      });
+    } else {
+      DEFAULT_CORE_MODULE_KEYS.forEach((key) => {
+        if (!moduleMap.has(key)) {
+          moduleMap.set(key, { canonical: key, active: false });
+        }
+      });
+    }
+
+    // 4. Preserve standard core order first, followed by any custom/dynamic extension modules
+    const allDiscoveredKeys = Array.from(moduleMap.keys());
+    const sortedKeys = [
+      ...DEFAULT_CORE_MODULE_KEYS.filter((k) => allDiscoveredKeys.includes(k)),
+      ...allDiscoveredKeys.filter((k) => !DEFAULT_CORE_MODULE_KEYS.includes(k)),
+    ];
+
+    return sortedKeys.map((canonical) => {
+      const catalogInfo = MODULE_CATALOG_DETAILED[canonical];
+      const rawInfo = moduleMap.get(canonical);
+
+      const isEntitled =
+        entitledModules.includes(canonical) ||
+        (canonical === 'PURCHASES' && (entitledModules.includes('PURCHASES') || entitledModules.includes('ACCOUNT'))) ||
+        (rawInfo?.active === true && (!entitledModules.length || entitledModules.includes(canonical)));
+
+      if (catalogInfo) {
+        return {
+          ...catalogInfo,
+          isEntitled,
+          path: catalogInfo.path(activeCompanyId),
+          name: rawInfo?.name && rawInfo.name !== canonical ? rawInfo.name : catalogInfo.name,
+          description: rawInfo?.description || catalogInfo.description,
+        };
+      }
+
+      // Dynamic fallback for any extension module returned by backend
+      const rawName = rawInfo?.name || canonical;
+      const rawCode = (rawInfo?.code || canonical).toLowerCase();
+      return {
+        id: canonical,
+        name: rawName,
+        code: rawCode,
+        shortName: rawName,
+        description: rawInfo?.description || `Enterprise ${rawName} application and operations management.`,
+        icon: Boxes,
+        color: 'text-zinc-700',
+        bgColor: 'bg-zinc-100',
+        borderColor: 'hover:border-zinc-300',
+        path: activeCompanyId ? `/company/${activeCompanyId}/${rawCode}` : `/${rawCode}`,
+        isEntitled,
+      };
+    });
+  }, [authContext, entitledModules, activeCompanyId]);
+
+  // Compute active count from dynamic launchers
+  const entitledCount = useMemo(() => {
+    return availableModuleLaunchers.filter((m) => m.isEntitled).length;
+  }, [availableModuleLaunchers]);
+
+  // Determine balanced responsive grid column classes based on module count
+  const moduleGridColsClass = useMemo(() => {
+    const count = availableModuleLaunchers.length;
+    switch (count) {
+      case 1:
+        return 'grid-cols-1 max-w-md';
+      case 2:
+        return 'grid-cols-1 sm:grid-cols-2 max-w-3xl';
+      case 3:
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+      case 4:
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
+      case 5:
+        // When 5 modules: 1 on mobile, 2 on small tablet, 3 on large tablet, ALL 5 IN A SINGLE ROW ON DESKTOP!
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5';
+      case 6:
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6';
+      default:
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5';
+    }
+  }, [availableModuleLaunchers.length]);
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-transparent">
-      {/* ── Main Content Container ── */}
-      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1">
+      {/* ── Main Content Container: Full available viewport width without artificial narrow bounds ── */}
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 py-6 space-y-6 flex-1 min-w-0">
 
-        {/* ── 1. Compact Page Header (Replacing oversized dark hero) ── */}
+        {/* ── 1. Compact Page Header ── */}
         <section className="bg-white p-5 sm:p-6 rounded-2xl border border-zinc-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
@@ -200,25 +348,27 @@ function OwnerDashboardContent() {
           </div>
         </section>
 
-        {/* ── 2. Summary KPI Cards Row (Matching Company Dashboard StatsCard design) ── */}
+        {/* ── 2. Summary KPI Cards Row (Consistent height, typography, badges, and icon alignment) ── */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
           {/* Card 1: Total Companies */}
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
+          <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
                   Total Companies
                 </span>
-                <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                   <Building2 size={18} />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-zinc-900 tracking-tight">
-                {companies.length}
-              </p>
+              <div className="min-h-[38px] flex items-baseline">
+                <p className="text-3xl font-bold text-zinc-900 tracking-tight">
+                  {companies.length}
+                </p>
+              </div>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-1.5 text-xs font-medium">
+            <div className="pt-3.5 mt-3 border-t border-zinc-100/80 flex flex-wrap items-center gap-1.5 text-xs font-medium">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 font-semibold text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 <span>{companies.length > 0 ? `${companies.length} Active` : '0 Active'}</span>
@@ -230,55 +380,58 @@ function OwnerDashboardContent() {
           </div>
 
           {/* Card 2: Active Modules */}
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
+          <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
                   Active Modules
                 </span>
-                <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                   <Layers size={18} />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-zinc-900 tracking-tight">
-                {entitledModules.length}
-                <span className="text-base font-normal text-zinc-400 ml-1">/ {availableModuleLaunchers.length}</span>
-              </p>
+              <div className="min-h-[38px] flex items-baseline">
+                <p className="text-3xl font-bold text-zinc-900 tracking-tight">
+                  {entitledCount}
+                  <span className="text-base font-normal text-zinc-400 ml-1">/ {availableModuleLaunchers.length}</span>
+                </p>
+              </div>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-1.5 text-xs font-medium">
+            <div className="pt-3.5 mt-3 border-t border-zinc-100/80 flex flex-wrap items-center gap-1.5 text-xs font-medium">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 font-semibold text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>{entitledModules.length} Provisioned</span>
+                <span>{entitledCount} Provisioned</span>
               </span>
-              {availableModuleLaunchers.length - entitledModules.length > 0 && (
+              {availableModuleLaunchers.length - entitledCount > 0 && (
                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-zinc-100 text-zinc-500 border border-zinc-200 text-[11px]">
-                  {availableModuleLaunchers.length - entitledModules.length} Locked
+                  {availableModuleLaunchers.length - entitledCount} Locked
                 </span>
               )}
             </div>
           </div>
 
           {/* Card 3: Subscription Status */}
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
+          <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
                   Subscription
                 </span>
-                <div className="p-2 rounded-xl bg-sky-50 text-sky-600">
+                <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
                   <CreditCard size={18} />
                 </div>
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight truncate capitalize">
-                {subscription?.planCode ? subscription.planCode.replace(/_/g, ' ') : (isTrial ? 'Free Trial' : 'Enterprise')}
-              </p>
+              <div className="min-h-[38px] flex items-center">
+                <p className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight truncate capitalize" title={planDisplay}>
+                  {planDisplay}
+                </p>
+              </div>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-1.5 text-xs font-medium">
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md font-semibold text-[11px] ${
-                isTrial
+            <div className="pt-3.5 mt-3 border-t border-zinc-100/80 flex flex-wrap items-center gap-1.5 text-xs font-medium">
+              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md font-semibold text-[11px] ${isTrial
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                   : 'bg-blue-50 text-blue-700 border border-blue-100'
-              }`}>
+                }`}>
                 <Clock size={11} />
                 <span>{daysRemaining !== null ? `${daysRemaining} days left` : 'Active Plan'}</span>
               </span>
@@ -289,26 +442,28 @@ function OwnerDashboardContent() {
           </div>
 
           {/* Card 4: Organization Owner Profile */}
-          <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between">
+          <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
                   Owner Profile
                 </span>
-                <div className="p-2 rounded-xl bg-purple-50 text-purple-600">
+                <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
                   <ShieldCheck size={18} />
                 </div>
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight truncate" title={ownerName}>
-                {ownerName}
-              </p>
+              <div className="min-h-[38px] flex items-center">
+                <p className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight truncate" title={ownerName}>
+                  {ownerName}
+                </p>
+              </div>
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-1.5 text-xs font-medium truncate">
+            <div className="pt-3.5 mt-3 border-t border-zinc-100/80 flex flex-wrap items-center gap-1.5 text-xs font-medium truncate">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 border border-purple-100 font-semibold text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
                 <span>Verified Owner</span>
               </span>
-              <span className="text-[11px] font-mono text-zinc-500 truncate max-w-[120px]">
+              <span className="text-[11px] font-mono text-zinc-500 truncate max-w-[130px]" title={ownerEmail}>
                 {ownerEmail}
               </span>
             </div>
@@ -316,19 +471,19 @@ function OwnerDashboardContent() {
 
         </section>
 
-        {/* ── 3. Organization Overview Section ── */}
+        {/* ── 3. Organization Overview Section (Balanced responsive grid without text overlap) ── */}
         <section className="bg-white rounded-2xl border border-zinc-200/80 shadow-2xs overflow-hidden">
           <div className="px-5 py-4 border-b border-zinc-100 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-zinc-900 tracking-tight">Organization Overview</h2>
               <p className="text-[11px] text-zinc-500 mt-0.5">Core organization identity, tenant parameters and billing currency</p>
             </div>
-            <span className="text-[10px] font-semibold text-zinc-500 bg-zinc-50 px-2 py-0.5 rounded-md border border-zinc-200/60 uppercase tracking-wider">
+            <span className="text-[10px] font-semibold text-zinc-500 bg-zinc-50 px-2.5 py-0.5 rounded-md border border-zinc-200/60 uppercase tracking-wider">
               Organization
             </span>
           </div>
 
-          <div className="p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="p-5 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Organization Name</span>
               <p className="text-xs font-bold text-zinc-900 truncate" title={orgName}>{orgName}</p>
@@ -361,7 +516,7 @@ function OwnerDashboardContent() {
           </div>
         </section>
 
-        {/* ── 4. Business Modules (Matching Company Dashboard Module Grid) ── */}
+        {/* ── 4. Business Modules (Balanced responsive grid with aligned buttons and wrapping descriptions) ── */}
         <section className="space-y-3.5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
             <div>
@@ -373,69 +528,68 @@ function OwnerDashboardContent() {
               </p>
             </div>
             <span className="self-start sm:self-auto text-[11px] font-bold text-zinc-600 bg-white px-2.5 py-1 rounded-lg border border-zinc-200/80 shadow-2xs">
-              {entitledModules.length} of {availableModuleLaunchers.length} Active
+              {entitledCount} of {availableModuleLaunchers.length} Active
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className={`grid ${moduleGridColsClass} gap-5`}>
             {availableModuleLaunchers.map((mod) => {
               const Icon = mod.icon;
               return (
                 <div
                   key={mod.id}
-                  className={`bg-white rounded-2xl p-5 border flex flex-col justify-between transition-all duration-200 shadow-2xs hover:shadow-md min-h-[220px] ${
-                    mod.isEntitled
+                  className={`bg-white rounded-2xl p-5 border flex flex-col justify-between transition-all duration-200 shadow-2xs hover:shadow-md min-h-[240px] ${mod.isEntitled
                       ? 'border-zinc-200/90 ' + mod.borderColor
-                      : 'border-zinc-200/70 bg-zinc-50/40 opacity-75'
-                  }`}
+                      : 'border-zinc-200/70 bg-zinc-50/40 opacity-80 hover:opacity-100'
+                    }`}
                 >
-                  <div className="space-y-3">
+                  <div className="flex-1 flex flex-col">
                     {/* Top Row: Icon container + Status badge */}
-                    <div className="flex items-center justify-between">
-                      <div className={`w-10 h-10 rounded-xl ${mod.bgColor} ${mod.color} flex items-center justify-center shadow-2xs`}>
+                    <div className="flex items-center justify-between mb-3.5">
+                      <div className={`w-11 h-11 rounded-xl ${mod.bgColor} ${mod.color} flex items-center justify-center shadow-2xs shrink-0`}>
                         <Icon size={20} />
                       </div>
 
                       {mod.isEntitled ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                          <CheckCircle2 size={11} className="text-emerald-600" />
+                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 shrink-0">
+                          <CheckCircle2 size={12} className="text-emerald-600" />
                           <span>Active</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200/60">
-                          <Lock size={10} className="text-zinc-400" />
+                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-medium text-zinc-500 bg-zinc-100 px-2.5 py-0.5 rounded-full border border-zinc-200/80 shrink-0">
+                          <Lock size={11} className="text-zinc-400" />
                           <span>Not Provisioned</span>
                         </span>
                       )}
                     </div>
 
                     {/* Title & Description */}
-                    <div>
-                      <h3 className="text-sm font-bold text-zinc-900">
+                    <div className="flex-1 flex flex-col justify-start">
+                      <h3 className="text-sm font-bold text-zinc-900 tracking-tight leading-snug">
                         {mod.name}
                       </h3>
-                      <p className="text-xs text-zinc-500 font-medium leading-relaxed mt-1 line-clamp-3">
+                      <p className="text-xs text-zinc-500 font-normal leading-relaxed mt-1.5 line-clamp-3" title={mod.description}>
                         {mod.description}
                       </p>
                     </div>
                   </div>
 
-                  {/* Bottom Action Button */}
-                  <div className="pt-4 mt-3 border-t border-zinc-100">
+                  {/* Bottom Action Button - ALWAYS anchored at bottom */}
+                  <div className="pt-4 mt-4 border-t border-zinc-100 shrink-0">
                     {mod.isEntitled ? (
                       <Link
                         to={mod.path}
                         className="w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs bg-zinc-900 hover:bg-zinc-800 text-white"
                       >
-                        <span>Open {mod.shortName}</span>
+                        <span>Open {mod.shortName || mod.name}</span>
                         <ArrowRight size={13} />
                       </Link>
                     ) : (
                       <Link
                         to="/subscription"
-                        className="w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold bg-zinc-100 text-zinc-500 hover:bg-zinc-200 transition-colors"
+                        className="w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold bg-zinc-100 text-zinc-600 hover:bg-zinc-200 transition-colors"
                       >
-                        <Lock size={11} className="text-zinc-400" />
+                        <Lock size={12} className="text-zinc-400" />
                         <span>Upgrade to Enable</span>
                       </Link>
                     )}
@@ -470,7 +624,7 @@ function OwnerDashboardContent() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[640px]">
               <thead className="bg-zinc-50/70 border-b border-zinc-100 text-zinc-400 font-bold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="py-3 px-5">Company</th>
@@ -588,18 +742,17 @@ function OwnerDashboardContent() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-zinc-900">
-                  {subscription?.planCode ? subscription.planCode.replace(/_/g, ' ') : (isTrial ? '30-Day Enterprise Trial' : 'Enterprise Subscription')}
+                  {planDisplay}
                 </h3>
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                  isTrial ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-blue-50 text-blue-700 border border-blue-100'
-                }`}>
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${isTrial ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-blue-50 text-blue-700 border border-blue-100'
+                  }`}>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                   <span>{isTrial ? 'Trial Active' : 'Subscribed'}</span>
                 </span>
               </div>
               <p className="text-xs text-zinc-500 mt-0.5">
                 {daysRemaining !== null
-                  ? `${daysRemaining} days remaining in trial period. Access all 4 enterprise modules with complete administrative control.`
+                  ? `${daysRemaining} days remaining in trial period. Access all enterprise modules with complete administrative control.`
                   : 'Active subscription tier with full organization privileges and workspace management.'}
               </p>
             </div>
@@ -618,9 +771,9 @@ function OwnerDashboardContent() {
 
       </div>
 
-      {/* ── Minimalist Clean Footer ── */}
+      {/* ── Minimalist Clean Footer matching full content width ── */}
       <footer className="border-t border-zinc-200/80 bg-white py-4 mt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-zinc-400">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
           <p>© {new Date().getFullYear()} Mark2 ERP. All rights reserved.</p>
           <div className="flex items-center gap-3">
             <span>Organization: <strong className="text-zinc-600 font-mono">{orgCode || 'ORG'}</strong></span>

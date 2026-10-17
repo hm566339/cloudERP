@@ -37,7 +37,7 @@ export default {
       spacing: {
         'sidebar': 'var(--sidebar-width)',
         'sidebar-collapsed': '72px',
-        'sidebar-expanded': '250px',
+        'sidebar-expanded': '260px',
       },
       transitionDuration: {
         'micro': '120ms',

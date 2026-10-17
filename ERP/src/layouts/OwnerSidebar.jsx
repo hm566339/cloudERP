@@ -27,6 +27,7 @@ export default function OwnerSidebar({
   membership,
   user,
   entitledModules = [],
+  modules = [],
   activeCompanyId = null,
   companies = [],
   isTrial = false,
@@ -46,13 +47,14 @@ export default function OwnerSidebar({
   const navGroups = useMemo(() => {
     return getOwnerSidebarNavGroups({
       entitledModules,
+      modules,
       activeCompanyId,
       companiesCount: companies.length,
       isTrial,
       daysRemaining,
       isActive,
     });
-  }, [entitledModules, activeCompanyId, companies.length, isTrial, daysRemaining, isActive]);
+  }, [entitledModules, modules, activeCompanyId, companies.length, isTrial, daysRemaining, isActive]);
 
   const isItemActive = (item) => {
     if (!item) return false;
@@ -311,19 +313,21 @@ export default function OwnerSidebar({
                           collapsedMode
                             ? 'justify-center p-2.5'
                             : 'justify-between'
-                        } opacity-60 hover:opacity-100`}
-                        title={collapsedMode ? undefined : lockedTooltipText}
+                        } opacity-65 hover:opacity-100 transition-opacity`}
+                        title={collapsedMode ? lockedTooltipText : item.label}
                       >
-                        <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-1.5">
                           <Icon size={18} className="shrink-0 text-zinc-400 group-hover:text-zinc-600 transition-colors" />
                           {!collapsedMode && (
-                            <span className="truncate text-zinc-500">{item.label}</span>
+                            <span className="truncate text-xs text-zinc-500 font-medium" title={item.label}>
+                              {item.label}
+                            </span>
                           )}
                         </div>
 
                         {!collapsedMode && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200/60 shrink-0">
-                            <Lock size={10} className="text-zinc-400" />
+                          <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200/80 shrink-0">
+                            <Lock size={10} className="text-zinc-400 shrink-0" />
                             <span>Locked</span>
                           </span>
                         )}
@@ -350,7 +354,7 @@ export default function OwnerSidebar({
                     <NavLink
                       to={item.path}
                       onClick={mobileOpen ? onMobileClose : undefined}
-                      className={`sidebar-item ${
+                      className={`sidebar-item group ${
                         collapsedMode
                           ? 'justify-center p-2.5'
                           : 'justify-between'
@@ -359,28 +363,34 @@ export default function OwnerSidebar({
                           ? 'sidebar-item-active'
                           : 'sidebar-item-inactive'
                       }`}
+                      title={collapsedMode ? itemTooltipText : item.label}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-1.5">
                         <Icon
                           size={18}
                           className={`shrink-0 transition-colors ${
-                            active ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-800'
+                            active ? 'text-white' : (item.accentColor || 'text-zinc-500 group-hover:text-zinc-800')
                           }`}
                         />
                         {!collapsedMode && (
-                          <span className="truncate">{item.label}</span>
+                          <span className="truncate text-xs font-medium" title={item.label}>
+                            {item.label}
+                          </span>
                         )}
                       </div>
 
-                      {!collapsedMode && item.badge && (
+                      {!collapsedMode && (
                         <span
-                          className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                          className={`inline-flex items-center gap-1 text-[9px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
                             active
-                              ? 'bg-zinc-800 text-zinc-200 border border-zinc-700'
-                              : (item.badgeColor || 'bg-zinc-100 text-zinc-600')
+                              ? 'bg-zinc-800 text-emerald-400 border border-zinc-700'
+                              : (item.badgeColor || 'bg-emerald-50 text-emerald-700 border border-emerald-200/80')
                           }`}
                         >
-                          {item.badge}
+                          {(item.badge === 'Active' || !item.badge) && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                          )}
+                          <span>{item.badge || 'Active'}</span>
                         </span>
                       )}
                     </NavLink>
@@ -441,7 +451,7 @@ export default function OwnerSidebar({
       {/* ── DESKTOP SIDEBAR (Fixed left) ── */}
       <aside
         className={`hidden lg:flex flex-col bg-[var(--color-sidebar-bg)] border-r border-black/[0.06] fixed top-0 bottom-0 left-0 z-20 transition-[width] duration-large ease-move overscroll-contain ${
-          isCollapsed ? 'w-[72px]' : 'w-[250px]'
+          isCollapsed ? 'w-[72px]' : 'w-[260px]'
         }`}
         style={{ height: '100vh' }}
       >
@@ -462,7 +472,7 @@ export default function OwnerSidebar({
 
           {/* Off-canvas sidebar */}
           <aside
-            className="relative flex flex-col w-[250px] bg-[var(--color-sidebar-bg)] h-full shadow-2xl border-r border-[var(--color-border)] z-50 animate-slide-in-right overscroll-contain"
+            className="relative flex flex-col w-[280px] max-w-[85vw] bg-[var(--color-sidebar-bg)] h-full shadow-2xl border-r border-[var(--color-border)] z-50 animate-slide-in-right overscroll-contain"
           >
             {renderHeader(false)}
             {renderNav(false)}

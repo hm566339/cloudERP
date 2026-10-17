@@ -127,6 +127,7 @@ export default function OwnerLayout({ children }) {
             membership={membership}
             user={user}
             entitledModules={entitledModules}
+            modules={authContext?.modules || []}
             activeCompanyId={activeCompanyId}
             companies={companies}
             isTrial={isTrial}
