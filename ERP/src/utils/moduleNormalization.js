@@ -448,16 +448,20 @@ export function hasPermission(authContextOrFeature, featureNameOrAction, actionO
       // Must be allowed and active
       if (p.allowed === false || p.active === false) return false;
 
+      const permCode = String(p.permissionCode || '').trim().toUpperCase();
+      const feat = normalizeFeatureCode(String(p.featureCode || p.feature || '').trim().toUpperCase());
+      if (permCode === 'ALL' || permCode === 'ALL_MODULES' || feat === 'ALL' || feat === 'ALL_MODULES') {
+        return true;
+      }
+
       // Module match if module specified
       if (canonicalModule) {
         const mod = normalizeModuleName(p.moduleName);
         if (mod && mod !== canonicalModule) return false;
       }
 
-      const feat = normalizeFeatureCode(String(p.featureCode || p.feature || '').trim().toUpperCase());
       let act = String(p.action || '').trim().toUpperCase();
       if (act === 'VIEW') act = 'READ';
-      const permCode = String(p.permissionCode || '').trim().toUpperCase();
 
       if (targetAction) {
         const isActionMatch = act === targetAction ||

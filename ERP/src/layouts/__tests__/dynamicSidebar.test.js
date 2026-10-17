@@ -59,8 +59,16 @@ describe('Fully Dynamic Role-Based ERP Sidebar Navigation Suite', () => {
     assert.ok(moduleIds.includes('accounts'), 'Accounts section must be present');
     assert.ok(moduleIds.includes('inventory'), 'Inventory Management section must be present');
     assert.ok(moduleIds.includes('sales-crm'), 'Sales & CRM section must be present');
-    assert.ok(moduleIds.includes('workflow'), 'Workflow section must be present');
+    assert.strictEqual(moduleIds.includes('workflow'), false, 'Workflow & Approvals must not appear as a top-level sidebar section');
     assert.ok(moduleIds.includes('admin'), 'SSO & Administration section must be present');
+
+    // Workflow functionality is preserved inside SSO & Administration
+    const adminSection = links.find((l) => l.id === 'admin');
+    assert.ok(adminSection, 'SSO & Administration section should exist');
+    assert.ok(
+      adminSection.children.some((c) => c.id === 'workflow-approvals'),
+      'Workflow & Approvals must be preserved under SSO & Administration'
+    );
 
     // Granular feature check: Only authorized items appear
     const invModule = links.find((l) => l.id === 'inventory');
@@ -141,7 +149,7 @@ describe('Fully Dynamic Role-Based ERP Sidebar Navigation Suite', () => {
 
     const sectionIds = links.map((l) => l.id);
     assert.ok(sectionIds.includes('sales-crm'), 'CRM should be displayed');
-    assert.ok(sectionIds.includes('workflow'), 'Workflow should be displayed');
+    assert.strictEqual(sectionIds.includes('workflow'), false, 'Workflow must not appear as a top-level sidebar section');
     assert.strictEqual(sectionIds.includes('accounts'), false, 'Accounts must not be displayed');
     assert.strictEqual(sectionIds.includes('inventory'), false, 'Inventory must not be displayed');
     assert.strictEqual(sectionIds.includes('admin'), false, 'SSO must not be displayed');
@@ -336,8 +344,57 @@ describe('Fully Dynamic Role-Based ERP Sidebar Navigation Suite', () => {
     assert.ok(idsB.includes('accounts'));
     assert.ok(idsB.includes('inventory'));
     assert.ok(idsB.includes('sales-crm'));
-    assert.ok(idsB.includes('workflow'));
+    assert.strictEqual(idsB.includes('workflow'), false, 'Workflow & Approvals must not appear as top-level section');
     assert.ok(idsB.includes('admin'));
+
+    const adminB = navB.find((l) => l.id === 'admin');
+    assert.ok(
+      adminB.children.some((c) => c.id === 'workflow-approvals'),
+      'Workflow & Approvals must be accessible in SSO & Administration'
+    );
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SCENARIO 9: Regular organization roles never see Workflow & Approvals as a top-level sidebar section
+  // ──────────────────────────────────────────────────────────────────────────
+  it('Scenario 9: Regular organization roles never see Workflow & Approvals as a top-level sidebar section', () => {
+    const roles = ['owner', 'company_admin', 'accountant', 'employee', 'manager'];
+    for (const role of roles) {
+      const links = buildDynamicSidebar({
+        authContext: {
+          user: { id: `user-${role}`, role },
+          accessMode: 'FULL',
+          modules: [
+            { code: 'account', canonical: 'ACCOUNT', active: true },
+            { code: 'workflow', canonical: 'WORKFLOW', active: true },
+            { code: 'sso', canonical: 'SSO', active: true },
+          ],
+          features: [
+            { featureCode: 'CUSTOMERS', active: true },
+            { featureCode: 'WORKFLOW_DEFINITIONS', active: true },
+            { featureCode: 'USER_MANAGEMENT', active: true },
+          ],
+          permissions: ['ALL'],
+        },
+        companyId: 'comp-org',
+        userRole: role,
+        isSuperAdminGlobal: false,
+      });
+
+      const sectionIds = links.map((l) => l.id);
+      assert.strictEqual(
+        sectionIds.includes('workflow'),
+        false,
+        `Role "${role}" must not have top-level workflow entry`
+      );
+      assert.ok(sectionIds.includes('accounts'), `Role "${role}" should have accounts entry`);
+      assert.ok(sectionIds.includes('admin'), `Role "${role}" should have admin entry`);
+      const adminSection = links.find((l) => l.id === 'admin');
+      assert.ok(
+        adminSection.children.some((c) => c.id === 'workflow-approvals'),
+        `Role "${role}" preserves workflow access inside admin section`
+      );
+    }
   });
 
   // ──────────────────────────────────────────────────────────────────────────

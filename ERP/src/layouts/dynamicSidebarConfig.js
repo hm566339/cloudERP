@@ -619,14 +619,22 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
     // A) If features[] is explicitly populated in session, feature must be present and active
     const featuresList = authContext?.features || [];
     if (featuresList.length > 0) {
-      const hasFeat = hasFeature(authContext, featureCode, moduleName);
+      const hasFeat = hasFeature(authContext, featureCode, moduleName) ||
+        (item.id?.startsWith('workflow-') && (
+          hasFeature(authContext, featureCode, CANONICAL_MODULES.WORKFLOW) ||
+          hasFeature(authContext, featureCode)
+        ));
       if (!hasFeat) return null;
     }
 
     // B) Permission check: user MUST have explicit or wildcard permission for this action
     // "Follow the application's established permission semantics. Do not assume that WRITE or DELETE implies READ."
     // "A user missing PRODUCTS:READ cannot see the Products menu item."
-    const hasPerm = checkHasPermission(authContext, featureCode, action, moduleName);
+    const hasPerm = checkHasPermission(authContext, featureCode, action, moduleName) ||
+      (item.id?.startsWith('workflow-') && (
+        checkHasPermission(authContext, featureCode, action, CANONICAL_MODULES.WORKFLOW) ||
+        checkHasPermission(authContext, featureCode, action)
+      ));
     if (!hasPerm) {
       // Special aliases for workflow & administration modules
       if (moduleName === CANONICAL_MODULES.WORKFLOW || item.id?.startsWith('workflow-')) {
@@ -708,6 +716,11 @@ export function buildDynamicSidebar({
   const uniqueModules = Array.from(new Set(entitledModules));
 
   for (const moduleName of uniqueModules) {
+    // Workflow & Approvals should not appear as a top-level item in the main sidebar for regular organization roles
+    if (moduleName === CANONICAL_MODULES.WORKFLOW || normalizeModuleName(moduleName) === CANONICAL_MODULES.WORKFLOW) {
+      continue;
+    }
+
     const meta = MODULE_UI_METADATA[moduleName];
     if (!meta) continue;
 
