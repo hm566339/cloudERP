@@ -241,7 +241,8 @@ export default function AccountantLayout() {
     </>
   ), [sidebarLinks, location, closeMobileSidebar, selectedCompany, workspacePopupOpen, currentUser, handleSwitchCompany]);
 
-  if (isOwner) {
+  const isOwnerWorkspace = location.pathname.startsWith('/owner') || location.pathname.startsWith('/organization');
+  if (isOwner && isOwnerWorkspace) {
     return <OwnerLayout />;
   }
 

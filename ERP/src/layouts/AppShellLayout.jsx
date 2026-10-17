@@ -1,7 +1,7 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAppSelector } from '../app/hooks';
 import { selectAuthContext, selectCurrentUser } from '../features/auth/authSlice';
-import { SidebarProvider } from './SidebarContext';
 import OwnerLayout from './OwnerLayout';
 import AccountantLayout from './AccountantLayout';
 import CompanyLayout from './CompanyLayout';
@@ -9,6 +9,7 @@ import CompanyLayout from './CompanyLayout';
 function AppShellContent() {
   const authContext = useAppSelector(selectAuthContext);
   const currentUser = useAppSelector(selectCurrentUser);
+  const location = useLocation();
 
   const rawRole = currentUser?.role || 'employee';
   const userRole = String(Array.isArray(rawRole) ? (rawRole[0]?.name || rawRole[0]) : (rawRole?.name || rawRole)).toLowerCase();
@@ -29,7 +30,11 @@ function AppShellContent() {
       return String(name).toUpperCase() === 'ACCOUNTANT' || String(name).toUpperCase() === 'ROLE_ACCOUNTANT';
     }));
 
-  if (isOwner) {
+  const isOwnerWorkspace =
+    location.pathname.startsWith('/owner') ||
+    location.pathname.startsWith('/organization');
+
+  if (isOwner && isOwnerWorkspace) {
     return <OwnerLayout />;
   }
 
@@ -41,9 +46,5 @@ function AppShellContent() {
 }
 
 export default function AppShellLayout() {
-  return (
-    <SidebarProvider>
-      <AppShellContent />
-    </SidebarProvider>
-  );
+  return <AppShellContent />;
 }

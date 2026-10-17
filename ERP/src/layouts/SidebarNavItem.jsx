@@ -2,30 +2,9 @@ import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { useSidebar } from './SidebarContext'
+import { isItemOrChildActive } from './SidebarNavUtils.js'
 
-export function isItemOrChildActive(item, currentPath) {
-  if (!item) return false;
-
-  if (item.path) {
-    if (currentPath === item.path) return true;
-
-    // Exact or sub-path matching without greedy prefix collision
-    if (item.path !== '/' && item.path !== '/super-admin/dashboard' && item.path !== '/owner/dashboard' && item.path !== '/dashboard') {
-      if (currentPath.startsWith(item.path + '/')) return true;
-    }
-
-    // Special module patterns
-    if (item.path.includes('/transactions/expenses') && currentPath.includes('/transactions/expenses')) return true;
-    if (item.path === '/workflows' && (currentPath === '/workflows' || currentPath.startsWith('/workflows/'))) return true;
-    if (item.path === '/workflows/approvals' && (currentPath === '/workflows/approvals' || currentPath.startsWith('/workflows/approvals/'))) return true;
-  }
-
-  if (Array.isArray(item.children) && item.children.length > 0) {
-    return item.children.some(child => isItemOrChildActive(child, currentPath));
-  }
-
-  return false;
-}
+export { isItemOrChildActive }
 
 function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
   const { isMenuOpen, toggleMenu, setMenuOpen } = useSidebar();
@@ -45,13 +24,24 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
 
   if (!hasChildren) {
     const isExpenseMenu = item.id === 'expense' || item.id === 'txn-exp' || (typeof item.path === 'string' && item.path.includes('/transactions/expenses'));
-    const isWorkflowMenu = item.id === 'workflow-approvals' || item.id === 'workflow-approval-requests' || (typeof item.path === 'string' && item.path.includes('/workflows'));
+    const isApprovalsRoute = currentPath === '/workflows/approvals' ||
+      currentPath.startsWith('/workflows/approvals/') ||
+      currentPath.endsWith('/workflows/approvals') ||
+      currentPath.includes('/workflows/approvals/');
+    const isWorkflowRoute = currentPath === '/workflows' ||
+      currentPath.startsWith('/workflows/') ||
+      currentPath.endsWith('/workflows') ||
+      currentPath.includes('/workflows/');
+
+    const isWorkflowApprovals = item.id === 'workflow-approvals';
+    const isWorkflowRequests = item.id === 'workflow-approval-requests';
 
     const isActive = currentPath === item.path ||
       (item.path !== '/super-admin/dashboard' && item.path !== '/' && item.path !== '/owner/dashboard' && item.path !== '/dashboard' &&
         currentPath.startsWith(item.path + '/'))
       || (isExpenseMenu && currentPath.includes('/transactions/expenses'))
-      || (isWorkflowMenu && (currentPath === item.path || currentPath.startsWith(item.path + '/')));
+      || (isWorkflowApprovals && isWorkflowRoute && !isApprovalsRoute)
+      || (isWorkflowRequests && isApprovalsRoute);
 
     return (
       <Link

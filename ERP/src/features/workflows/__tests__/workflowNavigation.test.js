@@ -12,6 +12,7 @@ import {
   normalizeModuleName,
 } from '../../../utils/moduleNormalization.js';
 import { buildSidebarLinks } from '../../../layouts/SidebarConfig.js';
+import { isItemOrChildActive } from '../../../layouts/SidebarNavUtils.js';
 
 describe('Workflow & Approvals Navigation & Routing Verification', () => {
   describe('1. Module Definition & Alias Mapping', () => {
@@ -135,6 +136,82 @@ describe('Workflow & Approvals Navigation & Routing Verification', () => {
         companyId: 'comp-100',
       });
       assert.ok(accessibleKeys.includes('workflow'), 'workflow must be among accessible keys');
+    });
+  });
+
+  describe('5. Active Menu Item Resolution and Submenu Highlighting', () => {
+    const workflowItem = { id: 'workflow-approvals', label: 'Workflow & Approvals', path: '/workflows' };
+    const approvalItem = { id: 'workflow-approval-requests', label: 'Approval Requests', path: '/workflows/approvals' };
+    const adminSection = {
+      id: 'admin',
+      label: 'SSO & Administration',
+      path: '/admin',
+      children: [
+        { id: 'admin-dashboard', label: 'Admin Dashboard', path: '/admin' },
+        approvalItem,
+        workflowItem,
+      ],
+    };
+
+    it('highlights Workflow & Approvals item on /workflows and opens admin submenu', () => {
+      assert.strictEqual(isItemOrChildActive(workflowItem, '/workflows'), true);
+      assert.strictEqual(isItemOrChildActive(approvalItem, '/workflows'), false);
+      assert.strictEqual(isItemOrChildActive(adminSection, '/workflows'), true);
+    });
+
+    it('highlights Approval Requests item on /workflows/approvals and does not highlight Workflow & Approvals', () => {
+      assert.strictEqual(isItemOrChildActive(approvalItem, '/workflows/approvals'), true);
+      assert.strictEqual(isItemOrChildActive(workflowItem, '/workflows/approvals'), false);
+      assert.strictEqual(isItemOrChildActive(adminSection, '/workflows/approvals'), true);
+    });
+
+    it('highlights Workflow & Approvals on company-scoped route /company/comp-100/workflows', () => {
+      assert.strictEqual(isItemOrChildActive(workflowItem, '/company/comp-100/workflows'), true);
+      assert.strictEqual(isItemOrChildActive(approvalItem, '/company/comp-100/workflows'), false);
+      assert.strictEqual(isItemOrChildActive(adminSection, '/company/comp-100/workflows'), true);
+    });
+
+    it('highlights Approval Requests on company-scoped route /company/comp-100/workflows/approvals', () => {
+      assert.strictEqual(isItemOrChildActive(approvalItem, '/company/comp-100/workflows/approvals'), true);
+      assert.strictEqual(isItemOrChildActive(workflowItem, '/company/comp-100/workflows/approvals'), false);
+      assert.strictEqual(isItemOrChildActive(adminSection, '/company/comp-100/workflows/approvals'), true);
+    });
+
+    it('does not highlight workflow items when viewing dashboard or other modules', () => {
+      assert.strictEqual(isItemOrChildActive(workflowItem, '/dashboard'), false);
+      assert.strictEqual(isItemOrChildActive(approvalItem, '/dashboard'), false);
+      assert.strictEqual(isItemOrChildActive(workflowItem, '/company/comp-100/dashboard'), false);
+      assert.strictEqual(isItemOrChildActive(approvalItem, '/company/comp-100/dashboard'), false);
+    });
+  });
+
+  describe('6. Application Shell Resolution on Workflow Navigation', () => {
+    const resolveLayout = (user, membership, pathname) => {
+      const isOwner = membership?.memberType === 'OWNER' || user?.role === 'owner';
+      const isOwnerWorkspace = pathname.startsWith('/owner') || pathname.startsWith('/organization');
+      if (isOwner && isOwnerWorkspace) return 'OwnerLayout';
+      return 'CompanyLayout';
+    };
+
+    it('resolves CompanyLayout for Owner navigating to /workflows', () => {
+      const layout = resolveLayout({ role: 'owner' }, { memberType: 'OWNER' }, '/workflows');
+      assert.strictEqual(layout, 'CompanyLayout');
+    });
+
+    it('resolves CompanyLayout for Owner navigating to /workflows/approvals', () => {
+      const layout = resolveLayout({ role: 'owner' }, { memberType: 'OWNER' }, '/workflows/approvals');
+      assert.strictEqual(layout, 'CompanyLayout');
+    });
+
+    it('resolves OwnerLayout only when Owner is on /owner workspace routes', () => {
+      assert.strictEqual(resolveLayout({ role: 'owner' }, { memberType: 'OWNER' }, '/owner/dashboard'), 'OwnerLayout');
+      assert.strictEqual(resolveLayout({ role: 'owner' }, { memberType: 'OWNER' }, '/owner/companies'), 'OwnerLayout');
+      assert.strictEqual(resolveLayout({ role: 'owner' }, { memberType: 'OWNER' }, '/owner/settings'), 'OwnerLayout');
+    });
+
+    it('resolves CompanyLayout for non-owner navigating to /workflows', () => {
+      const layout = resolveLayout({ role: 'company_admin' }, { memberType: 'ADMIN' }, '/workflows');
+      assert.strictEqual(layout, 'CompanyLayout');
     });
   });
 });
