@@ -53,6 +53,30 @@ public class OwnerRolePermissionBootstrap implements CommandLineRunner {
                 }
             }
             log.info("Owner Role Permissions Bootstrap completed. Processed {} OWNER roles.", processed);
+
+            // Also ensure ADMIN / WORKFLOW_ADMIN / WORKFLOW_MANAGER roles receive workflow permissions if WORKFLOW module enabled
+            List<Role> workflowRoles = roleRepository.findAll().stream()
+                    .filter(r -> r.getName() != null && (
+                            r.getName().equalsIgnoreCase("ADMIN")
+                            || r.getName().equalsIgnoreCase("WORKFLOW_ADMIN")
+                            || r.getName().equalsIgnoreCase("WORKFLOW_MANAGER")
+                    ))
+                    .toList();
+            for (Role role : workflowRoles) {
+                try {
+                    Company company = role.getCompany();
+                    if (company != null) {
+                        List<CompanyModule> companyModules = companyModuleRepository.findByCompany_IdAndActiveTrue(company.getId());
+                        boolean hasWorkflowModule = companyModules.stream()
+                                .anyMatch(cm -> cm.getModule() != null && "WORKFLOW".equalsIgnoreCase(cm.getModule().getName()));
+                        if (hasWorkflowModule) {
+                            permissionService.assignOwnerRolePermissions(role, List.of("WORKFLOW"), null);
+                        }
+                    }
+                } catch (Exception ex) {
+                    log.warn("Failed to bootstrap workflow permissions for role [{}]: {}", role.getName(), ex.getMessage());
+                }
+            }
         } catch (Exception e) {
             log.error("Error during Owner Role Permissions Bootstrap: {}", e.getMessage(), e);
         }

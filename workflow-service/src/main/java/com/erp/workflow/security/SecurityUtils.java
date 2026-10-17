@@ -28,9 +28,12 @@ public final class SecurityUtils {
                 return Optional.of((UserPrincipal) auth.getPrincipal());
             }
             if (auth.getPrincipal() instanceof AuthenticatedUser user) {
+                UUID compId = CurrentUserContext.getCompanyId() != null
+                        ? CurrentUserContext.getCompanyId()
+                        : user.getCompanyId();
                 return Optional.of(UserPrincipal.builder()
                         .userId(user.getUserId())
-                        .companyId(user.getOrganizationId())
+                        .companyId(compId)
                         .username(user.getUsername())
                         .roles(user.getRoles())
                         .build());

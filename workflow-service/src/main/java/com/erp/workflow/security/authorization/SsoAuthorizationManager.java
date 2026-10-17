@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
@@ -119,6 +120,26 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
         Set<FeatureGroupPermissionResolver.ModuleAction> effectivePermissions =
                 groupPermissionResolver.effectivePermissions(authenticatedUser, authorities);
 
+        String username = authenticatedUser != null ? authenticatedUser.getUsername() : "anonymous";
+        List<String> roles = authenticatedUser != null ? authenticatedUser.getRoles() : Collections.emptyList();
+
+        UUID companyContext = CurrentUserContext.getCompanyId();
+        if (companyContext == null) {
+            String cp = request.getParameter("companyId");
+            String ch = request.getHeader("X-Company-Id");
+            String cStr = StringUtils.hasText(ch) ? ch : cp;
+            if (StringUtils.hasText(cStr)) {
+                try {
+                    companyContext = UUID.fromString(cStr.trim());
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
+        UUID organizationContext = CurrentUserContext.getOrganizationId();
+        if (organizationContext == null && authenticatedUser != null) {
+            organizationContext = authenticatedUser.getOrganizationId();
+        }
+
         for (String action : requiredActions) {
             boolean granted = false;
             if (authenticatedUser != null) {
@@ -139,15 +160,14 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
             }
 
             if (granted) {
-                log.debug("Access granted for URI: {} to module: {} with action: {}", uri, requestedModule, action);
+                log.info("SSO Authorization [GRANTED] -> user: {}, roles: {}, module: WORKFLOW, feature: {}, action: {}, companyId: {}, organizationId: {}, method: {}, uri: {}",
+                        username, roles, requestedModule, action, companyContext, organizationContext, method, uri);
                 return new AuthorizationDecision(true);
             }
         }
 
-        String username = authenticatedUser != null ? authenticatedUser.getUsername() : "anonymous";
-        List<String> roles = authenticatedUser != null ? authenticatedUser.getRoles() : Collections.emptyList();
-        log.warn("AUTHORIZATION DENIED. User: {} Roles: {} Method: {} URI: {} Module: {} Required Actions: {} (no active+allowed SSO permission matched)",
-                username, roles, method, uri, requestedModule, requiredActions);
+        log.warn("SSO Authorization [DENIED] -> user: {}, roles: {}, module: WORKFLOW, feature: {}, requiredActions: {}, companyId: {}, organizationId: {}, method: {}, uri: {}",
+                username, roles, requestedModule, requiredActions, companyContext, organizationContext, method, uri);
         return new AuthorizationDecision(false);
     }
 

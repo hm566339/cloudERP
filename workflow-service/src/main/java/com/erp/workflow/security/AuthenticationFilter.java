@@ -141,22 +141,27 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         if (user.getOrganizationId() != null) {
             CurrentUserContext.setOrganizationId(user.getOrganizationId());
         }
-        if (user.getCompanyId() != null) {
-            CurrentUserContext.setCompanyId(user.getCompanyId());
-            if (CurrentUserContext.getOrganizationId() == null) {
-                CurrentUserContext.setOrganizationId(user.getCompanyId());
-            }
-        } else {
-            // When user session is at organization level (e.g. OWNER with currentCompany: null),
-            // resolve tenant company context from the X-Company-Id header sent by the client.
-            String headerCompanyId = request.getHeader("X-Company-Id");
-            if (StringUtils.hasText(headerCompanyId)) {
-                try {
-                    CurrentUserContext.setCompanyId(UUID.fromString(headerCompanyId.trim()));
-                } catch (IllegalArgumentException ignored) {
-                    log.debug("Invalid UUID in X-Company-Id header: {}", headerCompanyId);
+        UUID resolvedCompanyId = user.getCompanyId();
+        String headerCompanyId = request.getHeader("X-Company-Id");
+        String paramCompanyId = request.getParameter("companyId");
+        String candidateCompany = StringUtils.hasText(headerCompanyId) ? headerCompanyId : paramCompanyId;
+
+        boolean isPrivileged = user.getRole() != null && user.getRole().stream()
+                .anyMatch(r -> r != null && ("SYSTEM_ADMIN".equalsIgnoreCase(r.getName()) || "OWNER".equalsIgnoreCase(r.getName())));
+
+        if (StringUtils.hasText(candidateCompany)) {
+            try {
+                UUID parsed = UUID.fromString(candidateCompany.trim());
+                if (resolvedCompanyId == null || isPrivileged) {
+                    resolvedCompanyId = parsed;
                 }
+            } catch (IllegalArgumentException ignored) {
+                log.debug("Invalid UUID in company context: {}", candidateCompany);
             }
+        }
+
+        if (resolvedCompanyId != null) {
+            CurrentUserContext.setCompanyId(resolvedCompanyId);
         }
         if (user.getOrganizationCode() != null) {
             CurrentUserContext.setOrganizationCode(user.getOrganizationCode());

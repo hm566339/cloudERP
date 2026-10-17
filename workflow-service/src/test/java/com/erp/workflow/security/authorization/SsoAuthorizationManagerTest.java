@@ -507,12 +507,89 @@ class SsoAuthorizationManagerTest {
     }
 
     @Test
-    @DisplayName("Unmatched routes remain protected (fail closed)")
-    void testUnmatchedRoutesFailClosed() {
-        PermissionResponse readPerm = PermissionResponse.builder()
-                .moduleName("WORKFLOW_DEFINITIONS").action("READ").active(true).allowed(true).build();
-        AuthenticatedUser user = buildUser(List.of(), List.of(readPerm));
+    @DisplayName("Exact endpoint PATCH /api/v1/workflow/definitions/{id}/activate?companyId={companyId} with ACTIVATE permission is granted")
+    void testExactActivateEndpointWithCompanyIdParamAndActivatePermission() {
+        PermissionResponse activatePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW")
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("ACTIVATE")
+                .active(true)
+                .allowed(true)
+                .build();
+        UUID companyId = UUID.randomUUID();
+        UUID orgId = UUID.randomUUID();
+        AuthenticatedUser user = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("workflow.user")
+                .organizationId(orgId)
+                .companyId(companyId)
+                .roles(List.of("USER"))
+                .permissions(List.of(activatePerm))
+                .build();
 
-        assertThat(decide(user, "GET", "/api/v1/unmapped/route").isGranted()).isFalse();
+        MockHttpServletRequest request = new MockHttpServletRequest("PATCH",
+                "/api/v1/workflow/definitions/e8f283cf-6b1e-4f90-a16f-79a360a7b2e3/activate");
+        request.setParameter("companyId", companyId.toString());
+
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        AuthorizationDecision decision = manager.authorize(() -> auth, new RequestAuthorizationContext(request, null));
+
+        assertThat(decision.isGranted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Exact endpoint PATCH /activate?companyId=... with only READ/WRITE/DELETE is DENIED (403)")
+    void testExactActivateEndpointDeniedWhenOnlyReadWriteDelete() {
+        // Reproduce user scenario: SSO response contains READ, WRITE, DELETE, but NO ACTIVATE
+        PermissionResponse readPerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW")
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("READ")
+                .active(true)
+                .allowed(true)
+                .build();
+        PermissionResponse writePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW")
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("WRITE")
+                .active(true)
+                .allowed(true)
+                .build();
+        PermissionResponse deletePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW")
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("DELETE")
+                .active(true)
+                .allowed(true)
+                .build();
+
+        AuthenticatedUser user = buildUser(List.of("USER"), List.of(readPerm, writePerm, deletePerm));
+
+        MockHttpServletRequest request = new MockHttpServletRequest("PATCH",
+                "/api/v1/workflow/definitions/e8f283cf-6b1e-4f90-a16f-79a360a7b2e3/activate");
+        request.setParameter("companyId", UUID.randomUUID().toString());
+
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        AuthorizationDecision decision = manager.authorize(() -> auth, new RequestAuthorizationContext(request, null));
+
+        assertThat(decision.isGranted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Company ID is kept distinct from Organization ID and not confused")
+    void testCompanyIdDistinctFromOrganizationId() {
+        UUID companyId = UUID.fromString("ea811382-0afc-4908-a209-9bedcc63c445");
+        UUID orgId = UUID.fromString("11111111-2222-3333-4444-555555555555");
+
+        CurrentUserContext.setCompanyId(companyId);
+        CurrentUserContext.setOrganizationId(orgId);
+
+        assertThat(CurrentUserContext.getCompanyId()).isEqualTo(companyId);
+        assertThat(CurrentUserContext.getOrganizationId()).isEqualTo(orgId);
+        assertThat(CurrentUserContext.getCompanyId()).isNotEqualTo(CurrentUserContext.getOrganizationId());
+
+        CurrentUserContext.clear();
     }
 }

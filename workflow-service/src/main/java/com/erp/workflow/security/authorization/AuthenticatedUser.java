@@ -157,8 +157,11 @@ public class AuthenticatedUser implements Principal {
                 String permCanonicalModule = SsoAuthorities.normalizeModuleName(permission.getModuleName());
                 String permFeature = normalize(permission.getFeatureCode());
                 if (targetScope.equals(permModule) || targetScope.equals(permFeature)
-                        || (canonicalScope != null && (canonicalScope.equals(permCanonicalModule) || canonicalScope.equals(permFeature)))
-                        || ("WORKFLOW".equals(permModule) || "WORKFLOW".equals(permCanonicalModule))) {
+                        || (canonicalScope != null && (canonicalScope.equals(permCanonicalModule) || canonicalScope.equals(permFeature)))) {
+                    return true;
+                }
+                if (("WORKFLOW".equals(permModule) || "WORKFLOW".equals(permCanonicalModule))
+                        && (permFeature == null || permFeature.isBlank() || permFeature.equals(targetScope))) {
                     return true;
                 }
             }
