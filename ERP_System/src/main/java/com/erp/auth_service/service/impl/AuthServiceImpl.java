@@ -2743,6 +2743,12 @@ public class AuthServiceImpl implements AuthService {
                                                                                                                         ur.getRole().getName())
                                                                                         || "ROLE_SYSTEM_ADMIN"
                                                                                                         .equalsIgnoreCase(
+                                                                                                                        ur.getRole().getName())
+                                                                                        || "OWNER"
+                                                                                                        .equalsIgnoreCase(
+                                                                                                                        ur.getRole().getName())
+                                                                                        || "ROLE_OWNER"
+                                                                                                        .equalsIgnoreCase(
                                                                                                                         ur.getRole().getName())))
                                                         .map(userMapper::toRoleResponse)
                                                         .toList();
@@ -2750,10 +2756,10 @@ public class AuthServiceImpl implements AuthService {
                                 }
                         } else if (isOwner) {
                                 List<com.erp.auth_service.dto.response.RoleResponse> ownerRoles = new ArrayList<>();
-                                ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder().name("OWNER")
+                                ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder().name("OWNER").status(true)
                                                 .build());
                                 ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
-                                                .name("ROLE_OWNER").build());
+                                                .name("ROLE_OWNER").status(true).build());
                                 userResponse.setRole(ownerRoles);
                         }
                         EffectivePermissionsResponse effective = permissionService

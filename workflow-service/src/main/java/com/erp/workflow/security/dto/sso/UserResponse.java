@@ -35,6 +35,7 @@ public class UserResponse {
     private AccountStatus accountStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    @JsonAlias({ "roles", "userRoles" })
     private List<RoleResponse> role;
 
     @JsonAlias({ "activeFeatures", "featureCodes" })

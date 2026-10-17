@@ -45,11 +45,23 @@ public final class SsoAuthorities {
         Set<String> authorities = new LinkedHashSet<>();
 
         // Active roles
+        List<RoleResponse> allRoles = new ArrayList<>();
         if (user.getRole() != null) {
-            for (RoleResponse role : user.getRole()) {
-                if (role != null && Boolean.TRUE.equals(role.isStatus()) && hasText(role.getName())) {
-                    authorities.add("ROLE_" + normalize(role.getName()));
-                }
+            allRoles.addAll(user.getRole());
+        }
+        if (verifyResponse.getRoles() != null) {
+            allRoles.addAll(verifyResponse.getRoles());
+        }
+        for (RoleResponse role : allRoles) {
+            if (role != null && role.isStatus() && hasText(role.getName())) {
+                String roleName = normalize(role.getName());
+                authorities.add(roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName);
+            }
+        }
+        if (verifyResponse.getMembership() != null && hasText(verifyResponse.getMembership().getMemberType())) {
+            String memberType = normalize(verifyResponse.getMembership().getMemberType());
+            if ("OWNER".equalsIgnoreCase(memberType)) {
+                authorities.add("ROLE_OWNER");
             }
         }
 
@@ -110,8 +122,8 @@ public final class SsoAuthorities {
 
     public static boolean isActiveAndAllowed(PermissionResponse permission) {
         return permission != null
-                && Boolean.TRUE.equals(permission.getActive())
-                && Boolean.TRUE.equals(permission.getAllowed());
+                && (permission.getActive() == null || Boolean.TRUE.equals(permission.getActive()))
+                && (permission.getAllowed() == null || Boolean.TRUE.equals(permission.getAllowed()));
     }
 
     public static boolean isSystemAdmin(Collection<? extends GrantedAuthority> authorities) {

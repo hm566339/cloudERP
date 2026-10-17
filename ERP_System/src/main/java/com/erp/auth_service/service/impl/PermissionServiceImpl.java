@@ -321,9 +321,11 @@ public class PermissionServiceImpl implements PermissionService {
                 if (ur.getRole() != null && ur.getRole().isStatus()) {
                     boolean isSysAdminRole = "SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
                             || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName());
+                    boolean isOwnerRole = "OWNER".equalsIgnoreCase(ur.getRole().getName())
+                            || "ROLE_OWNER".equalsIgnoreCase(ur.getRole().getName());
                     if (companyId != null && ur.getRole().getCompany() != null
                             && !companyId.equals(ur.getRole().getCompany().getId())
-                            && !isSysAdminRole) {
+                            && !isSysAdminRole && !isOwnerRole) {
                         continue;
                     }
                     userRoles.add(ur.getRole().getName());

@@ -57,12 +57,22 @@ public class AuthenticatedUser implements Principal {
         }
 
         List<String> roles = new ArrayList<>();
+        List<RoleResponse> rawRoles = new ArrayList<>();
         if (user.getRole() != null) {
-            for (RoleResponse role : user.getRole()) {
-                if (role != null && Boolean.TRUE.equals(role.isStatus()) && hasText(role.getName())) {
-                    roles.add(role.getName().trim());
-                }
+            rawRoles.addAll(user.getRole());
+        }
+        if (verifyResponse.getRoles() != null) {
+            rawRoles.addAll(verifyResponse.getRoles());
+        }
+        for (RoleResponse role : rawRoles) {
+            if (role != null && role.isStatus() && hasText(role.getName())) {
+                roles.add(role.getName().trim());
             }
+        }
+        if (verifyResponse.getMembership() != null
+                && "OWNER".equalsIgnoreCase(verifyResponse.getMembership().getMemberType())
+                && roles.stream().noneMatch("OWNER"::equalsIgnoreCase)) {
+            roles.add("OWNER");
         }
 
         Set<String> features = new LinkedHashSet<>();

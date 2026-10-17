@@ -15,11 +15,26 @@ import java.util.List;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TokenVerifyResponse {
-    private boolean valid;
+
+    @JsonAlias({ "active", "authenticated", "success" })
+    private Boolean valid;
+
     private UserResponse user;
 
     @JsonAlias({ "activeFeatures", "featureCodes" })
     private List<FeatureResponse> features;
 
     private List<PermissionResponse> permissions;
+
+    @JsonAlias({ "role", "userRoles" })
+    private List<RoleResponse> roles;
+
+    private MembershipResponse membership;
+
+    public boolean isValid() {
+        if (valid != null) {
+            return valid;
+        }
+        return user != null && user.getId() != null;
+    }
 }

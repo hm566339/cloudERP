@@ -146,8 +146,17 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         String paramCompanyId = request.getParameter("companyId");
         String candidateCompany = StringUtils.hasText(headerCompanyId) ? headerCompanyId : paramCompanyId;
 
-        boolean isPrivileged = user.getRole() != null && user.getRole().stream()
-                .anyMatch(r -> r != null && ("SYSTEM_ADMIN".equalsIgnoreCase(r.getName()) || "OWNER".equalsIgnoreCase(r.getName())));
+        List<RoleResponse> allRoles = new ArrayList<>();
+        if (user.getRole() != null) {
+            allRoles.addAll(user.getRole());
+        }
+        if (verifyResponse.getRoles() != null) {
+            allRoles.addAll(verifyResponse.getRoles());
+        }
+
+        boolean isPrivileged = allRoles.stream()
+                .anyMatch(r -> r != null && ("SYSTEM_ADMIN".equalsIgnoreCase(r.getName()) || "OWNER".equalsIgnoreCase(r.getName())))
+                || (verifyResponse.getMembership() != null && "OWNER".equalsIgnoreCase(verifyResponse.getMembership().getMemberType()));
 
         if (StringUtils.hasText(candidateCompany)) {
             try {
@@ -171,11 +180,13 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         if (user.getAccessMode() != null) {
             CurrentUserContext.setAccessMode(user.getAccessMode());
         }
-        if (user.getRole() != null && !user.getRole().isEmpty() && user.getRole().get(0) != null) {
-            String firstRole = user.getRole().get(0).getName();
+        if (!allRoles.isEmpty() && allRoles.get(0) != null) {
+            String firstRole = allRoles.get(0).getName();
             if (firstRole != null && !firstRole.isBlank()) {
                 CurrentUserContext.setUserRole(firstRole);
             }
+        } else if (verifyResponse.getMembership() != null && verifyResponse.getMembership().getMemberType() != null) {
+            CurrentUserContext.setUserRole(verifyResponse.getMembership().getMemberType());
         }
 
         AuthenticatedUser authenticatedUser = AuthenticatedUser.from(verifyResponse);

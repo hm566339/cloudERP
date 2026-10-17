@@ -4,6 +4,7 @@ import com.erp.workflow.security.CurrentUserContext;
 import com.erp.workflow.security.dto.sso.AccountStatus;
 import com.erp.workflow.security.dto.sso.PermissionResponse;
 import com.erp.workflow.security.dto.sso.RoleResponse;
+import com.erp.workflow.security.dto.sso.TokenVerifyResponse;
 import com.erp.workflow.security.dto.sso.UserResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -693,5 +694,67 @@ class SsoAuthorizationManagerTest {
         assertThat(CurrentUserContext.getCompanyId()).isNotEqualTo(CurrentUserContext.getOrganizationId());
 
         CurrentUserContext.clear();
+    }
+
+    @Test
+    @DisplayName("User with OWNER role in verifyResponse and WORKFLOW_DEFINITIONS:ACTIVATE permission can activate definition")
+    void testOwnerWithDirectPermissionCanActivateWorkflowDefinition() {
+        UUID companyId = UUID.fromString("ea811382-0afc-4908-a209-9bedcc63c445");
+        UUID orgId = UUID.fromString("5529d8af-d97a-42e9-b2c4-41b3a294ec87");
+        UUID userId = UUID.fromString("ad330aee-5b8d-445d-a3ff-8e53ef0628b2");
+
+        TokenVerifyResponse verifyResponse = TokenVerifyResponse.builder()
+                .valid(true)
+                .user(UserResponse.builder()
+                        .id(userId)
+                        .username("harshomohit3@gmail.com")
+                        .fullName("mohit")
+                        .accountStatus(AccountStatus.ACTIVE)
+                        .organizationId(orgId)
+                        .build())
+                .membership(com.erp.workflow.security.dto.sso.MembershipResponse.builder()
+                        .memberType("OWNER")
+                        .membershipStatus("ACTIVE")
+                        .build())
+                .roles(List.of(RoleResponse.builder()
+                        .name("OWNER")
+                        .status(true)
+                        .build()))
+                .permissions(List.of(
+                        PermissionResponse.builder()
+                                .featureCode("WORKFLOW_DEFINITIONS")
+                                .action("ACTIVATE")
+                                .permissionCode("WORKFLOW_DEFINITIONS:ACTIVATE")
+                                .moduleName("WORKFLOW")
+                                .source("ROLE")
+                                .active(true)
+                                .allowed(true)
+                                .build(),
+                        PermissionResponse.builder()
+                                .featureCode("WORKFLOW_DEFINITIONS")
+                                .action("DEACTIVATE")
+                                .permissionCode("WORKFLOW_DEFINITIONS:DEACTIVATE")
+                                .moduleName("WORKFLOW")
+                                .source("ROLE")
+                                .active(true)
+                                .allowed(true)
+                                .build()
+                ))
+                .build();
+
+        AuthenticatedUser authenticatedUser = AuthenticatedUser.from(verifyResponse);
+        List<org.springframework.security.core.GrantedAuthority> authorities = SsoAuthorities.from(verifyResponse);
+
+        assertThat(authenticatedUser.hasActiveRole("OWNER")).isTrue();
+        assertThat(authorities).extracting("authority").contains("ROLE_OWNER");
+
+        MockHttpServletRequest request = new MockHttpServletRequest("PATCH", "/api/v1/workflow/definitions/d74d31bb-86e6-4623-9ac2-48232cd034a9/activate");
+        request.setParameter("companyId", companyId.toString());
+
+        AuthorizationDecision decision = manager.authorize(
+                () -> new UsernamePasswordAuthenticationToken(authenticatedUser, null, authorities),
+                new RequestAuthorizationContext(request, null));
+
+        assertThat(decision.isGranted()).isTrue();
     }
 }

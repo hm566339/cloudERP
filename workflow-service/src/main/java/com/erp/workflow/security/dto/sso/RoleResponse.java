@@ -17,7 +17,11 @@ import java.util.UUID;
 public class RoleResponse {
     private UUID id;
     private String name;
-    private boolean status;
+    private Boolean status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    public boolean isStatus() {
+        return status == null || Boolean.TRUE.equals(status);
+    }
 }
