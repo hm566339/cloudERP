@@ -39,7 +39,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class PermissionServiceImpl implements PermissionService {
 
-    private static final Set<String> VALID_ACTIONS = Set.of("READ", "WRITE", "DELETE");
+    private static final Set<String> VALID_ACTIONS = com.erp.auth_service.utility.PermissionAction.NAMES;
 
     private final FeaturePermissionRepository featurePermissionRepository;
     private final UserPermissionRepository userPermissionRepository;

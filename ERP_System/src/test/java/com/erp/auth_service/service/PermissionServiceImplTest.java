@@ -689,4 +689,143 @@ class PermissionServiceImplTest {
         assertEquals(List.of("ROLE_B"), resultB.getRoles());
         assertTrue(resultB.getPermissions().stream().noneMatch(p -> "DASHBOARD:READ".equals(p.getPermissionCode())));
     }
+
+    @Test
+    @DisplayName("Should successfully create WORKFLOW_DEFINITIONS:ACTIVATE permission")
+    void createPermission_activateAction_success() {
+        Feature workflowFeature = Feature.builder()
+                .id(UUID.randomUUID())
+                .code("WORKFLOW_DEFINITIONS")
+                .name("Workflow Definitions")
+                .moduleName("WORKFLOW")
+                .active(true)
+                .build();
+
+        when(featurePermissionRepository.findByFeature_CodeIgnoreCaseAndActionIgnoreCase("WORKFLOW_DEFINITIONS", "ACTIVATE"))
+                .thenReturn(Optional.empty());
+        when(featureRepository.findByCodeIgnoreCase("WORKFLOW_DEFINITIONS"))
+                .thenReturn(Optional.of(workflowFeature));
+        when(featurePermissionRepository.save(any(FeaturePermission.class)))
+                .thenAnswer(inv -> {
+                    FeaturePermission fp = inv.getArgument(0);
+                    fp.setId(UUID.randomUUID());
+                    return fp;
+                });
+
+        com.erp.auth_service.dto.request.CreatePermissionRequest req = com.erp.auth_service.dto.request.CreatePermissionRequest.builder()
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("ACTIVATE")
+                .description("Activate workflow definitions")
+                .active(true)
+                .build();
+
+        FeaturePermissionResponse res = permissionService.createPermission(req);
+        assertNotNull(res);
+        assertEquals("WORKFLOW_DEFINITIONS", res.getFeatureCode());
+        assertEquals("ACTIVATE", res.getAction());
+        assertEquals("WORKFLOW_DEFINITIONS:ACTIVATE", res.getPermissionCode());
+        assertTrue(res.isActive());
+    }
+
+    @Test
+    @DisplayName("Should successfully create WORKFLOW_DEFINITIONS:DEACTIVATE permission")
+    void createPermission_deactivateAction_success() {
+        Feature workflowFeature = Feature.builder()
+                .id(UUID.randomUUID())
+                .code("WORKFLOW_DEFINITIONS")
+                .name("Workflow Definitions")
+                .moduleName("WORKFLOW")
+                .active(true)
+                .build();
+
+        when(featurePermissionRepository.findByFeature_CodeIgnoreCaseAndActionIgnoreCase("WORKFLOW_DEFINITIONS", "DEACTIVATE"))
+                .thenReturn(Optional.empty());
+        when(featureRepository.findByCodeIgnoreCase("WORKFLOW_DEFINITIONS"))
+                .thenReturn(Optional.of(workflowFeature));
+        when(featurePermissionRepository.save(any(FeaturePermission.class)))
+                .thenAnswer(inv -> {
+                    FeaturePermission fp = inv.getArgument(0);
+                    fp.setId(UUID.randomUUID());
+                    return fp;
+                });
+
+        com.erp.auth_service.dto.request.CreatePermissionRequest req = com.erp.auth_service.dto.request.CreatePermissionRequest.builder()
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("DEACTIVATE")
+                .description("Deactivate workflow definitions")
+                .active(true)
+                .build();
+
+        FeaturePermissionResponse res = permissionService.createPermission(req);
+        assertNotNull(res);
+        assertEquals("WORKFLOW_DEFINITIONS", res.getFeatureCode());
+        assertEquals("DEACTIVATE", res.getAction());
+        assertEquals("WORKFLOW_DEFINITIONS:DEACTIVATE", res.getPermissionCode());
+        assertTrue(res.isActive());
+    }
+
+    @Test
+    @DisplayName("Should throw BadRequestException for unsupported action")
+    void createPermission_unsupportedAction_throwsBadRequest() {
+        com.erp.auth_service.dto.request.CreatePermissionRequest req = com.erp.auth_service.dto.request.CreatePermissionRequest.builder()
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("NON_EXISTENT_ACTION")
+                .description("Invalid action")
+                .active(true)
+                .build();
+
+        assertThrows(BadRequestException.class, () -> permissionService.createPermission(req));
+    }
+
+    @Test
+    @DisplayName("Should assign and verify effective permissions for ACTIVATE and DEACTIVATE")
+    void assignAndVerify_activateAndDeactivateEffectivePermissions() {
+        UUID companyId = UUID.randomUUID();
+        Company comp = Company.builder().id(companyId).build();
+        Role workflowAdminRole = Role.builder().id(UUID.randomUUID()).company(comp).name("WORKFLOW_ADMIN").status(true).build();
+
+        Feature wfFeature = Feature.builder().id(UUID.randomUUID()).code("WORKFLOW_DEFINITIONS").name("Workflow Definitions").moduleName("WORKFLOW").active(true).build();
+        FeaturePermission activatePerm = FeaturePermission.builder()
+                .id(UUID.randomUUID()).feature(wfFeature).action("ACTIVATE").permissionCode("WORKFLOW_DEFINITIONS:ACTIVATE").active(true).build();
+        FeaturePermission deactivatePerm = FeaturePermission.builder()
+                .id(UUID.randomUUID()).feature(wfFeature).action("DEACTIVATE").permissionCode("WORKFLOW_DEFINITIONS:DEACTIVATE").active(true).build();
+
+        targetUser.setUserRoles(List.of(UserRole.builder().user(targetUser).role(workflowAdminRole).build()));
+
+        when(userRepository.findById(targetUserId)).thenReturn(Optional.of(targetUser));
+        when(userPermissionRepository.findByUser_Id(targetUserId)).thenReturn(List.of());
+
+        Module wfModule = Module.builder().id(UUID.randomUUID()).name("WORKFLOW").moduleStatus(true).build();
+        CompanyModule cm = CompanyModule.builder().id(UUID.randomUUID()).company(comp).module(wfModule).active(true).build();
+        when(companyModuleRepository.findByCompany_IdAndActiveTrue(companyId)).thenReturn(List.of(cm));
+        when(userPortalAccessRepository.findAllByUser_Id(targetUserId)).thenReturn(List.of(
+                UserPortalAccess.builder().companyModule(cm).status(true).build()
+        ));
+
+        when(rolePermissionRepository.findByRole_Id(workflowAdminRole.getId())).thenReturn(List.of(
+                RolePermission.builder().role(workflowAdminRole).permission(activatePerm).build(),
+                RolePermission.builder().role(workflowAdminRole).permission(deactivatePerm).build()
+        ));
+        when(featurePermissionRepository.findAll()).thenReturn(List.of(activatePerm, deactivatePerm));
+
+        EffectivePermissionsResponse res = permissionService.getEffectivePermissions(targetUserId, companyId);
+        assertNotNull(res);
+        assertEquals(2, res.getPermissions().size());
+
+        UserPermissionDetailDto p1 = res.getPermissions().stream()
+                .filter(p -> "WORKFLOW_DEFINITIONS:ACTIVATE".equals(p.getPermissionCode()))
+                .findFirst().orElseThrow();
+        assertEquals("WORKFLOW_DEFINITIONS", p1.getFeatureCode());
+        assertEquals("ACTIVATE", p1.getAction());
+        assertTrue(p1.isActive());
+        assertTrue(p1.isAllowed());
+
+        UserPermissionDetailDto p2 = res.getPermissions().stream()
+                .filter(p -> "WORKFLOW_DEFINITIONS:DEACTIVATE".equals(p.getPermissionCode()))
+                .findFirst().orElseThrow();
+        assertEquals("WORKFLOW_DEFINITIONS", p2.getFeatureCode());
+        assertEquals("DEACTIVATE", p2.getAction());
+        assertTrue(p2.isActive());
+        assertTrue(p2.isAllowed());
+    }
 }

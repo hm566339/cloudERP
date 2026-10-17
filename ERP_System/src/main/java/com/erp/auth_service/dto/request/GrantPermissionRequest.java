@@ -16,5 +16,9 @@ public class GrantPermissionRequest {
     private String featureCode;
 
     @NotBlank(message = "action is required")
+    @jakarta.validation.constraints.Pattern(
+        regexp = "(?i)^(READ|CREATE|UPDATE|WRITE|DELETE|APPROVE|REJECT|RETURN|DELEGATE|CANCEL|ACTIVATE|DEACTIVATE|EXPORT)$",
+        message = "Action must be one of: READ, CREATE, UPDATE, WRITE, DELETE, APPROVE, REJECT, RETURN, DELEGATE, CANCEL, ACTIVATE, DEACTIVATE, EXPORT"
+    )
     private String action;
 }

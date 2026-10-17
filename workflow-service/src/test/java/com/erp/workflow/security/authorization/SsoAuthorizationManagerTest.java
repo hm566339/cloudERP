@@ -578,6 +578,108 @@ class SsoAuthorizationManagerTest {
     }
 
     @Test
+    @DisplayName("Exact endpoint PATCH /api/v1/workflow/definitions/{id}/deactivate?companyId={companyId} with DEACTIVATE permission is granted")
+    void testExactDeactivateEndpointWithCompanyIdParamAndDeactivatePermission() {
+        PermissionResponse deactivatePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW")
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("DEACTIVATE")
+                .active(true)
+                .allowed(true)
+                .build();
+        UUID companyId = UUID.randomUUID();
+        UUID orgId = UUID.randomUUID();
+        AuthenticatedUser user = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("workflow.user")
+                .organizationId(orgId)
+                .companyId(companyId)
+                .roles(List.of("USER"))
+                .permissions(List.of(deactivatePerm))
+                .build();
+
+        MockHttpServletRequest request = new MockHttpServletRequest("PATCH",
+                "/api/v1/workflow/definitions/e8f283cf-6b1e-4f90-a16f-79a360a7b2e3/deactivate");
+        request.setParameter("companyId", companyId.toString());
+
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        AuthorizationDecision decision = manager.authorize(() -> auth, new RequestAuthorizationContext(request, null));
+
+        assertThat(decision.isGranted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Exact endpoint PATCH /deactivate?companyId=... with only READ/WRITE/DELETE is DENIED (403)")
+    void testExactDeactivateEndpointDeniedWhenOnlyReadWriteDelete() {
+        PermissionResponse readPerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW")
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("READ")
+                .active(true)
+                .allowed(true)
+                .build();
+        PermissionResponse writePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW")
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("WRITE")
+                .active(true)
+                .allowed(true)
+                .build();
+        PermissionResponse deletePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW")
+                .featureCode("WORKFLOW_DEFINITIONS")
+                .action("DELETE")
+                .active(true)
+                .allowed(true)
+                .build();
+
+        AuthenticatedUser user = buildUser(List.of("USER"), List.of(readPerm, writePerm, deletePerm));
+
+        MockHttpServletRequest request = new MockHttpServletRequest("PATCH",
+                "/api/v1/workflow/definitions/e8f283cf-6b1e-4f90-a16f-79a360a7b2e3/deactivate");
+        request.setParameter("companyId", UUID.randomUUID().toString());
+
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        AuthorizationDecision decision = manager.authorize(() -> auth, new RequestAuthorizationContext(request, null));
+
+        assertThat(decision.isGranted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Cross check: user with only ACTIVATE cannot access /deactivate (403), user with only DEACTIVATE cannot access /activate (403)")
+    void testActivateAndDeactivateAreStrictlyEnforcedSeparately() {
+        PermissionResponse activatePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW").featureCode("WORKFLOW_DEFINITIONS").action("ACTIVATE").active(true).allowed(true).build();
+        PermissionResponse deactivatePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW").featureCode("WORKFLOW_DEFINITIONS").action("DEACTIVATE").active(true).allowed(true).build();
+
+        AuthenticatedUser activatorOnly = buildUser(List.of("USER"), List.of(activatePerm));
+        AuthenticatedUser deactivatorOnly = buildUser(List.of("USER"), List.of(deactivatePerm));
+
+        MockHttpServletRequest activateReq = new MockHttpServletRequest("PATCH", "/api/v1/workflow/definitions/123/activate");
+        activateReq.setParameter("companyId", UUID.randomUUID().toString());
+
+        MockHttpServletRequest deactivateReq = new MockHttpServletRequest("PATCH", "/api/v1/workflow/definitions/123/deactivate");
+        deactivateReq.setParameter("companyId", UUID.randomUUID().toString());
+
+        // Activator on activate -> GRANTED
+        assertThat(manager.authorize(() -> new UsernamePasswordAuthenticationToken(activatorOnly, null, List.of()),
+                new RequestAuthorizationContext(activateReq, null)).isGranted()).isTrue();
+        // Activator on deactivate -> DENIED
+        assertThat(manager.authorize(() -> new UsernamePasswordAuthenticationToken(activatorOnly, null, List.of()),
+                new RequestAuthorizationContext(deactivateReq, null)).isGranted()).isFalse();
+
+        // Deactivator on deactivate -> GRANTED
+        assertThat(manager.authorize(() -> new UsernamePasswordAuthenticationToken(deactivatorOnly, null, List.of()),
+                new RequestAuthorizationContext(deactivateReq, null)).isGranted()).isTrue();
+        // Deactivator on activate -> DENIED
+        assertThat(manager.authorize(() -> new UsernamePasswordAuthenticationToken(deactivatorOnly, null, List.of()),
+                new RequestAuthorizationContext(activateReq, null)).isGranted()).isFalse();
+    }
+
+    @Test
     @DisplayName("Company ID is kept distinct from Organization ID and not confused")
     void testCompanyIdDistinctFromOrganizationId() {
         UUID companyId = UUID.fromString("ea811382-0afc-4908-a209-9bedcc63c445");

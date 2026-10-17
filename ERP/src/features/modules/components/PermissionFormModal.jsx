@@ -2,6 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, AlertTriangle } from 'lucide-react';
 import { getAllFeatures } from '../../../api/sso/feature';
 
+const ACTION_OPTIONS = [
+  'READ',
+  'CREATE',
+  'UPDATE',
+  'WRITE',
+  'DELETE',
+  'APPROVE',
+  'REJECT',
+  'RETURN',
+  'DELEGATE',
+  'CANCEL',
+  'ACTIVATE',
+  'DEACTIVATE',
+  'EXPORT',
+];
+
 export default function PermissionFormModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     featureCode: '',
@@ -142,9 +158,11 @@ export default function PermissionFormModal({ isOpen, onClose, onSubmit }) {
                 errors.action ? 'border-rose-300 bg-rose-50' : 'border-zinc-300'
               }`}
             >
-              <option value="READ">READ</option>
-              <option value="WRITE">WRITE</option>
-              <option value="DELETE">DELETE</option>
+              {ACTION_OPTIONS.map((actionOption) => (
+                <option key={actionOption} value={actionOption}>
+                  {actionOption}
+                </option>
+              ))}
             </select>
             {errors.action && <p className="mt-1 text-sm text-rose-500">{errors.action}</p>}
           </div>
