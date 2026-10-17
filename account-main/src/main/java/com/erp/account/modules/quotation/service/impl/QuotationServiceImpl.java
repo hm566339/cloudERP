@@ -792,9 +792,13 @@ public class QuotationServiceImpl implements QuotationService {
                 .build();
 
         QtTermsAndConditionsDto terms = QtTermsAndConditionsDto.builder()
+                .paymentTermId(qt.getPaymentTermId())
                 .paymentTerms(qt.getPaymentTerms())
+                .deliveryTermId(qt.getDeliveryTermId())
                 .deliveryTerms(qt.getDeliveryTerms())
+                .warrantyTermId(qt.getWarrantyTermId())
                 .warrantyTerms(qt.getWarrantyTerms())
+                .termsConditionId(qt.getTermsConditionId())
                 .termsAndConditions(qt.getTermsAndConditions())
                 .notes(qt.getNotes())
                 .build();

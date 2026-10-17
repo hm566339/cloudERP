@@ -908,6 +908,7 @@ export default function QuotationsPage() {
           isOpen={isFormOpen}
           onClose={() => { setIsFormOpen(false); setEditQuoteId(null); }}
           quotationId={editQuoteId}
+          companyId={companyId}
           onSuccess={(savedId) => {
             if (savedId) {
               setEditQuoteId(savedId);

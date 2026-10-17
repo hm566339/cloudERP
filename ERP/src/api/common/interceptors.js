@@ -320,12 +320,15 @@ export const attachRequestInterceptor = (instance) => {
             delete config.headers['x-company-id'];
           }
 
-          // 4. For Owner / SystemAdmin: synchronize path parameters if URL contains /company/:id or /settings/:id
+          // 4. For Owner / SystemAdmin: synchronize path parameters if URL contains /company/:id or /api/settings/:id
           if (isPrivileged && isValidCompanyId(activeCompanyId) && config.url && typeof config.url === 'string') {
             if (config.url.includes('/company/')) {
               config.url = config.url.replace(/\/company\/[^/?#]+/g, `/company/${activeCompanyId}`);
-            } else if (config.url.startsWith('/api/settings/') || config.url.includes('/settings/')) {
-              config.url = config.url.replace(/\/settings\/[^/?#]+/g, `/settings/${activeCompanyId}`);
+            } else if (
+              (config.url.startsWith('/api/settings/') || config.url.includes('/api/settings/')) &&
+              !config.url.includes('/api/account/')
+            ) {
+              config.url = config.url.replace(/\/api\/settings\/[^/?#]+/g, `/api/settings/${activeCompanyId}`);
             }
           }
         }

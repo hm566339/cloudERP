@@ -537,6 +537,34 @@ describe('Company-Level Data Isolation & Query Parameter Injection Tests', () =>
         method: 'GET'
       });
       assert.strictEqual(req3.url, '/api/settings/company-ACTIVE-uuid');
+
+      // Regression guard: /api/account/v1/settings/* endpoints MUST NOT have their URLs mangled into /api/account/v1/settings/{companyId}
+      const ptReq = axiosMock.execute({
+        url: '/api/account/v1/settings/payment-terms',
+        method: 'POST',
+        data: { data: { name: 'Net 30' } }
+      });
+      assert.strictEqual(ptReq.url, '/api/account/v1/settings/payment-terms', 'POST /api/account/v1/settings/payment-terms URL must NOT be rewritten');
+      assert.strictEqual(ptReq.params.companyId, 'company-ACTIVE-uuid', 'Query param companyId must still be injected for OWNER');
+      assert.strictEqual(ptReq.headers['X-Company-Id'], 'company-ACTIVE-uuid', 'Header X-Company-Id must still be injected');
+
+      const dtReq = axiosMock.execute({
+        url: '/api/account/v1/settings/delivery-terms',
+        method: 'GET'
+      });
+      assert.strictEqual(dtReq.url, '/api/account/v1/settings/delivery-terms', 'GET /api/account/v1/settings/delivery-terms URL must NOT be rewritten');
+
+      const wtReq = axiosMock.execute({
+        url: '/api/account/v1/settings/warranty-terms',
+        method: 'GET'
+      });
+      assert.strictEqual(wtReq.url, '/api/account/v1/settings/warranty-terms', 'GET /api/account/v1/settings/warranty-terms URL must NOT be rewritten');
+
+      const tcReq = axiosMock.execute({
+        url: '/api/account/v1/settings/terms-conditions',
+        method: 'GET'
+      });
+      assert.strictEqual(tcReq.url, '/api/account/v1/settings/terms-conditions', 'GET /api/account/v1/settings/terms-conditions URL must NOT be rewritten');
     });
 
     it('Future-proofing: Any non-global /api/ endpoint automatically inherits company data isolation', () => {

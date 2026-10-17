@@ -248,9 +248,10 @@ export const emptyItem = () => ({
   isInterState: false
 });
 
-export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuccess }) {
+export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuccess, companyId: propCompanyId }) {
   const dispatch = useDispatch();
-  const companyId = useParams().companyId || JSON.parse(localStorage.getItem("selected_company"))?.id || JSON.parse(localStorage.getItem("auth_user"))?.companyCode;
+  const reduxCompanyId = useSelector(s => s.company?.selectedCompany?.id);
+  const companyId = propCompanyId || reduxCompanyId || useParams().companyId || JSON.parse(localStorage.getItem("selected_company") || "{}")?.id;
   const authUser = JSON.parse(localStorage.getItem("auth_user")) || {};
 
   const [createQuotation, { isLoading: isCreating }] = useCreateQuotationMutation();
@@ -471,6 +472,17 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
   useEffect(() => {
     if (quotationId && quotationData?.data) {
       const q = quotationData.data;
+      const termsObj = (q.termsAndConditions && typeof q.termsAndConditions === 'object') ? q.termsAndConditions : {};
+      const ptId = q.paymentTermId || termsObj.paymentTermId || '';
+      const ptText = q.paymentTerms || termsObj.paymentTerms || '';
+      const dtId = q.deliveryTermId || termsObj.deliveryTermId || '';
+      const dtText = q.deliveryTerms || termsObj.deliveryTerms || '';
+      const wtId = q.warrantyTermId || termsObj.warrantyTermId || '';
+      const wtText = q.warrantyTerms || termsObj.warrantyTerms || '';
+      const tcId = q.termsConditionId || termsObj.termsConditionId || '';
+      const tcText = (typeof q.termsAndConditions === 'string' ? q.termsAndConditions : termsObj.termsAndConditions) || '';
+      const notesText = q.notes || termsObj.notes || '';
+
       setFormData(prev => ({
         ...prev,
         customerId: q.customerId || '',
@@ -484,15 +496,15 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
         placeOfSupplyStateId: q.placeOfSupplyStateId || '',
         freightCharges: q.freightCharges || 0,
         otherCharges: q.otherCharges || 0,
-        paymentTermId: q.paymentTermId || (q.paymentTerms ? 'CUSTOM' : ''),
-        paymentTerms: q.paymentTerms || '',
-        deliveryTermId: q.deliveryTermId || (q.deliveryTerms ? 'CUSTOM' : ''),
-        deliveryTerms: q.deliveryTerms || '',
-        warrantyTermId: q.warrantyTermId || (q.warrantyTerms ? 'CUSTOM' : ''),
-        warrantyTerms: q.warrantyTerms || '',
-        termsConditionId: q.termsConditionId || (q.termsAndConditions ? 'CUSTOM' : ''),
-        termsAndConditions: q.termsAndConditions || '',
-        notes: q.notes || '',
+        paymentTermId: ptId || (ptText ? 'CUSTOM' : ''),
+        paymentTerms: ptText,
+        deliveryTermId: dtId || (dtText ? 'CUSTOM' : ''),
+        deliveryTerms: dtText,
+        warrantyTermId: wtId || (wtText ? 'CUSTOM' : ''),
+        warrantyTerms: wtText,
+        termsConditionId: tcId || (tcText ? 'CUSTOM' : ''),
+        termsAndConditions: tcText,
+        notes: notesText,
         billingAddressId: q.billingAddressId || '',
         deliveryAddressId: q.deliveryAddressId || '',
         deliveryAddressMode: q.newDeliveryAddress ? 'new' : 'existing',
@@ -608,7 +620,7 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
 
   useEffect(() => {
     if (!quotationId && isOpen && paymentTermsList.length > 0 && !formData.paymentTermId) {
-      const defaultPt = paymentTermsList.find(pt => pt.isDefault);
+      const defaultPt = paymentTermsList.find(pt => pt.isDefault) || paymentTermsList[0];
       if (defaultPt) {
         setFormData(prev => ({ ...prev, paymentTermId: defaultPt.id, paymentTerms: defaultPt.description }));
       }
@@ -617,7 +629,7 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
 
   useEffect(() => {
     if (!quotationId && isOpen && termsConditionsList.length > 0 && !formData.termsConditionId) {
-      const defaultTc = termsConditionsList.find(tc => tc.isDefault);
+      const defaultTc = termsConditionsList.find(tc => tc.isDefault) || termsConditionsList[0];
       if (defaultTc) {
         setFormData(prev => ({ ...prev, termsConditionId: defaultTc.id, termsAndConditions: defaultTc.content }));
       }
@@ -626,7 +638,7 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
 
   useEffect(() => {
     if (!quotationId && isOpen && deliveryTermsList.length > 0 && !formData.deliveryTermId) {
-      const defaultDt = deliveryTermsList.find(dt => dt.isDefault);
+      const defaultDt = deliveryTermsList.find(dt => dt.isDefault) || deliveryTermsList[0];
       if (defaultDt) {
         setFormData(prev => ({ ...prev, deliveryTermId: defaultDt.id, deliveryTerms: defaultDt.description }));
       }
@@ -635,7 +647,7 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
 
   useEffect(() => {
     if (!quotationId && isOpen && warrantyTermsList.length > 0 && !formData.warrantyTermId) {
-      const defaultWt = warrantyTermsList.find(wt => wt.isDefault);
+      const defaultWt = warrantyTermsList.find(wt => wt.isDefault) || warrantyTermsList[0];
       if (defaultWt) {
         setFormData(prev => ({ ...prev, warrantyTermId: defaultWt.id, warrantyTerms: defaultWt.description }));
       }
