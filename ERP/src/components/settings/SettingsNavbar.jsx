@@ -13,7 +13,7 @@ import { resolveSettingsNavigation } from './settingsNavigation';
  * 1. General Settings
  * 2. Module Settings (Accounting, Inventory, Workflow, CRM, SSO)
  */
-export default function SettingsNavbar({
+export function SettingsNavbar({
   activeTab: controlledActiveTab,
   onTabChange,
   className = '',
@@ -307,3 +307,6 @@ export default function SettingsNavbar({
     </nav>
   );
 }
+
+export default SettingsNavbar;
+

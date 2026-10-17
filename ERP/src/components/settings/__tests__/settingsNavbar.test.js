@@ -197,4 +197,24 @@ describe('SettingsNavbar & settingsNavigation Unit & Integration Tests', () => {
       assert.strictEqual(path4, '/owner/settings/organization');
     });
   });
+
+  describe('5. Module Export Integrity Verification', () => {
+    it('ensures SettingsNavbar is properly imported before being exported as default', async () => {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const indexPath = path.resolve('src/components/settings/index.js');
+      const content = fs.readFileSync(indexPath, 'utf8');
+
+      // Must not do `export default SettingsNavbar;` without importing SettingsNavbar into scope
+      const hasDirectDefaultExport = /export\s+default\s+SettingsNavbar\s*;/.test(content);
+      const hasLocalImport = /import\s+SettingsNavbar\s+from\s+['"]\.\/SettingsNavbar['"]\s*;/.test(content);
+
+      if (hasDirectDefaultExport) {
+        assert.ok(
+          hasLocalImport,
+          'SettingsNavbar must be imported into local scope before export default SettingsNavbar to avoid ReferenceError'
+        );
+      }
+    });
+  });
 });
