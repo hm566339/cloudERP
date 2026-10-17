@@ -643,7 +643,7 @@ export default function WorkflowManagementPage() {
   const selectCompany = (id) => { const company = companies.find((item) => String(item.id || item.companyId || item.code) === id); if (!company) return; dispatch(setSelectedCompany(company)); if (routeCompanyId) navigate(`/company/${id}/workflows`); };
 
   return (
-    <div className="animate-fade-in flex flex-col h-full min-h-0 p-3 sm:p-5 lg:p-6 overflow-y-auto lg:overflow-hidden">
+    <div className="animate-fade-in flex flex-col h-full min-h-0 p-3 sm:p-5 lg:p-6 overflow-hidden">
       {/* ── Top Header and Title ── */}
       <div className="flex-none flex flex-col gap-3 pb-3 border-b border-zinc-200/80 lg:flex-row lg:items-center lg:justify-between">
         <div>
@@ -729,9 +729,9 @@ export default function WorkflowManagementPage() {
       </div>
 
       {/* ── Main Content Responsive 3-Column Studio ── */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[250px_minmax(340px,1fr)_340px] xl:grid-cols-[270px_minmax(380px,1fr)_370px] gap-3.5 sm:gap-4 overflow-y-auto lg:overflow-hidden">
+      <div className="flex-1 min-h-0 grid grid-cols-[250px_minmax(340px,1fr)_340px] xl:grid-cols-[270px_minmax(380px,1fr)_370px] grid-rows-1 gap-3.5 sm:gap-4 overflow-x-auto overflow-y-hidden">
         {/* ── Left Column: Workflow List ── */}
-        <section className="card flex flex-col min-h-0 h-full overflow-hidden bg-white border border-zinc-200 rounded-xl shadow-sm">
+        <section className="card flex flex-col min-h-0 min-w-0 h-full overflow-hidden bg-white border border-zinc-200 rounded-xl shadow-sm">
           <div className="flex-none border-b border-zinc-100 p-3 bg-zinc-50/40">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -819,7 +819,7 @@ export default function WorkflowManagementPage() {
         </section>
 
         {/* ── Center Column: Workflow Editor & Diagram ── */}
-        <section className="card flex flex-col min-h-0 h-full overflow-hidden bg-white border border-zinc-200 rounded-xl shadow-sm">
+        <section className="card flex flex-col min-h-0 min-w-0 h-full overflow-hidden bg-white border border-zinc-200 rounded-xl shadow-sm">
           <div className="flex-none border-b border-zinc-100 p-4 bg-zinc-50/40">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
@@ -984,7 +984,7 @@ export default function WorkflowManagementPage() {
         </section>
 
         {/* ── Right Column: Configuration Panel ── */}
-        <section className="card flex flex-col min-h-0 h-full overflow-hidden bg-white border border-zinc-200 rounded-xl shadow-sm">
+        <section className="card flex flex-col min-h-0 min-w-0 h-full overflow-hidden bg-white border border-zinc-200 rounded-xl shadow-sm">
           <div className="flex-none border-b border-zinc-100 p-4 bg-zinc-50/40">
             <div className="flex items-center justify-between">
               <div>

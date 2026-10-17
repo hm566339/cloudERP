@@ -116,7 +116,7 @@ export default function ApprovalRequestsPage() {
   };
 
   return (
-    <div className="animate-fade-in space-y-4 pb-8">
+    <div className="animate-fade-in h-full overflow-y-auto p-4 sm:p-6 space-y-4 pb-8">
       <PageHeader
         title="Approval Requests"
         description="Review pending workflow tasks assigned to this company."

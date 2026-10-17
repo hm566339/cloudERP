@@ -39,7 +39,12 @@ export default function AccountantLayout() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const location = useLocation()
-  const isFullHeightPage = location.pathname.includes('create-from-order')
+  const isFullHeightPage = location.pathname.includes('create-from-order') ||
+    location.pathname.includes('/users') ||
+    location.pathname.includes('/roles') ||
+    location.pathname.includes('/portal-access') ||
+    location.pathname.includes('/workflows') ||
+    location.pathname.includes('/workflow');
 
   const reduxUser = useAppSelector((s) => s.auth?.user ?? null)
   const selectedCompany = useAppSelector((s) => s.company.selectedCompany)
@@ -485,8 +490,8 @@ export default function AccountantLayout() {
 
           <SubscriptionNoticeBanner />
 
-          <main className="flex-1 overflow-x-hidden flex flex-col min-h-0 min-w-0">
-            <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 max-w-[2560px] 5xl:max-w-[3200px] mx-auto">
+          <main className={`flex-1 min-h-0 min-w-0 flex flex-col bg-zinc-50/30 overscroll-contain ${isFullHeightPage ? 'overflow-hidden p-0' : 'overflow-x-hidden overflow-y-auto'}`}>
+            <div className={`w-full flex-1 flex flex-col min-h-0 min-w-0 ${isFullHeightPage ? 'h-full' : 'max-w-[2560px] 5xl:max-w-[3200px] mx-auto'}`}>
               <ErrorBoundary>
                 <Suspense fallback={<RouteLoading />}>
                   <Outlet context={{ accessibleModuleKeys: ['account', 'inventory', 'crm', 'purchases', 'workflow'], accessLoading: false, authContext, isOwner: false }} />
