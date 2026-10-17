@@ -610,11 +610,17 @@ export const workflowDefinitionApi = {
   missingEndpoints: [
     'POST /api/v1/workflow/definitions/{definitionId}/stages',
   ],
-  list: async (companyId, documentType = 'GENERAL', options = {}) => {
+  list: async (companyId, documentType, options = {}) => {
     const params = {};
     if (companyId) params.companyId = companyId;
-    if (documentType) params.documentType = documentType;
-    if (options.moduleName) params.moduleName = options.moduleName;
+    const cleanDocType = (documentType || '').trim();
+    if (cleanDocType && cleanDocType.toUpperCase() !== 'ALL') {
+      params.documentType = cleanDocType;
+    }
+    const cleanModuleName = (options.moduleName || '').trim();
+    if (cleanModuleName && cleanModuleName.toUpperCase() !== 'ALL') {
+      params.moduleName = cleanModuleName;
+    }
     if (options.page !== undefined) params.page = options.page;
     if (options.size !== undefined) params.size = options.size;
     if (options.sort) params.sort = options.sort;
@@ -780,7 +786,7 @@ export const writeWorkflowDraft = (companyId, definitions) => {
   localStorage.setItem(draftKey(companyId), JSON.stringify(definitions));
 };
 
-export async function loadWorkflowDefinitions(companyId, documentType = 'GENERAL', options = {}) {
+export async function loadWorkflowDefinitions(companyId, documentType, options = {}) {
   // Always query backend workflow-service directly.
   // Never silently fall back to localStorage drafts as server-persisted definitions.
   const definitions = await workflowDefinitionApi.list(companyId, documentType, options);

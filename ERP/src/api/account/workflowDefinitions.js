@@ -3,10 +3,17 @@ import apiClient from '../common/client';
 const getData = (response) => response?.data?.data ?? response?.data ?? response;
 
 export const workflowDefinitionsApi = {
-  getList: async ({ companyId, documentType = 'GENERAL', moduleName } = {}) => {
-    const params = { documentType };
+  getList: async ({ companyId, documentType, moduleName } = {}) => {
+    const params = {};
     if (companyId) params.companyId = companyId;
-    if (moduleName) params.moduleName = moduleName;
+    const cleanDocType = (documentType || '').trim();
+    if (cleanDocType && cleanDocType.toUpperCase() !== 'ALL') {
+      params.documentType = cleanDocType;
+    }
+    const cleanModuleName = (moduleName || '').trim();
+    if (cleanModuleName && cleanModuleName.toUpperCase() !== 'ALL') {
+      params.moduleName = cleanModuleName;
+    }
     const response = await apiClient.get('/api/v1/workflow/definitions', { params });
     const payload = getData(response);
     return Array.isArray(payload) ? payload : (Array.isArray(payload?.content) ? payload.content : (Array.isArray(payload?.data) ? payload.data : []));

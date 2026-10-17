@@ -60,8 +60,19 @@ public class WorkflowDefinitionController {
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {
         UUID effectiveCompanyId = resolveCompanyId(companyId);
-        WorkflowDefinitionResponse response = definitionService.getDefinition(id, effectiveCompanyId);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        log.info("[WF_CTRL] [GET_START] method=GET endpoint=/api/v1/workflow/definitions/{} definitionId={} requestedCompanyId={} effectiveCompanyId={} companyResolutionSuccess={} userId={} roles={}",
+                id, id, companyId, effectiveCompanyId, effectiveCompanyId != null,
+                SecurityUtils.getCurrentUserId().orElse(null), SecurityUtils.getCurrentRoles());
+        try {
+            WorkflowDefinitionResponse response = definitionService.getDefinition(id, effectiveCompanyId);
+            log.info("[WF_CTRL] [GET_SUCCESS] definitionId={} effectiveCompanyId={} workflowCode='{}' moduleName='{}' documentType='{}' isActive={}",
+                    id, effectiveCompanyId, response.getWorkflowCode(), response.getModuleName(), response.getDocumentType(), response.getIsActive());
+            return ResponseEntity.ok(ApiResponse.success(response));
+        } catch (Exception e) {
+            log.error("[WF_CTRL] [GET_ERROR] definitionId={} effectiveCompanyId={} error={}",
+                    id, effectiveCompanyId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @GetMapping("/active")
@@ -86,9 +97,21 @@ public class WorkflowDefinitionController {
             @RequestParam(required = false) String documentType,
             Pageable pageable) {
         UUID effectiveCompanyId = resolveCompanyId(companyId);
-        Page<WorkflowDefinitionResponse> page = definitionService.listDefinitions(effectiveCompanyId, moduleName, documentType,
-                pageable);
-        return ResponseEntity.ok(ApiResponse.success(page));
+        log.info("[WF_CTRL] [LIST_START] method=GET endpoint=/api/v1/workflow/definitions requestedCompanyId={} effectiveCompanyId={} companyResolutionSuccess={} moduleName='{}' documentType='{}' page={} size={} sort={} userId={} roles={}",
+                companyId, effectiveCompanyId, effectiveCompanyId != null, moduleName, documentType,
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort(),
+                SecurityUtils.getCurrentUserId().orElse(null), SecurityUtils.getCurrentRoles());
+        try {
+            Page<WorkflowDefinitionResponse> page = definitionService.listDefinitions(effectiveCompanyId, moduleName, documentType,
+                    pageable);
+            log.info("[WF_CTRL] [LIST_SUCCESS] effectiveCompanyId={} totalElements={} returnedElements={}",
+                    effectiveCompanyId, page.getTotalElements(), page.getNumberOfElements());
+            return ResponseEntity.ok(ApiResponse.success(page));
+        } catch (Exception e) {
+            log.error("[WF_CTRL] [LIST_ERROR] method=GET endpoint=/api/v1/workflow/definitions effectiveCompanyId={} error={}",
+                    effectiveCompanyId, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @PatchMapping("/{id}/activate")

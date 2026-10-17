@@ -232,16 +232,39 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
     @Override
     @Transactional(readOnly = true)
     public Page<WorkflowDefinitionResponse> listDefinitions(UUID companyId, String moduleName, String documentType, Pageable pageable) {
+        String cleanModuleName = StringUtils.hasText(moduleName) && !moduleName.trim().equalsIgnoreCase("ALL")
+                ? moduleName.trim().toUpperCase()
+                : null;
+        String cleanDocumentType = StringUtils.hasText(documentType) && !documentType.trim().equalsIgnoreCase("ALL")
+                ? documentType.trim().toUpperCase()
+                : null;
+
+        log.info("[WF_SVC] [LIST_DEFINITIONS] companyId={} requestedModuleName='{}' requestedDocumentType='{}' resolvedModuleName='{}' resolvedDocumentType='{}' page={} size={} sort={}",
+                companyId, moduleName, documentType, cleanModuleName, cleanDocumentType,
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+
         Page<WorkflowDefinition> page;
-        if (StringUtils.hasText(moduleName) && StringUtils.hasText(documentType)) {
-            page = definitionRepository.findByCompanyIdAndModuleNameAndDocumentTypeAndIsDeletedFalse(companyId, moduleName, documentType, pageable);
-        } else if (StringUtils.hasText(moduleName)) {
-            page = definitionRepository.findByCompanyIdAndModuleNameAndIsDeletedFalse(companyId, moduleName, pageable);
-        } else if (StringUtils.hasText(documentType)) {
-            page = definitionRepository.findByCompanyIdAndDocumentTypeAndIsDeletedFalse(companyId, documentType, pageable);
+        String filterMode;
+        if (cleanModuleName != null && cleanDocumentType != null) {
+            filterMode = "COMPANY_MODULE_DOCUMENT_TYPE";
+            page = definitionRepository.findByCompanyIdAndModuleNameIgnoreCaseAndDocumentTypeIgnoreCaseAndIsDeletedFalse(
+                    companyId, cleanModuleName, cleanDocumentType, pageable);
+        } else if (cleanModuleName != null) {
+            filterMode = "COMPANY_MODULE";
+            page = definitionRepository.findByCompanyIdAndModuleNameIgnoreCaseAndIsDeletedFalse(
+                    companyId, cleanModuleName, pageable);
+        } else if (cleanDocumentType != null) {
+            filterMode = "COMPANY_DOCUMENT_TYPE";
+            page = definitionRepository.findByCompanyIdAndDocumentTypeIgnoreCaseAndIsDeletedFalse(
+                    companyId, cleanDocumentType, pageable);
         } else {
+            filterMode = "COMPANY_ONLY";
             page = definitionRepository.findByCompanyIdAndIsDeletedFalse(companyId, pageable);
         }
+
+        log.info("[WF_SVC] [LIST_DEFINITIONS_RESULT] companyId={} filterMode={} totalElements={} totalPages={} numberOfElements={} ids={}",
+                companyId, filterMode, page.getTotalElements(), page.getTotalPages(), page.getNumberOfElements(),
+                page.getContent().stream().map(WorkflowDefinition::getId).collect(Collectors.toList()));
 
         return page.map(this::mapToResponse);
     }

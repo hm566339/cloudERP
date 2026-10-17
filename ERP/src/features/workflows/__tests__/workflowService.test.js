@@ -694,7 +694,7 @@ describe('Workflow Definitions API Routing & Service Verification', () => {
       assert.ok(othersValues.includes('FISCAL_YEAR'));
     });
 
-    it('loadWorkflowDefinitions passes moduleName in query params', async () => {
+    it('loadWorkflowDefinitions passes moduleName in query params and does not default documentType to GENERAL', async () => {
       try {
         apiClient.get = async (url, config) => {
           lastRequest = { url, config };
@@ -705,6 +705,7 @@ describe('Workflow Definitions API Routing & Service Verification', () => {
         assert.strictEqual(lastRequest.url, '/api/v1/workflow/definitions');
         assert.strictEqual(lastRequest.config.params.companyId, 'comp-123');
         assert.strictEqual(lastRequest.config.params.moduleName, 'MANUFACTURING');
+        assert.strictEqual(lastRequest.config.params.documentType, undefined);
       } finally {
         restoreClient();
       }

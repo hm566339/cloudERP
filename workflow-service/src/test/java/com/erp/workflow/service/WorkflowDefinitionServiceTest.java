@@ -13,6 +13,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Collections;
 import java.util.List;
@@ -373,5 +377,220 @@ class WorkflowDefinitionServiceTest {
 
         assertThrows(com.erp.workflow.exception.ResourceNotFoundException.class, () ->
                 definitionService.activateDefinition(defId, requestedCompanyId));
+    }
+
+    @Test
+    void testListDefinitions_ByCompanyOnly() {
+        UUID companyId = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 10);
+        WorkflowDefinition def = WorkflowDefinition.builder()
+                .id(UUID.randomUUID())
+                .companyId(companyId)
+                .workflowCode("WF_ALL")
+                .workflowName("All Company Workflows")
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .version(1)
+                .isActive(true)
+                .build();
+
+        when(definitionRepository.findByCompanyIdAndIsDeletedFalse(companyId, pageable))
+                .thenReturn(new PageImpl<>(List.of(def), pageable, 1));
+        when(stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(def.getId()))
+                .thenReturn(Collections.emptyList());
+        when(transitionRepository.findByWorkflowDefinitionIdAndIsDeletedFalse(def.getId()))
+                .thenReturn(Collections.emptyList());
+
+        Page<WorkflowDefinitionResponse> result = definitionService.listDefinitions(companyId, null, null, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("WF_ALL", result.getContent().get(0).getWorkflowCode());
+        verify(definitionRepository).findByCompanyIdAndIsDeletedFalse(companyId, pageable);
+    }
+
+    @Test
+    void testListDefinitions_ByCompanyAndDocumentType() {
+        UUID companyId = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 10);
+        WorkflowDefinition def = WorkflowDefinition.builder()
+                .id(UUID.randomUUID())
+                .companyId(companyId)
+                .workflowCode("WF_DOC")
+                .workflowName("Doc Type Workflow")
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .version(1)
+                .isActive(true)
+                .build();
+
+        when(definitionRepository.findByCompanyIdAndDocumentTypeIgnoreCaseAndIsDeletedFalse(companyId, "QUOTATION", pageable))
+                .thenReturn(new PageImpl<>(List.of(def), pageable, 1));
+        when(stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(def.getId()))
+                .thenReturn(Collections.emptyList());
+        when(transitionRepository.findByWorkflowDefinitionIdAndIsDeletedFalse(def.getId()))
+                .thenReturn(Collections.emptyList());
+
+        Page<WorkflowDefinitionResponse> result = definitionService.listDefinitions(companyId, null, "quotation", pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("QUOTATION", result.getContent().get(0).getDocumentType());
+        verify(definitionRepository).findByCompanyIdAndDocumentTypeIgnoreCaseAndIsDeletedFalse(companyId, "QUOTATION", pageable);
+    }
+
+    @Test
+    void testListDefinitions_ByCompanyAndModule() {
+        UUID companyId = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 10);
+        WorkflowDefinition def = WorkflowDefinition.builder()
+                .id(UUID.randomUUID())
+                .companyId(companyId)
+                .workflowCode("WF_MODULE")
+                .workflowName("Module Workflow")
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .version(1)
+                .isActive(true)
+                .build();
+
+        when(definitionRepository.findByCompanyIdAndModuleNameIgnoreCaseAndIsDeletedFalse(companyId, "SALES", pageable))
+                .thenReturn(new PageImpl<>(List.of(def), pageable, 1));
+        when(stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(def.getId()))
+                .thenReturn(Collections.emptyList());
+        when(transitionRepository.findByWorkflowDefinitionIdAndIsDeletedFalse(def.getId()))
+                .thenReturn(Collections.emptyList());
+
+        Page<WorkflowDefinitionResponse> result = definitionService.listDefinitions(companyId, "SALES", null, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("SALES", result.getContent().get(0).getModuleName());
+        verify(definitionRepository).findByCompanyIdAndModuleNameIgnoreCaseAndIsDeletedFalse(companyId, "SALES", pageable);
+    }
+
+    @Test
+    void testListDefinitions_ByCompanyAndModuleAndDocumentType() {
+        UUID companyId = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 10);
+        WorkflowDefinition def = WorkflowDefinition.builder()
+                .id(UUID.randomUUID())
+                .companyId(companyId)
+                .workflowCode("WF_BOTH")
+                .workflowName("Module and DocType Workflow")
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .version(1)
+                .isActive(true)
+                .build();
+
+        when(definitionRepository.findByCompanyIdAndModuleNameIgnoreCaseAndDocumentTypeIgnoreCaseAndIsDeletedFalse(
+                companyId, "SALES", "QUOTATION", pageable))
+                .thenReturn(new PageImpl<>(List.of(def), pageable, 1));
+        when(stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(def.getId()))
+                .thenReturn(Collections.emptyList());
+        when(transitionRepository.findByWorkflowDefinitionIdAndIsDeletedFalse(def.getId()))
+                .thenReturn(Collections.emptyList());
+
+        Page<WorkflowDefinitionResponse> result = definitionService.listDefinitions(companyId, "SALES", "QUOTATION", pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("SALES", result.getContent().get(0).getModuleName());
+        assertEquals("QUOTATION", result.getContent().get(0).getDocumentType());
+        verify(definitionRepository).findByCompanyIdAndModuleNameIgnoreCaseAndDocumentTypeIgnoreCaseAndIsDeletedFalse(
+                companyId, "SALES", "QUOTATION", pageable);
+    }
+
+    @Test
+    void testCreateActivateAndRetrieveDefinition() {
+        UUID companyId = UUID.randomUUID();
+        UUID defId = UUID.randomUUID();
+
+        CreateWorkflowDefinitionRequest createReq = CreateWorkflowDefinitionRequest.builder()
+                .companyId(companyId)
+                .workflowCode("SALES_ORDER_FLOW")
+                .workflowName("Sales Order Approval")
+                .moduleName("SALES")
+                .documentType("SALES_ORDER")
+                .version(1)
+                .isActive(false)
+                .build();
+
+        WorkflowDefinition createdDef = WorkflowDefinition.builder()
+                .id(defId)
+                .companyId(companyId)
+                .workflowCode("SALES_ORDER_FLOW")
+                .workflowName("Sales Order Approval")
+                .moduleName("SALES")
+                .documentType("SALES_ORDER")
+                .version(1)
+                .isActive(false)
+                .build();
+
+        when(definitionRepository.save(any(WorkflowDefinition.class)))
+                .thenReturn(createdDef);
+        when(definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(defId, companyId))
+                .thenReturn(Optional.of(createdDef));
+        when(stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(defId))
+                .thenReturn(Collections.emptyList());
+        when(transitionRepository.findByWorkflowDefinitionIdAndIsDeletedFalse(defId))
+                .thenReturn(Collections.emptyList());
+
+        // 1. Create
+        WorkflowDefinitionResponse createdRes = definitionService.createDefinition(createReq);
+        assertNotNull(createdRes);
+        assertEquals("SALES_ORDER_FLOW", createdRes.getWorkflowCode());
+        assertFalse(createdRes.getIsActive());
+
+        // 2. Activate
+        when(definitionRepository.findActiveByModuleAndDocumentType(companyId, "SALES", "SALES_ORDER"))
+                .thenReturn(Collections.emptyList());
+        when(definitionRepository.findByCompanyIdAndWorkflowCodeAndIsDeletedFalse(companyId, "SALES_ORDER_FLOW"))
+                .thenReturn(List.of(createdDef));
+
+        definitionService.activateDefinition(defId, companyId);
+        assertTrue(createdDef.getIsActive());
+
+        // 3. Retrieve
+        WorkflowDefinitionResponse retrievedRes = definitionService.getDefinition(defId, companyId);
+        assertNotNull(retrievedRes);
+        assertEquals(defId, retrievedRes.getId());
+        assertEquals("SALES_ORDER_FLOW", retrievedRes.getWorkflowCode());
+        assertTrue(retrievedRes.getIsActive());
+    }
+
+    @Test
+    void testListDefinitions_EnsuresOtherCompanyNotExposed() {
+        UUID companyA = UUID.randomUUID();
+        UUID companyB = UUID.randomUUID();
+        UUID defIdA = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 10);
+
+        WorkflowDefinition defA = WorkflowDefinition.builder()
+                .id(defIdA)
+                .companyId(companyA)
+                .workflowCode("WF_COMPANY_A")
+                .workflowName("Company A WF")
+                .moduleName("SALES")
+                .documentType("QUOTATION")
+                .version(1)
+                .isActive(true)
+                .build();
+
+        // Listing company B returns empty list
+        when(definitionRepository.findByCompanyIdAndIsDeletedFalse(companyB, pageable))
+                .thenReturn(new PageImpl<>(Collections.emptyList(), pageable, 0));
+
+        Page<WorkflowDefinitionResponse> pageB = definitionService.listDefinitions(companyB, null, null, pageable);
+        assertEquals(0, pageB.getTotalElements());
+        assertTrue(pageB.getContent().isEmpty());
+
+        // Attempting to retrieve company A's definition using company B's tenant context throws ResourceNotFoundException
+        when(definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(defIdA, companyB))
+                .thenReturn(Optional.empty());
+
+        assertThrows(com.erp.workflow.exception.ResourceNotFoundException.class, () ->
+                definitionService.getDefinition(defIdA, companyB));
     }
 }
