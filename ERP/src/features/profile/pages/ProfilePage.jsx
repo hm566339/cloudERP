@@ -63,7 +63,7 @@ export default function ProfilePage() {
   const initials = (user.fullName || user.username || 'U').substring(0, 2).toUpperCase();
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto pb-12 px-4 md:px-6 lg:px-8">
+    <div className="space-y-6 w-full p-4 sm:p-6 pb-12 animate-fade-in">
       <div className="flex items-center space-x-4 mb-6 bg-white p-5 md:p-6 rounded-xl shadow-sm border border-zinc-200">
         <div className="h-16 w-16 rounded-full bg-zinc-900 flex items-center justify-center text-white text-2xl font-bold shadow-sm shrink-0">
           {initials}

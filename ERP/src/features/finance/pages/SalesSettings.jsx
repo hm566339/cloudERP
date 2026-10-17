@@ -115,7 +115,7 @@ export default function SalesSettings() {
 
   return (
     <div className="w-full h-full flex flex-col min-h-0 bg-zinc-50/50">
-      <div className="p-4 md:p-6 pb-2 shrink-0 max-w-6xl mx-auto w-full">
+      <div className="p-4 sm:p-6 pb-2 shrink-0 w-full">
         <SettingsNavbar activeTab="module_account" />
       </div>
       {/* ── Page Header with Document Type Switcher ── */}

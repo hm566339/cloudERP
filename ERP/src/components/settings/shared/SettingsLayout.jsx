@@ -18,7 +18,7 @@ export function SettingsLayout({
   className = '',
 }) {
   return (
-    <div className={`p-4 md:p-8 max-w-6xl mx-auto w-full space-y-6 animate-fade-in ${className}`}>
+    <div className={`p-4 sm:p-6 w-full space-y-6 animate-fade-in ${className}`}>
       {/* ── Reusable Settings Navigation Bar ── */}
       {showNavbar && (
         <div className="shrink-0">
