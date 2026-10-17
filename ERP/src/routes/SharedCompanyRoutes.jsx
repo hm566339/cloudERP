@@ -3,7 +3,7 @@ import { Route, Navigate, Outlet } from 'react-router-dom';
 import PurchaseModuleLayout from '../components/common/PurchaseModuleLayout';
 
 const InventoryWrapper = () => (
-  <div className="p-4 sm:p-6 lg:p-8 max-w-[1280px] mx-auto w-full">
+  <div className="flex-1 min-h-0 min-w-0 flex flex-col w-full h-full">
     <Outlet />
   </div>
 );
