@@ -68,6 +68,7 @@ public class SsoAuthorizationProperties {
         map.put("/read", "UPDATE");
         map.put("/upload", "CREATE");
         map.put("/export", "EXPORT");
+        map.put("/retry", "UPDATE");
         return map;
     }
 

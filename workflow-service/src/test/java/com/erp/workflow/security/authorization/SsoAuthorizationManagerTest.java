@@ -36,7 +36,8 @@ class SsoAuthorizationManagerTest {
                 "WORKFLOW_TRANSACTIONS", List.of("/api/v1/workflow/transactions", "/api/v1/workflow/transactions/**"),
                 "WORKFLOW_TASKS", List.of("/api/v1/workflow/tasks", "/api/v1/workflow/tasks/**"),
                 "WORKFLOW_NOTIFICATIONS", List.of("/api/v1/workflow/notifications", "/api/v1/workflow/notifications/**"),
-                "WORKFLOW_ATTACHMENTS", List.of("/api/v1/workflow/attachments", "/api/v1/workflow/attachments/**")
+                "WORKFLOW_ATTACHMENTS", List.of("/api/v1/workflow/attachments", "/api/v1/workflow/attachments/**"),
+                "WORKFLOW_CALLBACKS", List.of("/api/v1/workflow/callbacks", "/api/v1/workflow/callbacks/**")
         ));
         properties.setFeatureGroups(Map.of(
                 "WORKFLOW_ADMIN", Map.of(
@@ -345,8 +346,8 @@ class SsoAuthorizationManagerTest {
     }
 
     @Test
-    @DisplayName("User with WORKFLOW_DEFINITIONS:WRITE can activate and deactivate workflow definitions")
-    void testUserWithWritePermissionCanActivateWorkflowDefinition() {
+    @DisplayName("User with WORKFLOW_DEFINITIONS:WRITE CANNOT activate or deactivate without explicit ACTIVATE/DEACTIVATE permission")
+    void testUserWithWritePermissionCannotActivateOrDeactivateWithoutExplicitPermission() {
         PermissionResponse writePerm = PermissionResponse.builder()
                 .moduleName("WORKFLOW_DEFINITIONS")
                 .action("WRITE")
@@ -355,13 +356,13 @@ class SsoAuthorizationManagerTest {
                 .build();
         AuthenticatedUser writer = buildUser(List.of(), List.of(writePerm));
 
-        assertThat(decide(writer, "PATCH", "/api/v1/workflow/definitions/123/activate").isGranted()).isTrue();
-        assertThat(decide(writer, "PATCH", "/api/v1/workflow/definitions/123/deactivate").isGranted()).isTrue();
+        assertThat(decide(writer, "PATCH", "/api/v1/workflow/definitions/123/activate").isGranted()).isFalse();
+        assertThat(decide(writer, "PATCH", "/api/v1/workflow/definitions/123/deactivate").isGranted()).isFalse();
     }
 
     @Test
-    @DisplayName("User with WORKFLOW_DEFINITIONS:UPDATE can activate and deactivate workflow definitions")
-    void testUserWithUpdatePermissionCanActivateWorkflowDefinition() {
+    @DisplayName("User with WORKFLOW_DEFINITIONS:UPDATE CANNOT activate or deactivate without explicit ACTIVATE/DEACTIVATE permission")
+    void testUserWithUpdatePermissionCannotActivateOrDeactivateWithoutExplicitPermission() {
         PermissionResponse updatePerm = PermissionResponse.builder()
                 .moduleName("WORKFLOW_DEFINITIONS")
                 .action("UPDATE")
@@ -370,8 +371,43 @@ class SsoAuthorizationManagerTest {
                 .build();
         AuthenticatedUser updater = buildUser(List.of(), List.of(updatePerm));
 
-        assertThat(decide(updater, "PATCH", "/api/v1/workflow/definitions/123/activate").isGranted()).isTrue();
-        assertThat(decide(updater, "PATCH", "/api/v1/workflow/definitions/123/deactivate").isGranted()).isTrue();
+        assertThat(decide(updater, "PATCH", "/api/v1/workflow/definitions/123/activate").isGranted()).isFalse();
+        assertThat(decide(updater, "PATCH", "/api/v1/workflow/definitions/123/deactivate").isGranted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("User with WORKFLOW_DEFINITIONS:ACTIVATE can activate but cannot deactivate or do CRUD")
+    void testUserWithExplicitActivatePermissionCanActivateWorkflowDefinition() {
+        PermissionResponse activatePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS")
+                .action("ACTIVATE")
+                .active(true)
+                .allowed(true)
+                .build();
+        AuthenticatedUser activator = buildUser(List.of(), List.of(activatePerm));
+
+        // Can activate
+        assertThat(decide(activator, "PATCH", "/api/v1/workflow/definitions/123/activate").isGranted()).isTrue();
+        // Cannot deactivate
+        assertThat(decide(activator, "PATCH", "/api/v1/workflow/definitions/123/deactivate").isGranted()).isFalse();
+        // Cannot do CRUD (GET, DELETE, etc.)
+        assertThat(decide(activator, "GET", "/api/v1/workflow/definitions").isGranted()).isFalse();
+        assertThat(decide(activator, "DELETE", "/api/v1/workflow/definitions/123").isGranted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("User with WORKFLOW_DEFINITIONS:DEACTIVATE can deactivate but cannot activate")
+    void testUserWithExplicitDeactivatePermissionCanDeactivateWorkflowDefinition() {
+        PermissionResponse deactivatePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS")
+                .action("DEACTIVATE")
+                .active(true)
+                .allowed(true)
+                .build();
+        AuthenticatedUser deactivator = buildUser(List.of(), List.of(deactivatePerm));
+
+        assertThat(decide(deactivator, "PATCH", "/api/v1/workflow/definitions/123/deactivate").isGranted()).isTrue();
+        assertThat(decide(deactivator, "PATCH", "/api/v1/workflow/definitions/123/activate").isGranted()).isFalse();
     }
 
     @Test
@@ -390,6 +426,73 @@ class SsoAuthorizationManagerTest {
     }
 
     @Test
+    @DisplayName("Workflow definition CRUD endpoints resolve to correct feature and actions")
+    void testWorkflowDefinitionCrudEndpointsResolveCorrectActions() {
+        PermissionResponse readPerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS").action("READ").active(true).allowed(true).build();
+        PermissionResponse createPerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS").action("CREATE").active(true).allowed(true).build();
+        PermissionResponse updatePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS").action("UPDATE").active(true).allowed(true).build();
+        PermissionResponse deletePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS").action("DELETE").active(true).allowed(true).build();
+
+        AuthenticatedUser reader = buildUser(List.of(), List.of(readPerm));
+        AuthenticatedUser creator = buildUser(List.of(), List.of(createPerm));
+        AuthenticatedUser updater = buildUser(List.of(), List.of(updatePerm));
+        AuthenticatedUser deleter = buildUser(List.of(), List.of(deletePerm));
+
+        // GET -> READ
+        assertThat(decide(reader, "GET", "/api/v1/workflow/definitions").isGranted()).isTrue();
+        assertThat(decide(creator, "GET", "/api/v1/workflow/definitions").isGranted()).isFalse();
+
+        // POST -> CREATE
+        assertThat(decide(creator, "POST", "/api/v1/workflow/definitions").isGranted()).isTrue();
+        assertThat(decide(reader, "POST", "/api/v1/workflow/definitions").isGranted()).isFalse();
+
+        // PUT -> UPDATE
+        assertThat(decide(updater, "PUT", "/api/v1/workflow/definitions/123").isGranted()).isTrue();
+        assertThat(decide(reader, "PUT", "/api/v1/workflow/definitions/123").isGranted()).isFalse();
+
+        // DELETE -> DELETE
+        assertThat(decide(deleter, "DELETE", "/api/v1/workflow/definitions/123").isGranted()).isTrue();
+        assertThat(decide(reader, "DELETE", "/api/v1/workflow/definitions/123").isGranted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Trailing slashes on custom action suffixes resolve to correct action")
+    void testTrailingSlashesOnCustomActionSuffixes() {
+        PermissionResponse activatePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS").action("ACTIVATE").active(true).allowed(true).build();
+        AuthenticatedUser activator = buildUser(List.of(), List.of(activatePerm));
+
+        assertThat(decide(activator, "PATCH", "/api/v1/workflow/definitions/123/activate/").isGranted()).isTrue();
+
+        PermissionResponse deactivatePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS").action("DEACTIVATE").active(true).allowed(true).build();
+        AuthenticatedUser deactivator = buildUser(List.of(), List.of(deactivatePerm));
+
+        assertThat(decide(deactivator, "PATCH", "/api/v1/workflow/definitions/123/deactivate/").isGranted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Custom action /retry resolves to UPDATE on WORKFLOW_CALLBACKS")
+    void testRetryActionResolvesToUpdate() {
+        PermissionResponse updatePerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_CALLBACKS").action("UPDATE").active(true).allowed(true).build();
+        AuthenticatedUser user = buildUser(List.of(), List.of(updatePerm));
+
+        assertThat(decide(user, "POST", "/api/v1/workflow/callbacks/123/retry").isGranted()).isTrue();
+
+        // User with only READ on callbacks cannot retry
+        PermissionResponse readPerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_CALLBACKS").action("READ").active(true).allowed(true).build();
+        AuthenticatedUser reader = buildUser(List.of(), List.of(readPerm));
+
+        assertThat(decide(reader, "POST", "/api/v1/workflow/callbacks/123/retry").isGranted()).isFalse();
+    }
+
+    @Test
     @DisplayName("User with permission for different module CANNOT activate workflow definitions")
     void testUserWithDifferentModulePermissionCannotActivateWorkflowDefinition() {
         PermissionResponse taskWritePerm = PermissionResponse.builder()
@@ -401,5 +504,15 @@ class SsoAuthorizationManagerTest {
         AuthenticatedUser taskUser = buildUser(List.of(), List.of(taskWritePerm));
 
         assertThat(decide(taskUser, "PATCH", "/api/v1/workflow/definitions/123/activate").isGranted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Unmatched routes remain protected (fail closed)")
+    void testUnmatchedRoutesFailClosed() {
+        PermissionResponse readPerm = PermissionResponse.builder()
+                .moduleName("WORKFLOW_DEFINITIONS").action("READ").active(true).allowed(true).build();
+        AuthenticatedUser user = buildUser(List.of(), List.of(readPerm));
+
+        assertThat(decide(user, "GET", "/api/v1/unmapped/route").isGranted()).isFalse();
     }
 }

@@ -176,12 +176,6 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
         String suffixAction = properties.actionForSuffix(uri);
         if (suffixAction != null && !suffixAction.isBlank()) {
             actions.add(suffixAction.toUpperCase());
-            // For mutation suffixes (like ACTIVATE/DEACTIVATE) or mutation methods, standard method actions
-            // (e.g. UPDATE, WRITE) also satisfy the requirement under standard FBAC.
-            if ("ACTIVATE".equalsIgnoreCase(suffixAction) || "DEACTIVATE".equalsIgnoreCase(suffixAction)
-                    || isMutationMethod(method)) {
-                actions.addAll(properties.actionsForMethod(method));
-            }
         } else {
             actions.addAll(properties.actionsForMethod(method));
         }
