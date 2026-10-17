@@ -429,6 +429,10 @@ const IntegrationsSettings = lazy(() => import("../pages/settings/IntegrationsSe
 const AuditLogsSettings = lazy(() => import("../pages/settings/AuditLogsSettings"));
 const PreferencesSettings = lazy(() => import("../pages/settings/PreferencesSettings"));
 const SubscriptionPlansSettings = lazy(() => import("../pages/settings/SubscriptionPlansSettings"));
+const InventorySettingsPage = lazy(() => import("../pages/settings/InventorySettingsPage"));
+const WorkflowSettingsPage = lazy(() => import("../pages/settings/WorkflowSettingsPage"));
+const CrmSettingsPage = lazy(() => import("../pages/settings/CrmSettingsPage"));
+const SalesSettings = lazy(() => import("../features/finance/pages/SalesSettings"));
 
 export default function AppRoutes() {
   const isRehydrated = useAppSelector(selectIsRehydrated);
@@ -849,6 +853,13 @@ export default function AppRoutes() {
           <Route path="/settings/users" element={<Navigate to="/settings/security/users" replace />} />
           <Route path="/settings/features" element={<Navigate to="/settings/security/features" replace />} />
           <Route path="/settings/permissions" element={<Navigate to="/settings/security/permissions" replace />} />
+          <Route path="/settings/sales" element={<SalesSettings />} />
+          <Route path="/settings/account" element={<SalesSettings />} />
+          <Route path="/settings/inventory" element={<InventorySettingsPage />} />
+          <Route path="/settings/workflow" element={<WorkflowSettingsPage />} />
+          <Route path="/settings/crm" element={<CrmSettingsPage />} />
+          <Route path="/settings/organization" element={<OrganizationSettingsPage />} />
+          <Route path="/settings/my-account" element={<Navigate to="/profile" replace />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
@@ -941,6 +952,13 @@ export default function AppRoutes() {
           <Route path="settings/audit-logs" element={<AuditLogsSettings />} />
           <Route path="settings/preferences" element={<PreferencesSettings />} />
           <Route path="settings/plans" element={<SubscriptionPlansSettings />} />
+          <Route path="settings/sales" element={<SalesSettings />} />
+          <Route path="settings/account" element={<SalesSettings />} />
+          <Route path="settings/inventory" element={<InventorySettingsPage />} />
+          <Route path="settings/workflow" element={<WorkflowSettingsPage />} />
+          <Route path="settings/crm" element={<CrmSettingsPage />} />
+          <Route path="settings/organization" element={<OrganizationSettingsPage />} />
+          <Route path="settings/my-account" element={<Navigate to="profile" replace />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="*" element={<CompanyEntryRedirect />} />
         </Route>

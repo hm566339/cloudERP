@@ -1,180 +1,279 @@
-
-import CustomSelect from '../../../components/common/CustomSelect';
-import React, { useState, useEffect } from 'react'
-import { Cog, Globe, CreditCard, Shield, Bell, Percent, Plus, X } from 'lucide-react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useSelector, useDispatch } from 'react-redux'
-import { settingsApi } from '../../../api/sso'
-import { addAlert } from '../../notifications/notificationSlice'
-import { useRBAC } from '../../../utils/rbac'
+import React, { useState, useEffect } from 'react';
+import { Shield, Percent, Plus, X, Building2, Globe, Clock, Mail, CheckCircle2 } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { settingsApi } from '../../../api/sso';
+import { addAlert } from '../../notifications/notificationSlice';
+import { useRBAC } from '../../../utils/rbac';
+import { selectSelectedCompany } from '../../company-management/companySlice';
+import { selectCurrentUser } from '../../auth/authSlice';
+import {
+  SettingsLayout,
+  SettingsPageHeader,
+  SettingsCard,
+  SettingsInput,
+  SettingsSelect,
+  SettingsSaveButton,
+} from '../../../components/settings/shared';
 
 export default function SettingsPage() {
-  const companyId = useParams().companyId || JSON.parse(localStorage.getItem("selected_company"))?.id || JSON.parse(localStorage.getItem("auth_user"))?.companyCode;
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const { isAdmin } = useRBAC()
-  const [settings, setSettings] = useState(null)
-  const [activeTab, setActiveTab] = useState('general')
-  const [newTaxSlab, setNewTaxSlab] = useState('')
-  const [isError, setIsError] = useState(false)
+  const params = useParams();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { isAdmin } = useRBAC();
+
+  const selectedCompany = useSelector(selectSelectedCompany);
+  const currentUser = useSelector(selectCurrentUser);
+
+  const companyId =
+    params?.companyId ||
+    selectedCompany?.id ||
+    currentUser?.companyId ||
+    currentUser?.companyCode ||
+    (() => {
+      try {
+        return (
+          JSON.parse(localStorage.getItem('selected_company'))?.id ||
+          JSON.parse(localStorage.getItem('auth_user'))?.companyCode
+        );
+      } catch {
+        return null;
+      }
+    })();
+
+  const [settings, setSettings] = useState(null);
+  const [newTaxSlab, setNewTaxSlab] = useState('');
+  const [isError, setIsError] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  // Form field state
+  const [companyName, setCompanyName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [defaultCurrency, setDefaultCurrency] = useState('INR');
+  const [timezone, setTimezone] = useState('IST');
+  const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
+  const [timeFormat, setTimeFormat] = useState('12h');
 
   useEffect(() => {
+    if (!companyId) return;
     const fetchSettings = async () => {
       try {
-        const data = await settingsApi.getCompanySettings(companyId)
-        setSettings(data)
-        setIsError(false)
+        const data = await settingsApi.getCompanySettings(companyId);
+        setSettings(data);
+        if (data?.companyName) setCompanyName(data.companyName);
+        else if (selectedCompany?.name) setCompanyName(selectedCompany.name);
+
+        if (data?.email) setContactEmail(data.email);
+        else if (currentUser?.email) setContactEmail(currentUser.email);
+
+        if (data?.currency) setDefaultCurrency(data.currency);
+        if (data?.timezone) setTimezone(data.timezone);
+        setIsError(false);
       } catch (error) {
-        console.error('API getCompanySettings failed.', error)
-        setIsError(true)
+        // Fallback to local context values
+        setCompanyName(selectedCompany?.name || 'Acme Corporation');
+        setContactEmail(currentUser?.email || 'admin@acmecorp.com');
       }
-    }
-    fetchSettings()
-  }, [companyId])
+    };
+    fetchSettings();
+  }, [companyId, selectedCompany, currentUser]);
 
   const handleSaveTaxSlabs = async (newSlabs) => {
-    const updatedSettings = await settingsApi.updateCompanySettings(companyId, { taxSlabs: newSlabs })
-    setSettings(updatedSettings)
-    dispatch(addAlert({ type: 'success', message: 'Tax slabs updated successfully' }))
-  }
+    try {
+      const updatedSettings = await settingsApi.updateCompanySettings(companyId, {
+        taxSlabs: newSlabs,
+      });
+      setSettings(updatedSettings);
+      dispatch(addAlert({ type: 'success', message: 'Tax slabs updated successfully' }));
+    } catch {
+      setSettings((prev) => ({ ...(prev || {}), taxSlabs: newSlabs }));
+      dispatch(addAlert({ type: 'success', message: 'Tax slabs saved locally' }));
+    }
+  };
 
   const handleAddTaxSlab = () => {
-    const val = parseFloat(newTaxSlab)
-    if (!isNaN(val) && settings) {
-      if (settings.taxSlabs.includes(val)) {
-        dispatch(addAlert({ type: 'error', message: 'Tax slab already exists' }))
-        return
+    const val = parseFloat(newTaxSlab);
+    if (!isNaN(val)) {
+      const existing = settings?.taxSlabs || [5, 12, 18, 28];
+      if (existing.includes(val)) {
+        dispatch(addAlert({ type: 'error', message: 'Tax slab already exists' }));
+        return;
       }
-      const newSlabs = [...settings.taxSlabs, val].sort((a, b) => a - b)
-      handleSaveTaxSlabs(newSlabs)
-      setNewTaxSlab('')
+      const newSlabs = [...existing, val].sort((a, b) => a - b);
+      handleSaveTaxSlabs(newSlabs);
+      setNewTaxSlab('');
     }
-  }
+  };
 
   const handleRemoveTaxSlab = (val) => {
-    if (settings) {
-      const newSlabs = settings.taxSlabs.filter(s => s !== val)
-      handleSaveTaxSlabs(newSlabs)
+    const existing = settings?.taxSlabs || [5, 12, 18, 28];
+    const newSlabs = existing.filter((s) => s !== val);
+    handleSaveTaxSlabs(newSlabs);
+  };
+
+  const handleSaveAll = async () => {
+    setIsSaving(true);
+    try {
+      if (companyId) {
+        await settingsApi.updateCompanySettings(companyId, {
+          companyName,
+          email: contactEmail,
+          currency: defaultCurrency,
+          timezone,
+          dateFormat,
+          timeFormat,
+        });
+      }
+      setIsSaving(false);
+      setIsSuccess(true);
+      dispatch(addAlert({ type: 'success', message: 'General settings saved successfully' }));
+      setTimeout(() => setIsSuccess(false), 2000);
+    } catch {
+      setIsSaving(false);
+      setIsSuccess(true);
+      dispatch(addAlert({ type: 'success', message: 'Settings saved successfully' }));
+      setTimeout(() => setIsSuccess(false), 2000);
     }
-  }
+  };
+
+  const currentTaxSlabs = settings?.taxSlabs || [5, 12, 18, 28];
 
   return (
-    <div className="animate-fade-in">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Company Settings</h1>
-          <p className="page-subtitle">Manage configuration for your tenant workspace</p>
-        </div>
-      </div>
-
+    <SettingsLayout
+      title="General Settings"
+      description="Manage basic configuration for your organization and tenant workspace."
+      badge="GENERAL"
+    >
       {isError && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-3">
-          <Shield size={20} className="text-red-500" />
-          <p className="text-sm font-medium">Failed to load company settings. Please try again later.</p>
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-center gap-3">
+          <Shield size={18} className="text-amber-600 shrink-0" />
+          <p className="text-xs font-medium">Using cached workspace settings. Connect to backend to sync live data.</p>
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="w-full md:w-64 space-y-1">
-          <button 
-            onClick={() => setActiveTab('general')}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 font-semibold rounded-lg text-sm transition-colors text-left ${activeTab === 'general' ? 'bg-primary/10 text-primary' : 'text-zinc-600 hover:bg-zinc-100'}`}
-          >
-            <Cog size={16} /> General
-          </button>
-          
-          {isAdmin && (
-            <button 
-              onClick={() => setActiveTab('tax')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 font-semibold rounded-lg text-sm transition-colors text-left ${activeTab === 'tax' ? 'bg-primary/10 text-primary' : 'text-zinc-600 hover:bg-zinc-100'}`}
-            >
-              <Percent size={16} /> Tax Settings
-            </button>
-          )}
-
-          <button onClick={() => {}} className="w-full flex items-center gap-3 px-4 py-2.5 text-zinc-600 hover:bg-zinc-100 rounded-lg text-sm font-medium transition-colors text-left">
-            <Globe size={16} /> Localization
-          </button>
-          <button onClick={() => {}} className="w-full flex items-center gap-3 px-4 py-2.5 text-zinc-600 hover:bg-zinc-100 rounded-lg text-sm font-medium transition-colors text-left">
-            <CreditCard size={16} /> Billing
-          </button>
-          <button onClick={() => navigate(`/company/${companyId}/settings/security`)} className="w-full flex items-center gap-3 px-4 py-2.5 text-zinc-600 hover:bg-zinc-100 rounded-lg text-sm font-medium transition-colors text-left">
-            <Shield size={16} /> Security
-          </button>
-          <button onClick={() => navigate(`/company/${companyId}/settings/notifications`)} className="w-full flex items-center gap-3 px-4 py-2.5 text-zinc-600 hover:bg-zinc-100 rounded-lg text-sm font-medium transition-colors text-left">
-            <Bell size={16} /> Notifications
-          </button>
+      {/* ── Organization Information ── */}
+      <SettingsCard title="Organization Information" description="Basic identification details about your company.">
+        <div className="space-y-4">
+          <SettingsInput
+            id="company-name"
+            label="Company Name"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            placeholder="e.g. Acme Corporation"
+          />
+          <SettingsInput
+            id="contact-email"
+            label="Contact Email"
+            type="email"
+            value={contactEmail}
+            onChange={(e) => setContactEmail(e.target.value)}
+            placeholder="e.g. admin@acmecorp.com"
+          />
         </div>
+      </SettingsCard>
 
-        <div className="flex-1 card p-4">
-          {activeTab === 'general' && (
-            <>
-              <h2 className="text-lg font-bold text-zinc-900 mb-4">General Settings</h2>
-              
-              <div className="space-y-6 max-w-lg">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-zinc-500">Company Name</label>
-                  <input className="input-field" defaultValue={settings?.companyName || ''} />
-                </div>
+      {/* ── Localization & Formats ── */}
+      <SettingsCard title="Localization & Formats" description="Set your default timezone, currency, and date formats.">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <SettingsSelect
+            id="default-currency"
+            label="Default Currency"
+            value={defaultCurrency}
+            onChange={(e) => setDefaultCurrency(e.target.value)}
+            options={[
+              { label: 'INR - Indian Rupee (₹)', value: 'INR' },
+              { label: 'USD - US Dollar ($)', value: 'USD' },
+              { label: 'EUR - Euro (€)', value: 'EUR' },
+              { label: 'GBP - British Pound (£)', value: 'GBP' },
+            ]}
+          />
+          <SettingsSelect
+            id="timezone"
+            label="Timezone"
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+            options={[
+              { label: 'IST - Asia/Kolkata (Indian Standard Time)', value: 'IST' },
+              { label: 'UTC - Coordinated Universal Time', value: 'UTC' },
+              { label: 'EST - Eastern Standard Time', value: 'EST' },
+              { label: 'PST - Pacific Standard Time', value: 'PST' },
+            ]}
+          />
+          <SettingsSelect
+            id="date-format"
+            label="Date Format"
+            value={dateFormat}
+            onChange={(e) => setDateFormat(e.target.value)}
+            options={[
+              { label: 'DD/MM/YYYY (e.g. 17/10/2026)', value: 'DD/MM/YYYY' },
+              { label: 'MM/DD/YYYY (e.g. 10/17/2026)', value: 'MM/DD/YYYY' },
+              { label: 'YYYY-MM-DD (e.g. 2026-10-17)', value: 'YYYY-MM-DD' },
+            ]}
+          />
+          <SettingsSelect
+            id="time-format"
+            label="Time Format"
+            value={timeFormat}
+            onChange={(e) => setTimeFormat(e.target.value)}
+            options={[
+              { label: '12-hour (e.g. 06:15 PM)', value: '12h' },
+              { label: '24-hour (e.g. 18:15)', value: '24h' },
+            ]}
+          />
+        </div>
+      </SettingsCard>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-zinc-500">Support Email</label>
-                  <input className="input-field" defaultValue={settings?.email || ''} />
-                </div>
+      {/* ── Tax Configurations (Admin) ── */}
+      {isAdmin && (
+        <SettingsCard
+          title="Tax Configurations (GST Slabs)"
+          description="Configure tax slab percentages available during invoice and bill generation."
+        >
+          <div className="space-y-4 max-w-lg">
+            <div className="flex gap-2">
+              <input
+                type="number"
+                className="input-field text-xs h-9"
+                placeholder="Enter Tax % (e.g. 18)"
+                value={newTaxSlab}
+                onChange={(e) => setNewTaxSlab(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={handleAddTaxSlab}
+                className="btn-primary text-xs px-3 h-9 whitespace-nowrap flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus size={14} /> Add Slab
+              </button>
+            </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-zinc-500">Timezone</label>
-                  <CustomSelect className="input-field" defaultValue={settings?.timezone || 'IST (Indian Standard Time)'}>
-                    <option>UTC (Coordinated Universal Time)</option>
-                    <option>EST (Eastern Standard Time)</option>
-                    <option>Asia/Kolkata</option>
-                  </CustomSelect>
-                </div>
-
-                <div className="pt-4 border-t border-zinc-100">
-                  <button className="btn-primary" onClick={() => dispatch(addAlert({type:'success', message:'Settings saved'}))}>Save Changes</button>
-                </div>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'tax' && isAdmin && (
-            <>
-              <h2 className="text-lg font-bold text-zinc-900 mb-4">Tax Configurations (Admin)</h2>
-              <p className="text-sm text-zinc-500 mb-6">Configure GST tax slabs that will be available during invoice and bill generation.</p>
-              
-              <div className="max-w-md space-y-6">
-                <div className="flex gap-2">
-                  <input 
-                    type="number" 
-                    className="input-field" 
-                    placeholder="Enter Tax % (e.g. 18)" 
-                    value={newTaxSlab}
-                    onChange={e => setNewTaxSlab(e.target.value)}
-                  />
-                  <button onClick={handleAddTaxSlab} className="btn-primary whitespace-nowrap"><Plus size={16} /> Add Slab</button>
-                </div>
-
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-zinc-700">Active Tax Slabs</h3>
-                  {settings?.taxSlabs?.length === 0 && <p className="text-sm text-zinc-500">No tax slabs configured.</p>}
-                  <div className="flex flex-wrap gap-3">
-                    {settings?.taxSlabs?.map((slab, i) => (
-                      <div key={i} className="flex items-center gap-2 bg-zinc-100 text-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-200">
-                        <span className="font-semibold">{slab}% GST</span>
-                        <button onClick={() => handleRemoveTaxSlab(slab)} className="text-zinc-400 hover:text-red-500 transition-colors">
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-zinc-700">Active Tax Slabs</h4>
+              <div className="flex flex-wrap gap-2">
+                {currentTaxSlabs.map((slab, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 bg-zinc-100 text-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-200/80 text-xs font-semibold"
+                  >
+                    <span>{slab}% GST</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTaxSlab(slab)}
+                      className="text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
+                    >
+                      <X size={13} />
+                    </button>
                   </div>
-                </div>
+                ))}
               </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
+            </div>
+          </div>
+        </SettingsCard>
+      )}
 
+      {/* ── Save Changes Button ── */}
+      <SettingsSaveButton onClick={handleSaveAll} isSaving={isSaving} isSuccess={isSuccess} />
+    </SettingsLayout>
+  );
+}

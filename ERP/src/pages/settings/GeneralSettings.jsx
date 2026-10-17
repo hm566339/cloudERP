@@ -1,14 +1,29 @@
 import React, { useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectSelectedCompany } from '../../features/company-management/companySlice';
+import { selectCurrentUser } from '../../features/auth/authSlice';
+import { addAlert } from '../../features/notifications/notificationSlice';
 import {
   SettingsLayout,
   SettingsPageHeader,
   SettingsCard,
   SettingsInput,
   SettingsSelect,
-  SettingsSaveButton
+  SettingsSaveButton,
 } from '../../components/settings/shared';
 
 export default function GeneralSettings() {
+  const dispatch = useAppDispatch();
+  const selectedCompany = useAppSelector(selectSelectedCompany);
+  const currentUser = useAppSelector(selectCurrentUser);
+
+  const [companyName, setCompanyName] = useState(selectedCompany?.name || 'Acme Corporation');
+  const [contactEmail, setContactEmail] = useState(currentUser?.email || 'admin@acmecorp.com');
+  const [defaultCurrency, setDefaultCurrency] = useState('INR');
+  const [timezone, setTimezone] = useState('IST');
+  const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
+  const [timeFormat, setTimeFormat] = useState('12h');
+
   const [isSaving, setIsSaving] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -17,28 +32,37 @@ export default function GeneralSettings() {
     setTimeout(() => {
       setIsSaving(false);
       setIsSuccess(true);
+      dispatch(
+        addAlert({
+          type: 'success',
+          message: 'General settings saved successfully',
+        })
+      );
       setTimeout(() => setIsSuccess(false), 2000);
-    }, 800);
+    }, 600);
   };
 
   return (
-    <SettingsLayout>
-      <SettingsPageHeader
-        title="General Settings"
-        description="Manage basic configuration for your organization and tenant workspace."
-      />
-
+    <SettingsLayout
+      title="General Settings"
+      description="Manage basic configuration for your organization and tenant workspace."
+      badge="GENERAL"
+    >
       <SettingsCard title="Organization Information" description="Basic details about your company.">
         <SettingsInput
           id="company-name"
           label="Company Name"
-          defaultValue="Acme Corporation"
+          value={companyName}
+          onChange={(e) => setCompanyName(e.target.value)}
+          placeholder="e.g. Acme Corporation"
         />
         <SettingsInput
           id="contact-email"
           label="Contact Email"
-          defaultValue="admin@acmecorp.com"
           type="email"
+          value={contactEmail}
+          onChange={(e) => setContactEmail(e.target.value)}
+          placeholder="e.g. admin@acmecorp.com"
         />
       </SettingsCard>
 
@@ -47,34 +71,43 @@ export default function GeneralSettings() {
           <SettingsSelect
             id="default-currency"
             label="Default Currency"
+            value={defaultCurrency}
+            onChange={(e) => setDefaultCurrency(e.target.value)}
             options={[
-              { label: 'USD - US Dollar', value: 'USD' },
-              { label: 'EUR - Euro', value: 'EUR' },
-              { label: 'GBP - British Pound', value: 'GBP' },
-              { label: 'INR - Indian Rupee', value: 'INR' },
+              { label: 'INR - Indian Rupee (₹)', value: 'INR' },
+              { label: 'USD - US Dollar ($)', value: 'USD' },
+              { label: 'EUR - Euro (€)', value: 'EUR' },
+              { label: 'GBP - British Pound (£)', value: 'GBP' },
             ]}
           />
           <SettingsSelect
             id="timezone"
             label="Timezone"
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
             options={[
+              { label: 'IST (Indian Standard Time)', value: 'IST' },
               { label: 'UTC (Coordinated Universal Time)', value: 'UTC' },
               { label: 'EST (Eastern Standard Time)', value: 'EST' },
-              { label: 'IST (Indian Standard Time)', value: 'IST' },
+              { label: 'PST (Pacific Standard Time)', value: 'PST' },
             ]}
           />
           <SettingsSelect
             id="date-format"
             label="Date Format"
+            value={dateFormat}
+            onChange={(e) => setDateFormat(e.target.value)}
             options={[
-              { label: 'MM/DD/YYYY', value: 'MM/DD/YYYY' },
-              { label: 'DD/MM/YYYY', value: 'DD/MM/YYYY' },
-              { label: 'YYYY-MM-DD', value: 'YYYY-MM-DD' },
+              { label: 'DD/MM/YYYY (e.g. 17/10/2026)', value: 'DD/MM/YYYY' },
+              { label: 'MM/DD/YYYY (e.g. 10/17/2026)', value: 'MM/DD/YYYY' },
+              { label: 'YYYY-MM-DD (e.g. 2026-10-17)', value: 'YYYY-MM-DD' },
             ]}
           />
           <SettingsSelect
             id="time-format"
             label="Time Format"
+            value={timeFormat}
+            onChange={(e) => setTimeFormat(e.target.value)}
             options={[
               { label: '12-hour (AM/PM)', value: '12h' },
               { label: '24-hour', value: '24h' },

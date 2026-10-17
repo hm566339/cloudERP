@@ -39,6 +39,7 @@ import { addAlert } from '../../notifications/notificationSlice';
 import { useDispatch } from 'react-redux';
 import PageHeader from '../../../components/common/PageHeader';
 import ConfirmModal from '../../../components/common/ConfirmModal';
+import SettingsNavbar from '../../../components/settings/SettingsNavbar';
 
 const DOCUMENT_TYPES = [
   { value: 'QUOTATION', label: 'Quotation' },
@@ -114,6 +115,9 @@ export default function SalesSettings() {
 
   return (
     <div className="w-full h-full flex flex-col min-h-0 bg-zinc-50/50">
+      <div className="p-4 md:p-6 pb-2 shrink-0 max-w-6xl mx-auto w-full">
+        <SettingsNavbar activeTab="module_account" />
+      </div>
       {/* ── Page Header with Document Type Switcher ── */}
       <PageHeader
         title="Sales Settings"

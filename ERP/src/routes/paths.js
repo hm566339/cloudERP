@@ -106,6 +106,11 @@ export const PATHS = {
     NOTIFICATIONS: '/settings/notifications',
     INTEGRATIONS: '/settings/integrations',
     PLANS: '/settings/plans',
+    ACCOUNT: '/settings/sales',
+    SALES: '/settings/sales',
+    INVENTORY: '/settings/inventory',
+    WORKFLOW: '/settings/workflow',
+    CRM: '/settings/crm',
   },
   SUPER_ADMIN: {
     ROOT: '/super-admin',
