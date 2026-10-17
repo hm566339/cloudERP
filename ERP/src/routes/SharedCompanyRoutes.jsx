@@ -45,6 +45,7 @@ const ProductSerialManagement = lazy(() => import('../features/inventory/pages/P
 const ProductUomManagement = lazy(() => import('../features/inventory/pages/ProductUomManagement'));
 const GenericEntityDetails = lazy(() => import('../features/inventory/pages/GenericEntityDetails'));
 const WarehouseLocationManagementPage = lazy(() => import('../features/inventory/pages/WarehouseLocationManagementPage'));
+const StockTracking = lazy(() => import('../features/inventory/pages/StockTracking'));
 
 
 // ─── Sales & CRM ────────────────────────────────────────────────────────
@@ -129,8 +130,12 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
         <Route path={`${prefix}inventory/snapshots/:id`} element={<GenericEntityDetails endpoint="/api/inventory/inventory-snapshots" entityName="Inventory Snapshot" />} />
         <Route path={`${prefix}inventory/valuations`} element={<InventoryValuationManagement />} />
         <Route path={`${prefix}inventory/valuations/:id`} element={<GenericEntityDetails endpoint="/api/inventory/inventory-valuations" entityName="Inventory Valuation" />} />
+        <Route path={`${prefix}inventory/opening-stock`} element={<OpeningStockManagement />} />
         <Route path={`${prefix}inventory/opening-stocks`} element={<OpeningStockManagement />} />
         <Route path={`${prefix}inventory/opening-stocks/:id`} element={<OpeningStockDetails />} />
+        <Route path={`${prefix}inventory/stock`} element={<StockTracking />} />
+        <Route path={`${prefix}inventory/stocks`} element={<StockTracking />} />
+        <Route path={`${prefix}inventory/current-stock`} element={<StockTracking />} />
         <Route path={`${prefix}inventory/stock-movements`} element={<StockMovementManagement />} />
         <Route path={`${prefix}inventory/stock-movements/:id`} element={<GenericEntityDetails endpoint="/api/inventory/stock-movements" entityName="Stock Movement" />} />
         <Route path={`${prefix}inventory/stock-movement-lines`} element={<StockMovementLineManagement />} />
@@ -153,13 +158,15 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
         <Route path={`${prefix}inventory/product-serials/:id`} element={<GenericEntityDetails endpoint="/api/inventory/product-serials" entityName="Product Serial" />} />
         <Route path={`${prefix}inventory/product-uoms`} element={<ProductUomManagement />} />
         <Route path={`${prefix}inventory/product-uoms/:id`} element={<GenericEntityDetails endpoint="/api/inventory/product-uoms" entityName="Product UOM" />} />
+        <Route path={`${prefix}inventory/reports`} element={<InventorySnapshotManagement />} />
+        <Route path={`${prefix}inventory/inventory-posting`} element={<InventoryDashboard />} />
 
         {/* Inventory convenience aliases */}
         <Route path={`${prefix}inventory/movements`} element={<Navigate to={`../${prefix}inventory/stock-movements`} replace />} />
         <Route path={`${prefix}inventory/adjustments`} element={<Navigate to={`../${prefix}inventory/stock-adjustments`} replace />} />
         <Route path={`${prefix}inventory/transfers`} element={<Navigate to={`../${prefix}inventory/stock-transfers`} replace />} />
         <Route path={`${prefix}inventory/valuation`} element={<Navigate to={`../${prefix}inventory/valuations`} replace />} />
-        <Route path={`${prefix}inventory/warehouses`} element={<Navigate to={`../${prefix}inventory/warehouse`} replace />} />
+        <Route path={`${prefix}inventory/warehouses`} element={<WarehouseManagement />} />
       </Route>
 
       {/* Sales & CRM */}

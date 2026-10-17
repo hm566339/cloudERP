@@ -6,6 +6,7 @@ import {
   hasPermission,
   MODULE_UI_METADATA,
 } from '../dynamicSidebarConfig.js';
+import { isItemOrChildActive } from '../SidebarNavUtils.js';
 import { CANONICAL_MODULES, buildAuthContext } from '../../utils/moduleNormalization.js';
 
 describe('Fully Dynamic Role-Based ERP Sidebar Navigation Suite', () => {
@@ -474,5 +475,81 @@ describe('Fully Dynamic Role-Based ERP Sidebar Navigation Suite', () => {
     assert.strictEqual(hasPermission(authCtx, 'CUSTOMERS', 'READ'), false);
     assert.strictEqual(hasPermission(authCtx, 'CUSTOMERS', 'DELETE'), true);
     assert.strictEqual(hasPermission(authCtx, 'DASHBOARD', 'READ'), true);
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SCENARIO 10: Inventory Stock Operations Navigation & Current Stock Active Resolution
+  // ──────────────────────────────────────────────────────────────────────────
+  it('Scenario 10: Current Stock sidebar item renders with correct path and resolves active parent state', () => {
+    const invAuthContext = {
+      user: { id: 'inv-manager', role: 'inventory_manager' },
+      currentCompany: { id: 'comp-100', code: 'ENT_CO' },
+      accessMode: 'FULL',
+      modules: [{ code: 'inventory', canonical: 'INVENTORY', active: true }],
+      features: [
+        { featureCode: 'STOCK', active: true },
+        { featureCode: 'STOCK_MOVEMENTS', active: true },
+        { featureCode: 'STOCK_TRANSFERS', active: true },
+        { featureCode: 'STOCK_RESERVATIONS', active: true },
+        { featureCode: 'STOCK_ADJUSTMENTS', active: true },
+        { featureCode: 'OPENING_STOCK', active: true },
+      ],
+      permissions: [
+        'STOCK:READ',
+        'STOCK_MOVEMENTS:READ',
+        'STOCK_TRANSFERS:READ',
+        'STOCK_RESERVATIONS:READ',
+        'STOCK_ADJUSTMENTS:READ',
+        'OPENING_STOCK:READ',
+      ],
+    };
+
+    const links = buildDynamicSidebar({
+      authContext: invAuthContext,
+      companyId: 'comp-100',
+      userRole: 'inventory_manager',
+    });
+
+    const invSection = links.find((l) => l.id === 'inventory');
+    assert.ok(invSection, 'Inventory section must be generated');
+
+    const stockOpsGroup = invSection.children.find((c) => c.id === 'inv-stock-ops-group');
+    assert.ok(stockOpsGroup, 'Stock Operations group must exist');
+    assert.strictEqual(stockOpsGroup.label, 'Stock Operations');
+
+    // Verify Current Stock menu item
+    const currentStockItem = stockOpsGroup.children.find((c) => c.id === 'inv-current-stock');
+    assert.ok(currentStockItem, 'Current Stock menu item must exist');
+    assert.strictEqual(currentStockItem.label, 'Current Stock');
+    assert.strictEqual(currentStockItem.path, '/company/comp-100/inventory/stock');
+
+    // Verify sibling Stock Operations menu items
+    const movementsItem = stockOpsGroup.children.find((c) => c.id === 'inv-stock-movements');
+    assert.strictEqual(movementsItem.path, '/company/comp-100/inventory/stock-movements');
+
+    const transfersItem = stockOpsGroup.children.find((c) => c.id === 'inv-transfer');
+    assert.strictEqual(transfersItem.path, '/company/comp-100/inventory/stock-transfers');
+
+    const reservationsItem = stockOpsGroup.children.find((c) => c.id === 'inv-stock-reservations');
+    assert.strictEqual(reservationsItem.path, '/company/comp-100/inventory/stock-reservations');
+
+    const adjustmentsItem = stockOpsGroup.children.find((c) => c.id === 'inv-stock-adjustments');
+    assert.strictEqual(adjustmentsItem.path, '/company/comp-100/inventory/stock-adjustments');
+
+    const openingStockItem = stockOpsGroup.children.find((c) => c.id === 'inv-opening-stock');
+    assert.strictEqual(openingStockItem.path, '/company/comp-100/inventory/opening-stock');
+
+    // Verify active matching
+    const currentStockUrl = '/company/comp-100/inventory/stock';
+    assert.strictEqual(isItemOrChildActive(currentStockItem, currentStockUrl), true, 'Current stock item must be active on stock URL');
+    assert.strictEqual(isItemOrChildActive(stockOpsGroup, currentStockUrl), true, 'Stock operations parent must be active to keep menu expanded');
+    assert.strictEqual(isItemOrChildActive(invSection, currentStockUrl), true, 'Inventory module section must be active on stock URL');
+
+    // Verify no false-positive active states on siblings
+    assert.strictEqual(isItemOrChildActive(movementsItem, currentStockUrl), false);
+    assert.strictEqual(isItemOrChildActive(transfersItem, currentStockUrl), false);
+    assert.strictEqual(isItemOrChildActive(reservationsItem, currentStockUrl), false);
+    assert.strictEqual(isItemOrChildActive(adjustmentsItem, currentStockUrl), false);
+    assert.strictEqual(isItemOrChildActive(openingStockItem, currentStockUrl), false);
   });
 });

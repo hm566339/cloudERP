@@ -55,6 +55,8 @@ export function SharedInventoryRoutes({ prefix = "" }) {
       <Route path={`${prefix}opening-stocks`} element={<OpeningStockManagement />} />
       <Route path={`${prefix}opening-stocks/:id`} element={<OpeningStockDetails />} />
       <Route path={`${prefix}stock`} element={<StockTracking />} />
+      <Route path={`${prefix}stocks`} element={<StockTracking />} />
+      <Route path={`${prefix}current-stock`} element={<StockTracking />} />
       <Route path={`${prefix}stock-movements`} element={<StockMovementManagement />} />
       <Route path={`${prefix}stock-movements/:id`} element={<GenericEntityDetails endpoint="/api/inventory/stock-movements" entityName="Stock Movement" />} />
       <Route path={`${prefix}stock-movement-lines`} element={<StockMovementLineManagement />} />
