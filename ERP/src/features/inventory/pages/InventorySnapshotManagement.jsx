@@ -485,6 +485,7 @@ export default function InventorySnapshotManagement() {
       <PageHeader
         title="Inventory Snapshots"
         description="Capture point-in-time stock quantities and valuations for audits"
+        icon={Camera}
       >
         <RequirePermission module="INVENTORY" action="CREATE">
           <button 
@@ -509,6 +510,7 @@ export default function InventorySnapshotManagement() {
           rowKey="id"
           loading={isLoading}
           isRefreshing={isFetching}
+          onRowClick={(row) => navigate(`/inventory/snapshots/${row.id}`)}
 
           // Search
           searchable

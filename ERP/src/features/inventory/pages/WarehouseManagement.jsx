@@ -3,7 +3,7 @@ import useListQuery from '../../../hooks/useListQuery';
 import SearchInput from '../../../components/common/SearchInput';
 import Pagination from '../../../components/common/Pagination';
 import { 
-  Plus, Edit2, Trash2, Eye, MapPin
+  Plus, Edit2, Trash2, Eye, MapPin, Warehouse
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRoutePath } from '../../../hooks/useRoutePath';
@@ -349,6 +349,7 @@ export default function WarehouseManagement() {
       <PageHeader
         title="Warehouse Management"
         description="Manage physical storage locations, capacities, and types"
+        icon={Warehouse}
       >
         <RequirePermission module="WAREHOUSES" action="CREATE">
           <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
@@ -368,6 +369,7 @@ export default function WarehouseManagement() {
           rowKey="id"
           loading={isLoading}
           isRefreshing={isFetching}
+          onRowClick={(row) => navigate(buildPath(`/inventory/warehouse/${row.id}`))}
 
           searchable
           searchValue={filters.searchKey || ''}

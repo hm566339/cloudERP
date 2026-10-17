@@ -252,6 +252,7 @@ export default function WarehouseLocationManagementPage() {
       <PageHeader
         title="Warehouse Locations"
         description="Manage physical locations, zones, and bins globally"
+        icon={MapPin}
       >
         <RequirePermission module="WAREHOUSE_LOCATIONS" action="CREATE">
           <button 
@@ -275,6 +276,7 @@ export default function WarehouseLocationManagementPage() {
           rowKey="id"
           loading={isLoading}
           isRefreshing={isFetching}
+          onRowClick={(row) => setSelectedLocationForView(row.id)}
 
           searchable
           searchValue={filters.searchKey || ''}

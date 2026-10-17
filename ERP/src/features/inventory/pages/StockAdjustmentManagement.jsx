@@ -3,7 +3,7 @@ import useListQuery from '../../../hooks/useListQuery';
 import SearchInput from '../../../components/common/SearchInput';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Plus, Edit2, Trash2, Eye, Calendar
+  Plus, Edit2, Trash2, Eye, Calendar, Scale
 } from 'lucide-react';
 import { 
   useStockAdjustmentList, 
@@ -241,6 +241,7 @@ export default function StockAdjustmentManagement() {
       <PageHeader
         title="Stock Adjustments"
         description="Manage manual stock adjustments for damages, shrinkage, or corrections"
+        icon={Scale}
       >
         <RequirePermission module="STOCK_ADJUSTMENTS" action="CREATE">
           <button 
@@ -264,6 +265,7 @@ export default function StockAdjustmentManagement() {
           rowKey="id"
           loading={isLoading}
           isRefreshing={isFetching}
+          onRowClick={(row) => navigate(buildPath(`/inventory/stock-adjustments/${row.id}`))}
 
           // Search
           searchable

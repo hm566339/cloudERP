@@ -363,6 +363,7 @@ export default function ProductPriceManagement() {
       <PageHeader
         title="Product Prices"
         description="Manage pricing tiers, multi-currency rates, and validity periods"
+        icon={Tag}
       >
         <RequirePermission module="INVENTORY" action="CREATE">
           <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
@@ -382,6 +383,7 @@ export default function ProductPriceManagement() {
           rowKey="id"
           loading={isLoading || isLoadingProducts}
           isRefreshing={isFetching}
+          onRowClick={(row) => setViewingPrice(row)}
           
           searchable
           searchValue={filters.searchKey || ''}

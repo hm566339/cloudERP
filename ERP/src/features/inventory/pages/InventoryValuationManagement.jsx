@@ -5,7 +5,8 @@ import {
   MapPin, 
   ArrowRightLeft, 
   Calendar,
-  Eye
+  Eye,
+  Landmark
 } from 'lucide-react';
 import { 
   useInventoryValuationList,
@@ -438,8 +439,9 @@ export default function InventoryValuationManagement() {
   return (
     <div className="flex flex-col h-full bg-zinc-50/50">
       <PageHeader
-        title="Inventory Financial Valuations"
+        title="Inventory Valuation"
         description="Review the financial impact (COGS, Average Cost, GL Postings) of stock movements"
+        icon={Landmark}
       />
 
       {/* Main Content Area */}
@@ -453,6 +455,7 @@ export default function InventoryValuationManagement() {
           rowKey="id"
           loading={isLoading}
           isRefreshing={isFetching}
+          onRowClick={(row) => navigate(`/inventory/valuations/${row.id}`)}
 
           // Search
           searchable

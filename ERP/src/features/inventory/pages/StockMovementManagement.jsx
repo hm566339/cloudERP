@@ -3,7 +3,7 @@ import useListQuery from '../../../hooks/useListQuery';
 import SearchInput from '../../../components/common/SearchInput';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Plus, Edit2, Trash2, Eye, Calendar
+  Plus, Edit2, Trash2, Eye, Calendar, ArrowLeftRight
 } from 'lucide-react';
 import { 
   useStockMovementList, 
@@ -320,6 +320,7 @@ export default function StockMovementManagement() {
       <PageHeader
         title="Stock Movements"
         description="Manage stock movement transaction headers and metadata"
+        icon={ArrowLeftRight}
       >
         <RequirePermission module="INVENTORY" action="CREATE">
           <button onClick={() => handleOpenFormModal(null)} className="btn-primary flex items-center gap-2">
@@ -340,6 +341,7 @@ export default function StockMovementManagement() {
           rowKey="id"
           loading={isLoading}
           isRefreshing={isFetching}
+          onRowClick={(row) => navigate(buildPath(`/inventory/stock-movements/${row.id}`))}
 
           // Search
           searchable

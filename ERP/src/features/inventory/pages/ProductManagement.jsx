@@ -10,7 +10,8 @@ import {
   useProductList, 
   useProductDelete, 
   useProductCreate, 
-  useProductUpdate 
+  useProductUpdate,
+  useProductCategoryList 
 } from '../../../api/inventory';
 import { useAppDispatch } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
@@ -76,6 +77,18 @@ export default function ProductManagement() {
     pageable,
     { keepPreviousData: true }
   );
+
+  const { productCategories } = useProductCategoryList({}, { page: 0, size: 200 });
+
+  const categoryMap = useMemo(() => {
+    const map = new Map();
+    if (Array.isArray(productCategories)) {
+      productCategories.forEach((cat) => {
+        if (cat?.id) map.set(cat.id, cat.name);
+      });
+    }
+    return map;
+  }, [productCategories]);
 
   const deleteMutation = useProductDelete();
   const createMutation = useProductCreate();
@@ -169,7 +182,11 @@ export default function ProductManagement() {
       id: 'category',
       label: 'Category',
       sortable: false,
-      render: (val, row) => <span className="text-zinc-700">{row.categoryId || 'Uncategorized'}</span>
+      render: (val, row) => (
+        <span className="text-zinc-700 font-medium">
+          {categoryMap.get(row.categoryId) || row.categoryName || row.category || row.categoryId || 'Uncategorized'}
+        </span>
+      )
     },
     {
       id: 'productType',
@@ -206,9 +223,28 @@ export default function ProductManagement() {
       align: 'center',
       render: (val, row) => <DataTableStatusBadge status={row.status === 'ACTIVE'} />
     }
-  ], []);
+  ], [categoryMap]);
 
   const basicFilters = useMemo(() => [
+    {
+      id: 'categoryId',
+      label: 'Category',
+      type: 'select',
+      placeholder: 'All Categories',
+      options: (productCategories || []).map((c) => ({ label: c.name, value: c.id }))
+    },
+    {
+      id: 'productType',
+      label: 'Product Type',
+      type: 'select',
+      placeholder: 'All Types',
+      options: [
+        { label: 'All Types', value: '' },
+        { label: 'Goods', value: 'GOODS' },
+        { label: 'Service', value: 'SERVICE' },
+        { label: 'Non-Inventory', value: 'NON_INVENTORY' },
+      ]
+    },
     {
       id: 'status',
       label: 'Status',
@@ -218,19 +254,8 @@ export default function ProductManagement() {
         { label: 'Active', value: 'ACTIVE' },
         { label: 'Inactive', value: 'INACTIVE' },
       ]
-    },
-    {
-      id: 'productType',
-      label: 'Product Type',
-      type: 'select',
-      options: [
-        { label: 'All Types', value: '' },
-        { label: 'Goods', value: 'GOODS' },
-        { label: 'Service', value: 'SERVICE' },
-        { label: 'Non-Inventory', value: 'NON_INVENTORY' },
-      ]
     }
-  ], []);
+  ], [productCategories]);
 
   const advancedFilters = useMemo(() => [
     {
@@ -290,6 +315,7 @@ export default function ProductManagement() {
       <PageHeader
         title="Product Catalog"
         description="Manage products, categories, inventory details, and product information"
+        icon={Package}
       >
         <RequirePermission module="PRODUCTS" action="CREATE">
           <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
@@ -309,6 +335,7 @@ export default function ProductManagement() {
           rowKey="id"
           loading={isLoading}
           isRefreshing={isFetching}
+          onRowClick={(row) => navigate(buildPath(`/inventory/products/${row.id}`))}
           
           searchable
           searchValue={filters.searchKey || ''}

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Plus, Edit2, Trash2, Eye
+  Plus, Edit2, Trash2, Eye, Activity
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
@@ -402,8 +402,9 @@ export default function StockTracking() {
   return (
     <div className="flex flex-col h-full bg-zinc-50/50">
       <PageHeader
-        title="Inventory Stock"
+        title="Current Stock"
         description="Manage products, warehouse locations, quantities, costs, and stock values"
+        icon={Activity}
       >
         <RequirePermission module="STOCK" action="CREATE">
           <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
