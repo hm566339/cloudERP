@@ -205,8 +205,8 @@ export default function AdminLogin() {
         </button>
 
         <div className="mt-8 pt-6 border-t border-zinc-100 text-center">
-          <Link to={buildPath('/login')} className="inline-flex items-center justify-center gap-2 px-4 py-2 text-[11.2px] font-bold text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-xl transition-colors border border-zinc-200/50">
-            Return to Standard Login
+          <Link to={buildPath('/')} className="inline-flex items-center justify-center gap-2 px-4 py-2 text-[11.2px] font-bold text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-xl transition-colors border border-zinc-200/50">
+            Return to ERP Home
           </Link>
         </div>
       </form>

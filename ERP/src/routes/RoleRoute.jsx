@@ -24,7 +24,7 @@ export default function RoleRoute({ children, allowedRoles = [], requiredPermiss
   }
 
   if (!currentUser) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    return <Navigate to="/" state={{ from: location }} replace />
   }
 
   const userRole = currentUser.role

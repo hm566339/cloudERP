@@ -134,7 +134,7 @@ export default function LandingNavbar({ isAuthenticated }) {
             ) : (
               <>
                 <Link
-                  to="/login"
+                  to="/"
                   className="inline-flex items-center px-4 py-2 rounded-xl text-xs font-semibold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 transition-colors active:scale-[0.98]"
                 >
                   Sign In
@@ -227,7 +227,7 @@ export default function LandingNavbar({ isAuthenticated }) {
                 ) : (
                   <>
                     <Link
-                      to="/login"
+                      to="/"
                       onClick={() => setMobileMenuOpen(false)}
                       className="w-full text-center py-3 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 transition-colors"
                     >

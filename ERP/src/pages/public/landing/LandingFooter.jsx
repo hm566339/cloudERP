@@ -52,7 +52,7 @@ export default function LandingFooter() {
           <Link to="/try-free" className="hover:text-zinc-900 transition-colors">
             Free Trial
           </Link>
-          <Link to="/login" className="hover:text-zinc-900 transition-colors">
+          <Link to="/" className="hover:text-zinc-900 transition-colors">
             Sign In
           </Link>
         </div>

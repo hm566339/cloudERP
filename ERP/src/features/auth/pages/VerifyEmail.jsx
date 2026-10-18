@@ -54,10 +54,10 @@ export default function VerifyEmail() {
           <h2 className="text-2xl font-extrabold tracking-tight text-zinc-900 mb-2">Email Verified</h2>
           <p className="text-zinc-500 font-medium text-sm mb-8">Your email has been successfully verified! You can now log into your account.</p>
           <Link
-            to={buildPath('/login')}
+            to={buildPath('/')}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-zinc-900 text-white font-semibold rounded-lg hover:bg-zinc-800 transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
           >
-            Continue to Login
+            Continue to ERP
             <ArrowRight size={16} />
           </Link>
         </>
@@ -74,10 +74,10 @@ export default function VerifyEmail() {
             {!token ? 'Invalid or missing verification token.' : (error?.message || 'Verification failed. The token may be expired or invalid.')}
           </p>
           <Link
-            to={buildPath('/login')}
+            to={buildPath('/')}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-zinc-200 text-zinc-700 font-semibold rounded-lg hover:bg-zinc-50 hover:border-zinc-300 transition-all shadow-sm active:scale-[0.98]"
           >
-            Back to Login
+            Back to ERP
           </Link>
         </>
       )}

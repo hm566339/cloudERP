@@ -143,7 +143,7 @@ export default function ProtectedRoute({
         );
       }
     }
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   // Super admins have cross-company access, regular users are locked

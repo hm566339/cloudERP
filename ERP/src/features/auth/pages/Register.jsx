@@ -54,7 +54,7 @@ export default function Register() {
       const payload = { ...data, host: window.location.origin };
       await registerApi(payload)
       dispatch(addAlert({ type: 'success', message: 'Registration successful! You can now log in.' }))
-      navigate(buildPath('/login'))
+      navigate(buildPath('/'))
     } catch (error) {
       console.error("API Registration failed.", error)
       let errorMessage = error?.data?.message || error.message || 'Registration failed. Please check your details.';
@@ -247,7 +247,7 @@ export default function Register() {
 
         <div className="mt-6 pt-5 border-t border-zinc-100 text-center">
           <span className="text-[11.2px] text-zinc-500 font-medium">Already have an account? </span>
-          <Link to={buildPath('/login')} className="text-[11.2px] font-bold text-primary hover:text-primary-hover transition-colors">
+          <Link to={buildPath('/')} className="text-[11.2px] font-bold text-primary hover:text-primary-hover transition-colors">
             Log in here
           </Link>
         </div>

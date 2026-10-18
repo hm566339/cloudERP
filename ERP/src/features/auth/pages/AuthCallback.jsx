@@ -84,7 +84,7 @@ export default function AuthCallback() {
             if (!activeToken) {
               const msg = exchangeErr?.response?.data?.message || exchangeErr?.message || 'Failed to exchange authorization code';
               setError(msg);
-              setTimeout(() => navigate(buildPath('/login')), 3000);
+              setTimeout(() => navigate(buildPath('/')), 3000);
               return;
             }
           }
@@ -214,7 +214,7 @@ export default function AuthCallback() {
         console.error("SSO Callback failed", err);
         const msg = err?.response?.data?.message || err.message || 'Authentication failed';
         setError(msg);
-        setTimeout(() => navigate(buildPath('/login')), 3000);
+        setTimeout(() => navigate(buildPath('/')), 3000);
       }
     };
 

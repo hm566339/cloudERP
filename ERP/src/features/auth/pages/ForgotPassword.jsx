@@ -74,10 +74,10 @@ export default function ForgotPassword() {
             Check your email box. We have sent recovery instructions to reset your account password.
           </p>
           <Link
-            to={buildPath('/login')}
+            to={buildPath('/')}
             className="w-full flex justify-center items-center gap-2 px-4 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-[12.8px] font-bold rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-xl shadow-emerald-500/20 group"
           >
-            Return to Login
+            Return to ERP Home
           </Link>
         </div>
       </div>
@@ -159,8 +159,8 @@ export default function ForgotPassword() {
         </button>
 
         <div className="mt-8 pt-6 border-t border-zinc-100 text-center">
-          <Link to={buildPath('/login')} className="inline-flex items-center justify-center gap-2 px-4 py-2 text-[11.2px] font-bold text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-xl transition-colors border border-zinc-200/50">
-            ← Back to Login
+          <Link to={buildPath('/')} className="inline-flex items-center justify-center gap-2 px-4 py-2 text-[11.2px] font-bold text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-xl transition-colors border border-zinc-200/50">
+            ← Back to ERP Home
           </Link>
         </div>
       </form>

@@ -43,7 +43,7 @@ export default function LandingHero({ children }) {
           </Link>
 
           <Link
-            to="/login"
+            to="/"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-12 rounded-xl bg-white border border-zinc-200 text-zinc-800 text-sm font-semibold hover:bg-zinc-50 hover:border-zinc-300 transition-colors active:scale-[0.98] shadow-sm"
           >
             <span>Sign In to Workspace</span>

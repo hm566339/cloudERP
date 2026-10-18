@@ -67,7 +67,7 @@
 /**
  * Options for the logout handler.
  * @typedef {Object} LogoutOptions
- * @property {string} [redirectTo='/login'] - URL to redirect to after logout.
+ * @property {string} [redirectTo='/erp/'] - URL to redirect to after logout.
  * @property {boolean} [clearQueues=true] - Whether to clear all module refresh queues.
  * @property {boolean} [dispatchAction=true] - Whether to dispatch the Redux logout action.
  */

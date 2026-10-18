@@ -42,7 +42,7 @@ export const isAuthPage = (path) =>
  *
  * 1. Dispatches `auth/logout` to the Redux store (clears auth state).
  * 2. Clears all per-module refresh queues (rejects pending requests).
- * 3. Redirects to `/login`.
+ * 3. Redirects to `/erp/` (ERP landing page).
  *
  * Guarded against:
  * - Multiple concurrent calls (only the first one executes).
@@ -53,8 +53,8 @@ export const isAuthPage = (path) =>
 export const dispatchLogout = (options = {}) => {
   const defaultLandingPath =
     (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_BASE_PATH || import.meta.env?.BASE_URL))
-      ? (import.meta.env.VITE_BASE_PATH || import.meta.env.BASE_URL).replace(/\/$/, '') + '/login'
-      : '/erp/login';
+      ? (import.meta.env.VITE_BASE_PATH || import.meta.env.BASE_URL).replace(/\/$/, '') + '/'
+      : '/erp/';
 
   const {
     redirectTo = defaultLandingPath,
@@ -97,6 +97,7 @@ export const dispatchLogout = (options = {}) => {
         if (
           !isAuthPage(currentPath) &&
           currentPath !== '/' &&
+          currentPath !== '/landing' &&
           currentPath !== '/login' &&
           !currentPath.includes('/dashboard/dashboard')
         ) {
@@ -113,10 +114,10 @@ export const dispatchLogout = (options = {}) => {
       }
     }
 
-    // 4. Redirect (unless already on an auth page)
+    // 4. Redirect (unless already on an auth page, landing page, or root)
     if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      if (!isAuthPage(currentPath)) {
+      const currentPath = window.location.pathname.replace(/^(\/erp)+/i, '') || '/';
+      if (!isAuthPage(currentPath) && currentPath !== '/' && currentPath !== '/landing') {
         window.location.href = redirectTo;
       }
     }

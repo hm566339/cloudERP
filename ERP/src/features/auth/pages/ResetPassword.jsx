@@ -62,11 +62,7 @@ export default function ResetPassword() {
             : "Password reset successfully! Log in with your new credentials.",
         }),
       );
-      if (res?.companyCode) {
-        navigate(`/c/${res.companyCode}/login`);
-      } else {
-        navigate(buildPath("/login"));
-      }
+      navigate(buildPath("/"));
     } catch (error) {
       dispatch(
         addAlert({

@@ -95,7 +95,7 @@ export default function CompanySelect() {
 
         if (!accessToken) {
           dispatch(addAlert({ type: 'error', message: 'Company selection failed: no access token returned. Please try logging in again.' }));
-          navigate('/login', { replace: true });
+          navigate('/', { replace: true });
           return;
         }
 
@@ -177,7 +177,7 @@ export default function CompanySelect() {
         sessionStorage.removeItem('pending_org_code');
         sessionStorage.removeItem('pending_org_user');
         sessionStorage.removeItem('pending_org_pass');
-        navigate('/login', { replace: true });
+        navigate('/', { replace: true });
         return;
       } finally {
         setIsSelecting(false);

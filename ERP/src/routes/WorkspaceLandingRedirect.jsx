@@ -13,7 +13,7 @@ import CommonWorkspaceView from '../features/dashboard/pages/CommonWorkspaceView
  * Rules:
  * 1. Waiting/Loading: Return loading spinner.
  *    Protects against temporary empty membership on reload -> wrong module route.
- * 2. Unauthenticated: Redirect to /login
+ * 2. Unauthenticated: Redirect to / (ERP Landing Page)
  * 3. Super Admin: /super-admin/dashboard
  * 4. Customer OWNER: /owner/dashboard
  * 5. Non-owner members:
@@ -42,7 +42,7 @@ export default function WorkspaceLandingRedirect() {
 
   // Not authenticated
   if (sessionStatus === 'unauthenticated' && !authenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // Priority 0: Super Administrator detection
