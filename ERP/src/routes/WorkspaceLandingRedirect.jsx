@@ -76,7 +76,24 @@ export default function WorkspaceLandingRedirect() {
     return <Navigate to="/owner/dashboard" replace />;
   }
 
+  // Multi-company check: If user belongs to multiple companies and none is currently selected/locked
+  const hasMultipleCompaniesUnselected =
+    (authContext?.companies?.length > 1) &&
+    !authContext?.currentCompany &&
+    !authContext?.user?.companyId &&
+    !authContext?.user?.companyCode;
+
+  if (hasMultipleCompaniesUnselected) {
+    return <Navigate to="/company-select" replace />;
+  }
+
   // Priority 2: Non-owner customer members derive destination from entitled business modules
+  const roleName = String(authContext?.user?.role || '').toUpperCase();
+  const membershipRole = String(authContext?.membership?.role || '').toUpperCase();
+  if (roleName.includes('ACCOUNTANT') || membershipRole.includes('ACCOUNTANT')) {
+    return <Navigate to="/accounts/dashboard" replace />;
+  }
+
   const entitledModules = getEntitledModules(authContext);
 
   // 0 modules: NoModuleAccessView

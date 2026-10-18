@@ -9,6 +9,8 @@ import { extractRoleFromToken, parseJwt } from '../../../utils/rbac';
 import { getCookie } from '../../../utils/cookieHelper';
 import { useRoutePath } from "../../../hooks/useRoutePath";
 import { isSafeRedirectPath } from "../../../utils/redirectHelper";
+import { normalizeAppRedirectPath } from "../../../utils/moduleAccess";
+import { getEntitledModules } from "../../../utils/moduleNormalization";
 
 export default function AuthCallback() {
   const [searchParams] = useSearchParams();
@@ -145,7 +147,12 @@ export default function AuthCallback() {
           permissions: mappedPermissions,
         }));
 
-        const currentComp = meData?.currentCompany;
+        let singleCompany = null;
+        if (meData?.companies && meData.companies.length === 1) {
+          singleCompany = meData.companies[0];
+        }
+
+        const currentComp = meData?.currentCompany || singleCompany;
         if (currentComp) {
           dispatch(setSelectedCompany({
             id: currentComp.id || currentComp.code,
@@ -161,21 +168,10 @@ export default function AuthCallback() {
         }
 
         // Redirect to intended destination safely
-        const rawDestination = sessionStorage.getItem('auth_redirect') || '/';
+        const rawDestination = sessionStorage.getItem('auth_redirect');
         sessionStorage.removeItem('auth_redirect');
         
-        let path = rawDestination;
-        if (path.startsWith(window.location.origin)) {
-          path = path.replace(window.location.origin, '');
-        }
-        if (path.startsWith('/erp/')) {
-          path = path.replace(/^\/erp/, '');
-        }
-
-        // Validate that destination is a safe relative path; reject open-redirects
-        if (!isSafeRedirectPath(path)) {
-          path = '/';
-        }
+        let path = normalizeAppRedirectPath(rawDestination);
 
         const isOwnerUser =
           userRole === 'owner' ||
@@ -183,13 +179,34 @@ export default function AuthCallback() {
           mergedUser?.membership?.memberType?.toUpperCase() === 'OWNER' ||
           decodedToken?.principalType === 'ORGANIZATION_OWNER';
 
-        if (!path || path === '/' || path === '/login' || path === '/accounts/dashboard' || path === '/account/dashboard' || path === '/workspace') {
+        const roleUpper = String(userRole || '').toUpperCase();
+        const memberRoleUpper = String(meData?.membership?.role || '').toUpperCase();
+        const isAccountant = roleUpper.includes('ACCOUNTANT') || memberRoleUpper.includes('ACCOUNTANT');
+
+        if (!path || path === '/' || path === '/workspace') {
           if (isAdminContext) {
             path = '/super-admin/dashboard';
           } else if (isOwnerUser) {
             path = '/owner/dashboard';
+          } else if (isAccountant) {
+            path = '/accounts/dashboard';
           } else {
-            path = '/workspace';
+            const entitled = getEntitledModules({
+              ...meData,
+              user: mergedUser,
+              membership: meData?.membership,
+              modules: meData?.modules,
+              permissions: mappedPermissions,
+            });
+            if (entitled.length === 1) {
+              const single = entitled[0];
+              if (single === 'ACCOUNT') path = '/accounts/dashboard';
+              else if (single === 'INVENTORY') path = '/inventory/dashboard';
+              else if (single === 'CRM') path = '/crm/dashboard';
+              else path = '/workspace';
+            } else {
+              path = '/workspace';
+            }
           }
         }
         navigate(path, { replace: true });

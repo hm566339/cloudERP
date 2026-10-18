@@ -66,9 +66,17 @@ export function CompanyEntryRedirect() {
   const isOwner = authContext?.membership?.memberType === 'OWNER' || user?.role === 'owner';
   const isAdmin = user?.role === 'super_admin';
 
+  const effectiveCompanyId =
+    (companyId && companyId !== 'undefined')
+      ? companyId
+      : (authContext?.currentCompany?.id || authContext?.currentCompany?.code || user?.companyId || user?.companyCode);
+
   // Admins and Owners get the general overview dashboard with all accessible company modules
   if (isAdmin || isOwner) {
-    return <Navigate to={`/company/${companyId}/dashboard`} replace />;
+    if (effectiveCompanyId) {
+      return <Navigate to={`/company/${encodeURIComponent(effectiveCompanyId)}/dashboard`} replace />;
+    }
+    return <Navigate to="/company-select" replace />;
   }
 
   // Regular users get redirected to the first canonical entitled module
@@ -85,5 +93,8 @@ export function CompanyEntryRedirect() {
   }
 
   // Fallback if no modules matched
-  return <Navigate to={`/company/${companyId}/dashboard`} replace />;
+  if (effectiveCompanyId) {
+    return <Navigate to={`/company/${encodeURIComponent(effectiveCompanyId)}/dashboard`} replace />;
+  }
+  return <Navigate to="/company-select" replace />;
 }

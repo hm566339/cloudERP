@@ -88,13 +88,18 @@ export const dispatchLogout = (options = {}) => {
     // 3. Clear all browser storage to ensure a clean slate
     if (typeof window !== 'undefined') {
       try {
-        const currentPath = window.location.pathname;
-        const returnUrl = window.location.pathname + window.location.search + window.location.hash;
+        const currentPath = window.location.pathname.replace(/^(\/erp)+/i, '') || '/';
+        const returnUrl = currentPath + window.location.search + window.location.hash;
 
         localStorage.clear();
         sessionStorage.clear();
 
-        if (!isAuthPage(currentPath) && currentPath !== '/' && currentPath !== '/login') {
+        if (
+          !isAuthPage(currentPath) &&
+          currentPath !== '/' &&
+          currentPath !== '/login' &&
+          !currentPath.includes('/dashboard/dashboard')
+        ) {
           sessionStorage.setItem('auth_return_to', returnUrl);
         }
         

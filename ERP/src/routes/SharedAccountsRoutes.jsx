@@ -107,8 +107,11 @@ const AuditLogsPage = lazy(() => import("../features/audit/pages/AuditLogsPage")
 const SalesSettings = lazy(() => import("../features/finance/pages/SalesSettings"));
 const ExpenseTracking = lazy(() => import("../features/finance/pages/ExpenseTracking"));
 
-export const SharedAccountsRoutes = ({ prefix = '' }) => (
-  <>
+export const SharedAccountsRoutes = ({ prefix = '' }) => {
+  const toPath = (sub) => ('/' + prefix + sub).replace(/\/{2,}/g, '/');
+
+  return (
+    <>
     <Route
       path={`${prefix}masters/bank-accounts/:id/ledger`}
       element={
@@ -151,12 +154,12 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => (
       }
     />
     {/* Aliases for direct convenience paths */}
-    <Route path={`${prefix}chart-of-accounts`} element={<Navigate to={`../${prefix}masters/ledgers`} replace />} />
-    <Route path={`${prefix}customers`} element={<Navigate to={`../${prefix}masters/customers`} replace />} />
-    <Route path={`${prefix}vendors`} element={<Navigate to={`../${prefix}masters/vendors`} replace />} />
-    <Route path={`${prefix}fiscal-years`} element={<Navigate to={`../${prefix}organization/financial-years`} replace />} />
-    <Route path={`${prefix}accounting-periods`} element={<Navigate to={`../${prefix}organization/accounting-periods`} replace />} />
-    <Route path={`${prefix}bank-accounts`} element={<Navigate to={`../${prefix}masters/bank-accounts`} replace />} />
+    <Route path={`${prefix}chart-of-accounts`} element={<Navigate to={toPath('masters/ledgers')} replace />} />
+    <Route path={`${prefix}customers`} element={<Navigate to={toPath('masters/customers')} replace />} />
+    <Route path={`${prefix}vendors`} element={<Navigate to={toPath('masters/vendors')} replace />} />
+    <Route path={`${prefix}fiscal-years`} element={<Navigate to={toPath('organization/financial-years')} replace />} />
+    <Route path={`${prefix}accounting-periods`} element={<Navigate to={toPath('organization/accounting-periods')} replace />} />
+    <Route path={`${prefix}bank-accounts`} element={<Navigate to={toPath('masters/bank-accounts')} replace />} />
 
     {/* Masters */}
     <Route
@@ -899,8 +902,8 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => (
       />
     </Route>
     {/* Journal Aliases */}
-    <Route path={`${prefix}transactions/journal-entries`} element={<Navigate to={`../${prefix}transactions/journal`} replace />} />
-    <Route path={`${prefix}transactions/journals`} element={<Navigate to={`../${prefix}transactions/journal`} replace />} />
+    <Route path={`${prefix}transactions/journal-entries`} element={<Navigate to={toPath('transactions/journal')} replace />} />
+    <Route path={`${prefix}transactions/journals`} element={<Navigate to={toPath('transactions/journal')} replace />} />
 
     <Route
       path={`${prefix}transactions/journal`}
@@ -967,9 +970,9 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => (
           </ProtectedRoute>
         }
       />
-      <Route path={`${prefix}transactions/payment-vouchers`} element={<Navigate to={`../${prefix}transactions/payments`} replace />} />
+      <Route path={`${prefix}transactions/payment-vouchers`} element={<Navigate to={toPath('transactions/payments')} replace />} />
     </Route>
-    <Route path={`${prefix}transactions/receipt-vouchers`} element={<Navigate to={`../${prefix}transactions/receipts`} replace />} />
+    <Route path={`${prefix}transactions/receipt-vouchers`} element={<Navigate to={toPath('transactions/receipts')} replace />} />
     <Route
       path={`${prefix}transactions/receipts`}
       element={
@@ -1074,7 +1077,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => (
     <Route path={`${prefix}reports/profit-loss`} element={<ProtectedRoute module="REPORTS"><ProfitLoss /></ProtectedRoute>} />
     <Route path={`${prefix}reports/balance-sheet`} element={<ProtectedRoute module="REPORTS"><BalanceSheet /></ProtectedRoute>} />
     <Route path={`${prefix}reports/cash-flow`} element={<ProtectedRoute module="REPORTS"><CashFlow /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/gst`} element={<ProtectedRoute module="GST_REPORTS"><Navigate to="summary" replace /></ProtectedRoute>} />
+    <Route path={`${prefix}reports/gst`} element={<ProtectedRoute module="GST_REPORTS"><Navigate to={toPath('reports/gst/summary')} replace /></ProtectedRoute>} />
     <Route path={`${prefix}reports/gst/summary`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="summary" /></ProtectedRoute>} />
     <Route path={`${prefix}reports/gst/gstr1`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="gstr1" /></ProtectedRoute>} />
     <Route path={`${prefix}reports/gst/gstr3b`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="gstr3b" /></ProtectedRoute>} />
@@ -1099,4 +1102,5 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => (
     <Route path={`${prefix}settings/audit-logs`} element={<ProtectedRoute module="AUDIT_LOGS"><AuditLogsPage moduleFilter="Accounts" /></ProtectedRoute>} />
 
   </>
-);
+  );
+};

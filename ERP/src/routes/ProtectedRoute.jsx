@@ -68,6 +68,13 @@ export default function ProtectedRoute({
         name: authContext.currentCompany.name || authContext.currentCompany.legalName || 'Assigned Company',
         code: authContext.currentCompany.code,
       }));
+    } else if (!selectedCompany && authContext?.companies?.length === 1) {
+      const single = authContext.companies[0];
+      dispatch(setSelectedCompany({
+        id: single.id || single.code,
+        name: single.name || single.legalName || 'Assigned Company',
+        code: single.code,
+      }));
     } else if (shouldRequireCompany && !selectedCompany && isTenantLocked) {
       dispatch(setSelectedCompany({
         id: lockedCompanyId,
@@ -146,6 +153,13 @@ export default function ProtectedRoute({
 
   // Check company context: Ensure company is initialized before route evaluation
   if (shouldRequireCompany && !selectedCompany && !authContext.currentCompany) {
+    if (authContext?.companies?.length === 1) {
+      return (
+        <div className="flex h-screen w-full items-center justify-center bg-zinc-50">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      );
+    }
     if (isTenantLocked) {
       if (!companyId || companyId !== lockedCompanyId) {
         return <Navigate to={`/company/${lockedCompanyId}`} replace />;

@@ -95,10 +95,12 @@ const ApprovalRequestsPage = lazy(() => import('../features/workflows/pages/Appr
 const DynamicWorkflowPage = lazy(() => import('../features/workflows/pages/DynamicWorkflowPage'));
 
 export default function SharedCompanyRoutes({ prefix = "" }) {
+  const toPath = (sub) => ('/' + prefix + sub).replace(/\/{2,}/g, '/');
+
   return (
     <>
       {/* HR & Employee */}
-      <Route path={`${prefix}hr`} element={<Navigate to={`${prefix}hr/dashboard`} replace />} />
+      <Route path={`${prefix}hr`} element={<Navigate to={toPath('hr/dashboard')} replace />} />
       <Route path={`${prefix}hr/dashboard`} element={<HRDashboard />} />
       <Route path={`${prefix}hr/profile`} element={<EmployeeProfile />} />
       <Route path={`${prefix}hr/employees`} element={<EmployeeList />} />
@@ -115,7 +117,7 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
 
       {/* Inventory */}
       <Route element={<InventoryWrapper />}>
-        <Route path={`${prefix}inventory`} element={<Navigate to={`${prefix}inventory/dashboard`} replace />} />
+        <Route path={`${prefix}inventory`} element={<Navigate to={toPath('inventory/dashboard')} replace />} />
         <Route path={`${prefix}inventory/dashboard`} element={<InventoryDashboard />} />
         <Route path={`${prefix}inventory/unit-of-measures`} element={<UnitOfMeasureManagement />} />
         <Route path={`${prefix}inventory/unit-of-measures/:id`} element={<GenericEntityDetails endpoint="/api/inventory/unit-of-measures" entityName="Unit of Measure" />} />
@@ -162,20 +164,20 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
         <Route path={`${prefix}inventory/inventory-posting`} element={<InventoryDashboard />} />
 
         {/* Inventory convenience aliases */}
-        <Route path={`${prefix}inventory/movements`} element={<Navigate to={`../${prefix}inventory/stock-movements`} replace />} />
-        <Route path={`${prefix}inventory/adjustments`} element={<Navigate to={`../${prefix}inventory/stock-adjustments`} replace />} />
-        <Route path={`${prefix}inventory/transfers`} element={<Navigate to={`../${prefix}inventory/stock-transfers`} replace />} />
-        <Route path={`${prefix}inventory/valuation`} element={<Navigate to={`../${prefix}inventory/valuations`} replace />} />
+        <Route path={`${prefix}inventory/movements`} element={<Navigate to={toPath('inventory/stock-movements')} replace />} />
+        <Route path={`${prefix}inventory/adjustments`} element={<Navigate to={toPath('inventory/stock-adjustments')} replace />} />
+        <Route path={`${prefix}inventory/transfers`} element={<Navigate to={toPath('inventory/stock-transfers')} replace />} />
+        <Route path={`${prefix}inventory/valuation`} element={<Navigate to={toPath('inventory/valuations')} replace />} />
         <Route path={`${prefix}inventory/warehouses`} element={<WarehouseManagement />} />
       </Route>
 
       {/* Sales & CRM */}
-      <Route path={`${prefix}sales`} element={<Navigate to={`${prefix}sales-crm/dashboard`} replace />} />
-      <Route path={`${prefix}sales/quotations`} element={<Navigate to={`../${prefix}sales-crm/quotations`} replace />} />
-      <Route path={`${prefix}sales/orders`} element={<Navigate to={`../${prefix}sales-crm/orders`} replace />} />
-      <Route path={`${prefix}sales/delivery-challans`} element={<Navigate to={`../accounts/transactions/delivery-challans`} replace />} />
-      <Route path={`${prefix}sales/invoices`} element={<Navigate to={`../${prefix}sales-crm/invoices`} replace />} />
-      <Route path={`${prefix}sales-crm`} element={<Navigate to={`${prefix}sales-crm/dashboard`} replace />} />
+      <Route path={`${prefix}sales`} element={<Navigate to={toPath('sales-crm/dashboard')} replace />} />
+      <Route path={`${prefix}sales/quotations`} element={<Navigate to={toPath('sales-crm/quotations')} replace />} />
+      <Route path={`${prefix}sales/orders`} element={<Navigate to={toPath('sales-crm/orders')} replace />} />
+      <Route path={`${prefix}sales/delivery-challans`} element={<Navigate to={toPath('accounts/transactions/delivery-challans')} replace />} />
+      <Route path={`${prefix}sales/invoices`} element={<Navigate to={toPath('sales-crm/invoices')} replace />} />
+      <Route path={`${prefix}sales-crm`} element={<Navigate to={toPath('sales-crm/dashboard')} replace />} />
       <Route path={`${prefix}sales-crm/dashboard`} element={<SalesCRMDashboard />} />
       <Route path={`${prefix}sales-crm/customers`} element={<CustomerManagement />} />
       <Route path={`${prefix}sales-crm/customers/:id`} element={<CustomerDetails />} />
@@ -203,14 +205,14 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
       />
 
       {/* Purchase Management */}
-      <Route path={`${prefix}purchase`} element={<Navigate to={`${prefix}purchases/dashboard`} replace />} />
-      <Route path={`${prefix}purchase/requisitions`} element={<Navigate to={`../${prefix}purchases/requisitions`} replace />} />
-      <Route path={`${prefix}purchase/rfqs`} element={<Navigate to={`../${prefix}purchases/rfqs`} replace />} />
-      <Route path={`${prefix}purchase/orders`} element={<Navigate to={`../${prefix}purchases/purchase-orders`} replace />} />
-      <Route path={`${prefix}purchase/grn`} element={<Navigate to={`../${prefix}purchases/goods-receipts`} replace />} />
-      <Route path={`${prefix}purchase/invoices`} element={<Navigate to={`../${prefix}purchases/invoices`} replace />} />
-      <Route path={`${prefix}purchase/payments`} element={<Navigate to={`../${prefix}purchases/payments`} replace />} />
-      <Route path={`${prefix}purchases`} element={<Navigate to={`${prefix}purchases/dashboard`} replace />} />
+      <Route path={`${prefix}purchase`} element={<Navigate to={toPath('purchases/dashboard')} replace />} />
+      <Route path={`${prefix}purchase/requisitions`} element={<Navigate to={toPath('purchases/requisitions')} replace />} />
+      <Route path={`${prefix}purchase/rfqs`} element={<Navigate to={toPath('purchases/rfqs')} replace />} />
+      <Route path={`${prefix}purchase/orders`} element={<Navigate to={toPath('purchases/purchase-orders')} replace />} />
+      <Route path={`${prefix}purchase/grn`} element={<Navigate to={toPath('purchases/goods-receipts')} replace />} />
+      <Route path={`${prefix}purchase/invoices`} element={<Navigate to={toPath('purchases/invoices')} replace />} />
+      <Route path={`${prefix}purchase/payments`} element={<Navigate to={toPath('purchases/payments')} replace />} />
+      <Route path={`${prefix}purchases`} element={<Navigate to={toPath('purchases/dashboard')} replace />} />
       <Route path={`${prefix}purchases/dashboard`} element={<PurchaseDashboard />} />
       <Route path={`${prefix}purchases/vendors`} element={<VendorManagement />} />
       <Route element={<PurchaseModuleLayout />}>
@@ -242,7 +244,7 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
       </Route>
 
       {/* Manufacturing */}
-      <Route path={`${prefix}manufacturing`} element={<Navigate to={`${prefix}manufacturing/dashboard`} replace />} />
+      <Route path={`${prefix}manufacturing`} element={<Navigate to={toPath('manufacturing/dashboard')} replace />} />
       <Route path={`${prefix}manufacturing/dashboard`} element={<ManufacturingDashboard />} />
       <Route path={`${prefix}manufacturing/production`} element={<ProductionPage />} />
       <Route path={`${prefix}manufacturing/batches`} element={<BatchesPage />} />
@@ -252,8 +254,8 @@ export default function SharedCompanyRoutes({ prefix = "" }) {
       <Route path={`${prefix}workflows/approvals`} element={<ApprovalRequestsPage />} />
       <Route path={`${prefix}workflows/transactions/:transactionId`} element={<DynamicWorkflowPage />} />
       <Route path={`${prefix}workflows/document/:documentType/:documentId`} element={<DynamicWorkflowPage />} />
-      <Route path={`${prefix}workflow`} element={<Navigate to={`${prefix}workflows`} replace />} />
-      <Route path={`${prefix}workflow/approvals`} element={<Navigate to={`${prefix}workflows/approvals`} replace />} />
+      <Route path={`${prefix}workflow`} element={<Navigate to={toPath('workflows')} replace />} />
+      <Route path={`${prefix}workflow/approvals`} element={<Navigate to={toPath('workflows/approvals')} replace />} />
     </>
   );
 }

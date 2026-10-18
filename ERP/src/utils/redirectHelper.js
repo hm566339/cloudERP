@@ -12,6 +12,20 @@ export function isSafeRedirectPath(path) {
   if (path.startsWith('//') || path.startsWith('/\\') || path.startsWith('/\\\\')) return false;
   // Reject URL schemes embedded e.g. /http: or /javascript:
   if (/^\/[a-zA-Z][a-zA-Z0-9+.-]*:/.test(path)) return false;
+  // Reject redirect loops and callback destinations
+  if (
+    path.includes('/dashboard/dashboard') ||
+    path.includes('/auth/callback') ||
+    path.includes('/account/callback') ||
+    path.includes('/accounts/callback') ||
+    path === '/403' ||
+    path.startsWith('/403') ||
+    path === '/login' ||
+    path === '/admin-login' ||
+    path === '/modules'
+  ) {
+    return false;
+  }
   return true;
 }
 
@@ -23,13 +37,20 @@ export function isSafeRedirectPath(path) {
  * 4. Falls back to defaultPath if invalid or open-redirect detected.
  */
 export function resolveSafeRedirectDestination({ searchParams, sessionStorage, locationStateFrom, defaultPath = '/workspace' }) {
+  const cleanCandidate = (p) => {
+    if (!p || typeof p !== 'string') return null;
+    const stripped = p.replace(/^(\/erp)+/i, '') || '/';
+    return isSafeRedirectPath(stripped) ? stripped : null;
+  };
+
   // 1. Query parameters
   if (searchParams) {
     const query = typeof searchParams.get === 'function'
       ? (searchParams.get('redirect') || searchParams.get('goto') || searchParams.get('returnTo'))
       : null;
-    if (isSafeRedirectPath(query)) {
-      return query;
+    const cleaned = cleanCandidate(query);
+    if (cleaned) {
+      return cleaned;
     }
   }
 
@@ -40,8 +61,9 @@ export function resolveSafeRedirectDestination({ searchParams, sessionStorage, l
       if (typeof sessionStorage.removeItem === 'function') {
         sessionStorage.removeItem('auth_return_to');
       }
-      if (isSafeRedirectPath(returnTo)) {
-        return returnTo;
+      const cleaned = cleanCandidate(returnTo);
+      if (cleaned) {
+        return cleaned;
       }
     }
   }
@@ -54,10 +76,11 @@ export function resolveSafeRedirectDestination({ searchParams, sessionStorage, l
     } else if (locationStateFrom.pathname) {
       fullPath = locationStateFrom.pathname + (locationStateFrom.search || '') + (locationStateFrom.hash || '');
     }
-    if (isSafeRedirectPath(fullPath)) {
-      return fullPath;
+    const cleaned = cleanCandidate(fullPath);
+    if (cleaned) {
+      return cleaned;
     }
   }
 
-  return defaultPath;
+  return cleanCandidate(defaultPath) || '/workspace';
 }

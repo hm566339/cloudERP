@@ -315,6 +315,31 @@ export function getEntitledModules(authContextOrModules) {
     }
   }
 
+  // If no entitled modules found from raw modules list, inspect permissions and user/membership roles
+  if (entitled.size === 0) {
+    for (const p of permissions) {
+      const explicitMod = typeof p === 'object' ? (p.moduleName || p.module) : null;
+      if (explicitMod) {
+        const canonical = normalizeModuleName(explicitMod);
+        if (canonical && canonical !== CANONICAL_MODULES.SSO && canonical !== CANONICAL_MODULES.CORE) {
+          entitled.add(canonical);
+        }
+      }
+    }
+
+    const user = authContextOrModules?.user || authContextOrModules;
+    const roleStr = String(user?.role || authContextOrModules?.role || authContextOrModules?.membership?.role || '').toUpperCase();
+    if (roleStr.includes('ACCOUNTANT') || roleStr.includes('FINANCE')) {
+      entitled.add(CANONICAL_MODULES.ACCOUNT);
+    }
+    if (roleStr.includes('INVENTORY') || roleStr.includes('WAREHOUSE')) {
+      entitled.add(CANONICAL_MODULES.INVENTORY);
+    }
+    if (roleStr.includes('SALES') || roleStr.includes('CRM')) {
+      entitled.add(CANONICAL_MODULES.CRM);
+    }
+  }
+
   return Array.from(entitled);
 }
 

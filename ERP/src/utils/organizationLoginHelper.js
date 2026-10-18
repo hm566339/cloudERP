@@ -84,9 +84,7 @@ export function evaluateLoginResult(loginResponse) {
       const match = data.redirectUrl.match(/\/auth\/callback.*$/);
       if (match) target = match[0];
     }
-    if (target.startsWith('/erp/')) {
-      target = target.replace(/^\/erp/, '');
-    }
+    target = target.replace(/^(\/erp)+/i, '') || '/';
     if (target.startsWith('/api/')) {
       const codeParam = target.includes('?') ? target.substring(target.indexOf('?')) : '';
       target = `/auth/callback${codeParam}`;

@@ -434,6 +434,36 @@ const WorkflowSettingsPage = lazy(() => import("../pages/settings/WorkflowSettin
 const CrmSettingsPage = lazy(() => import("../pages/settings/CrmSettingsPage"));
 const SalesSettings = lazy(() => import("../features/finance/pages/SalesSettings"));
 
+function OrgRedirect() {
+  const { organizationCode } = useParams();
+  return <Navigate to={`/o/${encodeURIComponent(organizationCode || '')}/login`} replace />;
+}
+
+function CompanyRedirect() {
+  const { companyCode } = useParams();
+  return <Navigate to={`/c/${encodeURIComponent(companyCode || '')}/login`} replace />;
+}
+
+function CompanyGstRedirect() {
+  const { companyId } = useParams();
+  return <Navigate to={`/company/${encodeURIComponent(companyId || '')}/accounts/reports/gst/summary`} replace />;
+}
+
+function CompanyWorkflowRedirect() {
+  const { companyId } = useParams();
+  return <Navigate to={`/company/${encodeURIComponent(companyId || '')}/workflows`} replace />;
+}
+
+function CompanyWorkflowApprovalsRedirect() {
+  const { companyId } = useParams();
+  return <Navigate to={`/company/${encodeURIComponent(companyId || '')}/workflows/approvals`} replace />;
+}
+
+function CompanyProfileRedirect() {
+  const { companyId } = useParams();
+  return <Navigate to={`/company/${encodeURIComponent(companyId || '')}/profile`} replace />;
+}
+
 export default function AppRoutes() {
   const isRehydrated = useAppSelector(selectIsRehydrated);
   const sessionStatus = useAppSelector(state => state.auth.sessionStatus);
@@ -467,7 +497,7 @@ export default function AppRoutes() {
   const location = useLocation();
   // Normalize current pathname relative to router basename (/erp)
   const rawPath = location.pathname || (typeof window !== 'undefined' ? window.location.pathname : '');
-  const currentPath = rawPath.replace(/^\/erp(\/|$)/, '/$1');
+  const currentPath = rawPath.replace(/^(\/erp)+/i, '') || '/';
 
   // Any route that is not explicitly public is treated as protected
   const isPublicPage =
@@ -541,9 +571,9 @@ export default function AppRoutes() {
           <Route path="/login" element={<Login />} />
           <Route path="/:moduleCode/login" element={<Login />} />
           <Route path="/o/:organizationCode/login" element={<Login />} />
-          <Route path="/o/:organizationCode" element={<Navigate to="login" replace />} />
+          <Route path="/o/:organizationCode" element={<OrgRedirect />} />
           <Route path="/c/:companyCode/login" element={<Login />} />
-          <Route path="/c/:companyCode" element={<Navigate to="login" replace />} />
+          <Route path="/c/:companyCode" element={<CompanyRedirect />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/account/callback" element={<AuthCallback />} />
@@ -879,7 +909,7 @@ export default function AppRoutes() {
 
           <Route path="company-dashboard" element={<CompanyDashboard />} />
           <Route path="subscription" element={<SubscriptionPage />} />
-          <Route path="gst-reports/*" element={<Navigate to="accounts/reports/gst/summary" replace />} />
+          <Route path="gst-reports/*" element={<CompanyGstRedirect />} />
 
           {/* Finance & Accounts Module (Replacing Legacy Finance/Accounting) */}
           {SharedAccountsRoutes({ prefix: "accounts/" })}
@@ -909,8 +939,8 @@ export default function AppRoutes() {
           {SharedCompanyRoutes({ prefix: "" })}
           <Route path="workflows" element={<WorkflowManagementPage />} />
           <Route path="workflows/approvals" element={<ApprovalRequestsPage />} />
-          <Route path="workflow" element={<Navigate to="workflows" replace />} />
-          <Route path="workflow/approvals" element={<Navigate to="workflows/approvals" replace />} />
+          <Route path="workflow" element={<CompanyWorkflowRedirect />} />
+          <Route path="workflow/approvals" element={<CompanyWorkflowApprovalsRedirect />} />
           <Route
             path="manufacturing/audit"
             element={<AuditLogsPage moduleFilter="Manufacturing" />}
@@ -958,7 +988,7 @@ export default function AppRoutes() {
           <Route path="settings/workflow" element={<WorkflowSettingsPage />} />
           <Route path="settings/crm" element={<CrmSettingsPage />} />
           <Route path="settings/organization" element={<OrganizationSettingsPage />} />
-          <Route path="settings/my-account" element={<Navigate to="profile" replace />} />
+          <Route path="settings/my-account" element={<CompanyProfileRedirect />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="*" element={<CompanyEntryRedirect />} />
         </Route>

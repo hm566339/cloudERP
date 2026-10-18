@@ -103,13 +103,22 @@ export default function AccountantLayout() {
 
   // Auto-select first company if none selected
   useEffect(() => {
-    if (!selectedCompany && currentUser) {
-      const code = currentUser.companyCode || currentUser.companyId
-      if (code) {
-        dispatch(setSelectedCompany({ id: code, code, name: currentUser.companyName || 'Company' }))
+    if (!selectedCompany) {
+      const company = authContext?.currentCompany || (authContext?.companies?.length === 1 ? authContext.companies[0] : null);
+      if (company) {
+        dispatch(setSelectedCompany({
+          id: company.id || company.code,
+          code: company.code || company.id,
+          name: company.name || company.legalName || 'Company',
+        }));
+      } else if (currentUser) {
+        const code = currentUser.companyCode || currentUser.companyId;
+        if (code) {
+          dispatch(setSelectedCompany({ id: code, code, name: currentUser.companyName || 'Company' }));
+        }
       }
     }
-  }, [currentUser, selectedCompany, dispatch])
+  }, [currentUser, selectedCompany, authContext, dispatch]);
 
   // Fetch account companies ONCE on mount
   useEffect(() => {

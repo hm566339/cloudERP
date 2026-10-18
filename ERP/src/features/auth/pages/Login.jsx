@@ -111,10 +111,16 @@ export default function Login() {
           return name === 'SYSTEM_ADMIN' || name === 'SUPER_ADMIN';
         });
 
+      const isAccountant =
+        currentUser.role?.toUpperCase() === 'ACCOUNTANT' ||
+        currentUser.membership?.role?.toUpperCase() === 'ACCOUNTANT';
+
       if (isSuperAdmin) {
         navigate('/super-admin/dashboard', { replace: true });
       } else if (isOwner) {
         navigate(getDestination('/owner/dashboard'), { replace: true });
+      } else if (isAccountant) {
+        navigate(getDestination('/accounts/dashboard'), { replace: true });
       } else {
         navigate(getDestination('/workspace'), { replace: true });
       }
@@ -148,6 +154,7 @@ export default function Login() {
           destinationUrl = gotoUrl.startsWith('/') ? gotoUrl : '/workspace';
         }
       }
+      destinationUrl = destinationUrl.replace(/^(\/erp)+/i, '') || '/workspace';
       sessionStorage.setItem('auth_redirect', destinationUrl);
 
       // Build payload matching backend LoginRequest contract
@@ -249,10 +256,7 @@ export default function Login() {
       if (loginData?.redirectUrl) {
         try {
           const urlObj = new URL(loginData.redirectUrl.startsWith('http') ? loginData.redirectUrl : `http://${loginData.redirectUrl}`);
-          let targetPath = urlObj.pathname;
-          if (targetPath.startsWith('/erp/')) {
-            targetPath = targetPath.replace(/^\/erp/, '');
-          }
+          let targetPath = urlObj.pathname.replace(/^(\/erp)+/i, '') || '/';
           // Never forward generic ERP login flow to module backend endpoints (e.g. /api/account/auth/callback)
           if (targetPath.startsWith('/api/')) {
             console.warn('[Login] Normalizing backend callback path to generic SPA callback:', targetPath);
@@ -370,10 +374,17 @@ export default function Login() {
         ssoData?.membership?.memberType?.toUpperCase() === 'OWNER' ||
         mergedUser?.membership?.memberType?.toUpperCase() === 'OWNER';
 
+      const isAccountantRole =
+        userRole?.toUpperCase() === 'ACCOUNTANT' ||
+        ssoData?.membership?.role?.toUpperCase() === 'ACCOUNTANT' ||
+        mergedUser?.membership?.role?.toUpperCase() === 'ACCOUNTANT';
+
       if (isSuperAdminRole || userRole === 'super_admin') {
         navigate('/super-admin/dashboard', { replace: true });
       } else if (isOwnerRole) {
         navigate(getDestination('/owner/dashboard'), { replace: true });
+      } else if (isAccountantRole) {
+        navigate(getDestination('/accounts/dashboard'), { replace: true });
       } else {
         navigate(getDestination('/workspace'), { replace: true });
       }

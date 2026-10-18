@@ -87,7 +87,8 @@ export default function AdminLogin() {
         if (finalRedirect.startsWith(window.location.origin)) {
           finalRedirect = finalRedirect.replace(window.location.origin, '');
         }
-        navigate(finalRedirect);
+        finalRedirect = finalRedirect.replace(/^(\/erp)+/i, '') || '/';
+        navigate(finalRedirect, { replace: true });
         return;
       }
 

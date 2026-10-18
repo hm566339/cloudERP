@@ -84,9 +84,6 @@ export function SharedInventoryRoutes({ prefix = "" }) {
       <Route path={`${prefix}integration/purchase-invoice`} element={<InventoryDashboard />} />
       <Route path={`${prefix}integration/stock`} element={<InventoryDashboard />} />
       <Route path={`${prefix}inventory-posting`} element={<InventoryDashboard />} />
-
-      {/* Catch-all */}
-      <Route path="*" element={<Navigate to="dashboard" replace />} />
     </>
   );
 }

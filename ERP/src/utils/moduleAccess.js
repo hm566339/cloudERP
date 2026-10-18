@@ -229,23 +229,34 @@ export function normalizeAppRedirectPath(path) {
     }
   }
 
+  // Strip all repeated /erp prefixes so React Router's basename does not duplicate it
+  normalized = normalized.replace(/^(\/erp)+/i, '') || '/'
+
   if (!normalized.startsWith('/')) {
     normalized = `/${normalized}`
   }
 
-  if (normalized === '/account/dashboard' || normalized === '/account') {
-    return '/account/dashboard'
-  }
-
-  if (normalized.includes('/company/undefined')) {
-    return '/company-select'
-  }
+  // Reject loop paths and auth/callback paths
   if (
+    normalized.includes('/dashboard/dashboard') ||
+    normalized.includes('/auth/callback') ||
+    normalized.includes('/account/callback') ||
+    normalized.includes('/accounts/callback') ||
+    normalized === '/403' ||
+    normalized.startsWith('/403') ||
     normalized === '/login' ||
     normalized === '/admin-login' ||
     normalized === '/modules'
   ) {
     return null
+  }
+
+  if (normalized === '/account/dashboard' || normalized === '/account') {
+    return '/accounts/dashboard'
+  }
+
+  if (normalized.includes('/company/undefined')) {
+    return '/company-select'
   }
   return normalized
 }

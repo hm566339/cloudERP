@@ -124,10 +124,7 @@ export default function CompanySelect() {
         if (selectData?.redirectUrl) {
           try {
             const urlObj = new URL(selectData.redirectUrl.startsWith('http') ? selectData.redirectUrl : `http://${selectData.redirectUrl}`);
-            let targetPath = urlObj.pathname;
-            if (targetPath.startsWith('/erp/')) {
-              targetPath = targetPath.replace(/^\/erp/, '');
-            }
+            let targetPath = urlObj.pathname.replace(/^(\/erp)+/i, '') || '/';
             if (targetPath.startsWith('/api/')) {
               targetPath = '/auth/callback';
             }
