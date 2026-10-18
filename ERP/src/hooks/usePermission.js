@@ -13,7 +13,7 @@ import { hasModuleAccess, hasPermission } from '../utils/rbacUtils';
  * @param {string} [moduleName] - Optional parent module if distinct from feature
  * @returns {boolean} True if permitted
  */
-export default function usePermission(moduleNameOrPermission, action, moduleName) {
+export function usePermission(moduleNameOrPermission, action, moduleName) {
   return useAppSelector((state) => {
     if (!action && typeof moduleNameOrPermission === 'string' && !moduleNameOrPermission.includes(':')) {
       return hasModuleAccess(state, moduleNameOrPermission);
@@ -21,6 +21,8 @@ export default function usePermission(moduleNameOrPermission, action, moduleName
     return hasPermission(state, moduleNameOrPermission, action, moduleName);
   });
 }
+
+export default usePermission;
 
 /**
  * Hook to check all core CRUD permissions for a given feature/module.
