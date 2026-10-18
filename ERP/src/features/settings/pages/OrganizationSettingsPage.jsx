@@ -59,8 +59,8 @@ export default function OrganizationSettingsPage() {
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const loginUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/erp/`
-    : `https://app.mark2erp.com/erp/`;
+    ? `${window.location.origin}/erp/o/${orgCode.toLowerCase()}/login`
+    : `https://app.mark2erp.com/erp/o/${orgCode.toLowerCase()}/login`;
 
   const handleCopyId = () => {
     if (!orgId) return;
@@ -259,7 +259,7 @@ export default function OrganizationSettingsPage() {
               Dedicated Organization Login Portal
             </h2>
             <p className="text-xs text-zinc-500 mt-0.5">
-              Share this dedicated URL with team members to access your organization workspace.
+              Share this dedicated URL with team members to sign in directly to your organization workspace.
             </p>
           </div>
         </div>

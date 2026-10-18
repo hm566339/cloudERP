@@ -174,10 +174,11 @@ export default function CompanySelect() {
         console.error('[CompanySelect] org select-company failed:', err);
         const msg = err?.data?.message || err?.message || 'Company selection failed. Please log in again.';
         dispatch(addAlert({ type: 'error', message: msg }));
+        const pendingOrg = sessionStorage.getItem('pending_org_code');
         sessionStorage.removeItem('pending_org_code');
         sessionStorage.removeItem('pending_org_user');
         sessionStorage.removeItem('pending_org_pass');
-        navigate('/', { replace: true });
+        navigate(pendingOrg ? `/o/${pendingOrg}/login` : '/', { replace: true });
         return;
       } finally {
         setIsSelecting(false);

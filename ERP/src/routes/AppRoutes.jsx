@@ -30,6 +30,7 @@ import { SidebarProvider } from "../layouts/SidebarContext";
 
 
 // ─── Auth Pages ───────────────────────────────────────────────────────────────
+const Login = lazy(() => import("../features/auth/pages/Login"));
 const AdminLogin = lazy(() => import("../features/auth/pages/AdminLogin"));
 const ForgotPassword = lazy(
   () => import("../features/auth/pages/ForgotPassword"),
@@ -434,6 +435,16 @@ const CrmSettingsPage = lazy(() => import("../pages/settings/CrmSettingsPage"));
 const SalesSettings = lazy(() => import("../features/finance/pages/SalesSettings"));
 
 
+function OrgRedirect() {
+  const { organizationCode } = useParams();
+  return <Navigate to={`/o/${encodeURIComponent(organizationCode || '')}/login`} replace />;
+}
+
+function CompanyRedirect() {
+  const { companyCode } = useParams();
+  return <Navigate to={`/c/${encodeURIComponent(companyCode || '')}/login`} replace />;
+}
+
 function CompanyGstRedirect() {
   const { companyId } = useParams();
   return <Navigate to={`/company/${encodeURIComponent(companyId || '')}/accounts/reports/gst/summary`} replace />;
@@ -497,6 +508,8 @@ export default function AppRoutes() {
     currentPath === '/modules' ||
     currentPath === '/admin-login' ||
     currentPath === '/403' ||
+    currentPath.startsWith('/o/') ||
+    currentPath.startsWith('/c/') ||
     currentPath.includes('/login') ||
     currentPath.includes('/callback') ||
     currentPath.startsWith('/forgot-password') ||
@@ -557,13 +570,13 @@ export default function AppRoutes() {
 
         {/* ── PUBLIC (Auth Layout) ── */}
         <Route element={<AuthLayout />}>
-          <Route path="/modules" element={<Navigate to="/" replace />} />
+          <Route path="/o/:organizationCode/login" element={<Login />} />
+          <Route path="/o/:organizationCode" element={<OrgRedirect />} />
+          <Route path="/c/:companyCode/login" element={<Login />} />
+          <Route path="/c/:companyCode" element={<CompanyRedirect />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="/modules" element={<Navigate to="/" replace />} />
           <Route path="/:moduleCode/login" element={<Navigate to="/" replace />} />
-          <Route path="/o/:organizationCode/login" element={<Navigate to="/" replace />} />
-          <Route path="/o/:organizationCode" element={<Navigate to="/" replace />} />
-          <Route path="/c/:companyCode/login" element={<Navigate to="/" replace />} />
-          <Route path="/c/:companyCode" element={<Navigate to="/" replace />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/account/callback" element={<AuthCallback />} />

@@ -5,8 +5,8 @@ import { isAuthPage, dispatchLogout } from '../../api/common/logout.js';
 import { isSafeRedirectPath } from '../../utils/redirectHelper.js';
 import { getPostLoginRedirectPath } from '../../utils/moduleAccess.js';
 
-describe('Legacy ERP Login Page Removal & Logout Redirection Suite', () => {
-  describe('1. Legacy Login URL & Route Normalization', () => {
+describe('Legacy ERP Login Removal & Organization/Company Login Restoration Suite', () => {
+  describe('1. Exact /login vs Specific Organization & Company Route Resolution', () => {
     it('defines canonical LOGIN and MODULES routes pointing to root landing page', () => {
       assert.equal(PATHS.ROOT, '/');
       assert.equal(PATHS.LOGIN, '/');
@@ -15,50 +15,187 @@ describe('Legacy ERP Login Page Removal & Logout Redirection Suite', () => {
       assert.notEqual(PATHS.MODULES, '/login');
     });
 
-    it('identifies obsolete login routes and maps them to replace-redirects to root /', () => {
-      const legacyLoginRoutes = [
-        '/login',
-        '/erp/login',
-        '/accounts/login',
-        '/inventory/login',
-        '/crm/login',
-        '/purchases/login',
-        '/o/acme-corp/login',
-        '/o/acme-corp',
-        '/c/comp-101/login',
-        '/c/comp-101',
-        '/modules'
-      ];
+    // Simulates the exact route table matching in AppRoutes.jsx
+    const resolveAppRoute = (path) => {
+      const normalized = path.replace(/^(\/erp)+/i, '') || '/';
 
-      const resolveRouteTarget = (path) => {
-        const normalized = path.replace(/^\/erp(\/|$)/, '/$1');
-        if (
-          normalized === '/modules' ||
-          normalized === '/login' ||
-          normalized === '/:moduleCode/login' ||
-          normalized === '/o/:organizationCode/login' ||
-          normalized === '/o/:organizationCode' ||
-          normalized === '/c/:companyCode/login' ||
-          normalized === '/c/:companyCode' ||
-          normalized.endsWith('/login') ||
-          /^\/o\/[^/]+(\/login)?$/.test(normalized) ||
-          /^\/c\/[^/]+(\/login)?$/.test(normalized)
-        ) {
-          return { element: 'Navigate', to: '/', replace: true };
-        }
-        return { element: 'Page', path: normalized };
-      };
-
-      for (const route of legacyLoginRoutes) {
-        const resolution = resolveRouteTarget(route);
-        assert.equal(resolution.element, 'Navigate', `Route ${route} should redirect`);
-        assert.equal(resolution.to, '/', `Route ${route} should redirect to '/'`);
-        assert.equal(resolution.replace, true, `Route ${route} should replace history`);
+      // Specific organization route: /o/:organizationCode/login -> <Login />
+      const orgLoginMatch = normalized.match(/^\/o\/([^/]+)\/login$/);
+      if (orgLoginMatch) {
+        return {
+          component: 'Login',
+          params: { organizationCode: decodeURIComponent(orgLoginMatch[1]) },
+          isRedirect: false,
+        };
       }
+
+      // Organization shortcut: /o/:organizationCode -> redirect to /o/:organizationCode/login
+      const orgRedirectMatch = normalized.match(/^\/o\/([^/]+)$/);
+      if (orgRedirectMatch) {
+        return {
+          component: 'OrgRedirect',
+          redirectTo: `/o/${encodeURIComponent(orgRedirectMatch[1])}/login`,
+          isRedirect: true,
+          replace: true,
+        };
+      }
+
+      // Specific company route: /c/:companyCode/login -> <Login />
+      const companyLoginMatch = normalized.match(/^\/c\/([^/]+)\/login$/);
+      if (companyLoginMatch) {
+        return {
+          component: 'Login',
+          params: { companyCode: decodeURIComponent(companyLoginMatch[1]) },
+          isRedirect: false,
+        };
+      }
+
+      // Company shortcut: /c/:companyCode -> redirect to /c/:companyCode/login
+      const companyRedirectMatch = normalized.match(/^\/c\/([^/]+)$/);
+      if (companyRedirectMatch) {
+        return {
+          component: 'CompanyRedirect',
+          redirectTo: `/c/${encodeURIComponent(companyRedirectMatch[1])}/login`,
+          isRedirect: true,
+          replace: true,
+        };
+      }
+
+      // Exact standalone /login route -> replace redirect to /
+      if (normalized === '/login') {
+        return {
+          component: 'Navigate',
+          redirectTo: '/',
+          isRedirect: true,
+          replace: true,
+        };
+      }
+
+      // Legacy /modules or /:moduleCode/login routes -> replace redirect to /
+      if (normalized === '/modules' || normalized.match(/^\/[^/]+\/login$/)) {
+        return {
+          component: 'Navigate',
+          redirectTo: '/',
+          isRedirect: true,
+          replace: true,
+        };
+      }
+
+      return {
+        component: 'Page',
+        path: normalized,
+        isRedirect: false,
+      };
+    };
+
+    it('redirects exact https://www.mark2.in/erp/login to https://www.mark2.in/erp/ (/)', () => {
+      const result = resolveAppRoute('/erp/login');
+      assert.equal(result.isRedirect, true);
+      assert.equal(result.redirectTo, '/');
+      assert.equal(result.replace, true);
+
+      const bareResult = resolveAppRoute('/login');
+      assert.equal(bareResult.isRedirect, true);
+      assert.equal(bareResult.redirectTo, '/');
+      assert.equal(bareResult.replace, true);
+    });
+
+    it('opens organization-specific login flow for /erp/o/mohit/login and preserves organizationCode mohit', () => {
+      const result = resolveAppRoute('/erp/o/mohit/login');
+      assert.equal(result.isRedirect, false);
+      assert.equal(result.component, 'Login');
+      assert.equal(result.params.organizationCode, 'mohit');
+
+      const bareResult = resolveAppRoute('/o/mohit/login');
+      assert.equal(bareResult.isRedirect, false);
+      assert.equal(bareResult.component, 'Login');
+      assert.equal(bareResult.params.organizationCode, 'mohit');
+    });
+
+    it('redirects /erp/o/mohit to /erp/o/mohit/login preserving organization code', () => {
+      const result = resolveAppRoute('/erp/o/mohit');
+      assert.equal(result.isRedirect, true);
+      assert.equal(result.component, 'OrgRedirect');
+      assert.equal(result.redirectTo, '/o/mohit/login');
+      assert.equal(result.replace, true);
+    });
+
+    it('opens company-specific login flow for /erp/c/MOHIT/login and preserves companyCode MOHIT', () => {
+      const result = resolveAppRoute('/erp/c/MOHIT/login');
+      assert.equal(result.isRedirect, false);
+      assert.equal(result.component, 'Login');
+      assert.equal(result.params.companyCode, 'MOHIT');
+
+      const bareResult = resolveAppRoute('/c/MOHIT/login');
+      assert.equal(bareResult.isRedirect, false);
+      assert.equal(bareResult.component, 'Login');
+      assert.equal(bareResult.params.companyCode, 'MOHIT');
+    });
+
+    it('redirects /erp/c/MOHIT to /erp/c/MOHIT/login preserving company code', () => {
+      const result = resolveAppRoute('/erp/c/MOHIT');
+      assert.equal(result.isRedirect, true);
+      assert.equal(result.component, 'CompanyRedirect');
+      assert.equal(result.redirectTo, '/c/MOHIT/login');
+      assert.equal(result.replace, true);
     });
   });
 
-  describe('2. Unauthenticated Protected Route Guards (Fail Closed to /)', () => {
+  describe('2. Login Component Mode Resolution & Standalone Redirection Defense', () => {
+    // Simulates Login component mode detection logic
+    const evaluateLoginComponent = ({ organizationCode, routeCompanyCode }) => {
+      const isOrgMode = Boolean(organizationCode);
+      const isCompanyMode = Boolean(routeCompanyCode);
+
+      // Defense-in-depth: standalone login without context redirects to /
+      if (!isOrgMode && !isCompanyMode) {
+        return { action: 'REDIRECT', to: '/', replace: true };
+      }
+
+      if (isOrgMode) {
+        return {
+          action: 'RENDER_ORG_PORTAL',
+          mode: 'organization',
+          organizationCode,
+          title: 'Owner Sign In',
+          badge: 'Organization Owner Portal',
+        };
+      }
+
+      return {
+        action: 'RENDER_COMPANY_PORTAL',
+        mode: 'company',
+        companyCode: routeCompanyCode,
+        title: 'Welcome Back',
+        badge: `Company Portal: ${routeCompanyCode}`,
+      };
+    };
+
+    it('renders organization login portal for organizationCode mohit without redirecting', () => {
+      const evalResult = evaluateLoginComponent({ organizationCode: 'mohit', routeCompanyCode: undefined });
+      assert.equal(evalResult.action, 'RENDER_ORG_PORTAL');
+      assert.equal(evalResult.mode, 'organization');
+      assert.equal(evalResult.organizationCode, 'mohit');
+      assert.equal(evalResult.badge, 'Organization Owner Portal');
+    });
+
+    it('renders company login portal for companyCode MOHIT without redirecting', () => {
+      const evalResult = evaluateLoginComponent({ organizationCode: undefined, routeCompanyCode: 'MOHIT' });
+      assert.equal(evalResult.action, 'RENDER_COMPANY_PORTAL');
+      assert.equal(evalResult.mode, 'company');
+      assert.equal(evalResult.companyCode, 'MOHIT');
+      assert.equal(evalResult.badge, 'Company Portal: MOHIT');
+    });
+
+    it('redirects to / if Login component is accessed without org or company context', () => {
+      const evalResult = evaluateLoginComponent({ organizationCode: undefined, routeCompanyCode: undefined });
+      assert.equal(evalResult.action, 'REDIRECT');
+      assert.equal(evalResult.to, '/');
+      assert.equal(evalResult.replace, true);
+    });
+  });
+
+  describe('3. Unauthenticated Protected Route Guards (Fail Closed to /)', () => {
     it('ProtectedRoute redirects unauthenticated visitors to / instead of /login', () => {
       const simulateProtectedRoute = ({ authenticated, cookieToken, location }) => {
         if (!authenticated && !cookieToken) {
@@ -119,7 +256,7 @@ describe('Legacy ERP Login Page Removal & Logout Redirection Suite', () => {
     });
   });
 
-  describe('3. Root Index Resolution (/erp/ Landing Page Preservation)', () => {
+  describe('4. Root Index Resolution (/erp/ Landing Page Preservation)', () => {
     it('renders public ERP LandingPage for unauthenticated users at / without redirecting', () => {
       const simulateRootIndexHandler = ({ authenticated, user, cookieToken, searchParams }) => {
         const urlToken = searchParams?.get?.('token');
@@ -167,9 +304,8 @@ describe('Legacy ERP Login Page Removal & Logout Redirection Suite', () => {
     });
   });
 
-  describe('4. Centralized Logout Handler & Redirection Behavior', () => {
+  describe('5. Centralized Logout Handler & Redirection Behavior', () => {
     it('configures defaultLandingPath as /erp/ and never /erp/login', () => {
-      // Test the defaultLandingPath resolution logic from logout.js
       const resolveDefaultLanding = (basePath) => {
         return (basePath || '/erp/').replace(/\/$/, '') + '/';
       };
@@ -232,13 +368,12 @@ describe('Legacy ERP Login Page Removal & Logout Redirection Suite', () => {
     });
   });
 
-  describe('5. Multi-Module Logout Uniformity', () => {
+  describe('6. Multi-Module Logout Uniformity', () => {
     it('verifies all modules perform identical clean logout sequence navigating to /', () => {
       const modules = ['Accounts', 'Inventory', 'CRM', 'Purchases', 'Workflows', 'Admin', 'Owner', 'Company'];
       
       for (const mod of modules) {
         const logoutActions = [];
-        // Simulate layout logout flow
         const performLogout = () => {
           logoutActions.push('API_LOGOUT');
           logoutActions.push('CLEAR_COOKIES');

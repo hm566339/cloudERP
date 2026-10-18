@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link, useSearchParams, useParams } from 'react-router-dom';
+import { useNavigate, useLocation, Link, useSearchParams, useParams, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   ArrowRight,
@@ -46,6 +46,11 @@ export default function Login() {
 
   const isOrgMode = Boolean(organizationCode);
   const isCompanyMode = Boolean(routeCompanyCode);
+
+  // Standalone /login is removed. If accessed without organization or company context, redirect to ERP root
+  if (!isOrgMode && !isCompanyMode) {
+    return <Navigate to="/" replace />;
+  }
 
 
   // Query organization lookup if in organization mode
