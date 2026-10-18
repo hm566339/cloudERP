@@ -179,7 +179,7 @@ export function getSystemAdminNavigation() {
 /**
  * Raw blueprint generator for each module.
  */
-function getModuleNavigationBlueprint(moduleName, base) {
+function getModuleNavigationBlueprint(moduleName, base, authContext) {
   switch (moduleName) {
     case CANONICAL_MODULES.ACCOUNT:
       return [
@@ -203,7 +203,7 @@ function getModuleNavigationBlueprint(moduleName, base) {
             { id: 'acc-ac', label: 'Account Categories', path: `${base}/accounts/masters/account-categories`, icon: Layers, featureCode: 'ACCOUNT_CATEGORIES', action: 'READ' },
             { id: 'acc-ap', label: 'Accounting Periods', path: `${base}/accounts/organization/accounting-periods`, icon: Clock, featureCode: 'ACCOUNTING_PERIODS', action: 'READ' },
             { id: 'acc-fy', label: 'Fiscal Years', path: `${base}/accounts/organization/financial-years`, icon: Calendar, featureCode: 'FISCAL_YEARS', action: 'READ' },
-            { id: 'acc-ec', label: 'Expense Categories', path: `${base}/accounts/masters/expense-categories`, icon: Tag, featureCode: 'EXPENSES', action: 'READ' },
+            { id: 'acc-ec', label: 'Expense Categories', path: `${base}/accounts/masters/expense-categories`, icon: Tag, featureCode: 'EXPENSE_CATEGORIES', action: 'READ' },
           ],
         },
         {
@@ -226,8 +226,8 @@ function getModuleNavigationBlueprint(moduleName, base) {
           label: 'Tax',
           icon: BadgeCheck,
           children: [
-            { id: 'acc-tax-gst-state', label: 'GST State Master', path: `${base}/accounts/tax/gst-state-master`, icon: Tag, featureCode: 'GST_MASTER', action: 'READ' },
-            { id: 'acc-tax-gst-reg', label: 'GST Registrations', path: `${base}/accounts/tax/gst-registrations`, icon: Tag, featureCode: 'GST_MASTER', action: 'READ' },
+            { id: 'acc-tax-gst-state', label: 'GST State Master', path: `${base}/accounts/tax/gst-state-master`, icon: Tag, featureCode: 'GST_STATE_MASTER', action: 'READ' },
+            { id: 'acc-tax-gst-reg', label: 'GST Registrations', path: `${base}/accounts/tax/gst-registrations`, icon: Tag, featureCode: 'GST_REGISTRATIONS', action: 'READ' },
             { id: 'acc-tax-gst', label: 'GST Slabs', path: `${base}/accounts/masters/gst-slabs`, icon: BadgeCheck, featureCode: 'GST_SLABS', action: 'READ' },
             { id: 'acc-tax-hsn', label: 'HSN / SAC', path: `${base}/accounts/masters/hsn-sac`, icon: Tag, featureCode: 'HSN_SAC', action: 'READ' },
           ],
@@ -551,8 +551,27 @@ function getModuleNavigationBlueprint(moduleName, base) {
         { id: 'pur-receipts', label: 'Goods Receipts', path: `/goods-receipts`, icon: ClipboardCheck, featureCode: 'GOODS_RECEIPTS', action: 'READ' },
       ];
 
-    default:
+    default: {
+      const dynamicFeatures = (authContext?.features || []).filter((f) => {
+        const mod = typeof f === 'object' ? normalizeModuleName(f.moduleName) : '';
+        return mod === normalizeModuleName(moduleName) && f.active !== false;
+      });
+      if (dynamicFeatures.length > 0) {
+        return dynamicFeatures.map((f) => {
+          const featCode = typeof f === 'string' ? f : (f.featureCode || f.featureName || f.code);
+          const featLabel = typeof f === 'object' && f.featureName ? f.featureName : featCode.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+          return {
+            id: `${normalizeModuleName(moduleName).toLowerCase()}-${featCode.toLowerCase().replace(/_/g, '-')}`,
+            label: featLabel,
+            path: `${base}/${normalizeModuleName(moduleName).toLowerCase()}/${featCode.toLowerCase().replace(/_/g, '-')}`,
+            icon: Package,
+            featureCode: featCode,
+            action: 'READ',
+          };
+        });
+      }
       return [];
+    }
   }
 }
 
@@ -630,11 +649,30 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
     // B) Permission check: user MUST have explicit or wildcard permission for this action
     // "Follow the application's established permission semantics. Do not assume that WRITE or DELETE implies READ."
     // "A user missing PRODUCTS:READ cannot see the Products menu item."
-    const hasPerm = checkHasPermission(authContext, featureCode, action, moduleName) ||
+    let hasPerm = checkHasPermission(authContext, featureCode, action, moduleName) ||
       (item.id?.startsWith('workflow-') && (
         checkHasPermission(authContext, featureCode, action, CANONICAL_MODULES.WORKFLOW) ||
         checkHasPermission(authContext, featureCode, action)
       ));
+    if (!hasPerm) {
+      if (featureCode === 'EXPENSE_CATEGORIES') {
+        hasPerm = checkHasPermission(authContext, 'EXPENSES', action, moduleName);
+      } else if (featureCode === 'GST_STATE_MASTER' || featureCode === 'GST_REGISTRATIONS') {
+        hasPerm = checkHasPermission(authContext, 'GST_MASTER', action, moduleName);
+      } else if (featureCode === 'ORDERS') {
+        hasPerm = checkHasPermission(authContext, 'SALES_ORDERS', action, moduleName);
+      } else if (featureCode === 'SALES_ORDERS') {
+        hasPerm = checkHasPermission(authContext, 'ORDERS', action, moduleName);
+      } else if (featureCode === 'UNIT_OF_MEASURES') {
+        hasPerm = checkHasPermission(authContext, 'PRODUCT_UOMS', action, moduleName);
+      } else if (featureCode === 'PRODUCT_UOMS') {
+        hasPerm = checkHasPermission(authContext, 'UNIT_OF_MEASURES', action, moduleName);
+      } else if (featureCode === 'PURCHASE_REQUESTS') {
+        hasPerm = checkHasPermission(authContext, 'PURCHASE_REQUISITIONS', action, moduleName);
+      } else if (featureCode === 'PURCHASE_REQUISITIONS') {
+        hasPerm = checkHasPermission(authContext, 'PURCHASE_REQUESTS', action, moduleName);
+      }
+    }
     if (!hasPerm) {
       // Special aliases for workflow & administration modules
       if (moduleName === CANONICAL_MODULES.WORKFLOW || item.id?.startsWith('workflow-')) {
@@ -721,10 +759,14 @@ export function buildDynamicSidebar({
       continue;
     }
 
-    const meta = MODULE_UI_METADATA[moduleName];
-    if (!meta) continue;
+    const meta = MODULE_UI_METADATA[moduleName] || {
+      id: moduleName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+      label: moduleName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      icon: Layers,
+      defaultPath: (b) => `${b}/${moduleName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+    };
 
-    const blueprint = getModuleNavigationBlueprint(moduleName, base);
+    const blueprint = getModuleNavigationBlueprint(moduleName, base, normalizedContext);
     if (!blueprint || blueprint.length === 0) continue;
 
     const filteredChildren = blueprint
@@ -735,6 +777,21 @@ export function buildDynamicSidebar({
     // If a module has no authorized child navigation items, omit the entire module.
     if (filteredChildren.length === 0) {
       continue;
+    }
+
+    // If the only surviving child is the generic root dashboard and user has no explicit DASHBOARD permission,
+    // the parent module must not appear because all its children/features are inaccessible (Rule 4).
+    const isOnlyRootDashboard = filteredChildren.length === 1 &&
+      (filteredChildren[0].id === 'admin-dashboard' || filteredChildren[0].id === 'acc-dash' || filteredChildren[0].id === 'inv-dashboard' || filteredChildren[0].id === 'crm-dashboard');
+    if (isOnlyRootDashboard) {
+      const hasExplicitDash = checkHasPermission(normalizedContext, 'DASHBOARD', 'READ') ||
+        checkHasPermission(normalizedContext, `${moduleName}_DASHBOARD`, 'READ') ||
+        checkHasPermission(normalizedContext, moduleName, 'READ') ||
+        checkHasPermission(normalizedContext, 'ALL', 'READ') ||
+        checkHasPermission(normalizedContext, 'ALL_MODULES', 'READ');
+      if (!hasExplicitDash) {
+        continue;
+      }
     }
 
     links.push({

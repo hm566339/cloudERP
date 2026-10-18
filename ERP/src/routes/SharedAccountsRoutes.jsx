@@ -245,7 +245,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
     <Route
       path={`${prefix}masters/expense-categories`}
       element={
-        <ProtectedRoute>
+        <ProtectedRoute module="EXPENSES">
           <ExpenseCategoriesManagement />
         </ProtectedRoute>
       }
@@ -253,7 +253,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
     <Route
       path={`${prefix}masters/expense-categories/:id`}
       element={
-        <ProtectedRoute>
+        <ProtectedRoute module="EXPENSES">
           <ExpenseCategoryDetails />
         </ProtectedRoute>
       }
@@ -473,7 +473,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase-requisitions`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_REQUISITIONS">
             <PurchaseRequests />
           </ProtectedRoute>
         }
@@ -481,7 +481,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase-requisitions/new`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_REQUISITIONS">
             <PurchaseRequisitionForm />
           </ProtectedRoute>
         }
@@ -489,7 +489,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase-requisitions/:id`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_REQUISITIONS">
             <PurchaseRequisitionDetail />
           </ProtectedRoute>
         }
@@ -497,7 +497,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase-requisitions/:id/edit`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_REQUISITIONS">
             <PurchaseRequisitionForm />
           </ProtectedRoute>
         }
@@ -505,7 +505,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/rfqs`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <RFQs />
           </ProtectedRoute>
         }
@@ -513,7 +513,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/rfqs/new`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <RFQForm />
           </ProtectedRoute>
         }
@@ -521,7 +521,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/rfqs/:id`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <RFQDetail />
           </ProtectedRoute>
         }
@@ -529,7 +529,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/rfqs/:id/edit`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <RFQForm />
           </ProtectedRoute>
         }
@@ -537,7 +537,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase-quotations`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotations />
           </ProtectedRoute>
         }
@@ -545,7 +545,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/supplier-quotes`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotations />
           </ProtectedRoute>
         }
@@ -553,7 +553,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/supplier-quotations`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotations />
           </ProtectedRoute>
         }
@@ -561,7 +561,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/supplier-quotations/new`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotationForm />
           </ProtectedRoute>
         }
@@ -569,7 +569,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/supplier-quotations/:id`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotationDetail />
           </ProtectedRoute>
         }
@@ -577,7 +577,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/supplier-quotations/:id/edit`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotationForm />
           </ProtectedRoute>
         }
@@ -585,7 +585,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/supplier-quotations/compare/:rfqId`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <QuotationComparison />
           </ProtectedRoute>
         }
@@ -593,7 +593,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase-orders`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <PurchaseOrders />
           </ProtectedRoute>
         }
@@ -601,7 +601,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase-orders/new`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <PurchaseOrderCreate />
           </ProtectedRoute>
         }
@@ -609,7 +609,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase-orders/:id`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <PurchaseOrderDetails />
           </ProtectedRoute>
         }
@@ -617,7 +617,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/goods-receipts`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="GOODS_RECEIPTS">
             <GoodsReceipts />
           </ProtectedRoute>
         }
@@ -625,7 +625,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/payments`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PAYMENT_VOUCHERS">
             <APPayments />
           </ProtectedRoute>
         }
@@ -633,7 +633,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_INVOICES">
             <APInvoices />
           </ProtectedRoute>
         }
@@ -641,7 +641,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase-invoices`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_INVOICES">
             <APInvoices />
           </ProtectedRoute>
         }
@@ -649,7 +649,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase/:id`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_INVOICES">
             <APInvoiceDetails />
           </ProtectedRoute>
         }
@@ -657,7 +657,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}transactions/purchase-invoices/:id`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_INVOICES">
             <APInvoiceDetails />
           </ProtectedRoute>
         }
@@ -669,7 +669,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}purchase-requisitions`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_REQUISITIONS">
             <PurchaseRequests />
           </ProtectedRoute>
         }
@@ -677,7 +677,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}purchase-requisitions/new`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_REQUISITIONS">
             <PurchaseRequisitionForm />
           </ProtectedRoute>
         }
@@ -685,7 +685,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}purchase-requisitions/:id`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_REQUISITIONS">
             <PurchaseRequisitionDetail />
           </ProtectedRoute>
         }
@@ -693,7 +693,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}purchase-requisitions/:id/edit`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_REQUISITIONS">
             <PurchaseRequisitionForm />
           </ProtectedRoute>
         }
@@ -701,7 +701,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}rfqs`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <RFQs />
           </ProtectedRoute>
         }
@@ -709,7 +709,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}rfqs/new`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <RFQForm />
           </ProtectedRoute>
         }
@@ -717,7 +717,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}rfqs/:id`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <RFQDetail />
           </ProtectedRoute>
         }
@@ -725,7 +725,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}rfqs/:id/edit`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <RFQForm />
           </ProtectedRoute>
         }
@@ -733,7 +733,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}supplier-quotes`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotations />
           </ProtectedRoute>
         }
@@ -741,7 +741,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}purchase-quotations`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotations />
           </ProtectedRoute>
         }
@@ -749,7 +749,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}supplier-quotations`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotations />
           </ProtectedRoute>
         }
@@ -757,7 +757,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}supplier-quotations/new`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotationForm />
           </ProtectedRoute>
         }
@@ -765,7 +765,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}supplier-quotations/:id`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotationDetail />
           </ProtectedRoute>
         }
@@ -773,7 +773,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}supplier-quotations/:id/edit`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <SupplierQuotationForm />
           </ProtectedRoute>
         }
@@ -781,7 +781,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}supplier-quotations/compare/:rfqId`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <QuotationComparison />
           </ProtectedRoute>
         }
@@ -789,7 +789,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}purchase-orders`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <PurchaseOrders />
           </ProtectedRoute>
         }
@@ -797,7 +797,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}purchase-orders/new`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <PurchaseOrderCreate />
           </ProtectedRoute>
         }
@@ -805,7 +805,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}purchase-orders/:id`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_ORDERS">
             <PurchaseOrderDetails />
           </ProtectedRoute>
         }
@@ -813,7 +813,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}goods-receipts`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="GOODS_RECEIPTS">
             <GoodsReceipts />
           </ProtectedRoute>
         }
@@ -821,7 +821,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}purchase-invoices`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_INVOICES">
             <APInvoices />
           </ProtectedRoute>
         }
@@ -829,7 +829,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}purchase-invoices/:id`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PURCHASE_INVOICES">
             <APInvoiceDetails />
           </ProtectedRoute>
         }
@@ -837,7 +837,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
       <Route
         path={`${prefix}payments`}
         element={
-          <ProtectedRoute>
+          <ProtectedRoute module="PAYMENT_VOUCHERS">
             <APPayments />
           </ProtectedRoute>
         }

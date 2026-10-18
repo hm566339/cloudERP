@@ -3,21 +3,26 @@
  */
 
 export function isItemOrChildActive(item, currentPath) {
-  if (!item) return false;
+  if (!item || !currentPath) return false;
+
+  const stripCompany = (p) => String(p || '').replace(/^\/company\/[^/]+/, '').replace(/\/$/, '') || '/';
+  const cleanCurrent = stripCompany(currentPath);
 
   if (item.path) {
-    if (currentPath === item.path) return true;
+    const cleanItem = stripCompany(item.path);
+
+    if (currentPath === item.path || (cleanCurrent === cleanItem && cleanItem !== '/')) {
+      return true;
+    }
 
     // Exact or sub-path matching without greedy prefix collision
-    if (item.path !== '/' && item.path !== '/super-admin/dashboard' && item.path !== '/owner/dashboard' && item.path !== '/dashboard') {
-      if (currentPath.startsWith(item.path + '/')) {
+    if (cleanItem !== '/' && cleanItem !== '/super-admin/dashboard' && cleanItem !== '/owner/dashboard' && cleanItem !== '/dashboard') {
+      if (currentPath.startsWith(item.path + '/') || cleanCurrent.startsWith(cleanItem + '/')) {
         // Prevent /workflows from greedily matching /workflows/approvals
-        const isApprovalsTarget = currentPath === '/workflows/approvals' ||
-          currentPath.startsWith('/workflows/approvals/') ||
-          currentPath.endsWith('/workflows/approvals') ||
-          currentPath.includes('/workflows/approvals/');
+        const isApprovalsTarget = cleanCurrent === '/workflows/approvals' ||
+          cleanCurrent.startsWith('/workflows/approvals/');
 
-        if ((item.path === '/workflows' || item.id === 'workflow-approvals') && isApprovalsTarget) {
+        if ((cleanItem === '/workflows' || item.id === 'workflow-approvals') && isApprovalsTarget) {
           // do not match
         } else {
           return true;
@@ -28,15 +33,11 @@ export function isItemOrChildActive(item, currentPath) {
     // Special module patterns
     if (item.path.includes('/transactions/expenses') && currentPath.includes('/transactions/expenses')) return true;
 
-    const isApprovalsRoute = currentPath === '/workflows/approvals' ||
-      currentPath.startsWith('/workflows/approvals/') ||
-      currentPath.endsWith('/workflows/approvals') ||
-      currentPath.includes('/workflows/approvals/');
+    const isApprovalsRoute = cleanCurrent === '/workflows/approvals' ||
+      cleanCurrent.startsWith('/workflows/approvals/');
 
-    const isWorkflowRoute = currentPath === '/workflows' ||
-      currentPath.startsWith('/workflows/') ||
-      currentPath.endsWith('/workflows') ||
-      currentPath.includes('/workflows/');
+    const isWorkflowRoute = cleanCurrent === '/workflows' ||
+      cleanCurrent.startsWith('/workflows/');
 
     if (item.id === 'workflow-approval-requests' && isApprovalsRoute) return true;
     if (item.id === 'workflow-approvals' && isWorkflowRoute && !isApprovalsRoute) return true;

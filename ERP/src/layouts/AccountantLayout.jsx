@@ -214,7 +214,7 @@ export default function AccountantLayout() {
           <MarkLogo variant="light" className="w-full h-full object-contain object-left" />
         </div>
         <span className="ml-auto text-[10px] font-bold bg-zinc-100 text-zinc-800 px-2 py-0.5 rounded border border-zinc-200/50 uppercase tracking-wider">
-          Accountant
+          {(currentUser?.role || authContext?.user?.role || 'Accountant').toString().replace(/^ROLE_/i, '').replace(/_/g, ' ')}
         </span>
       </div>
 

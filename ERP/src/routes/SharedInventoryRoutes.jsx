@@ -1,5 +1,6 @@
 import React, { lazy } from 'react';
 import { Route, Navigate } from 'react-router-dom';
+import ProtectedRoute from './ProtectedRoute';
 
 // ─── Inventory Pages ────────────────────────────────────────────────────────
 const InventoryDashboard = lazy(() => import('../features/inventory/pages/InventoryDashboard'));
@@ -36,54 +37,54 @@ const StockTracking = lazy(() => import('../features/inventory/pages/StockTracki
 export function SharedInventoryRoutes({ prefix = "" }) {
   return (
     <>
-      <Route path={`${prefix}dashboard`} element={<InventoryDashboard />} />
-      <Route path={`${prefix}unit-of-measures`} element={<UnitOfMeasureManagement />} />
-      <Route path={`${prefix}unit-of-measures/:id`} element={<GenericEntityDetails endpoint="/api/inventory/unit-of-measures" entityName="Unit of Measure" />} />
-      <Route path={`${prefix}warehouses`} element={<WarehouseManagement />} />
-      <Route path={`${prefix}warehouse`} element={<WarehouseManagement />} />
-      <Route path={`${prefix}warehouse/:id`} element={<WarehouseDetails />} />
-      <Route path={`${prefix}warehouse-locations`} element={<WarehouseLocationManagementPage />} />
-      <Route path={`${prefix}cost-layers`} element={<InventoryCostLayerManagement />} />
-      <Route path={`${prefix}cost-layers/:id`} element={<GenericEntityDetails endpoint="/api/inventory/inventory-cost-layers" entityName="Cost Layer" />} />
-      <Route path={`${prefix}periods`} element={<InventoryPeriodManagement />} />
-      <Route path={`${prefix}periods/:id`} element={<GenericEntityDetails endpoint="/api/inventory/inventory-periods" entityName="Inventory Period" />} />
-      <Route path={`${prefix}snapshots`} element={<InventorySnapshotManagement />} />
-      <Route path={`${prefix}snapshots/:id`} element={<GenericEntityDetails endpoint="/api/inventory/inventory-snapshots" entityName="Inventory Snapshot" />} />
-      <Route path={`${prefix}valuations`} element={<InventoryValuationManagement />} />
-      <Route path={`${prefix}valuations/:id`} element={<GenericEntityDetails endpoint="/api/inventory/inventory-valuations" entityName="Inventory Valuation" />} />
-      <Route path={`${prefix}opening-stock`} element={<OpeningStockManagement />} />
-      <Route path={`${prefix}opening-stocks`} element={<OpeningStockManagement />} />
-      <Route path={`${prefix}opening-stocks/:id`} element={<OpeningStockDetails />} />
-      <Route path={`${prefix}stock`} element={<StockTracking />} />
-      <Route path={`${prefix}stocks`} element={<StockTracking />} />
-      <Route path={`${prefix}current-stock`} element={<StockTracking />} />
-      <Route path={`${prefix}stock-movements`} element={<StockMovementManagement />} />
-      <Route path={`${prefix}stock-movements/:id`} element={<GenericEntityDetails endpoint="/api/inventory/stock-movements" entityName="Stock Movement" />} />
-      <Route path={`${prefix}stock-movement-lines`} element={<StockMovementLineManagement />} />
-      <Route path={`${prefix}stock-movement-lines/:id`} element={<GenericEntityDetails endpoint="/api/inventory/stock-movement-lines" entityName="Stock Movement Line" />} />
-      <Route path={`${prefix}stock-reservations`} element={<StockReservationManagement />} />
-      <Route path={`${prefix}stock-reservations/:id`} element={<GenericEntityDetails endpoint="/api/inventory/stock-reservations" entityName="Stock Reservation" />} />
-      <Route path={`${prefix}stock-transfers`} element={<StockTransferManagement />} />
-      <Route path={`${prefix}stock-transfers/:id`} element={<StockTransferDetails />} />
-      <Route path={`${prefix}stock-adjustments`} element={<StockAdjustmentManagement />} />
-      <Route path={`${prefix}stock-adjustments/:id`} element={<StockAdjustmentDetails />} />
-      <Route path={`${prefix}product-batches`} element={<ProductBatchManagement />} />
-      <Route path={`${prefix}product-batches/:id`} element={<GenericEntityDetails endpoint="/api/inventory/product-batches" entityName="Product Batch" />} />
-      <Route path={`${prefix}products`} element={<ProductManagement />} />
-      <Route path={`${prefix}products/:id`} element={<GenericEntityDetails endpoint="/api/inventory/products" entityName="Product" />} />
-      <Route path={`${prefix}product-categories`} element={<ProductCategoryManagement />} />
-      <Route path={`${prefix}product-categories/:id`} element={<GenericEntityDetails endpoint="/api/inventory/product-categories" entityName="Product Category" />} />
-      <Route path={`${prefix}product-prices`} element={<ProductPriceManagement />} />
-      <Route path={`${prefix}product-prices/:id`} element={<GenericEntityDetails endpoint="/api/inventory/product-prices" entityName="Product Price" />} />
-      <Route path={`${prefix}product-serials`} element={<ProductSerialManagement />} />
-      <Route path={`${prefix}product-serials/:id`} element={<GenericEntityDetails endpoint="/api/inventory/product-serials" entityName="Product Serial" />} />
-      <Route path={`${prefix}product-uoms`} element={<ProductUomManagement />} />
-      <Route path={`${prefix}product-uoms/:id`} element={<GenericEntityDetails endpoint="/api/inventory/product-uoms" entityName="Product UOM" />} />
-      <Route path={`${prefix}reports`} element={<InventorySnapshotManagement />} />
-      <Route path={`${prefix}integration/sales-invoice`} element={<InventoryDashboard />} />
-      <Route path={`${prefix}integration/purchase-invoice`} element={<InventoryDashboard />} />
-      <Route path={`${prefix}integration/stock`} element={<InventoryDashboard />} />
-      <Route path={`${prefix}inventory-posting`} element={<InventoryDashboard />} />
+      <Route path={`${prefix}dashboard`} element={<ProtectedRoute module="INVENTORY"><InventoryDashboard /></ProtectedRoute>} />
+      <Route path={`${prefix}unit-of-measures`} element={<ProtectedRoute module="PRODUCT_UOMS"><UnitOfMeasureManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}unit-of-measures/:id`} element={<ProtectedRoute module="PRODUCT_UOMS"><GenericEntityDetails endpoint="/api/inventory/unit-of-measures" entityName="Unit of Measure" /></ProtectedRoute>} />
+      <Route path={`${prefix}warehouses`} element={<ProtectedRoute module="WAREHOUSES"><WarehouseManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}warehouse`} element={<ProtectedRoute module="WAREHOUSES"><WarehouseManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}warehouse/:id`} element={<ProtectedRoute module="WAREHOUSES"><WarehouseDetails /></ProtectedRoute>} />
+      <Route path={`${prefix}warehouse-locations`} element={<ProtectedRoute module="WAREHOUSE_LOCATIONS"><WarehouseLocationManagementPage /></ProtectedRoute>} />
+      <Route path={`${prefix}cost-layers`} element={<ProtectedRoute module="INVENTORY_VALUATION"><InventoryCostLayerManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}cost-layers/:id`} element={<ProtectedRoute module="INVENTORY_VALUATION"><GenericEntityDetails endpoint="/api/inventory/inventory-cost-layers" entityName="Cost Layer" /></ProtectedRoute>} />
+      <Route path={`${prefix}periods`} element={<ProtectedRoute module="INVENTORY_VALUATION"><InventoryPeriodManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}periods/:id`} element={<ProtectedRoute module="INVENTORY_VALUATION"><GenericEntityDetails endpoint="/api/inventory/inventory-periods" entityName="Inventory Period" /></ProtectedRoute>} />
+      <Route path={`${prefix}snapshots`} element={<ProtectedRoute module="INVENTORY_VALUATION"><InventorySnapshotManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}snapshots/:id`} element={<ProtectedRoute module="INVENTORY_VALUATION"><GenericEntityDetails endpoint="/api/inventory/inventory-snapshots" entityName="Inventory Snapshot" /></ProtectedRoute>} />
+      <Route path={`${prefix}valuations`} element={<ProtectedRoute module="INVENTORY_VALUATION"><InventoryValuationManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}valuations/:id`} element={<ProtectedRoute module="INVENTORY_VALUATION"><GenericEntityDetails endpoint="/api/inventory/inventory-valuations" entityName="Inventory Valuation" /></ProtectedRoute>} />
+      <Route path={`${prefix}opening-stock`} element={<ProtectedRoute module="OPENING_STOCK"><OpeningStockManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}opening-stocks`} element={<ProtectedRoute module="OPENING_STOCK"><OpeningStockManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}opening-stocks/:id`} element={<ProtectedRoute module="OPENING_STOCK"><OpeningStockDetails /></ProtectedRoute>} />
+      <Route path={`${prefix}stock`} element={<ProtectedRoute module="STOCK"><StockTracking /></ProtectedRoute>} />
+      <Route path={`${prefix}stocks`} element={<ProtectedRoute module="STOCK"><StockTracking /></ProtectedRoute>} />
+      <Route path={`${prefix}current-stock`} element={<ProtectedRoute module="STOCK"><StockTracking /></ProtectedRoute>} />
+      <Route path={`${prefix}stock-movements`} element={<ProtectedRoute module="STOCK_MOVEMENTS"><StockMovementManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}stock-movements/:id`} element={<ProtectedRoute module="STOCK_MOVEMENTS"><GenericEntityDetails endpoint="/api/inventory/stock-movements" entityName="Stock Movement" /></ProtectedRoute>} />
+      <Route path={`${prefix}stock-movement-lines`} element={<ProtectedRoute module="STOCK_MOVEMENTS"><StockMovementLineManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}stock-movement-lines/:id`} element={<ProtectedRoute module="STOCK_MOVEMENTS"><GenericEntityDetails endpoint="/api/inventory/stock-movement-lines" entityName="Stock Movement Line" /></ProtectedRoute>} />
+      <Route path={`${prefix}stock-reservations`} element={<ProtectedRoute module="STOCK_RESERVATIONS"><StockReservationManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}stock-reservations/:id`} element={<ProtectedRoute module="STOCK_RESERVATIONS"><GenericEntityDetails endpoint="/api/inventory/stock-reservations" entityName="Stock Reservation" /></ProtectedRoute>} />
+      <Route path={`${prefix}stock-transfers`} element={<ProtectedRoute module="STOCK_TRANSFERS"><StockTransferManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}stock-transfers/:id`} element={<ProtectedRoute module="STOCK_TRANSFERS"><StockTransferDetails /></ProtectedRoute>} />
+      <Route path={`${prefix}stock-adjustments`} element={<ProtectedRoute module="STOCK_ADJUSTMENTS"><StockAdjustmentManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}stock-adjustments/:id`} element={<ProtectedRoute module="STOCK_ADJUSTMENTS"><StockAdjustmentDetails /></ProtectedRoute>} />
+      <Route path={`${prefix}product-batches`} element={<ProtectedRoute module="PRODUCT_BATCHES"><ProductBatchManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}product-batches/:id`} element={<ProtectedRoute module="PRODUCT_BATCHES"><GenericEntityDetails endpoint="/api/inventory/product-batches" entityName="Product Batch" /></ProtectedRoute>} />
+      <Route path={`${prefix}products`} element={<ProtectedRoute module="PRODUCTS"><ProductManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}products/:id`} element={<ProtectedRoute module="PRODUCTS"><GenericEntityDetails endpoint="/api/inventory/products" entityName="Product" /></ProtectedRoute>} />
+      <Route path={`${prefix}product-categories`} element={<ProtectedRoute module="PRODUCT_CATEGORIES"><ProductCategoryManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}product-categories/:id`} element={<ProtectedRoute module="PRODUCT_CATEGORIES"><GenericEntityDetails endpoint="/api/inventory/product-categories" entityName="Product Category" /></ProtectedRoute>} />
+      <Route path={`${prefix}product-prices`} element={<ProtectedRoute module="PRODUCT_PRICES"><ProductPriceManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}product-prices/:id`} element={<ProtectedRoute module="PRODUCT_PRICES"><GenericEntityDetails endpoint="/api/inventory/product-prices" entityName="Product Price" /></ProtectedRoute>} />
+      <Route path={`${prefix}product-serials`} element={<ProtectedRoute module="PRODUCT_SERIALS"><ProductSerialManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}product-serials/:id`} element={<ProtectedRoute module="PRODUCT_SERIALS"><GenericEntityDetails endpoint="/api/inventory/product-serials" entityName="Product Serial" /></ProtectedRoute>} />
+      <Route path={`${prefix}product-uoms`} element={<ProtectedRoute module="PRODUCT_UOMS"><ProductUomManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}product-uoms/:id`} element={<ProtectedRoute module="PRODUCT_UOMS"><GenericEntityDetails endpoint="/api/inventory/product-uoms" entityName="Product UOM" /></ProtectedRoute>} />
+      <Route path={`${prefix}reports`} element={<ProtectedRoute module="INVENTORY_REPORTS"><InventorySnapshotManagement /></ProtectedRoute>} />
+      <Route path={`${prefix}integration/sales-invoice`} element={<ProtectedRoute module="INVENTORY_POSTING"><InventoryDashboard /></ProtectedRoute>} />
+      <Route path={`${prefix}integration/purchase-invoice`} element={<ProtectedRoute module="INVENTORY_POSTING"><InventoryDashboard /></ProtectedRoute>} />
+      <Route path={`${prefix}integration/stock`} element={<ProtectedRoute module="INVENTORY_POSTING"><InventoryDashboard /></ProtectedRoute>} />
+      <Route path={`${prefix}inventory-posting`} element={<ProtectedRoute module="INVENTORY_POSTING"><InventoryDashboard /></ProtectedRoute>} />
     </>
   );
 }

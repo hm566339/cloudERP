@@ -102,7 +102,7 @@ export function normalizeModulesList(rawModules) {
       const canonical = normalizeModuleName(m);
       return { id: m, name: m, code: m.toLowerCase(), canonical, active: true };
     }
-    const canonical = normalizeModuleName(m.canonical || m.name || m.code);
+    const canonical = normalizeModuleName(m.canonical || m.code || m.name);
     return {
       ...m,
       canonical,
@@ -137,19 +137,105 @@ export function normalizeFeaturesList(rawFeatures) {
   });
 }
 
+const FEATURE_CODE_ALIASES = {
+  // SSO / System
+  ROLES: 'ROLE',
+  ROLE_MANAGEMENT: 'ROLE',
+  USERS: 'USER',
+  USER_MANAGEMENT: 'USER',
+  PERMISSIONS: 'PERMISSION',
+  PERMISSION_MANAGEMENT: 'PERMISSION',
+  FEATURES: 'FEATURE',
+  FEATURE_MANAGEMENT: 'FEATURE',
+  MODULES: 'MODULE',
+  MODULE_MANAGEMENT: 'MODULE',
+  SESSIONS: 'SESSION',
+  SESSION_MANAGEMENT: 'SESSION',
+  PORTALACCESS: 'PORTAL_ACCESS',
+  PORTAL_ACCESS: 'PORTAL_ACCESS',
+  ORGANIZATIONS: 'ORGANIZATION',
+  ORGANIZATION_MANAGEMENT: 'ORGANIZATION',
+  COMPANIES: 'COMPANY',
+  COMPANY_MANAGEMENT: 'COMPANY',
+  SUBSCRIPTIONS: 'SUBSCRIPTION',
+  SUBSCRIPTION_MANAGEMENT: 'SUBSCRIPTION',
+
+  // Accounts
+  CUSTOMER: 'CUSTOMERS',
+  VENDOR: 'VENDORS',
+  COA: 'CHART_OF_ACCOUNTS',
+  LEDGER: 'CHART_OF_ACCOUNTS',
+  LEDGERS: 'CHART_OF_ACCOUNTS',
+  ACCOUNT_GROUP: 'ACCOUNT_GROUPS',
+  ACCOUNT_CATEGORY: 'ACCOUNT_CATEGORIES',
+  ACCOUNTING_PERIOD: 'ACCOUNTING_PERIODS',
+  FISCAL_YEAR: 'FISCAL_YEARS',
+  EXPENSE: 'EXPENSES',
+  EXPENSE_CATEGORY: 'EXPENSE_CATEGORIES',
+  EXPENSES_CATEGORY: 'EXPENSE_CATEGORIES',
+  SALES_INVOICE: 'SALES_INVOICES',
+  PURCHASE_INVOICE: 'PURCHASE_INVOICES',
+  PAYMENT_VOUCHER: 'PAYMENT_VOUCHERS',
+  RECEIPT_VOUCHER: 'RECEIPT_VOUCHERS',
+  CREDIT_NOTE: 'CREDIT_NOTES',
+  DEBIT_NOTE: 'DEBIT_NOTES',
+  GL_JOURNAL: 'GL_JOURNALS',
+  GL_JOURNAL_LINE: 'GL_JOURNAL_LINES',
+  GST_STATE: 'GST_STATE_MASTER',
+  GST_REGISTRATION: 'GST_REGISTRATIONS',
+  GST_SLAB: 'GST_SLABS',
+  BANK_ACCOUNT: 'BANK_ACCOUNTS',
+  BANK_TRANSACTION: 'BANK_TRANSACTIONS',
+  BANK_RECON: 'BANK_RECONCILIATION',
+  BUDGET: 'BUDGET_HEADERS',
+  BUDGETS: 'BUDGET_HEADERS',
+  BUDGET_HEADER: 'BUDGET_HEADERS',
+  BUDGET_LINE: 'BUDGET_LINES',
+  AUDIT_LOG: 'AUDIT_LOGS',
+
+  // Inventory
+  PRODUCT: 'PRODUCTS',
+  CATEGORY: 'PRODUCT_CATEGORIES',
+  CATEGORIES: 'PRODUCT_CATEGORIES',
+  PRODUCT_CATEGORY: 'PRODUCT_CATEGORIES',
+  PRODUCT_PRICE: 'PRODUCT_PRICES',
+  PRODUCT_BATCH: 'PRODUCT_BATCHES',
+  PRODUCT_SERIAL: 'PRODUCT_SERIALS',
+  UNIT_OF_MEASURE: 'PRODUCT_UOMS',
+  UNIT_OF_MEASURES: 'PRODUCT_UOMS',
+  UOM: 'PRODUCT_UOMS',
+  UOMS: 'PRODUCT_UOMS',
+  WAREHOUSE: 'WAREHOUSES',
+  WAREHOUSE_LOCATION: 'WAREHOUSE_LOCATIONS',
+  STOCK_MOVEMENT: 'STOCK_MOVEMENTS',
+  STOCK_TRANSFER: 'STOCK_TRANSFERS',
+  STOCK_RESERVATION: 'STOCK_RESERVATIONS',
+  STOCK_ADJUSTMENT: 'STOCK_ADJUSTMENTS',
+
+  // Sales & CRM
+  LEAD: 'LEADS',
+  QUOTATION: 'QUOTATIONS',
+  ORDER: 'SALES_ORDERS',
+  ORDERS: 'SALES_ORDERS',
+  SALES_ORDER: 'SALES_ORDERS',
+
+  // Procurement
+  PURCHASE_REQUEST: 'PURCHASE_REQUISITIONS',
+  PURCHASE_REQUESTS: 'PURCHASE_REQUISITIONS',
+  PURCHASE_REQUISITION: 'PURCHASE_REQUISITIONS',
+  PURCHASE_ORDER: 'PURCHASE_ORDERS',
+  SUPPLIER_QUOTE: 'SUPPLIER_QUOTATIONS',
+  SUPPLIER_QUOTES: 'SUPPLIER_QUOTATIONS',
+  SUPPLIER_QUOTATION: 'SUPPLIER_QUOTATIONS',
+  GOODS_RECEIPT: 'GOODS_RECEIPTS',
+};
+
 export function normalizeFeatureCode(input) {
   if (!input) return '';
   const clean = String(input).trim().toUpperCase().replace(/[-\s]/g, '_');
-  if (clean === 'ROLES' || clean === 'ROLE_MANAGEMENT') return 'ROLE';
-  if (clean === 'USERS' || clean === 'USER_MANAGEMENT') return 'USER';
-  if (clean === 'PERMISSIONS' || clean === 'PERMISSION_MANAGEMENT') return 'PERMISSION';
-  if (clean === 'FEATURES' || clean === 'FEATURE_MANAGEMENT') return 'FEATURE';
-  if (clean === 'MODULES' || clean === 'MODULE_MANAGEMENT') return 'MODULE';
-  if (clean === 'SESSIONS' || clean === 'SESSION_MANAGEMENT') return 'SESSION';
-  if (clean === 'PORTAL_ACCESS' || clean === 'PORTALACCESS') return 'PORTAL_ACCESS';
-  if (clean === 'ORGANIZATION_MANAGEMENT' || clean === 'ORGANIZATIONS') return 'ORGANIZATION';
-  if (clean === 'COMPANY_MANAGEMENT' || clean === 'COMPANIES') return 'COMPANY';
-  if (clean === 'SUBSCRIPTION_MANAGEMENT' || clean === 'SUBSCRIPTIONS') return 'SUBSCRIPTION';
+  if (FEATURE_CODE_ALIASES[clean]) {
+    return FEATURE_CODE_ALIASES[clean];
+  }
   return clean;
 }
 
@@ -192,13 +278,14 @@ export function normalizePermissionsList(rawPermissions) {
     }
     const explicitMod = normalizeModuleName(p.moduleName);
     const resolvedMod = explicitMod || (SSO_FEATURE_CODES.includes(feat) ? CANONICAL_MODULES.SSO : '');
+    const isActive = p.active !== false && String(p.status || '').toUpperCase() !== 'INACTIVE' && p.status !== false;
     return {
       ...p,
       featureCode: feat,
       action: act,
       permissionCode: permCode,
       moduleName: resolvedMod,
-      active: p.active !== false,
+      active: isActive,
       allowed: p.allowed !== false,
     };
   });
@@ -294,7 +381,7 @@ export function getEntitledModules(authContextOrModules) {
       if (canonical) entitled.add(canonical);
     } else if (m && typeof m === 'object') {
       if (m.active !== false) {
-        const canonical = normalizeModuleName(m.canonical || m.name || m.code || m.moduleName);
+        const canonical = normalizeModuleName(m.canonical || m.code || m.name || m.moduleName);
         if (canonical) entitled.add(canonical);
       }
     }
@@ -567,7 +654,7 @@ export function hasPermission(authContextOrFeature, featureNameOrAction, actionO
 
     if (p && typeof p === 'object') {
       // Must be allowed and active
-      if (p.allowed === false || p.active === false) return false;
+      if (p.allowed === false || p.active === false || String(p.status || '').toUpperCase() === 'INACTIVE' || p.status === false) return false;
 
       const permCode = String(p.permissionCode || '').trim().toUpperCase();
       const feat = normalizeFeatureCode(String(p.featureCode || p.feature || '').trim().toUpperCase());
@@ -653,93 +740,91 @@ export function canViewModule(authContext, moduleOrFeature) {
   if (isSystemAdminUser(authContext)) return true;
 
   const str = String(moduleOrFeature).trim();
-  const canonical = normalizeModuleName(str);
-
-  // 1. Is it a canonical top-level module? (e.g. 'ACCOUNT', 'INVENTORY', 'CRM')
-  const entitled = getEntitledModules(authContext);
-  if (entitled.includes(canonical)) {
-    return true;
-  }
-
-  // 2. Is it a feature/sub-module? (e.g. 'CUSTOMERS', 'BANK_ACCOUNTS', 'PRODUCTS', 'STOCK')
+  const lower = str.toLowerCase();
   const upper = str.toUpperCase();
   const normUpper = normalizeFeatureCode(upper);
+
+  const TOP_LEVEL_MODULE_ALIASES = {
+    account: CANONICAL_MODULES.ACCOUNT,
+    accounts: CANONICAL_MODULES.ACCOUNT,
+    finance: CANONICAL_MODULES.ACCOUNT,
+    accounting: CANONICAL_MODULES.ACCOUNT,
+    inventory: CANONICAL_MODULES.INVENTORY,
+    inv: CANONICAL_MODULES.INVENTORY,
+    crm: CANONICAL_MODULES.CRM,
+    sales: CANONICAL_MODULES.CRM,
+    'sales-crm': CANONICAL_MODULES.CRM,
+    'sales_crm': CANONICAL_MODULES.CRM,
+    salescrm: CANONICAL_MODULES.CRM,
+    workflow: CANONICAL_MODULES.WORKFLOW,
+    workflows: CANONICAL_MODULES.WORKFLOW,
+    wf: CANONICAL_MODULES.WORKFLOW,
+    hr: CANONICAL_MODULES.HR,
+    manufacturing: CANONICAL_MODULES.MANUFACTURING,
+    mfg: CANONICAL_MODULES.MANUFACTURING,
+    purchases: CANONICAL_MODULES.PURCHASES,
+    purchase: CANONICAL_MODULES.PURCHASES,
+    procurement: CANONICAL_MODULES.PURCHASES,
+    core: CANONICAL_MODULES.CORE,
+    sso: CANONICAL_MODULES.SSO,
+    auth: CANONICAL_MODULES.SSO,
+    admin: CANONICAL_MODULES.SSO,
+  };
+
+  const entitled = getEntitledModules(authContext);
+  const isTopModule = Boolean(TOP_LEVEL_MODULE_ALIASES[lower] || Object.values(CANONICAL_MODULES).includes(upper));
+
+  // 1. Target is a top-level module (e.g. 'ACCOUNT', 'INVENTORY', 'CRM', 'SSO')
+  if (isTopModule) {
+    const canonical = TOP_LEVEL_MODULE_ALIASES[lower] || upper;
+    if (entitled.includes(canonical)) {
+      return true;
+    }
+    // Fallback: If SSO module, check if user has active SSO feature permissions
+    if (canonical === CANONICAL_MODULES.SSO) {
+      const permissions = authContext?.permissions || [];
+      const SSO_ADMIN_FEATS = ['USER', 'ROLE', 'PERMISSION', 'FEATURE', 'MODULE', 'MODULE_ROUTE', 'PORTAL_ACCESS', 'SESSION', 'ORGANIZATION', 'COMPANY', 'SUBSCRIPTION', 'PLATFORM_ADMIN'];
+      return SSO_ADMIN_FEATS.some((featCode) =>
+        permissions.some((p) => {
+          if (typeof p === 'string') {
+            return p.toUpperCase() === featCode || p.toUpperCase().startsWith(`${featCode}:`);
+          }
+          const fc = normalizeFeatureCode(String(p.featureCode || p.feature || '').toUpperCase());
+          return fc === featCode && p.allowed !== false && p.active !== false;
+        })
+      );
+    }
+    return false;
+  }
+
+  // 2. Target is a feature (e.g. 'CUSTOMERS', 'PRODUCTS', 'ACCOUNT_GROUPS', etc.)
   if (upper === 'DASHBOARD' || upper.endsWith('_DASHBOARD') || normUpper === 'DASHBOARD') {
     return entitled.length > 0;
   }
+
   const features = authContext?.features || [];
-  const permissions = authContext?.permissions || [];
 
-  // Find if this feature exists in features/permissions and belongs to an entitled module
-  const matchingPerm = permissions.find((p) => {
-    if (typeof p === 'string') {
-      const parts = p.toUpperCase().split(':');
-      const pFeat = normalizeFeatureCode(parts[0] || p.toUpperCase());
-      return (pFeat === normUpper || p.toUpperCase() === upper) && p.toUpperCase() !== 'ALL' && p.toUpperCase() !== 'ALL_MODULES';
-    }
-    const feat = normalizeFeatureCode(String(p.featureCode || p.feature || '').trim().toUpperCase());
-    const pCode = String(p.permissionCode || '').trim().toUpperCase();
-    const pFeat = normalizeFeatureCode(pCode.includes(':') ? pCode.split(':')[0] : feat);
-    return (feat === normUpper || pFeat === normUpper) && p.allowed !== false && p.active !== false;
-  });
+  // If features list is provided in session, feature must exist and be active
+  if (features.length > 0) {
+    const matchingFeat = features.find((f) => {
+      if (typeof f === 'string') return normalizeFeatureCode(f.toUpperCase()) === normUpper || f.toUpperCase() === upper;
+      const code = normalizeFeatureCode(String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase());
+      const rawCode = String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase();
+      return (code === normUpper || rawCode === upper) && f.active !== false;
+    });
 
-  if (matchingPerm) {
-    const parentMod = typeof matchingPerm === 'object' ? normalizeModuleName(matchingPerm.moduleName) : null;
-    if (!parentMod || entitled.includes(parentMod)) {
-      return true;
-    }
-  }
-
-  const matchingFeat = features.find((f) => {
-    if (typeof f === 'string') return normalizeFeatureCode(f.toUpperCase()) === normUpper;
-    const code = normalizeFeatureCode(String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase());
-    return code === normUpper && f.active !== false;
-  });
-
-  if (matchingFeat) {
-    const parentMod = typeof matchingFeat === 'object' ? normalizeModuleName(matchingFeat.moduleName) : null;
-    if (!parentMod || entitled.includes(parentMod)) {
-      return true;
+    if (matchingFeat) {
+      const parentMod = typeof matchingFeat === 'object' ? normalizeModuleName(matchingFeat.moduleName) : null;
+      if (parentMod && !entitled.includes(parentMod)) {
+        return false;
+      }
+    } else {
+      // Feature not in features list — check if permission explicitly authorizes it
+      const hasExplicit = hasPermission(authContext, normUpper, 'READ') || hasPermission(authContext, upper, 'READ');
+      if (!hasExplicit) return false;
     }
   }
 
-  // 3. Fallback: aliases check for backward compatibility
-  const moduleAliases = {
-    accounts: ['ACCOUNT'],
-    finance: ['ACCOUNT'],
-    accounting: ['ACCOUNT'],
-    inventory: ['INVENTORY'],
-    crm: ['CRM'],
-    sales: ['CRM'],
-    workflow: ['WORKFLOW'],
-    workflows: ['WORKFLOW'],
-    banking: ['ACCOUNT'],
-    expenses: ['ACCOUNT'],
-    sso: ['SSO'],
-    admin: ['SSO'],
-    auth: ['SSO'],
-  };
-  const alias = moduleAliases[str.toLowerCase()];
-  if (alias) {
-    return alias.some((m) => entitled.includes(m));
-  }
-
-  // 4. If target is SSO and SSO is entitled or user has active SSO feature permissions
-  if (canonical === CANONICAL_MODULES.SSO) {
-    if (entitled.includes(CANONICAL_MODULES.SSO)) {
-      return true;
-    }
-
-    return SSO_FEATURE_CODES.some((featCode) =>
-      permissions.some((p) => {
-        if (typeof p === 'string') {
-          return p.toUpperCase() === featCode || p.toUpperCase().startsWith(`${featCode}:`);
-        }
-        const fc = normalizeFeatureCode(String(p.featureCode || p.feature || '').toUpperCase());
-        return fc === featCode && p.allowed !== false && p.active !== false;
-      })
-    );
-  }
-
-  return false;
+  // 3. User MUST have active READ permission (or wildcard ALL/ALL_MODULES)
+  return hasPermission(authContext, normUpper, 'READ') || hasPermission(authContext, upper, 'READ');
 }

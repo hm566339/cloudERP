@@ -777,7 +777,7 @@ export default function AppRoutes() {
 
           {/* Accounts & Finance */}
           <Route path="/accounts" element={<Navigate to="/accounts/dashboard" replace />} />
-          <Route path="/accounts/dashboard" element={<AccountDashboard />} />
+          <Route path="/accounts/dashboard" element={<ProtectedRoute module="ACCOUNTS"><AccountDashboard /></ProtectedRoute>} />
           {SharedAccountsRoutes({ prefix: "accounts/" })}
           {SharedAccountsRoutes({ prefix: "" })}
           <Route path="/accounts/profile" element={<ProfilePage />} />
@@ -792,52 +792,52 @@ export default function AppRoutes() {
 
           {/* CRM & Sales */}
           <Route path="/crm" element={<Navigate to="/crm/dashboard" replace />} />
-          <Route path="/crm/dashboard" element={<SalesCRMDashboard />} />
-          <Route path="/crm/customers" element={<CustomerManagement />} />
-          <Route path="/crm/customers/:id" element={<CustomerDetails />} />
-          <Route path="/crm/leads" element={<LeadTracking />} />
-          <Route path="/crm/quotations" element={<QuotationsPage />} />
-          <Route path="/crm/quotations/:id" element={<QuotationDetails />} />
-          <Route path="/crm/orders" element={<SalesOrders />} />
-          <Route path="/crm/communication" element={<CustomerCommunication />} />
-          <Route path="/crm/analytics" element={<SalesAnalytics />} />
-          <Route path="/crm/invoices" element={<SalesInvoices />} />
-          <Route path="/crm/invoices/:id" element={<SalesInvoiceDetails />} />
-          <Route path="/crm/audit" element={<AuditLogsPage />} />
+          <Route path="/crm/dashboard" element={<ProtectedRoute module="CRM"><SalesCRMDashboard /></ProtectedRoute>} />
+          <Route path="/crm/customers" element={<ProtectedRoute module="CUSTOMERS"><CustomerManagement /></ProtectedRoute>} />
+          <Route path="/crm/customers/:id" element={<ProtectedRoute module="CUSTOMERS"><CustomerDetails /></ProtectedRoute>} />
+          <Route path="/crm/leads" element={<ProtectedRoute module="LEADS"><LeadTracking /></ProtectedRoute>} />
+          <Route path="/crm/quotations" element={<ProtectedRoute module="QUOTATIONS"><QuotationsPage /></ProtectedRoute>} />
+          <Route path="/crm/quotations/:id" element={<ProtectedRoute module="QUOTATIONS"><QuotationDetails /></ProtectedRoute>} />
+          <Route path="/crm/orders" element={<ProtectedRoute module="SALES_ORDERS"><SalesOrders /></ProtectedRoute>} />
+          <Route path="/crm/communication" element={<ProtectedRoute module="COMMUNICATION"><CustomerCommunication /></ProtectedRoute>} />
+          <Route path="/crm/analytics" element={<ProtectedRoute module="ANALYTICS"><SalesAnalytics /></ProtectedRoute>} />
+          <Route path="/crm/invoices" element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoices /></ProtectedRoute>} />
+          <Route path="/crm/invoices/:id" element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoiceDetails /></ProtectedRoute>} />
+          <Route path="/crm/audit" element={<ProtectedRoute module="AUDIT_LOGS"><AuditLogsPage /></ProtectedRoute>} />
           <Route path="/sales-crm/*" element={<Navigate to="/crm" replace />} />
           <Route path="/sales-crm" element={<Navigate to="/crm/dashboard" replace />} />
 
           {/* Direct Procurement Routes */}
           <Route element={<PurchaseModuleLayout />}>
-            <Route path="/purchase-requisitions" element={<PurchaseRequests />} />
-            <Route path="/purchase-requisitions/new" element={<PurchaseRequisitionForm />} />
-            <Route path="/purchase-requisitions/:id" element={<PurchaseRequisitionDetail />} />
-            <Route path="/purchase-requisitions/:id/edit" element={<PurchaseRequisitionForm />} />
-            <Route path="/rfqs" element={<RFQs />} />
-            <Route path="/rfqs/new" element={<RFQForm />} />
-            <Route path="/rfqs/:id" element={<RFQDetail />} />
-            <Route path="/rfqs/:id/edit" element={<RFQForm />} />
-            <Route path="/supplier-quotes" element={<SupplierQuotations />} />
-            <Route path="/purchase-quotations" element={<SupplierQuotations />} />
-            <Route path="/supplier-quotations" element={<SupplierQuotations />} />
-            <Route path="/supplier-quotations/new" element={<SupplierQuotationForm />} />
-            <Route path="/supplier-quotations/:id" element={<SupplierQuotationDetail />} />
-            <Route path="/supplier-quotations/:id/edit" element={<SupplierQuotationForm />} />
-            <Route path="/supplier-quotations/compare/:rfqId" element={<QuotationComparison />} />
-            <Route path="/purchase-orders" element={<PurchaseOrders />} />
-            <Route path="/purchase-orders/new" element={<PurchaseOrderCreate />} />
-            <Route path="/purchase-orders/:id" element={<PurchaseOrderDetails />} />
-            <Route path="/goods-receipts" element={<GoodsReceipts />} />
-            <Route path="/purchase-invoices" element={<APInvoices />} />
-            <Route path="/purchase-invoices/:id" element={<APInvoiceDetails />} />
-            <Route path="/payments" element={<APPayments />} />
+            <Route path="/purchase-requisitions" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequests /></ProtectedRoute>} />
+            <Route path="/purchase-requisitions/new" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequisitionForm /></ProtectedRoute>} />
+            <Route path="/purchase-requisitions/:id" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequisitionDetail /></ProtectedRoute>} />
+            <Route path="/purchase-requisitions/:id/edit" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequisitionForm /></ProtectedRoute>} />
+            <Route path="/rfqs" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQs /></ProtectedRoute>} />
+            <Route path="/rfqs/new" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQForm /></ProtectedRoute>} />
+            <Route path="/rfqs/:id" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQDetail /></ProtectedRoute>} />
+            <Route path="/rfqs/:id/edit" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQForm /></ProtectedRoute>} />
+            <Route path="/supplier-quotes" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotations /></ProtectedRoute>} />
+            <Route path="/purchase-quotations" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotations /></ProtectedRoute>} />
+            <Route path="/supplier-quotations" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotations /></ProtectedRoute>} />
+            <Route path="/supplier-quotations/new" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotationForm /></ProtectedRoute>} />
+            <Route path="/supplier-quotations/:id" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotationDetail /></ProtectedRoute>} />
+            <Route path="/supplier-quotations/:id/edit" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotationForm /></ProtectedRoute>} />
+            <Route path="/supplier-quotations/compare/:rfqId" element={<ProtectedRoute module="PURCHASE_ORDERS"><QuotationComparison /></ProtectedRoute>} />
+            <Route path="/purchase-orders" element={<ProtectedRoute module="PURCHASE_ORDERS"><PurchaseOrders /></ProtectedRoute>} />
+            <Route path="/purchase-orders/new" element={<ProtectedRoute module="PURCHASE_ORDERS"><PurchaseOrderCreate /></ProtectedRoute>} />
+            <Route path="/purchase-orders/:id" element={<ProtectedRoute module="PURCHASE_ORDERS"><PurchaseOrderDetails /></ProtectedRoute>} />
+            <Route path="/goods-receipts" element={<ProtectedRoute module="GOODS_RECEIPTS"><GoodsReceipts /></ProtectedRoute>} />
+            <Route path="/purchase-invoices" element={<ProtectedRoute module="PURCHASE_INVOICES"><APInvoices /></ProtectedRoute>} />
+            <Route path="/purchase-invoices/:id" element={<ProtectedRoute module="PURCHASE_INVOICES"><APInvoiceDetails /></ProtectedRoute>} />
+            <Route path="/payments" element={<ProtectedRoute module="PAYMENT_VOUCHERS"><APPayments /></ProtectedRoute>} />
           </Route>
 
           {/* Direct Workflow & Approvals Routes */}
-          <Route path="/workflows" element={<WorkflowManagementPage />} />
-          <Route path="/workflows/approvals" element={<ApprovalRequestsPage />} />
-          <Route path="/workflows/transactions/:transactionId" element={<DynamicWorkflowPage />} />
-          <Route path="/workflows/document/:documentType/:documentId" element={<DynamicWorkflowPage />} />
+          <Route path="/workflows" element={<ProtectedRoute module="WORKFLOW"><WorkflowManagementPage /></ProtectedRoute>} />
+          <Route path="/workflows/approvals" element={<ProtectedRoute module="APPROVAL_REQUESTS"><ApprovalRequestsPage /></ProtectedRoute>} />
+          <Route path="/workflows/transactions/:transactionId" element={<ProtectedRoute module="WORKFLOW"><DynamicWorkflowPage /></ProtectedRoute>} />
+          <Route path="/workflows/document/:documentType/:documentId" element={<ProtectedRoute module="WORKFLOW"><DynamicWorkflowPage /></ProtectedRoute>} />
           <Route path="/workflow" element={<Navigate to="/workflows" replace />} />
           <Route path="/workflow/approvals" element={<Navigate to="/workflows/approvals" replace />} />
 
@@ -852,19 +852,19 @@ export default function AppRoutes() {
           {SharedCompanyRoutes({ prefix: "" })}
 
           {/* SSO & Administration */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/system-logs" element={<SystemLogsPage />} />
-          <Route path="/users" element={<UserList />} />
-          <Route path="/users/:id" element={<UserDetails />} />
-          <Route path="/roles" element={<RoleList />} />
-          <Route path="/portal-access" element={<PortalAccess />} />
-          <Route path="/sessions" element={<SessionList />} />
-          <Route path="/security/roles" element={<RolePermissionsSettings />} />
-          <Route path="/roles/permissions" element={<RolePermissionsSettings />} />
-          <Route path="/security/users" element={<UserPermissionsSettings />} />
-          <Route path="/security/features" element={<FeatureList />} />
-          <Route path="/security/permissions" element={<PermissionList />} />
-          <Route path="/features" element={<FeatureList />} />
+          <Route path="/admin" element={<ProtectedRoute module="SSO"><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/system-logs" element={<ProtectedRoute module="SSO"><SystemLogsPage /></ProtectedRoute>} />
+          <Route path="/users" element={<ProtectedRoute module="USER"><UserList /></ProtectedRoute>} />
+          <Route path="/users/:id" element={<ProtectedRoute module="USER"><UserDetails /></ProtectedRoute>} />
+          <Route path="/roles" element={<ProtectedRoute module="ROLE"><RoleList /></ProtectedRoute>} />
+          <Route path="/portal-access" element={<ProtectedRoute module="PORTAL_ACCESS"><PortalAccess /></ProtectedRoute>} />
+          <Route path="/sessions" element={<ProtectedRoute module="SESSION"><SessionList /></ProtectedRoute>} />
+          <Route path="/security/roles" element={<ProtectedRoute module="ROLE"><RolePermissionsSettings /></ProtectedRoute>} />
+          <Route path="/roles/permissions" element={<ProtectedRoute module="ROLE"><RolePermissionsSettings /></ProtectedRoute>} />
+          <Route path="/security/users" element={<ProtectedRoute module="USER"><UserPermissionsSettings /></ProtectedRoute>} />
+          <Route path="/security/features" element={<ProtectedRoute module="FEATURE"><FeatureList /></ProtectedRoute>} />
+          <Route path="/security/permissions" element={<ProtectedRoute module="PERMISSION"><PermissionList /></ProtectedRoute>} />
+          <Route path="/features" element={<ProtectedRoute module="FEATURE"><FeatureList /></ProtectedRoute>} />
 
           {/* Settings */}
           <Route path="/settings" element={<SettingsPage />} />

@@ -274,7 +274,7 @@ export default function CompanyLayout() {
         </div>
         {selectedCompany && !isSuperAdminGlobal && (
           <span className="ml-auto text-[10px] font-bold bg-zinc-100 text-zinc-800 px-2 py-0.5 rounded border border-zinc-200/50 uppercase tracking-wider">
-            {isOwnerUser ? 'Owner' : 'Tenant'}
+            {(effectiveUser?.role || authContext?.user?.role || membership?.memberType || (isOwnerUser ? 'Owner' : 'Member')).toString().replace(/^ROLE_/i, '').replace(/_/g, ' ')}
           </span>
         )}
         {isSuperAdminGlobal && (

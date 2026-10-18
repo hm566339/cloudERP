@@ -552,4 +552,243 @@ describe('Fully Dynamic Role-Based ERP Sidebar Navigation Suite', () => {
     assert.strictEqual(isItemOrChildActive(adjustmentsItem, currentStockUrl), false);
     assert.strictEqual(isItemOrChildActive(openingStockItem, currentStockUrl), false);
   });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SCENARIO 11: Accountant with full authorized access to Accounts and Reports
+  // ──────────────────────────────────────────────────────────────────────────
+  it('Scenario 11: Accountant with authorized access to Accounts and Reports receives structured hierarchy', () => {
+    const rawAccountantMe = {
+      user: { id: 'acc-1', role: 'accountant', email: 'accountant@firm.com' },
+      currentCompany: { id: 'comp-acc', code: 'ACC_CO' },
+      accessMode: 'FULL',
+      modules: [
+        { code: 'account', canonical: 'ACCOUNT', active: true },
+      ],
+      features: [
+        { featureCode: 'CUSTOMERS', active: true },
+        { featureCode: 'VENDORS', active: true },
+        { featureCode: 'CHART_OF_ACCOUNTS', active: true },
+        { featureCode: 'ACCOUNT_GROUPS', active: true },
+        { featureCode: 'SALES_INVOICES', active: true },
+        { featureCode: 'PURCHASE_INVOICES', active: true },
+        { featureCode: 'GL_JOURNALS', active: true },
+        { featureCode: 'GENERAL_LEDGER', active: true },
+        { featureCode: 'TRIAL_BALANCE', active: true },
+        { featureCode: 'PROFIT_LOSS', active: true },
+        { featureCode: 'BALANCE_SHEET', active: true },
+      ],
+      permissions: [
+        'CUSTOMERS:READ',
+        'VENDORS:READ',
+        'CHART_OF_ACCOUNTS:READ',
+        'ACCOUNT_GROUPS:READ',
+        'SALES_INVOICES:READ',
+        'PURCHASE_INVOICES:READ',
+        'GL_JOURNALS:READ',
+        'GENERAL_LEDGER:READ',
+        'TRIAL_BALANCE:READ',
+        'PROFIT_LOSS:READ',
+        'BALANCE_SHEET:READ',
+      ],
+    };
+
+    const links = buildDynamicSidebar({
+      authContext: rawAccountantMe,
+      companyId: 'comp-acc',
+      userRole: 'accountant',
+    });
+
+    const accSection = links.find((l) => l.id === 'accounts');
+    assert.ok(accSection, 'Accounts section must be generated');
+
+    const groupIds = accSection.children.map((c) => c.id);
+    assert.ok(groupIds.includes('acc-masters'), 'Masters group must exist');
+    assert.ok(groupIds.includes('acc-txn'), 'Transactions group must exist');
+    assert.ok(groupIds.includes('acc-reports'), 'Reports group must exist');
+
+    // Tax and Bank have no permitted features for this accountant, so they must be pruned
+    assert.strictEqual(groupIds.includes('acc-tax'), false, 'Empty Tax group must be pruned');
+    assert.strictEqual(groupIds.includes('acc-bank'), false, 'Empty Bank group must be pruned');
+
+    // Verify Masters children
+    const mastersGroup = accSection.children.find((c) => c.id === 'acc-masters');
+    const masterChildIds = mastersGroup.children.map((c) => c.id);
+    assert.ok(masterChildIds.includes('acc-cust'), 'Customers must be visible');
+    assert.ok(masterChildIds.includes('acc-vend'), 'Vendors must be visible');
+    assert.ok(masterChildIds.includes('acc-coa'), 'COA must be visible');
+    assert.ok(masterChildIds.includes('acc-ag'), 'Account Groups must be visible');
+    // Fiscal years not granted -> must not appear
+    assert.strictEqual(masterChildIds.includes('acc-fy'), false, 'Fiscal Years must not appear');
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SCENARIO 12: Granular Feature Visibility: Products visible, Product Batches hidden
+  // ──────────────────────────────────────────────────────────────────────────
+  it('Scenario 12: User with Products permission but lacking Product Batches shows Products and hides Batches', () => {
+    const rawInvMe = {
+      user: { id: 'inv-specialist', role: 'inventory_staff' },
+      currentCompany: { id: 'comp-inv', code: 'INV_CO' },
+      accessMode: 'FULL',
+      modules: [
+        { code: 'inventory', canonical: 'INVENTORY', active: true },
+      ],
+      features: [
+        { featureCode: 'PRODUCTS', active: true },
+        // PRODUCT_BATCHES and PRODUCT_SERIALS are NOT enabled/assigned
+      ],
+      permissions: [
+        'PRODUCTS:READ',
+      ],
+    };
+
+    const links = buildDynamicSidebar({
+      authContext: rawInvMe,
+      companyId: 'comp-inv',
+      userRole: 'inventory_staff',
+    });
+
+    const invSection = links.find((l) => l.id === 'inventory');
+    assert.ok(invSection, 'Inventory section should exist');
+
+    const prodGroup = invSection.children.find((c) => c.id === 'inv-products-group');
+    assert.ok(prodGroup, 'Products group should exist');
+
+    const prodChildIds = prodGroup.children.map((c) => c.id);
+    assert.ok(prodChildIds.includes('inv-products'), 'Products item must be visible');
+    assert.strictEqual(prodChildIds.includes('inv-batches'), false, 'Product Batches must NOT be visible');
+    assert.strictEqual(prodChildIds.includes('inv-serials'), false, 'Product Serials must NOT be visible');
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SCENARIO 13: Inactive or Denied Permissions Fail Closed
+  // ──────────────────────────────────────────────────────────────────────────
+  it('Scenario 13: Inactive or Denied Permissions fail closed', () => {
+    const deniedCtx = {
+      user: { id: 'denied-user', role: 'staff' },
+      currentCompany: { id: 'comp-d', code: 'DENY_CO' },
+      accessMode: 'FULL',
+      modules: [
+        { code: 'account', canonical: 'ACCOUNT', active: true },
+      ],
+      features: [
+        { featureCode: 'CUSTOMERS', active: true },
+        { featureCode: 'VENDORS', active: false }, // Feature inactive
+      ],
+      permissions: [
+        { featureCode: 'CUSTOMERS', action: 'READ', allowed: false, status: 'ACTIVE' }, // Explicitly denied
+        { featureCode: 'VENDORS', action: 'READ', allowed: true, status: 'ACTIVE' }, // Feature inactive above
+        { featureCode: 'SALES_INVOICES', action: 'READ', allowed: true, status: 'INACTIVE' }, // Permission inactive
+      ],
+    };
+
+    assert.strictEqual(hasPermission(deniedCtx, 'CUSTOMERS', 'READ'), false, 'Denied permission must return false');
+    assert.strictEqual(hasPermission(deniedCtx, 'SALES_INVOICES', 'READ'), false, 'Inactive permission must return false');
+
+    const links = buildDynamicSidebar({
+      authContext: deniedCtx,
+      companyId: 'comp-d',
+      userRole: 'staff',
+    });
+
+    // Accounts section should be pruned because all features are denied/inactive
+    assert.strictEqual(links.some((l) => l.id === 'accounts'), false, 'Accounts section with 0 permitted features must be pruned');
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SCENARIO 14: Direct Route Access Guard Verification (canViewModule)
+  // ──────────────────────────────────────────────────────────────────────────
+  it('Scenario 14: canViewModule enforces fail-closed permission checks for protected routes', async () => {
+    const { canViewModule } = await import('../../utils/moduleNormalization.js');
+
+    const authContext = {
+      user: { id: 'tester-1' },
+      accessMode: 'FULL',
+      modules: [
+        { code: 'account', canonical: 'ACCOUNT', active: true },
+        { code: 'inventory', canonical: 'INVENTORY', active: true },
+      ],
+      features: [
+        { featureCode: 'CUSTOMERS', active: true },
+        { featureCode: 'PRODUCTS', active: true },
+      ],
+      permissions: [
+        'CUSTOMERS:READ',
+        'PRODUCTS:READ',
+      ],
+    };
+
+    // Allowed module & feature checks
+    assert.strictEqual(canViewModule(authContext, 'ACCOUNTS'), true);
+    assert.strictEqual(canViewModule(authContext, 'CUSTOMERS'), true);
+    assert.strictEqual(canViewModule(authContext, 'PRODUCTS'), true);
+
+    // Unassigned feature checks: Must FAIL closed (return false) even if parent module is active
+    assert.strictEqual(canViewModule(authContext, 'ACCOUNT_GROUPS'), false, 'ACCOUNT_GROUPS must fail closed');
+    assert.strictEqual(canViewModule(authContext, 'PURCHASE_INVOICES'), false, 'PURCHASE_INVOICES must fail closed');
+    assert.strictEqual(canViewModule(authContext, 'INVENTORY_VALUATION'), false, 'INVENTORY_VALUATION must fail closed');
+    assert.strictEqual(canViewModule(authContext, 'CRM'), false, 'Unassigned CRM must fail closed');
+    assert.strictEqual(canViewModule(authContext, 'SSO'), false, 'Unassigned SSO must fail closed');
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SCENARIO 15: Dynamic Extension Modules Discovery
+  // ──────────────────────────────────────────────────────────────────────────
+  it('Scenario 15: Custom extension modules and features are dynamically rendered without manual code changes', () => {
+    const customModuleContext = {
+      user: { id: 'custom-org-user', role: 'admin' },
+      currentCompany: { id: 'comp-custom' },
+      accessMode: 'FULL',
+      modules: [
+        { code: 'payroll', name: 'Payroll & HR', active: true },
+      ],
+      features: [
+        { featureCode: 'PAYSLIPS', featureName: 'Employee Payslips', moduleName: 'payroll', active: true },
+        { featureCode: 'TAX_DECLARATIONS', featureName: 'Tax Declarations', moduleName: 'payroll', active: true },
+      ],
+      permissions: [
+        'PAYSLIPS:READ',
+        'TAX_DECLARATIONS:READ',
+      ],
+    };
+
+    const links = buildDynamicSidebar({
+      authContext: customModuleContext,
+      companyId: 'comp-custom',
+    });
+
+    const payrollSection = links.find((l) => l.id === 'payroll' || l.label.includes('Payroll'));
+    assert.ok(payrollSection, 'Custom payroll module should be dynamically rendered');
+    assert.ok(payrollSection.children.length >= 2, 'Custom module features should be populated');
+    const childLabels = payrollSection.children.map((c) => c.label);
+    assert.ok(childLabels.includes('Employee Payslips'), 'Employee Payslips feature should appear');
+    assert.ok(childLabels.includes('Tax Declarations'), 'Tax Declarations feature should appear');
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SCENARIO 16: Deep nested active route resolution for browser refresh
+  // ──────────────────────────────────────────────────────────────────────────
+  it('Scenario 16: Deep nested active route resolution keeps parents expanded on browser refresh', () => {
+    const parentGroup = {
+      id: 'acc-masters',
+      label: 'Masters',
+      children: [
+        { id: 'acc-cust', label: 'Customers', path: '/company/comp-100/accounts/customers' },
+      ],
+    };
+
+    // Deep nested URL: creating a new customer or viewing customer ID
+    const nestedDetailUrl = '/company/comp-100/accounts/customers/new';
+    assert.strictEqual(
+      isItemOrChildActive(parentGroup, nestedDetailUrl),
+      true,
+      'Parent group must remain active on deep child URL'
+    );
+
+    const nonMatchingUrl = '/company/comp-100/accounts/vendors';
+    assert.strictEqual(
+      isItemOrChildActive(parentGroup, nonMatchingUrl),
+      false,
+      'Parent group must not be active on unrelated sibling URL'
+    );
+  });
 });
