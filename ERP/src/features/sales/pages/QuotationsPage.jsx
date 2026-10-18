@@ -17,6 +17,7 @@ import PageHeader from '../../../components/common/PageHeader';
 import ModuleTabs, { salesTabs } from '../../../components/module-tabs';
 import DataTable from '../../../components/data-table';
 import AuditLogHover from '../../../components/common/AuditLogHover';
+import PermissionGuard from '../../../components/common/PermissionGuard';
 
 const QuotationOverview = ({ quote }) => {
   const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
@@ -803,14 +804,14 @@ export default function QuotationsPage() {
         description="Manage sales quotations"
         icon={FileText}
       >
-        {canCreate() && (
+        <PermissionGuard permission="QUOTATIONS:CREATE">
           <button
             onClick={() => { setEditQuoteId(null); setIsFormOpen(true); }}
             className="btn-primary flex items-center gap-2"
           >
             <Plus size={16} /> <span>New Quotation</span>
           </button>
-        )}
+        </PermissionGuard>
       </PageHeader>
 
       {/* ── Module Tabs ── */}
@@ -819,6 +820,7 @@ export default function QuotationsPage() {
       {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
+          permissionFeature="QUOTATIONS"
           selectable
           rowKey="id"
           selectedRows={selectedQuotations}

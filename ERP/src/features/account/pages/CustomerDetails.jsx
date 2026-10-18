@@ -370,6 +370,7 @@ export default function CustomerDetails() {
       iconBg:      'bg-blue-50',
       iconColor:   'text-blue-600',
       trailingIcon: Plus,
+      permission:  { module: 'SALES_INVOICES', action: 'CREATE' },
       onClick: () => navigate(buildPath('/sales/invoices'), { state: { customerId: customer.id, openCreate: true } }),
     },
     {
@@ -378,6 +379,7 @@ export default function CustomerDetails() {
       iconBg:      'bg-emerald-50',
       iconColor:   'text-emerald-600',
       trailingIcon: Plus,
+      permission:  { module: 'RECEIPTS', action: 'CREATE' },
       onClick: () => navigate(buildPath('/accounts/finance/receipts/new'), { state: { customerId: customer.id } }),
     },
     {
@@ -386,6 +388,7 @@ export default function CustomerDetails() {
       iconBg:      'bg-purple-50',
       iconColor:   'text-purple-600',
       trailingIcon: ExternalLink,
+      permission:  { module: 'GENERAL_LEDGER', action: 'READ' },
       onClick: () => setActiveTab('ledger'),
     },
   ];

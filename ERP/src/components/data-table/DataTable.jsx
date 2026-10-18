@@ -100,8 +100,14 @@ export default function DataTable({
   selectable = false,
   selectedRows: controlledSelectedRows,
   onSelectionChange,
-  bulkActions = []
+  bulkActions = [],
+
+  // Permissions & Dynamic RBAC
+  permissionFeature,
+  feature,
+  module
 }) {
+  const effectivePermissionFeature = permissionFeature || feature || module;
   // Row Selection (Controlled or Uncontrolled)
   const [internalSelectedRows, setInternalSelectedRows] = useState([]);
   const activeSelectedRows = controlledSelectedRows !== undefined ? controlledSelectedRows : internalSelectedRows;
@@ -294,6 +300,7 @@ export default function DataTable({
           onClearSelection={handleClearSelection}
           bulkActions={bulkActions}
           selectedRows={activeSelectedRows}
+          permissionFeature={effectivePermissionFeature}
         />
       )}
 
@@ -333,6 +340,7 @@ export default function DataTable({
         onRowClick={onRowClick}
         rowClassName={rowClassName}
         tableClassName={tableClassName}
+        permissionFeature={effectivePermissionFeature}
       />
 
       {/* 4. Bottom Pagination */}

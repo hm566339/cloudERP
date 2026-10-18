@@ -12,6 +12,9 @@ import {
 import DataTableFilters from './DataTableFilters';
 import DataTableSearch from './DataTableSearch';
 import ColumnVisibilityToggle from '../common/ColumnVisibilityToggle';
+import { usePermission } from '../../hooks/usePermission';
+import { useAuth } from '../../hooks/useAuth';
+import { hasPermission } from '../../utils/moduleNormalization';
 
 /**
  * Top toolbar for DataTable including search, quick filters, advanced filter toggle,
@@ -47,8 +50,49 @@ export default function DataTableHeader({
   selectedCount = 0,
   onClearSelection,
   bulkActions = [],
-  selectedRows = []
+  selectedRows = [],
+  permissionFeature,
+  feature,
+  module
 }) {
+  const { user } = useAuth();
+  const tableFeature = permissionFeature || feature || module;
+
+  const createPermFeature =
+    createOption?.permission?.feature ||
+    createOption?.permission?.module ||
+    (typeof createOption?.permission === 'string' && createOption.permission.includes(':')
+      ? createOption.permission.split(':')[0]
+      : createOption?.permission || tableFeature);
+
+  const createPermAction =
+    createOption?.permission?.action ||
+    (typeof createOption?.permission === 'string' && createOption.permission.includes(':')
+      ? createOption.permission.split(':')[1]
+      : 'CREATE');
+
+  const canCreate = usePermission(createPermFeature, createPermAction);
+  const effectiveCreateOption = (!createOption || (createPermFeature && !canCreate)) ? null : createOption;
+  const effectiveSearchAction = (!searchAction || (tableFeature && !canCreate)) ? null : searchAction;
+
+  const permittedBulkActions = React.useMemo(() => {
+    if (!Array.isArray(bulkActions)) return [];
+    return bulkActions.filter((action) => {
+      if (!action) return false;
+      if (action.permission) {
+        return hasPermission(user?.permissions, action.permission, action.action);
+      }
+      const actionKey = String(action.key || action.id || action.action || '').toUpperCase();
+      const actionLabel = String(action.label || '').toUpperCase();
+      if (actionKey.includes('DELETE') || actionLabel.includes('DELETE') || action.action === 'DELETE') {
+        const feat = action.feature || action.module || tableFeature;
+        if (feat) {
+          return hasPermission(user?.permissions, feat, 'DELETE');
+        }
+      }
+      return true;
+    });
+  }, [bulkActions, user?.permissions, tableFeature]);
   return (
     <div className="p-4 border-b border-zinc-200 bg-white space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -61,8 +105,8 @@ export default function DataTableHeader({
               onChange={onSearchChange}
               placeholder={searchPlaceholder}
               debounceMs={searchDebounceMs}
-              createOption={createOption}
-              searchAction={searchAction}
+              createOption={effectiveCreateOption}
+              searchAction={effectiveSearchAction}
               data={data}
             />
           )}
@@ -97,9 +141,9 @@ export default function DataTableHeader({
           )}
 
           {/* Bulk Actions */}
-          {selectable && selectedCount > 0 && bulkActions && bulkActions.length > 0 && (
+          {selectable && selectedCount > 0 && permittedBulkActions && permittedBulkActions.length > 0 && (
             <div className="flex items-center gap-1.5">
-              {bulkActions.map((action) => (
+              {permittedBulkActions.map((action) => (
                 <button
                   key={action.key || action.id || action.label}
                   type="button"

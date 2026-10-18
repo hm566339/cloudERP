@@ -724,7 +724,7 @@ export default function SalesInvoices() {
         icon={FileText}
         actions={[
 
-          ...(canCreate() ? [{
+          ...(canCreate('SALES_INVOICES') ? [{
             key: 'create',
             label: 'Generate Invoice',
             icon: Plus,
@@ -767,6 +767,7 @@ export default function SalesInvoices() {
       {/* Main Container with Generic DataTable */}
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
+          permissionFeature="SALES_INVOICES"
           columns={columns}
           data={invoices}
           loading={isLoading}

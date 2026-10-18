@@ -1,4 +1,5 @@
 import React from 'react';
+import RequirePermission from './RequirePermission';
 
 /**
  * Generic reusable QuickActionsCard.
@@ -73,9 +74,8 @@ export default function QuickActionsCard({ title = 'Quick Actions', actions = []
             ? iconHoverBg
             : iconBg.replace('-50', '-100').replace('bg-zinc-100', 'bg-zinc-200');
 
-          return (
+          const itemButton = (
             <button
-              key={i}
               onClick={onClick}
               disabled={disabled}
               className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-zinc-50 rounded-xl transition-colors group disabled:opacity-40 disabled:pointer-events-none"
@@ -98,6 +98,31 @@ export default function QuickActionsCard({ title = 'Quick Actions', actions = []
               )}
             </button>
           );
+
+          if (action.permission) {
+            const permModule =
+              typeof action.permission === 'string' && action.permission.includes(':')
+                ? action.permission.split(':')[0]
+                : action.permission.module || (typeof action.permission === 'string' ? action.permission : null);
+            const permAction =
+              typeof action.permission === 'string' && action.permission.includes(':')
+                ? action.permission.split(':')[1]
+                : action.permission.action || null;
+
+            return (
+              <RequirePermission
+                key={i}
+                module={permModule}
+                action={permAction}
+                permission={typeof action.permission === 'string' ? action.permission : undefined}
+                behavior={action.permission.behavior ?? 'hide'}
+              >
+                {itemButton}
+              </RequirePermission>
+            );
+          }
+
+          return <React.Fragment key={i}>{itemButton}</React.Fragment>;
         })}
       </div>
     </div>

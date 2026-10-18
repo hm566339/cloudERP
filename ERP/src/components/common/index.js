@@ -61,3 +61,11 @@ export { default as SkeletonLoader } from './SkeletonLoader';
 export { default as Pagination } from './Pagination';
 export { default as SearchInput } from './SearchInput';
 export { default as FilterBar } from './FilterBar';
+
+// ─── Permission-Aware Components ─────────────────────────────────────────────
+export { default as PermissionGuard } from './PermissionGuard';
+export { default as RequirePermission } from './RequirePermission';
+export { default as Can } from './Can';
+export { default as ActionButton } from './ActionButton';
+export { default as TableRowActions, TableActions } from './TableRowActions';
+

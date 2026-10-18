@@ -17,6 +17,7 @@ import ModuleTabs, { purchaseTabs } from '../../../components/module-tabs';
 import DataTable from '../../../components/data-table/DataTable';
 import AuditLogHover from '../../../components/common/AuditLogHover';
 import ExportModal from '../../../components/common/ExportModal';
+import PermissionGuard from '../../../components/common/PermissionGuard';
 import CreateAdvancePaymentModal from '../components/CreateAdvancePaymentModal';
 import RequireAdvanceModal from '../components/RequireAdvanceModal';
 import CreateGrnModal from '../components/CreateGrnModal';
@@ -441,7 +442,7 @@ export default function PurchaseOrders() {
               <Download size={15} />
               <span className="hidden sm:inline">Export</span>
             </button>
-            {canCreate() && (
+            <PermissionGuard permission="PURCHASE_ORDERS:CREATE">
               <button
                 onClick={() => navigate(buildPath('/accounts/transactions/purchase-orders/new'))}
                 className="btn-primary flex items-center gap-2"
@@ -449,7 +450,7 @@ export default function PurchaseOrders() {
                 <Plus size={16} />
                 <span>New Purchase Order</span>
               </button>
-            )}
+            </PermissionGuard>
           </div>
         }
       />
@@ -458,6 +459,7 @@ export default function PurchaseOrders() {
 
       <div className="p-6">
         <DataTable
+          permissionFeature="PURCHASE_ORDERS"
           data={orders}
           columns={columns}
           keyField="id"

@@ -32,7 +32,8 @@ export default function DataTableBody({
   rowKey = 'id',
   onRowClick,
   rowClassName,
-  tableClassName = ''
+  tableClassName = '',
+  permissionFeature
 }) {
   const selectAllRef = React.useRef(null);
 
@@ -209,6 +210,7 @@ export default function DataTableBody({
                   renderExpandedRow={renderExpandedRow}
                   onRowClick={onRowClick}
                   rowClassName={rowClassName}
+                  permissionFeature={permissionFeature}
                 />
               );
             })

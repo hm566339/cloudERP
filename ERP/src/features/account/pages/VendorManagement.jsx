@@ -453,6 +453,7 @@ export default function VendorManagement() {
       {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
+          permissionFeature="VENDORS"
           selectable
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}

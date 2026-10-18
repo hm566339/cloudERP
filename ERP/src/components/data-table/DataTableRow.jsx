@@ -10,6 +10,7 @@ function DataTableRow({
   index,
   columns = [],
   rowActions = [],
+  permissionFeature,
   showIndex = true,
   rowIndex,
   selectable = false,
@@ -114,7 +115,7 @@ function DataTableRow({
                 : 'bg-white group-hover:bg-zinc-50/70'
             }`}
           >
-            <DataTableActionMenu actions={resolvedActions} row={row} index={index} />
+            <DataTableActionMenu actions={resolvedActions} row={row} index={index} permissionFeature={permissionFeature} />
           </td>
         )}
       </tr>

@@ -494,6 +494,7 @@ export default function CustomerManagement() {
       {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
+          permissionFeature="CUSTOMERS"
           selectable
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}

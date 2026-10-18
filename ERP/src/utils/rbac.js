@@ -1,5 +1,5 @@
-import { useAppSelector } from '../app/hooks';
-import { selectCurrentUser, selectAuthContext } from '../features/auth/authSlice';
+import { useAppSelector } from '../app/hooks.js';
+import { selectCurrentUser, selectAuthContext } from '../features/auth/authSlice.js';
 import {
   normalizeModuleName,
   getEntitledModules,
@@ -230,9 +230,14 @@ export function useRBAC() {
 
   const isSuperAdmin = roleName === ROLES.SUPER_ADMIN;
 
+  const accessMode = String(authContext?.accessMode || user?.accessMode || '').toUpperCase();
+  const isBlocked = accessMode === 'BLOCKED';
+  const isReadOnly = accessMode === 'READ_ONLY';
+
   const canCreate = (mod = null) => {
+    if (isBlocked || isReadOnly) return false;
     if (isSuperAdmin) return true;
-    if (mod) return checkCanWrite(authContext, mod);
+    if (mod) return checkHasPermission(authContext, mod, 'CREATE');
     const hasAnyWrite = (authContext.permissions || []).some(p => {
       const act = typeof p === 'string' ? p : (p.action || p.permissionCode || '');
       return String(act).toUpperCase().includes('CREATE') || String(act).toUpperCase().includes('WRITE');
@@ -241,16 +246,18 @@ export function useRBAC() {
   };
 
   const canEdit = (mod = null) => {
+    if (isBlocked || isReadOnly) return false;
     if (isSuperAdmin) return true;
-    if (mod) return checkCanWrite(authContext, mod);
+    if (mod) return checkHasPermission(authContext, mod, 'UPDATE');
     const hasAnyUpdate = (authContext.permissions || []).some(p => {
       const act = typeof p === 'string' ? p : (p.action || p.permissionCode || '');
-      return String(act).toUpperCase().includes('UPDATE') || String(act).toUpperCase().includes('EDIT');
+      return String(act).toUpperCase().includes('UPDATE') || String(act).toUpperCase().includes('EDIT') || String(act).toUpperCase().includes('WRITE');
     });
     return hasAnyUpdate || (rolePermissions[roleName]?.canEdit ?? false);
   };
 
   const canDelete = (mod = null) => {
+    if (isBlocked || isReadOnly) return false;
     if (isSuperAdmin) return true;
     if (mod) return checkCanDelete(authContext, mod);
     const hasAnyDelete = (authContext.permissions || []).some(p => {
@@ -261,6 +268,7 @@ export function useRBAC() {
   };
 
   const canApprove = (mod = null) => {
+    if (isBlocked || isReadOnly) return false;
     if (isSuperAdmin) return true;
     if (mod) return checkHasPermission(authContext, mod, 'APPROVE');
     const hasAnyApprove = (authContext.permissions || []).some(p => {

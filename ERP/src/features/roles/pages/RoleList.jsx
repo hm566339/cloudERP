@@ -13,6 +13,7 @@ import PageHeader from '../../../components/common/PageHeader';
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import Modal from '../../../components/common/Modal';
 import ExportModal from '../../../components/common/ExportModal';
+import PermissionGuard from '../../../components/common/PermissionGuard';
 import { useAppDispatch } from '../../../app/hooks'
 import { addAlert } from '../../notifications/notificationSlice'
 import { useParams } from 'react-router-dom'
@@ -534,7 +535,7 @@ export default function RoleList() {
         title="Role Management"
         description="Design organizational security configurations by allocating system capabilities and overrides"
       >
-        {isAdmin && (
+        <PermissionGuard permission="ROLE:CREATE">
           <button 
             onClick={() => {
               setRoleName('');
@@ -547,13 +548,14 @@ export default function RoleList() {
             <Plus size={16} />
             <span>Create Role</span>
           </button>
-        )}
+        </PermissionGuard>
       </PageHeader>
       
       <ModuleTabs tabs={userTabs} activeKey="roles" />
 
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
+          permissionFeature="ROLE"
           selectable
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}

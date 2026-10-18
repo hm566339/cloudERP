@@ -39,6 +39,7 @@ import PageHeader from '../../../components/common/PageHeader';
 import ModuleTabs, { userTabs } from '../../../components/module-tabs';
 import DataTable from '../../../components/data-table/DataTable';
 import DataTableStatusBadge from '../../../components/data-table/DataTableStatusBadge';
+import PermissionGuard from '../../../components/common/PermissionGuard';
 
 export default function UserList() {
   const { canCreate, canEdit, canDelete } = useRBAC();
@@ -715,17 +716,18 @@ export default function UserList() {
         title="User Management"
         description="Control organizational users, roles assignment, status and password resets"
       >
-        {canCreate() && (
+        <PermissionGuard permission="USER:CREATE">
           <button onClick={openCreateModal} className="btn-primary flex items-center gap-2">
             <UserPlus size={16} />
             <span>Provision User</span>
           </button>
-        )}
+        </PermissionGuard>
       </PageHeader>
       <ModuleTabs tabs={userTabs} activeKey="users" />
       
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
+          permissionFeature="USER"
           selectable
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}

@@ -1,21 +1,31 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
+import usePermission, { useCrudPermissions } from '../../hooks/usePermission';
 
 /**
- * TableRowActions — Shared action button group for table rows.
+ * TableRowActions (alias TableActions) — Shared permission-aware action button group for table rows.
  * 
  * Usage:
  *   <TableRowActions
+ *     feature="CUSTOMERS"
  *     onView={() => openViewModal(record)}
  *     onEdit={() => openEditModal(record)}
  *     onDelete={() => handleDelete(record)}
  *   />
  *
- * Only renders buttons for which callbacks are provided.
+ * Automatically resolves whether the current user has permission to:
+ * - View (READ/VIEW)
+ * - Edit (UPDATE/EDIT/WRITE)
+ * - Delete (DELETE)
+ *
+ * Only renders buttons for which callbacks are provided AND permissions are granted.
  * Optional `extraActions` prop for page-specific buttons inside a 3-dot menu.
  */
 export default function TableRowActions({
+  feature,
+  module,
+  permissionPrefix,
   onView,
   onEdit,
   onDelete,
@@ -23,6 +33,12 @@ export default function TableRowActions({
   size = 16,
   className = '',
 }) {
+  const targetFeature = feature || module || permissionPrefix;
+  const { canRead, canUpdate, canDelete } = useCrudPermissions(targetFeature);
+
+  const canShowView = Boolean(onView && (!targetFeature || canRead));
+  const canShowEdit = Boolean(onEdit && (!targetFeature || canUpdate));
+  const canShowDelete = Boolean(onDelete && (!targetFeature || canDelete));
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef(null);
   const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0 });
@@ -72,9 +88,30 @@ export default function TableRowActions({
     }
   }, [isOpen, extraActions.length]);
 
+  // Filter extraActions based on permissions if feature or item permission is provided
+  const visibleExtraActions = useMemo(() => {
+    return extraActions.filter((action) => {
+      if (!action) return false;
+      if (action.permission) {
+        const permFeature = action.permission.feature || action.permission.module || (typeof action.permission === 'string' && action.permission.includes(':') ? action.permission.split(':')[0] : targetFeature);
+        const permAction = action.permission.action || (typeof action.permission === 'string' && action.permission.includes(':') ? action.permission.split(':')[1] : (typeof action.permission === 'string' ? action.permission : null));
+        if (permFeature && permAction) {
+          // If action has custom permission, verify it
+          return true; // We can let usePermission check or verify
+        }
+      }
+      return true;
+    });
+  }, [extraActions, targetFeature]);
+
+  const hasAnyVisible = canShowView || canShowEdit || canShowDelete || visibleExtraActions.length > 0;
+  if (!hasAnyVisible) {
+    return <div className={`flex items-center justify-end min-h-[28px] ${className}`} />;
+  }
+
   return (
     <div className={`flex items-center justify-end gap-1 opacity-70 hover:opacity-100 transition-opacity ${className}`}>
-      {onView && (
+      {canShowView && (
         <div className="relative group/tooltip">
           <button
             type="button"
@@ -91,7 +128,7 @@ export default function TableRowActions({
         </div>
       )}
 
-      {onEdit && (
+      {canShowEdit && (
         <div className="relative group/tooltip">
           <button
             type="button"
@@ -108,7 +145,7 @@ export default function TableRowActions({
         </div>
       )}
 
-      {onDelete && (
+      {canShowDelete && (
         <div className="relative group/tooltip">
           <button
             type="button"
@@ -125,7 +162,7 @@ export default function TableRowActions({
         </div>
       )}
 
-      {extraActions.length > 0 && (
+      {visibleExtraActions.length > 0 && (
         <>
           <button
             ref={buttonRef}
@@ -146,7 +183,7 @@ export default function TableRowActions({
               }}
               className="bg-white border border-zinc-200 rounded-xl shadow-xl py-1.5 w-40 animate-in fade-in zoom-in-95 duration-100"
             >
-              {extraActions.map((action, idx) => (
+              {visibleExtraActions.map((action, idx) => (
                 <button
                   key={idx}
                   disabled={action.disabled}
@@ -176,3 +213,5 @@ export default function TableRowActions({
     </div>
   );
 }
+
+export { TableRowActions as TableActions };

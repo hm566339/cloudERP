@@ -327,6 +327,7 @@ export default function ProductManagement() {
 
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
+          permissionFeature="PRODUCTS"
           selectable
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}

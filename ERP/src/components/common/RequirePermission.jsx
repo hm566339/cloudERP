@@ -12,28 +12,42 @@ import usePermission from '../../hooks/usePermission';
  *                                           'disable' -> Renders the children but passes a `disabled` prop and adds a tooltip wrapper.
  * @param {React.ReactNode} props.children
  */
-export default function RequirePermission({ module, action, behavior = 'hide', children }) {
-  const isAllowed = usePermission(module, action);
+export default function RequirePermission({
+  permission,
+  module,
+  feature,
+  action,
+  behavior = 'hide',
+  fallback = null,
+  children,
+}) {
+  const targetFeature =
+    feature ||
+    module ||
+    (typeof permission === 'string' && permission.includes(':') ? permission.split(':')[0] : permission);
+  const targetAction =
+    action ||
+    (typeof permission === 'string' && permission.includes(':') ? permission.split(':')[1] : null);
+
+  const isAllowed = usePermission(targetFeature, targetAction);
 
   if (isAllowed) {
     return <>{children}</>;
   }
 
   if (behavior === 'hide') {
-    return null;
+    return fallback ? <>{fallback}</> : null;
   }
 
   if (behavior === 'disable') {
-    // We wrap the child in a span with a not-allowed cursor and tooltip,
-    // and attempt to clone the child to pass `disabled={true}` if it's a valid React element.
     return (
       <span className="inline-block cursor-not-allowed group relative" title="You don't have permission to perform this action">
         {React.Children.map(children, (child) => {
           if (React.isValidElement(child)) {
-            // Merge existing class names with disabled styles
             const existingClass = child.props.className || '';
             return React.cloneElement(child, {
               disabled: true,
+              'aria-disabled': true,
               className: `${existingClass} opacity-50 pointer-events-none`.trim(),
               onClick: (e) => e.preventDefault(),
             });
@@ -44,5 +58,5 @@ export default function RequirePermission({ module, action, behavior = 'hide', c
     );
   }
 
-  return null;
+  return fallback ? <>{fallback}</> : null;
 }

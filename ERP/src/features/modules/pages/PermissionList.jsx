@@ -9,6 +9,7 @@ import PageHeader from '../../../components/common/PageHeader';
 import ModuleTabs, { securityTabs } from '../../../components/module-tabs';
 import DataTable from '../../../components/data-table/DataTable';
 import DataTableStatusBadge from '../../../components/data-table/DataTableStatusBadge';
+import PermissionGuard from '../../../components/common/PermissionGuard';
 
 export default function PermissionList() {
   const dispatch = useAppDispatch();
@@ -194,19 +195,22 @@ export default function PermissionList() {
         title="User Permissions"
         description="Manage permission definitions and action-level access controls."
       >
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={16} />
-          <span>Create Permission</span>
-        </button>
+        <PermissionGuard permission="PERMISSION:CREATE">
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={16} />
+            <span>Create Permission</span>
+          </button>
+        </PermissionGuard>
       </PageHeader>
       
       <ModuleTabs tabs={securityTabs} activeKey="user-permissions" />
 
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
+          permissionFeature="PERMISSION"
           showIndex
           selectable
           selectedRows={selectedRows}

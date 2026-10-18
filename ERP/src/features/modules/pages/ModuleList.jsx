@@ -238,6 +238,7 @@ export default function ModuleList() {
 
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
+          permissionFeature="MODULES"
           columns={columns}
           data={modules}
           rowKey="id"

@@ -1,21 +1,52 @@
-import { useMemo } from 'react';
 import { useAppSelector } from '../app/hooks';
 import { hasModuleAccess, hasPermission } from '../utils/rbacUtils';
 
 /**
- * Hook to check if the current user has a specific permission for a module.
- * @param {string} moduleName - Name of the module from rbacConfig (e.g. 'CUSTOMERS')
- * @param {string} [action] - Optional action to check (e.g. 'CREATE', 'READ', 'UPDATE', 'DELETE', 'APPROVE'). 
- *                            If omitted, checks if the user has ANY access to the module.
- * @returns {boolean} True if the user has the required permission/access.
+ * Hook to check if the current user has a specific permission for a module/feature.
+ * Supports:
+ *   - usePermission('CUSTOMERS', 'READ')
+ *   - usePermission('CUSTOMERS:READ')
+ *   - usePermission('CUSTOMERS') // Checks module access
+ *
+ * @param {string} moduleNameOrPermission - Module/Feature name (e.g. 'CUSTOMERS') or combined permission ('CUSTOMERS:READ')
+ * @param {string} [action] - Action ('CREATE', 'READ', 'UPDATE', 'DELETE', 'APPROVE', etc.)
+ * @param {string} [moduleName] - Optional parent module if distinct from feature
+ * @returns {boolean} True if permitted
  */
-export default function usePermission(moduleName, action) {
-  // We don't want to re-run the selector logic if the rbac object hasn't changed.
-  // We can just use the selector directly.
+export default function usePermission(moduleNameOrPermission, action, moduleName) {
   return useAppSelector((state) => {
-    if (!action) {
-      return hasModuleAccess(state, moduleName);
+    if (!action && typeof moduleNameOrPermission === 'string' && !moduleNameOrPermission.includes(':')) {
+      return hasModuleAccess(state, moduleNameOrPermission);
     }
-    return hasPermission(state, moduleName, action);
+    return hasPermission(state, moduleNameOrPermission, action, moduleName);
   });
 }
+
+/**
+ * Hook to check all core CRUD permissions for a given feature/module.
+ * 
+ * Usage:
+ *   const { canCreate, canRead, canUpdate, canDelete, canApprove } = useCrudPermissions('CUSTOMERS');
+ *
+ * @param {string} feature - Feature or module name (e.g. 'CUSTOMERS')
+ * @param {string} [module] - Optional canonical module name
+ * @returns {{ canCreate: boolean, canRead: boolean, canView: boolean, canUpdate: boolean, canEdit: boolean, canDelete: boolean, canApprove: boolean }}
+ */
+export function useCrudPermissions(feature, module) {
+  const canRead = usePermission(feature, 'READ', module);
+  const canCreate = usePermission(feature, 'CREATE', module);
+  const canUpdate = usePermission(feature, 'UPDATE', module);
+  const canDelete = usePermission(feature, 'DELETE', module);
+  const canApprove = usePermission(feature, 'APPROVE', module);
+
+  return {
+    canRead,
+    canView: canRead,
+    canCreate,
+    canUpdate,
+    canEdit: canUpdate,
+    canDelete,
+    canApprove,
+  };
+}
+

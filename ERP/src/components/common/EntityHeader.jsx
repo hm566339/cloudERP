@@ -146,10 +146,20 @@ function ButtonAction({ action }) {
   );
 
   if (permission) {
+    const permModule =
+      typeof permission === 'string' && permission.includes(':')
+        ? permission.split(':')[0]
+        : permission.module || (typeof permission === 'string' ? permission : null);
+    const permAction =
+      typeof permission === 'string' && permission.includes(':')
+        ? permission.split(':')[1]
+        : permission.action || null;
+
     return (
       <RequirePermission
-        module={permission.module}
-        action={permission.action}
+        module={permModule}
+        action={permAction}
+        permission={typeof permission === 'string' ? permission : undefined}
         behavior={permission.behavior ?? (variant === 'danger' ? 'hide' : 'disable')}
       >
         {btn}
@@ -219,11 +229,21 @@ function DropdownAction({ action }) {
                 </button>
               );
               if (item.permission) {
+                const itemMod =
+                  typeof item.permission === 'string' && item.permission.includes(':')
+                    ? item.permission.split(':')[0]
+                    : item.permission.module || (typeof item.permission === 'string' ? item.permission : null);
+                const itemAct =
+                  typeof item.permission === 'string' && item.permission.includes(':')
+                    ? item.permission.split(':')[1]
+                    : item.permission.action || null;
+
                 return (
                   <RequirePermission
                     key={i}
-                    module={item.permission.module}
-                    action={item.permission.action}
+                    module={itemMod}
+                    action={itemAct}
+                    permission={typeof item.permission === 'string' ? item.permission : undefined}
                     behavior={item.permission.behavior ?? 'hide'}
                   >
                     {content}

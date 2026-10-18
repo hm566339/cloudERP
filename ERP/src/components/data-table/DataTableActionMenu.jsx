@@ -6,7 +6,8 @@ import Tooltip from '../common/Tooltip';
  * Renders row action icons for DataTable rows.
  * Supports tooltips, permissions, danger states, dynamic disable/hide, and custom handlers.
  */
-export default function DataTableActionMenu({ actions = [], row, index }) {
+export default function DataTableActionMenu({ actions = [], row, index, module, feature, permissionFeature }) {
+  const tableFeature = permissionFeature || feature || module;
   const resolvedActions = typeof actions === 'function' ? actions(row, index) : (Array.isArray(actions) ? actions : []);
   if (!resolvedActions || resolvedActions.length === 0) return null;
 
@@ -92,18 +93,40 @@ export default function DataTableActionMenu({ actions = [], row, index }) {
           </Tooltip>
         );
 
-        // Optional permission wrapper
-        if (action.permission) {
-          if ((action.permission.behavior || 'hide') === 'disable') {
+        // Resolve permission for this action
+        let targetFeature =
+          action.permission?.feature ||
+          action.permission?.module ||
+          (typeof action.permission === 'string' && action.permission.includes(':')
+            ? action.permission.split(':')[0]
+            : action.feature || action.module || tableFeature);
+
+        let targetAction =
+          action.permission?.action ||
+          (typeof action.permission === 'string' && action.permission.includes(':')
+            ? action.permission.split(':')[1]
+            : typeof action.permission === 'string'
+            ? action.permission
+            : action.action || null);
+
+        // Auto-infer action from standard keys if not explicitly defined
+        if (!targetAction && targetFeature) {
+          if (action.key === 'view' || action.key === 'preview') targetAction = 'READ';
+          else if (action.key === 'edit' || action.key === 'update') targetAction = 'UPDATE';
+          else if (action.key === 'delete' || action.key === 'remove') targetAction = 'DELETE';
+        }
+
+        const behavior = action.permission?.behavior || action.behavior || 'hide';
+
+        // Dynamic permission check wrapper
+        if (targetFeature && targetAction) {
+          if (behavior === 'disable') {
             return (
-              <Tooltip
-                key={action.key || actionIdx}
-                content={tooltip}
-              >
+              <Tooltip key={action.key || actionIdx} content={tooltip}>
                 <RequirePermission
-                  module={action.permission.module}
-                  action={action.permission.action}
-                  behavior={action.permission.behavior}
+                  module={targetFeature}
+                  action={targetAction}
+                  behavior="disable"
                 >
                   {buttonElement}
                 </RequirePermission>
@@ -113,8 +136,9 @@ export default function DataTableActionMenu({ actions = [], row, index }) {
           return (
             <RequirePermission
               key={action.key || actionIdx}
-              module={action.permission.module}
-              action={action.permission.action}
+              module={targetFeature}
+              action={targetAction}
+              behavior="hide"
             >
               {tooltipElement}
             </RequirePermission>

@@ -3,11 +3,15 @@ import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Component-level permission and role gating wrapper.
- * Conditionally renders children if the authenticated user has the required permission/role.
+ * Conditionally renders or disables children if the authenticated user has the required permission/role.
  *
  * @example
- * <Can permission="CUSTOMERS" action="CREATE">
+ * <Can permission="CUSTOMERS:CREATE">
  *   <button>Add Customer</button>
+ * </Can>
+ *
+ * <Can feature="CUSTOMERS" action="UPDATE">
+ *   <button>Edit Customer</button>
  * </Can>
  *
  * <Can roles={['owner', 'company_admin']}>
@@ -16,11 +20,15 @@ import { useAuth } from '../../hooks/useAuth';
  */
 export default function Can({
   permission = null,
+  feature = null,
+  module = null,
+  do: doAction = null,
+  on: onSubject = null,
   action = null,
   roles = null,
-  module = null,
+  behavior = 'hide', // 'hide' | 'disable'
   fallback = null,
-  children,
+  children
 }) {
   const { can, hasRole, canAccessModule, isSuperAdmin, isOwner } = useAuth();
 
@@ -32,30 +40,49 @@ export default function Can({
     }
   }
 
-  // 2. Check permission/action if specified to enforce READ_ONLY & specific permissions
-  if (permission) {
-    let perm = permission;
-    let act = action;
+  // 2. Resolve target subject and action
+  const targetSubject = onSubject || feature || module || permission;
+  const targetAction = doAction || action;
 
-    // Handle "MODULE:ACTION" format like "CUSTOMERS:CREATE"
-    if (typeof permission === 'string' && permission.includes(':') && !act) {
-      const [m, a] = permission.split(':');
-      perm = m;
-      act = a;
-    }
+  let perm = targetSubject;
+  let act = targetAction;
 
-    if (!can(perm, act)) {
-      return fallback;
-    }
+  if (typeof perm === 'string' && perm.includes(':') && !act) {
+    const [pSub, pAct] = perm.split(':');
+    perm = pSub;
+    act = pAct;
   }
 
-  // 3. Super admin and Owner bypass subsequent generic checks for non-blocked/non-readonly actions
-  if (isSuperAdmin || isOwner) {
-    return <>{children}</>;
+  let allowed = true;
+
+  if (perm || act) {
+    allowed = can(perm, act);
+  } else if (module && !canAccessModule(module) && !isSuperAdmin && !isOwner) {
+    allowed = false;
   }
 
-  // 4. Check module access if specified
-  if (module && !canAccessModule(module)) {
+  if (!allowed) {
+    if (behavior === 'disable') {
+      return (
+        <span
+          className="inline-flex cursor-not-allowed opacity-50 pointer-events-none"
+          aria-disabled="true"
+          title="Permission required"
+        >
+          {React.isValidElement(children)
+            ? React.cloneElement(children, {
+                disabled: true,
+                'aria-disabled': true,
+                tabIndex: -1,
+                onClick: (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              })
+            : children}
+        </span>
+      );
+    }
     return fallback;
   }
 

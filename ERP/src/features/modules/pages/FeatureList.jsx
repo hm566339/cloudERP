@@ -14,6 +14,7 @@ import ModuleTabs, { securityTabs, userTabs } from '../../../components/module-t
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import ExportModal from '../../../components/common/ExportModal';
 import FeatureFormModal from '../components/FeatureFormModal';
+import PermissionGuard from '../../../components/common/PermissionGuard';
 
 const DEFAULT_COLUMNS = [
   'moduleName',
@@ -584,13 +585,15 @@ export default function FeatureList() {
             <Globe size={14} className="text-indigo-600" />
             <span>Global System Feature — Available to all organizations and companies</span>
           </div>
-          <button
-            onClick={() => handleCreate()}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus size={16} />
-            <span>Create Feature</span>
-          </button>
+          <PermissionGuard permission="FEATURE:CREATE">
+            <button
+              onClick={() => handleCreate()}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus size={16} />
+              <span>Create Feature</span>
+            </button>
+          </PermissionGuard>
         </div>
       </PageHeader>
 
@@ -608,6 +611,7 @@ export default function FeatureList() {
           </span>
         </div>
         <DataTable
+          permissionFeature="FEATURE"
           showIndex
           selectable
           selectedRows={selectedRows}

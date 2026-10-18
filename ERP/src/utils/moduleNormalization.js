@@ -407,41 +407,137 @@ export function hasPermission(authContextOrFeature, featureNameOrAction, actionO
     moduleName = maybeModule;
   }
 
+  // Support "FEATURE:ACTION" combined syntax in featureName (e.g. "CUSTOMERS:READ")
+  if (typeof featureName === 'string' && featureName.includes(':') && !action) {
+    const parts = featureName.split(':');
+    featureName = parts[0];
+    action = parts[1];
+  }
+
   if (!featureName) return false;
   if (isSystemAdminUser(authContext)) return true;
-  if (moduleName && !hasModule(authContext, moduleName)) return false;
+
+  // Enforce accessMode restrictions
+  const accessMode = authContext?.accessMode || authContext?.user?.accessMode;
+  if (accessMode === 'BLOCKED') return false;
 
   const targetFeature = normalizeFeatureCode(String(featureName).trim().toUpperCase());
   let targetAction = action ? String(action).trim().toUpperCase() : null;
   if (targetAction === 'VIEW') targetAction = 'READ';
-  const canonicalModule = moduleName ? normalizeModuleName(moduleName) : null;
+  if (targetAction === 'EDIT') targetAction = 'UPDATE';
+  if (targetAction === 'NEW') targetAction = 'CREATE';
 
-  const permissions = authContext?.permissions || [];
+  if (accessMode === 'READ_ONLY' && targetAction) {
+    const mutationActions = ['CREATE', 'UPDATE', 'WRITE', 'DELETE', 'APPROVE', 'POST', 'CANCEL', 'REVERSE', 'CLOSE', 'AWARD'];
+    if (mutationActions.includes(targetAction)) {
+      return false;
+    }
+  }
+
+  if (moduleName && !hasModule(authContext, moduleName)) return false;
+
+  const canonicalModule = moduleName ? normalizeModuleName(moduleName) : null;
+  const permissions = Array.isArray(authContext)
+    ? authContext
+    : authContext?.permissions || authContext?.user?.permissions || [];
+
+  // Determine candidate actions that satisfy the requested targetAction
+  let candidateActions = null;
+  if (targetAction) {
+    if (targetAction === 'READ') {
+      candidateActions = ['READ', 'VIEW'];
+    } else if (targetAction === 'CREATE') {
+      candidateActions = ['CREATE', 'WRITE'];
+    } else if (targetAction === 'UPDATE') {
+      candidateActions = ['UPDATE', 'EDIT', 'WRITE'];
+    } else if (targetAction === 'DELETE') {
+      candidateActions = ['DELETE'];
+    } else if (targetAction === 'APPROVE') {
+      candidateActions = ['APPROVE'];
+    } else if (targetAction === 'EXPORT') {
+      candidateActions = ['EXPORT', 'READ', 'VIEW'];
+    } else if (targetAction === 'WRITE') {
+      candidateActions = ['WRITE', 'CREATE', 'UPDATE'];
+    } else {
+      candidateActions = [targetAction];
+    }
+  }
+
+  // Check if targetFeature has explicit permissions defined in the permission set
+  // Check if targetFeature has explicit permissions defined in the permission set
+  const hasExplicitFeaturePerm = permissions.some((p) => {
+    if (typeof p === 'string') {
+      const upper = p.trim().toUpperCase();
+      let pFeat = upper;
+      if (upper.includes(':')) {
+        pFeat = upper.split(':')[0];
+      } else if (upper.includes('_')) {
+        const lastUnderscore = upper.lastIndexOf('_');
+        const suffix = upper.slice(lastUnderscore + 1);
+        if (['READ', 'VIEW', 'CREATE', 'WRITE', 'UPDATE', 'EDIT', 'DELETE', 'APPROVE', 'EXPORT'].includes(suffix)) {
+          pFeat = upper.slice(0, lastUnderscore);
+        }
+      }
+      return normalizeFeatureCode(pFeat) === targetFeature;
+    }
+    if (p && typeof p === 'object') {
+      const feat = normalizeFeatureCode(String(p.featureCode || p.feature || '').trim().toUpperCase());
+      const permCode = String(p.permissionCode || '').trim().toUpperCase();
+      const pFeat = normalizeFeatureCode(permCode.includes(':') ? permCode.split(':')[0] : feat);
+      return feat === targetFeature || pFeat === targetFeature;
+    }
+    return false;
+  });
+
+  const isDistinctCatalogFeature = SSO_FEATURE_CODES.includes(targetFeature);
+  const allowPrefixFallback = !hasExplicitFeaturePerm && !isDistinctCatalogFeature && targetFeature.includes('_');
 
   return permissions.some((p) => {
     if (typeof p === 'string') {
       const upper = p.trim().toUpperCase();
       if (upper === 'ALL' || upper === 'ALL_MODULES') return true;
-      if (targetAction) {
-        const directMatch =
-          upper === `${targetFeature}:${targetAction}` ||
-          upper === `${targetAction}_${targetFeature}` ||
-          (targetAction === 'READ' && (upper === `${targetFeature}_VIEW` || upper === `VIEW_${targetFeature}`)) ||
-          (targetAction === 'APPROVE' && (upper === `${targetFeature}_APPROVE` || upper === `APPROVE_${targetFeature}`));
-        if (directMatch) return true;
 
-        if (targetFeature.includes('_')) {
+      let pFeat = upper;
+      let pAct = '';
+      if (upper.includes(':')) {
+        const parts = upper.split(':');
+        pFeat = parts[0];
+        pAct = parts[1] || '';
+      } else if (upper.includes('_')) {
+        const lastUnderscore = upper.lastIndexOf('_');
+        const suffix = upper.slice(lastUnderscore + 1);
+        if (['READ', 'VIEW', 'CREATE', 'WRITE', 'UPDATE', 'EDIT', 'DELETE', 'APPROVE', 'EXPORT'].includes(suffix)) {
+          pFeat = upper.slice(0, lastUnderscore);
+          pAct = suffix;
+        }
+      }
+
+      pFeat = normalizeFeatureCode(pFeat);
+      let normalizedPAct = pAct;
+      if (normalizedPAct === 'VIEW') normalizedPAct = 'READ';
+      if (normalizedPAct === 'EDIT') normalizedPAct = 'UPDATE';
+      if (normalizedPAct === 'NEW') normalizedPAct = 'CREATE';
+
+      if (targetAction) {
+        if (pFeat === targetFeature) {
+          if (candidateActions.includes(normalizedPAct)) return true;
+          if (upper === `${targetFeature}:${targetAction}`) return true;
+          if (upper === `${targetAction}_${targetFeature}`) return true;
+          if (targetAction === 'READ' && (upper === `${targetFeature}_VIEW` || upper === `VIEW_${targetFeature}`)) return true;
+          if (targetAction === 'APPROVE' && (upper === `${targetFeature}_APPROVE` || upper === `APPROVE_${targetFeature}`)) return true;
+        }
+
+        if (allowPrefixFallback) {
           const parentPrefix = targetFeature.split('_')[0];
-          const parentMatch =
-            upper === `${parentPrefix}:${targetAction}` ||
-            upper === `${targetAction}_${parentPrefix}` ||
-            (targetAction === 'READ' && (upper === `${parentPrefix}_VIEW` || upper === `VIEW_${parentPrefix}`));
-          if (parentMatch) return true;
+          if (pFeat === parentPrefix && candidateActions.includes(normalizedPAct)) {
+            return true;
+          }
         }
 
         return false;
       }
-      return upper === targetFeature || upper.startsWith(`${targetFeature}:`);
+
+      return pFeat === targetFeature || upper === targetFeature || upper.startsWith(`${targetFeature}:`);
     }
 
     if (p && typeof p === 'object') {
@@ -461,23 +557,33 @@ export function hasPermission(authContextOrFeature, featureNameOrAction, actionO
       }
 
       let act = String(p.action || '').trim().toUpperCase();
+      if (!act && permCode.includes(':')) {
+        act = permCode.split(':')[1].toUpperCase();
+      }
       if (act === 'VIEW') act = 'READ';
+      if (act === 'EDIT') act = 'UPDATE';
+
+      const pFeat = feat || normalizeFeatureCode(permCode.includes(':') ? permCode.split(':')[0] : permCode);
 
       if (targetAction) {
-        const isActionMatch = act === targetAction ||
-          permCode === `${targetFeature}:${targetAction}` ||
-          permCode === `${targetAction}_${targetFeature}` ||
-          (targetAction === 'READ' && (permCode === `${targetFeature}_VIEW` || permCode === `VIEW_${targetFeature}`));
+        const isActionMatch = candidateActions.includes(act) ||
+          candidateActions.some(ca => permCode === `${targetFeature}:${ca}` || permCode === `${ca}_${targetFeature}`);
 
-        const isFeatureMatch = feat === targetFeature ||
-          permCode === `${targetFeature}:${targetAction}` ||
-          permCode.startsWith(`${targetFeature}:`) ||
-          (targetFeature.startsWith(`${feat}_`));
+        if (pFeat === targetFeature) {
+          return isActionMatch;
+        }
 
-        return isFeatureMatch && isActionMatch;
+        if (allowPrefixFallback) {
+          const parentPrefix = targetFeature.split('_')[0];
+          if (pFeat === parentPrefix && isActionMatch) {
+            return true;
+          }
+        }
+
+        return false;
       }
 
-      return feat === targetFeature || permCode === targetFeature || permCode.startsWith(`${targetFeature}:`);
+      return pFeat === targetFeature || permCode === targetFeature || permCode.startsWith(`${targetFeature}:`);
     }
 
     return false;
@@ -491,6 +597,14 @@ export function canRead(authContext, featureName, moduleName) {
   return hasPermission(authContext, featureName, 'READ', moduleName);
 }
 
+export function canCreate(authContext, featureName, moduleName) {
+  return hasPermission(authContext, featureName, 'CREATE', moduleName);
+}
+
+export function canUpdate(authContext, featureName, moduleName) {
+  return hasPermission(authContext, featureName, 'UPDATE', moduleName);
+}
+
 export function canWrite(authContext, featureName, moduleName) {
   return hasPermission(authContext, featureName, 'WRITE', moduleName) ||
     hasPermission(authContext, featureName, 'CREATE', moduleName) ||
@@ -499,6 +613,10 @@ export function canWrite(authContext, featureName, moduleName) {
 
 export function canDelete(authContext, featureName, moduleName) {
   return hasPermission(authContext, featureName, 'DELETE', moduleName);
+}
+
+export function canApprove(authContext, featureName, moduleName) {
+  return hasPermission(authContext, featureName, 'APPROVE', moduleName);
 }
 
 /**
