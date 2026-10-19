@@ -1,4 +1,3 @@
-﻿<USER_REQUEST>
 // Accounting System DBML Schema
 // Generated from JPA Entity Analysis
 // Enums: AccountCategoryType, AccountNature, InvoiceStatus, PostingStatus, BankAccountType, BankTransactionType, PaymentMode, PaymentStatus, ReceiptVoucherStatus, DocumentStatus, ApprovalStatus, EinvoiceStatus, PeriodType, AccountingPeriodStatus, SourceModule, FiscalYearStatus
