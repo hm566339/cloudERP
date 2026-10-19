@@ -33,6 +33,7 @@ class ProductionCostServiceF1Test {
     @Mock private ProductionOrderOutputRepository outputRepository;
     @Mock private ProductionOrderMaterialRepository materialRepository;
     @Mock private MaterialConsumptionRepository consumptionRepository;
+    @Mock private com.erp.manufacturing.security.sso.CompanyCurrencyService companyCurrencyService;
 
     private ProductionCostServiceImpl service;
     private UUID companyId = UUID.randomUUID();
@@ -42,7 +43,8 @@ class ProductionCostServiceF1Test {
 
     @BeforeEach
     void setUp() {
-        service = new ProductionCostServiceImpl(costRepository, orderRepository, outputRepository, consumptionRepository);
+        lenient().when(companyCurrencyService.getCompanyCurrency(companyId)).thenReturn("USD");
+        service = new ProductionCostServiceImpl(costRepository, orderRepository, outputRepository, consumptionRepository, companyCurrencyService);
         order = ProductionOrder.builder().companyId(companyId).plannedQuantity(new BigDecimal("100")).build();
         order.setId(orderId);
         output = ProductionOrderOutput.builder().companyId(companyId).productionOrder(order)
@@ -50,8 +52,8 @@ class ProductionCostServiceF1Test {
         lenient().when(orderRepository.findByIdAndCompanyId(orderId, companyId)).thenReturn(Optional.of(order));
         lenient().when(outputRepository.findAllByProductionOrder_IdAndCompanyId(orderId, companyId)).thenReturn(List.of(output));
         lenient().when(consumptionRepository.findAll()).thenReturn(List.of(
-                MaterialConsumption.builder().companyId(companyId).productionOrder(order).actualTotalCost(new BigDecimal("70.00")).build(),
-                MaterialConsumption.builder().companyId(companyId).productionOrder(order).actualTotalCost(new BigDecimal("30.00")).build()));
+                MaterialConsumption.builder().companyId(companyId).productionOrder(order).costCurrency("USD").actualTotalCost(new BigDecimal("70.00")).build(),
+                MaterialConsumption.builder().companyId(companyId).productionOrder(order).costCurrency("USD").actualTotalCost(new BigDecimal("30.00")).build()));
         lenient().when(costRepository.findByCompanyIdAndProductionOrder_Id(companyId, orderId)).thenReturn(Optional.empty());
         lenient().when(costRepository.save(any(ProductionCost.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
@@ -61,6 +63,7 @@ class ProductionCostServiceF1Test {
         assertEquals(new BigDecimal("100.00"), result.getMaterialCost());
         assertEquals(new BigDecimal("100.00"), result.getTotalCost());
         assertEquals(new BigDecimal("1.000000"), result.getCostPerUnit());
+        assertEquals("USD", result.getCurrencyCode());
         assertEquals(ProductionCostStatus.FINALIZED, result.getStatus());
     }
 
@@ -71,7 +74,7 @@ class ProductionCostServiceF1Test {
 
     @Test void rejectsMissingAuthoritativeMaterialCost() {
         when(consumptionRepository.findAll()).thenReturn(List.of(MaterialConsumption.builder()
-                .companyId(companyId).productionOrder(order).actualTotalCost(null).build()));
+                .companyId(companyId).productionOrder(order).costCurrency("USD").actualTotalCost(null).build()));
         assertThrows(BusinessValidationException.class, () -> service.calculate(orderId, companyId, false));
     }
 }

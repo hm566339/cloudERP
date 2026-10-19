@@ -87,6 +87,7 @@ public class ProductionStockInIntegrationService {
         Optional<StockMovement> existing = stockMovementRepository
                 .findByCompanyIdAndIdempotencyKey(companyId, request.getIdempotencyKey());
         if (existing.isPresent()) {
+            validateStockInPayload(existing.get(), request);
             return response(existing.get(), request, companyId, request.getQuantity(), request.getUomId());
         }
 
@@ -173,7 +174,61 @@ public class ProductionStockInIntegrationService {
                                                          ProductionStockInRequest request) {
         StockMovement movement = stockMovementRepository.findByCompanyIdAndIdempotencyKey(companyId, idempotencyKey)
                 .orElseThrow(() -> new ResourceNotFoundException("StockMovement not found for idempotencyKey: " + idempotencyKey));
+        validateStockInPayload(movement, request);
         return response(movement, request, companyId, request.getQuantity(), request.getUomId());
+    }
+
+    public ProductionStockInCostedResponse getExistingCostedStockIn(UUID companyId, UUID idempotencyKey,
+                                                                   ProductionStockInCostedRequest request) {
+        StockMovement movement = stockMovementRepository.findByCompanyIdAndIdempotencyKey(companyId, idempotencyKey)
+                .orElseThrow(() -> new ResourceNotFoundException("StockMovement not found for idempotencyKey: " + idempotencyKey));
+        ProductionStockInRequest base = ProductionStockInRequest.builder()
+                .productionOrderId(request.getProductionOrderId())
+                .productionOrderOutputId(request.getProductionOrderOutputId())
+                .productId(request.getProductId())
+                .quantity(request.getQuantity())
+                .uomId(request.getUomId())
+                .warehouseId(request.getWarehouseId())
+                .locationId(request.getLocationId())
+                .batchId(request.getBatchId())
+                .serialId(request.getSerialId())
+                .idempotencyKey(request.getIdempotencyKey())
+                .build();
+        validateStockInPayload(movement, base);
+        ProductionStockInResponse baseResp = response(movement, base, companyId, request.getQuantity(), request.getUomId());
+        return ProductionStockInCostedResponse.builder()
+                .inventoryMovementId(baseResp.getInventoryMovementId())
+                .movementType(baseResp.getMovementType())
+                .referenceType(baseResp.getReferenceType())
+                .referenceId(baseResp.getReferenceId())
+                .referenceLineId(baseResp.getReferenceLineId())
+                .companyId(baseResp.getCompanyId())
+                .quantity(baseResp.getQuantity())
+                .uomId(baseResp.getUomId())
+                .unitCost(request.getProductionCostPerUnit())
+                .totalCost(request.getProductionTotalCost())
+                .status(baseResp.getStatus())
+                .build();
+    }
+
+    private void validateStockInPayload(StockMovement movement, ProductionStockInRequest request) {
+        if (movement.getReferenceId() != null && !movement.getReferenceId().equals(request.getProductionOrderId())) {
+            throw new BusinessValidationException("Idempotency key reuse with mismatched payload: production order mismatch");
+        }
+        var lines = stockMovementLineRepository.findAllByStockMovementId(movement.getId());
+        if (!lines.isEmpty()) {
+            var line = lines.get(0);
+            if (line.getProductId() != null && !line.getProductId().equals(request.getProductId())) {
+                throw new BusinessValidationException("Idempotency key reuse with mismatched payload: product mismatch");
+            }
+            if (line.getDestinationWarehouseId() != null && !line.getDestinationWarehouseId().equals(request.getWarehouseId())) {
+                throw new BusinessValidationException("Idempotency key reuse with mismatched payload: warehouse mismatch");
+            }
+            if (line.getTransactionQuantity() != null && request.getQuantity() != null
+                    && line.getTransactionQuantity().compareTo(request.getQuantity()) != 0) {
+                throw new BusinessValidationException("Idempotency key reuse with mismatched payload: quantity mismatch");
+            }
+        }
     }
 
     private BigDecimal resolveConversionFactor(Product product, UUID uomId, UUID companyId) {

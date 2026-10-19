@@ -78,6 +78,7 @@ class PhaseEProductionCompletionConcurrencyTest {
     @Autowired private BomRevisionRepository bomRevisionRepository;
 
     @MockitoBean private InventoryFeignClient inventoryFeignClient;
+    @MockitoBean private com.erp.manufacturing.security.sso.SsoFeignClient ssoFeignClient;
 
     private UUID companyId;
     private UUID orderId;
@@ -90,6 +91,9 @@ class PhaseEProductionCompletionConcurrencyTest {
     @BeforeEach
     void setUp() {
         companyId = UUID.randomUUID();
+        when(ssoFeignClient.verifyCompany(eq(companyId), any(), any())).thenReturn(
+                com.erp.manufacturing.security.dto.sso.ResponseWrapper.success(
+                        com.erp.manufacturing.security.dto.sso.CompanyResponse.builder().id(companyId).baseCurrency("USD").build()));
         productId = UUID.randomUUID();
         uomId = UUID.randomUUID();
         warehouseId = UUID.randomUUID();

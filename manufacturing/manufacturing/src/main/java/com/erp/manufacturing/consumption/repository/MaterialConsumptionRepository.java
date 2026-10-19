@@ -9,4 +9,5 @@ import java.util.UUID;
 @Repository
 public interface MaterialConsumptionRepository extends JpaRepository<MaterialConsumption, UUID> {
     Optional<MaterialConsumption> findByCompanyIdAndIdempotencyKey(UUID companyId, String idempotencyKey);
+    java.util.List<MaterialConsumption> findAllByCompanyIdAndProductionOrder_Id(UUID companyId, UUID productionOrderId);
 }

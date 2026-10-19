@@ -29,6 +29,7 @@ import com.erp.manufacturing.productionorder.entity.ProductionOrder;
 import com.erp.manufacturing.productionorder.entity.ProductionOrderMaterial;
 import com.erp.manufacturing.productionorder.repository.ProductionOrderMaterialRepository;
 import com.erp.manufacturing.productionorder.repository.ProductionOrderRepository;
+import com.erp.manufacturing.security.sso.CompanyCurrencyService;
 import com.erp.manufacturing.util.TenantUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -44,6 +45,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.erp.manufacturing.integration.inventory.entity.ManufacturingOperationRecord;
+import com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationStatus;
+import com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationType;
+import com.erp.manufacturing.integration.inventory.repository.ManufacturingOperationRecordRepository;
+import com.erp.manufacturing.integration.inventory.service.ManufacturingOperationRecordService;
+import java.nio.charset.StandardCharsets;
+
 @Service
 public class MaterialConsumptionServiceImpl implements MaterialConsumptionService {
     private final ProductionOrderRepository productionOrderRepository;
@@ -53,6 +61,12 @@ public class MaterialConsumptionServiceImpl implements MaterialConsumptionServic
     private final ManufacturingOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
     private final ManufacturingAccountingEventRepository accountingEventRepository;
+    private final CompanyCurrencyService companyCurrencyService;
+    private final ManufacturingOperationRecordRepository operationRecordRepository;
+    @Autowired(required = false)
+    private ManufacturingOperationRecordService operationRecordService;
+    @Autowired(required = false)
+    private com.erp.manufacturing.cost.repository.ProductionCostRepository costRepository;
 
     @Autowired
     public MaterialConsumptionServiceImpl(ProductionOrderRepository productionOrderRepository,
@@ -61,7 +75,9 @@ public class MaterialConsumptionServiceImpl implements MaterialConsumptionServic
                                           InventoryFeignClient inventoryFeignClient,
                                           ManufacturingOutboxRepository outboxRepository,
                                           ObjectMapper objectMapper,
-                                          ManufacturingAccountingEventRepository accountingEventRepository) {
+                                          ManufacturingAccountingEventRepository accountingEventRepository,
+                                          CompanyCurrencyService companyCurrencyService,
+                                          @Autowired(required = false) ManufacturingOperationRecordRepository operationRecordRepository) {
         this.productionOrderRepository = productionOrderRepository;
         this.productionOrderMaterialRepository = productionOrderMaterialRepository;
         this.repository = repository;
@@ -69,6 +85,31 @@ public class MaterialConsumptionServiceImpl implements MaterialConsumptionServic
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
         this.accountingEventRepository = accountingEventRepository;
+        this.companyCurrencyService = companyCurrencyService;
+        this.operationRecordRepository = operationRecordRepository;
+    }
+
+    public MaterialConsumptionServiceImpl(ProductionOrderRepository productionOrderRepository,
+                                          ProductionOrderMaterialRepository productionOrderMaterialRepository,
+                                          MaterialConsumptionRepository repository,
+                                          InventoryFeignClient inventoryFeignClient,
+                                          ManufacturingOutboxRepository outboxRepository,
+                                          ObjectMapper objectMapper,
+                                          ManufacturingAccountingEventRepository accountingEventRepository,
+                                          CompanyCurrencyService companyCurrencyService) {
+        this(productionOrderRepository, productionOrderMaterialRepository, repository,
+                inventoryFeignClient, outboxRepository, objectMapper, accountingEventRepository, companyCurrencyService, null);
+    }
+
+    public MaterialConsumptionServiceImpl(ProductionOrderRepository productionOrderRepository,
+                                          ProductionOrderMaterialRepository productionOrderMaterialRepository,
+                                          MaterialConsumptionRepository repository,
+                                          InventoryFeignClient inventoryFeignClient,
+                                          ManufacturingOutboxRepository outboxRepository,
+                                          ObjectMapper objectMapper,
+                                          ManufacturingAccountingEventRepository accountingEventRepository) {
+        this(productionOrderRepository, productionOrderMaterialRepository, repository,
+                inventoryFeignClient, outboxRepository, objectMapper, accountingEventRepository, null, null);
     }
 
     public MaterialConsumptionServiceImpl(ProductionOrderRepository productionOrderRepository,
@@ -78,7 +119,7 @@ public class MaterialConsumptionServiceImpl implements MaterialConsumptionServic
                                           ManufacturingOutboxRepository outboxRepository,
                                           ObjectMapper objectMapper) {
         this(productionOrderRepository, productionOrderMaterialRepository, repository,
-                inventoryFeignClient, outboxRepository, objectMapper, null);
+                inventoryFeignClient, outboxRepository, objectMapper, null, null, null);
     }
 
     @Override public Optional<MaterialConsumption> getById(UUID id) { return repository.findById(id); }
@@ -111,28 +152,131 @@ public class MaterialConsumptionServiceImpl implements MaterialConsumptionServic
             return toResponse(current, current.getProductionOrder(), current.getProductionOrderMaterial());
         }
 
-        ProductionStockOutInventoryRequest stockOutRequest = ProductionStockOutInventoryRequest.builder()
-                .productionOrderId(order.getId())
-                .productionOrderMaterialId(material.getId())
-                .productId(material.getComponentProductId())
-                .quantity(request.getQuantity())
-                .uomId(request.getUomId())
-                .warehouseId(request.getWarehouseId())
-                .locationId(request.getLocationId())
-                .batchId(request.getBatchId())
-                .serialId(request.getSerialId())
-                .reservationId(request.getReservationId())
-                .idempotencyKey(idempotencyKey)
-                .build();
+        UUID movementKey = UUID.nameUUIDFromBytes(idempotencyKey.getBytes(StandardCharsets.UTF_8));
 
-        InventoryApiRequest<ProductionStockOutInventoryRequest> inventoryRequest = InventoryApiRequest.<ProductionStockOutInventoryRequest>builder()
-                .data(stockOutRequest)
-                .build();
+        ManufacturingOperationRecord opRecord = null;
+        if (operationRecordService != null) {
+            opRecord = operationRecordService.findRecord(companyId, ManufacturingOperationType.MATERIAL_CONSUMPTION, idempotencyKey).orElse(null);
+        } else if (operationRecordRepository != null) {
+            opRecord = operationRecordRepository.findByCompanyIdAndOperationTypeAndIdempotencyKey(
+                    companyId, ManufacturingOperationType.MATERIAL_CONSUMPTION, idempotencyKey).orElse(null);
+        }
 
-        ProductionStockOutInventoryResponse inventoryResponse = callInventory(inventoryRequest, companyId);
+        ProductionStockOutInventoryResponse inventoryResponse = null;
+        if (opRecord != null && opRecord.getStatus() == ManufacturingOperationStatus.SUCCEEDED
+                && opRecord.getInventoryReferenceId() != null) {
+            inventoryResponse = ProductionStockOutInventoryResponse.builder()
+                    .inventoryMovementId(opRecord.getInventoryReferenceId())
+                    .movementType("PRODUCTION_OUT")
+                    .quantity(request.getQuantity())
+                    .companyId(companyId)
+                    .build();
+        } else {
+            try {
+                ResponseEntity<InventoryApiResponse<ProductionStockOutInventoryResponse>> existingMovement =
+                        inventoryFeignClient.getMovementByIdempotencyKey(movementKey, companyId);
+                if (existingMovement != null && existingMovement.getBody() != null && existingMovement.getBody().getData() != null) {
+                    inventoryResponse = existingMovement.getBody().getData();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (inventoryResponse == null) {
+            if (operationRecordService != null) {
+                opRecord = operationRecordService.recordProcessing(
+                        companyId, ManufacturingOperationType.MATERIAL_CONSUMPTION,
+                        productionOrderId, material.getId(), idempotencyKey);
+            } else if (opRecord == null && operationRecordRepository != null) {
+                opRecord = operationRecordRepository.save(ManufacturingOperationRecord.builder()
+                        .companyId(companyId)
+                        .operationType(ManufacturingOperationType.MATERIAL_CONSUMPTION)
+                        .businessId(productionOrderId)
+                        .lineId(material.getId())
+                        .idempotencyKey(idempotencyKey)
+                        .status(ManufacturingOperationStatus.PROCESSING)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build());
+            }
+
+            ProductionStockOutInventoryRequest stockOutRequest = ProductionStockOutInventoryRequest.builder()
+                    .productionOrderId(order.getId())
+                    .productionOrderMaterialId(material.getId())
+                    .productId(material.getComponentProductId())
+                    .quantity(request.getQuantity())
+                    .uomId(request.getUomId())
+                    .warehouseId(request.getWarehouseId())
+                    .locationId(request.getLocationId())
+                    .batchId(request.getBatchId())
+                    .serialId(request.getSerialId())
+                    .reservationId(request.getReservationId())
+                    .idempotencyKey(movementKey)
+                    .build();
+
+            InventoryApiRequest<ProductionStockOutInventoryRequest> inventoryRequest = InventoryApiRequest.<ProductionStockOutInventoryRequest>builder()
+                    .data(stockOutRequest)
+                    .build();
+
+            try {
+                inventoryResponse = callInventory(inventoryRequest, companyId);
+            } catch (Exception ex) {
+                try {
+                    ResponseEntity<InventoryApiResponse<ProductionStockOutInventoryResponse>> recon =
+                            inventoryFeignClient.getMovementByIdempotencyKey(movementKey, companyId);
+                    if (recon != null && recon.getBody() != null && recon.getBody().getData() != null) {
+                        inventoryResponse = recon.getBody().getData();
+                    }
+                } catch (Exception ignored) {
+                }
+
+                if (inventoryResponse == null) {
+                    if (operationRecordService != null) {
+                        operationRecordService.recordReconciliationRequired(
+                                companyId, ManufacturingOperationType.MATERIAL_CONSUMPTION,
+                                idempotencyKey, ex.getMessage());
+                    } else if (opRecord != null) {
+                        opRecord.setStatus(ManufacturingOperationStatus.RECONCILIATION_REQUIRED);
+                        opRecord.setErrorMessage(ex.getMessage());
+                        opRecord.setUpdatedAt(LocalDateTime.now());
+                        operationRecordRepository.save(opRecord);
+                    }
+                    throw ex;
+                }
+            }
+        }
+
+        if (operationRecordService != null) {
+            operationRecordService.recordSuccess(
+                    companyId, ManufacturingOperationType.MATERIAL_CONSUMPTION,
+                    idempotencyKey, inventoryResponse.getInventoryMovementId());
+        } else if (opRecord != null) {
+            opRecord.setStatus(ManufacturingOperationStatus.SUCCEEDED);
+            opRecord.setInventoryReferenceId(inventoryResponse.getInventoryMovementId());
+            opRecord.setUpdatedAt(LocalDateTime.now());
+            operationRecordRepository.save(opRecord);
+        }
+
         ProductionStockOutCostInventoryResponse costResponse = callInventoryCost(
             inventoryResponse.getInventoryMovementId(), order.getId(), material.getId(), companyId);
 
+        String companyCurrency = companyCurrencyService != null
+                ? companyCurrencyService.getCompanyCurrency(companyId)
+                : null;
+        if (companyCurrency == null || companyCurrency.isBlank()) {
+            throw new BusinessValidationException("Company currency could not be resolved for material consumption");
+        }
+
+        String inventoryCurrency = costResponse.getEffectiveCurrency();
+        if (inventoryCurrency != null && !inventoryCurrency.isBlank()) {
+            if (!inventoryCurrency.equalsIgnoreCase(companyCurrency)) {
+                throw new BusinessValidationException(
+                    String.format("Inventory valuation currency (%s) does not match company currency (%s)",
+                        inventoryCurrency, companyCurrency));
+            }
+        }
+
+        LocalDateTime now = LocalDateTime.now();
         MaterialConsumption consumption = MaterialConsumption.builder()
                 .companyId(companyId)
                 .productionOrder(order)
@@ -145,15 +289,19 @@ public class MaterialConsumptionServiceImpl implements MaterialConsumptionServic
                 .locationId(request.getLocationId())
                 .batchId(request.getBatchId())
                 .serialId(request.getSerialId())
-                .consumptionDate(LocalDateTime.now())
+                .consumptionDate(now)
                 .status(ConsumptionStatus.POSTED)
                 .inventoryMovementId(inventoryResponse.getInventoryMovementId())
                 .actualUnitCost(costResponse.getUnitCost())
                 .actualTotalCost(costResponse.getTotalCost())
+                .costCurrency(companyCurrency)
                 .costSource(ProductionCostSource.INVENTORY_VALUATION)
                 .idempotencyKey(idempotencyKey)
                 .remarks("Production material consumption")
                 .build();
+        consumption.setCreatedAt(now);
+        consumption.setUpdatedAt(now);
+        consumption.setIsDeleted(false);
 
         MaterialConsumption saved = repository.saveAndFlush(consumption);
 
@@ -167,8 +315,11 @@ public class MaterialConsumptionServiceImpl implements MaterialConsumptionServic
         String accountingKey = AccountingEventIdentity.idempotencyKey(companyId, order.getId(),
             OutboxEventType.PRODUCTION_WIP_ACCUMULATION, "WIP-V1-" + material.getId() + "-" + request.getIdempotencyKey());
         saveAccountingEvent(companyId, order.getId(), saved.getId(), accountingKey,
-            costResponse.getTotalCost(), "USD", "MC-" + saved.getId());
-        saveOutboxEvent(companyId, order.getId(), material.getId(), saved.getId(), material.getComponentProductId(), request.getQuantity(), request.getUomId(), inventoryResponse.getInventoryMovementId(), request.getReservationId(), request.getBatchId(), request.getSerialId(), accountingKey, costResponse.getTotalCost());
+            costResponse.getTotalCost(), companyCurrency, "MC-" + saved.getId());
+        saveOutboxEvent(companyId, order.getId(), material.getId(), saved.getId(), material.getComponentProductId(),
+            request.getQuantity(), request.getUomId(), inventoryResponse.getInventoryMovementId(),
+            request.getReservationId(), request.getBatchId(), request.getSerialId(),
+            accountingKey, costResponse.getTotalCost(), companyCurrency);
 
         return toResponse(saved, order, material);
     }
@@ -263,7 +414,8 @@ public class MaterialConsumptionServiceImpl implements MaterialConsumptionServic
 
     private void saveOutboxEvent(UUID companyId, UUID productionOrderId, UUID productionOrderMaterialId, UUID materialConsumptionId,
                                 UUID productId, BigDecimal quantity, UUID uomId, UUID inventoryMovementId,
-                                UUID reservationId, UUID batchId, UUID serialId, String idempotencyKey, BigDecimal amount) {
+                                UUID reservationId, UUID batchId, UUID serialId, String idempotencyKey, BigDecimal amount,
+                                String currencyCode) {
         ObjectNode payload = objectMapper.createObjectNode();
         payload.put("companyId", companyId.toString());
         payload.put("productionOrderId", productionOrderId.toString());
@@ -273,6 +425,9 @@ public class MaterialConsumptionServiceImpl implements MaterialConsumptionServic
         payload.put("sourceId", AccountingEventIdentity.sourceId(idempotencyKey).toString());
         payload.put("eventType", OutboxEventType.PRODUCTION_WIP_ACCUMULATION.name());
         payload.put("amount", amount.toPlainString());
+        if (currencyCode != null) {
+            payload.put("currencyCode", currencyCode);
+        }
         payload.put("productId", productId.toString());
         payload.put("quantity", quantity.toPlainString());
         payload.put("uomId", uomId.toString());

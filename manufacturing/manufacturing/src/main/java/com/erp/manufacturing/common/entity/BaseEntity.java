@@ -5,6 +5,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,4 +39,26 @@ public abstract class BaseEntity {
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        if (updatedAt == null) {
+            updatedAt = now;
+        }
+        if (isDeleted == null) {
+            isDeleted = Boolean.FALSE;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+        if (isDeleted == null) {
+            isDeleted = Boolean.FALSE;
+        }
+    }
 }

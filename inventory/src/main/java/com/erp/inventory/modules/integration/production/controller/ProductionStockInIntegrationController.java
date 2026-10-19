@@ -58,7 +58,22 @@ public class ProductionStockInIntegrationController {
             @Valid @RequestBody ApiRequest<ProductionStockInCostedRequest> apiRequest,
             @RequestParam(required = false) UUID companyId) {
         ProductionStockInCostedRequest request = apiRequest.getData();
-        ProductionStockInCostedResponse response = service.createCostedStockIn(request, TenantUtils.resolveCompanyId(companyId));
-        return ResponseEntity.ok(ApiResponse.success(response, "Costed production stock-in completed successfully"));
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        try {
+            ProductionStockInCostedResponse response = service.createCostedStockIn(request, resolvedCompanyId);
+            return ResponseEntity.ok(ApiResponse.success(response, "Costed production stock-in completed successfully"));
+        } catch (DataIntegrityViolationException exception) {
+            String message = exception.getMessage() == null ? "" : exception.getMessage();
+            String causeMessage = exception.getCause() == null || exception.getCause().getMessage() == null
+                    ? "" : exception.getCause().getMessage();
+            if (message.contains("uk_stock_movement_idempotency")
+                    || causeMessage.contains("uk_stock_movement_idempotency")) {
+                log.warn("Concurrent duplicate costed production stock-in for idempotencyKey: {}", request.getIdempotencyKey());
+                ProductionStockInCostedResponse response = service.getExistingCostedStockIn(
+                        resolvedCompanyId, request.getIdempotencyKey(), request);
+                return ResponseEntity.ok(ApiResponse.success(response, "Costed production stock-in already processed"));
+            }
+            throw exception;
+        }
     }
 }

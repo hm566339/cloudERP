@@ -16,6 +16,11 @@ import java.util.UUID;
 import java.math.BigDecimal;
 import com.erp.inventory.common.dto.request.ApiRequest;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import com.erp.inventory.common.util.TenantUtils;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/inventory/stock-reservations")
 @RequiredArgsConstructor
@@ -27,8 +32,31 @@ public class StockReservationController {
     public ResponseEntity<ApiResponse<StockReservationResponse>> create(
             @RequestBody ApiRequest<StockReservationRequest> apiRequest,
             @RequestParam(required = false) UUID companyId) {
-        StockReservationResponse response = service.create(apiRequest.getData(), companyId);
-        return ResponseEntity.ok(ApiResponse.success(response, "StockReservation created successfully"));
+        StockReservationRequest request = apiRequest.getData();
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        try {
+            StockReservationResponse response = service.create(request, resolvedCompanyId);
+            return ResponseEntity.ok(ApiResponse.success(response, "StockReservation created successfully"));
+        } catch (DataIntegrityViolationException exception) {
+            String message = exception.getMessage() == null ? "" : exception.getMessage();
+            String causeMessage = exception.getCause() == null || exception.getCause().getMessage() == null
+                    ? "" : exception.getCause().getMessage();
+            if ((message.contains("uk_stock_reservation_idempotency") || causeMessage.contains("uk_stock_reservation_idempotency"))
+                    && request.getIdempotencyKey() != null) {
+                log.warn("Concurrent duplicate stock reservation for idempotencyKey: {}", request.getIdempotencyKey());
+                StockReservationResponse response = service.getExistingReservation(resolvedCompanyId, request.getIdempotencyKey(), request);
+                return ResponseEntity.ok(ApiResponse.success(response, "StockReservation already processed"));
+            }
+            throw exception;
+        }
+    }
+
+    @GetMapping("/by-idempotency/{idempotencyKey}")
+    public ResponseEntity<ApiResponse<StockReservationResponse>> getByIdempotencyKey(
+            @PathVariable UUID idempotencyKey,
+            @RequestParam(required = false) UUID companyId) {
+        StockReservationResponse response = service.getByIdempotencyKey(idempotencyKey, companyId);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/{id}/release")

@@ -4,6 +4,7 @@ import com.erp.manufacturing.completion.dto.ProductionCompletionRequest;
 import com.erp.manufacturing.completion.dto.ProductionCompletionResponse;
 import com.erp.manufacturing.completion.service.ProductionCompletionService;
 import com.erp.manufacturing.util.TenantUtils;
+import com.erp.manufacturing.security.annotation.RequireFeature;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/manufacturing/production-orders")
+@RequireFeature("MANUFACTURING")
 @RequiredArgsConstructor
 public class ProductionCompletionController {
     private final ProductionCompletionService service;

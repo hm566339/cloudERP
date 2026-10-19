@@ -53,6 +53,8 @@ class PhaseEProductionCompletionServiceTest {
     @Mock private ProductionCostRepository costRepository;
     @Mock private InventoryFeignClient inventoryClient;
     @Mock private ManufacturingOutboxRepository outboxRepository;
+    @Mock private com.erp.manufacturing.security.sso.CompanyCurrencyService companyCurrencyService;
+    @Mock private com.erp.manufacturing.cost.service.ProductionCostService productionCostService;
 
     private ProductionCompletionServiceImpl service;
     private UUID companyId, orderId, outputId, productId, uomId, warehouseId, locationId, batchId, serialId;
@@ -62,10 +64,12 @@ class PhaseEProductionCompletionServiceTest {
 
     @BeforeEach
     void setUp() {
+        companyId = UUID.randomUUID();
+        lenient().when(companyCurrencyService.getCompanyCurrency(companyId)).thenReturn("USD");
         service = new ProductionCompletionServiceImpl(completionRepository, lineRepository, orderRepository,
                 outputRepository, materialRepository, costRepository, inventoryClient, outboxRepository,
-                new com.fasterxml.jackson.databind.ObjectMapper());
-        companyId = UUID.randomUUID(); orderId = UUID.randomUUID(); outputId = UUID.randomUUID();
+                new com.fasterxml.jackson.databind.ObjectMapper(), null, companyCurrencyService, productionCostService);
+        orderId = UUID.randomUUID(); outputId = UUID.randomUUID();
         productId = UUID.randomUUID(); uomId = UUID.randomUUID(); warehouseId = UUID.randomUUID();
         locationId = UUID.randomUUID(); batchId = UUID.randomUUID(); serialId = UUID.randomUUID();
         CurrentUserContext.setCompanyId(companyId);
@@ -81,6 +85,7 @@ class PhaseEProductionCompletionServiceTest {
                 .build();
         output.setId(outputId);
         cost = ProductionCost.builder().productionOrder(order).companyId(companyId).costPerUnit(new BigDecimal("2.50"))
+                .currencyCode("USD")
                 .build();
 
         lenient().when(orderRepository.findByIdAndCompanyId(orderId, companyId)).thenReturn(Optional.of(order));

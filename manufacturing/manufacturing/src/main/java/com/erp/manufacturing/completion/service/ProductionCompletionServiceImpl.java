@@ -35,6 +35,8 @@ import com.erp.manufacturing.productionorder.entity.ProductionOrderOutput;
 import com.erp.manufacturing.productionorder.repository.ProductionOrderMaterialRepository;
 import com.erp.manufacturing.productionorder.repository.ProductionOrderOutputRepository;
 import com.erp.manufacturing.productionorder.repository.ProductionOrderRepository;
+import com.erp.manufacturing.cost.service.ProductionCostService;
+import com.erp.manufacturing.security.sso.CompanyCurrencyService;
 import com.erp.manufacturing.util.TenantUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -63,6 +65,11 @@ public class ProductionCompletionServiceImpl implements ProductionCompletionServ
     private final ManufacturingOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
     private final ManufacturingAccountingEventRepository accountingEventRepository;
+    private final CompanyCurrencyService companyCurrencyService;
+    private final ProductionCostService productionCostService;
+    private final com.erp.manufacturing.integration.inventory.repository.ManufacturingOperationRecordRepository operationRecordRepository;
+    @Autowired(required = false)
+    private com.erp.manufacturing.integration.inventory.service.ManufacturingOperationRecordService operationRecordService;
 
     @Autowired
     public ProductionCompletionServiceImpl(ProductionCompletionRepository repository,
@@ -74,7 +81,10 @@ public class ProductionCompletionServiceImpl implements ProductionCompletionServ
                                            InventoryFeignClient inventoryFeignClient,
                                            ManufacturingOutboxRepository outboxRepository,
                                            ObjectMapper objectMapper,
-                                           ManufacturingAccountingEventRepository accountingEventRepository) {
+                                           ManufacturingAccountingEventRepository accountingEventRepository,
+                                           CompanyCurrencyService companyCurrencyService,
+                                           ProductionCostService productionCostService,
+                                           @Autowired(required = false) com.erp.manufacturing.integration.inventory.repository.ManufacturingOperationRecordRepository operationRecordRepository) {
         this.repository = repository;
         this.lineRepository = lineRepository;
         this.productionOrderRepository = productionOrderRepository;
@@ -85,6 +95,40 @@ public class ProductionCompletionServiceImpl implements ProductionCompletionServ
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
         this.accountingEventRepository = accountingEventRepository;
+        this.companyCurrencyService = companyCurrencyService;
+        this.productionCostService = productionCostService;
+        this.operationRecordRepository = operationRecordRepository;
+    }
+
+    public ProductionCompletionServiceImpl(ProductionCompletionRepository repository,
+                                           ProductionCompletionLineRepository lineRepository,
+                                           ProductionOrderRepository productionOrderRepository,
+                                           ProductionOrderOutputRepository outputRepository,
+                                           ProductionOrderMaterialRepository materialRepository,
+                                           ProductionCostRepository costRepository,
+                                           InventoryFeignClient inventoryFeignClient,
+                                           ManufacturingOutboxRepository outboxRepository,
+                                           ObjectMapper objectMapper,
+                                           ManufacturingAccountingEventRepository accountingEventRepository,
+                                           CompanyCurrencyService companyCurrencyService,
+                                           ProductionCostService productionCostService) {
+        this(repository, lineRepository, productionOrderRepository, outputRepository, materialRepository,
+                costRepository, inventoryFeignClient, outboxRepository, objectMapper, accountingEventRepository,
+                companyCurrencyService, productionCostService, null);
+    }
+
+    public ProductionCompletionServiceImpl(ProductionCompletionRepository repository,
+                                           ProductionCompletionLineRepository lineRepository,
+                                           ProductionOrderRepository productionOrderRepository,
+                                           ProductionOrderOutputRepository outputRepository,
+                                           ProductionOrderMaterialRepository materialRepository,
+                                           ProductionCostRepository costRepository,
+                                           InventoryFeignClient inventoryFeignClient,
+                                           ManufacturingOutboxRepository outboxRepository,
+                                           ObjectMapper objectMapper,
+                                           ManufacturingAccountingEventRepository accountingEventRepository) {
+        this(repository, lineRepository, productionOrderRepository, outputRepository, materialRepository,
+                costRepository, inventoryFeignClient, outboxRepository, objectMapper, accountingEventRepository, null, null, null);
     }
 
     public ProductionCompletionServiceImpl(ProductionCompletionRepository repository,
@@ -97,7 +141,7 @@ public class ProductionCompletionServiceImpl implements ProductionCompletionServ
                                            ManufacturingOutboxRepository outboxRepository,
                                            ObjectMapper objectMapper) {
         this(repository, lineRepository, productionOrderRepository, outputRepository, materialRepository,
-                costRepository, inventoryFeignClient, outboxRepository, objectMapper, null);
+                costRepository, inventoryFeignClient, outboxRepository, objectMapper, null, null, null, null);
     }
 
     @Override public Optional<ProductionCompletion> getById(UUID id) { return repository.findById(id); }
@@ -129,23 +173,148 @@ public class ProductionCompletionServiceImpl implements ProductionCompletionServ
             throw new BusinessValidationException("Requested quantity exceeds remaining output quantity");
         }
 
+        String companyCurrency = companyCurrencyService != null
+                ? companyCurrencyService.getCompanyCurrency(companyId)
+                : null;
+        if (companyCurrency == null || companyCurrency.isBlank()) {
+            throw new BusinessValidationException("Company currency could not be resolved for production completion");
+        }
+
         ProductionCost cost = costRepository.findByCompanyIdAndProductionOrder_Id(companyId, order.getId())
-                .orElseThrow(() -> new BusinessValidationException("Production cost is required before completion"));
+                .orElseGet(() -> {
+                    if (productionCostService != null) {
+                        return productionCostService.calculate(order.getId(), companyId, false);
+                    }
+                    throw new BusinessValidationException("Production cost is required before completion");
+                });
         if (cost.getCostPerUnit() == null || cost.getCostPerUnit().signum() < 0) {
             throw new BusinessValidationException("Production cost per unit is invalid");
         }
+        if (cost.getCurrencyCode() == null || cost.getCurrencyCode().isBlank()) {
+            throw new BusinessValidationException("Production cost currency is missing");
+        }
+        if (!cost.getCurrencyCode().equalsIgnoreCase(companyCurrency)) {
+            throw new BusinessValidationException(
+                String.format("Production cost currency (%s) does not match company currency (%s)",
+                    cost.getCurrencyCode(), companyCurrency));
+        }
 
         UUID inventoryKey = UUID.nameUUIDFromBytes(completionKey.getBytes(StandardCharsets.UTF_8));
+
+        com.erp.manufacturing.integration.inventory.entity.ManufacturingOperationRecord opRecord = null;
+        if (operationRecordService != null) {
+            opRecord = operationRecordService.findRecord(companyId,
+                    com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationType.PRODUCTION_COMPLETION, completionKey).orElse(null);
+        } else if (operationRecordRepository != null) {
+            opRecord = operationRecordRepository.findByCompanyIdAndOperationTypeAndIdempotencyKey(
+                    companyId, com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationType.PRODUCTION_COMPLETION, completionKey).orElse(null);
+        }
+
+        ProductionStockInCostedInventoryResponse inventory = null;
+        if (opRecord != null && opRecord.getStatus() == com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationStatus.SUCCEEDED
+                && opRecord.getInventoryReferenceId() != null) {
+            inventory = ProductionStockInCostedInventoryResponse.builder()
+                    .inventoryMovementId(opRecord.getInventoryReferenceId())
+                    .movementType("PRODUCTION_IN")
+                    .referenceType("PRODUCTION")
+                    .quantity(request.getQuantity())
+                    .companyId(companyId)
+                    .unitCost(cost.getCostPerUnit())
+                    .totalCost(request.getQuantity().multiply(cost.getCostPerUnit()))
+                    .build();
+        } else {
+            try {
+                ResponseEntity<InventoryApiResponse<com.erp.manufacturing.integration.inventory.dto.ProductionStockOutInventoryResponse>> existingMovement =
+                        inventoryFeignClient.getMovementByIdempotencyKey(inventoryKey, companyId);
+                if (existingMovement != null && existingMovement.getBody() != null && existingMovement.getBody().getData() != null) {
+                    inventory = ProductionStockInCostedInventoryResponse.builder()
+                            .inventoryMovementId(existingMovement.getBody().getData().getInventoryMovementId())
+                            .movementType("PRODUCTION_IN")
+                            .referenceType("PRODUCTION")
+                            .quantity(request.getQuantity())
+                            .companyId(companyId)
+                            .unitCost(cost.getCostPerUnit())
+                            .totalCost(request.getQuantity().multiply(cost.getCostPerUnit()))
+                            .build();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
         ProductionStockInCostedInventoryRequest stockIn = ProductionStockInCostedInventoryRequest.builder()
                 .productionOrderId(order.getId()).productionOrderOutputId(output.getId()).productId(output.getProductId())
                 .quantity(request.getQuantity()).uomId(request.getUomId()).warehouseId(request.getWarehouseId())
                 .locationId(request.getLocationId()).batchId(request.getBatchId()).serialId(request.getSerialId())
             .productionCostPerUnit(cost.getCostPerUnit())
             .productionTotalCost(request.getQuantity().multiply(cost.getCostPerUnit()))
-            .currencyCode(cost.getCurrencyCode())
+            .currencyCode(companyCurrency)
                 .idempotencyKey(inventoryKey).build();
-        ProductionStockInCostedInventoryResponse inventory = callCostedInventory(
-            InventoryApiRequest.<ProductionStockInCostedInventoryRequest>builder().data(stockIn).build(), companyId);
+
+        if (inventory == null) {
+            if (operationRecordService != null) {
+                opRecord = operationRecordService.recordProcessing(
+                        companyId, com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationType.PRODUCTION_COMPLETION,
+                        productionOrderId, output.getId(), completionKey);
+            } else if (opRecord == null && operationRecordRepository != null) {
+                opRecord = operationRecordRepository.save(com.erp.manufacturing.integration.inventory.entity.ManufacturingOperationRecord.builder()
+                        .companyId(companyId)
+                        .operationType(com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationType.PRODUCTION_COMPLETION)
+                        .businessId(productionOrderId)
+                        .lineId(output.getId())
+                        .idempotencyKey(completionKey)
+                        .status(com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationStatus.PROCESSING)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build());
+            }
+
+            try {
+                inventory = callCostedInventory(
+                    InventoryApiRequest.<ProductionStockInCostedInventoryRequest>builder().data(stockIn).build(), companyId);
+            } catch (Exception ex) {
+                try {
+                    ResponseEntity<InventoryApiResponse<com.erp.manufacturing.integration.inventory.dto.ProductionStockOutInventoryResponse>> recon =
+                            inventoryFeignClient.getMovementByIdempotencyKey(inventoryKey, companyId);
+                    if (recon != null && recon.getBody() != null && recon.getBody().getData() != null) {
+                        inventory = ProductionStockInCostedInventoryResponse.builder()
+                                .inventoryMovementId(recon.getBody().getData().getInventoryMovementId())
+                                .movementType("PRODUCTION_IN")
+                                .referenceType("PRODUCTION")
+                                .quantity(request.getQuantity())
+                                .companyId(companyId)
+                                .unitCost(cost.getCostPerUnit())
+                                .totalCost(request.getQuantity().multiply(cost.getCostPerUnit()))
+                                .build();
+                    }
+                } catch (Exception ignored) {
+                }
+
+                if (inventory == null) {
+                    if (operationRecordService != null) {
+                        operationRecordService.recordReconciliationRequired(
+                                companyId, com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationType.PRODUCTION_COMPLETION,
+                                completionKey, ex.getMessage());
+                    } else if (opRecord != null) {
+                        opRecord.setStatus(com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationStatus.RECONCILIATION_REQUIRED);
+                        opRecord.setErrorMessage(ex.getMessage());
+                        opRecord.setUpdatedAt(LocalDateTime.now());
+                        operationRecordRepository.save(opRecord);
+                    }
+                    throw ex;
+                }
+            }
+        }
+
+        if (operationRecordService != null) {
+            operationRecordService.recordSuccess(
+                    companyId, com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationType.PRODUCTION_COMPLETION,
+                    completionKey, inventory.getInventoryMovementId());
+        } else if (opRecord != null) {
+            opRecord.setStatus(com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationStatus.SUCCEEDED);
+            opRecord.setInventoryReferenceId(inventory.getInventoryMovementId());
+            opRecord.setUpdatedAt(LocalDateTime.now());
+            operationRecordRepository.save(opRecord);
+        }
 
         BigDecimal producedAfter = producedBefore.add(request.getQuantity());
         output.setProducedQuantity(producedAfter);
@@ -179,10 +348,10 @@ public class ProductionCompletionServiceImpl implements ProductionCompletionServ
             String accountingKey = AccountingEventIdentity.idempotencyKey(companyId, order.getId(),
                 OutboxEventType.PRODUCTION_COMPLETION, "COMPLETION-V1-" + cost.getId());
             saveAccountingEvent(companyId, order.getId(), accountingKey,
-                request.getQuantity().multiply(cost.getCostPerUnit()), cost.getCurrencyCode(), "PC-" + saved.getId());
-            saveOutbox(companyId, order, output, saved, request, inventory, accountingKey, true);
+                request.getQuantity().multiply(cost.getCostPerUnit()), companyCurrency, "PC-" + saved.getId());
+            saveOutbox(companyId, order, output, saved, request, inventory, accountingKey, true, companyCurrency);
         } else {
-            saveOutbox(companyId, order, output, saved, request, inventory, completionKey, false);
+            saveOutbox(companyId, order, output, saved, request, inventory, completionKey, false, companyCurrency);
         }
         return response(saved, order, request, output);
     }
@@ -268,7 +437,7 @@ public class ProductionCompletionServiceImpl implements ProductionCompletionServ
     private void saveOutbox(UUID companyId, ProductionOrder order, ProductionOrderOutput output,
                             ProductionCompletion completion, ProductionCompletionRequest request,
                             ProductionStockInCostedInventoryResponse inventory, String completionKey,
-                            boolean accountingEligible) {
+                            boolean accountingEligible, String currencyCode) {
         ObjectNode payload = objectMapper.createObjectNode();
         payload.put("companyId", companyId.toString());
         payload.put("productionOrderId", order.getId().toString());
@@ -279,6 +448,9 @@ public class ProductionCompletionServiceImpl implements ProductionCompletionServ
         payload.put("eventType", OutboxEventType.PRODUCTION_COMPLETION.name());
         BigDecimal inventoryUnitCost = inventory.getUnitCost() == null ? BigDecimal.ZERO : inventory.getUnitCost();
         payload.put("amount", request.getQuantity().multiply(inventoryUnitCost).toPlainString());
+        if (currencyCode != null) {
+            payload.put("currencyCode", currencyCode);
+        }
         payload.put("accountingEligible", accountingEligible);
         payload.put("productId", output.getProductId().toString());
         payload.put("quantity", request.getQuantity().toPlainString());

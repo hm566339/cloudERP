@@ -1,10 +1,14 @@
 spring:
   application:
     name: manufacturing
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:classpath:application-sso-auth.yml
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/manufacturing}
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:mohit}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -12,4 +16,38 @@ spring:
     open-in-view: false
 
 server:
-    port: ${SERVER_PORT:8084}
+  port: ${SERVER_PORT:8085}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+service:
+  api:
+    inventory: ${SERVICE_API_INVENTORY:http://inventory-service:8082}
+    account: ${SERVICE_API_ACCOUNT:http://account-service:8081}
+
+workflow:
+  service:
+    url: ${WORKFLOW_SERVICE_URL:http://workflow-service:8083}
+  callback:
+    secret: ${WORKFLOW_CALLBACK_SECRET:erp-workflow-internal-callback-secret}
+
+manufacturing:
+  service:
+    callback-base-url: ${MANUFACTURING_SERVICE_CALLBACK_BASE_URL:http://manufacturing-service:8085}
+  outbox:
+    poll-interval-ms: ${MANUFACTURING_OUTBOX_POLL_INTERVAL_MS:5000}
+
+sso:
+  backend: ${SSO_BACKEND:http://auth-service:8090}
+  cookie-name: ${SSO_COOKIE_NAME:access_token}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:default-secret-key-must-be-at-least-32-chars-long-for-hmac256}

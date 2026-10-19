@@ -3,6 +3,7 @@ package com.erp.manufacturing.productionorder.controller;
 import com.erp.manufacturing.productionorder.entity.ProductionOrder;
 import com.erp.manufacturing.productionorder.service.ProductionOrderService;
 import com.erp.manufacturing.util.TenantUtils;
+import com.erp.manufacturing.security.annotation.RequireFeature;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/manufacturing/production-orders")
+@RequireFeature("MANUFACTURING")
 @RequiredArgsConstructor
 public class ProductionOrderController {
 
@@ -29,6 +31,27 @@ public class ProductionOrderController {
     @GetMapping
     public ResponseEntity<List<ProductionOrder>> getAll() {
         return ResponseEntity.ok(productionOrderService.getAll());
+    }
+
+    @GetMapping("/company/{companyId}")
+    public ResponseEntity<List<ProductionOrder>> getAllByCompany(@PathVariable UUID companyId) {
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        return ResponseEntity.ok(productionOrderService.getAll());
+    }
+
+    @PostMapping
+    public ResponseEntity<ProductionOrder> create(@jakarta.validation.Valid @RequestBody com.erp.manufacturing.productionorder.dto.request.ProductionOrderCreateRequest request) {
+        return ResponseEntity.ok(productionOrderService.createOrder(request));
+    }
+
+    @PostMapping("/from-bom/{bomId}")
+    public ResponseEntity<ProductionOrder> createFromBom(
+            @PathVariable UUID bomId,
+            @RequestParam(required = false) java.math.BigDecimal quantity,
+            @RequestParam(required = false) UUID warehouseId,
+            @RequestParam(required = false) UUID locationId,
+            @RequestParam(required = false) String notes) {
+        return ResponseEntity.ok(productionOrderService.createOrderFromBom(bomId, quantity, warehouseId, locationId, notes));
     }
 
     @PostMapping("/{id}/submit")

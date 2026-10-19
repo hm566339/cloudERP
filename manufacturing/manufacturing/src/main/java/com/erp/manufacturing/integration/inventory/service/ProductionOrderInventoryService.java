@@ -29,7 +29,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.erp.manufacturing.integration.inventory.entity.ManufacturingOperationRecord;
+import com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationStatus;
+import com.erp.manufacturing.integration.inventory.enums.ManufacturingOperationType;
+import com.erp.manufacturing.integration.inventory.repository.ManufacturingOperationRecordRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +44,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class ProductionOrderInventoryService {
 
     private static final String REFERENCE_TYPE = "PRODUCTION";
@@ -47,6 +53,32 @@ public class ProductionOrderInventoryService {
     private final InventoryFeignClient inventoryFeignClient;
     private final ManufacturingOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final ManufacturingOperationRecordRepository operationRecordRepository;
+    @Autowired(required = false)
+    private ManufacturingOperationRecordService operationRecordService;
+
+    @Autowired
+    public ProductionOrderInventoryService(ProductionOrderRepository productionOrderRepository,
+                                          ProductionOrderMaterialRepository materialRepository,
+                                          InventoryFeignClient inventoryFeignClient,
+                                          ManufacturingOutboxRepository outboxRepository,
+                                          ObjectMapper objectMapper,
+                                          @Autowired(required = false) ManufacturingOperationRecordRepository operationRecordRepository) {
+        this.productionOrderRepository = productionOrderRepository;
+        this.materialRepository = materialRepository;
+        this.inventoryFeignClient = inventoryFeignClient;
+        this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
+        this.operationRecordRepository = operationRecordRepository;
+    }
+
+    public ProductionOrderInventoryService(ProductionOrderRepository productionOrderRepository,
+                                          ProductionOrderMaterialRepository materialRepository,
+                                          InventoryFeignClient inventoryFeignClient,
+                                          ManufacturingOutboxRepository outboxRepository,
+                                          ObjectMapper objectMapper) {
+        this(productionOrderRepository, materialRepository, inventoryFeignClient, outboxRepository, objectMapper, null);
+    }
 
     @Transactional(readOnly = true)
     public List<MaterialAvailabilityResponse> getMaterialAvailability(UUID productionOrderId, UUID requestCompanyId) {
@@ -76,20 +108,61 @@ public class ProductionOrderInventoryService {
                 continue;
             }
 
+            String idempotencyKey = reservationIdempotencyKey(companyId, productionOrderId, material.getId());
+            UUID reservationKey = UUID.nameUUIDFromBytes(idempotencyKey.getBytes(StandardCharsets.UTF_8));
+
+            ManufacturingOperationRecord existingOp = null;
+            if (operationRecordService != null) {
+                existingOp = operationRecordService.findRecord(companyId, ManufacturingOperationType.MATERIAL_RESERVATION, idempotencyKey).orElse(null);
+            } else if (operationRecordRepository != null) {
+                existingOp = operationRecordRepository.findByCompanyIdAndOperationTypeAndIdempotencyKey(
+                        companyId, ManufacturingOperationType.MATERIAL_RESERVATION, idempotencyKey).orElse(null);
+            }
+
+            if (existingOp != null && existingOp.getStatus() == ManufacturingOperationStatus.SUCCEEDED
+                    && existingOp.getInventoryReferenceId() != null) {
+                material.setInventoryReservationId(existingOp.getInventoryReferenceId());
+                material.setStatus(remainingRequired.signum() <= 0
+                        ? ProductionMaterialStatus.RESERVED : ProductionMaterialStatus.PARTIALLY_RESERVED);
+                materialRepository.save(material);
+                continue;
+            }
+
             StockSnapshot stock = stockFor(material, order, companyId);
             BigDecimal reservationQuantity = remainingRequired.min(stock.availableQuantity());
             if (reservationQuantity.signum() <= 0 || stock.batchId() == null) {
                 continue;
             }
 
-            String idempotencyKey = reservationIdempotencyKey(companyId, productionOrderId, material.getId());
             Optional<ManufacturingOutbox> existingEvent = outboxRepository
                     .findByCompanyIdAndIdempotencyKey(companyId, idempotencyKey);
             if (existingEvent.isPresent()) {
                 continue;
             }
 
+            ManufacturingOperationRecord opRecord = null;
+            if (operationRecordService != null) {
+                opRecord = operationRecordService.recordProcessing(
+                        companyId, ManufacturingOperationType.MATERIAL_RESERVATION,
+                        productionOrderId, material.getId(), idempotencyKey);
+            } else if (operationRecordRepository != null) {
+                opRecord = operationRecordRepository
+                        .findByCompanyIdAndOperationTypeAndIdempotencyKey(
+                                companyId, ManufacturingOperationType.MATERIAL_RESERVATION, idempotencyKey)
+                        .orElseGet(() -> operationRecordRepository.save(ManufacturingOperationRecord.builder()
+                                .companyId(companyId)
+                                .operationType(ManufacturingOperationType.MATERIAL_RESERVATION)
+                                .businessId(productionOrderId)
+                                .lineId(material.getId())
+                                .idempotencyKey(idempotencyKey)
+                                .status(ManufacturingOperationStatus.PROCESSING)
+                                .createdAt(LocalDateTime.now())
+                                .updatedAt(LocalDateTime.now())
+                                .build()));
+            }
+
             ReservationInventoryRequest reservation = ReservationInventoryRequest.builder()
+                    .idempotencyKey(reservationKey)
                     .reservationNo(idempotencyKey)
                     .productId(material.getComponentProductId())
                     .warehouseId(order.getWarehouseId())
@@ -102,7 +175,45 @@ public class ProductionOrderInventoryService {
                     .releasedQuantity(BigDecimal.ZERO)
                     .build();
 
-            ReservationInventoryResponse response = createReservation(reservation, companyId);
+            ReservationInventoryResponse response = null;
+            try {
+                response = createReservation(reservation, companyId);
+            } catch (Exception ex) {
+                try {
+                    ResponseEntity<InventoryApiResponse<ReservationInventoryResponse>> recon =
+                            inventoryFeignClient.getReservationByIdempotencyKey(reservationKey, companyId);
+                    if (recon != null && recon.getBody() != null && recon.getBody().getData() != null) {
+                        response = recon.getBody().getData();
+                    }
+                } catch (Exception ignored) {
+                }
+
+                if (response == null) {
+                    if (operationRecordService != null) {
+                        operationRecordService.recordReconciliationRequired(
+                                companyId, ManufacturingOperationType.MATERIAL_RESERVATION,
+                                idempotencyKey, ex.getMessage());
+                    } else if (opRecord != null) {
+                        opRecord.setStatus(ManufacturingOperationStatus.RECONCILIATION_REQUIRED);
+                        opRecord.setErrorMessage(ex.getMessage());
+                        opRecord.setUpdatedAt(LocalDateTime.now());
+                        operationRecordRepository.save(opRecord);
+                    }
+                    throw ex;
+                }
+            }
+
+            if (operationRecordService != null) {
+                operationRecordService.recordSuccess(
+                        companyId, ManufacturingOperationType.MATERIAL_RESERVATION,
+                        idempotencyKey, response.getId());
+            } else if (opRecord != null) {
+                opRecord.setStatus(ManufacturingOperationStatus.SUCCEEDED);
+                opRecord.setInventoryReferenceId(response.getId());
+                opRecord.setUpdatedAt(LocalDateTime.now());
+                operationRecordRepository.save(opRecord);
+            }
+
             BigDecimal actualReserved = response.getReservedQuantity();
             if (actualReserved == null || actualReserved.signum() <= 0) {
                 throw new ExternalServiceException("Inventory returned no reserved quantity.");
@@ -131,7 +242,39 @@ public class ProductionOrderInventoryService {
                 continue;
             }
 
+            String releaseKey = reservationId + ":RELEASE";
+            ManufacturingOperationRecord existingOp = null;
+            if (operationRecordService != null) {
+                existingOp = operationRecordService.findRecord(companyId, ManufacturingOperationType.RESERVATION_RELEASE, releaseKey).orElse(null);
+            } else if (operationRecordRepository != null) {
+                existingOp = operationRecordRepository
+                        .findByCompanyIdAndOperationTypeAndIdempotencyKey(
+                                companyId, ManufacturingOperationType.RESERVATION_RELEASE, releaseKey).orElse(null);
+            }
+            if (existingOp != null && existingOp.getStatus() == ManufacturingOperationStatus.SUCCEEDED) {
+                material.setInventoryReservationId(null);
+                material.setStatus(ProductionMaterialStatus.PLANNED);
+                materialRepository.save(material);
+                continue;
+            }
+
             ReservationInventoryResponse response = releaseReservation(reservationId, companyId);
+            if (operationRecordService != null) {
+                operationRecordService.recordSuccess(companyId, ManufacturingOperationType.RESERVATION_RELEASE, releaseKey, reservationId);
+            } else if (operationRecordRepository != null) {
+                operationRecordRepository.save(ManufacturingOperationRecord.builder()
+                        .companyId(companyId)
+                        .operationType(ManufacturingOperationType.RESERVATION_RELEASE)
+                        .businessId(productionOrderId)
+                        .lineId(material.getId())
+                        .idempotencyKey(releaseKey)
+                        .status(ManufacturingOperationStatus.SUCCEEDED)
+                        .inventoryReferenceId(reservationId)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build());
+            }
+
             BigDecimal released = response.getReleasedQuantity();
             if (released == null) {
                 released = nonNull(material.getReservedQuantity());

@@ -14,13 +14,18 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "stock_reservation")
+@Table(name = "stock_reservation", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_stock_reservation_idempotency", columnNames = {"company_id", "idempotency_key"})
+})
 public class StockReservation extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private UUID id;
+
+    @Column(name = "idempotency_key")
+    private UUID idempotencyKey;
 
     @Column(name = "reservation_no")
     private String reservationNo;

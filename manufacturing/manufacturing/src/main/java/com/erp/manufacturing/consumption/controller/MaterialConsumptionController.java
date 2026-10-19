@@ -4,6 +4,7 @@ import com.erp.manufacturing.consumption.dto.request.MaterialConsumptionRequest;
 import com.erp.manufacturing.consumption.dto.response.MaterialConsumptionResponse;
 import com.erp.manufacturing.consumption.service.MaterialConsumptionService;
 import com.erp.manufacturing.util.TenantUtils;
+import com.erp.manufacturing.security.annotation.RequireFeature;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/manufacturing/production-orders")
+@RequireFeature("MANUFACTURING")
 @RequiredArgsConstructor
 public class MaterialConsumptionController {
 

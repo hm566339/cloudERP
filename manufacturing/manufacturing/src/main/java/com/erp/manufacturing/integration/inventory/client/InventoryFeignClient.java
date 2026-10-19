@@ -89,4 +89,14 @@ public interface InventoryFeignClient {
     ResponseEntity<InventoryApiResponse<com.erp.manufacturing.integration.inventory.dto.ProductionStockInCostedInventoryResponse>> createCostedProductionStockIn(
             @RequestBody InventoryApiRequest<com.erp.manufacturing.integration.inventory.dto.ProductionStockInCostedInventoryRequest> request,
             @RequestParam(value = "companyId", required = false) UUID companyId);
+
+    @GetMapping("/api/inventory/stock-reservations/by-idempotency/{idempotencyKey}")
+    ResponseEntity<InventoryApiResponse<ReservationInventoryResponse>> getReservationByIdempotencyKey(
+            @PathVariable("idempotencyKey") UUID idempotencyKey,
+            @RequestParam(value = "companyId", required = false) UUID companyId);
+
+    @GetMapping("/api/inventory/integration/production/movements/by-idempotency/{idempotencyKey}")
+    ResponseEntity<InventoryApiResponse<com.erp.manufacturing.integration.inventory.dto.ProductionStockOutInventoryResponse>> getMovementByIdempotencyKey(
+            @PathVariable("idempotencyKey") UUID idempotencyKey,
+            @RequestParam(value = "companyId", required = false) UUID companyId);
 }

@@ -27,4 +27,14 @@ public interface StockReservationRepository extends JpaRepository<StockReservati
     );
 
     boolean existsByBatchIdAndCompanyId(UUID batchId, UUID companyId);
+
+    Optional<StockReservation> findByCompanyIdAndIdempotencyKey(UUID companyId, UUID idempotencyKey);
+
+    Optional<StockReservation> findFirstByCompanyIdAndReferenceTypeAndReferenceIdAndReferenceLineIdAndStatusIn(
+            UUID companyId,
+            com.erp.inventory.modules.product.enums.ReferenceType referenceType,
+            UUID referenceId,
+            UUID referenceLineId,
+            List<String> statuses
+    );
 }

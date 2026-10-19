@@ -5,6 +5,7 @@ import com.erp.manufacturing.bom.dto.request.BomUpdateRequest;
 import com.erp.manufacturing.bom.dto.response.BomResponse;
 import com.erp.manufacturing.bom.mapper.BomMapper;
 import com.erp.manufacturing.bom.service.BomService;
+import com.erp.manufacturing.security.annotation.RequireFeature;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +13,8 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/boms")
+@RequestMapping({"/api/manufacturing/boms", "/api/boms"})
+@RequireFeature("MANUFACTURING")
 public class BomController {
     private final BomService service;
     private final BomMapper mapper;
@@ -44,14 +46,16 @@ public class BomController {
     }
 
     @PostMapping("/{id}/submit")
-    public ResponseEntity<BomResponse> submit(@PathVariable UUID id, @RequestBody(required = false) java.util.Map<String, String> payload) {
+    public ResponseEntity<BomResponse> submit(@PathVariable UUID id,
+            @RequestBody(required = false) java.util.Map<String, String> payload) {
         UUID companyId = com.erp.manufacturing.util.TenantUtils.getCurrentCompanyId();
         String comments = payload != null ? payload.get("comments") : null;
         return ResponseEntity.ok(service.submitForApproval(id, companyId, comments));
     }
 
     @PostMapping("/{id}/submit-for-approval")
-    public ResponseEntity<BomResponse> submitForApproval(@PathVariable UUID id, @RequestBody(required = false) java.util.Map<String, String> payload) {
+    public ResponseEntity<BomResponse> submitForApproval(@PathVariable UUID id,
+            @RequestBody(required = false) java.util.Map<String, String> payload) {
         return submit(id, payload);
     }
 

@@ -19,4 +19,8 @@ public interface StockReservationService {
     StockReservationResponse releaseReservation(UUID id, UUID companyId);
 
     StockReservationResponse consumeReservation(UUID id, java.math.BigDecimal consumeQuantity, UUID companyId);
+
+    StockReservationResponse getExistingReservation(UUID companyId, UUID idempotencyKey, StockReservationRequest request);
+
+    StockReservationResponse getByIdempotencyKey(UUID idempotencyKey, UUID companyId);
 }

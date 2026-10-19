@@ -116,8 +116,16 @@ public class StockReservationServiceImpl implements StockReservationService {
             }
         }
 
-        // 5. Prevent Duplicates
-        boolean duplicateExists = repository.existsByCompanyIdAndReferenceTypeAndReferenceIdAndReferenceLineIdAndStatusIn(
+        if (request.getIdempotencyKey() != null) {
+            java.util.Optional<StockReservation> existing = repository.findByCompanyIdAndIdempotencyKey(company, request.getIdempotencyKey());
+            if (existing.isPresent()) {
+                validateReservationPayload(existing.get(), request);
+                return mapper.toResponse(existing.get());
+            }
+        }
+
+        // 5. Prevent Duplicates on Reference Line
+        java.util.Optional<StockReservation> activeReservation = repository.findFirstByCompanyIdAndReferenceTypeAndReferenceIdAndReferenceLineIdAndStatusIn(
                 company, 
                 request.getReferenceType(), 
                 request.getReferenceId(), 
@@ -125,7 +133,10 @@ public class StockReservationServiceImpl implements StockReservationService {
                 Arrays.asList(ReservationStatus.RESERVED.name(), ReservationStatus.PARTIALLY_CONSUMED.name())
         );
 
-        if (duplicateExists) {
+        if (activeReservation.isPresent()) {
+            if (isSamePayload(activeReservation.get(), request)) {
+                return mapper.toResponse(activeReservation.get());
+            }
             throw new BusinessValidationException("An active reservation already exists for this reference line");
         }
 
@@ -134,6 +145,7 @@ public class StockReservationServiceImpl implements StockReservationService {
         // 9. Create Reservation
         StockReservation reservation = mapper.toEntity(request);
         reservation.setCompanyId(company);
+        reservation.setIdempotencyKey(request.getIdempotencyKey());
         reservation.setReleasedQuantity(BigDecimal.ZERO);
         reservation.setStatus(ReservationStatus.RESERVED.name());
         
@@ -147,6 +159,10 @@ public class StockReservationServiceImpl implements StockReservationService {
         StockReservation reservation = repository.findByIdAndCompanyId(id, company)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
 
+        if (ReservationStatus.RELEASED.name().equals(reservation.getStatus())) {
+            return mapper.toResponse(reservation);
+        }
+
         if (!ReservationStatus.RESERVED.name().equals(reservation.getStatus()) &&
             !ReservationStatus.PARTIALLY_CONSUMED.name().equals(reservation.getStatus())) {
             throw new BusinessValidationException("Only RESERVED or PARTIALLY_CONSUMED reservations can be released");
@@ -156,7 +172,8 @@ public class StockReservationServiceImpl implements StockReservationService {
                 .subtract(reservation.getReleasedQuantity() != null ? reservation.getReleasedQuantity() : BigDecimal.ZERO);
 
         if (activeReservedQuantity.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessValidationException("No remaining reserved quantity to release");
+            reservation.setStatus(ReservationStatus.RELEASED.name());
+            return mapper.toResponse(repository.save(reservation));
         }
 
         inventoryStockService.releaseReservedStock(reservation.getProductId(), reservation.getWarehouseId(), reservation.getLocationId(), reservation.getBatchId(), activeReservedQuantity, company);
@@ -262,5 +279,43 @@ public class StockReservationServiceImpl implements StockReservationService {
         UUID company = TenantUtils.resolveCompanyIdForQuery(companyId);
         Page<StockReservation> page = repository.findAllByCompanyId(company, pageable);
         return page.map(mapper::toResponse);
+    }
+
+    @Override
+    public StockReservationResponse getExistingReservation(UUID companyId, UUID idempotencyKey, StockReservationRequest request) {
+        StockReservation reservation = repository.findByCompanyIdAndIdempotencyKey(companyId, idempotencyKey)
+                .orElseThrow(() -> new ResourceNotFoundException("StockReservation not found for idempotencyKey: " + idempotencyKey));
+        validateReservationPayload(reservation, request);
+        return mapper.toResponse(reservation);
+    }
+
+    @Override
+    public StockReservationResponse getByIdempotencyKey(UUID idempotencyKey, UUID companyId) {
+        UUID company = TenantUtils.resolveCompanyId(companyId);
+        StockReservation reservation = repository.findByCompanyIdAndIdempotencyKey(company, idempotencyKey)
+                .orElseThrow(() -> new ResourceNotFoundException("StockReservation not found for idempotencyKey: " + idempotencyKey));
+        return mapper.toResponse(reservation);
+    }
+
+    private void validateReservationPayload(StockReservation existing, StockReservationRequest request) {
+        if (!isSamePayload(existing, request)) {
+            throw new BusinessValidationException("Idempotency key reuse with mismatched payload");
+        }
+    }
+
+    private boolean isSamePayload(StockReservation existing, StockReservationRequest request) {
+        if (existing == null || request == null) return false;
+        boolean productMatch = existing.getProductId() != null && existing.getProductId().equals(request.getProductId());
+        boolean warehouseMatch = existing.getWarehouseId() != null && existing.getWarehouseId().equals(request.getWarehouseId());
+        boolean qtyMatch = existing.getReservedQuantity() != null && request.getReservedQuantity() != null
+                && existing.getReservedQuantity().compareTo(request.getReservedQuantity()) == 0;
+        boolean refMatch = existing.getReferenceType() == request.getReferenceType()
+                && (existing.getReferenceId() != null && existing.getReferenceId().equals(request.getReferenceId()))
+                && (existing.getReferenceLineId() != null && existing.getReferenceLineId().equals(request.getReferenceLineId()));
+        boolean batchMatch = (existing.getBatchId() == null && request.getBatchId() == null)
+                || (existing.getBatchId() != null && existing.getBatchId().equals(request.getBatchId()));
+        boolean locationMatch = (existing.getLocationId() == null && request.getLocationId() == null)
+                || (existing.getLocationId() != null && existing.getLocationId().equals(request.getLocationId()));
+        return productMatch && warehouseMatch && qtyMatch && refMatch && batchMatch && locationMatch;
     }
 }

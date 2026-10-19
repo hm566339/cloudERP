@@ -48,6 +48,7 @@ class PhaseDMaterialConsumptionServiceTest {
     @Mock private MaterialConsumptionRepository materialConsumptionRepository;
     @Mock private InventoryFeignClient inventoryFeignClient;
     @Mock private ManufacturingOutboxRepository outboxRepository;
+    @Mock private com.erp.manufacturing.security.sso.CompanyCurrencyService companyCurrencyService;
 
     private MaterialConsumptionServiceImpl service;
     private UUID companyId;
@@ -63,9 +64,10 @@ class PhaseDMaterialConsumptionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new MaterialConsumptionServiceImpl(productionOrderRepository, productionOrderMaterialRepository,
-                materialConsumptionRepository, inventoryFeignClient, outboxRepository, new ObjectMapper());
         companyId = UUID.randomUUID();
+        lenient().when(companyCurrencyService.getCompanyCurrency(companyId)).thenReturn("USD");
+        service = new MaterialConsumptionServiceImpl(productionOrderRepository, productionOrderMaterialRepository,
+                materialConsumptionRepository, inventoryFeignClient, outboxRepository, new ObjectMapper(), null, companyCurrencyService);
         orderId = UUID.randomUUID();
         materialId = UUID.randomUUID();
         productId = UUID.randomUUID();

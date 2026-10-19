@@ -26,4 +26,5 @@ public class ReservationInventoryRequest {
     private BigDecimal releasedQuantity;
     private String status;
     private LocalDateTime expiresAt;
+    private UUID idempotencyKey;
 }

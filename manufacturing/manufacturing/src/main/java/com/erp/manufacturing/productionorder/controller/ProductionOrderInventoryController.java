@@ -3,6 +3,7 @@ package com.erp.manufacturing.productionorder.controller;
 import com.erp.manufacturing.integration.inventory.dto.MaterialAvailabilityResponse;
 import com.erp.manufacturing.integration.inventory.service.ProductionOrderInventoryService;
 import com.erp.manufacturing.util.TenantUtils;
+import com.erp.manufacturing.security.annotation.RequireFeature;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/manufacturing/production-orders")
+@RequireFeature("MANUFACTURING")
 @RequiredArgsConstructor
 public class ProductionOrderInventoryController {
 

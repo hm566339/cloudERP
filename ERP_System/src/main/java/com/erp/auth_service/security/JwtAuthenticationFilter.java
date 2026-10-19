@@ -98,7 +98,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = extractToken(request);
 
             if (!StringUtils.hasText(token)) {
-                if (path.startsWith("/api/admin/") || path.startsWith("/api/sso/admin/") || path.startsWith("/api/sso/platform/")) {
+                if (path.startsWith("/api/admin/") || path.startsWith("/api/sso/admin/")
+                        || path.startsWith("/api/sso/platform/")) {
                     rejectUnauthorized(response, "Platform admin authorization required");
                     return;
                 }
@@ -125,16 +126,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Object rolesObj = claims.get("roles");
             boolean hasSystemAdminRole = false;
             if (rolesObj instanceof List<?> rList) {
-                hasSystemAdminRole = rList.stream().anyMatch(r -> "SYSTEM_ADMIN".equals(String.valueOf(r)) || "ROLE_SYSTEM_ADMIN".equals(String.valueOf(r)));
+                hasSystemAdminRole = rList.stream().anyMatch(
+                        r -> "SYSTEM_ADMIN".equals(String.valueOf(r)) || "ROLE_SYSTEM_ADMIN".equals(String.valueOf(r)));
             }
             boolean isSystemAdmin = hasSystemAdminRole
                     || "SYSTEM_ADMIN".equals(claims.get("scope"))
                     || "ADMIN".equals(claims.get("loginType"))
                     || "ADMIN_PANEL".equals(claims.get("iss"));
 
-            // ==================== PLATFORM / SYSTEM ADMIN REQUESTS (/api/admin/**, /api/sso/admin/**, /api/sso/platform/**)
+            // ==================== PLATFORM / SYSTEM ADMIN REQUESTS (/api/admin/**,
+            // /api/sso/admin/**, /api/sso/platform/**)
             // ====================
-            if (path.startsWith("/api/admin/") || path.startsWith("/api/sso/admin/") || path.startsWith("/api/sso/platform/")) {
+            if (path.startsWith("/api/admin/") || path.startsWith("/api/sso/admin/")
+                    || path.startsWith("/api/sso/platform/")) {
                 if (!isPlatformAdmin && !isSystemAdmin) {
                     rejectForbidden(response,
                             "Access denied: Customer tokens are not authorized for platform administration");
@@ -310,7 +314,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 session.getOrganization().getId(),
                                 null,
                                 session.getModule() != null ? session.getModule().getClientId() : null,
-                                session.getOrganization().getAccessMode() != null ? session.getOrganization().getAccessMode() : AccessMode.FULL);
+                                session.getOrganization().getAccessMode() != null
+                                        ? session.getOrganization().getAccessMode()
+                                        : AccessMode.FULL);
 
                         if (session.getOrganization().getAccessMode() == AccessMode.READ_ONLY
                                 && isBusinessWrite(request)) {
@@ -397,7 +403,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         RequestContext.set(
                                 session.getUser().getId(),
                                 null,
-                                isSystemAdmin ? null : (session.getCompany() != null ? session.getCompany().getId() : null),
+                                isSystemAdmin ? null
+                                        : (session.getCompany() != null ? session.getCompany().getId() : null),
                                 session.getModule() != null ? session.getModule().getClientId() : null,
                                 AccessMode.FULL);
                     }
@@ -432,11 +439,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             TenantContext.clear();
             RequestContext.clear();
             // NOTE: Do NOT clear SecurityContextHolder here.
-            // Spring Security's SecurityContextHolderFilter / SecurityContextPersistenceFilter
+            // Spring Security's SecurityContextHolderFilter /
+            // SecurityContextPersistenceFilter
             // is responsible for clearing the context after the full request lifecycle.
             // Clearing it in this finally block destroys authentication before downstream
-            // filters, controllers, and async handlers can read the authenticated principal,
-            // causing /api/sso/auth/me to receive a 401 even after a valid token is presented.
+            // filters, controllers, and async handlers can read the authenticated
+            // principal,
+            // causing /api/sso/auth/me to receive a 401 even after a valid token is
+            // presented.
         }
     }
 

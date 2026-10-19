@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: inventory-service-test
+  config:
+    import:
+      - optional:classpath:application-sso-auth.yml
+  datasource:
+    url: jdbc:h2:mem:inventory;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  sql:
+    init:
+      mode: never
+
+sso:
+  frontend: http://localhost:3000
+  backend: http://localhost:8090
+  cookie: /
+  base-url: http://localhost:8082
+  login-url: http://localhost:3000/login
+  client-id: test-client
+  client-secret: test-secret
+  transport: cookie
+  callback-path: /auth/callback
+  cookie-name: ACCESS_TOKEN
+  cookie-path: /
+  cookie-secure: false
+  cookie-http-only: true
+  cookie-same-site: Lax
+  module-name: INVENTORY
+
+inventory:
+  seed:
+    master-data: false

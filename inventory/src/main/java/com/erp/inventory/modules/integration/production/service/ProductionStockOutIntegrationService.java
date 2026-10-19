@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -64,6 +65,7 @@ public class ProductionStockOutIntegrationService {
         Optional<StockMovement> existing = stockMovementRepository
                 .findByCompanyIdAndIdempotencyKey(companyId, request.getIdempotencyKey());
         if (existing.isPresent()) {
+            validateStockOutPayload(existing.get(), request);
             return response(existing.get(), request, companyId, request.getQuantity(), request.getUomId());
         }
 
@@ -222,4 +224,46 @@ public class ProductionStockOutIntegrationService {
     }
 
     private BigDecimal nonNull(BigDecimal value) { return value == null ? BigDecimal.ZERO : value; }
+
+    public ProductionStockOutResponse getExistingStockOut(UUID companyId, UUID idempotencyKey,
+                                                           ProductionStockOutRequest request) {
+        StockMovement movement = stockMovementRepository.findByCompanyIdAndIdempotencyKey(companyId, idempotencyKey)
+                .orElseThrow(() -> new ResourceNotFoundException("StockMovement not found for idempotencyKey: " + idempotencyKey));
+        validateStockOutPayload(movement, request);
+        return response(movement, request, companyId, request.getQuantity(), request.getUomId());
+    }
+
+    public ProductionStockOutResponse getMovementByIdempotencyKey(UUID companyId, UUID idempotencyKey) {
+        StockMovement movement = stockMovementRepository.findByCompanyIdAndIdempotencyKey(companyId, idempotencyKey)
+                .orElseThrow(() -> new ResourceNotFoundException("StockMovement not found for idempotencyKey: " + idempotencyKey));
+        return ProductionStockOutResponse.builder()
+                .inventoryMovementId(movement.getId())
+                .movementType(movement.getMovementType())
+                .referenceType(movement.getReferenceType() != null ? movement.getReferenceType().name() : null)
+                .referenceId(movement.getReferenceId())
+                .companyId(companyId)
+                .quantity(movement.getTotalQuantity())
+                .status(movement.getStatus())
+                .build();
+    }
+
+    private void validateStockOutPayload(StockMovement movement, ProductionStockOutRequest request) {
+        if (movement.getReferenceId() != null && !movement.getReferenceId().equals(request.getProductionOrderId())) {
+            throw new BusinessValidationException("Idempotency key reuse with mismatched payload: production order mismatch");
+        }
+        List<StockMovementLine> lines = stockMovementLineRepository.findAllByStockMovementId(movement.getId());
+        if (!lines.isEmpty()) {
+            StockMovementLine line = lines.get(0);
+            if (line.getProductId() != null && !line.getProductId().equals(request.getProductId())) {
+                throw new BusinessValidationException("Idempotency key reuse with mismatched payload: product mismatch");
+            }
+            if (line.getSourceWarehouseId() != null && !line.getSourceWarehouseId().equals(request.getWarehouseId())) {
+                throw new BusinessValidationException("Idempotency key reuse with mismatched payload: warehouse mismatch");
+            }
+            if (line.getTransactionQuantity() != null && request.getQuantity() != null
+                    && line.getTransactionQuantity().compareTo(request.getQuantity()) != 0) {
+                throw new BusinessValidationException("Idempotency key reuse with mismatched payload: quantity mismatch");
+            }
+        }
+    }
 }

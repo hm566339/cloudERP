@@ -1,0 +1,45 @@
+sso:
+  authorization:
+    # ------------------------------------------------------------------
+    # SSO-only authorization routing for Manufacturing Service.
+    # Roles, features and permissions are managed exclusively by the SSO
+    # service (POST /api/sso/token/verify).
+    # ------------------------------------------------------------------
+    modules:
+      MANUFACTURING:
+        - "/api/manufacturing"
+        - "/api/manufacturing/**"
+        - "/api/boms"
+        - "/api/boms/**"
+
+    method-actions:
+      GET:
+        - "READ"
+      POST:
+        - "CREATE"
+        - "WRITE"
+      PUT:
+        - "UPDATE"
+        - "WRITE"
+      PATCH:
+        - "UPDATE"
+        - "WRITE"
+      DELETE:
+        - "DELETE"
+
+    custom-action-suffixes:
+      "/approve": "APPROVE"
+      "/reject": "REJECT"
+      "/release": "RELEASE"
+      "/submit": "SUBMIT"
+      "/submit-for-approval": "SUBMIT"
+      "/cancel": "CANCEL"
+      "/complete": "COMPLETE"
+      "/consume-material": "CONSUME"
+      "/reserve": "RESERVE"
+      "/release-reservation": "RELEASE"
+      "/release-reservations": "RELEASE"
+
+    feature-groups: {}
+
+    write-implies-create-update: false

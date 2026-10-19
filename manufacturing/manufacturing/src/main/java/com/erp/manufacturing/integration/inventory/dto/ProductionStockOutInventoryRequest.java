@@ -23,5 +23,5 @@ public class ProductionStockOutInventoryRequest {
     private UUID batchId;
     private UUID serialId;
     private UUID reservationId;
-    private String idempotencyKey;
+    private UUID idempotencyKey;
 }
