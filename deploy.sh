@@ -182,6 +182,7 @@ REQUIRED_CONTAINERS=(
     "erp-workflow-service"
     "erp-inventory-service"
     "erp-communication-service"
+    "erp-manufacturing-service"
     "erp-frontend"
 )
 

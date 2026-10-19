@@ -25,12 +25,12 @@ public class WorkflowClientImpl implements WorkflowClient {
     @Value("${workflow.service.url:http://workflow-service:8083}")
     private String workflowServiceUrl;
 
-    @Value("${manufacturing.service.callback-base-url:http://manufacturing-service:8084}")
+    @Value("${manufacturing.service.callback-base-url:http://manufacturing-service:8085}")
     private String callbackBaseUrl;
 
     public WorkflowClientImpl(
             @Value("${workflow.service.url:http://workflow-service:8083}") String workflowServiceUrl,
-            @Value("${manufacturing.service.callback-base-url:http://manufacturing-service:8084}") String callbackBaseUrl) {
+            @Value("${manufacturing.service.callback-base-url:http://manufacturing-service:8085}") String callbackBaseUrl) {
         this.workflowServiceUrl = workflowServiceUrl;
         this.callbackBaseUrl = callbackBaseUrl;
         this.restClient = RestClient.builder()

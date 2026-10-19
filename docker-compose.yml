@@ -380,6 +380,53 @@ services:
       - erp-network
 
   # ----------------------------------------------------------------------------
+  # 7b. Manufacturing Service (Internal only)
+  # ----------------------------------------------------------------------------
+  manufacturing-service:
+    image: ${IMAGE_MANUFACTURING:-mohit950/clouderp:manufacturing-${TAG:-latest}}
+    build:
+      context: ./manufacturing/manufacturing
+      dockerfile: dockerfile
+    container_name: erp-manufacturing-service
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/manufacturing
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      SSO_BACKEND: http://auth-service:8090
+      SSO_COOKIE_NAME: ${SSO_COOKIE_NAME:-access_token}
+      JWT_SECRET: ${JWT_SECRET}
+      SERVICE_API_INVENTORY: http://inventory-service:8082
+      SERVICE_API_ACCOUNT: http://account-service:8081
+      WORKFLOW_SERVICE_URL: http://workflow-service:8083
+      WORKFLOW_CALLBACK_SECRET: ${WORKFLOW_CALLBACK_SECRET}
+      MANUFACTURING_SERVICE_CALLBACK_BASE_URL: ${MANUFACTURING_SERVICE_CALLBACK_BASE_URL:-http://manufacturing-service:8085}
+      MANUFACTURING_OUTBOX_POLL_INTERVAL_MS: ${MANUFACTURING_OUTBOX_POLL_INTERVAL_MS:-5000}
+    depends_on:
+      db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8085/actuator/health || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - erp-network
+
+  # ----------------------------------------------------------------------------
   # 8. Frontend Client & Subpath Reverse Proxy (Binds to 127.0.0.1:3001)
   # ----------------------------------------------------------------------------
   frontend:
