@@ -542,6 +542,10 @@ Table material_consumption {
   consumption_date timestamp [not null, default: `now()`]
   status consumption_status [not null, default: 'DRAFT']
   inventory_movement_id uuid [note: 'External Inventory stock_movement UUID - no FK']
+  actual_unit_cost decimal(19,6)
+  actual_total_cost decimal(19,6)
+  cost_currency varchar(3)
+  cost_source varchar
   idempotency_key varchar [not null]
   remarks text
   version bigint [not null, default: 0]

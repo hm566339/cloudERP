@@ -33,7 +33,7 @@ $env:HIBERNATE_DDL_AUTO = 'update'
 ./mvnw.cmd spring-boot:run
 ```
 
-Start Manufacturing from `manufacturing/manufacturing` with:
+Start Manufacturing from `manufacturing` with:
 
 ```powershell
 $env:DB_URL = 'jdbc:postgresql://localhost:55432/manufacturing_test'

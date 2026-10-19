@@ -385,8 +385,8 @@ services:
   manufacturing-service:
     image: ${IMAGE_MANUFACTURING:-mohit950/clouderp:manufacturing-${TAG:-latest}}
     build:
-      context: ./manufacturing/manufacturing
-      dockerfile: dockerfile
+      context: ./manufacturing
+      dockerfile: Dockerfile
     container_name: erp-manufacturing-service
     restart: unless-stopped
     env_file:

@@ -1,0 +1,14 @@
+.git
+.gitignore
+.gitattributes
+.github
+.vscode
+.idea
+target
+.mvn
+mvnw
+mvnw.cmd
+.env
+Example.env
+*.md
+*.dbml

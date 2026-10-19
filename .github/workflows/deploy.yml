@@ -39,8 +39,8 @@ jobs:
             context: ./communication-service
             dockerfile: ./communication-service/Dockerfile
           - name: manufacturing
-            context: ./manufacturing/manufacturing
-            dockerfile: ./manufacturing/manufacturing/dockerfile
+            context: ./manufacturing
+            dockerfile: ./manufacturing/Dockerfile
 
 
     steps:
