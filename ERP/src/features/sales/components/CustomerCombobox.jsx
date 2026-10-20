@@ -124,7 +124,7 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
     <div className={`relative w-full group ${isOpen ? 'z-50' : 'z-10'}`} ref={dropdownRef}>
       {/* Trigger Input */}
       <div className="relative">
-        <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
         <input
           type="text"
           placeholder="Select Customer..."
@@ -143,7 +143,7 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
               setSearchTerm(selectedCustomer.customerName || selectedCustomer.companyName || selectedCustomer.name || '');
             }
           }}
-          className={`w-full h-9 pl-8 pr-8 bg-white border rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:outline-none transition-all ${
+          className={`w-full h-8 pl-8 pr-8 bg-white border rounded-md text-[10px] text-zinc-800 placeholder-zinc-400 focus:outline-none transition-all ${
             error ? 'border-red-500 focus:ring-1 focus:ring-red-500 focus:border-red-500' : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
           }`}
           onKeyDown={handleKeyDown}

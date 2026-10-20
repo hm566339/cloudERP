@@ -28,7 +28,8 @@ export const QuotationLineItemRow = ({ item, products, productsLoading, companyI
     <div className="grid gap-1 w-full bg-white hover:bg-zinc-50/50 min-w-0 border-b border-zinc-100 last:border-0 box-border" style={{ gridTemplateColumns: gridTemplateColumns || 'repeat(12, minmax(90px, 1fr))' }}>
       <div className="p-1 pt-2 min-w-0">
         <CustomSelect
-          className="input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white"
+          className="w-full min-w-0"
+          buttonClassName="w-full h-8 px-2 border border-zinc-200 rounded-md bg-white text-[8.8px] text-zinc-800 hover:border-zinc-300 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
           value={item.itemId || ''}
           onChange={e => {
             const prod = products.find(p => p.productId === e.target.value);
@@ -1036,7 +1037,12 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
   const selectField = (field, options, placeholder, onValueChange = null, customKey = null) => ({
     ...field,
     render: ({ value, setValue, formValues, setFormValue, disabled, errors }) => (
-      <div className="flex flex-col gap-1.5 w-full">
+      <div className="flex flex-col w-full">
+        {field.label && (
+          <label className="block mb-1 text-[8.5px] font-semibold text-zinc-700">
+            {field.label}{field.required ? ' *' : ''}
+          </label>
+        )}
         <CustomSelect
           value={value || ''}
           onChange={e => {
@@ -1056,14 +1062,15 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
             }
           }}
           disabled={disabled}
-          className="input-field w-full h-8 text-[8.8px]"
+          className="w-full"
+          buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 disabled:bg-zinc-50 disabled:text-zinc-400"
         >
           <option value="">{placeholder || 'Select an option'}</option>
           {options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
           <option value="CUSTOM">Custom</option>
         </CustomSelect>
         {value === 'CUSTOM' && customKey && (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 mt-1.5">
             <textarea
               value={formValues?.[customKey] || ''}
               onChange={e => setFormValue(customKey, e.target.value)}
@@ -1118,8 +1125,8 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
                     options={[{ value: '', label: 'Select State...' }, ...gstStates.map(state => ({ value: state.id, label: state.stateName || state.name || state.code }))]}
                     placeholder="Select State..."
                     searchable
-                    comboInput
-                    className="input-field w-full h-8 text-[8.8px]"
+                    className="w-full"
+                    buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
                   />
                   {error && <p className="mt-1 text-[8px] text-red-600">{error}</p>}
                 </div>

@@ -1148,7 +1148,8 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
                 }
               }}
               disabled={disabled || isLoading}
-              className="input-field w-full h-8 text-[8.8px]"
+              className="w-full"
+              buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
             />
             {currentVal === 'CUSTOM' && customKey && (
               <div className="flex flex-col gap-1 mt-1">
@@ -1229,7 +1230,8 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
                   <div className="space-y-2">
                     <label className="block text-[8px] font-semibold text-zinc-700 mb-1">Delivery Address</label>
                     <CustomSelect
-                      className="w-full h-8 py-0 text-[8.8px]"
+                      className="w-full"
+                      buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
                       value={formData.deliveryAddressId || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, deliveryAddressId: e.target.value }))}
                       disabled={!formData.customerId}
@@ -1247,7 +1249,7 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
                         <input type="text" placeholder="Street Address *" className="input-field w-full h-7 text-[8px]" value={formData.newDeliveryAddress.addressLine1} onChange={e => setFormData(prev => ({ ...prev, newDeliveryAddress: { ...prev.newDeliveryAddress, addressLine1: e.target.value } }))} />
                         <input type="text" placeholder="Apt, Suite, etc. (Optional)" className="input-field w-full h-7 text-[8px]" value={formData.newDeliveryAddress.addressLine2} onChange={e => setFormData(prev => ({ ...prev, newDeliveryAddress: { ...prev.newDeliveryAddress, addressLine2: e.target.value } }))} />
                         <input type="text" placeholder="City *" className="input-field w-full h-7 text-[8px]" value={formData.newDeliveryAddress.city} onChange={e => setFormData(prev => ({ ...prev, newDeliveryAddress: { ...prev.newDeliveryAddress, city: e.target.value } }))} />
-                        <CustomSelect className="w-full h-7 text-[8px]" value={formData.newDeliveryAddress.gstStateId} onChange={e => setFormData(prev => ({ ...prev, newDeliveryAddress: { ...prev.newDeliveryAddress, gstStateId: e.target.value } }))}>
+                        <CustomSelect className="w-full" buttonClassName="w-full h-7 px-2 border border-zinc-200 rounded-md bg-white text-[8px] text-zinc-800 flex items-center justify-between" value={formData.newDeliveryAddress.gstStateId} onChange={e => setFormData(prev => ({ ...prev, newDeliveryAddress: { ...prev.newDeliveryAddress, gstStateId: e.target.value } }))}>
                           <option value="">Select State *</option>
                           {gstStates.map(s => <option key={s.id} value={s.id}>{s.displayName || `${s.stateCode} - ${s.stateName}`}</option>)}
                         </CustomSelect>
@@ -1265,7 +1267,8 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
                   <div>
                     <label className="block text-[8px] font-semibold text-zinc-700 mb-1">Place of Supply *</label>
                     <CustomSelect
-                      className="w-full h-8 py-0 text-[8.8px]"
+                      className="w-full"
+                      buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
                       value={formData.placeOfSupplyStateId || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, placeOfSupplyStateId: e.target.value }))}
                       searchable={true}

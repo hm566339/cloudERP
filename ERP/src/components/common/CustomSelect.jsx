@@ -400,10 +400,68 @@ const CustomSelect = React.forwardRef(({
     lg: 'h-10 px-3.5 text-sm',
   };
 
+  // Segregate container classes (layout/positioning/margins) from control button classes (dimensions, borders, padding)
+  const { wrapperClass, resolvedButtonClass } = useMemo(() => {
+    if (!className) {
+      const fallbackBtn = buttonClassName || `w-full ${sizeClasses[size] || sizeClasses.md} bg-white border border-zinc-200 rounded-md`;
+      return { wrapperClass: 'w-full', resolvedButtonClass: fallbackBtn };
+    }
+
+    const tokens = className.split(/\s+/).filter(Boolean);
+    const wrapperTokens = [];
+    const controlTokens = [];
+    let detectedHeight = null;
+    let detectedText = null;
+    let detectedRounded = null;
+
+    // Tokens that belong strictly on the outer container wrapper
+    const wrapperPattern = /^(w-|max-w-|min-w-|flex-|grow|shrink|col-|grid-|row-|m-|mx-|my-|mt-|mb-|ml-|mr-|z-|hidden|block|inline-block|inline-flex|self-)/;
+    
+    // Tokens that must NEVER be placed on the outer wrapper
+    const controlPattern = /^(input-field|border|rounded|bg-|p-|px-|py-|pl-|pr-|pt-|pb-|h-|text-|shadow|ring|outline)/;
+
+    for (const token of tokens) {
+      if (controlPattern.test(token)) {
+        if (/^h-/.test(token)) detectedHeight = token;
+        else if (/^text-/.test(token)) detectedText = token;
+        else if (/^rounded/.test(token)) detectedRounded = token;
+
+        if (token !== 'input-field') {
+          controlTokens.push(token);
+        }
+      } else if (wrapperPattern.test(token)) {
+        wrapperTokens.push(token);
+      } else {
+        wrapperTokens.push(token);
+      }
+    }
+
+    if (!wrapperTokens.some(t => /^w-/.test(t))) {
+      wrapperTokens.unshift('w-full');
+    }
+
+    let finalButtonClass = buttonClassName;
+    if (!finalButtonClass) {
+      const isInputField = className.includes('input-field');
+      const hClass = detectedHeight || (isInputField ? 'h-8' : (sizeClasses[size]?.split(' ')[0] || 'h-9'));
+      const pClass = controlTokens.find(t => /^px-/.test(t)) || (hClass === 'h-7' ? 'px-2' : hClass === 'h-8' ? 'px-2.5' : 'px-3');
+      const tClass = detectedText || (isInputField ? 'text-[10px]' : (sizeClasses[size]?.split(' ')[2] || 'text-xs'));
+      const rClass = detectedRounded || 'rounded-md';
+      const otherControl = controlTokens.filter(t => !/^h-|^px-|^text-|^rounded/.test(t)).join(' ');
+      
+      finalButtonClass = `w-full ${hClass} ${pClass} ${tClass} ${rClass} bg-white border ${otherControl}`.trim();
+    }
+
+    return {
+      wrapperClass: wrapperTokens.join(' '),
+      resolvedButtonClass: finalButtonClass
+    };
+  }, [className, buttonClassName, size]);
+
   const hasSelectedValue = isMulti ? Array.isArray(value) && value.length > 0 : (value !== undefined && value !== null && value !== '');
 
   return (
-    <div className={`relative w-full ${className}`} ref={containerRef} onKeyDown={handleKeyDown}>
+    <div className={`relative ${wrapperClass}`} ref={containerRef} onKeyDown={handleKeyDown}>
       {label && (
         <label className="block text-xs font-semibold text-zinc-700 mb-1.5">
           {label}
@@ -427,11 +485,10 @@ const CustomSelect = React.forwardRef(({
             if (typeof ref === 'function') ref(node);
             else if (ref) ref.current = node;
           }}
-          className={`w-full flex items-center justify-between transition-all duration-150 shadow-2xs bg-white border rounded-lg
-            ${buttonClassName ? buttonClassName : sizeClasses[size] || sizeClasses.md}
+          className={`flex items-center justify-between transition-all duration-150 select-none shadow-2xs ${resolvedButtonClass}
             ${isOpen ? 'border-zinc-900 ring-2 ring-zinc-900/10' : 'border-zinc-200 hover:border-zinc-300'}
-            ${error ? 'border-red-400 focus-within:border-red-500 focus-within:ring-red-500/10' : ''}
-            ${disabled ? 'bg-zinc-50 text-zinc-400 cursor-not-allowed shadow-none' : 'cursor-pointer'}
+            ${error ? '!border-red-400 focus-within:!border-red-500 focus-within:!ring-red-500/10' : ''}
+            ${disabled ? '!bg-zinc-50 !text-zinc-400 cursor-not-allowed shadow-none !border-zinc-200' : 'cursor-pointer'}
           `}
           onClick={() => {
             if (!disabled && !isOpen) setIsOpen(true);
@@ -464,6 +521,7 @@ const CustomSelect = React.forwardRef(({
                 onClick={handleClearAll}
                 className="p-0.5 text-zinc-400 hover:text-zinc-600 rounded"
                 title="Clear selection"
+                aria-label="Clear selection"
               >
                 <X size={12} />
               </button>
@@ -486,11 +544,10 @@ const CustomSelect = React.forwardRef(({
           onClick={() => {
             if (!disabled) setIsOpen(!isOpen);
           }}
-          className={`w-full flex items-center justify-between transition-all duration-150 shadow-2xs bg-white border rounded-lg select-none text-left
-            ${buttonClassName ? buttonClassName : sizeClasses[size] || sizeClasses.md}
+          className={`flex items-center justify-between transition-all duration-150 select-none text-left shadow-2xs ${resolvedButtonClass}
             ${isOpen ? 'border-zinc-900 ring-2 ring-zinc-900/10' : 'border-zinc-200 hover:border-zinc-300'}
-            ${error ? 'border-red-400 ring-red-500/10' : ''}
-            ${disabled ? 'bg-zinc-50 text-zinc-400 cursor-not-allowed shadow-none border-zinc-200' : 'cursor-pointer'}
+            ${error ? '!border-red-400 !ring-red-500/10' : ''}
+            ${disabled ? '!bg-zinc-50 !text-zinc-400 cursor-not-allowed shadow-none !border-zinc-200' : 'cursor-pointer'}
           `}
           {...restProps}
         >

@@ -134,7 +134,8 @@ export default function DeliveryAddressField({
           emptyMessage={customerId ? 'No delivery addresses available' : 'Select a customer first'}
           isLoading={addressesLoading}
           disabled={disabled || !customerId}
-          className="input-field w-full h-8 text-[8.8px]"
+          className="w-full"
+          buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 disabled:bg-zinc-50 disabled:text-zinc-400"
         />
       ) : (
         <div className="space-y-1.5 rounded-md border border-zinc-200 bg-zinc-50 p-2">
@@ -160,9 +161,9 @@ export default function DeliveryAddressField({
             onChange={event => updateCustomAddress('gstStateId', event.target.value)}
             placeholder="Select Address State..."
             searchable
-            comboInput
             disabled={disabled}
-            className="input-field w-full h-7 text-[8.8px]"
+            className="w-full"
+            buttonClassName="w-full h-7 px-2 border border-zinc-200 rounded-md bg-white text-[8.8px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 disabled:bg-zinc-50 disabled:text-zinc-400"
           />
           <label className="flex items-center gap-1.5 text-[8px] text-zinc-600">
             <input

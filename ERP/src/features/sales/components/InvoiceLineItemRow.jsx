@@ -11,7 +11,8 @@ const InvoiceLineItemRow = ({ item, products, productsLoading, companyId, isSyst
     >
       <div className="p-1 pt-2 min-w-0">
         <CustomSelect
-          className={`input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white ${error ? '!border-rose-500 !ring-1 !ring-rose-500/20' : ''}`}
+          className="w-full min-w-0"
+          buttonClassName={`w-full h-8 px-2 border rounded-md text-[8.8px] text-zinc-700 bg-white flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 ${error ? '!border-rose-500 !ring-1 !ring-rose-500/20' : 'border-zinc-200 hover:border-zinc-300'}`}
           value={item.itemId || ''}
           onChange={e => onUpdate(item.id, 'itemId', e.target.value)}
           searchable={true}
