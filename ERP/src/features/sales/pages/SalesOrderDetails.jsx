@@ -243,7 +243,7 @@ export default function SalesOrderDetails() {
             <h2 className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Order Items</h2>
           </div>
           <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-            <table className="w-full min-w-[750px] sm:min-w-full text-sm text-left whitespace-nowrap" aria-label="Order Items Table">
+            <table className="w-full min-w-[750px] text-sm text-left whitespace-nowrap" aria-label="Order Items Table">
               <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                 <tr>
                   {['#', 'Item', 'Description', 'Qty', 'Unit', 'Unit Price', 'Discount', 'Tax', 'Total'].map(h => (

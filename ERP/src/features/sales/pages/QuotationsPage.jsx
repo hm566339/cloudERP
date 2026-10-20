@@ -48,7 +48,7 @@ const QuotationOverview = ({ quote }) => {
           </span>
         </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-4 sm:gap-6 mb-6">
         <div>
           <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Grand Total</p>
           <p className="text-sm font-bold text-zinc-900 mt-1">{curr} {fmt(amtSummary.totalAmount)}</p>
@@ -81,8 +81,8 @@ const QuotationOverview = ({ quote }) => {
 
       <div className="mb-6">
         <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Items</h4>
-        <div className="border border-zinc-200 rounded-lg overflow-hidden">
-          <table className="w-full text-left text-sm">
+        <div className="border border-zinc-200 rounded-lg overflow-x-auto min-w-0 custom-scrollbar">
+          <table className="w-full min-w-[750px] text-left text-sm">
             <thead className="bg-zinc-50 border-b border-zinc-200">
               <tr>
                 <th className="px-4 py-2 font-medium text-zinc-500">Item/Product</th>

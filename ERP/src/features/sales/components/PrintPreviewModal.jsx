@@ -113,9 +113,9 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
         </button>
       </div>
 
-      <div className="flex w-full h-full pt-12">
+      <div className="flex flex-col md:flex-row w-full h-full pt-12 overflow-y-auto md:overflow-hidden">
         {/* Left Panel: Preview */}
-        <div className="flex-[7] bg-zinc-400/80 p-8 flex items-center justify-center overflow-hidden relative">
+        <div className="flex-1 min-h-[360px] md:min-h-0 md:flex-[7] bg-zinc-400/80 p-3 sm:p-6 md:p-8 flex items-center justify-center relative">
           <div className="w-full h-full max-w-5xl mx-auto flex items-center justify-center shadow-2xl bg-white rounded-sm overflow-hidden border border-zinc-300/50">
             {pdfUrl ? (
               <iframe
@@ -134,7 +134,7 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
         </div>
 
         {/* Right Panel: Settings */}
-        <div className="flex-[3] bg-white border-l border-zinc-200 flex flex-col min-w-[272px] max-w-[336px] relative shadow-[-10px_0_20px_rgba(0,0,0,0.05)] z-10">
+        <div className="w-full md:w-auto md:flex-[3] bg-white border-t md:border-t-0 md:border-l border-zinc-200 flex flex-col md:min-w-[272px] md:max-w-[336px] relative shadow-[-10px_0_20px_rgba(0,0,0,0.05)] z-10">
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
             
             {/* Printer Selection */}

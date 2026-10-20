@@ -728,7 +728,7 @@ export default function PurchaseRequisitionForm() {
       {/* ═══════════════════════════════════════════════════════════════════
           MAIN WORKSPACE: LEFT SIDEBAR | RIGHT CONTENT (like Create Quotation)
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 bg-white">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 bg-white">
 
         {/* ── LEFT COLUMN (~230px) ── */}
         <PurchaseRequisitionSidebar

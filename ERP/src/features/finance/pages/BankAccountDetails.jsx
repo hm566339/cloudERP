@@ -463,7 +463,7 @@ export default function BankAccountDetails() {
               <div className="animate-in fade-in duration-300">
                 {profile.bankTransactions && profile.bankTransactions.length > 0 ? (
                   <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar border border-zinc-200 rounded-xl shadow-sm">
-                    <table className="w-full min-w-[700px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Bank Transactions Table">
+                    <table className="w-full min-w-[700px] text-left border-collapse whitespace-nowrap text-sm" aria-label="Bank Transactions Table">
                       <thead className="bg-zinc-100/80 border-b border-zinc-200 sticky top-0 z-10">
                         <tr>
                           <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Date</th>
@@ -503,7 +503,7 @@ export default function BankAccountDetails() {
               <div className="animate-in fade-in duration-300">
                 {profile.paymentVouchers && profile.paymentVouchers.length > 0 ? (
                   <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar border border-zinc-200 rounded-xl shadow-sm">
-                    <table className="w-full min-w-[620px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Payment Vouchers Table">
+                    <table className="w-full min-w-[620px] text-left border-collapse whitespace-nowrap text-sm" aria-label="Payment Vouchers Table">
                       <thead className="bg-zinc-100/80 border-b border-zinc-200 sticky top-0 z-10">
                         <tr>
                           <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Voucher No</th>
@@ -541,7 +541,7 @@ export default function BankAccountDetails() {
               <div className="animate-in fade-in duration-300">
                 {profile.receiptVouchers && profile.receiptVouchers.length > 0 ? (
                   <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar border border-zinc-200 rounded-xl shadow-sm">
-                    <table className="w-full min-w-[620px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Receipt Vouchers Table">
+                    <table className="w-full min-w-[620px] text-left border-collapse whitespace-nowrap text-sm" aria-label="Receipt Vouchers Table">
                       <thead className="bg-zinc-100/80 border-b border-zinc-200 sticky top-0 z-10">
                         <tr>
                           <th scope="col" className="px-4 py-3 text-zinc-600 font-semibold text-xs">Voucher No</th>
@@ -589,7 +589,7 @@ export default function BankAccountDetails() {
                           <span className="px-2 py-0.5 text-xs font-medium rounded-md border bg-blue-50 text-blue-700 border-blue-200">{gl.postingStatus}</span>
                         </div>
                         <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-                          <table className="w-full min-w-[500px] sm:min-w-full text-sm" aria-label="Journal Entries Table">
+                          <table className="w-full min-w-[500px] text-sm" aria-label="Journal Entries Table">
                              <thead className="bg-zinc-50 text-zinc-600 border-b border-zinc-100 text-left text-xs font-semibold">
                                 <tr>
                                   <th scope="col" className="px-4 py-2">Account Code</th>

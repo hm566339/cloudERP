@@ -186,7 +186,7 @@ export default function ApprovalRequestsPage() {
         </div>
 
         <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-          <table className="w-full min-w-[700px] sm:min-w-full text-left text-sm" aria-label="Approval Requests Table">
+          <table className="w-full min-w-[700px] text-left text-sm" aria-label="Approval Requests Table">
             <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-600 border-b border-zinc-200 sticky top-0 z-10">
               <tr>
                 <th scope="col" className="px-4 py-3 font-semibold">Document</th>

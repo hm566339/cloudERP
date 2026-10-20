@@ -177,23 +177,23 @@ export default function QuotationDetails() {
     <div className="flex flex-col h-full bg-zinc-50/50">
       {/* Sticky Header */}
       <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-6 bg-white border-b border-zinc-200 shadow-sm">
-        <div className="flex items-center gap-4">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 text-zinc-400 hover:text-zinc-900 rounded-full hover:bg-zinc-100 transition-colors"
+            className="p-2 text-zinc-400 hover:text-zinc-900 rounded-full hover:bg-zinc-100 transition-colors shrink-0"
           >
             <ArrowLeft size={20} />
           </button>
-          <div>
-            <div className="flex items-center flex-wrap gap-3">
-              <h1 className="text-2xl font-bold text-zinc-900 tracking-tight font-mono">
+          <div className="min-w-0">
+            <div className="flex items-center flex-wrap gap-2 sm:gap-3">
+              <h1 className="text-lg sm:text-2xl font-bold text-zinc-900 tracking-tight font-mono break-all">
                 {quotation.quotationNumber}
               </h1>
               <StatusBadge status={quotation.status} />
-              <span className="text-sm font-medium text-zinc-500">
+              <span className="text-xs sm:text-sm font-medium text-zinc-600 truncate max-w-[200px] sm:max-w-none">
                 {cust.customerName || cust.companyName}
               </span>
-              <span className="text-sm text-zinc-400">
+              <span className="text-xs sm:text-sm text-zinc-400">
                 ({quotation.quotationDate} &mdash; Valid Until: {quotation.validUntil})
               </span>
             </div>
@@ -346,6 +346,34 @@ export default function QuotationDetails() {
 
         {/* Main Content Tabs */}
         <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/50">
+          {/* Mobile Summary & Details (< lg) */}
+          <div className="lg:hidden p-3 bg-white border-b border-zinc-200">
+            <details className="group">
+              <summary className="flex items-center justify-between cursor-pointer list-none text-xs font-bold text-zinc-800 uppercase tracking-wider">
+                <span>Quotation Summary & Details</span>
+                <span className="text-zinc-400 group-open:rotate-180 transition-transform text-sm">▾</span>
+              </summary>
+              <div className="mt-3 pt-3 border-t border-zinc-100 grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-[9px] font-semibold text-zinc-500 uppercase block">Quotation No</span>
+                  <span className="font-medium text-zinc-900">{quotation.quotationNumber || '-'}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] font-semibold text-zinc-500 uppercase block">Customer</span>
+                  <span className="font-medium text-zinc-900">{cust.customerName || cust.companyName || '-'}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] font-semibold text-zinc-500 uppercase block">Currency</span>
+                  <span className="font-medium text-zinc-900">{curr}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] font-semibold text-zinc-500 uppercase block">Reference No</span>
+                  <span className="font-medium text-zinc-900">{quotation.referenceNumber || '-'}</span>
+                </div>
+              </div>
+            </details>
+          </div>
+
           <div className="sticky top-0 z-10 bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm overflow-x-auto no-scrollbar">
             <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 min-w-max">
               {tabs.map(tab => (
@@ -494,7 +522,7 @@ export default function QuotationDetails() {
                   </div>
                 ) : (
                   <div className="w-full overflow-x-auto min-w-0 custom-scrollbar rounded-lg border border-zinc-200">
-                    <table className="w-full min-w-[640px] sm:min-w-full text-left text-sm" aria-label="Quotation Items Table">
+                    <table className="w-full min-w-[680px] text-left text-sm" aria-label="Quotation Items Table">
                       <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold uppercase tracking-wider text-xs sticky top-0 z-10">
                         <tr>
                           <th scope="col" className="p-4 w-10 text-center"></th>
@@ -542,7 +570,7 @@ export default function QuotationDetails() {
                               {/* Expanded Inline Details */}
                               {isExpanded && (
                                 <tr className="bg-zinc-50/50">
-                                  <td colSpan={10} className="p-0 border-t border-zinc-100">
+                                  <td colSpan={9} className="p-0 border-t border-zinc-100">
                                     <div className="p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-top-2 duration-200">
                                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                         <div className="space-y-6">

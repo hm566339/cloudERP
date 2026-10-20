@@ -128,7 +128,7 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
               </CustomSelect>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Order Date</label>
                 <input 
@@ -151,7 +151,7 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Payment Terms</label>
                 <select

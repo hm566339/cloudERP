@@ -25,7 +25,7 @@ export default function APInvoiceItemsTable({
         <EmptyState icon={<ShoppingCart size={48} />} title="No Purchase Items" desc="No items listed for this purchase invoice." />
       ) : (
         <div className="w-full overflow-x-auto min-w-0 custom-scrollbar rounded-lg border border-zinc-200">
-          <table className="w-full min-w-[640px] sm:min-w-full text-left text-sm" aria-label="Purchase Invoice Items">
+          <table className="w-full min-w-[680px] text-left text-sm" aria-label="Purchase Invoice Items">
             <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold uppercase tracking-wider text-xs sticky top-0 z-10">
               <tr>
                 <th scope="col" className="p-4 w-10 text-center"></th>

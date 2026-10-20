@@ -813,8 +813,8 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                     </span>
                   )}
                 </div>
-                <div className="w-full">
-                  <table className="w-full text-left text-xs table-fixed border-collapse">
+                <div className="w-full overflow-x-auto min-w-0 custom-scrollbar">
+                  <table className="w-full min-w-[700px] text-left text-xs table-fixed border-collapse">
                     <colgroup>
                       <col className="w-[28%]" />
                       <col className="w-[8.5%]" />

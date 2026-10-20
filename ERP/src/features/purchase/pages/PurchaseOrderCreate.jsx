@@ -424,10 +424,10 @@ export default function PurchaseOrderCreate({ initialData }) {
       {/* ═══════════════════════════════════════════════════════════════════
           MAIN WORKSPACE: LEFT FORM PANEL | RIGHT ORDER ITEMS WORKSPACE
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 bg-white">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 bg-white">
 
-        {/* ── LEFT INTERNAL FORM PANEL (~250px) ── */}
-        <div className="w-full lg:w-[250px] flex-none p-2 bg-zinc-50/40 overflow-y-auto overflow-x-hidden flex flex-col gap-2">
+        {/* ── LEFT INTERNAL FORM PANEL ── */}
+        <div className="w-full lg:w-[320px] xl:w-[340px] flex-none p-2.5 sm:p-3 bg-zinc-50/40 overflow-y-auto overflow-x-hidden sm:grid sm:grid-cols-2 lg:flex lg:flex-col gap-2.5 sm:gap-3">
 
           {/* SECTION 1: PURCHASE ORDER INFORMATION */}
           <div className={sidebarCard}>

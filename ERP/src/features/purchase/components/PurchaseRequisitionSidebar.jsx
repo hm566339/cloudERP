@@ -21,7 +21,7 @@ export default function PurchaseRequisitionSidebar({
   const errText = 'text-[7.2px] text-rose-600 mt-0.5 font-medium';
 
   return (
-    <div className="w-full lg:w-[230px] flex-none p-2 bg-zinc-50/40 overflow-y-auto overflow-x-hidden flex flex-col gap-2">
+    <div className="w-full lg:w-[300px] xl:w-[320px] flex-none p-2.5 sm:p-3 bg-zinc-50/40 overflow-y-auto overflow-x-hidden sm:grid sm:grid-cols-2 lg:flex lg:flex-col gap-2.5 sm:gap-3">
       {/* 1. REQUISITION INFORMATION */}
       <div className={sidebarCard}>
         <div className={cardHead}>

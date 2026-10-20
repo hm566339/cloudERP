@@ -32,7 +32,7 @@ export default function CustomerInformation({ pi }) {
           <Briefcase size={16} className="text-zinc-400" />
           <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Commercial Information</h3>
         </div>
-        <div className="p-5 grid grid-cols-2 gap-4">
+        <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-xs font-medium text-zinc-500 mb-1">Currency</p>
             <p className="text-sm font-semibold text-zinc-900">{pi.currency || 'INR'}</p>
@@ -41,11 +41,11 @@ export default function CustomerInformation({ pi }) {
             <p className="text-xs font-medium text-zinc-500 mb-1">Payment Condition</p>
             <p className="text-sm font-medium text-zinc-900">{pi.paymentCondition || '—'}</p>
           </div>
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <p className="text-xs font-medium text-zinc-500 mb-1">Payment Terms</p>
             <p className="text-sm text-zinc-800">{pi.paymentTerms || '—'}</p>
           </div>
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <p className="text-xs font-medium text-zinc-500 mb-1">Delivery Terms</p>
             <p className="text-sm text-zinc-800">{pi.deliveryTerms || '—'}</p>
           </div>

@@ -171,7 +171,7 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-[256px] sm:w-full rounded-xl border border-zinc-200 bg-white shadow-xl animate-in fade-in zoom-in-95 duration-100 overflow-hidden flex flex-col max-w-[100vw]">
+        <div className="absolute z-50 mt-1 w-full min-w-full sm:min-w-[260px] max-w-[calc(100vw-2rem)] rounded-xl border border-zinc-200 bg-white shadow-xl animate-in fade-in zoom-in-95 duration-100 overflow-hidden flex flex-col">
 
 
           {/* Customer List (Scrollable) */}
@@ -207,7 +207,7 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
                     {isCompany ? <Building2 size={14} /> : <User size={14} />}
                   </div>
                   
-                  <div className="flex flex-col min-w-0">
+                  <div className="flex flex-col min-w-0 flex-1">
                     <span className={`truncate ${isSelected ? 'font-bold' : 'font-semibold'}`}>
                       {cName}
                     </span>

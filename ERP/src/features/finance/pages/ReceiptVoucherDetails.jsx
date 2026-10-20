@@ -456,7 +456,7 @@ export default function ReceiptVoucherDetails() {
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                     {receipt.invoiceAllocations?.length > 0 ? (
                       <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-                        <table className="w-full min-w-[720px] sm:min-w-full text-left text-sm whitespace-nowrap" aria-label="Invoice Allocations Table">
+                        <table className="w-full min-w-[720px] text-left text-sm whitespace-nowrap" aria-label="Invoice Allocations Table">
                           <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                             <tr>
                               <th scope="col" className="px-4 py-3 text-xs font-semibold text-zinc-600">Invoice Number</th>

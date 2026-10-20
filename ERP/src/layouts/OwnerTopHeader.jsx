@@ -121,9 +121,9 @@ export default function OwnerTopHeader({
   }, [logoutApi, dispatch, navigate]);
 
   return (
-    <header className="h-[56px] flex-none bg-white/80 backdrop-blur-md border-b border-zinc-200/80 px-4 sm:px-6 sticky top-0 z-50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] flex items-center justify-between gap-4">
+    <header className="h-[56px] flex-none bg-white/80 backdrop-blur-md border-b border-zinc-200/80 px-3 sm:px-6 sticky top-0 z-50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] flex items-center justify-between gap-2 sm:gap-4">
       {/* ── Left: Hamburger + Collapse Toggle + Breadcrumbs ── */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {/* Mobile Hamburger Button */}
         <button
           type="button"
@@ -148,18 +148,18 @@ export default function OwnerTopHeader({
         )}
 
         {/* Breadcrumb Navigation */}
-        <nav className="flex items-center gap-2 text-[10.4px] text-zinc-500 font-medium">
+        <nav className="flex items-center gap-1.5 sm:gap-2 text-[10.4px] text-zinc-500 font-medium min-w-0">
           <Link
             to="/owner/dashboard"
-            className="hover:text-primary transition-colors flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-md border border-zinc-200/60 shadow-sm"
+            className="hover:text-primary transition-colors flex items-center gap-1.5 bg-zinc-50 px-2 sm:px-2.5 py-1 rounded-md border border-zinc-200/60 shadow-sm shrink-0"
           >
-            <LayoutDashboard size={14} className="text-zinc-400" />
-            <strong className="capitalize text-zinc-800 truncate max-w-[140px] sm:max-w-none">
+            <LayoutDashboard size={14} className="text-zinc-400 shrink-0" />
+            <strong className="capitalize text-zinc-800 truncate max-w-[80px] xs:max-w-[120px] sm:max-w-none">
               {orgName}
             </strong>
           </Link>
-          <ChevronRight size={14} className="text-zinc-300 shrink-0" />
-          <span className="text-zinc-900 font-bold bg-zinc-100/50 px-2 py-1 rounded-md">
+          <ChevronRight size={14} className="text-zinc-300 shrink-0 hidden xs:inline" />
+          <span className="text-zinc-900 font-bold bg-zinc-100/50 px-2 py-1 rounded-md truncate max-w-[100px] sm:max-w-none hidden xs:inline">
             {getBreadcrumbLabel()}
           </span>
         </nav>

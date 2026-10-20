@@ -488,7 +488,7 @@ export default function PaymentVoucherDetails() {
                     <h3 className="text-lg font-bold text-zinc-900 mb-4">Invoice Allocations</h3>
                     {v.invoiceAllocations && v.invoiceAllocations.length > 0 ? (
                       <div className="border border-zinc-200 rounded-xl overflow-x-auto min-w-0 max-w-full custom-scrollbar shadow-sm">
-                        <table className="w-full min-w-[700px] sm:min-w-full text-left text-sm whitespace-nowrap" aria-label="Invoice Allocations Table">
+                        <table className="w-full min-w-[700px] text-left text-sm whitespace-nowrap" aria-label="Invoice Allocations Table">
                           <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 text-xs font-semibold sticky top-0 z-10">
                             <tr>
                               <th scope="col" className="px-4 py-3">Invoice No</th>
@@ -942,7 +942,7 @@ export default function PaymentVoucherDetails() {
                     
                     {v.attachments && v.attachments.length > 0 ? (
                       <div className="border border-zinc-200 rounded-xl overflow-x-auto min-w-0 max-w-full custom-scrollbar shadow-sm">
-                        <table className="w-full min-w-[500px] sm:min-w-full text-left text-sm whitespace-nowrap" aria-label="Attachments Table">
+                        <table className="w-full min-w-[500px] text-left text-sm whitespace-nowrap" aria-label="Attachments Table">
                           <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 text-xs font-semibold sticky top-0 z-10">
                             <tr>
                               <th scope="col" className="px-4 py-3">Document Type</th>

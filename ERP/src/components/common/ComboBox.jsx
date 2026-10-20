@@ -138,7 +138,7 @@ export default function ComboBox({
 
       {/* Autocomplete Dropdown */}
       {isFocused && (filteredOptions.length > 0 || showCreateOption) && (
-        <div className={`absolute left-0 w-full bg-white border border-zinc-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 max-h-56 overflow-y-auto z-50 ${
+        <div className={`absolute left-0 w-full min-w-full sm:min-w-[220px] max-w-[calc(100vw-2rem)] bg-white border border-zinc-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 max-h-56 overflow-y-auto z-50 ${
           openUpward ? 'bottom-full mb-1.5' : 'top-full mt-1'
         }`}>
           <div className="py-1">

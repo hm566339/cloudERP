@@ -223,7 +223,7 @@ export default function SubscriptionTab({ organizationId, org }) {
           </div>
         ) : (
           <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-            <table className="w-full text-left text-xs whitespace-nowrap min-w-[580px] sm:min-w-full" aria-label="Payment Transactions Table">
+            <table className="w-full text-left text-xs whitespace-nowrap min-w-[580px]" aria-label="Payment Transactions Table">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold text-zinc-600 uppercase tracking-wider bg-zinc-50/80 sticky top-0 z-10">
                   <th scope="col" className="py-2.5 px-3">Transaction / Order ID</th>
@@ -290,7 +290,7 @@ export default function SubscriptionTab({ organizationId, org }) {
           </div>
         ) : (
           <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-            <table className="w-full text-left text-xs whitespace-nowrap min-w-[580px] sm:min-w-full" aria-label="Billing Invoices Table">
+            <table className="w-full text-left text-xs whitespace-nowrap min-w-[580px]" aria-label="Billing Invoices Table">
               <thead>
                 <tr className="border-b border-zinc-200 text-xs font-semibold text-zinc-600 uppercase tracking-wider bg-zinc-50/80 sticky top-0 z-10">
                   <th scope="col" className="py-2.5 px-3">Invoice Number</th>

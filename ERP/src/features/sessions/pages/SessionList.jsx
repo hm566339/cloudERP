@@ -254,7 +254,7 @@ export default function SessionList() {
             </div>
             
             <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-              <table className="w-full min-w-[620px] sm:min-w-full table-fixed divide-y divide-zinc-200 text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="My Sessions Table">
+              <table className="w-full min-w-[620px] table-fixed divide-y divide-zinc-200 text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="My Sessions Table">
                 <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                   <tr className="text-xs font-semibold text-zinc-600 uppercase tracking-wider select-none">
                     <th scope="col" className="w-[27%] min-w-[160px] px-4 py-3">Device & User</th>
@@ -301,7 +301,7 @@ export default function SessionList() {
               </div>
 
               <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-                <table className="w-full min-w-[620px] sm:min-w-full table-fixed divide-y divide-zinc-200 text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="Company Sessions Table">
+                <table className="w-full min-w-[620px] table-fixed divide-y divide-zinc-200 text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="Company Sessions Table">
                   <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                     <tr className="text-xs font-semibold text-zinc-600 uppercase tracking-wider select-none">
                       <th scope="col" className="w-[27%] min-w-[160px] px-4 py-3">Device & User</th>

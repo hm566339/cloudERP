@@ -143,7 +143,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
         <div className="overflow-y-auto flex-1 p-6 bg-zinc-50/50">
           <div className="mb-6 p-4 bg-indigo-50/50 border border-indigo-100 rounded-lg">
             <h3 className="text-xs font-bold text-indigo-800 uppercase tracking-wider mb-3">Proforma Invoice Details</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="block text-zinc-500 mb-1">PI Number</span>
                 <span className="font-mono font-bold text-zinc-900">{pi.piNumber}</span>
@@ -164,7 +164,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
           </div>
 
           <form id="advance-payment-form" onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
                 <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Receipt Date <span className="text-red-500">*</span></label>
                 <input

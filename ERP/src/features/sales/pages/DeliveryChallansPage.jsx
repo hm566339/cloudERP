@@ -201,7 +201,7 @@ function DeliveryChallanOverview({ challan }) {
           </span>
         </div>
         <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-          <table className="w-full min-w-[750px] sm:min-w-full text-left text-xs whitespace-nowrap" aria-label="Delivery Challan Line Items Table">
+          <table className="w-full min-w-[750px] text-left text-xs whitespace-nowrap" aria-label="Delivery Challan Line Items Table">
             <thead className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold text-zinc-600 sticky top-0 z-10">
               <tr>
                 <th scope="col" className="px-3 py-2 font-semibold">Product</th>

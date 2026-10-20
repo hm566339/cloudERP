@@ -296,7 +296,7 @@ export default function QuotationComparison() {
                   <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Supplier Quotations</h3>
                 </div>
                 <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar px-6 pb-6">
-                  <table className="w-full min-w-[850px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Supplier Quotations Table">
+                  <table className="w-full min-w-[850px] text-left border-collapse whitespace-nowrap text-sm" aria-label="Supplier Quotations Table">
                     <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                       <tr>
                         <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Supplier</th>

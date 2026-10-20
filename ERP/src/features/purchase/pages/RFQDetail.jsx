@@ -261,7 +261,7 @@ export default function RFQDetail() {
               </div>
             ) : (
               <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar px-6 pb-6">
-                <table className="w-full min-w-[650px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Invited Suppliers Table">
+                <table className="w-full min-w-[650px] text-left border-collapse whitespace-nowrap text-sm" aria-label="Invited Suppliers Table">
                   <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                     <tr>
                       <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">Supplier</th>
@@ -300,7 +300,7 @@ export default function RFQDetail() {
               </div>
             ) : (
               <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar px-6 pb-6">
-                <table className="w-full min-w-[700px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Requested RFQ Items Table">
+                <table className="w-full min-w-[700px] text-left border-collapse whitespace-nowrap text-sm" aria-label="Requested RFQ Items Table">
                   <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                     <tr>
                       <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">#</th>

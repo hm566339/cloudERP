@@ -146,8 +146,8 @@ const ProformaInvoiceOverview = ({ pi, isLoading, isError, onRetry }) => {
               <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500">Items</h4>
               <span className="text-xs font-semibold text-zinc-500 bg-white px-2.5 py-1 rounded-md border border-zinc-200 shadow-sm">{items.length} items</span>
             </div>
-            <div className="border border-zinc-200 rounded-lg overflow-hidden">
-              <table className="w-full text-left text-sm">
+            <div className="border border-zinc-200 rounded-lg overflow-x-auto min-w-0 custom-scrollbar">
+              <table className="w-full min-w-[750px] text-left text-sm">
                 <thead className="bg-zinc-50 border-b border-zinc-200">
                   <tr>
                     <th className="px-4 py-2 font-medium text-zinc-500">Product</th>

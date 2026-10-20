@@ -217,11 +217,15 @@ const CustomSelect = React.forwardRef(({
         maxHeight = Math.max(120, Math.min(260, spaceBelow - 16));
       }
 
+      const effectiveWidth = Math.max(rect.width, 180);
+      const leftPosition = Math.max(8, Math.min(rect.left, viewportWidth - effectiveWidth - 8));
+
       setDropdownCoords({
         top: topPosition,
         bottom: bottomPosition,
-        left: Math.max(8, Math.min(rect.left, viewportWidth - rect.width - 8)),
+        left: leftPosition,
         width: rect.width,
+        effectiveWidth,
         openUpwards: shouldOpenUpwards,
         maxHeight,
       });
@@ -530,7 +534,8 @@ const CustomSelect = React.forwardRef(({
             bottom: dropdownCoords.bottom !== 'auto' ? `${dropdownCoords.bottom}px` : 'auto',
             left: `${dropdownCoords.left}px`,
             width: `${dropdownCoords.width}px`,
-            minWidth: Math.max(dropdownCoords.width, 180),
+            minWidth: Math.min(Math.max(dropdownCoords.width, 180), typeof window !== 'undefined' ? window.innerWidth - 16 : 180),
+            maxWidth: 'calc(100vw - 16px)',
             zIndex: 99999,
           }}
           className={dropdownClassName || "bg-white border border-zinc-200/90 rounded-xl shadow-xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100 ring-1 ring-black/5"}

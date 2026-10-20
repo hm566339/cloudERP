@@ -519,7 +519,7 @@ export default function CreditNoteDetails() {
                   <EmptyState title="No Line Items" message="There are no specific line items recorded for this credit note." icon={ShoppingCart} />
                 ) : (
                   <div className="border border-zinc-200 rounded-xl overflow-x-auto min-w-0 max-w-full custom-scrollbar shadow-sm">
-                    <table className="w-full min-w-[640px] sm:min-w-full text-left text-sm whitespace-nowrap" aria-label="Credit Note Items Table">
+                    <table className="w-full min-w-[680px] text-left text-sm whitespace-nowrap" aria-label="Credit Note Items Table">
                       <thead className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold text-zinc-600 sticky top-0 z-10">
                         <tr>
                           <th scope="col" className="px-4 py-3">Item Code</th>

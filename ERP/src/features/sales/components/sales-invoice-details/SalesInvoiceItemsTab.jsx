@@ -15,7 +15,7 @@ export default function SalesInvoiceItemsTab({
         <EmptyState icon={<ShoppingCart size={48} />} title="No Line Items" desc="There are no line items recorded for this invoice." />
       ) : (
         <div className="w-full overflow-x-auto min-w-0 custom-scrollbar rounded-lg border border-zinc-200">
-          <table className="w-full min-w-[640px] sm:min-w-full text-left text-sm" aria-label="Invoice Line Items">
+          <table className="w-full min-w-[750px] text-left text-sm" aria-label="Invoice Line Items">
             <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold uppercase tracking-wider text-xs sticky top-0 z-10">
               <tr>
                 <th scope="col" className="p-4 w-10 text-center"></th>

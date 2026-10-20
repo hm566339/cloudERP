@@ -351,7 +351,7 @@ export default function CompanyLayout() {
             onClick={() => closeMobile()}
           />
           <aside
-            className="fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] animate-slide-in-right lg:hidden shadow-xl overscroll-contain"
+            className="fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] animate-slide-in-right lg:hidden shadow-xl overscroll-contain max-w-[85vw]"
             style={{ width: 'var(--sidebar-width)' }}
           >
             <div className="absolute top-3 right-3">
@@ -373,7 +373,7 @@ export default function CompanyLayout() {
         <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden">
 
           {/* Top Header */}
-          <header className="h-[56px] flex-none bg-white/80 backdrop-blur-md border-b border-zinc-200/80 flex items-center justify-between px-6 sticky top-0 z-50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]">
+          <header className="h-[56px] flex-none bg-white/80 backdrop-blur-md border-b border-zinc-200/80 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]">
             <div className="flex items-center gap-4">
               <button
                 onClick={handleToggleSidebar}

@@ -23,7 +23,7 @@ export default function PlanTable({
   return (
     <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-2xs overflow-hidden max-w-full min-w-0">
       <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-        <table className="w-full min-w-[760px] sm:min-w-full text-left border-collapse text-xs md:text-sm" aria-label="Subscription Plans Table">
+        <table className="w-full min-w-[760px] text-left border-collapse text-xs md:text-sm" aria-label="Subscription Plans Table">
           <thead>
             <tr className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold text-zinc-600 uppercase tracking-wider sticky top-0 z-10">
               <th scope="col" className="py-3.5 px-4">Plan Name</th>

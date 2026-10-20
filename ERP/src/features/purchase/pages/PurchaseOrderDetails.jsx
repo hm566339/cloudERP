@@ -328,7 +328,7 @@ export default function PurchaseOrderDetails() {
         {activeTab === 'items' && (
           <div className="card bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-              <table className="w-full min-w-[650px] sm:min-w-full text-left text-sm whitespace-nowrap" aria-label="Purchase Order Items Table">
+              <table className="w-full min-w-[650px] text-left text-sm whitespace-nowrap" aria-label="Purchase Order Items Table">
                 <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 text-xs font-semibold sticky top-0 z-10">
                   <tr>
                     <th scope="col" className="px-4 py-3">Item / Product</th>

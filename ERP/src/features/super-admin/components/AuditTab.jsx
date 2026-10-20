@@ -120,7 +120,7 @@ export default function AuditTab({ organizationId, org, buildPath }) {
         <div className="p-6"><TableSkeleton columns={5} rows={4} /></div>
       ) : filtered.length > 0 ? (
         <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-          <table className="w-full text-left text-xs whitespace-nowrap min-w-[620px] sm:min-w-full" aria-label="Security Audit Trail Table">
+          <table className="w-full text-left text-xs whitespace-nowrap min-w-[620px]" aria-label="Security Audit Trail Table">
             <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold sticky top-0 z-10">
               <tr>
                 <th scope="col" className="py-3 px-4 w-12 text-center text-xs uppercase tracking-wider text-zinc-500">#</th>

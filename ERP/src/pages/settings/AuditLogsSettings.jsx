@@ -43,7 +43,7 @@ export default function AuditLogsSettings() {
         </div>
 
         <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-          <table className="w-full text-sm text-left border-collapse min-w-[540px] sm:min-w-full" aria-label="Audit Logs Table">
+          <table className="w-full text-sm text-left border-collapse min-w-[540px]" aria-label="Audit Logs Table">
             <thead className="text-xs font-semibold text-zinc-600 bg-zinc-50 uppercase border-b border-zinc-200 sticky top-0 z-10">
               <tr>
                 <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">Action</th>

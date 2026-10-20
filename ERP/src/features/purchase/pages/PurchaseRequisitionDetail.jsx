@@ -268,7 +268,7 @@ export default function PurchaseRequisitionDetail() {
               <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Requested Items</h3>
             </div>
             <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-              <table className="w-full min-w-[700px] sm:min-w-full text-left border-collapse whitespace-nowrap text-sm" aria-label="Requested Items Table">
+              <table className="w-full min-w-[700px] text-left border-collapse whitespace-nowrap text-sm" aria-label="Requested Items Table">
                 <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
                   <tr>
                     <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-600">#</th>

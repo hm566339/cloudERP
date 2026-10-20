@@ -189,7 +189,7 @@ export default function OrganizationList() {
           </div>
         ) : (
           <div className={`overflow-x-auto min-w-0 max-w-full custom-scrollbar transition-opacity ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
-            <table className="w-full min-w-[750px] sm:min-w-full text-left text-xs whitespace-nowrap" aria-label="Organizations Table">
+            <table className="w-full min-w-[750px] text-left text-xs whitespace-nowrap" aria-label="Organizations Table">
               <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 sticky top-0 z-10">
                 <tr>
                   <th scope="col" className="p-3.5 w-10 text-center text-xs uppercase font-semibold tracking-wider">#</th>
