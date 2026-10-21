@@ -19,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-
 import com.erp.account.common.dto.request.RequestWrapper;
 import com.erp.account.common.dto.response.ApiResponse;
 import com.erp.account.common.dto.response.PostResponse;
@@ -61,7 +60,8 @@ public class ChartOfAccountController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Referenced entity not found")
     })
     public ResponseEntity<ApiResponse<PostResponse>> createChartOfAccount(
-            @Valid @RequestBody RequestWrapper<ChartOfAccountRequest> requestWrapper, @RequestParam(required = false) UUID companyId) {
+            @Valid @RequestBody RequestWrapper<ChartOfAccountRequest> requestWrapper,
+            @RequestParam(required = false) UUID companyId) {
 
         log.info("Create chart of account request received for companyId: {}", companyId);
 

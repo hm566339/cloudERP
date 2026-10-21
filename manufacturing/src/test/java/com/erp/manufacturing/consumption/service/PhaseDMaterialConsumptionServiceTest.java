@@ -489,4 +489,51 @@ class PhaseDMaterialConsumptionServiceTest {
         assertEquals(movementId, retry.getInventoryMovementId());
         verify(inventoryFeignClient, times(2)).createProductionStockOut(any(), eq(companyId));
     }
+
+    @Test
+    void mismatchedProductIdIsRejected() {
+        MaterialConsumptionRequest request = MaterialConsumptionRequest.builder()
+                .productionOrderMaterialId(materialId)
+                .productId(UUID.randomUUID()) // mismatch with material.getComponentProductId()
+                .quantity(new BigDecimal("10.00"))
+                .uomId(uomId)
+                .warehouseId(warehouseId)
+                .locationId(locationId)
+                .reservationId(reservationId)
+                .idempotencyKey("mismatched-prod")
+                .build();
+
+        assertThrows(BusinessValidationException.class, () -> service.consumeMaterial(orderId, request, companyId));
+        verify(inventoryFeignClient, never()).createProductionStockOut(any(), any());
+    }
+
+    @Test
+    void matchingProductIdSucceeds() {
+        MaterialConsumptionRequest request = MaterialConsumptionRequest.builder()
+                .productionOrderMaterialId(materialId)
+                .productId(productId) // matches material.getComponentProductId()
+                .quantity(new BigDecimal("10.00"))
+                .uomId(uomId)
+                .warehouseId(warehouseId)
+                .locationId(locationId)
+                .reservationId(reservationId)
+                .idempotencyKey("matching-prod")
+                .build();
+
+        UUID movementId = UUID.randomUUID();
+        when(inventoryFeignClient.createProductionStockOut(any(InventoryApiRequest.class), eq(companyId)))
+                .thenReturn(ResponseEntity.ok(InventoryApiResponse.success(
+                        ProductionStockOutInventoryResponse.builder()
+                                .inventoryMovementId(movementId)
+                                .movementType("PRODUCTION_OUT")
+                                .referenceType("PRODUCTION")
+                                .referenceId(orderId)
+                                .referenceLineId(materialId)
+                                .status("POSTED")
+                                .build())));
+
+        MaterialConsumptionResponse response = service.consumeMaterial(orderId, request, companyId);
+        assertNotNull(response);
+        assertEquals(movementId, response.getInventoryMovementId());
+    }
 }

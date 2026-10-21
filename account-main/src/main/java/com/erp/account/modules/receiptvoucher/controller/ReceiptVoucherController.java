@@ -61,7 +61,7 @@ public class ReceiptVoucherController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping({"/{id}/submit", "/{id}/submit-approval", "/{id}/submit-for-approval"})
+    @PostMapping({ "/{id}/submit", "/{id}/submit-approval", "/{id}/submit-for-approval" })
     public ResponseEntity<Map<String, Object>> submit(
             @PathVariable UUID id,
             @RequestParam(required = false) String comments,

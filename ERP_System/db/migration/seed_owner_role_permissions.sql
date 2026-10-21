@@ -28,5 +28,9 @@ WHERE UPPER(r.name) = 'OWNER'
       SELECT 1 FROM company_module cm JOIN module m ON cm.module_id = m.id 
       WHERE cm.company_id = r.company_id AND cm.active = true AND m.module_status = true AND UPPER(m.name) LIKE 'WORKFLOW%'
     ))
+    OR (f.module_name = 'MANUFACTURING' AND EXISTS (
+      SELECT 1 FROM company_module cm JOIN module m ON cm.module_id = m.id 
+      WHERE cm.company_id = r.company_id AND cm.active = true AND m.module_status = true AND UPPER(m.name) LIKE 'MANUFACTURING%'
+    ))
   )
 ON CONFLICT (feature_permission_id, role_id) DO NOTHING;

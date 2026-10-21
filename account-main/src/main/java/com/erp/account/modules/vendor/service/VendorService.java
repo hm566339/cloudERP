@@ -36,6 +36,8 @@ public interface VendorService {
 
     Page<VendorResponse> getAllVendors(VendorFilterDto filter, Pageable pageable);
 
+    Page<VendorResponse> getAllVendors(VendorFilterDto filter, Pageable pageable, UUID companyId);
+
     List<VendorResponse> getActiveVendors();
 
     Page<VendorResponse> searchVendors(String query, Pageable pageable);

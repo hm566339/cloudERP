@@ -351,8 +351,8 @@ public class MaterialConsumptionServiceImpl implements MaterialConsumptionServic
         if (!companyId.equals(order.getCompanyId()) || !companyId.equals(material.getCompanyId())) {
             throw new BusinessValidationException("Production material does not belong to the authenticated company.");
         }
-        if (!material.getComponentProductId().equals(request.getWarehouseId()) && request.getWarehouseId() == null) {
-            throw new BusinessValidationException("Warehouse is required.");
+        if (request.getProductId() != null && !material.getComponentProductId().equals(request.getProductId())) {
+            throw new BusinessValidationException("Product does not match the component product of the material.");
         }
         if (request.getWarehouseId() == null || request.getLocationId() == null) {
             throw new BusinessValidationException("Warehouse and location are required.");

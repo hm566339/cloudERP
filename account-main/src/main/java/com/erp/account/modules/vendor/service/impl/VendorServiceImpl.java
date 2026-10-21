@@ -202,7 +202,14 @@ public class VendorServiceImpl implements VendorService {
     @Override
     @Transactional(readOnly = true)
     public Page<VendorResponse> getAllVendors(VendorFilterDto filter, Pageable pageable) {
-        UUID companyId = TenantUtils.isSystemAdmin() ? null : TenantUtils.getCurrentCompanyId();
+        return getAllVendors(filter, pageable, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<VendorResponse> getAllVendors(VendorFilterDto filter, Pageable pageable, UUID companyIdParam) {
+        UUID requestedCompanyId = companyIdParam != null ? companyIdParam : (filter != null ? filter.getCompanyId() : null);
+        UUID companyId = requestedCompanyId != null ? requestedCompanyId : TenantUtils.getCurrentCompanyId();
         Specification<Vendor> spec = VendorSpecification.getFilterSpecification(filter, companyId);
         Page<Vendor> vendors = vendorRepository.findAll(spec, pageable);
         return vendors.map(v -> enrichVendorResponse(vendorMapper.entityToResponse(v), v));

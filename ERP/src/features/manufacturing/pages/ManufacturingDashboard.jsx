@@ -10,7 +10,10 @@ export default function ManufacturingDashboard() {
   const { canViewModule } = useRBAC()
   const { data: schedules = [], isLoading } = useGetProductionSchedulesQuery(companyId)
 
-  const activeOrders = schedules.filter(s => s.status === 'In Progress').length
+  const activeOrders = schedules.filter(s => {
+    const st = (s.status || '').toUpperCase()
+    return st === 'IN_PROGRESS' || st === 'IN PROGRESS' || st === 'RELEASED'
+  }).length
 
  return (
  <div className="animate-fade-in space-y-6">
@@ -66,12 +69,18 @@ export default function ManufacturingDashboard() {
  <h3 className="font-bold text-zinc-900 mb-4">Active Production Lines</h3>
  <div className="space-y-4 relative min-h-[80px]">
  {isLoading && <div className="p-6 w-full"><TableSkeleton columns={5} rows={3} /></div>}
- {schedules.filter(s => s.status === 'In Progress').map((line, i) => {
-   const progress = Math.min(Math.round((line.produced / line.targetQty) * 100), 100) || 0
+ {schedules.filter(s => {
+   const st = (s.status || '').toUpperCase()
+   return st === 'IN_PROGRESS' || st === 'IN PROGRESS' || st === 'RELEASED'
+ }).map((line, i) => {
+   const prod = line.producedQuantity !== undefined ? Number(line.producedQuantity) : (Number(line.produced) || 0)
+   const target = line.plannedQuantity !== undefined ? Number(line.plannedQuantity) : (Number(line.targetQty) || 0)
+   const progress = target > 0 ? Math.min(Math.round((prod / target) * 100), 100) : 0
+   const productName = line.bom?.name || line.product || line.productionOrderNo || 'Production Line'
    return (
  <div key={i} className="p-4 border border-zinc-100 rounded-lg">
  <div className="flex justify-between items-center mb-2">
- <span className="font-semibold text-zinc-800">{line.product}</span>
+ <span className="font-semibold text-zinc-800">{productName}</span>
  <span className="badge badge-success">Running</span>
  </div>
  <div className="flex justify-between text-xs text-zinc-500 mb-1">

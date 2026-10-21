@@ -35,4 +35,5 @@ public class VendorFilterDto {
     private LocalDateTime updatedFrom;
     private LocalDateTime updatedTo;
     private List<UUID> ids;
+    private UUID companyId;
 }

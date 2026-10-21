@@ -61,7 +61,8 @@ public class VendorController {
 
     @GetMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "Get vendor by ID with full profile")
-    public ResponseEntity<ApiResponse<com.erp.account.modules.vendor.dto.response.VendorProfileResponse>> getVendorById(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<com.erp.account.modules.vendor.dto.response.VendorProfileResponse>> getVendorById(
+            @PathVariable UUID id) {
         log.info("Fetching vendor profile: {}", id);
         com.erp.account.modules.vendor.dto.response.VendorProfileResponse response = vendorService.getVendorById(id);
         return ResponseEntity.ok(ApiResponse.success(response, "Vendor profile retrieved successfully"));
@@ -70,9 +71,9 @@ public class VendorController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<VendorResponse>>> getAllVendors(
             @ModelAttribute VendorFilterDto filter,
-            Pageable pageable) {
+            Pageable pageable, @RequestParam(required = false) UUID companyId) {
         log.info("GET /api/v1/vendors - Get all vendors with filter: {}", filter);
-        Page<VendorResponse> vendors = vendorService.getAllVendors(filter, pageable);
+        Page<VendorResponse> vendors = vendorService.getAllVendors(filter, pageable, companyId);
         return ResponseEntity.ok(ApiResponse.success(vendors, "Vendors retrieved successfully"));
     }
 

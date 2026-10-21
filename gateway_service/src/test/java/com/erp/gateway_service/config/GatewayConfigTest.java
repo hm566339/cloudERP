@@ -208,4 +208,38 @@ class GatewayConfigTest {
         assertEquals(1, routes.size());
         assertEquals(URI.create("http://auth-service:8090"), routes.get(0).getUri());
     }
+
+    @Test
+    @DisplayName("Should dynamically resolve and forward Manufacturing routes from SSO database")
+    void testManufacturingDynamicRouteRegistration() {
+        UUID mfgRouteId = UUID.randomUUID();
+        UUID bomRouteId = UUID.randomUUID();
+
+        ModuleRouteResponse mfgRoute = createRoute(mfgRouteId, "MANUFACTURING", "/api/manufacturing/**",
+                "http://manufacturing-service:8085", 10, true);
+        ModuleRouteResponse bomRoute = createRoute(bomRouteId, "MANUFACTURING", "/api/boms/**",
+                "http://manufacturing-service:8085", 10, true);
+
+        when(routeProviderService.getRoutes()).thenReturn(List.of(mfgRoute, bomRoute));
+
+        RouteLocator routeLocator = gatewayConfig.routeLocator(builder);
+        List<Route> routes = routeLocator.getRoutes().collectList().block();
+
+        assertNotNull(routes);
+        assertEquals(2, routes.size());
+
+        Route resolvedMfg = routes.stream()
+                .filter(r -> r.getId().equals(mfgRouteId.toString()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(resolvedMfg);
+        assertEquals(URI.create("http://manufacturing-service:8085"), resolvedMfg.getUri());
+
+        Route resolvedBom = routes.stream()
+                .filter(r -> r.getId().equals(bomRouteId.toString()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(resolvedBom);
+        assertEquals(URI.create("http://manufacturing-service:8085"), resolvedBom.getUri());
+    }
 }

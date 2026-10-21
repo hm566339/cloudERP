@@ -84,7 +84,8 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
             accountCode = generateAccountCode(request.getAccountType(), accountGroup, resolvedCompanyId);
         } else {
             accountCode = accountCode.trim();
-            if (chartOfAccountRepository.existsByCompanyIdAndAccountCodeAndIsDeletedFalse(resolvedCompanyId, accountCode)) {
+            if (chartOfAccountRepository.existsByCompanyIdAndAccountCodeAndIsDeletedFalse(resolvedCompanyId,
+                    accountCode)) {
                 throw new ConflictException("Account code already exists for the selected company");
             }
         }
@@ -106,7 +107,8 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
         chartOfAccount.setCompany(company);
         chartOfAccount.setGroup(accountGroup);
         chartOfAccount.setParentAccount(parentAccount);
-        chartOfAccount.setPostingAllowed(request.getPostingAllowed() == null ? Boolean.TRUE : request.getPostingAllowed());
+        chartOfAccount
+                .setPostingAllowed(request.getPostingAllowed() == null ? Boolean.TRUE : request.getPostingAllowed());
         chartOfAccount.setIsActive(request.getIsActive() == null ? Boolean.TRUE : request.getIsActive());
         chartOfAccount.setIsDeleted(false);
 
@@ -163,13 +165,17 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
         }
 
         boolean hasChildAccounts = chartOfAccountRepository.existsByParentAccountIdAndIsDeletedFalse(chartOfAccountId);
-        validatePostingRule(parentAccount, request.getPostingAllowed() == null ? existingAccount.getPostingAllowed() : request.getPostingAllowed(), hasChildAccounts);
+        validatePostingRule(parentAccount,
+                request.getPostingAllowed() == null ? existingAccount.getPostingAllowed() : request.getPostingAllowed(),
+                hasChildAccounts);
 
         chartOfAccountMapper.updateEntity(request, existingAccount);
         existingAccount.setGroup(accountGroup);
         existingAccount.setParentAccount(parentAccount);
-        existingAccount.setPostingAllowed(request.getPostingAllowed() == null ? existingAccount.getPostingAllowed() : request.getPostingAllowed());
-        existingAccount.setIsActive(request.getIsActive() == null ? existingAccount.getIsActive() : request.getIsActive());
+        existingAccount.setPostingAllowed(request.getPostingAllowed() == null ? existingAccount.getPostingAllowed()
+                : request.getPostingAllowed());
+        existingAccount
+                .setIsActive(request.getIsActive() == null ? existingAccount.getIsActive() : request.getIsActive());
 
         chartOfAccountRepository.save(existingAccount);
 
@@ -254,10 +260,16 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
 
         // Balances calculation
         BigDecimal openingBal = acc.getOpeningBalance() != null ? acc.getOpeningBalance() : BigDecimal.ZERO;
-        BigDecimal totDebit = companyId != null ? glJournalLineRepository.getTotalDebitForAccount(companyId, acc.getId()) : BigDecimal.ZERO;
-        BigDecimal totCredit = companyId != null ? glJournalLineRepository.getTotalCreditForAccount(companyId, acc.getId()) : BigDecimal.ZERO;
-        if (totDebit == null) totDebit = BigDecimal.ZERO;
-        if (totCredit == null) totCredit = BigDecimal.ZERO;
+        BigDecimal totDebit = companyId != null
+                ? glJournalLineRepository.getTotalDebitForAccount(companyId, acc.getId())
+                : BigDecimal.ZERO;
+        BigDecimal totCredit = companyId != null
+                ? glJournalLineRepository.getTotalCreditForAccount(companyId, acc.getId())
+                : BigDecimal.ZERO;
+        if (totDebit == null)
+            totDebit = BigDecimal.ZERO;
+        if (totCredit == null)
+            totCredit = BigDecimal.ZERO;
 
         BigDecimal netChange = AccountNature.CREDIT.equals(acc.getAccountType())
                 ? totCredit.subtract(totDebit)
@@ -269,19 +281,32 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
         LocalDate startOfMonth = now.withDayOfMonth(1);
         LocalDate startOfYear = now.withDayOfYear(1);
 
-        BigDecimal monthDebit = companyId != null ? glJournalLineRepository.getTotalDebitForAccountByDateRange(companyId, acc.getId(), startOfMonth, now) : BigDecimal.ZERO;
-        BigDecimal monthCredit = companyId != null ? glJournalLineRepository.getTotalCreditForAccountByDateRange(companyId, acc.getId(), startOfMonth, now) : BigDecimal.ZERO;
-        BigDecimal yearDebit = companyId != null ? glJournalLineRepository.getTotalDebitForAccountByDateRange(companyId, acc.getId(), startOfYear, now) : BigDecimal.ZERO;
-        BigDecimal yearCredit = companyId != null ? glJournalLineRepository.getTotalCreditForAccountByDateRange(companyId, acc.getId(), startOfYear, now) : BigDecimal.ZERO;
+        BigDecimal monthDebit = companyId != null
+                ? glJournalLineRepository.getTotalDebitForAccountByDateRange(companyId, acc.getId(), startOfMonth, now)
+                : BigDecimal.ZERO;
+        BigDecimal monthCredit = companyId != null
+                ? glJournalLineRepository.getTotalCreditForAccountByDateRange(companyId, acc.getId(), startOfMonth, now)
+                : BigDecimal.ZERO;
+        BigDecimal yearDebit = companyId != null
+                ? glJournalLineRepository.getTotalDebitForAccountByDateRange(companyId, acc.getId(), startOfYear, now)
+                : BigDecimal.ZERO;
+        BigDecimal yearCredit = companyId != null
+                ? glJournalLineRepository.getTotalCreditForAccountByDateRange(companyId, acc.getId(), startOfYear, now)
+                : BigDecimal.ZERO;
 
-        if (monthDebit == null) monthDebit = BigDecimal.ZERO;
-        if (monthCredit == null) monthCredit = BigDecimal.ZERO;
-        if (yearDebit == null) yearDebit = BigDecimal.ZERO;
-        if (yearCredit == null) yearCredit = BigDecimal.ZERO;
+        if (monthDebit == null)
+            monthDebit = BigDecimal.ZERO;
+        if (monthCredit == null)
+            monthCredit = BigDecimal.ZERO;
+        if (yearDebit == null)
+            yearDebit = BigDecimal.ZERO;
+        if (yearCredit == null)
+            yearCredit = BigDecimal.ZERO;
 
         // Journal Lines / Ledger Transactions
         List<GlJournalLine> lines = companyId != null
-                ? glJournalLineRepository.findByAccountIdAndCompanyIdAndIsDeletedFalse(acc.getId(), companyId, org.springframework.data.domain.PageRequest.of(0, 20)).getContent()
+                ? glJournalLineRepository.findByAccountIdAndCompanyIdAndIsDeletedFalse(acc.getId(), companyId,
+                        org.springframework.data.domain.PageRequest.of(0, 20)).getContent()
                 : List.of();
 
         BigDecimal runningBal = openingBal;
@@ -303,7 +328,8 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
             String voucherNo = je != null ? je.getVoucherNo() : null;
             String voucherType = (je != null && je.getSourceModule() != null) ? je.getSourceModule().name() : "JOURNAL";
             LocalDate txDate = je != null ? je.getVoucherDate() : null;
-            String narration = line.getLineDescription() != null ? line.getLineDescription() : (je != null ? je.getNarration() : null);
+            String narration = line.getLineDescription() != null ? line.getLineDescription()
+                    : (je != null ? je.getNarration() : null);
 
             journalEntryDtos.add(CoaJournalEntryDto.builder()
                     .journalEntryId(jeId)
@@ -334,7 +360,8 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
                 .max(LocalDate::compareTo)
                 .orElse(null);
 
-        List<String> childCodes = childAccountDtos.stream().map(CoaChildAccountDto::getAccountCode).collect(Collectors.toList());
+        List<String> childCodes = childAccountDtos.stream().map(CoaChildAccountDto::getAccountCode)
+                .collect(Collectors.toList());
 
         return ChartOfAccountProfileResponse.builder()
                 // 1. Account Master
@@ -394,7 +421,8 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
                         .payments(List.of())
                         .creditNotes(List.of())
                         .debitNotes(List.of())
-                        .journalVouchers(journalEntryDtos.stream().map(CoaJournalEntryDto::getVoucherNumber).filter(java.util.Objects::nonNull).collect(Collectors.toList()))
+                        .journalVouchers(journalEntryDtos.stream().map(CoaJournalEntryDto::getVoucherNumber)
+                                .filter(java.util.Objects::nonNull).collect(Collectors.toList()))
                         .build())
 
                 // 9. Financial Summary
@@ -443,9 +471,10 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
 
     @Override
     public ChartOfAccountListResponse getAllChartOfAccounts(ChartOfAccountFilterDto filter, Pageable pageable) {
-         UUID resolvedCompanyId = TenantUtils.resolveCompanyId(filter.getCompanyId());
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(filter.getCompanyId());
 
-        Specification<ChartOfAccount> spec = ChartOfAccountSpecification.getFilterSpecification(filter, resolvedCompanyId);
+        Specification<ChartOfAccount> spec = ChartOfAccountSpecification.getFilterSpecification(filter,
+                resolvedCompanyId);
 
         Page<ChartOfAccount> pageResult = chartOfAccountRepository.findAll(spec, pageable);
 
@@ -504,7 +533,8 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
         if (!Boolean.TRUE.equals(parentAccount.getIsActive())) {
             throw new ValidationException("Inactive parent account cannot be used");
         }
-        if (parentAccount.getAccountType() != null && accountType != null && parentAccount.getAccountType() != accountType) {
+        if (parentAccount.getAccountType() != null && accountType != null
+                && parentAccount.getAccountType() != accountType) {
             throw new ValidationException("Parent and child account nature must be compatible");
         }
         validateNoCyclicParentAccount(parentAccount, currentAccountId);
@@ -518,7 +548,8 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
         if (parentAccount == null) {
             return;
         }
-        if (currentAccountId != null && parentAccount.getId() != null && parentAccount.getId().equals(currentAccountId)) {
+        if (currentAccountId != null && parentAccount.getId() != null
+                && parentAccount.getId().equals(currentAccountId)) {
             throw new ValidationException("Cyclic chart of account hierarchy is not allowed");
         }
         if (!visited.add(parentAccount.getId())) {
@@ -529,7 +560,8 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
         }
     }
 
-    private void validatePostingRule(ChartOfAccount parentAccount, Boolean requestedPostingAllowed, boolean hasChildAccounts) {
+    private void validatePostingRule(ChartOfAccount parentAccount, Boolean requestedPostingAllowed,
+            boolean hasChildAccounts) {
         if (hasChildAccounts && Boolean.TRUE.equals(requestedPostingAllowed)) {
             throw new ValidationException("Only leaf accounts may allow posting");
         }
@@ -539,11 +571,13 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
     }
 
     private void validateChartOfAccountCanBeDeleted(ChartOfAccount account) {
-        if (chartOfAccountRepository.existsByParentAccountIdAndCompanyIdAndIsDeletedFalse(account.getId(), account.getCompany().getId())) {
+        if (chartOfAccountRepository.existsByParentAccountIdAndCompanyIdAndIsDeletedFalse(account.getId(),
+                account.getCompany().getId())) {
             throw new ValidationException("Chart of account cannot be deleted because child accounts exist");
         }
         if (chartOfAccountRepository.existsAccountingReference(account.getId())) {
-            throw new ValidationException("Chart of account cannot be deleted because accounting transactions reference it");
+            throw new ValidationException(
+                    "Chart of account cannot be deleted because accounting transactions reference it");
         }
     }
 
@@ -555,7 +589,8 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
     @Override
     public String generateAccountCode(AccountNature accountNature, AccountGroup accountGroup, UUID companyId) {
         String prefix = getAccountPrefix(accountNature, accountGroup);
-        Optional<String> maxCodeOpt = chartOfAccountRepository.findMaxAccountCodeByPrefixAndCompanyId(prefix, companyId);
+        Optional<String> maxCodeOpt = chartOfAccountRepository.findMaxAccountCodeByPrefixAndCompanyId(prefix,
+                companyId);
 
         long nextSequence = 1;
         if (maxCodeOpt.isPresent() && maxCodeOpt.get() != null && !maxCodeOpt.get().isBlank()) {
@@ -564,7 +599,8 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
                 long maxVal = Long.parseLong(maxCode);
                 nextSequence = maxVal + 1;
                 String generated = String.valueOf(nextSequence);
-                while (chartOfAccountRepository.existsByCompanyIdAndAccountCodeAndIsDeletedFalse(companyId, generated)) {
+                while (chartOfAccountRepository.existsByCompanyIdAndAccountCodeAndIsDeletedFalse(companyId,
+                        generated)) {
                     nextSequence++;
                     generated = String.valueOf(nextSequence);
                 }
@@ -588,30 +624,47 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountService {
         if (accountGroup != null && accountGroup.getCategory() != null) {
             if (accountGroup.getCategory().getCode() != null) {
                 String codeStr = String.valueOf(accountGroup.getCategory().getCode()).toUpperCase();
-                if (codeStr.contains("AST") || codeStr.contains("ASSET")) return "1";
-                if (codeStr.contains("LIA") || codeStr.contains("LIABILIT")) return "2";
-                if (codeStr.contains("EQT") || codeStr.contains("EQUITY")) return "3";
-                if (codeStr.contains("INC") || codeStr.contains("INCOME")) return "4";
-                if (codeStr.contains("EXP") || codeStr.contains("EXPENSE")) return "5";
+                if (codeStr.contains("AST") || codeStr.contains("ASSET"))
+                    return "1";
+                if (codeStr.contains("LIA") || codeStr.contains("LIABILIT"))
+                    return "2";
+                if (codeStr.contains("EQT") || codeStr.contains("EQUITY"))
+                    return "3";
+                if (codeStr.contains("INC") || codeStr.contains("INCOME"))
+                    return "4";
+                if (codeStr.contains("EXP") || codeStr.contains("EXPENSE"))
+                    return "5";
             }
             if (accountGroup.getCategory().getName() != null) {
                 String catName = accountGroup.getCategory().getName().toUpperCase();
-                if (catName.contains("ASSET")) return "1";
-                if (catName.contains("LIABILIT")) return "2";
-                if (catName.contains("EQUITY")) return "3";
-                if (catName.contains("INCOME") || catName.contains("REVENUE")) return "4";
-                if (catName.contains("EXPENSE") || catName.contains("COST")) return "5";
+                if (catName.contains("ASSET"))
+                    return "1";
+                if (catName.contains("LIABILIT"))
+                    return "2";
+                if (catName.contains("EQUITY"))
+                    return "3";
+                if (catName.contains("INCOME") || catName.contains("REVENUE"))
+                    return "4";
+                if (catName.contains("EXPENSE") || catName.contains("COST"))
+                    return "5";
             }
         }
         if (accountNature != null) {
             String natureStr = accountNature.name().toUpperCase();
-            if (natureStr.contains("ASSET")) return "1";
-            if (natureStr.contains("LIABILIT")) return "2";
-            if (natureStr.contains("EQUITY")) return "3";
-            if (natureStr.contains("INCOME")) return "4";
-            if (natureStr.contains("EXPENSE")) return "5";
-            if (accountNature == AccountNature.DEBIT) return "1";
-            if (accountNature == AccountNature.CREDIT) return "2";
+            if (natureStr.contains("ASSET"))
+                return "1";
+            if (natureStr.contains("LIABILIT"))
+                return "2";
+            if (natureStr.contains("EQUITY"))
+                return "3";
+            if (natureStr.contains("INCOME"))
+                return "4";
+            if (natureStr.contains("EXPENSE"))
+                return "5";
+            if (accountNature == AccountNature.DEBIT)
+                return "1";
+            if (accountNature == AccountNature.CREDIT)
+                return "2";
         }
         return "1";
     }

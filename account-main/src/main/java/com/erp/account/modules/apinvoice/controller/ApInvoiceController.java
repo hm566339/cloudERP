@@ -300,7 +300,7 @@ public class ApInvoiceController {
     // WORKFLOW ACTION ENDPOINTS
     // ============================================================
 
-    @PostMapping({"/{id}/submit-for-approval", "/{id}/submit-approval", "/{id}/submit"})
+    @PostMapping({ "/{id}/submit-for-approval", "/{id}/submit-approval", "/{id}/submit" })
     @Operation(summary = "Submit for approval", description = "Submits a draft invoice for approval and initiates workflow")
     public ResponseEntity<ApiResponse<ApInvoiceResponse>> submitForApproval(
             @PathVariable UUID id,

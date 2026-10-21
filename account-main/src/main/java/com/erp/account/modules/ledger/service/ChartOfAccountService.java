@@ -14,32 +14,26 @@ import org.springframework.data.domain.Pageable;
 
 public interface ChartOfAccountService {
 
-    PostResponse createChartOfAccount(
-            RequestWrapper<ChartOfAccountRequest> request,
-            UUID companyId
-    );
+        PostResponse createChartOfAccount(
+                        RequestWrapper<ChartOfAccountRequest> request,
+                        UUID companyId);
 
-    PostResponse updateChartOfAccount(
-            UUID chartOfAccountId,
-            RequestWrapper<ChartOfAccountRequest> request
-    );
+        PostResponse updateChartOfAccount(
+                        UUID chartOfAccountId,
+                        RequestWrapper<ChartOfAccountRequest> request);
 
-    PostResponse deleteChartOfAccount(
-            UUID chartOfAccountId
-    );
+        PostResponse deleteChartOfAccount(
+                        UUID chartOfAccountId);
 
-    ChartOfAccountProfileResponse getChartOfAccountById(
-            UUID chartOfAccountId
-    );
+        ChartOfAccountProfileResponse getChartOfAccountById(
+                        UUID chartOfAccountId);
 
-    ChartOfAccountListResponse getAllChartOfAccounts(
-            ChartOfAccountFilterDto filter,
-            Pageable pageable
-    );
+        ChartOfAccountListResponse getAllChartOfAccounts(
+                        ChartOfAccountFilterDto filter,
+                        Pageable pageable);
 
-    String generateAccountCode(
-            com.erp.account.enums.AccountNature accountNature,
-            com.erp.account.modules.accountgroup.entity.AccountGroup accountGroup,
-            UUID companyId
-    );
+        String generateAccountCode(
+                        com.erp.account.enums.AccountNature accountNature,
+                        com.erp.account.modules.accountgroup.entity.AccountGroup accountGroup,
+                        UUID companyId);
 }

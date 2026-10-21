@@ -31,7 +31,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-
 @RestController
 @RequestMapping("/api/account/gl/journals")
 @AllArgsConstructor
@@ -43,7 +42,8 @@ public class GlJournalEntryController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<GlJournalEntryResponse>> createJournalEntry(
-            @Valid @RequestBody RequestWrapper<GlJournalEntryRequest> requestWrapper, @RequestParam(required = false) UUID companyIdUUID) {
+            @Valid @RequestBody RequestWrapper<GlJournalEntryRequest> requestWrapper,
+            @RequestParam(required = false) UUID companyIdUUID) {
         GlJournalEntryRequest request = requestWrapper.unwrap();
         log.info("Received request to create GL journal entry");
         GlJournalEntryResponse response = glJournalEntryService.createJournalEntry(requestWrapper, companyIdUUID);
@@ -69,9 +69,11 @@ public class GlJournalEntryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<com.erp.account.modules.gljournal.dto.response.GlJournalProfileResponse>> getJournalEntryById(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<com.erp.account.modules.gljournal.dto.response.GlJournalProfileResponse>> getJournalEntryById(
+            @PathVariable UUID id) {
         log.info("Received request to get GL journal entry profile {}", id);
-        com.erp.account.modules.gljournal.dto.response.GlJournalProfileResponse response = glJournalEntryService.getJournalProfileById(id);
+        com.erp.account.modules.gljournal.dto.response.GlJournalProfileResponse response = glJournalEntryService
+                .getJournalProfileById(id);
         return ResponseEntity.ok(ApiResponse.success(response, "GL journal entry profile retrieved successfully"));
     }
 
@@ -120,7 +122,8 @@ public class GlJournalEntryController {
                 : com.erp.account.util.TenantUtils.getCurrentCompanyId();
         log.info("Received request for trial balance report for company {}", resolvedCompanyId);
         Pageable pageable = PageRequest.of(page, pageSize);
-        Page<TrialBalanceLine> pageResponse = glJournalEntryService.getTrialBalance(resolvedCompanyId, startDate, endDate,
+        Page<TrialBalanceLine> pageResponse = glJournalEntryService.getTrialBalance(resolvedCompanyId, startDate,
+                endDate,
                 pageable);
         return ResponseEntity.ok(ApiResponse.success(pageResponse, "Trial balance retrieved successfully"));
     }
@@ -181,7 +184,8 @@ public class GlJournalEntryController {
             byte[] pdfContent = glJournalPdfService.generateJournalEntryPdf(journalEntry);
 
             response.setContentType(MediaType.APPLICATION_PDF_VALUE);
-            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"journal-entry-" + id + ".pdf\"");
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"journal-entry-" + id + ".pdf\"");
             response.setContentLength(pdfContent.length);
             response.getOutputStream().write(pdfContent);
             response.getOutputStream().flush();
@@ -199,9 +203,11 @@ public class GlJournalEntryController {
             HttpServletResponse response) {
         try {
             log.info("Received request to download Trial Balance PDF");
-            UUID resolvedCompanyId = (TenantUtils.isSystemAdmin() && companyId != null) ? companyId : TenantUtils.getCurrentCompanyId();
+            UUID resolvedCompanyId = (TenantUtils.isSystemAdmin() && companyId != null) ? companyId
+                    : TenantUtils.getCurrentCompanyId();
             Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE);
-            Page<TrialBalanceLine> pageResponse = glJournalEntryService.getTrialBalance(resolvedCompanyId, startDate, endDate, pageable);
+            Page<TrialBalanceLine> pageResponse = glJournalEntryService.getTrialBalance(resolvedCompanyId, startDate,
+                    endDate, pageable);
             byte[] pdfContent = glJournalPdfService.generateTrialBalancePdf(pageResponse.getContent());
 
             response.setContentType(MediaType.APPLICATION_PDF_VALUE);
@@ -224,13 +230,16 @@ public class GlJournalEntryController {
             HttpServletResponse response) {
         try {
             log.info("Received request to download General Ledger PDF for account {}", accountId);
-            UUID resolvedCompanyId = (TenantUtils.isSystemAdmin() && companyId != null) ? companyId : TenantUtils.getCurrentCompanyId();
+            UUID resolvedCompanyId = (TenantUtils.isSystemAdmin() && companyId != null) ? companyId
+                    : TenantUtils.getCurrentCompanyId();
             Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE);
-            Page<GeneralLedgerLine> pageResponse = glJournalEntryService.getAccountLedger(resolvedCompanyId, accountId, startDate, endDate, pageable);
+            Page<GeneralLedgerLine> pageResponse = glJournalEntryService.getAccountLedger(resolvedCompanyId, accountId,
+                    startDate, endDate, pageable);
             byte[] pdfContent = glJournalPdfService.generateGeneralLedgerPdf(pageResponse.getContent());
 
             response.setContentType(MediaType.APPLICATION_PDF_VALUE);
-            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"general-ledger-" + accountId + ".pdf\"");
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"general-ledger-" + accountId + ".pdf\"");
             response.setContentLength(pdfContent.length);
             response.getOutputStream().write(pdfContent);
             response.getOutputStream().flush();
@@ -247,8 +256,10 @@ public class GlJournalEntryController {
             HttpServletResponse response) {
         try {
             log.info("Received request to download Balance Sheet PDF");
-            UUID resolvedCompanyId = (TenantUtils.isSystemAdmin() && companyId != null) ? companyId : TenantUtils.getCurrentCompanyId();
-            BalanceSheetReport balanceSheet = glJournalEntryService.getBalanceSheetData(resolvedCompanyId, fiscalYearId);
+            UUID resolvedCompanyId = (TenantUtils.isSystemAdmin() && companyId != null) ? companyId
+                    : TenantUtils.getCurrentCompanyId();
+            BalanceSheetReport balanceSheet = glJournalEntryService.getBalanceSheetData(resolvedCompanyId,
+                    fiscalYearId);
             byte[] pdfContent = glJournalPdfService.generateBalanceSheetPdf(balanceSheet);
 
             response.setContentType(MediaType.APPLICATION_PDF_VALUE);
@@ -269,7 +280,8 @@ public class GlJournalEntryController {
             HttpServletResponse response) {
         try {
             log.info("Received request to download Profit & Loss PDF");
-            UUID resolvedCompanyId = (TenantUtils.isSystemAdmin() && companyId != null) ? companyId : TenantUtils.getCurrentCompanyId();
+            UUID resolvedCompanyId = (TenantUtils.isSystemAdmin() && companyId != null) ? companyId
+                    : TenantUtils.getCurrentCompanyId();
             ProfitLossReport profitLoss = glJournalEntryService.getProfitLossData(resolvedCompanyId, fiscalYearId);
             byte[] pdfContent = glJournalPdfService.generateProfitLossPdf(profitLoss);
 

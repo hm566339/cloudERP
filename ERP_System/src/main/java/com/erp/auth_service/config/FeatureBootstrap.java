@@ -47,7 +47,20 @@ public class FeatureBootstrap implements CommandLineRunner {
             new FeatureDefinition("WORKFLOW_CALLBACKS", "Workflow Callbacks", "WORKFLOW", "Access to workflow callback logs and retry operations",
                     List.of("READ", "WRITE", "UPDATE")),
             new FeatureDefinition("WORKFLOW_DOCUMENT_FLOWS", "Workflow Document Flows", "WORKFLOW", "Access to workflow document flows and configurations",
-                    List.of("READ", "CREATE", "UPDATE", "WRITE", "DELETE"))
+                    List.of("READ", "CREATE", "UPDATE", "WRITE", "DELETE")),
+            // ── Manufacturing Features ──────────────────────────────────────────────
+            new FeatureDefinition("MANUFACTURING", "Manufacturing Module", "MANUFACTURING",
+                    "Access to the Manufacturing module — production orders, BOMs, and operations",
+                    List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "SUBMIT", "APPROVE", "REJECT", "RELEASE", "COMPLETE", "CONSUME", "RESERVE", "CANCEL")),
+            new FeatureDefinition("MFG_BOM", "Bill of Materials", "MANUFACTURING",
+                    "Access to create, view, edit, submit and manage Bills of Materials",
+                    List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "SUBMIT", "APPROVE", "REJECT")),
+            new FeatureDefinition("MFG_PRODUCTION", "Production Orders", "MANUFACTURING",
+                    "Access to create, submit, approve, reject, release and manage Production Orders",
+                    List.of("READ", "CREATE", "WRITE", "UPDATE", "DELETE", "SUBMIT", "APPROVE", "REJECT", "RELEASE", "CANCEL")),
+            new FeatureDefinition("MFG_OPERATIONS", "Production Operations", "MANUFACTURING",
+                    "Access to record material consumption, production completion and scrap",
+                    List.of("READ", "CREATE", "WRITE", "COMPLETE", "CONSUME", "RESERVE", "CANCEL"))
     );
 
     @Override

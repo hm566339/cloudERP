@@ -15,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MaterialConsumptionRequest {
+    private UUID productId;
     @NotNull private UUID productionOrderMaterialId;
     @NotNull @DecimalMin(value = "0.000001") private BigDecimal quantity;
     @NotNull private UUID uomId;
