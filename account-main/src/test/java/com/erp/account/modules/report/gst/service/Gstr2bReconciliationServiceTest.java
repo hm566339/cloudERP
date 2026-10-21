@@ -45,9 +45,16 @@ public class Gstr2bReconciliationServiceTest {
     @BeforeEach
     void setUp() {
         companyId = UUID.randomUUID();
+        com.erp.account.security.CurrentUserContext.setCompanyId(companyId);
+        com.erp.account.security.CurrentUserContext.setUserId(UUID.randomUUID());
         ReflectionTestUtils.setField(reconciliationService, "entityManager", entityManager);
         ReflectionTestUtils.setField(reconciliationService, "gstr2bReconciliationRepository", gstr2bReconciliationRepository);
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        com.erp.account.security.CurrentUserContext.clear();
     }
 
     @Test
