@@ -34,8 +34,8 @@ export default function WorkspaceLandingRedirect() {
 
   if (isAuthLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-zinc-50">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex h-screen w-full items-center justify-center bg-zinc-50 dark:bg-[#0F1117]">
+        <div className="w-8 h-8 border-4 border-primary dark:border-[#4C8DFF] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }

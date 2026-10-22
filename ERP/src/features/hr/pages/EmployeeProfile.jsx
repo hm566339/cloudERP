@@ -21,10 +21,10 @@ export default function EmployeeProfile() {
 
   if (!employee) {
     return (
-      <div className="space-y-6 animate-fade-in p-2 flex flex-col items-center justify-center min-h-[320px] bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
-        <User size={48} className="text-zinc-300 mb-4" />
-        <h2 className="text-lg font-bold text-zinc-700">No Employee Found</h2>
-        <p className="text-sm text-zinc-500">No active employees exist in the database.</p>
+      <div className="space-y-6 animate-fade-in p-2 flex flex-col items-center justify-center min-h-[320px] bg-zinc-50 dark:bg-[#161922] rounded-xl border border-dashed border-zinc-200 dark:border-[#2A2F3D]">
+        <User size={48} className="text-zinc-300 dark:text-[#6B7184] mb-4" />
+        <h2 className="text-lg font-bold text-zinc-700 dark:text-[#E6E8EE]">No Employee Found</h2>
+        <p className="text-sm text-zinc-500 dark:text-[#A0A6B5]">No active employees exist in the database.</p>
       </div>
     );
   }

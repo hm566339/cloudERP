@@ -6,7 +6,7 @@ import { PageLoader } from '../components/common/SkeletonLoader';
  */
 export default function RouteLoading() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-white/50">
+    <div className="min-h-screen w-full flex items-center justify-center bg-white/50 dark:bg-[#0F1117] transition-colors">
       <PageLoader message="Loading page…" />
     </div>
   );

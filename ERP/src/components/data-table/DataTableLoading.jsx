@@ -11,7 +11,7 @@ export default function DataTableLoading({ columnCount = 6, rowCount = 8 }) {
           {Array.from({ length: columnCount }).map((_, cIdx) => (
             <td key={`skeleton-cell-${cIdx}`} className="p-3.5">
               <div
-                className="h-4 bg-zinc-200/70 rounded-md"
+                className="h-4 bg-zinc-200/70 dark:bg-[#1D212C] rounded-md"
                 style={{
                   width: cIdx === 0 ? '24px' : cIdx === 1 ? '70%' : cIdx === columnCount - 1 ? '80px' : `${Math.floor(40 + ((cIdx * 19 + rIdx * 13) % 45))}%`
                 }}
