@@ -155,11 +155,20 @@ public class GstSummaryService {
         BigDecimal eligibleItc = availableItc;
         BigDecimal blockedItc = BigDecimal.ZERO;
         BigDecimal reversedItc = BigDecimal.ZERO;
-        BigDecimal utilizedItc = availableItc.min(outputGst);
-        BigDecimal closingItc = openingItc.add(availableItc).subtract(utilizedItc);
+        // Component-wise ITC set-off against forward-charge output liability under GST Rule 88A
+        TaxCalculationEngine.Rule88aSetoffResult setoff = calculationEngine != null
+                ? calculationEngine.calculateRule88aSetoff(
+                        igst, cgst, sgst, cess,
+                        inputIgst, inputCgst, inputSgst, inputCess,
+                        reverseCharge, interest, lateFee)
+                : null;
 
-        BigDecimal netGstLiability = outputGst.add(reverseCharge).add(interest).add(lateFee)
-                .subtract(availableItc).subtract(utilizedItc).max(BigDecimal.ZERO);
+        BigDecimal utilizedItc = setoff != null ? setoff.getTotalUtilizedItc() : inputGst.min(outputGst);
+        BigDecimal closingItc = openingItc.add(availableItc).subtract(utilizedItc).max(BigDecimal.ZERO);
+        BigDecimal forwardChargePayable = setoff != null ? setoff.getForwardCashPayable() : outputGst.subtract(utilizedItc).max(BigDecimal.ZERO);
+        // Net GST Liability = Forward charge cash payable + RCM cash liability + Interest + Late fee
+        // RCM cannot be offset using ITC (Section 49(4) of CGST Act)
+        BigDecimal netGstLiability = setoff != null ? setoff.getTotalCashPayable() : forwardChargePayable.add(reverseCharge).add(interest).add(lateFee);
 
         // ============================================================
         // 2. SUPPLY SUMMARY
