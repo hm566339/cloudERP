@@ -109,24 +109,24 @@ export default function CompanyModules() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[22px] font-semibold text-zinc-900 tracking-tight">Modules</h1>
-          <p className="text-[13px] text-zinc-500 mt-1">Select a module to access dashboard and capabilities.</p>
+          <h1 className="text-[22px] font-semibold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Modules</h1>
+          <p className="text-[13px] text-zinc-500 dark:text-[#A0A6B5] mt-1">Select a module to access dashboard and capabilities.</p>
         </div>
         {displayModules.length > 0 && (
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-600 bg-zinc-100/80 border border-zinc-200/80 px-3 py-1.5 rounded-lg w-fit">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] bg-zinc-100/80 dark:bg-[#1D212C] border border-zinc-200/80 dark:border-[#2A2F3D] px-3 py-1.5 rounded-lg w-fit">
             <span>{displayModules.filter(m => m.active).length} Active</span>
-            <span className="text-zinc-300">•</span>
-            <span className="text-zinc-500">{displayModules.length} Total</span>
+            <span className="text-zinc-300 dark:text-[#6B7184]">•</span>
+            <span className="text-zinc-500 dark:text-[#A0A6B5]">{displayModules.length} Total</span>
           </div>
         )}
       </div>
 
       {/* Modules Grid */}
       {displayModules.length === 0 ? (
-        <div className="p-12 text-center border-2 border-dashed border-zinc-200 rounded-2xl bg-white/50 backdrop-blur-sm">
-          <Layers className="mx-auto text-zinc-300 mb-4" size={32} />
-          <p className="text-base font-bold text-zinc-700">No modules available</p>
-          <p className="text-sm text-zinc-500 mt-1 max-w-sm mx-auto">This tenant does not have any modules assigned yet, or they have been disabled.</p>
+        <div className="p-12 text-center border-2 border-dashed border-zinc-200 dark:border-[#2A2F3D] rounded-2xl bg-white/50 dark:bg-[#161922]/50 backdrop-blur-sm">
+          <Layers className="mx-auto text-zinc-300 dark:text-[#6B7184] mb-4" size={32} />
+          <p className="text-base font-bold text-zinc-700 dark:text-[#E6E8EE]">No modules available</p>
+          <p className="text-sm text-zinc-500 dark:text-[#A0A6B5] mt-1 max-w-sm mx-auto">This tenant does not have any modules assigned yet, or they have been disabled.</p>
         </div>
       ) : (
         <div
@@ -152,24 +152,24 @@ export default function CompanyModules() {
                     handleModuleClick(mod.path, mod.active);
                   }
                 }}
-                className={`w-full min-h-[170px] p-5 bg-white rounded-xl border flex flex-col items-center justify-between text-center transition-all duration-200 ease-out select-none group ${mod.active
-                    ? 'border-zinc-200 hover:border-zinc-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
-                    : 'border-zinc-200/60 bg-zinc-50/40 opacity-65 grayscale cursor-not-allowed'
+                className={`w-full min-h-[170px] p-5 bg-white dark:bg-[#161922] rounded-xl border flex flex-col items-center justify-between text-center transition-all duration-200 ease-out select-none group ${mod.active
+                    ? 'border-zinc-200 dark:border-[#2A2F3D] hover:border-zinc-300 dark:hover:border-[#4C8DFF]/40 hover:shadow-md hover:-translate-y-0.5 dark:hover:bg-[#1D212C] cursor-pointer'
+                    : 'border-zinc-200/60 dark:border-[#2A2F3D]/60 bg-zinc-50/40 dark:bg-[#161922]/40 opacity-65 grayscale cursor-not-allowed'
                   }`}
               >
                 <div className="flex flex-col items-center w-full">
                   {/* Module Icon Container */}
-                  <div className={`w-12 h-12 rounded-xl ${mod.bg} border border-zinc-100 flex items-center justify-center mb-3.5 transition-transform duration-200 group-hover:scale-105 shadow-2xs`}>
+                  <div className={`w-12 h-12 rounded-xl ${mod.bg} border border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-center mb-3.5 transition-transform duration-200 group-hover:scale-105 shadow-2xs`}>
                     <Icon className={mod.color} size={22} strokeWidth={1.75} />
                   </div>
 
                   {/* Module Display Name */}
-                  <h3 className={`text-[15px] font-semibold text-center leading-snug line-clamp-1 ${mod.active ? 'text-zinc-900' : 'text-zinc-500'}`}>
+                  <h3 className={`text-[15px] font-semibold text-center leading-snug line-clamp-1 ${mod.active ? 'text-zinc-900 dark:text-[#E6E8EE]' : 'text-zinc-500 dark:text-[#6B7184]'}`}>
                     {mod.name}
                   </h3>
 
                   {/* Technical Module Identifier */}
-                  <span className="text-[12px] font-mono text-zinc-400 mt-1 block tracking-tight">
+                  <span className="text-[12px] font-mono text-zinc-400 dark:text-[#6B7184] mt-1 block tracking-tight">
                     {mod.technicalKey || '\u00A0'}
                   </span>
                 </div>
@@ -177,8 +177,8 @@ export default function CompanyModules() {
                 {/* Status Badge */}
                 <div className="mt-4 pt-1">
                   <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${mod.active
-                      ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/60'
-                      : 'text-zinc-500 bg-zinc-100 border border-zinc-200/60'
+                      ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/60 dark:text-emerald-400 dark:bg-emerald-950/40 dark:border-emerald-800/60'
+                      : 'text-zinc-500 bg-zinc-100 border border-zinc-200/60 dark:text-[#A0A6B5] dark:bg-[#1D212C] dark:border-[#2A2F3D]'
                     }`}>
                     {mod.active ? (
                       <>
@@ -187,7 +187,7 @@ export default function CompanyModules() {
                       </>
                     ) : (
                       <>
-                        <Lock size={12} className="text-zinc-400" />
+                        <Lock size={12} className="text-zinc-400 dark:text-[#6B7184]" />
                         Locked
                       </>
                     )}

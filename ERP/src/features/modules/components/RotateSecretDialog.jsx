@@ -40,23 +40,23 @@ export default function RotateSecretDialog({ isOpen, onClose, moduleData }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-scale-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 dark:bg-black/70 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-scale-up border border-zinc-200 dark:border-[#2A2F3D]">
         
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-zinc-100">
+        <div className="flex justify-between items-center p-6 border-b border-zinc-100 dark:border-[#2A2F3D]">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${newCredentials ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+            <div className={`p-2 rounded-lg ${newCredentials ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400'}`}>
               {newCredentials ? <CheckCircle2 size={20} /> : <AlertTriangle size={20} />}
             </div>
             <div>
-              <h2 className="text-lg font-bold text-zinc-900">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">
                 {newCredentials ? 'Credentials Rotated' : 'Rotate Client Secret'}
               </h2>
             </div>
           </div>
           {!newCredentials && (
-            <button onClick={handleClose} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors">
+            <button onClick={handleClose} className="p-2 text-zinc-400 dark:text-[#A0A6B5] hover:text-zinc-600 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg transition-colors">
               <X size={20} />
             </button>
           )}
@@ -66,51 +66,51 @@ export default function RotateSecretDialog({ isOpen, onClose, moduleData }) {
         <div className="p-6">
           {!newCredentials ? (
             <div className="space-y-4">
-              <p className="text-sm text-zinc-600 leading-relaxed">
-                You are about to rotate the Client Secret for the module <strong>"{moduleData.name}"</strong>.
+              <p className="text-sm text-zinc-600 dark:text-[#A0A6B5] leading-relaxed">
+                You are about to rotate the Client Secret for the module <strong className="text-zinc-900 dark:text-[#E6E8EE]">"{moduleData.name}"</strong>.
               </p>
-              <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl">
-                <h4 className="text-sm font-bold text-rose-800 flex items-center gap-2 mb-2">
+              <div className="p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/60 rounded-xl">
+                <h4 className="text-sm font-bold text-rose-800 dark:text-rose-400 flex items-center gap-2 mb-2">
                   <AlertTriangle size={16} /> Warning: Breaking Change
                 </h4>
-                <p className="text-xs text-rose-700 leading-relaxed">
+                <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
                   Rotating the secret will immediately invalidate the existing secret. The application using this module will lose connection until it is updated with the new credentials.
                 </p>
               </div>
             </div>
           ) : (
             <div className="space-y-4 animate-fade-in">
-              <p className="text-sm text-zinc-600 mb-4">
+              <p className="text-sm text-zinc-600 dark:text-[#A0A6B5] mb-4">
                 The secret has been successfully rotated. Please update your application with these new credentials.
               </p>
               
-              <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-200/60 space-y-4">
+              <div className="p-4 bg-zinc-50 dark:bg-[#1D212C] rounded-xl border border-zinc-200/60 dark:border-[#2A2F3D] space-y-4">
                 <div>
-                  <label className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Client ID</label>
+                  <label className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block mb-1">Client ID</label>
                   <div className="flex items-center justify-between gap-3">
-                    <code className="text-sm font-mono font-semibold text-zinc-700 truncate">
+                    <code className="text-sm font-mono font-semibold text-zinc-700 dark:text-[#E6E8EE] truncate">
                       {newCredentials.clientId}
                     </code>
-                    <button onClick={() => handleCopy(newCredentials.clientId, 'Client ID')} className="p-1.5 text-zinc-400 hover:text-zinc-700 bg-white shadow-sm border border-zinc-200 rounded-md transition-colors shrink-0">
+                    <button onClick={() => handleCopy(newCredentials.clientId, 'Client ID')} className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#161922] shadow-sm border border-zinc-200 dark:border-[#2A2F3D] rounded-md transition-colors shrink-0">
                       <Copy size={14} />
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">New Client Secret</label>
+                  <label className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block mb-1">New Client Secret</label>
                   <div className="flex items-center justify-between gap-3">
-                    <code className="text-sm font-mono font-semibold text-zinc-700 truncate">
+                    <code className="text-sm font-mono font-semibold text-zinc-700 dark:text-[#E6E8EE] truncate">
                       {newCredentials.clientSecret}
                     </code>
-                    <button onClick={() => handleCopy(newCredentials.clientSecret, 'Client Secret')} className="p-1.5 text-zinc-400 hover:text-zinc-700 bg-white shadow-sm border border-zinc-200 rounded-md transition-colors shrink-0">
+                    <button onClick={() => handleCopy(newCredentials.clientSecret, 'Client Secret')} className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#161922] shadow-sm border border-zinc-200 dark:border-[#2A2F3D] rounded-md transition-colors shrink-0">
                       <Copy size={14} />
                     </button>
                   </div>
                 </div>
               </div>
 
-              <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                <p className="text-xs font-medium text-amber-800 flex items-center gap-2">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 rounded-lg">
+                <p className="text-xs font-medium text-amber-800 dark:text-amber-300 flex items-center gap-2">
                   <Key size={14} className="shrink-0" />
                   Save these credentials now. You will not be able to see the secret again.
                 </p>
@@ -120,7 +120,7 @@ export default function RotateSecretDialog({ isOpen, onClose, moduleData }) {
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-zinc-100 bg-zinc-50/50 flex justify-end gap-3">
+        <div className="p-5 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C] flex justify-end gap-3">
           {!newCredentials ? (
             <>
               <button onClick={handleClose} disabled={isLoading} className="btn-secondary">

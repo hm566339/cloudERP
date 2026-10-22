@@ -182,7 +182,7 @@ export default function StockAdjustmentDetails() {
           
           {/* Header Card */}
           <div className="card p-5">
-            <h2 className="text-[11.2px] font-bold text-zinc-800 mb-4 flex items-center gap-2 border-b border-zinc-100 pb-3">
+            <h2 className="text-[11.2px] font-bold text-zinc-800 mb-4 flex items-center gap-2 border-b border-zinc-100 dark:border-[#2A2F3D] pb-3">
               <FileText size={16} className="text-zinc-400" /> General Information
             </h2>
             
@@ -195,7 +195,7 @@ export default function StockAdjustmentDetails() {
                   value={header.adjustmentNo}
                   onChange={handleHeaderChange}
                   disabled={header.status === 'COMPLETED'}
-                  className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -207,7 +207,7 @@ export default function StockAdjustmentDetails() {
                   value={header.adjustmentDate}
                   onChange={handleHeaderChange}
                   disabled={header.status === 'COMPLETED'}
-                  className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -219,7 +219,7 @@ export default function StockAdjustmentDetails() {
                   value={header.warehouseId}
                   onChange={handleHeaderChange}
                   disabled={header.status === 'COMPLETED'}
-                  className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -231,7 +231,7 @@ export default function StockAdjustmentDetails() {
                   value={header.locationId}
                   onChange={handleHeaderChange}
                   disabled={header.status === 'COMPLETED'}
-                  className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
@@ -242,7 +242,7 @@ export default function StockAdjustmentDetails() {
                   value={header.reason}
                   onChange={handleHeaderChange}
                   disabled={header.status === 'COMPLETED'}
-                  className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="">Select Reason...</option>
                   <option value="DAMAGED">Damaged Goods</option>
@@ -261,7 +261,7 @@ export default function StockAdjustmentDetails() {
                   onChange={handleHeaderChange}
                   disabled={header.status === 'COMPLETED'}
                   rows={2}
-                  className="w-full p-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+                  className="w-full p-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
                 />
               </div>
 
@@ -270,7 +270,7 @@ export default function StockAdjustmentDetails() {
 
           {/* Lines Card */}
           <div className="card overflow-hidden">
-             <div className="p-4 border-b border-zinc-200 bg-white flex justify-between items-center">
+             <div className="p-4 border-b border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark flex justify-between items-center">
                <h2 className="text-[11.2px] font-bold text-zinc-800 flex items-center gap-2">
                  <LayoutList size={16} className="text-zinc-400" /> Line Items
                </h2>

@@ -94,7 +94,7 @@ export default function ProformaInvoiceDetails() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <ProformaInvoiceHeader
         pi={pi}
         canEdit={canEdit}
@@ -147,12 +147,12 @@ export default function ProformaInvoiceDetails() {
               />
               
               {pi.notes && (
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden mb-6">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                    <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Notes</h3>
+                <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden mb-6">
+                  <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
+                    <h3 className="text-[10.4px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Notes</h3>
                   </div>
                   <div className="p-5">
-                    <p className="text-sm text-zinc-800 whitespace-pre-wrap leading-relaxed">{pi.notes}</p>
+                    <p className="text-sm text-zinc-800 dark:text-[#E6E8EE] whitespace-pre-wrap leading-relaxed">{pi.notes}</p>
                   </div>
                 </div>
               )}

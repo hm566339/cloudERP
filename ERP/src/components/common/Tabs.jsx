@@ -47,9 +47,9 @@ export function TabsList({ children, variant: propVariant, className = '' }) {
   const variant = propVariant || ctx?.variant || 'pill';
 
   const variantClasses = {
-    pill: 'bg-zinc-100/70 p-1 rounded-xl border border-zinc-200/60 inline-flex items-center gap-1 overflow-x-auto hide-scrollbar max-w-full',
+    pill: 'bg-zinc-100/70 dark:bg-[#161922] p-1 rounded-xl border border-zinc-200/60 dark:border-[#2A2F3D] inline-flex items-center gap-1 overflow-x-auto hide-scrollbar max-w-full',
     underline:
-      'border-b border-zinc-200 flex items-center gap-6 overflow-x-auto hide-scrollbar w-full',
+      'border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center gap-6 overflow-x-auto hide-scrollbar w-full',
   };
 
   return (
@@ -90,8 +90,8 @@ export function TabsTrigger({
         onClick={handleClick}
         className={`pb-3 pt-2 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
           isActive
-            ? 'border-zinc-900 text-zinc-900'
-            : 'border-transparent text-zinc-500 hover:text-zinc-800 hover:border-zinc-300'
+            ? 'border-zinc-900 dark:border-[#4C8DFF] text-zinc-900 dark:text-[#4C8DFF]'
+            : 'border-transparent text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-800 dark:hover:text-[#E6E8EE] hover:border-zinc-300 dark:hover:border-[#3A4154]'
         } ${className}`}
       >
         {Icon && (
@@ -104,8 +104,8 @@ export function TabsTrigger({
           <span
             className={`px-1.5 py-0.5 text-[10px] font-bold rounded-full ${
               isActive
-                ? 'bg-zinc-900 text-white'
-                : 'bg-zinc-200 text-zinc-600'
+                ? 'bg-zinc-900 dark:bg-[#4C8DFF] text-white dark:text-zinc-950'
+                : 'bg-zinc-200 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5]'
             }`}
           >
             {badge}
@@ -125,8 +125,8 @@ export function TabsTrigger({
       onClick={handleClick}
       className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer select-none disabled:opacity-40 disabled:cursor-not-allowed ${
         isActive
-          ? 'bg-white text-zinc-900 shadow-2xs border border-zinc-200/80'
-          : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50'
+          ? 'bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] shadow-2xs border border-zinc-200/80 dark:border-[#2A2F3D]'
+          : 'text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#222736]'
       } ${className}`}
     >
       {Icon && (
@@ -139,8 +139,8 @@ export function TabsTrigger({
         <span
           className={`px-1.5 py-0.2 text-[10px] font-bold rounded-full ${
             isActive
-              ? 'bg-zinc-100 text-zinc-900 border border-zinc-200'
-              : 'bg-zinc-200/80 text-zinc-600'
+              ? 'bg-zinc-100 dark:bg-[#222736] text-zinc-900 dark:text-[#E6E8EE] border border-zinc-200 dark:border-[#2A2F3D]'
+              : 'bg-zinc-200/80 dark:bg-[#222736]/60 text-zinc-600 dark:text-[#A0A6B5]'
           }`}
         >
           {badge}

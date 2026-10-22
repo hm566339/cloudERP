@@ -221,7 +221,7 @@ function HsnSacCellSelect({ value, onChange, hsnSacList, fallbackHsn }) {
           setIsOpen(prev => !prev);
           setSearch('');
         }}
-        className={`w-full h-8 px-1.5 bg-white border rounded-md text-[11px] text-left flex items-center justify-between transition-all cursor-pointer ${
+        className={`w-full h-8 px-1.5 bg-white dark:bg-surface-dark border dark:border-border-dark text-zinc-800 dark:text-zinc-200 rounded-md text-[11px] text-left flex items-center justify-between transition-all cursor-pointer ${
           isOpen ? 'border-zinc-900 ring-1 ring-zinc-900/10' : 'border-zinc-200 hover:border-zinc-300'
         }`}
       >
@@ -246,10 +246,10 @@ function HsnSacCellSelect({ value, onChange, hsnSacList, fallbackHsn }) {
             width: `${coords.width}px`,
             zIndex: 99999
           }}
-          className="bg-white border border-zinc-200 rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100 divide-y divide-zinc-100"
+          className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100 divide-y divide-zinc-100"
         >
           {/* Search box */}
-          <div className="p-2 bg-zinc-50/80 border-b border-zinc-100">
+          <div className="p-2 bg-zinc-50/80 border-b border-zinc-100 dark:border-[#2A2F3D]">
             <div className="relative">
               <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input
@@ -257,7 +257,7 @@ function HsnSacCellSelect({ value, onChange, hsnSacList, fallbackHsn }) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search HSN/SAC code or desc..."
-                className="w-full h-8 pl-8 pr-2.5 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-zinc-900"
+                className="w-full h-8 pl-8 pr-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-zinc-900"
                 autoFocus
               />
             </div>
@@ -913,7 +913,7 @@ export default function CreateSupplierQuotationModal({
                   <button
                     type="button"
                     onClick={() => setIsVendorDropdownOpen(prev => !prev)}
-                    className={`w-full min-h-[40px] px-3 py-2 bg-white border rounded-xl flex items-center justify-between text-left transition-all cursor-pointer ${
+                    className={`w-full min-h-[40px] px-3 py-2 bg-white dark:bg-surface-dark border dark:border-border-dark text-zinc-800 dark:text-zinc-200 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer ${
                       errors.vendorId
                         ? 'border-rose-400 focus:ring-2 focus:ring-rose-100'
                         : isVendorDropdownOpen
@@ -940,9 +940,9 @@ export default function CreateSupplierQuotationModal({
                   </button>
 
                   {isVendorDropdownOpen && (
-                    <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-zinc-200 rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 divide-y divide-zinc-100">
+                    <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 divide-y divide-zinc-100">
                       {rfqVendors.length > 4 && (
-                        <div className="p-2 bg-zinc-50/70 border-b border-zinc-100">
+                        <div className="p-2 bg-zinc-50/70 border-b border-zinc-100 dark:border-[#2A2F3D]">
                           <div className="relative">
                             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
                             <input
@@ -950,7 +950,7 @@ export default function CreateSupplierQuotationModal({
                               value={vendorSearch}
                               onChange={(e) => setVendorSearch(e.target.value)}
                               placeholder="Filter vendors by name or code..."
-                              className="w-full h-8 pl-8 pr-2.5 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-zinc-900"
+                              className="w-full h-8 pl-8 pr-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-800 placeholder-zinc-400 outline-none focus:border-zinc-900"
                               autoFocus
                             />
                           </div>
@@ -972,7 +972,7 @@ export default function CreateSupplierQuotationModal({
                                 className={`px-3.5 py-2.5 cursor-pointer flex items-center justify-between hover:bg-zinc-50/90 transition-colors text-xs ${isSelected ? 'bg-zinc-50/90' : ''}`}
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${isSelected ? 'bg-zinc-900 border-zinc-900 text-white' : 'border-zinc-300 bg-white'}`}>
+                                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${isSelected ? 'bg-zinc-900 border-zinc-900 text-white' : 'border-zinc-300 dark:border-border-dark bg-white dark:bg-surface-dark'}`}>
                                     {isSelected && <Check size={11} strokeWidth={3} />}
                                   </div>
                                   <div className="truncate">

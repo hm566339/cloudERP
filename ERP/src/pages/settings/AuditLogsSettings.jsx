@@ -33,7 +33,7 @@ export default function AuditLogsSettings() {
             />
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
-            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-zinc-200 text-zinc-700 rounded-xl text-sm hover:bg-zinc-50 transition-colors">
+            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-zinc-200 text-zinc-700 rounded-xl text-sm hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
               <Filter size={16} /> Filter
             </button>
             <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-xl text-sm hover:bg-zinc-800 transition-colors">

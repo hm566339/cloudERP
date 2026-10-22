@@ -74,12 +74,12 @@ const ExpandedRowDetails = ({ data, colSpan }) => {
 
   return (
     <tr>
-      <td colSpan={colSpan || 100} className="p-0 border-b border-zinc-100 whitespace-normal">
+      <td colSpan={colSpan || 100} className="p-0 border-b border-zinc-100 dark:border-[#2A2F3D] whitespace-normal">
         <div className="bg-zinc-50/50 p-6 shadow-inner border-y border-zinc-100 animate-slide-down">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
             {displayItems.map((item, idx) => (
               <div key={idx} className="space-y-1 min-w-0">
-                <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 truncate block">
+                <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] truncate block">
                   {item.key}
                 </span>
                 <div className="min-w-0">

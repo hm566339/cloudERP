@@ -39,18 +39,18 @@ export default function CompaniesTab({ organizationId, org, linkedCompanies, bui
   }, [effectiveCompanies, search, statusFilter]);
 
   return (
-    <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+    <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
       {/* Header with Title and Action */}
-      <div className="p-5 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="p-5 border-b border-zinc-100 dark:border-[#2A2F3D] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900 tracking-tight flex items-center gap-2">
-            <Building2 size={16} className="text-blue-600" />
+          <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight flex items-center gap-2">
+            <Building2 size={16} className="text-blue-600 dark:text-blue-400" />
             Company Workspaces
-            <span className="text-[11px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200">
+            <span className="text-[11px] font-bold text-zinc-600 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1D212C] px-2 py-0.5 rounded-full border border-zinc-200 dark:border-[#2A2F3D]">
               {effectiveCompanies.length} Total
             </span>
           </h3>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
             Operational enterprise company instances provisioned under {org?.name || 'this organization'}
           </p>
         </div>
@@ -97,9 +97,9 @@ export default function CompaniesTab({ organizationId, org, linkedCompanies, bui
       ) : filtered.length > 0 ? (
         <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
           <table className="w-full text-left text-xs whitespace-nowrap min-w-[640px]" aria-label="Companies Table">
-            <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold sticky top-0 z-10">
+            <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] font-semibold sticky top-0 z-10">
               <tr>
-                <th scope="col" className="py-3 px-4 w-12 text-center text-xs uppercase tracking-wider text-zinc-500">#</th>
+                <th scope="col" className="py-3 px-4 w-12 text-center text-xs uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">#</th>
                 <th scope="col" className="py-3 px-4 text-xs uppercase tracking-wider">Workspace Company</th>
                 <th scope="col" className="py-3 px-4 text-xs uppercase tracking-wider">Company Code</th>
                 <th scope="col" className="py-3 px-4 text-xs uppercase tracking-wider">Status</th>
@@ -107,40 +107,40 @@ export default function CompaniesTab({ organizationId, org, linkedCompanies, bui
                 <th scope="col" className="py-3 px-4 text-right text-xs uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
               {filtered.map((c, idx) => {
                 const cName = c.name || c.companyName || 'Workspace';
                 const cCode = c.code || c.companyCode || '—';
                 const cActive = c.active !== false && c.status !== 'SUSPENDED';
 
                 return (
-                  <tr key={c.id || idx} className="hover:bg-zinc-50/70 transition-colors">
-                    <td className="py-3.5 px-4 text-center font-medium text-zinc-400">{idx + 1}</td>
+                  <tr key={c.id || idx} className="hover:bg-zinc-50/70 dark:hover:bg-[#1D212C]/60 transition-colors">
+                    <td className="py-3.5 px-4 text-center font-medium text-zinc-400 dark:text-[#6B7184]">{idx + 1}</td>
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center text-xs font-bold border border-blue-100 shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 flex items-center justify-center text-xs font-bold border border-blue-100 dark:border-blue-800/40 shrink-0">
                           {cName.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-semibold text-zinc-900">{cName}</span>
+                        <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{cName}</span>
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className="font-mono text-[11px] font-semibold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md border border-zinc-200">
+                      <span className="font-mono text-[11px] font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-zinc-100 dark:bg-[#1D212C] px-2 py-0.5 rounded-md border border-zinc-200 dark:border-[#2A2F3D]">
                         {cCode}
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
                       {cActive ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60">
                           <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Suspended
                         </span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-zinc-500">
+                    <td className="py-3.5 px-4 text-zinc-500 dark:text-[#A0A6B5]">
                       {c.created || c.createdAt ? new Date(c.created || c.createdAt).toLocaleDateString() : '—'}
                     </td>
                     <td className="py-3.5 px-4 text-right">
@@ -151,13 +151,13 @@ export default function CompaniesTab({ organizationId, org, linkedCompanies, bui
                             localStorage.setItem('selected_company', JSON.stringify(c));
                             dispatch(setSelectedCompany(c));
                           }}
-                          className="text-xs font-semibold text-zinc-900 hover:text-zinc-700 inline-flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-blue-50 transition-colors"
+                          className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] hover:text-zinc-700 dark:hover:text-blue-400 inline-flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
                         >
                           Launch <ExternalLink size={11} />
                         </Link>
                         <Link
                           to={buildPath(`/super-admin/companies`)}
-                          className="text-xs font-semibold text-zinc-500 hover:text-zinc-800 inline-flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-zinc-100 transition-colors"
+                          className="text-xs font-semibold text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-800 dark:hover:text-[#E6E8EE] inline-flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-zinc-100 dark:hover:bg-[#1D212C] transition-colors"
                         >
                           Manage <ChevronRight size={13} />
                         </Link>
@@ -171,11 +171,11 @@ export default function CompaniesTab({ organizationId, org, linkedCompanies, bui
         </div>
       ) : (
         <div className="p-10 text-center">
-          <Building2 size={28} className="mx-auto text-zinc-300 mb-2" />
-          <h4 className="text-sm font-bold text-zinc-800">
+          <Building2 size={28} className="mx-auto text-zinc-300 dark:text-[#6B7184] mb-2" />
+          <h4 className="text-sm font-bold text-zinc-800 dark:text-[#E6E8EE]">
             {search || statusFilter !== 'ALL' ? 'No matching workspaces found' : 'No company workspaces found'}
           </h4>
-          <p className="text-xs text-zinc-400 mt-1 mb-4">
+          <p className="text-xs text-zinc-400 dark:text-[#6B7184] mt-1 mb-4">
             {search || statusFilter !== 'ALL'
               ? `No workspaces match your query "${search}". Try resetting active filters.`
               : 'Provision a company workspace for this organization to begin managing business modules.'}

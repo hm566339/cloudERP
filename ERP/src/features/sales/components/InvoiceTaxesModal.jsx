@@ -161,10 +161,10 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-zinc-900/50 backdrop-blur-sm">
-      <div className="w-full max-w-4xl bg-zinc-50 h-full shadow-2xl flex flex-col animate-slide-in-right">
-        <div className="flex items-center justify-between p-4 border-b border-zinc-200 bg-white">
-          <h2 className="text-lg font-bold text-zinc-800">Invoice Taxes Breakdown</h2>
-          <button onClick={onClose} className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-100 transition-colors">
+      <div className="w-full max-w-4xl bg-zinc-50 dark:bg-[#0F1117] h-full shadow-2xl flex flex-col animate-slide-in-right">
+        <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922]">
+          <h2 className="text-lg font-bold text-zinc-800 dark:text-[#E6E8EE]">Invoice Taxes Breakdown</h2>
+          <button onClick={onClose} className="p-2 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-700 dark:hover:text-[#E6E8EE] rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -172,36 +172,36 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {!isFormOpen && (
             <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-              <div className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex flex-col">
-                <span className="text-xs text-zinc-500 font-medium uppercase mb-1">Total Taxable</span>
-                <span className="text-lg font-bold text-zinc-800">{totalTaxable.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm flex flex-col">
+                <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium uppercase mb-1">Total Taxable</span>
+                <span className="text-lg font-bold text-zinc-800 dark:text-[#E6E8EE]">{totalTaxable.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex flex-col">
-                <span className="text-xs text-zinc-500 font-medium uppercase mb-1">Total CGST</span>
-                <span className="text-lg font-bold text-zinc-800">{totalCgst.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm flex flex-col">
+                <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium uppercase mb-1">Total CGST</span>
+                <span className="text-lg font-bold text-zinc-800 dark:text-[#E6E8EE]">{totalCgst.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex flex-col">
-                <span className="text-xs text-zinc-500 font-medium uppercase mb-1">Total SGST</span>
-                <span className="text-lg font-bold text-zinc-800">{totalSgst.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm flex flex-col">
+                <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium uppercase mb-1">Total SGST</span>
+                <span className="text-lg font-bold text-zinc-800 dark:text-[#E6E8EE]">{totalSgst.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex flex-col">
-                <span className="text-xs text-zinc-500 font-medium uppercase mb-1">Total IGST</span>
-                <span className="text-lg font-bold text-zinc-800">{totalIgst.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm flex flex-col">
+                <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium uppercase mb-1">Total IGST</span>
+                <span className="text-lg font-bold text-zinc-800 dark:text-[#E6E8EE]">{totalIgst.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-zinc-100 shadow-sm flex flex-col">
-                <span className="text-xs text-zinc-500 font-medium uppercase mb-1">Total CESS</span>
-                <span className="text-lg font-bold text-zinc-800">{totalCess.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm flex flex-col">
+                <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium uppercase mb-1">Total CESS</span>
+                <span className="text-lg font-bold text-zinc-800 dark:text-[#E6E8EE]">{totalCess.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="bg-primary/10 p-4 rounded-xl border border-primary/20 shadow-sm flex flex-col">
-                <span className="text-xs text-primary font-bold uppercase mb-1">Total Tax</span>
-                <span className="text-lg font-black text-primary">{grandTotalTax.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              <div className="bg-primary/10 dark:bg-blue-500/10 p-4 rounded-xl border border-primary/20 dark:border-blue-500/20 shadow-sm flex flex-col">
+                <span className="text-xs text-primary dark:text-[#4C8DFF] font-bold uppercase mb-1">Total Tax</span>
+                <span className="text-lg font-black text-primary dark:text-[#4C8DFF]">{grandTotalTax.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
             </div>
           )}
 
           {!isFormOpen ? (
             <div className="space-y-4">
-              <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-zinc-100 shadow-sm">
+              <div className="flex justify-between items-center bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm">
                 <div className="flex gap-3">
                   <CustomSelect
                     value={filters.isDeleted || ''}
@@ -222,10 +222,10 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
                 </RequirePermission>
               </div>
 
-              <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto min-w-0 custom-scrollbar">
                   <table className="w-full text-left text-sm whitespace-nowrap" aria-label="Invoice Taxes Table">
-                    <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 text-xs font-semibold uppercase sticky top-0 z-10">
+                    <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] text-xs font-semibold uppercase sticky top-0 z-10">
                       <tr>
                         <SortableHeader field="gstSlabName" currentSortBy={sortBy} currentSortOrder={sortOrder} onSort={handleColumnSort} className="p-4">GST Slab</SortableHeader>
                         <SortableHeader field="taxableAmount" currentSortBy={sortBy} currentSortOrder={sortOrder} onSort={handleColumnSort} className="p-4 text-right">Taxable</SortableHeader>
@@ -237,39 +237,39 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
                         <th scope="col" className="p-4 w-20 text-center text-xs font-semibold uppercase">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100">
+                    <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                       {isLoading ? (
                         <TableRowSkeleton columns={8} rows={3} />
                       ) : taxes.length === 0 ? (
                         <tr>
-                          <td colSpan="8" className="p-8 text-center text-zinc-500">
+                          <td colSpan="8" className="p-8 text-center text-zinc-500 dark:text-[#6B7184]">
                             No tax entries found.
                           </td>
                         </tr>
                       ) : (
                         taxes.map((tax) => (
-                          <tr key={tax.id} className={`hover:bg-zinc-50/50 transition-colors ${tax.isDeleted ? 'opacity-50' : ''}`}>
+                          <tr key={tax.id} className={`hover:bg-zinc-50/50 dark:hover:bg-[#222736] transition-colors ${tax.isDeleted ? 'opacity-50' : ''}`}>
                             <td className="p-4">
-                              <span className="font-medium text-zinc-900">{tax.gstSlabName || 'Unknown'}</span>
+                              <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{tax.gstSlabName || 'Unknown'}</span>
                               {tax.isDeleted && <span className="ml-2 badge badge-danger text-[10px]">Deleted</span>}
                             </td>
-                            <td className="p-4 text-right font-medium text-zinc-900 tabular-nums font-mono">{tax.taxableAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td className="p-4 text-right text-zinc-600 tabular-nums font-mono">{tax.cgstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td className="p-4 text-right text-zinc-600 tabular-nums font-mono">{tax.sgstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td className="p-4 text-right text-zinc-600 tabular-nums font-mono">{tax.igstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td className="p-4 text-right text-zinc-600 tabular-nums font-mono">{tax.cessAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                            <td className="p-4 text-zinc-500 text-xs">{new Date(tax.createdAt).toLocaleDateString()}</td>
+                            <td className="p-4 text-right font-medium text-zinc-900 dark:text-[#E6E8EE] tabular-nums font-mono">{tax.taxableAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td className="p-4 text-right text-zinc-600 dark:text-[#A0A6B5] tabular-nums font-mono">{tax.cgstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td className="p-4 text-right text-zinc-600 dark:text-[#A0A6B5] tabular-nums font-mono">{tax.sgstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td className="p-4 text-right text-zinc-600 dark:text-[#A0A6B5] tabular-nums font-mono">{tax.igstAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td className="p-4 text-right text-zinc-600 dark:text-[#A0A6B5] tabular-nums font-mono">{tax.cessAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td className="p-4 text-zinc-500 dark:text-[#6B7184] text-xs">{new Date(tax.createdAt).toLocaleDateString()}</td>
                             <td className="p-4">
                               <div className="flex items-center justify-center gap-2">
                                 {!tax.isDeleted && (
                                   <>
                                     <RequirePermission module="SALES_INVOICES" action="UPDATE">
-                                      <button onClick={() => handleOpenForm(tax)} className="p-1.5 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" aria-label="Edit tax entry">
+                                      <button onClick={() => handleOpenForm(tax)} className="p-1.5 text-zinc-400 dark:text-[#6B7184] hover:text-blue-600 dark:hover:text-[#4C8DFF] hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-md transition-colors" aria-label="Edit tax entry">
                                         <Edit2 size={16} />
                                       </button>
                                     </RequirePermission>
                                     <RequirePermission module="SALES_INVOICES" action="DELETE">
-                                      <button onClick={() => handleDelete(tax.id)} className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" aria-label="Delete tax entry">
+                                      <button onClick={() => handleDelete(tax.id)} className="p-1.5 text-zinc-400 dark:text-[#6B7184] hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition-colors" aria-label="Delete tax entry">
                                         <Trash2 size={16} />
                                       </button>
                                     </RequirePermission>
@@ -295,14 +295,14 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
               </div>
             </div>
           ) : (
-            <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
-              <h3 className="font-bold text-zinc-800 mb-6 pb-3 border-b border-zinc-100">
+            <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-6 shadow-sm">
+              <h3 className="font-bold text-zinc-800 dark:text-[#E6E8EE] mb-6 pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
                 {editingId ? 'Edit Tax Entry' : 'Add Tax Entry'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-500 uppercase">GST Slab *</label>
+                    <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase">GST Slab *</label>
                     <CustomSelect
                       name="gstSlabId"
                       value={formData.gstSlabId}
@@ -313,7 +313,7 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-500 uppercase">Taxable Amount *</label>
+                    <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase">Taxable Amount *</label>
                     <input
                       type="number"
                       step="0.01"
@@ -326,7 +326,7 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-500 uppercase">CGST Amount</label>
+                    <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase">CGST Amount</label>
                     <input
                       type="number"
                       step="0.01"
@@ -338,7 +338,7 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-500 uppercase">SGST Amount</label>
+                    <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase">SGST Amount</label>
                     <input
                       type="number"
                       step="0.01"
@@ -350,7 +350,7 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-500 uppercase">IGST Amount</label>
+                    <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase">IGST Amount</label>
                     <input
                       type="number"
                       step="0.01"
@@ -362,7 +362,7 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-zinc-500 uppercase">Cess Amount</label>
+                    <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase">Cess Amount</label>
                     <input
                       type="number"
                       step="0.01"
@@ -375,7 +375,7 @@ export default function InvoiceTaxesModal({ isOpen, onClose, invoiceId }) {
                   </div>
                 </div>
                 
-                <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
+                <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100 dark:border-[#2A2F3D]">
                   <button
                     type="button"
                     onClick={() => { setIsFormOpen(false); setEditingId(null); }}

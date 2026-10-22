@@ -365,15 +365,15 @@ export default function UserDetails() {
   /* ── Error / not-found state ── */
   if (isError || !user) {
     return (
-      <div className="p-8 mt-12 max-w-lg mx-auto bg-white rounded-xl border border-rose-200 shadow-sm text-center animate-fade-in">
-        <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+      <div className="p-8 mt-12 max-w-lg mx-auto bg-white dark:bg-[#161922] rounded-xl border border-rose-200 dark:border-rose-900/60 shadow-sm text-center animate-fade-in">
+        <div className="w-12 h-12 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-lg flex items-center justify-center mx-auto mb-4">
           <AlertCircle size={24} />
         </div>
-        <h2 className="text-xl font-bold text-zinc-900 mb-2">User Not Found</h2>
-        <p className="text-sm text-zinc-500 mb-6">We couldn't find the requested user record.</p>
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-[#E6E8EE] mb-2">User Not Found</h2>
+        <p className="text-sm text-zinc-500 dark:text-[#A0A6B5] mb-6">We couldn't find the requested user record.</p>
         <button
           onClick={() => navigate(-1)}
-          className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-sm font-semibold transition-colors"
+          className="px-4 py-2 bg-zinc-900 dark:bg-primary hover:bg-zinc-800 dark:hover:bg-primary-600 text-white rounded-lg text-sm font-semibold transition-colors"
         >
           Go Back
         </button>
@@ -501,7 +501,7 @@ export default function UserDetails() {
                 /* Edit Mode */
                 <div className="space-y-4 animate-fade-in">
                   <div>
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1 block">
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1 block">
                       Full Name
                     </label>
                     <input
@@ -513,7 +513,7 @@ export default function UserDetails() {
                     />
                   </div>
                   <div>
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1 block">
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1 block">
                       Username
                     </label>
                     <input
@@ -525,7 +525,7 @@ export default function UserDetails() {
                     />
                   </div>
                   <div>
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1 block">
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1 block">
                       Employee ID
                     </label>
                     <input
@@ -537,7 +537,7 @@ export default function UserDetails() {
                     />
                   </div>
                   <div>
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1 block">
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1 block">
                       Email Address
                     </label>
                     <input
@@ -549,26 +549,26 @@ export default function UserDetails() {
                     />
                   </div>
                   <div>
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1 block">
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1 block">
                       Account Status
                     </label>
                     <select
                       value={editForm.accountStatus}
                       onChange={(e) => setEditForm(prev => ({ ...prev, accountStatus: e.target.value }))}
-                      className="w-full text-xs font-semibold px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 bg-white"
+                      className="w-full text-xs font-semibold px-3 py-2 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-primary bg-white dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE]"
                     >
                       <option value="ACTIVE">ACTIVE</option>
                       <option value="INACTIVE">INACTIVE</option>
                     </select>
                   </div>
                   <div>
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1 block">
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1 block">
                       Email Status
                     </label>
                     <select
                       value={editForm.emailStatus}
                       onChange={(e) => setEditForm(prev => ({ ...prev, emailStatus: e.target.value }))}
-                      className="w-full text-xs font-semibold px-3 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 bg-white"
+                      className="w-full text-xs font-semibold px-3 py-2 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-primary bg-white dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE]"
                     >
                       <option value="VERIFIED">VERIFIED</option>
                       <option value="UNVERIFIED">UNVERIFIED</option>
@@ -600,7 +600,7 @@ export default function UserDetails() {
                   <InfoField label="Email Address" value={user.email || '-'} />
                   
                   <div>
-                    <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+                    <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] mb-1">
                       Email Status
                     </p>
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
@@ -613,7 +613,7 @@ export default function UserDetails() {
                   </div>
 
                   <div>
-                    <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+                    <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] mb-1">
                       Account Status
                     </p>
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
@@ -627,7 +627,7 @@ export default function UserDetails() {
 
                   {user.notes && (
                     <div className="pt-2 border-t border-zinc-100">
-                      <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                      <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] mb-1.5">
                         Onboarding Notes
                       </p>
                       <div className="bg-amber-50/70 border border-amber-200/80 rounded-lg p-3 text-xs text-zinc-700 leading-relaxed whitespace-pre-wrap">
@@ -701,11 +701,11 @@ export default function UserDetails() {
                     return (
                       <div 
                         key={idx} 
-                        className="bg-white border border-zinc-200 rounded-xl p-3.5 flex items-center justify-between gap-4 min-w-[200px] shadow-2xs hover:shadow-xs transition-shadow"
+                        className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-3.5 flex items-center justify-between gap-4 min-w-[200px] shadow-2xs hover:shadow-xs transition-shadow"
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-bold text-xs text-zinc-900 uppercase tracking-wide truncate">
+                            <span className="font-bold text-xs text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wide truncate">
                               {roleName}
                             </span>
                             <span className={`text-[8.5px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider border ${
@@ -841,28 +841,28 @@ export default function UserDetails() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-zinc-200 bg-zinc-50/80">
-                        <th className="w-12 text-center py-2.5 px-3 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">S.No.</th>
-                        <th className="text-left py-2.5 px-4 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Module Name</th>
-                        <th className="text-left py-2.5 px-4 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">IP Address</th>
-                        <th className="text-left py-2.5 px-4 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">User Agent</th>
-                        <th className="text-left py-2.5 px-4 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Login Time</th>
-                        <th className="text-right py-2.5 px-4 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Token Valid Till</th>
+                      <tr className="border-b border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C]">
+                        <th className="w-12 text-center py-2.5 px-3 text-[10px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">S.No.</th>
+                        <th className="text-left py-2.5 px-4 text-[10px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">Module Name</th>
+                        <th className="text-left py-2.5 px-4 text-[10px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">IP Address</th>
+                        <th className="text-left py-2.5 px-4 text-[10px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">User Agent</th>
+                        <th className="text-left py-2.5 px-4 text-[10px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">Login Time</th>
+                        <th className="text-right py-2.5 px-4 text-[10px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">Token Valid Till</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100">
+                    <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                       {activeSessions.map((session, idx) => (
-                        <tr key={idx} className="hover:bg-zinc-50/60 transition-colors">
-                          <td className="text-center font-medium text-zinc-500 py-3 px-3">{idx + 1}</td>
-                          <td className="font-semibold text-zinc-900 py-3 px-4">{session.moduleName || '-'}</td>
-                          <td className="font-mono text-zinc-600 py-3 px-4">{session.ipAddress || '-'}</td>
-                          <td className="text-zinc-500 py-3 px-4 truncate max-w-[200px]" title={session.userAgent || '-'}>
+                        <tr key={idx} className="hover:bg-zinc-50/60 dark:hover:bg-[#1D212C]/60 transition-colors">
+                          <td className="text-center font-medium text-zinc-500 dark:text-[#A0A6B5] py-3 px-3">{idx + 1}</td>
+                          <td className="font-semibold text-zinc-900 dark:text-[#E6E8EE] py-3 px-4">{session.moduleName || '-'}</td>
+                          <td className="font-mono text-zinc-600 dark:text-[#A0A6B5] py-3 px-4">{session.ipAddress || '-'}</td>
+                          <td className="text-zinc-500 dark:text-[#A0A6B5] py-3 px-4 truncate max-w-[200px]" title={session.userAgent || '-'}>
                             {session.userAgent || '-'}
                           </td>
-                          <td className="text-zinc-600 py-3 px-4">
+                          <td className="text-zinc-600 dark:text-[#A0A6B5] py-3 px-4">
                             {session.loginTime ? new Date(session.loginTime).toLocaleString() : '-'}
                           </td>
-                          <td className="text-right text-zinc-500 py-3 px-4">
+                          <td className="text-right text-zinc-500 dark:text-[#A0A6B5] py-3 px-4">
                             {session.accessTokenValidTill ? new Date(session.accessTokenValidTill).toLocaleString() : '-'}
                           </td>
                         </tr>
@@ -931,13 +931,13 @@ export default function UserDetails() {
                     {effectiveFeatures.map((feat, idx) => (
                       <div
                         key={`${feat.featureCode || feat.code}-${idx}`}
-                        className="bg-white border border-zinc-200/90 rounded-xl p-3 shadow-2xs hover:shadow-xs transition-shadow flex items-start justify-between gap-2"
+                        className="bg-white dark:bg-[#161922] border border-zinc-200/90 dark:border-[#2A2F3D] rounded-xl p-3 shadow-2xs hover:shadow-xs transition-shadow flex items-start justify-between gap-2"
                       >
                         <div className="min-w-0">
-                          <p className="font-bold text-xs text-zinc-900 truncate">
+                          <p className="font-bold text-xs text-zinc-900 dark:text-[#E6E8EE] truncate">
                             {feat.featureName || feat.name || feat.featureCode}
                           </p>
-                          <p className="font-mono text-[9.5px] text-zinc-500 mt-0.5">
+                          <p className="font-mono text-[9.5px] text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
                             {feat.featureCode || feat.code}
                           </p>
                           {feat.moduleName && (

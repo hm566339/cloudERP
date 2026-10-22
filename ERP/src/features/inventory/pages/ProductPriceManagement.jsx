@@ -359,7 +359,7 @@ export default function ProductPriceManagement() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Product Prices"
         description="Manage pricing tiers, multi-currency rates, and validity periods"

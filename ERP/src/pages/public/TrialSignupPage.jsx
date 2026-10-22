@@ -212,7 +212,7 @@ export default function TrialSignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 relative flex flex-col justify-between font-sans selection:bg-primary/20 selection:text-zinc-900 overflow-x-hidden">
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#0F1117] relative flex flex-col justify-between font-sans selection:bg-primary/20 selection:text-zinc-900 overflow-x-hidden">
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-[-15%] right-[-10%] w-[55vw] h-[55vw] rounded-full bg-primary/5 blur-[120px] mix-blend-multiply" />
@@ -221,7 +221,7 @@ export default function TrialSignupPage() {
       </div>
 
       {/* Top Navbar */}
-      <header className="relative z-10 w-full border-b border-zinc-200/80 bg-white/80 backdrop-blur-md">
+      <header className="relative z-10 w-full border-b border-zinc-200/80 dark:border-[#2A2F3D] bg-white/80 dark:bg-[#161922]/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <MarkLogo
@@ -229,15 +229,15 @@ export default function TrialSignupPage() {
               alt="Mark2 ERP"
               className="h-9 w-auto object-contain"
             />
-            <span className="hidden sm:inline-block text-xs font-semibold text-zinc-500 border-l border-zinc-200 pl-3">
+            <span className="hidden sm:inline-block text-xs font-semibold text-zinc-500 dark:text-[#A0A6B5] border-l border-zinc-200 dark:border-[#2A2F3D] pl-3">
               30-Day Free Trial
             </span>
           </Link>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-zinc-500 hidden sm:inline">Already have an account?</span>
+            <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] hidden sm:inline">Already have an account?</span>
             <Link
               to="/"
-              className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 transition-colors"
+              className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-zinc-100 dark:bg-[#1D212C] hover:bg-zinc-200 dark:hover:bg-[#222736] transition-colors"
             >
               Sign In
             </Link>
@@ -250,15 +250,15 @@ export default function TrialSignupPage() {
         <div className="w-full max-w-2xl">
           {signupSuccessData ? (
             /* ── Success Screen ── */
-            <div className="bg-white/95 backdrop-blur-2xl border border-white shadow-[0_12px_40px_rgb(0,0,0,0.06)] rounded-3xl p-8 sm:p-12 animate-fade-in-up">
+            <div className="bg-white/95 dark:bg-[#161922]/95 backdrop-blur-2xl border border-white dark:border-[#2A2F3D] shadow-[0_12px_40px_rgb(0,0,0,0.06)] rounded-3xl p-8 sm:p-12 animate-fade-in-up">
               <div className="text-center space-y-3 mb-8">
-                <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center mx-auto shadow-sm">
+                <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40 flex items-center justify-center mx-auto shadow-sm">
                   <CheckCircle2 size={36} />
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-display font-black text-zinc-900 tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-display font-black text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                   Your Account is Ready!
                 </h1>
-                <p className="text-sm text-zinc-600 max-w-md mx-auto leading-relaxed">
+                <p className="text-sm text-zinc-600 dark:text-[#A0A6B5] max-w-md mx-auto leading-relaxed">
                   Your 30-day free trial has been created. Your enterprise organization and primary company are active and ready.
                 </p>
               </div>
@@ -324,7 +324,7 @@ export default function TrialSignupPage() {
                 {signupSuccessData?.login?.url && (
                   <div className="pt-2 border-t border-zinc-200/60 text-[11px] text-zinc-500 space-y-1">
                     <span className="text-zinc-400 block font-medium">Organization Login Portal:</span>
-                    <div className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-lg border border-zinc-200">
+                    <div className="flex items-center justify-between bg-white dark:bg-surface-dark px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-border-dark text-zinc-800 dark:text-zinc-200">
                       <span className="font-mono text-zinc-800 text-[10px] truncate max-w-[280px]">
                         {signupSuccessData.login.url}
                       </span>
@@ -377,16 +377,16 @@ export default function TrialSignupPage() {
             </div>
           ) : (
             /* ── Trial Signup Form ── */
-            <div className="bg-white/95 backdrop-blur-2xl border border-white shadow-[0_12px_40px_rgb(0,0,0,0.06)] rounded-3xl p-6 sm:p-10 animate-fade-in-up">
+            <div className="bg-white/95 dark:bg-[#161922]/95 backdrop-blur-2xl border border-white dark:border-[#2A2F3D] shadow-[0_12px_40px_rgb(0,0,0,0.06)] rounded-3xl p-6 sm:p-10 animate-fade-in-up">
               <div className="text-center space-y-2 mb-8">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 text-xs font-semibold mb-1">
-                  <Sparkles size={13} className="text-emerald-600" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold mb-1">
+                  <Sparkles size={13} className="text-emerald-600 dark:text-emerald-400" />
                   <span>30-Day Free Trial • Instant Organization Setup</span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-display font-black text-zinc-900 tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-display font-black text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                   Start Your 30-Day Free Trial
                 </h1>
-                <p className="text-xs sm:text-sm text-zinc-500 max-w-md mx-auto">
+                <p className="text-xs sm:text-sm text-zinc-500 dark:text-[#A0A6B5] max-w-md mx-auto">
                   Set up your organization and first company in seconds. No credit card required to get started.
                 </p>
               </div>
@@ -394,9 +394,9 @@ export default function TrialSignupPage() {
               {serverError && (
                 <div
                   role="alert"
-                  className="mb-6 p-3.5 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-800 text-xs font-medium flex items-start gap-2.5 animate-slide-up"
+                  className="mb-6 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/40 text-rose-800 dark:text-rose-300 text-xs font-medium flex items-start gap-2.5 animate-slide-up"
                 >
-                  <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+                  <AlertCircle size={16} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                   <div className="flex-1">{serverError}</div>
                 </div>
               )}
@@ -404,9 +404,9 @@ export default function TrialSignupPage() {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
                 {/* ── SECTION 1: Your Account ── */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
-                    <User size={16} className="text-zinc-700" />
-                    <h2 className="text-sm font-bold text-zinc-900">1. Your Administrator Account</h2>
+                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                    <User size={16} className="text-zinc-700 dark:text-[#A0A6B5]" />
+                    <h2 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">1. Your Administrator Account</h2>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -427,7 +427,7 @@ export default function TrialSignupPage() {
                           placeholder="e.g. Rahul Sharma"
                           aria-invalid={!!errors.fullName}
                           aria-describedby={errors.fullName ? 'fullName-error' : undefined}
-                          className={`w-full pl-9 pr-3 py-2 bg-white border ${errors.fullName ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-zinc-900'} rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
+                          className={`w-full pl-9 pr-3 py-2 bg-white dark:bg-surface-dark border dark:border-border-dark text-zinc-900 dark:text-zinc-100 ${errors.fullName ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-zinc-900'} rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
                         />
                       </div>
                       {errors.fullName && (
@@ -454,7 +454,7 @@ export default function TrialSignupPage() {
                           placeholder="you@company.com"
                           aria-invalid={!!errors.email}
                           aria-describedby={errors.email ? 'email-error' : undefined}
-                          className={`w-full pl-9 pr-3 py-2 bg-white border ${errors.email ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-zinc-900'} rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
+                          className={`w-full pl-9 pr-3 py-2 bg-white dark:bg-surface-dark border dark:border-border-dark text-zinc-900 dark:text-zinc-100 ${errors.email ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-zinc-900'} rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
                         />
                       </div>
                       {errors.email && (
@@ -483,7 +483,7 @@ export default function TrialSignupPage() {
                           placeholder="Min. 8 characters"
                           aria-invalid={!!errors.password}
                           aria-describedby={errors.password ? 'password-error' : undefined}
-                          className={`w-full pl-9 pr-9 py-2 bg-white border ${errors.password ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-zinc-900'} rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
+                          className={`w-full pl-9 pr-9 py-2 bg-white dark:bg-surface-dark border dark:border-border-dark text-zinc-900 dark:text-zinc-100 ${errors.password ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-zinc-900'} rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
                         />
                         <button
                           type="button"
@@ -518,7 +518,7 @@ export default function TrialSignupPage() {
                           placeholder="Re-enter password"
                           aria-invalid={!!errors.confirmPassword}
                           aria-describedby={errors.confirmPassword ? 'confirmPassword-error' : undefined}
-                          className={`w-full pl-9 pr-9 py-2 bg-white border ${errors.confirmPassword ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-zinc-900'} rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
+                          className={`w-full pl-9 pr-9 py-2 bg-white dark:bg-surface-dark border dark:border-border-dark text-zinc-900 dark:text-zinc-100 ${errors.confirmPassword ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-zinc-900'} rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
                         />
                         <button
                           type="button"
@@ -540,18 +540,18 @@ export default function TrialSignupPage() {
 
                 {/* ── SECTION 2: Organization / Business ── */}
                 <div className="space-y-4 pt-2">
-                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
-                    <Building2 size={16} className="text-zinc-700" />
-                    <h2 className="text-sm font-bold text-zinc-900">2. Organization & Business Details</h2>
+                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                    <Building2 size={16} className="text-zinc-700 dark:text-[#A0A6B5]" />
+                    <h2 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">2. Organization & Business Details</h2>
                   </div>
 
                   {/* Organization Name */}
                   <div className="space-y-1">
-                    <label htmlFor="signup-organizationName" className="text-xs font-semibold text-zinc-700 block">
+                    <label htmlFor="signup-organizationName" className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] block">
                       Organization / Business Name <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-zinc-400 pointer-events-none">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-zinc-400 dark:text-[#6B7184] pointer-events-none">
                         <Building2 size={15} />
                       </span>
                       <input
@@ -562,15 +562,15 @@ export default function TrialSignupPage() {
                         placeholder="e.g. Apex Global Enterprises"
                         aria-invalid={!!errors.organizationName}
                         aria-describedby={errors.organizationName ? 'orgName-error' : undefined}
-                        className={`w-full pl-9 pr-3 py-2 bg-white border ${errors.organizationName ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-zinc-900'} rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
+                        className={`w-full pl-9 pr-3 py-2 bg-white dark:bg-[#1D212C] border ${errors.organizationName ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 dark:border-[#2A2F3D] focus:border-zinc-900 dark:focus:border-zinc-500'} rounded-xl text-xs text-zinc-900 dark:text-[#E6E8EE] placeholder:text-zinc-400 dark:placeholder:text-[#6B7184] focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
                       />
                     </div>
                     {errors.organizationName ? (
-                      <p id="orgName-error" className="text-[11px] text-rose-600 font-medium">
+                      <p id="orgName-error" className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">
                         {errors.organizationName.message}
                       </p>
                     ) : (
-                      <p className="text-[10px] text-zinc-400">
+                      <p className="text-[10px] text-zinc-400 dark:text-[#6B7184]">
                         Top-level enterprise tenant that holds your companies and user accounts.
                       </p>
                     )}
@@ -579,15 +579,15 @@ export default function TrialSignupPage() {
 
                 {/* ── SECTION 3: First Company ── */}
                 <div className="space-y-4 pt-2">
-                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
-                    <Briefcase size={16} className="text-zinc-700" />
-                    <h2 className="text-sm font-bold text-zinc-900">3. Primary Company Unit</h2>
+                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                    <Briefcase size={16} className="text-zinc-700 dark:text-[#A0A6B5]" />
+                    <h2 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">3. Primary Company Unit</h2>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Company Name */}
                     <div className="space-y-1">
-                      <label htmlFor="signup-companyName" className="text-xs font-semibold text-zinc-700 block">
+                      <label htmlFor="signup-companyName" className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] block">
                         Company Name <span className="text-rose-500">*</span>
                       </label>
                       <input
@@ -599,7 +599,7 @@ export default function TrialSignupPage() {
                         placeholder="e.g. Apex India Pvt Ltd"
                         aria-invalid={!!errors.companyName}
                         aria-describedby={errors.companyName ? 'compName-error' : undefined}
-                        className={`w-full px-3 py-2 bg-white border ${errors.companyName ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-zinc-900'} rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
+                        className={`w-full px-3 py-2 bg-white dark:bg-surface-dark border dark:border-border-dark text-zinc-900 dark:text-zinc-100 ${errors.companyName ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-zinc-900'} rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-all`}
                       />
                       {errors.companyName && (
                         <p id="compName-error" className="text-[11px] text-rose-600 font-medium">
@@ -645,7 +645,7 @@ export default function TrialSignupPage() {
                           {...register('baseCurrency')}
                           disabled={isSubmitting}
                           aria-invalid={!!errors.baseCurrency}
-                          className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-xl text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-all"
+                          className="w-full px-3 py-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-all"
                         >
                           <option value="INR">INR — Indian Rupee (₹)</option>
                           <option value="USD">USD — US Dollar ($)</option>
@@ -670,7 +670,7 @@ export default function TrialSignupPage() {
                         {...register('legalName')}
                         disabled={isSubmitting}
                         placeholder="Registered legal entity name"
-                        className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-all"
+                        className="w-full px-3 py-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-all"
                       />
                     </div>
                   </div>
@@ -680,17 +680,17 @@ export default function TrialSignupPage() {
                     <button
                       type="button"
                       onClick={() => setShowOptionalDetails(!showOptionalDetails)}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900 transition-colors"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-white transition-colors"
                     >
                       {showOptionalDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       <span>{showOptionalDetails ? 'Hide' : 'Add'} Tax & Location Details (Optional)</span>
                     </button>
 
                     {showOptionalDetails && (
-                      <div className="mt-3 p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-3 animate-fade-in">
+                      <div className="mt-3 p-4 rounded-2xl bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200/80 dark:border-[#2A2F3D] space-y-3 animate-fade-in">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <label htmlFor="signup-gstin" className="text-[11px] font-semibold text-zinc-700 block">
+                            <label htmlFor="signup-gstin" className="text-[11px] font-semibold text-zinc-700 dark:text-[#E6E8EE] block">
                               GSTIN
                             </label>
                             <input
@@ -699,11 +699,11 @@ export default function TrialSignupPage() {
                               {...register('gstin')}
                               disabled={isSubmitting}
                               placeholder="22AAAAA0000A1Z5"
-                              className="w-full px-3 py-1.5 bg-white font-mono uppercase border border-zinc-200 rounded-lg text-xs text-zinc-900 focus:outline-none focus:border-zinc-900"
+                              className="w-full px-3 py-1.5 bg-white dark:bg-[#161922] font-mono uppercase border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-500"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label htmlFor="signup-pan" className="text-[11px] font-semibold text-zinc-700 block">
+                            <label htmlFor="signup-pan" className="text-[11px] font-semibold text-zinc-700 dark:text-[#E6E8EE] block">
                               PAN
                             </label>
                             <input
@@ -712,14 +712,14 @@ export default function TrialSignupPage() {
                               {...register('pan')}
                               disabled={isSubmitting}
                               placeholder="AAAAA0000A"
-                              className="w-full px-3 py-1.5 bg-white font-mono uppercase border border-zinc-200 rounded-lg text-xs text-zinc-900 focus:outline-none focus:border-zinc-900"
+                              className="w-full px-3 py-1.5 bg-white dark:bg-[#161922] font-mono uppercase border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-500"
                             />
                           </div>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="space-y-1">
-                            <label htmlFor="signup-phone" className="text-[11px] font-semibold text-zinc-700 block">
+                            <label htmlFor="signup-phone" className="text-[11px] font-semibold text-zinc-700 dark:text-[#E6E8EE] block">
                               Phone
                             </label>
                             <input
@@ -729,14 +729,14 @@ export default function TrialSignupPage() {
                               disabled={isSubmitting}
                               placeholder="10-15 digits"
                               aria-invalid={!!errors.phone}
-                              className="w-full px-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-900 focus:outline-none focus:border-zinc-900"
+                              className="w-full px-3 py-1.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-500"
                             />
                             {errors.phone && (
-                              <p className="text-[10px] text-rose-600 font-medium">{errors.phone.message}</p>
+                              <p className="text-[10px] text-rose-600 dark:text-rose-400 font-medium">{errors.phone.message}</p>
                             )}
                           </div>
                           <div className="space-y-1">
-                            <label htmlFor="signup-city" className="text-[11px] font-semibold text-zinc-700 block">
+                            <label htmlFor="signup-city" className="text-[11px] font-semibold text-zinc-700 dark:text-[#E6E8EE] block">
                               City
                             </label>
                             <input
@@ -745,11 +745,11 @@ export default function TrialSignupPage() {
                               {...register('city')}
                               disabled={isSubmitting}
                               placeholder="e.g. Mumbai"
-                              className="w-full px-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-900 focus:outline-none focus:border-zinc-900"
+                              className="w-full px-3 py-1.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-500"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label htmlFor="signup-state" className="text-[11px] font-semibold text-zinc-700 block">
+                            <label htmlFor="signup-state" className="text-[11px] font-semibold text-zinc-700 dark:text-[#E6E8EE] block">
                               State
                             </label>
                             <input
@@ -758,7 +758,7 @@ export default function TrialSignupPage() {
                               {...register('state')}
                               disabled={isSubmitting}
                               placeholder="e.g. Maharashtra"
-                              className="w-full px-3 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-900 focus:outline-none focus:border-zinc-900"
+                              className="w-full px-3 py-1.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-500"
                             />
                           </div>
                         </div>
@@ -768,11 +768,11 @@ export default function TrialSignupPage() {
                 </div>
 
                 {/* Submit Action */}
-                <div className="pt-4 border-t border-zinc-100 space-y-3">
+                <div className="pt-4 border-t border-zinc-100 dark:border-[#2A2F3D] space-y-3">
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 text-white text-sm font-semibold hover:bg-zinc-800 disabled:bg-zinc-400 disabled:cursor-not-allowed transition-all shadow-sm focus:ring-2 focus:ring-zinc-900 focus:outline-none"
+                    className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 dark:bg-[#4C8DFF] text-white text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] disabled:bg-zinc-400 dark:disabled:bg-zinc-700 disabled:cursor-not-allowed transition-all shadow-sm focus:ring-2 focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] focus:outline-none"
                   >
                     {isSubmitting ? (
                       <>
@@ -804,7 +804,7 @@ export default function TrialSignupPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 w-full border-t border-zinc-200/80 bg-white/60 py-4 text-center text-xs text-zinc-500">
+      <footer className="relative z-10 w-full border-t border-zinc-200/80 bg-white/60 dark:bg-card-dark/60 py-4 text-center text-xs text-zinc-500 dark:text-zinc-400 border-zinc-200/80 dark:border-border-dark">
         © {new Date().getFullYear()} Mark2 ERP Platform. All rights reserved.
       </footer>
     </div>

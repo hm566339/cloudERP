@@ -9,7 +9,7 @@ export default function WorkflowToggle({ checked, onChange, disabled, label }) {
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1 ${
-        checked ? 'bg-zinc-900' : 'bg-zinc-300'
+        checked ? 'bg-zinc-900 dark:bg-primary' : 'bg-zinc-300 dark:bg-zinc-700'
       } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
     >
       <span

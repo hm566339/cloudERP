@@ -141,7 +141,7 @@ const BudgetLineFormModal = ({ isOpen, onClose, editingRecord, onSuccess }) => {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-zinc-700">Budget Header *</label>
+          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Budget Header *</label>
           <CustomSelect
             options={budgetHeadersList.map(h => ({ value: h.id, label: h.budgetName || h.name || h.budgetHeaderName || h.id }))}
             value={formData.budgetHeaderId}
@@ -151,7 +151,7 @@ const BudgetLineFormModal = ({ isOpen, onClose, editingRecord, onSuccess }) => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-zinc-700">Account *</label>
+          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Account *</label>
           <CustomSelect
             options={accountsList.map(a => ({ value: a.id, label: a.accountName }))}
             value={formData.accountId}
@@ -161,7 +161,7 @@ const BudgetLineFormModal = ({ isOpen, onClose, editingRecord, onSuccess }) => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-zinc-700">Department</label>
+          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Department</label>
           <CustomSelect
             options={departmentsList.map(d => ({ value: d.id, label: d.name || d.departmentName || d.id }))}
             value={formData.departmentId}
@@ -172,9 +172,9 @@ const BudgetLineFormModal = ({ isOpen, onClose, editingRecord, onSuccess }) => {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-zinc-700">Allocated Amount *</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Allocated Amount *</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">₹</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-400 font-medium">₹</span>
               <input
                 type="number"
                 name="allocatedAmount"
@@ -189,9 +189,9 @@ const BudgetLineFormModal = ({ isOpen, onClose, editingRecord, onSuccess }) => {
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-zinc-700">Utilized Amount</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Utilized Amount</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">₹</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-400 font-medium">₹</span>
               <input
                 type="number"
                 name="utilizedAmount"
@@ -203,11 +203,11 @@ const BudgetLineFormModal = ({ isOpen, onClose, editingRecord, onSuccess }) => {
                 step="0.01"
               />
             </div>
-            <p className="text-[10.4px] text-zinc-500 mt-1">Usually updated automatically</p>
+            <p className="text-[10.4px] text-zinc-500 dark:text-zinc-400 mt-1">Usually updated automatically</p>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 mt-6">
+        <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-border-dark mt-6">
           <button type="button" onClick={onClose} className="btn-secondary">
             Cancel
           </button>

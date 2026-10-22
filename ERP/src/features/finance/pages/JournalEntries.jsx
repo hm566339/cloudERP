@@ -46,12 +46,12 @@ const STATUS_OPTIONS = [
 ];
 
 const getStatusBadge = (status) => {
-  if (!status) return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-zinc-50 text-zinc-600 border-zinc-200">DRAFT</span>;
+  if (!status) return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-zinc-50 text-zinc-600 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]">DRAFT</span>;
   const s = status.toString().toUpperCase();
-  if (s === 'POSTED' || s === 'APPROVED' || s === 'PAID') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200">{status}</span>;
-  if (s === 'CREATED' || s === 'DRAFT' || s === 'PENDING_APPROVAL' || s === 'PARTIALLY_PAID') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-amber-50 text-amber-700 border-amber-200">{status}</span>;
-  if (s === 'CANCELLED' || s === 'REJECTED') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-rose-50 text-rose-700 border-rose-200">{status}</span>;
-  return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-blue-50 text-blue-700 border-blue-200">{status}</span>;
+  if (s === 'POSTED' || s === 'APPROVED' || s === 'PAID') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50">{status}</span>;
+  if (s === 'CREATED' || s === 'DRAFT' || s === 'PENDING_APPROVAL' || s === 'PARTIALLY_PAID') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/50">{status}</span>;
+  if (s === 'CANCELLED' || s === 'REJECTED') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/50">{status}</span>;
+  return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/50">{status}</span>;
 };
 
 /**
@@ -66,16 +66,16 @@ const JournalEntryOverview = ({ journalId, selectedCompany }) => {
 
   if (isLoading) {
     return (
-      <div className="p-8 text-center bg-zinc-50/50">
-        <div className="w-6 h-6 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-        <p className="text-xs text-zinc-500 font-medium">Loading journal details...</p>
+      <div className="p-8 text-center bg-zinc-50/50 dark:bg-[#161922]/50">
+        <div className="w-6 h-6 border-2 border-zinc-900 border-t-transparent dark:border-[#E6E8EE] dark:border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+        <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium">Loading journal details...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 text-center bg-zinc-50/50">
+      <div className="p-6 text-center bg-zinc-50/50 dark:bg-[#161922]/50">
         <p className="text-xs text-rose-500 font-medium">Failed to load journal details</p>
       </div>
     );
@@ -93,90 +93,90 @@ const JournalEntryOverview = ({ journalId, selectedCompany }) => {
   const diff = Math.abs(totalDebit - totalCredit);
 
   return (
-    <div className="p-4 bg-zinc-50/60 border-y border-zinc-200 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200" onClick={e => e.stopPropagation()}>
+    <div className="p-4 bg-zinc-50/60 dark:bg-[#161922]/60 border-y border-zinc-200 dark:border-[#2A2F3D] space-y-4 animate-in fade-in slide-in-from-top-1 duration-200" onClick={e => e.stopPropagation()}>
       {/* 3-Column Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Column 1: Voucher & Reference */}
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
-            <Book size={16} className="text-zinc-600" />
-            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">Entry Information</h4>
+        <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs space-y-3">
+          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+            <Book size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+            <h4 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">Entry Information</h4>
           </div>
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Voucher No</span>
-              <span className="font-semibold text-zinc-900">{journal.voucherNumber || journal.voucherNo || journal.id}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Voucher No</span>
+              <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{journal.voucherNumber || journal.voucherNo || journal.id}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Date</span>
-              <span className="font-semibold text-zinc-900">{journal.voucherDate ? new Date(journal.voucherDate).toLocaleDateString() : '—'}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Date</span>
+              <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{journal.voucherDate ? new Date(journal.voucherDate).toLocaleDateString() : '—'}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Source Module</span>
-              <span className="font-medium text-zinc-800">{journal.sourceModule || 'Manual'}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Source Module</span>
+              <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{journal.sourceModule || 'Manual'}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Reference</span>
-              <span className="font-mono text-zinc-800">{journal.referenceNumber || journal.referenceNo || '—'}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Reference</span>
+              <span className="font-mono text-zinc-800 dark:text-[#E6E8EE]">{journal.referenceNumber || journal.referenceNo || '—'}</span>
             </div>
           </div>
         </div>
 
         {/* Column 2: Financial Impact */}
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
-            <Coins size={16} className="text-zinc-600" />
-            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">Financial Impact</h4>
+        <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs space-y-3">
+          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+            <Coins size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+            <h4 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">Financial Impact</h4>
           </div>
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Total Debit</span>
-              <span className="font-bold text-emerald-600">{formatCurrency(totalDebit, curr)}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Total Debit</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(totalDebit, curr)}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Total Credit</span>
-              <span className="font-bold text-rose-600">{formatCurrency(totalCredit, curr)}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Total Credit</span>
+              <span className="font-bold text-rose-600 dark:text-rose-400">{formatCurrency(totalCredit, curr)}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Balance Status</span>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border ${isBalanced ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Balance Status</span>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border ${isBalanced ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50' : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/50'}`}>
                 {isBalanced ? 'Balanced' : `Diff: ${formatCurrency(diff, curr)}`}
               </span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Status</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Status</span>
               <div className="mt-0.5">{getStatusBadge(journal.status)}</div>
             </div>
           </div>
         </div>
 
         {/* Column 3: Narration & Metadata */}
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
-            <FileText size={16} className="text-zinc-600" />
-            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">Remarks & Metadata</h4>
+        <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs space-y-3">
+          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+            <FileText size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+            <h4 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">Remarks & Metadata</h4>
           </div>
           <div className="space-y-2 text-xs">
             {journal.narration && (
               <div>
-                <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Narration</span>
-                <p className="text-zinc-800 text-[11px] leading-relaxed">{journal.narration}</p>
+                <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Narration</span>
+                <p className="text-zinc-800 dark:text-[#E6E8EE] text-[11px] leading-relaxed">{journal.narration}</p>
               </div>
             )}
             {journal.description && (
               <div>
-                <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Description</span>
-                <p className="text-zinc-800 text-[11px] leading-relaxed">{journal.description}</p>
+                <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Description</span>
+                <p className="text-zinc-800 dark:text-[#E6E8EE] text-[11px] leading-relaxed">{journal.description}</p>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-100">
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-100 dark:border-[#2A2F3D]">
               <div>
-                <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Created At</span>
-                <span className="text-zinc-700">{journal.createdAt ? new Date(journal.createdAt).toLocaleDateString() : '—'}</span>
+                <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Created At</span>
+                <span className="text-zinc-700 dark:text-[#A0A6B5]">{journal.createdAt ? new Date(journal.createdAt).toLocaleDateString() : '—'}</span>
               </div>
               <div>
-                <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Posted At</span>
-                <span className="text-zinc-700">{journal.postedAt ? new Date(journal.postedAt).toLocaleDateString() : '—'}</span>
+                <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Posted At</span>
+                <span className="text-zinc-700 dark:text-[#A0A6B5]">{journal.postedAt ? new Date(journal.postedAt).toLocaleDateString() : '—'}</span>
               </div>
             </div>
           </div>
@@ -185,19 +185,19 @@ const JournalEntryOverview = ({ journalId, selectedCompany }) => {
 
       {/* Journal Lines Table */}
       {journalLines.length > 0 ? (
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-2xs">
-          <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
-              <Layers size={14} className="text-zinc-500" />
+        <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl overflow-hidden shadow-2xs">
+          <div className="px-4 py-2.5 bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between">
+            <span className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider flex items-center gap-1.5">
+              <Layers size={14} className="text-zinc-500 dark:text-[#A0A6B5]" />
               Journal Lines ({journalLines.length})
             </span>
-            <span className="text-xs font-semibold text-zinc-500">
-              Currency: <strong className="text-zinc-800">{curr}</strong>
+            <span className="text-xs font-semibold text-zinc-500 dark:text-[#A0A6B5]">
+              Currency: <strong className="text-zinc-800 dark:text-[#E6E8EE]">{curr}</strong>
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead className="bg-zinc-50/70 border-b border-zinc-200 text-[8.5px] font-bold text-zinc-500 uppercase tracking-wider">
+              <thead className="bg-zinc-50/70 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-[8.5px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">
                 <tr>
                   <th className="px-4 py-2.5 text-center w-12">#</th>
                   <th className="px-4 py-2.5">Account Code</th>
@@ -207,36 +207,36 @@ const JournalEntryOverview = ({ journalId, selectedCompany }) => {
                   <th className="px-4 py-2.5 text-right w-32">Credit</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                 {journalLines.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-zinc-50/50">
-                    <td className="px-4 py-2.5 text-center text-zinc-400 font-medium">{item.lineNumber || (idx + 1)}</td>
-                    <td className="px-4 py-2.5 font-mono text-zinc-700 font-semibold">{item.accountCode || '—'}</td>
-                    <td className="px-4 py-2.5 font-semibold text-zinc-900">{item.accountName || '—'}</td>
-                    <td className="px-4 py-2.5 text-zinc-600 truncate max-w-[240px]" title={item.description || item.lineDescription}>
+                  <tr key={idx} className="hover:bg-zinc-50/50 dark:hover:bg-[#222736]/50">
+                    <td className="px-4 py-2.5 text-center text-zinc-400 dark:text-[#6B7184] font-medium">{item.lineNumber || (idx + 1)}</td>
+                    <td className="px-4 py-2.5 font-mono text-zinc-700 dark:text-[#A0A6B5] font-semibold">{item.accountCode || '—'}</td>
+                    <td className="px-4 py-2.5 font-semibold text-zinc-900 dark:text-[#E6E8EE]">{item.accountName || '—'}</td>
+                    <td className="px-4 py-2.5 text-zinc-600 dark:text-[#A0A6B5] truncate max-w-[240px]" title={item.description || item.lineDescription}>
                       {item.description || item.lineDescription || '—'}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-bold text-emerald-600">
+                    <td className="px-4 py-2.5 text-right font-bold text-emerald-600 dark:text-emerald-400">
                       {item.debitAmount ? formatCurrency(item.debitAmount, curr) : '—'}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-bold text-rose-600">
+                    <td className="px-4 py-2.5 text-right font-bold text-rose-600 dark:text-rose-400">
                       {item.creditAmount ? formatCurrency(item.creditAmount, curr) : '—'}
                     </td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="bg-zinc-50 border-t border-zinc-200 font-bold">
+              <tfoot className="bg-zinc-50 dark:bg-[#1D212C] border-t border-zinc-200 dark:border-[#2A2F3D] font-bold">
                 <tr>
-                  <td colSpan={4} className="px-4 py-3 text-right uppercase text-zinc-600 tracking-wider">Totals:</td>
-                  <td className="px-4 py-3 text-right text-emerald-700 text-sm">{formatCurrency(totalDebit, curr)}</td>
-                  <td className="px-4 py-3 text-right text-rose-700 text-sm">{formatCurrency(totalCredit, curr)}</td>
+                  <td colSpan={4} className="px-4 py-3 text-right uppercase text-zinc-600 dark:text-[#A0A6B5] tracking-wider">Totals:</td>
+                  <td className="px-4 py-3 text-right text-emerald-700 dark:text-emerald-400 text-sm">{formatCurrency(totalDebit, curr)}</td>
+                  <td className="px-4 py-3 text-right text-rose-700 dark:text-rose-400 text-sm">{formatCurrency(totalCredit, curr)}</td>
                 </tr>
               </tfoot>
             </table>
           </div>
         </div>
       ) : (
-        <div className="p-4 text-center bg-white rounded-xl border border-zinc-200 text-xs text-zinc-500">
+        <div className="p-4 text-center bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] text-xs text-zinc-500 dark:text-[#A0A6B5]">
           No lines found for this journal entry.
         </div>
       )}
@@ -412,7 +412,7 @@ export default function JournalEntries() {
       sortable: true,
       className: 'w-32 whitespace-nowrap',
       render: (val, row) => (
-        <span className="font-mono text-zinc-900 font-bold">
+        <span className="font-mono text-zinc-900 dark:text-[#E6E8EE] font-bold">
           {val || row.id?.substring(0, 8) || '—'}
         </span>
       )
@@ -423,7 +423,7 @@ export default function JournalEntries() {
       sortable: true,
       className: 'w-28 whitespace-nowrap',
       render: (val) => (
-        <span className="text-zinc-600 font-medium">
+        <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">
           {val ? new Date(val).toLocaleDateString() : '—'}
         </span>
       )
@@ -433,7 +433,7 @@ export default function JournalEntries() {
       label: 'COMPANY',
       sortable: false,
       className: 'w-36 whitespace-nowrap',
-      render: (val) => <span className="text-zinc-700">{val || '—'}</span>
+      render: (val) => <span className="text-zinc-700 dark:text-[#E6E8EE]">{val || '—'}</span>
     },
     {
       key: 'sourceModule',
@@ -441,7 +441,7 @@ export default function JournalEntries() {
       sortable: false,
       className: 'w-28 whitespace-nowrap',
       render: (val) => (
-        <span className="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-600 border border-zinc-200">
+        <span className="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200 dark:border-[#2A2F3D]">
           {val || 'Manual'}
         </span>
       )
@@ -451,7 +451,7 @@ export default function JournalEntries() {
       label: 'REFERENCE',
       sortable: false,
       className: 'w-36 whitespace-nowrap',
-      render: (val) => <span className="font-mono text-zinc-700 text-xs">{val || '—'}</span>
+      render: (val) => <span className="font-mono text-zinc-700 dark:text-[#A0A6B5] text-xs">{val || '—'}</span>
     },
     {
       key: 'totalDebit',
@@ -459,7 +459,7 @@ export default function JournalEntries() {
       sortable: true,
       className: 'text-right w-36 whitespace-nowrap',
       render: (val) => (
-        <span className="font-bold text-emerald-600">
+        <span className="font-bold text-emerald-600 dark:text-emerald-400">
           ₹{Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
         </span>
       )
@@ -470,7 +470,7 @@ export default function JournalEntries() {
       sortable: true,
       className: 'text-right w-36 whitespace-nowrap',
       render: (val) => (
-        <span className="font-bold text-rose-600">
+        <span className="font-bold text-rose-600 dark:text-rose-400">
           ₹{Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
         </span>
       )
@@ -488,7 +488,7 @@ export default function JournalEntries() {
       sortable: false,
       className: 'text-center w-24 whitespace-nowrap',
       render: (val) => (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border ${val ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border ${val ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50' : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/50'}`}>
           {val ? 'YES' : 'NO'}
         </span>
       )
@@ -498,14 +498,14 @@ export default function JournalEntries() {
       label: 'LINES',
       sortable: false,
       className: 'text-center w-20 whitespace-nowrap',
-      render: (val) => <span className="font-semibold text-zinc-700">{val ?? '—'}</span>
+      render: (val) => <span className="font-semibold text-zinc-700 dark:text-[#E6E8EE]">{val ?? '—'}</span>
     },
     {
       key: 'createdAt',
       label: 'CREATED AT',
       sortable: true,
       className: 'w-28 whitespace-nowrap',
-      render: (val) => <span className="text-zinc-500 text-xs">{val ? new Date(val).toLocaleDateString() : '—'}</span>
+      render: (val) => <span className="text-zinc-500 dark:text-[#A0A6B5] text-xs">{val ? new Date(val).toLocaleDateString() : '—'}</span>
     }
   ];
 
@@ -605,7 +605,7 @@ export default function JournalEntries() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* 1. Common Enterprise Page Header */}
       <PageHeader
         title="Journal Entries"
@@ -646,7 +646,7 @@ export default function JournalEntries() {
       <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-5 min-h-0">
         {/* Error Alert */}
         {error && (
-          <div className="flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium">
+          <div className="flex items-center gap-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-400 px-4 py-3 rounded-xl text-sm font-medium">
             <AlertCircle size={16} className="shrink-0" />
             {error}
           </div>

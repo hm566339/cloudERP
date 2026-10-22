@@ -496,7 +496,7 @@ export default function ModuleTabs({ tabs = salesTabs, module, activeKey, active
   }, [effectiveTabs, currentPath, cleanCurrentPath, queryTab, activeKey, activeTab, buildPath]);
 
   return (
-    <div className="bg-white/80 backdrop-blur-md border-b border-zinc-200 px-6 py-2.5 overflow-x-auto hide-scrollbar shrink-0 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.02)]">
+    <div className="bg-white/80 dark:bg-[#161922]/90 backdrop-blur-md border-b border-zinc-200 dark:border-[#2A2F3D] px-6 py-2.5 overflow-x-auto hide-scrollbar shrink-0 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.02)]">
       <div className="flex items-center gap-1 min-w-max">
         {effectiveTabs.map((item) => {
           const Icon = item.icon;
@@ -506,8 +506,8 @@ export default function ModuleTabs({ tabs = salesTabs, module, activeKey, active
 
           const tabClassName = `flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10.4px] font-semibold transition-all duration-200 ${
             isActive
-              ? 'bg-zinc-900 text-white shadow-xs border border-zinc-900'
-              : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 border border-transparent'
+              ? 'bg-zinc-900 text-white shadow-xs border border-zinc-900 dark:bg-[#4C8DFF] dark:text-white dark:border-[#4C8DFF]'
+              : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:hover:bg-[#222736] border border-transparent'
           }`;
 
           if (onTabChange) {
@@ -519,7 +519,7 @@ export default function ModuleTabs({ tabs = salesTabs, module, activeKey, active
                 className={tabClassName}
                 aria-current={isActive ? 'page' : undefined}
               >
-                {Icon && <Icon size={14} className={isActive ? 'text-white' : 'text-zinc-400'} />}
+                {Icon && <Icon size={14} className={isActive ? 'text-white' : 'text-zinc-400 dark:text-[#6B7184]'} />}
                 {item.label}
               </button>
             );
@@ -532,7 +532,7 @@ export default function ModuleTabs({ tabs = salesTabs, module, activeKey, active
               className={tabClassName}
               aria-current={isActive ? 'page' : undefined}
             >
-              {Icon && <Icon size={14} className={isActive ? 'text-white' : 'text-zinc-400'} />}
+              {Icon && <Icon size={14} className={isActive ? 'text-white' : 'text-zinc-400 dark:text-[#6B7184]'} />}
               {item.label}
             </Link>
           );

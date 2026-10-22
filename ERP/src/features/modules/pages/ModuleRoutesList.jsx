@@ -216,15 +216,15 @@ export default function ModuleRoutesList() {
 
   if (!isSuperAdminGlobal) {
     return (
-      <div className="p-8 text-center bg-white rounded-2xl shadow-sm border border-zinc-100 m-6">
-        <h2 className="text-xl font-semibold text-zinc-800">Access Denied</h2>
-        <p className="text-zinc-500 mt-2">You do not have permission to view module routes.</p>
+      <div className="p-8 text-center bg-white dark:bg-[#161922] rounded-2xl shadow-sm border border-zinc-100 dark:border-[#2A2F3D] m-6">
+        <h2 className="text-xl font-semibold text-zinc-800 dark:text-[#E6E8EE]">Access Denied</h2>
+        <p className="text-zinc-500 dark:text-[#A0A6B5] mt-2">You do not have permission to view module routes.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] dark:bg-transparent">
       <PageHeader
         title="Module Routes"
         description="Manage module routes and API endpoint configurations."

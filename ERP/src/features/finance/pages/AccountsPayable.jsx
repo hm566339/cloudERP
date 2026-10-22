@@ -137,22 +137,22 @@ export default function AccountsPayable() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-zinc-500 mb-2">
+          <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
             <span className="text-[9.6px] font-bold uppercase tracking-wider">Total Outstanding</span>
           </div>
-          <p className="font-mono text-2xl font-semibold text-rose-600">₹{totalOutstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+          <p className="font-mono text-2xl font-semibold text-rose-600 dark:text-rose-400">₹{totalOutstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-zinc-500 mb-2">
+          <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
             <span className="text-[9.6px] font-bold uppercase tracking-wider">Overdue Payments</span>
           </div>
-          <p className="font-mono text-2xl font-semibold text-rose-800">₹{totalOverdue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+          <p className="font-mono text-2xl font-semibold text-rose-800 dark:text-rose-500">₹{totalOverdue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-zinc-500 mb-2">
+          <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
             <span className="text-[9.6px] font-bold uppercase tracking-wider">Total Paid</span>
           </div>
-          <p className="font-mono text-2xl font-semibold text-emerald-600">₹{totalPaid.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+          <p className="font-mono text-2xl font-semibold text-emerald-600 dark:text-emerald-400">₹{totalPaid.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
         </div>
       </div>
 
@@ -179,44 +179,44 @@ export default function AccountsPayable() {
               ) : bills.length === 0 ? (
                 <tr>
                   <td colSpan={8}>
-                    <div className="p-12 text-center border-2 border-dashed border-zinc-200 m-4 rounded-xl">
-                      <CreditCard className="mx-auto text-zinc-300 mb-3" size={28} />
-                      <p className="text-sm font-medium text-zinc-600">No AP Invoices found.</p>
+                    <div className="p-12 text-center border-2 border-dashed border-zinc-200 dark:border-border-dark m-4 rounded-xl">
+                      <CreditCard className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" size={28} />
+                      <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">No AP Invoices found.</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 bills.map((bill, index) => (
                   <tr key={bill.id}>
-                    <td className="text-center font-medium text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
+                    <td className="text-center font-medium text-zinc-500 dark:text-zinc-400 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
                     <td>
-                      <span className="text-sm font-mono text-zinc-700 font-medium">{bill.invoiceNo}</span>
+                      <span className="text-sm font-mono text-zinc-700 dark:text-zinc-300 font-medium">{bill.invoiceNo}</span>
                     </td>
                     <td>
-                      <div className="font-semibold text-sm text-zinc-800">{bill.vendorName || 'Unknown Vendor'}</div>
+                      <div className="font-semibold text-sm text-zinc-800 dark:text-zinc-100">{bill.vendorName || 'Unknown Vendor'}</div>
                     </td>
                     <td>
-                      <span className="text-sm text-zinc-500 font-mono">-</span>
+                      <span className="text-sm text-zinc-500 dark:text-zinc-400 font-mono">-</span>
                     </td>
                     <td className="text-right">
-                      <span className="font-mono text-sm text-zinc-900 font-semibold">
+                      <span className="font-mono text-sm text-zinc-900 dark:text-zinc-100 font-semibold">
                         ₹{(bill.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </span>
                     </td>
                     <td>
                       <div className="flex items-center gap-1.5">
-                        <Clock size={14} className={bill.status === 'OVERDUE' ? 'text-rose-500' : 'text-zinc-400'} />
-                        <span className={`text-sm font-mono ${bill.status === 'OVERDUE' ? 'text-rose-600 font-medium' : 'text-zinc-600'}`}>
+                        <Clock size={14} className={bill.status === 'OVERDUE' ? 'text-rose-500 dark:text-rose-400' : 'text-zinc-400 dark:text-zinc-500'} />
+                        <span className={`text-sm font-mono ${bill.status === 'OVERDUE' ? 'text-rose-600 dark:text-rose-400 font-medium' : 'text-zinc-600 dark:text-zinc-400'}`}>
                           {formatDate(bill.dueDate)}
                         </span>
                       </div>
                     </td>
                     <td className="text-center">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider border ${
-                        bill.status === 'PAID' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                        bill.status === 'OVERDUE' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                        bill.status === 'DRAFT' ? 'bg-zinc-100 text-zinc-700 border-zinc-200' :
-                        'bg-blue-50 text-blue-700 border-blue-200'
+                        bill.status === 'PAID' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60' :
+                        bill.status === 'OVERDUE' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/60' :
+                        bill.status === 'DRAFT' ? 'bg-zinc-100 dark:bg-hover-dark text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-border-dark' :
+                        'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/60'
                       }`}>
                         {bill.status}
                       </span>
@@ -240,13 +240,13 @@ export default function AccountsPayable() {
                               icon: <CheckCircle size={16} />,
                               tooltip: "Approve",
                               onClick: () => handleAction(vendorApiSlice.endpoints.approveAPInvoice.initiate, bill.id, 'Invoice approved'),
-                              className: "text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                              className: "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-700"
                             },
                             {
                               icon: <XCircle size={16} />,
                               tooltip: "Reject",
                               onClick: () => handleAction(vendorApiSlice.endpoints.rejectAPInvoice.initiate, bill.id, 'Invoice rejected'),
-                              className: "text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                              className: "text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-700"
                             }
                           ] : []),
                           ...(bill.status === 'APPROVED' && canUpdate ? [
@@ -254,7 +254,7 @@ export default function AccountsPayable() {
                               icon: <ArrowRightCircle size={16} />,
                               tooltip: "Post to GL",
                               onClick: () => handleAction(vendorApiSlice.endpoints.postAPInvoice.initiate, bill.id, 'Invoice posted to GL'),
-                              className: "text-purple-600 hover:bg-purple-50 hover:text-purple-700"
+                              className: "text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-700"
                             }
                           ] : []),
                           ...((bill.status === 'POSTED' || bill.status === 'PARTIAL_PAID' || bill.status === 'OUTSTANDING') && canUpdate && bill.outstandingAmount > 0 ? [
@@ -262,13 +262,13 @@ export default function AccountsPayable() {
                               icon: <span className="text-[8.8px] font-bold px-1">PAY</span>,
                               tooltip: "Record Partial Payment",
                               onClick: () => handlePartialPayment(bill.id),
-                              className: "text-blue-700 hover:text-blue-800 bg-blue-50 border border-blue-200"
+                              className: "text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60"
                             },
                             {
                               icon: <CheckSquare size={16} />,
                               tooltip: "Mark Fully Paid",
                               onClick: () => handleAction(vendorApiSlice.endpoints.markAPInvoicePaid.initiate, bill.id, 'Bill marked as fully paid'),
-                              className: "text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                              className: "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:text-emerald-700"
                             }
                           ] : []),
                           ...(bill.status !== 'PAID' && bill.status !== 'CANCELLED' && bill.status !== 'REJECTED' && canUpdate ? [
@@ -285,7 +285,7 @@ export default function AccountsPayable() {
                                   handleAction(vendorApiSlice.endpoints.cancelAPInvoice.initiate, bill.id, 'Invoice cancelled');
                                 }
                               },
-                              className: "text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                              className: "text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-700"
                             }
                           ] : [])
                         ]}
@@ -297,7 +297,7 @@ export default function AccountsPayable() {
             </tbody>
           </table>
           {!isLoading && pageInfo && (
-            <div className="p-4 border-t border-zinc-100">
+            <div className="p-4 border-t border-zinc-100 dark:border-border-dark">
               <Pagination
                 page={paginationProps.page}
                 totalPages={pageInfo.totalPages}

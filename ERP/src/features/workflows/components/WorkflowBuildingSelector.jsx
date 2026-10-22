@@ -36,7 +36,7 @@ export default function WorkflowBuildingSelector({ companies = [], selectedCompa
         options={options}
         placeholder="Select company"
         className="w-full"
-        buttonClassName="h-8 px-2.5 text-xs font-semibold text-zinc-800 bg-white border border-zinc-200 rounded-lg hover:border-zinc-300 shadow-2xs"
+        buttonClassName="h-8 px-2.5 text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:border-zinc-300 dark:hover:border-zinc-600 shadow-2xs"
       />
     </div>
   );

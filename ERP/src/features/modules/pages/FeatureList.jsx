@@ -393,7 +393,7 @@ export default function FeatureList() {
         label: 'Module',
         sortable: true,
         render: (val, row) => (
-          <div className="flex items-center gap-1.5 text-zinc-800 text-xs font-semibold">
+          <div className="flex items-center gap-1.5 text-zinc-800 dark:text-[#E6E8EE] text-xs font-semibold">
             <Box size={13} className="text-indigo-500 shrink-0" />
             <span>{row.moduleName || '-'}</span>
           </div>
@@ -405,9 +405,9 @@ export default function FeatureList() {
         sortable: true,
         render: (val, row) => (
           <div>
-            <span className="font-semibold text-zinc-900 block">{row.name || '-'}</span>
+            <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE] block">{row.name || '-'}</span>
             {row.description && (
-              <span className="text-[11px] text-zinc-500 truncate max-w-xs block" title={row.description}>
+              <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] truncate max-w-xs block" title={row.description}>
                 {row.description}
               </span>
             )}
@@ -419,7 +419,7 @@ export default function FeatureList() {
         label: 'Feature Code',
         sortable: true,
         render: (val, row) => (
-          <span className="font-mono text-xs font-semibold bg-zinc-100 px-2 py-1 rounded text-zinc-700 border border-zinc-200">
+          <span className="font-mono text-xs font-semibold bg-zinc-100 dark:bg-[#1D212C] px-2 py-1 rounded text-zinc-700 dark:text-[#E6E8EE] border border-zinc-200 dark:border-[#2A2F3D]">
             {row.code || '-'}
           </span>
         )
@@ -430,13 +430,13 @@ export default function FeatureList() {
         sortable: false,
         render: () => (
           <div className="flex items-center gap-1 flex-wrap">
-            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-blue-50 text-blue-700 border border-blue-200">
+            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40">
               READ
             </span>
-            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40">
               WRITE
             </span>
-            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-rose-50 text-rose-700 border border-rose-200">
+            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/40">
               DELETE
             </span>
           </div>
@@ -457,7 +457,7 @@ export default function FeatureList() {
         label: 'Created At',
         sortable: true,
         render: (val, row) => (
-          <span className="text-zinc-600 text-xs font-medium">
+          <span className="text-zinc-600 dark:text-[#A0A6B5] text-xs font-medium">
             {formatDate(row.createdAt)}
           </span>
         )
@@ -519,25 +519,25 @@ export default function FeatureList() {
   const renderExpandedRow = (feature) => (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 p-2">
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">
           Feature Code
         </span>
         <p className="text-sm font-semibold font-mono text-zinc-900">{feature.code || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">
           Feature Name
         </span>
         <p className="text-sm font-semibold text-zinc-900">{feature.name || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">
           Module Name
         </span>
         <p className="text-sm font-medium text-zinc-700">{feature.moduleName || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">
           Status
         </span>
         <div>
@@ -553,13 +553,13 @@ export default function FeatureList() {
         </div>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">
           Created At
         </span>
         <p className="text-sm font-medium text-zinc-700">{formatDate(feature.createdAt)}</p>
       </div>
       <div className="space-y-1 col-span-2 md:col-span-4 lg:col-span-5">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">
           Description
         </span>
         <p className="text-sm font-medium text-zinc-700">
@@ -575,7 +575,7 @@ export default function FeatureList() {
   const currentActiveKey = isSecuritySettings ? 'feature-permissions' : 'portal-access';
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 relative">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] relative">
       <PageHeader
         title="Feature Permissions"
         description="Global system features and module permissions master catalog."
@@ -601,12 +601,12 @@ export default function FeatureList() {
 
       {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
-        <div className="mb-4 p-3 bg-gradient-to-r from-indigo-50/90 via-blue-50/60 to-transparent border border-indigo-100 rounded-xl flex items-center justify-between gap-3 text-xs text-indigo-950">
+        <div className="mb-4 p-3 bg-gradient-to-r from-indigo-50/90 via-blue-50/60 to-transparent dark:from-indigo-950/40 dark:via-blue-950/20 dark:to-transparent border border-indigo-100 dark:border-indigo-900/40 rounded-xl flex items-center justify-between gap-3 text-xs text-indigo-950 dark:text-indigo-200">
           <div className="flex items-center gap-2">
-            <Globe size={16} className="text-indigo-600 shrink-0" />
+            <Globe size={16} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
             <span className="font-semibold">Global System Feature — Available to all organizations and companies</span>
           </div>
-          <span className="text-[11px] text-zinc-500 hidden md:inline">
+          <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] hidden md:inline">
             Platform master data definition • Tenant isolation maintained through company roles
           </span>
         </div>

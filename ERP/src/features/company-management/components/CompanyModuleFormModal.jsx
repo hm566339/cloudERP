@@ -88,13 +88,13 @@ export default function CompanyModuleFormModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+          <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-lg">
             {error}
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-semibold text-zinc-700 mb-1">Company *</label>
+          <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Company *</label>
           <CustomSelect
             options={companyOptions}
             value={formData.company}
@@ -103,11 +103,11 @@ export default function CompanyModuleFormModal({
             isLoading={loadingCompanies}
             disabled={isEdit || isSubmitting}
           />
-          {isEdit && <p className="text-xs text-zinc-500 mt-1">Company cannot be changed after creation.</p>}
+          {isEdit && <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Company cannot be changed after creation.</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-zinc-700 mb-1">Module *</label>
+          <label className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Module *</label>
           <CustomSelect
             options={moduleOptions}
             value={formData.module}
@@ -116,7 +116,7 @@ export default function CompanyModuleFormModal({
             isLoading={loadingModules}
             disabled={isEdit || isSubmitting}
           />
-          {isEdit && <p className="text-xs text-zinc-500 mt-1">Module cannot be changed after creation.</p>}
+          {isEdit && <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Module cannot be changed after creation.</p>}
         </div>
 
         {isEdit && (
@@ -127,20 +127,20 @@ export default function CompanyModuleFormModal({
               checked={formData.active}
               onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
               disabled={isSubmitting}
-              className="rounded border-zinc-300 text-primary focus:ring-primary h-4 w-4"
+              className="rounded border-zinc-300 dark:border-border-dark dark:bg-card-dark text-primary focus:ring-primary h-4 w-4"
             />
-            <label htmlFor="active" className="text-sm font-medium text-zinc-700">
+            <label htmlFor="active" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Active Assignment
             </label>
           </div>
         )}
 
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-zinc-100">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-zinc-100 dark:border-border-dark">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-4 py-2 text-sm font-semibold text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors"
+            className="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-hover-dark rounded-xl transition-colors"
           >
             Cancel
           </button>

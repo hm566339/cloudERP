@@ -209,35 +209,35 @@ export default function ChartOfAccountsModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[500] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200">
+      <div className="bg-white dark:bg-[#161922] w-full max-w-5xl max-h-[90vh] rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200 dark:border-[#2A2F3D]">
         
         {/* Header - Sticky */}
-        <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
-          <h2 className="text-base font-bold text-zinc-900 tracking-tight">
+        <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C]/80 shrink-0">
+          <h2 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
             {title}
           </h2>
           <button 
             type="button"
             onClick={onClose} 
-            className="p-1 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors active:scale-95"
+            className="p-1 text-zinc-400 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200 dark:hover:bg-[#222736] rounded-md transition-colors active:scale-95"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
 
         {/* Body - Overflow handling */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar bg-white">
+        <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar bg-white dark:bg-[#161922]">
           <form id="chart-of-accounts-form" onSubmit={handleSubmit} className="flex flex-col gap-y-6">
 
         {isReadOnly && (
-          <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-100 flex flex-wrap gap-4 justify-between items-center mb-6">
+          <div className="bg-zinc-50 dark:bg-[#1D212C] p-4 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] flex flex-wrap gap-4 justify-between items-center mb-6">
             <div className="text-sm">
-              <span className="text-zinc-500 font-medium">Created: </span>
-              <span className="text-zinc-900 font-semibold">{account?.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</span>
+              <span className="text-zinc-500 dark:text-zinc-400 font-medium">Created: </span>
+              <span className="text-zinc-900 dark:text-[#E6E8EE] font-semibold">{account?.createdAt ? new Date(account.createdAt).toLocaleString() : 'N/A'}</span>
             </div>
             <div className="text-sm">
-              <span className="text-zinc-500 font-medium">Updated: </span>
-              <span className="text-zinc-900 font-semibold">{account?.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</span>
+              <span className="text-zinc-500 dark:text-zinc-400 font-medium">Updated: </span>
+              <span className="text-zinc-900 dark:text-[#E6E8EE] font-semibold">{account?.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'N/A'}</span>
             </div>
           </div>
         )}
@@ -245,16 +245,16 @@ export default function ChartOfAccountsModal({
           <div className="space-y-6">
             {/* Basic Information */}
             <div>
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100">Basic Information</h3>
+              <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1.5 max-w-md">
-            <label className="text-sm font-semibold text-zinc-700">Account Code</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Account Code</label>
             <input
               type="text"
               name="accountCode"
               value={formData.accountCode}
               onChange={handleInputChange}
-              className={`input-field w-full font-mono ${isReadOnly ? 'bg-zinc-50 opacity-80 cursor-not-allowed' : ''}`}
+              className={`input-field w-full font-mono ${isReadOnly ? 'bg-zinc-50 dark:bg-[#1D212C] opacity-80 cursor-not-allowed' : ''}`}
               readOnly={isReadOnly}
               placeholder="e.g. 1000"
               pattern="^[a-zA-Z0-9\-]+$"
@@ -263,13 +263,13 @@ export default function ChartOfAccountsModal({
             />
           </div>
           <div className="space-y-1.5 max-w-md">
-            <label className="text-sm font-semibold text-zinc-700">Account Name *</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Account Name *</label>
             <input
               type="text"
               name="accountName"
               value={formData.accountName}
               onChange={handleInputChange}
-              className={`input-field w-full ${isReadOnly ? 'bg-zinc-50 opacity-80 cursor-not-allowed' : ''}`}
+              className={`input-field w-full ${isReadOnly ? 'bg-zinc-50 dark:bg-[#1D212C] opacity-80 cursor-not-allowed' : ''}`}
               required
               readOnly={isReadOnly}
               placeholder="e.g. Cash in Hand"
@@ -279,7 +279,7 @@ export default function ChartOfAccountsModal({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1.5 max-w-md">
-            <label className="text-sm font-semibold text-zinc-700">Account Type *</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Account Type *</label>
             <CustomSelect
               required
               name="accountType"
@@ -292,7 +292,7 @@ export default function ChartOfAccountsModal({
             />
           </div>
           <div className="space-y-1.5 max-w-md">
-            <label className="text-sm font-semibold text-zinc-700">Account Group *</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Account Group *</label>
             <CustomSelect
               required
               name="groupId"
@@ -314,14 +314,14 @@ export default function ChartOfAccountsModal({
                       setInitialGroupData(searchTerm ? { name: searchTerm } : null);
                       setIsGroupFormOpen(true);
                     }}
-                    className="w-full text-left px-3 py-2 text-[10.4px] text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 transition-colors flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-[10.4px] text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center gap-2"
                   >
                     <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
                       <Plus size={14} className="text-primary" />
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="font-semibold truncate">Create {searchTerm ? `"${searchTerm}"` : 'New Account Group'}</span>
-                      <span className="text-[8.8px] text-zinc-500">Add as new account group</span>
+                      <span className="text-[8.8px] text-zinc-500 dark:text-zinc-400">Add as new account group</span>
                     </div>
                   </button>
                 );
@@ -332,7 +332,7 @@ export default function ChartOfAccountsModal({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1.5 max-w-md">
-            <label className="text-sm font-semibold text-zinc-700">Parent Account</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Parent Account</label>
             <CustomSelect
               name="parentAccountId"
               value={formData.parentAccountId}
@@ -355,14 +355,14 @@ export default function ChartOfAccountsModal({
                       setInitialParentAccountData(searchTerm ? { accountName: searchTerm, postingAllowed: false } : { postingAllowed: false });
                       setIsParentAccountFormOpen(true);
                     }}
-                    className="w-full text-left px-3 py-2 text-[10.4px] text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 transition-colors flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-[10.4px] text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center gap-2"
                   >
                     <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
                       <Plus size={14} className="text-primary" />
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="font-semibold truncate">Create {searchTerm ? `"${searchTerm}"` : 'New Parent Account'}</span>
-                      <span className="text-[8.8px] text-zinc-500">Add as new parent account</span>
+                      <span className="text-[8.8px] text-zinc-500 dark:text-zinc-400">Add as new parent account</span>
                     </div>
                   </button>
                 );
@@ -370,7 +370,7 @@ export default function ChartOfAccountsModal({
             />
           </div>
           <div className="space-y-1.5 max-w-md">
-            <label className="text-sm font-semibold text-zinc-700">Opening Balance</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Opening Balance</label>
             <input
               type="number"
               step="0.01"
@@ -379,7 +379,7 @@ export default function ChartOfAccountsModal({
               onChange={handleInputChange}
               placeholder="e.g. 0.00"
               readOnly={isReadOnly}
-              className={`input-field w-full text-right font-mono ${isReadOnly ? 'bg-zinc-50 opacity-80 cursor-not-allowed' : ''}`}
+              className={`input-field w-full text-right font-mono ${isReadOnly ? 'bg-zinc-50 dark:bg-[#1D212C] opacity-80 cursor-not-allowed' : ''}`}
             />
           </div>
         </div>
@@ -395,14 +395,14 @@ export default function ChartOfAccountsModal({
                 disabled={isReadOnly}
                 className="peer sr-only"
               />
-              <div className="w-5 h-5 rounded-[4.8px] border-2 border-zinc-300 bg-white peer-checked:bg-primary peer-checked:border-primary transition-all"></div>
+              <div className="w-5 h-5 rounded-[4.8px] border-2 border-zinc-300 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] peer-checked:bg-primary peer-checked:border-primary transition-all"></div>
               <div className="absolute inset-0 flex items-center justify-center text-white opacity-0 peer-checked:opacity-100 pointer-events-none">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             </div>
-            <span className="text-sm font-semibold text-zinc-700 group-hover:text-zinc-900 transition-colors">Active Account</span>
+            <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">Active Account</span>
           </label>
 
           <label className={`flex items-center gap-2.5 group ${isReadOnly ? 'cursor-default opacity-80' : 'cursor-pointer'}`}>
@@ -415,14 +415,14 @@ export default function ChartOfAccountsModal({
                 disabled={isReadOnly}
                 className="peer sr-only"
               />
-              <div className="w-5 h-5 rounded-[4.8px] border-2 border-zinc-300 bg-white peer-checked:bg-primary peer-checked:border-primary transition-all"></div>
+              <div className="w-5 h-5 rounded-[4.8px] border-2 border-zinc-300 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] peer-checked:bg-primary peer-checked:border-primary transition-all"></div>
               <div className="absolute inset-0 flex items-center justify-center text-white opacity-0 peer-checked:opacity-100 pointer-events-none">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
             </div>
-            <span className="text-sm font-semibold text-zinc-700 group-hover:text-zinc-900 transition-colors">Posting Allowed</span>
+            <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">Posting Allowed</span>
           </label>
         </div>
       </div>
@@ -431,7 +431,7 @@ export default function ChartOfAccountsModal({
         </div>
 
         {/* Footer - Sticky */}
-        <div className="flex justify-end items-center gap-3 px-5 py-4 border-t border-zinc-200 bg-zinc-50/80 shrink-0">
+        <div className="flex justify-end items-center gap-3 px-5 py-4 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C]/80 shrink-0">
           {isReadOnly ? (
             <>
               {canEdit && (
@@ -445,10 +445,10 @@ export default function ChartOfAccountsModal({
             </>
           ) : (
             <>
-              <button type="button" onClick={onClose} className="px-5 py-2 text-[10.4px] font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/50 bg-white border border-zinc-300 rounded-md transition-all active:scale-95">
+              <button type="button" onClick={onClose} className="px-5 py-2 text-[10.4px] font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/50 dark:hover:bg-[#222736] bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-md transition-all active:scale-95">
                 Cancel
               </button>
-              <button type="submit" form="chart-of-accounts-form" className="flex items-center gap-2 px-5 py-2 text-[10.4px] font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-md transition-all active:scale-95" disabled={isCreating || isUpdating}>
+              <button type="submit" form="chart-of-accounts-form" className="flex items-center gap-2 px-5 py-2 text-[10.4px] font-bold text-white bg-zinc-900 dark:bg-[#4C8DFF] hover:bg-zinc-800 dark:hover:bg-[#3A78E6] rounded-md transition-all active:scale-95" disabled={isCreating || isUpdating}>
                 {isCreating || isUpdating ? 'Saving...' : 'Save Account'}
               </button>
             </>
@@ -458,18 +458,18 @@ export default function ChartOfAccountsModal({
 
       {isGroupFormOpen && (
         <div className="fixed inset-0 z-[600] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-lg max-h-[90vh] rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200">
-            <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
-              <h2 className="text-base font-bold text-zinc-900 tracking-tight">Create Account Group</h2>
+          <div className="bg-white dark:bg-[#161922] w-full max-w-lg max-h-[90vh] rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200 dark:border-[#2A2F3D]">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C]/80 shrink-0">
+              <h2 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Create Account Group</h2>
               <button 
                 type="button" 
                 onClick={() => setIsGroupFormOpen(false)} 
-                className="p-1 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors active:scale-95"
+                className="p-1 text-zinc-400 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200 dark:hover:bg-[#222736] rounded-md transition-colors active:scale-95"
               >
                 <X size={18} strokeWidth={2.5} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar bg-white">
+            <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar bg-white dark:bg-[#161922]">
               <AccountGroupForm
                 initialData={initialGroupData}
                 onSubmit={handleCreateGroupSubmit}

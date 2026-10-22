@@ -44,7 +44,7 @@ export default function DynamicFormRenderer({
             key={group.id}
             className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-sm"
           >
-            <div className="mb-4 pb-2 border-b border-zinc-100">
+            <div className="mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
               <h3 className="text-sm font-bold text-zinc-900">{group.title}</h3>
               {group.description && (
                 <p className="text-xs text-zinc-500 mt-0.5">{group.description}</p>

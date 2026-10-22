@@ -250,7 +250,7 @@ export default function StockTransferManagement() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Stock Transfers"
         description="Manage inter-warehouse stock transfer orders and shipments"

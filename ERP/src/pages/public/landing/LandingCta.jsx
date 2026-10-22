@@ -4,9 +4,9 @@ import { Sparkles, ArrowRight } from 'lucide-react';
 
 export default function LandingCta() {
   return (
-    <section className="py-20 bg-gradient-to-b from-slate-50 to-white border-t border-zinc-200/80">
+    <section className="py-20 bg-gradient-to-b from-slate-50 to-white dark:from-[#0F1117] dark:to-[#161922] border-t border-zinc-200/80 dark:border-[#2A2F3D]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="bg-zinc-950 text-white rounded-3xl p-6 sm:p-10 md:p-14 relative overflow-hidden shadow-xl">
+        <div className="bg-zinc-950 text-white rounded-3xl p-6 sm:p-10 md:p-14 relative overflow-hidden shadow-xl border border-transparent dark:border-[#2A2F3D]">
           <div className="relative z-10 space-y-4 max-w-2xl mx-auto">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
               <Sparkles size={13} />

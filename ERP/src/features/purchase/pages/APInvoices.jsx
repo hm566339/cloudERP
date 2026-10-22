@@ -35,7 +35,7 @@ const PurchaseInvoiceOverview = ({ inv }) => {
     <div className="bg-zinc-50/70 p-6 rounded-xl border border-zinc-200/80 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-zinc-200">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-white text-zinc-800 rounded-lg border border-zinc-200 shadow-2xs">
+          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-white dark:bg-surface-dark text-zinc-800 dark:text-zinc-200 rounded-lg border border-zinc-200 dark:border-border-dark shadow-2xs">
             {inv.invoiceNumber || inv.invoiceNo}
           </span>
           <div>
@@ -63,32 +63,32 @@ const PurchaseInvoiceOverview = ({ inv }) => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        <div className="bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Grand Total</p>
+        <div className="bg-white dark:bg-card-dark p-3 rounded-lg border border-zinc-200/70 dark:border-border-dark shadow-2xs">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Grand Total</p>
           <p className="text-sm font-bold text-zinc-900 mt-1 font-mono">{curr} {fmt(inv.totalAmount ?? inv.grandTotal)}</p>
         </div>
-        <div className="bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Outstanding</p>
+        <div className="bg-white dark:bg-card-dark p-3 rounded-lg border border-zinc-200/70 dark:border-border-dark shadow-2xs">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Outstanding</p>
           <p className="text-sm font-bold text-rose-600 mt-1 font-mono">{curr} {fmt(inv.outstandingAmount ?? inv.outstanding)}</p>
         </div>
-        <div className="bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Payment %</p>
+        <div className="bg-white dark:bg-card-dark p-3 rounded-lg border border-zinc-200/70 dark:border-border-dark shadow-2xs">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Payment %</p>
           <p className="text-sm font-bold text-emerald-600 mt-1">{inv.paymentPercentage ?? 0}%</p>
         </div>
-        <div className="bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Item Count</p>
+        <div className="bg-white dark:bg-card-dark p-3 rounded-lg border border-zinc-200/70 dark:border-border-dark shadow-2xs">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Item Count</p>
           <p className="text-sm font-medium text-zinc-900 mt-1">{inv.itemCount || (inv.items?.length) || 0}</p>
         </div>
-        <div className="bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Days Outstanding</p>
+        <div className="bg-white dark:bg-card-dark p-3 rounded-lg border border-zinc-200/70 dark:border-border-dark shadow-2xs">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Days Outstanding</p>
           <p className="text-sm font-medium text-zinc-900 mt-1">{inv.daysOutstanding || 0} days</p>
         </div>
-        <div className="bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Days Overdue</p>
+        <div className="bg-white dark:bg-card-dark p-3 rounded-lg border border-zinc-200/70 dark:border-border-dark shadow-2xs">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Days Overdue</p>
           <p className="text-sm font-medium text-zinc-900 mt-1">{inv.daysOverdue || 0} days</p>
         </div>
-        <div className="bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Currency</p>
+        <div className="bg-white dark:bg-card-dark p-3 rounded-lg border border-zinc-200/70 dark:border-border-dark shadow-2xs">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Currency</p>
           <p className="text-sm font-medium text-zinc-900 mt-1">{curr}</p>
         </div>
       </div>
@@ -709,7 +709,7 @@ export default function APInvoices() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsExportModalOpen(true)}
-              className="btn-secondary flex items-center gap-1.5 h-9 px-3 text-xs bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-2xs"
+              className="btn-secondary flex items-center gap-1.5 h-9 px-3 text-xs bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors shadow-2xs"
             >
               <Download size={15} />
               <span className="hidden sm:inline">Export</span>

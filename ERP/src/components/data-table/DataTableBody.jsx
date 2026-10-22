@@ -100,7 +100,7 @@ export default function DataTableBody({
   return (
     <div className={`flex-1 overflow-auto min-h-0 min-w-0 custom-scrollbar ${tableClassName}`}>
       <table className="w-full text-left text-sm whitespace-nowrap" aria-label="Data table">
-        <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-medium sticky top-0 z-20">
+        <thead className="bg-zinc-50 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] font-medium sticky top-0 z-20">
           <tr>
             {/* Selection Checkbox Header */}
             {selectable && (
@@ -112,7 +112,7 @@ export default function DataTableBody({
                     checked={allSelected}
                     onChange={handleToggleSelectAll}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 rounded border-zinc-300 text-zinc-900 accent-zinc-900 focus:ring-zinc-900/20 focus:ring-offset-0 transition-colors cursor-pointer"
+                    className="w-4 h-4 rounded border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-[#4C8DFF] accent-zinc-900 dark:accent-[#4C8DFF] focus:ring-zinc-900/20 dark:focus:ring-[#4C8DFF]/20 focus:ring-offset-0 transition-colors cursor-pointer"
                     aria-label="Select all visible rows"
                   />
                 </div>
@@ -121,7 +121,7 @@ export default function DataTableBody({
 
             {/* Index Header */}
             {showIndex && (
-              <th scope="col" className="px-4 py-3 w-12 text-center text-xs font-semibold text-zinc-600 uppercase tracking-wider select-none">
+              <th scope="col" className="px-4 py-3 w-12 text-center text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider select-none">
                 #
               </th>
             )}
@@ -149,7 +149,7 @@ export default function DataTableBody({
                     onSort={handleSort}
                     align={col.align}
                     width={col.width}
-                    className={`p-4 text-xs font-semibold uppercase tracking-wider text-zinc-600 ${col.headerClassName || ''}`}
+                    className={`p-4 text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-[#A0A6B5] ${col.headerClassName || ''}`}
                     label={col.label || col.header || colKey}
                   />
                 );
@@ -160,7 +160,7 @@ export default function DataTableBody({
                   scope="col"
                   key={colKey}
                   style={col.width ? { width: col.width, minWidth: col.width } : undefined}
-                  className={`p-4 text-xs font-semibold uppercase tracking-wider text-zinc-600 select-none ${alignClass} ${col.headerClassName || ''}`}
+                  className={`p-4 text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-[#A0A6B5] select-none ${alignClass} ${col.headerClassName || ''}`}
                 >
                   {col.label || col.header || colKey}
                 </th>
@@ -169,14 +169,14 @@ export default function DataTableBody({
 
             {/* Actions Header */}
             {hasRowActions && (
-              <th scope="col" className="p-4 text-right sticky right-0 bg-zinc-50 z-30 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] text-xs font-semibold uppercase tracking-wider text-zinc-600 select-none">
+              <th scope="col" className="p-4 text-right sticky right-0 bg-zinc-50 dark:bg-[#161922] z-30 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-[#A0A6B5] select-none">
                 Actions
               </th>
             )}
           </tr>
         </thead>
 
-        <tbody className="divide-y divide-zinc-100">
+        <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]/60">
           {loading ? (
             <DataTableLoading columnCount={totalColSpan} rowCount={skeletonRows} />
           ) : !data || data.length === 0 ? (

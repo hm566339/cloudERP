@@ -146,7 +146,7 @@ export default function InventoryStockForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white dark:bg-card-dark">
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
         
         <div className="p-3 bg-amber-50 text-amber-800 rounded-lg border border-amber-100 text-[9.6px] mb-4">
@@ -177,7 +177,7 @@ export default function InventoryStockForm({
               required={true}
               serverSideSearch={true}
               inputClassName={`w-full h-9 pl-8 pr-8 rounded-md border text-[10.4px] transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
-                initialData?.productId ? 'bg-zinc-100 text-zinc-500 border-zinc-200 pointer-events-none' : 'bg-white border-zinc-200 focus:border-primary'
+                initialData?.productId ? 'bg-zinc-100 text-zinc-500 border-zinc-200 pointer-events-none' : 'bg-white dark:bg-surface-dark border-zinc-200 dark:border-border-dark text-zinc-900 dark:text-zinc-100 focus:border-primary'
               } ${errors.productId ? 'border-rose-300 focus:border-rose-500' : ''}`}
             />
             {errors.productId && (
@@ -203,7 +203,7 @@ export default function InventoryStockForm({
               required={true}
               serverSideSearch={true}
               inputClassName={`w-full h-9 pl-8 pr-8 rounded-md border text-[10.4px] transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
-                initialData?.id ? 'bg-zinc-100 text-zinc-500 border-zinc-200 pointer-events-none' : 'bg-white border-zinc-200 focus:border-primary'
+                initialData?.id ? 'bg-zinc-100 text-zinc-500 border-zinc-200 pointer-events-none' : 'bg-white dark:bg-surface-dark border-zinc-200 dark:border-border-dark text-zinc-900 dark:text-zinc-100 focus:border-primary'
               } ${errors.warehouseId ? 'border-rose-300 focus:border-rose-500' : ''}`}
             />
             {errors.warehouseId && (
@@ -228,7 +228,7 @@ export default function InventoryStockForm({
               placeholder="Search location..."
               serverSideSearch={true}
               inputClassName={`w-full h-9 pl-8 pr-8 rounded-md border border-zinc-200 text-[10.4px] transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                initialData?.id ? 'bg-zinc-100 text-zinc-500 pointer-events-none' : 'bg-white'
+                initialData?.id ? 'bg-zinc-100 text-zinc-500 pointer-events-none' : 'bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100'
               }`}
             />
           </div>
@@ -248,7 +248,7 @@ export default function InventoryStockForm({
               placeholder="Search batch..."
               serverSideSearch={true}
               inputClassName={`w-full h-9 pl-8 pr-8 rounded-md border border-zinc-200 text-[10.4px] transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                initialData?.id ? 'bg-zinc-100 text-zinc-500 pointer-events-none' : 'bg-white'
+                initialData?.id ? 'bg-zinc-100 text-zinc-500 pointer-events-none' : 'bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100'
               }`}
             />
           </div>
@@ -266,7 +266,7 @@ export default function InventoryStockForm({
               name="quantity"
               value={formData.quantity}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.quantity ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -286,7 +286,7 @@ export default function InventoryStockForm({
               name="reservedQuantity"
               value={formData.reservedQuantity}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.reservedQuantity ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -323,7 +323,7 @@ export default function InventoryStockForm({
               name="averageCost"
               value={formData.averageCost}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.averageCost ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -350,12 +350,12 @@ export default function InventoryStockForm({
 
       </div>
 
-      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto shrink-0">
+      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 mt-auto shrink-0">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

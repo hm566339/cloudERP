@@ -365,29 +365,29 @@ export default function PurchaseOrderCreate({ initialData }) {
   };
 
   /* ── Shared style tokens (exact match with PurchaseRequisitionForm) ── */
-  const sidebarCard = 'flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-1.5';
-  const cardHead = 'flex items-center justify-between pb-1 border-b border-zinc-100';
+  const sidebarCard = 'flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-2.5 bg-white dark:bg-card-dark shadow-2xs space-y-1.5';
+  const cardHead = 'flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]';
   const cardTitle = 'text-[8px] font-bold text-zinc-800 uppercase tracking-wider';
   const label = 'text-[8px] font-semibold text-zinc-700 block mb-1';
   const field = (hasErr = false) =>
-    `input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white border border-zinc-200 rounded-md px-2 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${
+    `input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md px-2 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${
       hasErr ? 'border-rose-300' : ''
     }`;
   const errText = 'text-[7.2px] text-rose-600 mt-0.5 font-medium';
   const btnSecondary =
-    'px-4 py-2 text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 shadow-xs transition-colors flex items-center gap-2 cursor-pointer';
+    'px-4 py-2 text-xs font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 shadow-xs transition-colors flex items-center gap-2 cursor-pointer';
   const btnPrimary =
     'px-4 py-2 text-xs font-bold text-white bg-primary rounded-md hover:bg-primary/90 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 cursor-pointer';
   const colTemplate =
     'grid-cols-[36px_minmax(180px,1.6fr)_minmax(130px,1.2fr)_minmax(130px,1.2fr)_80px_95px_75px_105px_40px]';
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-white animate-fade-in w-full h-full min-h-screen overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-white dark:bg-page-dark animate-fade-in w-full h-full min-h-screen overflow-hidden">
 
       {/* ═══════════════════════════════════════════════════════════════════
           PAGE HEADER (exact same structure as New Purchase Requisition)
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-wrap xl:flex-nowrap items-center gap-4 p-3 border-b border-zinc-100 bg-zinc-50/50 flex-none">
+      <div className="flex flex-wrap xl:flex-nowrap items-center gap-4 p-3 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 flex-none">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <button
             type="button"
@@ -424,7 +424,7 @@ export default function PurchaseOrderCreate({ initialData }) {
       {/* ═══════════════════════════════════════════════════════════════════
           MAIN WORKSPACE: LEFT FORM PANEL | RIGHT ORDER ITEMS WORKSPACE
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 bg-white">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-border-dark bg-white dark:bg-page-dark">
 
         {/* ── LEFT INTERNAL FORM PANEL ── */}
         <div className="w-full lg:w-[320px] xl:w-[340px] flex-none p-2.5 sm:p-3 bg-zinc-50/40 overflow-y-auto overflow-x-hidden sm:grid sm:grid-cols-2 lg:flex lg:flex-col gap-2.5 sm:gap-3">
@@ -458,7 +458,7 @@ export default function PurchaseOrderCreate({ initialData }) {
                     }
                   }}
                   searchable={true}
-                  className={`w-full h-8 text-[8.8px] text-zinc-700 bg-white ${
+                  className={`w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark ${
                     errors.vendorId ? 'border-rose-300' : ''
                   }`}
                 >
@@ -563,7 +563,7 @@ export default function PurchaseOrderCreate({ initialData }) {
                       }
                     }}
                     searchable={true}
-                    className="w-full h-8 text-[8.8px] text-zinc-700 bg-white"
+                    className="w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark"
                   >
                     <option value="">Select State...</option>
                     {gstStates.map(s => {
@@ -676,7 +676,7 @@ export default function PurchaseOrderCreate({ initialData }) {
         </div>
 
         {/* ── RIGHT MAIN WORKSPACE: ORDER ITEMS TABLE + ORDER SUMMARY ── */}
-        <div className="w-full flex-1 flex flex-col overflow-y-auto min-h-0 bg-white">
+        <div className="w-full flex-1 flex flex-col overflow-y-auto min-h-0 bg-white dark:bg-page-dark">
 
           {errors.items && (
             <div className="p-3 bg-rose-50 border-b border-rose-200 flex items-center gap-2 text-rose-700 text-xs font-medium">
@@ -690,7 +690,7 @@ export default function PurchaseOrderCreate({ initialData }) {
             <div className="flex items-center gap-2">
               <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">ORDER ITEMS</h3>
               {formData.items.length > 0 && (
-                <span className="text-[8.8px] font-medium text-zinc-500 bg-white px-2 py-0.5 rounded-full border border-zinc-200 shadow-2xs">
+                <span className="text-[8.8px] font-medium text-zinc-500 dark:text-zinc-400 bg-white dark:bg-surface-dark px-2 py-0.5 rounded-full border border-zinc-200 dark:border-border-dark shadow-2xs">
                   {formData.items.length} {formData.items.length === 1 ? 'item' : 'items'}
                 </span>
               )}
@@ -730,7 +730,7 @@ export default function PurchaseOrderCreate({ initialData }) {
                   return (
                     <div
                       key={item.id || idx}
-                      className={`grid ${colTemplate} w-full bg-white hover:bg-zinc-50/50 min-w-0 border-b border-zinc-100 last:border-0 box-border transition-colors`}
+                      className={`grid ${colTemplate} w-full bg-white dark:bg-card-dark hover:bg-zinc-50/50 dark:hover:bg-hover-dark/40 min-w-0 border-b border-zinc-100 dark:border-[#2A2F3D] last:border-0 box-border transition-colors`}
                     >
                       {/* # */}
                       <div className="p-1 pt-2 pb-2 min-w-0 flex items-center justify-center text-[8.8px] text-zinc-400 font-medium">
@@ -757,7 +757,7 @@ export default function PurchaseOrderCreate({ initialData }) {
                             }
                           }}
                           searchable={true}
-                          className={`w-full h-8 text-[8.8px] text-zinc-700 bg-white ${
+                          className={`w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark ${
                             errors[`item_${idx}_itemId`] ? 'border-rose-300' : ''
                           }`}
                         >
@@ -790,7 +790,7 @@ export default function PurchaseOrderCreate({ initialData }) {
                           value={item.warehouseId || ''}
                           onChange={(e) => handleItemChange(item.id, 'warehouseId', e.target.value)}
                           searchable={true}
-                          className="w-full h-8 text-[8.8px] text-zinc-700 bg-white"
+                          className="w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark"
                         >
                           <option value="">Warehouse</option>
                           {warehouses.map(w => (
@@ -893,8 +893,8 @@ export default function PurchaseOrderCreate({ initialData }) {
 
           {/* 3. ORDER SUMMARY (pinned to bottom of right column) */}
           <div className="p-4 border-t border-zinc-200 bg-zinc-50/40 mt-auto flex-none">
-            <div className="bg-white p-3.5 rounded-xl border border-zinc-200 shadow-2xs space-y-2.5">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+            <div className="bg-white dark:bg-card-dark p-3.5 rounded-xl border border-zinc-200 dark:border-border-dark shadow-2xs space-y-2.5">
+              <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
                 <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">ORDER SUMMARY</h3>
                 <span className="text-[8.8px] font-medium text-zinc-500 bg-zinc-50 border border-zinc-200 px-2 py-0.5 rounded-full">
                   {totals.totalItems} {totals.totalItems === 1 ? 'item' : 'items'}
@@ -978,7 +978,7 @@ export default function PurchaseOrderCreate({ initialData }) {
       ═══════════════════════════════════════════════════════════════════ */}
       {showDiscardModal && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm bg-white rounded-xl shadow-xl p-6 animate-fade-in">
+          <div className="w-full max-w-sm bg-white dark:bg-card-dark rounded-xl shadow-xl border border-zinc-200 dark:border-border-dark p-6 animate-fade-in">
             <h2 className="text-base font-semibold text-zinc-900">Discard unsaved changes?</h2>
             <p className="mt-2 text-sm text-zinc-500">
               Your changes will be lost if you leave without saving.

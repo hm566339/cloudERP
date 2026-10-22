@@ -339,9 +339,9 @@ export default function PaymentVoucherFormModal({ isOpen, onClose, initialData, 
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-[960px] h-[90vh] max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-card-dark rounded-xl shadow-2xl w-full max-w-[960px] h-[90vh] max-h-[90vh] flex flex-col overflow-hidden border border-zinc-200 dark:border-border-dark">
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b border-zinc-100 bg-zinc-50/50 flex-none">
+        <div className="flex justify-between items-center p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 flex-none">
           <h2 className="text-base font-bold text-zinc-800">
             {isEditing ? 'Edit Payment Voucher' : 'Create Payment Voucher'}
           </h2>
@@ -354,7 +354,7 @@ export default function PaymentVoucherFormModal({ isOpen, onClose, initialData, 
         <form id="voucher-form" onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden text-xs min-h-0">
           
           {/* Header Controls */}
-          <div className="p-4 flex-none space-y-3 bg-white border-b border-zinc-100">
+          <div className="p-4 flex-none space-y-3 bg-white dark:bg-card-dark border-b border-zinc-100 dark:border-[#2A2F3D]">
             {/* Row 1: Basic Info */}
             <div className="grid grid-cols-4 gap-3">
               <div className="space-y-1">
@@ -399,7 +399,7 @@ export default function PaymentVoucherFormModal({ isOpen, onClose, initialData, 
                     setIsAddVendorOpen(true);
                   }}
                   createSubtext="Add as new vendor"
-                  inputClassName="w-full h-8 pl-8 pr-2 bg-white border border-zinc-200 rounded-md text-xs hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                  inputClassName="w-full h-8 pl-8 pr-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-xs hover:border-zinc-300 focus:border-zinc-400 outline-none"
                 />
               </div>
               <div className="space-y-1">
@@ -415,7 +415,7 @@ export default function PaymentVoucherFormModal({ isOpen, onClose, initialData, 
                     setIsAddBankAccountOpen(true);
                   }}
                   createSubtext="Add as new bank account"
-                  inputClassName="w-full h-8 pl-8 pr-2 bg-white border border-zinc-200 rounded-md text-xs hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                  inputClassName="w-full h-8 pl-8 pr-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-xs hover:border-zinc-300 focus:border-zinc-400 outline-none"
                 />
               </div>
               <div className="space-y-1">
@@ -433,7 +433,7 @@ export default function PaymentVoucherFormModal({ isOpen, onClose, initialData, 
                     setIsAddAccountOpen(true); 
                   }}
                   createSubtext="Add as new payable account"
-                  inputClassName="w-full h-8 pl-8 pr-2 bg-white border border-zinc-200 rounded-md text-xs hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                  inputClassName="w-full h-8 pl-8 pr-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-xs hover:border-zinc-300 focus:border-zinc-400 outline-none"
                 />
               </div>
               <div className="space-y-1">
@@ -451,7 +451,7 @@ export default function PaymentVoucherFormModal({ isOpen, onClose, initialData, 
                     setIsAddAccountOpen(true); 
                   }}
                   createSubtext="Add as new payment account"
-                  inputClassName="w-full h-8 pl-8 pr-2 bg-white border border-zinc-200 rounded-md text-xs hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                  inputClassName="w-full h-8 pl-8 pr-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-xs hover:border-zinc-300 focus:border-zinc-400 outline-none"
                 />
               </div>
             </div>
@@ -516,7 +516,7 @@ export default function PaymentVoucherFormModal({ isOpen, onClose, initialData, 
                   const inv = apInvoices.find(i => i.id === alloc.apInvoiceId);
                   const displayBalance = inv ? (inv.outstandingAmount || 0) : '-';
                   return (
-                    <tr key={index} className="bg-white hover:bg-zinc-50/50">
+                    <tr key={index} className="bg-white dark:bg-card-dark hover:bg-zinc-50/50 dark:hover:bg-hover-dark/40">
                       <td className="p-1 align-middle">
                         <ComboBox
                           name={`alloc-invoice-${index}`}
@@ -526,7 +526,7 @@ export default function PaymentVoucherFormModal({ isOpen, onClose, initialData, 
                           placeholder="Search AP Invoice..."
                           onCreateClick={() => setIsAddInvoiceOpen(true)}
                           createSubtext="Create new AP Invoice"
-                          inputClassName="w-full h-8 pl-8 pr-2 bg-white border border-zinc-200 rounded-md text-xs hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                          inputClassName="w-full h-8 pl-8 pr-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-xs hover:border-zinc-300 focus:border-zinc-400 outline-none"
                         />
                       </td>
                       <td className="p-1 align-middle text-right font-medium text-zinc-700">
@@ -561,7 +561,7 @@ export default function PaymentVoucherFormModal({ isOpen, onClose, initialData, 
           </div>
 
           {/* Notes / Summary */}
-          <div className="p-4 flex-none border-t border-zinc-100 bg-white flex justify-end">
+          <div className="p-4 flex-none border-t border-zinc-100 dark:border-border-dark bg-white dark:bg-card-dark flex justify-end">
             <div className="bg-zinc-50 p-4 rounded-lg border border-zinc-200 w-80 space-y-2">
               <div className="flex justify-between items-center text-xs">
                 <span className="font-bold text-zinc-600">Total Payment</span>

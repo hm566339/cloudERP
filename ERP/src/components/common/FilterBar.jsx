@@ -58,7 +58,7 @@ export default function FilterBar({
   const isMinimal = variant === 'minimal';
 
   return (
-    <div className={isMinimal ? "space-y-3" : "p-4 border-b border-zinc-200 bg-white space-y-3"}>
+    <div className={isMinimal ? "space-y-3" : "p-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] space-y-3"}>
       <div className={isMinimal ? "flex items-center gap-2" : "flex flex-wrap items-end justify-between gap-3"}>
         <div className={isMinimal ? "flex items-center gap-2 flex-1" : "flex flex-wrap gap-3 flex-1"}>
           {/* Search Input */}
@@ -77,7 +77,7 @@ export default function FilterBar({
           {priorityFilters.map(filter => (
             <div key={filter.key} className={isMinimal ? "w-[104px]" : "flex-1 min-w-[96px]"}>
               {!isMinimal && (
-                <label className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block truncate" title={filter.label}>
+                <label className="text-[8.8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block truncate" title={filter.label}>
                   {filter.label}
                 </label>
               )}
@@ -88,8 +88,8 @@ export default function FilterBar({
                   options={!filter.hideAllOption ? [{value: '', label: filter.label}, ...(filter.options || [])] : (filter.options || [])}
                   placeholder={filter.label}
                   searchable={filter.searchable ?? ((filter.options?.length || 0) > 10)}
-                  className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus-within:border-zinc-400 focus-within:ring-1 focus-within:ring-zinc-900/10 transition-all cursor-pointer"
-                  dropdownClassName="bg-white border border-zinc-200 rounded-lg shadow-lg py-1 max-h-[200px] overflow-y-auto min-w-full z-50 text-[10.4px]"
+                  className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 dark:text-[#E6E8EE] focus-within:border-zinc-400 dark:focus-within:border-[#4C8DFF] focus-within:ring-1 focus-within:ring-zinc-900/10 dark:focus-within:ring-[#4C8DFF]/20 transition-all cursor-pointer"
+                  dropdownClassName="bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg shadow-lg py-1 max-h-[200px] overflow-y-auto min-w-full z-50 text-[10.4px]"
                 />
               ) : filter.type === 'dateRange' ? (
                 <div className="w-full h-9">
@@ -103,7 +103,7 @@ export default function FilterBar({
                   type="date"
                   value={filter.value || ''}
                   onChange={(e) => onFilterChange(filter.key, e.target.value)}
-                  className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
+                  className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 outline-none transition-all"
                 />
               ) : (
                 <input
@@ -111,7 +111,7 @@ export default function FilterBar({
                   placeholder={filter.label}
                   value={filter.value || ''}
                   onChange={(e) => onFilterChange(filter.key, e.target.value)}
-                  className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
+                  className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] placeholder-zinc-400 dark:placeholder-[#6B7184] focus:border-zinc-400 dark:focus:border-[#4C8DFF] focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 outline-none transition-all"
                 />
               )}
             </div>
@@ -123,7 +123,7 @@ export default function FilterBar({
           <button
             type="button"
             onClick={onClearAll}
-            className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95"
+            className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all flex items-center gap-1.5 active:scale-95"
             title="Reset all filters"
           >
             <span>Reset</span>
@@ -134,14 +134,14 @@ export default function FilterBar({
               type="button"
               onClick={() => setIsSidebarOpen(true)}
               className={`h-9 px-3 text-[10.4px] font-semibold rounded-lg border transition-all flex items-center gap-1.5 active:scale-95 ${sidebarActiveCount > 0
-                  ? 'bg-zinc-100 border-zinc-300 text-zinc-900 shadow-sm'
-                  : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                  ? 'bg-zinc-100 dark:bg-[#222736] border-zinc-300 dark:border-[#4C8DFF] text-zinc-900 dark:text-[#E6E8EE] shadow-sm'
+                  : 'bg-white dark:bg-[#1D212C] border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736]'
                 }`}
             >
               <Filter size={14} />
               <span>Filters</span>
               {sidebarActiveCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-zinc-900 text-white text-[8.8px] flex items-center justify-center font-bold ml-0.5">
+                <span className="w-5 h-5 rounded-full bg-zinc-900 dark:bg-[#4C8DFF] text-white dark:text-white text-[8.8px] flex items-center justify-center font-bold ml-0.5">
                   {sidebarActiveCount}
                 </span>
               )}
@@ -153,10 +153,10 @@ export default function FilterBar({
               type="button"
               onClick={onRefresh}
               disabled={isLoading}
-              className="h-9 w-9 text-zinc-500 hover:text-zinc-800 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 flex items-center justify-center transition-all active:scale-95 shrink-0"
+              className="h-9 w-9 text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-800 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] flex items-center justify-center transition-all active:scale-95 shrink-0"
               title="Refresh Data"
             >
-              <RefreshCw size={14} className={isLoading ? "animate-spin text-zinc-800" : ""} />
+              <RefreshCw size={14} className={isLoading ? "animate-spin text-zinc-800 dark:text-[#E6E8EE]" : ""} />
             </button>
           )}
         </div>
@@ -168,12 +168,12 @@ export default function FilterBar({
           {activeFilterBadges.map((badge) => (
             <span
               key={badge.id}
-              className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-100 text-zinc-700 text-[8.8px] font-bold tracking-wide border border-zinc-200"
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-[#E6E8EE] text-[8.8px] font-bold tracking-wide border border-zinc-200 dark:border-[#2A2F3D]"
             >
               {badge.label}
               <button 
                 onClick={badge.onRemove} 
-                className="hover:text-zinc-900 hover:bg-zinc-200 rounded-full p-0.5 transition-colors"
+                className="hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200 dark:hover:bg-[#222736] rounded-full p-0.5 transition-colors"
               >
                 <X size={12} />
               </button>

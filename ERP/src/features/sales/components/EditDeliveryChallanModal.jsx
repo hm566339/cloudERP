@@ -118,62 +118,62 @@ export default function EditDeliveryChallanModal({ isOpen, onClose, challanId, c
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-zinc-900/40 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-[#161922] border border-transparent dark:border-[#2A2F3D] rounded-xl shadow-xl w-full max-w-3xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50/50 rounded-t-xl shrink-0">
+        <div className="px-6 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/50 dark:bg-[#1D212C] rounded-t-xl shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center border border-indigo-100 text-indigo-600">
+            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-blue-500/10 flex items-center justify-center border border-indigo-100 dark:border-blue-500/20 text-indigo-600 dark:text-[#4C8DFF]">
               <Truck size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-zinc-900 tracking-tight">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                 Edit Delivery Challan {challan?.dcNumber ? `(${challan.dcNumber})` : ''}
               </h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
+              <p className="text-xs text-zinc-500 dark:text-[#6B7184] mt-0.5">
                 Update dispatch metadata and item quantities
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 bg-zinc-50/30 space-y-5">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 bg-zinc-50/30 dark:bg-[#0F1117] space-y-5">
           {isLoadingDetails ? (
-            <div className="py-16 text-center text-zinc-400">
+            <div className="py-16 text-center text-zinc-400 dark:text-[#6B7184]">
               <div className="flex items-center justify-center gap-2">
-                <div className="w-5 h-5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-zinc-900 dark:border-primary border-t-transparent rounded-full animate-spin" />
                 <span className="text-xs font-medium">Loading details...</span>
               </div>
             </div>
           ) : (
             <>
-              <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-2xs space-y-4">
-                <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">
+              <div className="bg-white dark:bg-[#161922] p-4 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs space-y-4">
+                <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">
                   Transport & Metadata
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+                    <label className="text-[9px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                       Dispatch Date
                     </label>
                     <input
                       type="date"
                       value={formData.dispatchDate}
                       onChange={(e) => handleFieldChange('dispatchDate', e.target.value)}
-                      className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-800 outline-none focus:border-zinc-400"
+                      className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-800 dark:text-[#E6E8EE] outline-none focus:border-zinc-400"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+                    <label className="text-[9px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                       Reference Number
                     </label>
                     <input
@@ -181,12 +181,12 @@ export default function EditDeliveryChallanModal({ isOpen, onClose, challanId, c
                       placeholder="e.g. PO Ref / Gate Pass..."
                       value={formData.referenceNumber}
                       onChange={(e) => handleFieldChange('referenceNumber', e.target.value)}
-                      className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-800 outline-none focus:border-zinc-400"
+                      className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-800 dark:text-[#E6E8EE] outline-none focus:border-zinc-400"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+                    <label className="text-[9px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                       Vehicle Number
                     </label>
                     <input
@@ -194,12 +194,12 @@ export default function EditDeliveryChallanModal({ isOpen, onClose, challanId, c
                       placeholder="e.g. MH12AB1234..."
                       value={formData.vehicleNumber}
                       onChange={(e) => handleFieldChange('vehicleNumber', e.target.value)}
-                      className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-800 outline-none focus:border-zinc-400"
+                      className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-800 dark:text-[#E6E8EE] outline-none focus:border-zinc-400"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+                    <label className="text-[9px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                       LR Number
                     </label>
                     <input
@@ -207,13 +207,13 @@ export default function EditDeliveryChallanModal({ isOpen, onClose, challanId, c
                       placeholder="e.g. LR-98765..."
                       value={formData.lrNumber}
                       onChange={(e) => handleFieldChange('lrNumber', e.target.value)}
-                      className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-800 outline-none focus:border-zinc-400"
+                      className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-800 dark:text-[#E6E8EE] outline-none focus:border-zinc-400"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[9px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+                  <label className="text-[9px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                     Notes
                   </label>
                   <textarea
@@ -221,35 +221,35 @@ export default function EditDeliveryChallanModal({ isOpen, onClose, challanId, c
                     placeholder="Add delivery instructions or notes..."
                     value={formData.notes}
                     onChange={(e) => handleFieldChange('notes', e.target.value)}
-                    className="w-full p-2.5 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-800 outline-none focus:border-zinc-400"
+                    className="w-full p-2.5 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-800 dark:text-[#E6E8EE] outline-none focus:border-zinc-400"
                   />
                 </div>
               </div>
 
               {/* Items Section */}
-              <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden shadow-sm">
-                <div className="px-4 py-3 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <Package size={14} className="text-zinc-400" />
+              <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-hidden shadow-sm">
+                <div className="px-4 py-3 bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider flex items-center gap-1.5">
+                    <Package size={14} className="text-zinc-400 dark:text-[#6B7184]" />
                     Challan Items
                   </h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs whitespace-nowrap">
-                    <thead className="bg-white border-b border-zinc-200">
+                    <thead className="bg-white dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D]">
                       <tr>
-                        <th className="px-3 py-2.5 font-semibold text-zinc-600">Product</th>
-                        <th className="px-3 py-2.5 font-semibold text-zinc-600 w-32 text-right">Quantity</th>
-                        <th className="px-3 py-2.5 font-semibold text-zinc-600">Item Notes</th>
+                        <th className="px-3 py-2.5 font-semibold text-zinc-600 dark:text-[#A0A6B5]">Product</th>
+                        <th className="px-3 py-2.5 font-semibold text-zinc-600 dark:text-[#A0A6B5] w-32 text-right">Quantity</th>
+                        <th className="px-3 py-2.5 font-semibold text-zinc-600 dark:text-[#A0A6B5]">Item Notes</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100 bg-white">
+                    <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] bg-white dark:bg-[#161922]">
                       {itemRows.map((it, idx) => (
                         <tr key={it.id || idx}>
                           <td className="px-3 py-2.5">
-                            <div className="font-semibold text-zinc-900">{it.itemName}</div>
+                            <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{it.itemName}</div>
                             {it.description && (
-                              <div className="text-[10px] text-zinc-500 truncate max-w-[220px]">{it.description}</div>
+                              <div className="text-[10px] text-zinc-500 dark:text-[#6B7184] truncate max-w-[220px]">{it.description}</div>
                             )}
                           </td>
                           <td className="px-3 py-2.5 text-right">
@@ -259,7 +259,7 @@ export default function EditDeliveryChallanModal({ isOpen, onClose, challanId, c
                               step="any"
                               value={it.quantity}
                               onChange={(e) => handleItemQtyChange(idx, e.target.value)}
-                              className="w-24 px-2 py-1 text-right border border-zinc-300 rounded-md text-xs outline-none focus:border-zinc-400"
+                              className="w-24 px-2 py-1 text-right border border-zinc-300 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] rounded-md text-xs outline-none focus:border-zinc-400"
                             />
                           </td>
                           <td className="px-3 py-2.5">
@@ -268,7 +268,7 @@ export default function EditDeliveryChallanModal({ isOpen, onClose, challanId, c
                               placeholder="Notes for this item..."
                               value={it.notes}
                               onChange={(e) => handleItemNotesChange(idx, e.target.value)}
-                              className="w-full px-2 py-1 border border-zinc-200 rounded-md text-xs outline-none focus:border-zinc-400"
+                              className="w-full px-2 py-1 border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE] rounded-md text-xs outline-none focus:border-zinc-400"
                             />
                           </td>
                         </tr>
@@ -279,8 +279,8 @@ export default function EditDeliveryChallanModal({ isOpen, onClose, challanId, c
               </div>
 
               {submitError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 text-red-700 text-xs">
-                  <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600" />
+                <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 rounded-lg flex items-start gap-2 text-red-700 dark:text-red-400 text-xs">
+                  <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
                   <p className="font-medium">{submitError}</p>
                 </div>
               )}
@@ -289,12 +289,12 @@ export default function EditDeliveryChallanModal({ isOpen, onClose, challanId, c
         </form>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-200 bg-white flex items-center justify-end gap-3 rounded-b-xl shrink-0">
+        <div className="px-6 py-4 border-t border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] flex items-center justify-end gap-3 rounded-b-xl shrink-0">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-4 py-2 text-sm font-semibold text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
@@ -302,7 +302,7 @@ export default function EditDeliveryChallanModal({ isOpen, onClose, challanId, c
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting || isLoadingDetails}
-            className="px-5 py-2 text-sm font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2 text-sm font-semibold text-white bg-zinc-900 dark:bg-primary rounded-lg hover:bg-zinc-800 dark:hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             {isSubmitting ? (
               <>

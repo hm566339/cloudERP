@@ -143,13 +143,13 @@ export default function SalesOrderFromPiModal({
   return createPortal(
     <>
       <div className="fixed inset-0 z-[300] flex items-center justify-center bg-zinc-900/50 backdrop-blur-sm">
-        <div className="bg-white shadow-2xl w-full h-full flex flex-col overflow-hidden">
+        <div className="bg-white dark:bg-[#0F1117] shadow-2xl w-full h-full flex flex-col overflow-hidden">
 
           <div className="flex flex-col flex-none">
-            <div className="flex justify-between items-center p-4 border-b border-zinc-100 bg-zinc-50/50">
-              <h2 className="text-base font-bold text-zinc-800">Create Sales Order</h2>
-              <div className="text-xs text-zinc-500 font-medium ml-4 truncate">Create a sales order from Proforma Invoice: {proformaInvoice.piNumber}</div>
-              <button type="button" onClick={onClose} className="p-1.5 ml-auto text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100 transition-colors">
+            <div className="flex justify-between items-center p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922]">
+              <h2 className="text-base font-bold text-zinc-800 dark:text-[#E6E8EE]">Create Sales Order</h2>
+              <div className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium ml-4 truncate">Create a sales order from Proforma Invoice: {proformaInvoice.piNumber}</div>
+              <button type="button" onClick={onClose} className="p-1.5 ml-auto text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors">
                 <X size={16} />
               </button>
             </div>
@@ -157,91 +157,91 @@ export default function SalesOrderFromPiModal({
 
           <form id="so-form" onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden text-xs min-h-0">
             {/* ── MAIN WORKSPACE: LEFT FORM (31%) | RIGHT ITEMS (69%) ── */}
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 bg-white">
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-[#2A2F3D] bg-white dark:bg-[#0F1117]">
 
               {/* ── LEFT COLUMN ── */}
-              <div className="w-full lg:w-[31%] flex-none p-2 bg-zinc-50/40 overflow-y-auto overflow-x-hidden flex flex-col gap-2">
+              <div className="w-full lg:w-[31%] flex-none p-2 bg-zinc-50/40 dark:bg-[#161922]/50 overflow-y-auto overflow-x-hidden flex flex-col gap-2">
                 {/* SOURCE DOCUMENT CARD */}
-                <div className="flex-none border border-zinc-200 rounded-lg bg-white shadow-2xs overflow-hidden">
-                  <div className="p-2.5 flex items-center justify-between border-b border-zinc-100">
+                <div className="flex-none border border-zinc-200 dark:border-[#2A2F3D] rounded-lg bg-white dark:bg-[#161922] shadow-2xs overflow-hidden">
+                  <div className="p-2.5 flex items-center justify-between border-b border-zinc-100 dark:border-[#2A2F3D]">
                     <div className="flex flex-wrap items-center gap-4">
                       <div>
-                        <div className="text-[8px] text-zinc-500 font-semibold uppercase">Source PI</div>
-                        <div className="font-mono text-xs font-bold text-zinc-900 flex items-center gap-1.5 mt-0.5">
-                          <FileText size={12} className="text-zinc-400" />
+                        <div className="text-[8px] text-zinc-500 dark:text-[#6B7184] font-semibold uppercase">Source PI</div>
+                        <div className="font-mono text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-1.5 mt-0.5">
+                          <FileText size={12} className="text-zinc-400 dark:text-[#6B7184]" />
                           {proformaInvoice.piNumber}
                         </div>
                       </div>
-                      <div className="hidden sm:block h-6 w-px bg-zinc-200"></div>
+                      <div className="hidden sm:block h-6 w-px bg-zinc-200 dark:bg-[#2A2F3D]"></div>
                       <div>
-                        <div className="text-[8px] text-zinc-500 font-semibold uppercase">PI Status</div>
+                        <div className="text-[8px] text-zinc-500 dark:text-[#6B7184] font-semibold uppercase">PI Status</div>
                         <div className="mt-0.5">
-                          <span className="px-2 py-0.5 text-[8px] font-semibold rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          <span className="px-2 py-0.5 text-[8px] font-semibold rounded-md border bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30">
                             {proformaInvoice.status}
                           </span>
                         </div>
                       </div>
-                      <div className="hidden sm:block h-6 w-px bg-zinc-200"></div>
+                      <div className="hidden sm:block h-6 w-px bg-zinc-200 dark:bg-[#2A2F3D]"></div>
                       <div>
-                        <div className="text-[8px] text-zinc-500 font-semibold uppercase">Quotation</div>
-                        <div className="text-xs font-medium text-zinc-700 mt-0.5">
+                        <div className="text-[8px] text-zinc-500 dark:text-[#6B7184] font-semibold uppercase">Quotation</div>
+                        <div className="text-xs font-medium text-zinc-700 dark:text-[#A0A6B5] mt-0.5">
                           {proformaInvoice.quotation?.quotationNumber || proformaInvoice.sourceQuotationNumber || 'Direct PI'}
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="px-2.5 py-2 bg-amber-50/50 flex items-start gap-2">
-                    <AlertCircle size={14} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-[8.8px] text-amber-800 font-medium leading-snug">Partial conversion supported. Only the remaining PI quantity can be converted to this Sales Order.</span>
+                  <div className="px-2.5 py-2 bg-amber-50/50 dark:bg-amber-950/20 flex items-start gap-2">
+                    <AlertCircle size={14} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-[8.8px] text-amber-800 dark:text-amber-300 font-medium leading-snug">Partial conversion supported. Only the remaining PI quantity can be converted to this Sales Order.</span>
                   </div>
                 </div>
 
                 {/* CUSTOMER DETAILS */}
-                <div className="flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-1.5">
-                  <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
-                    <h3 className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider">Customer Details</h3>
+                <div className="flex-none border border-zinc-200 dark:border-[#2A2F3D] rounded-lg p-2.5 bg-white dark:bg-[#161922] shadow-2xs space-y-1.5">
+                  <div className="flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                    <h3 className="text-[8px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Customer Details</h3>
                   </div>
                   <div className="space-y-2 pt-1">
                     <div>
-                      <label className="text-[8px] font-semibold text-zinc-700 block mb-1">Customer *</label>
+                      <label className="text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] block mb-1">Customer *</label>
                       <input
                         type="text"
-                        className="input-field w-full h-8 text-[8.8px] bg-zinc-50 border-transparent text-zinc-700 cursor-not-allowed font-medium"
+                        className="input-field w-full h-8 text-[8.8px] bg-zinc-50 dark:bg-[#1D212C] border-transparent text-zinc-700 dark:text-[#E6E8EE] cursor-not-allowed font-medium"
                         value={proformaInvoice.customerName || ''}
                         readOnly
                       />
                     </div>
                     {proformaInvoice.billingAddressId && (
-                      <div className="text-[8.8px] text-zinc-600">
-                        <span className="font-semibold block mb-0.5 text-[8px] text-zinc-500">Billing Address</span>
-                        <div className="p-1.5 bg-zinc-50 rounded border border-zinc-100">Inherited from PI</div>
+                      <div className="text-[8.8px] text-zinc-600 dark:text-[#A0A6B5]">
+                        <span className="font-semibold block mb-0.5 text-[8px] text-zinc-500 dark:text-[#6B7184]">Billing Address</span>
+                        <div className="p-1.5 bg-zinc-50 dark:bg-[#1D212C] rounded border border-zinc-100 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#A0A6B5]">Inherited from PI</div>
                       </div>
                     )}
                     {proformaInvoice.deliveryAddressId && (
-                      <div className="text-[8.8px] text-zinc-600">
-                        <span className="font-semibold block mb-0.5 text-[8px] text-zinc-500">Delivery Address</span>
-                        <div className="p-1.5 bg-zinc-50 rounded border border-zinc-100">Inherited from PI</div>
+                      <div className="text-[8.8px] text-zinc-600 dark:text-[#A0A6B5]">
+                        <span className="font-semibold block mb-0.5 text-[8px] text-zinc-500 dark:text-[#6B7184]">Delivery Address</span>
+                        <div className="p-1.5 bg-zinc-50 dark:bg-[#1D212C] rounded border border-zinc-100 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#A0A6B5]">Inherited from PI</div>
                       </div>
                     )}
                     {proformaInvoice.placeOfSupplyStateId && (
-                      <div className="text-[8.8px] text-zinc-600">
-                        <span className="font-semibold block mb-0.5 text-[8px] text-zinc-500">Place of Supply</span>
-                        <div className="p-1.5 bg-zinc-50 rounded border border-zinc-100">Inherited from PI</div>
+                      <div className="text-[8.8px] text-zinc-600 dark:text-[#A0A6B5]">
+                        <span className="font-semibold block mb-0.5 text-[8px] text-zinc-500 dark:text-[#6B7184]">Place of Supply</span>
+                        <div className="p-1.5 bg-zinc-50 dark:bg-[#1D212C] rounded border border-zinc-100 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#A0A6B5]">Inherited from PI</div>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* SALES ORDER DETAILS */}
-                <div className="flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-1.5">
-                  <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
-                    <h3 className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider">Sales Order Details</h3>
+                <div className="flex-none border border-zinc-200 dark:border-[#2A2F3D] rounded-lg p-2.5 bg-white dark:bg-[#161922] shadow-2xs space-y-1.5">
+                  <div className="flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                    <h3 className="text-[8px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Sales Order Details</h3>
                   </div>
                   <div className="space-y-2 pt-1">
 
                     <div className="grid grid-cols-1 gap-2">
                       <div>
-                        <label className="text-[8px] font-semibold text-zinc-700 block mb-1">Sales Order Date *</label>
+                        <label className="text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] block mb-1">Sales Order Date *</label>
                         <input
                           type="date"
                           className="input-field w-full h-8 text-[8.8px]"
@@ -257,20 +257,18 @@ export default function SalesOrderFromPiModal({
               </div>
 
               {/* ── RIGHT COLUMN ── */}
-              <div className="w-full flex-1 flex flex-col overflow-y-auto min-h-0 bg-white">
+              <div className="w-full flex-1 flex flex-col overflow-y-auto min-h-0 bg-white dark:bg-[#0F1117]">
 
-
-
-                <div className="px-4 py-2.5 bg-zinc-50/80 border-b border-zinc-200 flex justify-between items-center flex-none sticky top-0 z-20">
+                <div className="px-4 py-2.5 bg-zinc-50/80 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] flex justify-between items-center flex-none sticky top-0 z-20">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Items</h3>
-                    <span className="text-[8.8px] font-medium text-zinc-500 bg-white px-2 py-0.5 rounded-full border border-zinc-200">
+                    <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Items</h3>
+                    <span className="text-[8.8px] font-medium text-zinc-500 dark:text-[#A0A6B5] bg-white dark:bg-[#1D212C] px-2 py-0.5 rounded-full border border-zinc-200 dark:border-[#2A2F3D]">
                       {items.length} {items.length === 1 ? 'item' : 'items'}
                     </span>
                   </div>
                 </div>
 
-                <div className="w-full text-left bg-zinc-100 text-zinc-600 border-b border-zinc-200 sticky top-[36px] z-10 flex-none pr-1">
+                <div className="w-full text-left bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border-b border-zinc-200 dark:border-[#2A2F3D] sticky top-[36px] z-10 flex-none pr-1">
                   <div className="grid grid-cols-[18%_13%_8%_8%_8%_9%_7%_8%_7%_7%_7%] w-full min-w-0">
                     <div className="p-1.5 font-semibold truncate text-[8.8px]">Item</div>
                     <div className="p-1.5 font-semibold truncate text-[8.8px]">Description</div>
@@ -287,7 +285,7 @@ export default function SalesOrderFromPiModal({
                 </div>
 
                 <div className="flex-none min-h-[112px]">
-                  <div className="flex flex-col divide-y divide-zinc-100">
+                  <div className="flex flex-col divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                     {items.map((item, index) => {
                       const isExceeding = item.soQuantity > (item.remainingQuantity || 0);
                       const qty = parseFloat(item.soQuantity) || 0;
@@ -301,12 +299,12 @@ export default function SalesOrderFromPiModal({
                       const lineTotal = taxable + taxAmt;
 
                       return (
-                        <div key={item.id} className="grid grid-cols-[18%_13%_8%_8%_8%_9%_7%_8%_7%_7%_7%] w-full bg-white hover:bg-zinc-50/50 min-w-0 border-b border-zinc-100 last:border-0 box-border items-center py-1">
-                          <div className="p-1.5 min-w-0 font-medium text-zinc-900 truncate text-[8.8px]" title={item.itemName}>{item.itemName}</div>
-                          <div className="p-1.5 min-w-0 text-zinc-500 truncate text-[8.8px]" title={item.description}>{item.description || '—'}</div>
-                          <div className="p-1.5 min-w-0 text-right text-zinc-600 text-[8.8px]">{item.quantity}</div>
-                          <div className="p-1.5 min-w-0 text-right text-emerald-600 font-medium text-[8.8px]">{item.convertedQuantity || 0}</div>
-                          <div className="p-1.5 min-w-0 text-right font-bold text-zinc-800 text-[8.8px]">{item.remainingQuantity || 0}</div>
+                        <div key={item.id} className="grid grid-cols-[18%_13%_8%_8%_8%_9%_7%_8%_7%_7%_7%] w-full bg-white dark:bg-[#161922] hover:bg-zinc-50/50 dark:hover:bg-[#222736] min-w-0 border-b border-zinc-100 dark:border-[#2A2F3D] last:border-0 box-border items-center py-1">
+                          <div className="p-1.5 min-w-0 font-medium text-zinc-900 dark:text-[#E6E8EE] truncate text-[8.8px]" title={item.itemName}>{item.itemName}</div>
+                          <div className="p-1.5 min-w-0 text-zinc-500 dark:text-[#6B7184] truncate text-[8.8px]" title={item.description}>{item.description || '—'}</div>
+                          <div className="p-1.5 min-w-0 text-right text-zinc-600 dark:text-[#A0A6B5] text-[8.8px]">{item.quantity}</div>
+                          <div className="p-1.5 min-w-0 text-right text-emerald-600 dark:text-emerald-400 font-medium text-[8.8px]">{item.convertedQuantity || 0}</div>
+                          <div className="p-1.5 min-w-0 text-right font-bold text-zinc-800 dark:text-[#E6E8EE] text-[8.8px]">{item.remainingQuantity || 0}</div>
                           <div className="p-1 min-w-0 relative">
                             <input
                               type="number"
@@ -315,15 +313,15 @@ export default function SalesOrderFromPiModal({
                               step="0.01"
                               value={item.soQuantity}
                               onChange={(e) => handleQuantityChange(index, Number(e.target.value))}
-                              className={`w-full h-7 px-1.5 text-[8.8px] text-right font-bold border rounded focus:outline-none focus:ring-1 focus:ring-primary ${isExceeding ? 'border-red-500 bg-red-50 text-red-700' : 'border-zinc-300 bg-white'}`}
+                              className={`w-full h-7 px-1.5 text-[8.8px] text-right font-bold border rounded focus:outline-none focus:ring-1 focus:ring-primary ${isExceeding ? 'border-red-500 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400' : 'border-zinc-300 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE]'}`}
                               disabled={(item.remainingQuantity || 0) <= 0}
                             />
                           </div>
-                          <div className="p-1.5 min-w-0 text-center text-zinc-600 text-[8.8px] uppercase">{item.unit || 'PCS'}</div>
-                          <div className="p-1.5 min-w-0 text-right text-zinc-700 text-[8.8px]">{item.unitPrice}</div>
-                          <div className="p-1.5 min-w-0 text-right text-zinc-600 text-[8.8px]">{item.discountPercent || 0}</div>
-                          <div className="p-1.5 min-w-0 text-right text-zinc-700 text-[8.8px]">{taxAmt.toFixed(2)}</div>
-                          <div className="p-1.5 min-w-0 text-right font-semibold text-zinc-900 text-[8.8px]">{lineTotal.toFixed(2)}</div>
+                          <div className="p-1.5 min-w-0 text-center text-zinc-600 dark:text-[#A0A6B5] text-[8.8px] uppercase">{item.unit || 'PCS'}</div>
+                          <div className="p-1.5 min-w-0 text-right text-zinc-700 dark:text-[#A0A6B5] text-[8.8px]">{item.unitPrice}</div>
+                          <div className="p-1.5 min-w-0 text-right text-zinc-600 dark:text-[#A0A6B5] text-[8.8px]">{item.discountPercent || 0}</div>
+                          <div className="p-1.5 min-w-0 text-right text-zinc-700 dark:text-[#A0A6B5] text-[8.8px]">{taxAmt.toFixed(2)}</div>
+                          <div className="p-1.5 min-w-0 text-right font-semibold text-zinc-900 dark:text-[#E6E8EE] text-[8.8px]">{lineTotal.toFixed(2)}</div>
                         </div>
                       );
                     })}
@@ -331,40 +329,40 @@ export default function SalesOrderFromPiModal({
                 </div>
 
                 {/* SALES ORDER SUMMARY */}
-                <div className="p-4 border-t border-zinc-200 bg-zinc-50/40 mt-auto flex-none">
-                  <div className="bg-white p-3.5 rounded-xl border border-zinc-200 flex flex-col justify-between shadow-2xs space-y-2.5">
-                    <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
-                      <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Sales Order Summary</h3>
+                <div className="p-4 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/40 dark:bg-[#161922]/50 mt-auto flex-none">
+                  <div className="bg-white dark:bg-[#161922] p-3.5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] flex flex-col justify-between shadow-2xs space-y-2.5">
+                    <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                      <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Sales Order Summary</h3>
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex justify-between items-center text-[9.6px]">
-                        <span className="text-zinc-600 font-medium">Sub Total</span>
-                        <span className="font-semibold text-zinc-800">
+                        <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Sub Total</span>
+                        <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">
                           {new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(calculatedTotals.subtotal)}
                         </span>
                       </div>
 
                       {calculatedTotals.discount > 0 && (
                         <div className="flex justify-between items-center text-[9.6px]">
-                          <span className="text-emerald-600 font-medium">Discount</span>
-                          <span className="font-semibold text-emerald-600">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Discount</span>
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                             -{new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(calculatedTotals.discount)}
                           </span>
                         </div>
                       )}
 
                       <div className="flex justify-between items-center text-[9.6px]">
-                        <span className="text-zinc-600 font-medium">Taxable Amount</span>
-                        <span className="font-semibold text-zinc-800">
+                        <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Taxable Amount</span>
+                        <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">
                           {new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(calculatedTotals.taxableAmount)}
                         </span>
                       </div>
 
                       {calculatedTotals.cgst > 0 && (
                         <div className="flex justify-between items-center text-[9.6px]">
-                          <span className="text-zinc-500 font-medium ml-4">CGST</span>
-                          <span className="font-semibold text-zinc-600">
+                          <span className="text-zinc-500 dark:text-[#6B7184] font-medium ml-4">CGST</span>
+                          <span className="font-semibold text-zinc-600 dark:text-[#A0A6B5]">
                             {new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(calculatedTotals.cgst)}
                           </span>
                         </div>
@@ -372,8 +370,8 @@ export default function SalesOrderFromPiModal({
 
                       {calculatedTotals.sgst > 0 && (
                         <div className="flex justify-between items-center text-[9.6px]">
-                          <span className="text-zinc-500 font-medium ml-4">SGST</span>
-                          <span className="font-semibold text-zinc-600">
+                          <span className="text-zinc-500 dark:text-[#6B7184] font-medium ml-4">SGST</span>
+                          <span className="font-semibold text-zinc-600 dark:text-[#A0A6B5]">
                             {new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(calculatedTotals.sgst)}
                           </span>
                         </div>
@@ -381,36 +379,36 @@ export default function SalesOrderFromPiModal({
 
                       {calculatedTotals.igst > 0 && (
                         <div className="flex justify-between items-center text-[9.6px]">
-                          <span className="text-zinc-500 font-medium ml-4">IGST</span>
-                          <span className="font-semibold text-zinc-600">
+                          <span className="text-zinc-500 dark:text-[#6B7184] font-medium ml-4">IGST</span>
+                          <span className="font-semibold text-zinc-600 dark:text-[#A0A6B5]">
                             {new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(calculatedTotals.igst)}
                           </span>
                         </div>
                       )}
 
                       <div className="flex justify-between items-center text-[9.6px]">
-                        <span className="text-zinc-600 font-medium">Freight Charges</span>
-                        <span className="font-semibold text-zinc-800">
+                        <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Freight Charges</span>
+                        <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">
                           {new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(calculatedTotals.freight)}
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center text-[9.6px]">
-                        <span className="text-zinc-600 font-medium">Other Charges</span>
-                        <span className="font-semibold text-zinc-800">
+                        <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Other Charges</span>
+                        <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">
                           {new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(calculatedTotals.other)}
                         </span>
                       </div>
 
                       <div className="flex justify-between items-center text-[9.6px]">
-                        <span className="text-zinc-600 font-medium">Round Off</span>
-                        <span className="text-zinc-700 font-medium">
+                        <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Round Off</span>
+                        <span className="text-zinc-700 dark:text-[#A0A6B5] font-medium">
                           {new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(calculatedTotals.roundOff)}
                         </span>
                       </div>
 
-                      <div className="pt-2.5 border-t border-zinc-200 flex justify-between items-center">
-                        <span className="text-sm font-bold text-zinc-900">Grand Total</span>
+                      <div className="pt-2.5 border-t border-zinc-200 dark:border-[#2A2F3D] flex justify-between items-center">
+                        <span className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">Grand Total</span>
                         <span className="text-base font-black text-primary">
                           {new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(calculatedTotals.grandTotal)}
                         </span>
@@ -429,12 +427,12 @@ export default function SalesOrderFromPiModal({
           </form>
 
           {/* ── BOTTOM FIXED FOOTER ── */}
-          <div className="flex justify-between items-center p-3 border-t border-zinc-200 bg-zinc-100 flex-none">
+          <div className="flex justify-between items-center p-3 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-100 dark:bg-[#161922] flex-none">
             <button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="px-4 py-2 text-sm font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-[#A0A6B5] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-[#E6E8EE] transition-colors disabled:opacity-50"
             >
               Cancel
             </button>

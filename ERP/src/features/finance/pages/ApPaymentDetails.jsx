@@ -42,10 +42,10 @@ export default function ApPaymentDetails() {
 
   if (error || !payment) {
     return (
-      <div className="p-8 text-center bg-white rounded-xl shadow-sm border border-zinc-200 mt-4 mx-4">
-        <h2 className="text-xl font-bold text-zinc-900">AP Payment not found</h2>
-        <p className="text-zinc-500 mt-2">{error?.message}</p>
-        <button onClick={() => navigate(-1)} className="mt-4 px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium">
+      <div className="p-8 text-center bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] mt-4 mx-4">
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-[#E6E8EE]">AP Payment not found</h2>
+        <p className="text-zinc-500 dark:text-zinc-400 mt-2">{error?.message}</p>
+        <button onClick={() => navigate(-1)} className="mt-4 px-4 py-2 bg-zinc-900 dark:bg-[#4C8DFF] text-white rounded-lg text-sm font-medium">
           Go Back
         </button>
       </div>
@@ -105,40 +105,40 @@ export default function ApPaymentDetails() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-        <div className="h-2 bg-zinc-900" />
+      <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
+        <div className="h-2 bg-zinc-900 dark:bg-[#4C8DFF]" />
         <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex gap-4 items-center">
-            <button onClick={() => navigate(-1)} className="p-2 bg-zinc-100 text-zinc-600 hover:bg-zinc-200 rounded-lg transition-colors">
+            <button onClick={() => navigate(-1)} className="p-2 bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-[#222736] rounded-lg transition-colors">
               <ArrowLeft size={20} />
             </button>
-            <div className="w-14 h-14 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl flex items-center justify-center text-2xl shadow-sm shrink-0">
+            <div className="w-14 h-14 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-[#4C8DFF] border border-blue-100 dark:border-blue-900/50 rounded-xl flex items-center justify-center text-2xl shadow-sm shrink-0">
               <CreditCard />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-zinc-900">{payment.paymentNo}</h1>
+                <h1 className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE]">{payment.paymentNo}</h1>
                 <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                  payment.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' :
-                  payment.paymentStatus === 'PARTIAL' ? 'bg-blue-100 text-blue-800' :
-                  payment.paymentStatus === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                  'bg-orange-100 text-orange-800'
+                  payment.paymentStatus === 'PAID' ? 'bg-green-100 dark:bg-emerald-950/40 text-green-800 dark:text-emerald-400' :
+                  payment.paymentStatus === 'PARTIAL' ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-400' :
+                  payment.paymentStatus === 'CANCELLED' ? 'bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-400' :
+                  'bg-orange-100 dark:bg-amber-950/40 text-orange-800 dark:text-amber-400'
                 }`}>
                   {payment.paymentStatus}
                 </span>
                 <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                  payment.glPostingStatus === 'POSTED' ? 'bg-blue-100 text-blue-800' :
-                  payment.glPostingStatus === 'REVERSED' ? 'bg-orange-100 text-orange-800' :
-                  payment.glPostingStatus === 'FAILED' ? 'bg-red-100 text-red-800' :
-                  'bg-zinc-100 text-zinc-800'
+                  payment.glPostingStatus === 'POSTED' ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-400' :
+                  payment.glPostingStatus === 'REVERSED' ? 'bg-orange-100 dark:bg-amber-950/40 text-orange-800 dark:text-amber-400' :
+                  payment.glPostingStatus === 'FAILED' ? 'bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-400' :
+                  'bg-zinc-100 dark:bg-[#1D212C] text-zinc-800 dark:text-zinc-300'
                 }`}>
                   GL: {payment.glPostingStatus}
                 </span>
               </div>
-              <p className="text-zinc-500 mt-1 flex items-center gap-2">
+              <p className="text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-2">
                 <span>{payment.vendorName}</span>
                 <span>•</span>
-                <span className="font-mono bg-zinc-100 px-2 py-0.5 rounded text-sm">{payment.vendorCode}</span>
+                <span className="font-mono bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-zinc-300 px-2 py-0.5 rounded text-sm">{payment.vendorCode}</span>
                 <span>•</span>
                 <span>{payment.paymentDate ? format(new Date(payment.paymentDate), 'dd MMM yyyy') : '-'}</span>
               </p>
@@ -150,21 +150,21 @@ export default function ApPaymentDetails() {
               <>
                 <button 
                   onClick={handlePost}
-                  className="flex items-center px-3 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors text-sm font-medium"
+                  className="flex items-center px-3 py-2 bg-zinc-900 dark:bg-[#4C8DFF] text-white rounded-lg hover:bg-zinc-800 dark:hover:bg-[#3A78E6] transition-colors text-sm font-medium"
                 >
                   <Send size={16} className="mr-2" />
                   Post to GL
                 </button>
                 <button 
                   onClick={() => setIsEditModalOpen(true)}
-                  className="flex items-center px-3 py-2 bg-white border border-zinc-300 text-zinc-700 rounded-lg hover:bg-zinc-50 transition-colors text-sm font-medium"
+                  className="flex items-center px-3 py-2 bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors text-sm font-medium"
                 >
-                  <Edit size={16} className="mr-2 text-blue-600" />
+                  <Edit size={16} className="mr-2 text-blue-600 dark:text-[#4C8DFF]" />
                   Edit
                 </button>
                 <button 
                   onClick={handleDelete}
-                  className="flex items-center px-3 py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+                  className="flex items-center px-3 py-2 bg-white dark:bg-[#1D212C] border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors text-sm font-medium"
                 >
                   <Trash2 size={16} className="mr-2" />
                   Delete
@@ -175,7 +175,7 @@ export default function ApPaymentDetails() {
             {payment.glPostingStatus === 'POSTED' && (
               <button 
                 onClick={handleReverse}
-                className="flex items-center px-3 py-2 bg-white border border-orange-200 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors text-sm font-medium"
+                className="flex items-center px-3 py-2 bg-white dark:bg-[#1D212C] border border-orange-200 dark:border-amber-900/50 text-orange-600 dark:text-amber-400 rounded-lg hover:bg-orange-50 dark:hover:bg-amber-950/30 transition-colors text-sm font-medium"
               >
                 <Power size={16} className="mr-2" />
                 Reverse Payment
@@ -185,7 +185,7 @@ export default function ApPaymentDetails() {
         </div>
 
         {/* Tabs */}
-        <div className="border-t border-zinc-200 flex overflow-x-auto">
+        <div className="border-t border-zinc-200 dark:border-[#2A2F3D] flex overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -195,11 +195,11 @@ export default function ApPaymentDetails() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center px-6 py-4 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
                   isActive
-                    ? 'border-zinc-900 text-blue-600'
-                    : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'
+                    ? 'border-zinc-900 dark:border-[#4C8DFF] text-blue-600 dark:text-[#4C8DFF]'
+                    : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-600'
                 }`}
               >
-                <Icon size={18} className={`mr-2 ${isActive ? 'text-blue-600' : 'text-zinc-400'}`} />
+                <Icon size={18} className={`mr-2 ${isActive ? 'text-blue-600 dark:text-[#4C8DFF]' : 'text-zinc-400 dark:text-zinc-500'}`} />
                 {tab.label}
               </button>
             );
@@ -214,119 +214,119 @@ export default function ApPaymentDetails() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* Financial Details */}
-            <div className="bg-white rounded-xl shadow-sm border border-zinc-200 p-6 space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-900 border-b pb-2 flex items-center">
-                <CreditCard className="w-5 h-5 mr-2 text-green-600" />
+            <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] p-6 space-y-4">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-[#E6E8EE] border-b border-zinc-200 dark:border-[#2A2F3D] pb-2 flex items-center">
+                <CreditCard className="w-5 h-5 mr-2 text-green-600 dark:text-emerald-400" />
                 Financial Summary
               </h3>
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div>
-                  <p className="text-sm text-zinc-500">Payment Amount</p>
-                  <p className="text-2xl font-bold text-zinc-900">{formatCurrency(payment.paymentAmount)}</p>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">Payment Amount</p>
+                  <p className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(payment.paymentAmount)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-zinc-500">Allocated Amount</p>
-                  <p className="text-2xl font-bold text-blue-600">{formatCurrency(payment.totalAllocatedAmount)}</p>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">Allocated Amount</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-[#4C8DFF]">{formatCurrency(payment.totalAllocatedAmount)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-zinc-500">TDS Amount</p>
-                  <p className="text-lg font-medium text-zinc-700">{formatCurrency(payment.tdsAmount)}</p>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">TDS Amount</p>
+                  <p className="text-lg font-medium text-zinc-700 dark:text-zinc-300">{formatCurrency(payment.tdsAmount)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-zinc-500">Vendor Outstanding</p>
-                  <p className="text-lg font-medium text-zinc-700">{formatCurrency(payment.vendorOutstandingBalance)}</p>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">Vendor Outstanding</p>
+                  <p className="text-lg font-medium text-zinc-700 dark:text-zinc-300">{formatCurrency(payment.vendorOutstandingBalance)}</p>
                 </div>
               </div>
             </div>
 
             {/* Vendor & Bank Info */}
-            <div className="bg-white rounded-xl shadow-sm border border-zinc-200 p-6 space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-900 border-b pb-2 flex items-center">
-                <Building2 className="w-5 h-5 mr-2 text-blue-600" />
+            <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] p-6 space-y-4">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-[#E6E8EE] border-b border-zinc-200 dark:border-[#2A2F3D] pb-2 flex items-center">
+                <Building2 className="w-5 h-5 mr-2 text-blue-600 dark:text-[#4C8DFF]" />
                 Payment Details
               </h3>
               <dl className="grid grid-cols-2 gap-y-4 gap-x-4 pt-2 text-sm">
                 <div>
-                  <dt className="text-zinc-500">Vendor</dt>
-                  <dd className="font-medium text-zinc-900 mt-1">{payment.vendorName}</dd>
+                  <dt className="text-zinc-500 dark:text-zinc-400">Vendor</dt>
+                  <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{payment.vendorName}</dd>
                 </div>
                 <div>
-                  <dt className="text-zinc-500">Payment Mode</dt>
-                  <dd className="font-medium text-zinc-900 mt-1">{payment.paymentMode}</dd>
+                  <dt className="text-zinc-500 dark:text-zinc-400">Payment Mode</dt>
+                  <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{payment.paymentMode}</dd>
                 </div>
                 {payment.bankName && (
                   <>
                     <div>
-                      <dt className="text-zinc-500">Bank Name</dt>
-                      <dd className="font-medium text-zinc-900 mt-1">{payment.bankName}</dd>
+                      <dt className="text-zinc-500 dark:text-zinc-400">Bank Name</dt>
+                      <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{payment.bankName}</dd>
                     </div>
                     <div>
-                      <dt className="text-zinc-500">Bank Account</dt>
-                      <dd className="font-mono text-zinc-900 mt-1">{payment.bankAccountNumber}</dd>
+                      <dt className="text-zinc-500 dark:text-zinc-400">Bank Account</dt>
+                      <dd className="font-mono text-zinc-900 dark:text-[#E6E8EE] mt-1">{payment.bankAccountNumber}</dd>
                     </div>
                   </>
                 )}
                 {payment.remarks && (
                   <div className="col-span-2">
-                    <dt className="text-zinc-500">Remarks</dt>
-                    <dd className="font-medium text-zinc-900 mt-1">{payment.remarks}</dd>
+                    <dt className="text-zinc-500 dark:text-zinc-400">Remarks</dt>
+                    <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{payment.remarks}</dd>
                   </div>
                 )}
               </dl>
             </div>
 
             {/* Reference Info */}
-            <div className="bg-white rounded-xl shadow-sm border border-zinc-200 p-6 space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-900 border-b pb-2 flex items-center">
-                <FileText className="w-5 h-5 mr-2 text-purple-600" />
+            <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] p-6 space-y-4">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-[#E6E8EE] border-b border-zinc-200 dark:border-[#2A2F3D] pb-2 flex items-center">
+                <FileText className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
                 References
               </h3>
               <dl className="grid grid-cols-2 gap-4 pt-2 text-sm">
                 <div>
-                  <dt className="text-zinc-500">Reference No</dt>
-                  <dd className="font-medium text-zinc-900 mt-1">{payment.referenceNo || '-'}</dd>
+                  <dt className="text-zinc-500 dark:text-zinc-400">Reference No</dt>
+                  <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{payment.referenceNo || '-'}</dd>
                 </div>
                 <div>
-                  <dt className="text-zinc-500">Transaction ID</dt>
-                  <dd className="font-mono text-zinc-900 mt-1">{payment.transactionId || '-'}</dd>
+                  <dt className="text-zinc-500 dark:text-zinc-400">Transaction ID</dt>
+                  <dd className="font-mono text-zinc-900 dark:text-[#E6E8EE] mt-1">{payment.transactionId || '-'}</dd>
                 </div>
                 <div>
-                  <dt className="text-zinc-500">Cheque Number</dt>
-                  <dd className="font-mono text-zinc-900 mt-1">{payment.chequeNumber || '-'}</dd>
+                  <dt className="text-zinc-500 dark:text-zinc-400">Cheque Number</dt>
+                  <dd className="font-mono text-zinc-900 dark:text-[#E6E8EE] mt-1">{payment.chequeNumber || '-'}</dd>
                 </div>
                 <div>
-                  <dt className="text-zinc-500">Cheque Date</dt>
-                  <dd className="font-medium text-zinc-900 mt-1">{payment.chequeDate ? format(new Date(payment.chequeDate), 'dd MMM yyyy') : '-'}</dd>
+                  <dt className="text-zinc-500 dark:text-zinc-400">Cheque Date</dt>
+                  <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{payment.chequeDate ? format(new Date(payment.chequeDate), 'dd MMM yyyy') : '-'}</dd>
                 </div>
                 <div>
-                  <dt className="text-zinc-500">UTR Number</dt>
-                  <dd className="font-mono text-zinc-900 mt-1">{payment.utrNumber || '-'}</dd>
+                  <dt className="text-zinc-500 dark:text-zinc-400">UTR Number</dt>
+                  <dd className="font-mono text-zinc-900 dark:text-[#E6E8EE] mt-1">{payment.utrNumber || '-'}</dd>
                 </div>
               </dl>
             </div>
 
             {/* Audit Info */}
-            <div className="bg-white rounded-xl shadow-sm border border-zinc-200 p-6 space-y-4">
-              <h3 className="text-lg font-semibold text-zinc-900 border-b pb-2 flex items-center">
-                <Activity className="w-5 h-5 mr-2 text-orange-600" />
+            <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] p-6 space-y-4">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-[#E6E8EE] border-b border-zinc-200 dark:border-[#2A2F3D] pb-2 flex items-center">
+                <Activity className="w-5 h-5 mr-2 text-orange-600 dark:text-orange-400" />
                 Audit Information
               </h3>
               <dl className="grid grid-cols-2 gap-4 pt-2 text-sm">
                 <div>
-                  <dt className="text-zinc-500">Created At</dt>
-                  <dd className="font-medium text-zinc-900 mt-1">
+                  <dt className="text-zinc-500 dark:text-zinc-400">Created At</dt>
+                  <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">
                     {payment.createdAt ? format(new Date(payment.createdAt), 'PPpp') : '-'}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-zinc-500">Updated At</dt>
-                  <dd className="font-medium text-zinc-900 mt-1">
+                  <dt className="text-zinc-500 dark:text-zinc-400">Updated At</dt>
+                  <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">
                     {payment.updatedAt ? format(new Date(payment.updatedAt), 'PPpp') : '-'}
                   </dd>
                 </div>
                 <div className="col-span-2">
-                  <dt className="text-zinc-500">GL Posting Time</dt>
-                  <dd className="font-medium text-zinc-900 mt-1">
+                  <dt className="text-zinc-500 dark:text-zinc-400">GL Posting Time</dt>
+                  <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">
                     {payment.glPostingTime ? format(new Date(payment.glPostingTime), 'PPpp') : '-'}
                   </dd>
                 </div>
@@ -337,17 +337,17 @@ export default function ApPaymentDetails() {
 
         {/* ALLOCATIONS TAB */}
         {activeTab === 'allocations' && (
-          <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-            <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
-              <h3 className="text-lg font-medium text-zinc-900">Invoice Allocations</h3>
+          <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
+            <div className="p-4 border-b border-zinc-200 dark:border-[#2A2F3D] flex justify-between items-center bg-zinc-50 dark:bg-[#1D212C]">
+              <h3 className="text-lg font-medium text-zinc-900 dark:text-[#E6E8EE]">Invoice Allocations</h3>
               <div className="text-sm">
-                <span className="text-zinc-500 mr-2">Total Allocated:</span>
-                <span className="font-bold text-zinc-900">{formatCurrency(payment.totalAllocatedAmount)}</span>
+                <span className="text-zinc-500 dark:text-zinc-400 mr-2">Total Allocated:</span>
+                <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(payment.totalAllocatedAmount)}</span>
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-zinc-600">
-                <thead className="bg-zinc-50 border-b border-zinc-200 text-xs uppercase text-zinc-700 font-semibold">
+              <table className="w-full text-left text-sm text-zinc-600 dark:text-zinc-400">
+                <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-xs uppercase text-zinc-700 dark:text-zinc-300 font-semibold">
                   <tr>
                     <th className="px-4 py-3">Invoice No</th>
                     <th className="px-4 py-3 text-right">Invoice Total</th>
@@ -356,25 +356,25 @@ export default function ApPaymentDetails() {
                     <th className="px-4 py-3 text-center">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-200">
+                <tbody className="divide-y divide-zinc-200 dark:divide-[#2A2F3D]">
                   {allocations.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="px-4 py-12 text-center text-zinc-500">
+                      <td colSpan="5" className="px-4 py-12 text-center text-zinc-500 dark:text-zinc-400">
                         No invoices allocated for this payment.
                       </td>
                     </tr>
                   ) : (
                     allocations.map((alloc, idx) => (
-                      <tr key={alloc.id || idx} className="hover:bg-zinc-50">
-                        <td className="px-4 py-3 font-medium text-zinc-900">{alloc.invoiceNo}</td>
+                      <tr key={alloc.id || idx} className="hover:bg-zinc-50 dark:hover:bg-[#222736]/50">
+                        <td className="px-4 py-3 font-medium text-zinc-900 dark:text-[#E6E8EE]">{alloc.invoiceNo}</td>
                         <td className="px-4 py-3 text-right">{formatCurrency(alloc.invoiceTotalAmount)}</td>
                         <td className="px-4 py-3 text-right">{formatCurrency(alloc.invoiceOutstandingAmount)}</td>
-                        <td className="px-4 py-3 text-right font-medium text-blue-600">{formatCurrency(alloc.allocatedAmount)}</td>
+                        <td className="px-4 py-3 text-right font-medium text-blue-600 dark:text-[#4C8DFF]">{formatCurrency(alloc.allocatedAmount)}</td>
                         <td className="px-4 py-3 text-center">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                            alloc.invoiceStatus === 'PAID' ? 'bg-green-100 text-green-800' :
-                            alloc.invoiceStatus === 'PARTIAL' ? 'bg-blue-100 text-blue-800' :
-                            'bg-zinc-100 text-zinc-800'
+                            alloc.invoiceStatus === 'PAID' ? 'bg-green-100 dark:bg-emerald-950/40 text-green-800 dark:text-emerald-400' :
+                            alloc.invoiceStatus === 'PARTIAL' ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-400' :
+                            'bg-zinc-100 dark:bg-[#1D212C] text-zinc-800 dark:text-zinc-300'
                           }`}>
                             {alloc.invoiceStatus || 'UNKNOWN'}
                           </span>

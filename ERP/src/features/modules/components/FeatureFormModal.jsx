@@ -124,15 +124,15 @@ export default function FeatureFormModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-zinc-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 dark:bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="bg-white dark:bg-[#161922] rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-zinc-200 dark:border-[#2A2F3D]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 bg-zinc-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
           <div>
-            <h2 className="text-base font-semibold text-zinc-900">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-[#E6E8EE]">
               {isEditMode ? 'Edit Global Feature' : 'Create Global Feature'}
             </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
               {isEditMode
                 ? 'Update global feature definition and catalog properties.'
                 : 'Define a platform-level feature accessible across all tenants.'}
@@ -142,7 +142,7 @@ export default function FeatureFormModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-lg hover:bg-zinc-100 transition-colors disabled:opacity-50"
+            className="p-1.5 text-zinc-400 dark:text-[#A0A6B5] hover:text-zinc-600 dark:hover:text-[#E6E8EE] rounded-lg hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors disabled:opacity-50"
             aria-label="Close"
           >
             <X size={18} />
@@ -150,15 +150,15 @@ export default function FeatureFormModal({
         </div>
 
         {/* Global Master Data Banner */}
-        <div className="mx-6 mt-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center gap-2.5 text-xs font-medium text-indigo-900">
-          <Globe size={16} className="text-indigo-600 shrink-0" />
+        <div className="mx-6 mt-4 p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 rounded-lg flex items-center gap-2.5 text-xs font-medium text-indigo-900 dark:text-indigo-300">
+          <Globe size={16} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
           <span>Global System Feature — Available to all organizations and companies</span>
         </div>
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 pt-4 space-y-4">
           {submitError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2.5 text-xs text-rose-700">
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 rounded-lg flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-400">
               <AlertTriangle size={15} className="shrink-0 mt-0.5" />
               <div className="flex-1">{submitError}</div>
             </div>
@@ -166,7 +166,7 @@ export default function FeatureFormModal({
 
           {/* Module */}
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider mb-1.5">
               Module <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
@@ -177,8 +177,8 @@ export default function FeatureFormModal({
                 value={formData.moduleName}
                 onChange={handleChange}
                 placeholder="e.g. ACCOUNT, CORE, SSO..."
-                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-colors ${
-                  errors.moduleName ? 'border-rose-300 bg-rose-50/50' : 'border-zinc-300'
+                className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] placeholder:text-zinc-400 dark:placeholder:text-[#6B7184] ${
+                  errors.moduleName ? 'border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20' : 'border-zinc-300 dark:border-[#2A2F3D]'
                 }`}
               />
               <datalist id="feature-module-options">
@@ -188,11 +188,11 @@ export default function FeatureFormModal({
               </datalist>
             </div>
             {errors.moduleName ? (
-              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p className="mt-1 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1">
                 <AlertTriangle size={12} /> {errors.moduleName}
               </p>
             ) : availableModules.length > 0 ? (
-              <p className="mt-1 text-[11px] text-zinc-400">
+              <p className="mt-1 text-[11px] text-zinc-400 dark:text-[#6B7184]">
                 Select an existing module or specify a new module name.
               </p>
             ) : null}
@@ -200,7 +200,7 @@ export default function FeatureFormModal({
 
           {/* Feature Name */}
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider mb-1.5">
               Feature Name <span className="text-rose-500">*</span>
             </label>
             <input
@@ -209,12 +209,12 @@ export default function FeatureFormModal({
               value={formData.name}
               onChange={handleChange}
               placeholder="e.g. Payment Operations"
-              className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-colors ${
-                errors.name ? 'border-rose-300 bg-rose-50/50' : 'border-zinc-300'
+              className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] placeholder:text-zinc-400 dark:placeholder:text-[#6B7184] ${
+                errors.name ? 'border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20' : 'border-zinc-300 dark:border-[#2A2F3D]'
               }`}
             />
             {errors.name && (
-              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p className="mt-1 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1">
                 <AlertTriangle size={12} /> {errors.name}
               </p>
             )}
@@ -222,7 +222,7 @@ export default function FeatureFormModal({
 
           {/* Feature Code */}
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider mb-1.5">
               Feature Code <span className="text-rose-500">*</span>
             </label>
             <input
@@ -239,20 +239,20 @@ export default function FeatureFormModal({
               }
               placeholder="e.g. PAYMENTS"
               disabled={isEditMode}
-              className={`w-full px-3 py-2 text-sm border rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-colors ${
+              className={`w-full px-3 py-2 text-sm border rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors ${
                 isEditMode
-                  ? 'bg-zinc-100 text-zinc-500 border-zinc-200 cursor-not-allowed'
+                  ? 'bg-zinc-100 dark:bg-[#161922] text-zinc-500 dark:text-[#6B7184] border-zinc-200 dark:border-[#2A2F3D] cursor-not-allowed'
                   : errors.code
-                  ? 'border-rose-300 bg-rose-50/50'
-                  : 'border-zinc-300'
+                  ? 'border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20'
+                  : 'bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] border-zinc-300 dark:border-[#2A2F3D]'
               }`}
             />
             {errors.code ? (
-              <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+              <p className="mt-1 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1">
                 <AlertTriangle size={12} /> {errors.code}
               </p>
             ) : isEditMode ? (
-              <p className="mt-1 text-[11px] text-zinc-400">
+              <p className="mt-1 text-[11px] text-zinc-400 dark:text-[#6B7184]">
                 Feature code is a unique identifier and cannot be modified.
               </p>
             ) : null}
@@ -260,20 +260,20 @@ export default function FeatureFormModal({
 
           {/* Defined Actions */}
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider mb-1.5">
               Actions
             </label>
-            <div className="flex items-center gap-2 p-2.5 bg-zinc-50 border border-zinc-200 rounded-lg">
-              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 text-blue-700 border border-blue-200">
+            <div className="flex items-center gap-2 p-2.5 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg">
+              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900/40">
                 READ
               </span>
-              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-100 text-emerald-700 border border-emerald-200">
+              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40">
                 WRITE
               </span>
-              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-rose-100 text-rose-700 border border-rose-200">
+              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40">
                 DELETE
               </span>
-              <span className="text-[11px] text-zinc-500 ml-auto">
+              <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] ml-auto">
                 Standard platform actions
               </span>
             </div>
@@ -281,8 +281,8 @@ export default function FeatureFormModal({
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
-              Description <span className="text-zinc-400 font-normal normal-case">(Optional)</span>
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider mb-1.5">
+              Description <span className="text-zinc-400 dark:text-[#6B7184] font-normal normal-case">(Optional)</span>
             </label>
             <textarea
               name="description"
@@ -290,17 +290,17 @@ export default function FeatureFormModal({
               onChange={handleChange}
               rows={3}
               placeholder="Provide context or purpose for this system feature..."
-              className="w-full px-3 py-2 text-sm border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-colors resize-none text-zinc-800 placeholder:text-zinc-400"
+              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none text-zinc-800 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] placeholder:text-zinc-400 dark:placeholder:text-[#6B7184]"
             />
           </div>
 
           {/* Active Toggle */}
-          <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
+          <div className="pt-2 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between">
             <div>
-              <label htmlFor="feature-active" className="text-xs font-semibold text-zinc-800 block cursor-pointer">
+              <label htmlFor="feature-active" className="text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE] block cursor-pointer">
                 Active Status
               </label>
-              <p className="text-[11px] text-zinc-500">
+              <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">
                 Active features are available for role and user permission assignments.
               </p>
             </div>
@@ -313,13 +313,13 @@ export default function FeatureFormModal({
                 onChange={handleChange}
                 className="sr-only peer"
               />
-              <div className="w-10 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+              <div className="w-10 h-5 bg-zinc-200 dark:bg-[#2A2F3D] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 dark:after:border-zinc-600 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
             </label>
           </div>
 
           {/* Auto-provision note (create only) */}
           {!isEditMode && (
-            <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-start gap-2.5 text-xs text-indigo-700">
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-lg flex items-start gap-2.5 text-xs text-indigo-700 dark:text-indigo-300">
               <ShieldCheck size={15} className="shrink-0 mt-0.5" />
               <span>
                 On create, the standard permissions (<span className="font-semibold">READ</span>,{' '}
@@ -331,12 +331,12 @@ export default function FeatureFormModal({
           )}
 
           {/* Form Actions */}
-          <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg transition-colors disabled:opacity-50"
             >
               Cancel
             </button>

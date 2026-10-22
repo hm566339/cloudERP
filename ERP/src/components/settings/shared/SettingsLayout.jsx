@@ -28,17 +28,17 @@ export function SettingsLayout({
 
       {/* ── Optional Page Header when passed directly to Layout ── */}
       {title && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200/60 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200/60 dark:border-[#2A2F3D] pb-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight">{title}</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">{title}</h1>
               {badge && (
-                <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-700 rounded-md border border-zinc-200">
+                <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-[#E6E8EE] rounded-md border border-zinc-200 dark:border-[#2A2F3D]">
                   {badge}
                 </span>
               )}
             </div>
-            {description && <p className="text-zinc-500 text-xs md:text-sm mt-1">{description}</p>}
+            {description && <p className="text-zinc-500 dark:text-[#A0A6B5] text-xs md:text-sm mt-1">{description}</p>}
           </div>
         </div>
       )}

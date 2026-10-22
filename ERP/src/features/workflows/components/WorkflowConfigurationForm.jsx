@@ -9,7 +9,7 @@ export { DOCUMENT_TYPES_BY_MODULE };
 function Field({ label, children, hint }) {
   return (
     <div className="space-y-1">
-      <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+      <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">
         {label}
       </label>
       {children}
@@ -45,8 +45,8 @@ export default function WorkflowConfigurationForm({
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Workflow name">
           <input
-            className={`w-full h-8 px-2.5 rounded-lg border bg-white text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 ${
-              (errors.name || errors.workflowName) ? 'border-red-400' : 'border-zinc-200'
+            className={`w-full h-8 px-2.5 rounded-lg border bg-white dark:bg-[#1D212C] text-xs text-zinc-900 dark:text-[#E6E8EE] placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-zinc-900 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900 dark:focus:ring-primary transition-colors disabled:bg-zinc-50 dark:disabled:bg-[#161922] ${
+              (errors.name || errors.workflowName) ? 'border-red-400' : 'border-zinc-200 dark:border-[#2A2F3D]'
             }`}
             disabled={!canEdit}
             value={workflow.name || workflow.workflowName || ''}
@@ -75,8 +75,8 @@ export default function WorkflowConfigurationForm({
 
         <Field label="Workflow code" hint="Unique code, e.g. SALES_APPROVAL">
           <input
-            className={`w-full h-8 px-2.5 rounded-lg border bg-white text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 font-mono text-[11px] ${
-              errors.workflowCode || isCodeDuplicate ? 'border-red-400' : 'border-zinc-200'
+            className={`w-full h-8 px-2.5 rounded-lg border bg-white dark:bg-[#1D212C] text-xs text-zinc-900 dark:text-[#E6E8EE] placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-zinc-900 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900 dark:focus:ring-primary transition-colors disabled:bg-zinc-50 dark:disabled:bg-[#161922] font-mono text-[11px] ${
+              errors.workflowCode || isCodeDuplicate ? 'border-red-400' : 'border-zinc-200 dark:border-[#2A2F3D]'
             }`}
             disabled={!canEdit}
             value={workflow.workflowCode || ''}
@@ -121,7 +121,7 @@ export default function WorkflowConfigurationForm({
               <button
                 type="button"
                 onClick={onRetryRoles}
-                className="text-[11px] text-zinc-900 underline font-semibold hover:text-zinc-700"
+                className="text-[11px] text-zinc-900 dark:text-[#E6E8EE] underline font-semibold hover:text-zinc-700 dark:hover:text-white"
               >
                 Retry loading roles
               </button>
@@ -139,7 +139,7 @@ export default function WorkflowConfigurationForm({
                 <button
                   type="button"
                   onClick={onRetryRoles}
-                  className="text-zinc-800 underline hover:text-zinc-950 font-semibold"
+                  className="text-zinc-800 dark:text-[#E6E8EE] underline hover:text-zinc-950 dark:hover:text-white font-semibold"
                 >
                   Retry
                 </button>
@@ -155,7 +155,7 @@ export default function WorkflowConfigurationForm({
       <Field label="Description">
         <textarea
           rows={2}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 resize-none"
+          className="w-full rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] px-2.5 py-2 text-xs text-zinc-900 dark:text-[#E6E8EE] placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-zinc-900 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900 dark:focus:ring-primary transition-colors disabled:bg-zinc-50 dark:disabled:bg-[#161922] resize-none"
           disabled={!canEdit}
           value={workflow.description}
           onChange={(e) => update('description', e.target.value)}
@@ -180,9 +180,9 @@ export default function WorkflowConfigurationForm({
 
         <Field label="Approval threshold" hint="Amount in company base currency">
           <div className="relative">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-zinc-400 font-semibold">₹</span>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-zinc-400 dark:text-zinc-500 font-semibold">₹</span>
             <input
-              className="w-full h-8 pl-6 pr-2.5 rounded-lg border border-zinc-200 bg-white text-xs text-zinc-900 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50"
+              className="w-full h-8 pl-6 pr-2.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-xs text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:border-zinc-900 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900 dark:focus:ring-primary transition-colors disabled:bg-zinc-50 dark:disabled:bg-[#161922]"
               disabled={!canEdit}
               value={workflow.threshold || ''}
               onChange={(e) => update('threshold', e.target.value.replace(/[^0-9,]/g, ''))}
@@ -192,7 +192,7 @@ export default function WorkflowConfigurationForm({
         </Field>
       </div>
 
-      <div className="divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
+      <div className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] shadow-sm overflow-hidden">
         <WorkflowSettingRow label="Workflow status" description="Allow this workflow to run for new transactions">
           <WorkflowToggle
             label="Workflow status"
@@ -225,7 +225,7 @@ export default function WorkflowConfigurationForm({
                 <button
                   type="button"
                   onClick={onRetryRoles}
-                  className="text-[10px] text-zinc-900 underline font-semibold hover:text-zinc-700"
+                  className="text-[10px] text-zinc-900 dark:text-[#E6E8EE] underline font-semibold hover:text-zinc-700 dark:hover:text-white"
                 >
                   Retry loading roles
                 </button>
@@ -264,7 +264,7 @@ export default function WorkflowConfigurationForm({
       <Field label="Notes">
         <textarea
           rows={2}
-          className="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-2 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 transition-colors disabled:bg-zinc-50 resize-none"
+          className="w-full rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] px-2.5 py-2 text-xs text-zinc-900 dark:text-[#E6E8EE] placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-zinc-900 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900 dark:focus:ring-primary transition-colors disabled:bg-zinc-50 dark:disabled:bg-[#161922] resize-none"
           disabled={!canEdit}
           value={workflow.notes}
           onChange={(e) => update('notes', e.target.value)}

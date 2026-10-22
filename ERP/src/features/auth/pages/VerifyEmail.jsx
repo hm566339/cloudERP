@@ -65,7 +65,7 @@ export default function VerifyEmail() {
 
       {(isError || !token) && (
         <>
-          <div className="w-16 h-16 rounded-2xl bg-white border border-rose-200 text-rose-600 flex items-center justify-center mb-6 shadow-sm relative overflow-hidden">
+          <div className="w-16 h-16 rounded-2xl bg-white dark:bg-surface-dark border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-6 shadow-sm relative overflow-hidden">
             <div className="absolute inset-0 bg-rose-50 opacity-50"></div>
             <XCircle size={32} className="relative z-10" />
           </div>
@@ -75,7 +75,7 @@ export default function VerifyEmail() {
           </p>
           <Link
             to={buildPath('/')}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-zinc-200 text-zinc-700 font-semibold rounded-lg hover:bg-zinc-50 hover:border-zinc-300 transition-all shadow-sm active:scale-[0.98]"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 font-semibold rounded-lg hover:bg-zinc-50 hover:border-zinc-300 transition-all shadow-sm active:scale-[0.98]"
           >
             Back to ERP
           </Link>

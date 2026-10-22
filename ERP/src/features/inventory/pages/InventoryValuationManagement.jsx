@@ -363,33 +363,33 @@ export default function InventoryValuationManagement() {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Product Name</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Product Name</span>
           <p className="text-sm font-semibold text-zinc-900">{prodName}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Movement No</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Movement No</span>
           <p className="text-sm font-semibold text-zinc-900 font-mono">{movNo}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Warehouse</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Warehouse</span>
           <p className="text-sm font-medium text-zinc-700">{wName}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Location</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Location</span>
           <p className="text-sm font-medium text-zinc-700">{locName}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Valuation Date</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Valuation Date</span>
           <p className="text-sm font-medium text-zinc-700">
             {val.valuationDate ? new Date(val.valuationDate).toLocaleDateString() : '-'}
           </p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Quantity</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Quantity</span>
           <p className="text-sm font-medium text-zinc-900 font-mono">{val.quantity ?? 0}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Average Cost</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Average Cost</span>
           <p className="text-sm font-medium text-zinc-700 font-mono">
             {val.averageCost !== undefined && val.averageCost !== null 
               ? Number(val.averageCost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
@@ -397,7 +397,7 @@ export default function InventoryValuationManagement() {
           </p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">COGS Amount</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">COGS Amount</span>
           <p className="text-sm font-medium text-zinc-700 font-mono">
             {val.cogsAmount !== undefined && val.cogsAmount !== null 
               ? Number(val.cogsAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
@@ -405,7 +405,7 @@ export default function InventoryValuationManagement() {
           </p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Stock Value</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Stock Value</span>
           <p className="text-sm font-bold text-zinc-900 font-mono">
             {val.stockValue !== undefined && val.stockValue !== null 
               ? Number(val.stockValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
@@ -413,7 +413,7 @@ export default function InventoryValuationManagement() {
           </p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">GL Status</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">GL Status</span>
           <div>
             {val.glPostingRequired ? (
               val.glPosted ? (
@@ -428,7 +428,7 @@ export default function InventoryValuationManagement() {
         </div>
         {val.valuationMethod && (
           <div className="space-y-1">
-            <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Valuation Method</span>
+            <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Valuation Method</span>
             <p className="text-sm font-medium text-zinc-700 font-mono uppercase">{val.valuationMethod}</p>
           </div>
         )}
@@ -437,7 +437,7 @@ export default function InventoryValuationManagement() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Inventory Valuation"
         description="Review the financial impact (COGS, Average Cost, GL Postings) of stock movements"

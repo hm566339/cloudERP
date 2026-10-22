@@ -99,7 +99,7 @@ export default function PurchaseRequisitionDetail() {
 
   if (error || !pr) {
     return (
-      <div className="flex flex-col h-full bg-zinc-50/50">
+      <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
         <PurchaseNavigation />
         <ErrorState
           title="Purchase Requisition Not Found"
@@ -114,9 +114,9 @@ export default function PurchaseRequisitionDetail() {
   const hasActions = (pr.status === 'DRAFT' && canUpdate) || (pr.status === 'SUBMITTED' && canApprove);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PurchaseNavigation />
-      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white border-b border-zinc-200 shadow-sm">
+      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark shadow-sm">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(buildPath('/accounts/transactions/purchase-requisitions'))}
@@ -166,7 +166,7 @@ export default function PurchaseRequisitionDetail() {
                 <ChevronDown size={14} className={`transition-transform ${showMoreActions ? 'rotate-180' : ''}`} />
               </button>
               {showMoreActions && (
-                <div className="absolute right-0 mt-2 w-56 bg-white border border-zinc-200 rounded-xl shadow-lg z-30 py-1.5 text-xs animate-in fade-in slide-in-from-top-2">
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-lg z-30 py-1.5 text-xs animate-in fade-in slide-in-from-top-2">
                   {pr.status === 'DRAFT' && canUpdate && (
                     <button
                       onClick={() => handleAction(submitMutation, 'Submit', true)}
@@ -215,55 +215,55 @@ export default function PurchaseRequisitionDetail() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6">
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
-            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100">Requisition Information</h3>
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-6">
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Requisition Information</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">PR Number</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">PR Number</p>
                 <p className="text-sm font-mono font-bold text-zinc-900 mt-1">{displayValue(pr.requisitionNumber)}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Requester</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Requester</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{displayValue(pr.requesterName)}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Requisition Name</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Requisition Name</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{displayValue(pr.requisitionName)}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Department</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Department</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{displayValue(pr.departmentName)}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Cost Center</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Cost Center</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{displayValue(pr.costCenterName)}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Required Date</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Required Date</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{pr.requiredDate ? new Date(pr.requiredDate).toLocaleDateString() : 'N/A'}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Priority</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Priority</p>
                 <div className="mt-1"><PriorityBadge priority={pr.priority} /></div>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Status</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Status</p>
                 <div className="mt-1"><StatusBadge status={pr.status} /></div>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Purpose</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Purpose</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{displayValue(pr.purpose)}</p>
               </div>
               {pr.remarks && (
                 <div className="col-span-2 md:col-span-3 lg:col-span-4">
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Remarks</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Remarks</p>
                   <p className="text-sm font-medium text-zinc-900 mt-1">{pr.remarks}</p>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
             <div className="p-6 pb-4">
               <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Requested Items</h3>
             </div>
@@ -306,26 +306,26 @@ export default function PurchaseRequisitionDetail() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
-            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100">Workflow Audit</h3>
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-6">
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Workflow Audit</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {pr.submittedBy && (
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Submitted By</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Submitted By</p>
                   <p className="text-sm font-medium text-zinc-900 mt-1">{pr.submittedBy}</p>
                   {pr.submittedAt && <p className="text-[10px] text-zinc-400 mt-0.5">{new Date(pr.submittedAt).toLocaleString()}</p>}
                 </div>
               )}
               {pr.approvedBy && (
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Approved By</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Approved By</p>
                   <p className="text-sm font-medium text-emerald-700 mt-1">{pr.approvedBy}</p>
                   {pr.approvedAt && <p className="text-[10px] text-zinc-400 mt-0.5">{new Date(pr.approvedAt).toLocaleString()}</p>}
                 </div>
               )}
               {pr.rejectedBy && (
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Rejected By</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Rejected By</p>
                   <p className="text-sm font-medium text-rose-700 mt-1">{pr.rejectedBy}</p>
                   {pr.rejectedAt && <p className="text-[10px] text-zinc-400 mt-0.5">{new Date(pr.rejectedAt).toLocaleString()}</p>}
                   {pr.rejectionReason && (
@@ -337,20 +337,20 @@ export default function PurchaseRequisitionDetail() {
               )}
               {pr.cancelledBy && (
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Cancelled By</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Cancelled By</p>
                   <p className="text-sm font-medium text-zinc-700 mt-1">{pr.cancelledBy}</p>
                   {pr.cancelledAt && <p className="text-[10px] text-zinc-400 mt-0.5">{new Date(pr.cancelledAt).toLocaleString()}</p>}
                 </div>
               )}
               {pr.createdAt && (
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Created</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Created</p>
                   <p className="text-sm font-medium text-zinc-900 mt-1">{new Date(pr.createdAt).toLocaleString()}</p>
                 </div>
               )}
               {pr.updatedAt && (
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Last Updated</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Last Updated</p>
                   <p className="text-sm font-medium text-zinc-900 mt-1">{new Date(pr.updatedAt).toLocaleString()}</p>
                 </div>
               )}
@@ -361,19 +361,19 @@ export default function PurchaseRequisitionDetail() {
 
       {showRejectModal && (
         <div className="fixed inset-0 z-[201] flex items-center justify-center p-4" onClick={() => { setShowRejectModal(false); setRejectReason(''); }}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-zinc-200 w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-zinc-200 dark:border-border-dark w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-zinc-900 mb-2">Reject Requisition</h3>
             <p className="text-sm text-zinc-500 mb-4">Please provide a reason for rejecting this requisition.</p>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Rejection reason..."
-              className="w-full h-24 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all resize-none"
+              className="w-full h-24 px-3 py-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-sm text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all resize-none"
             />
             <div className="flex justify-end gap-3 mt-4">
               <button
                 onClick={() => { setShowRejectModal(false); setRejectReason(''); }}
-                className="px-4 py-2 text-sm font-semibold text-zinc-600 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors"
+                className="px-4 py-2 text-sm font-semibold text-zinc-600 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-hover-dark/40 dark:hover:bg-[#222736] transition-colors"
               >
                 Cancel
               </button>

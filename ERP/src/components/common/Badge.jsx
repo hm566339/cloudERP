@@ -22,23 +22,23 @@ export default function Badge({
   ...props
 }) {
   const variantClasses = {
-    default: 'bg-zinc-900 text-white border-zinc-900',
-    secondary: 'bg-zinc-100 text-zinc-700 border-zinc-200',
-    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    warning: 'bg-amber-50 text-amber-700 border-amber-200',
-    danger: 'bg-rose-50 text-rose-700 border-rose-200',
-    info: 'bg-teal-50 text-teal-700 border-teal-200',
-    outline: 'bg-transparent text-zinc-700 border-zinc-300',
+    default: 'bg-zinc-900 dark:bg-[#4C8DFF] text-white dark:text-zinc-950 border-zinc-900 dark:border-[#4C8DFF]',
+    secondary: 'bg-zinc-100 dark:bg-[#222736] text-zinc-700 dark:text-[#E6E8EE] border-zinc-200 dark:border-[#2A2F3D]',
+    success: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30',
+    warning: 'bg-amber-50 dark:bg-[#F5B544]/15 text-amber-700 dark:text-[#F5B544] border-amber-200 dark:border-[#F5B544]/30',
+    danger: 'bg-rose-50 dark:bg-[#F0616D]/15 text-rose-700 dark:text-[#F0616D] border-rose-200 dark:border-[#F0616D]/30',
+    info: 'bg-teal-50 dark:bg-[#38BDF8]/15 text-teal-700 dark:text-[#38BDF8] border-teal-200 dark:border-[#38BDF8]/30',
+    outline: 'bg-transparent text-zinc-700 dark:text-[#E6E8EE] border-zinc-300 dark:border-[#2A2F3D]',
   };
 
   const dotClasses = {
-    default: 'bg-white',
-    secondary: 'bg-zinc-400',
-    success: 'bg-emerald-500',
-    warning: 'bg-amber-500',
-    danger: 'bg-rose-500',
-    info: 'bg-teal-500',
-    outline: 'bg-zinc-400',
+    default: 'bg-white dark:bg-[#4C8DFF]',
+    secondary: 'bg-zinc-400 dark:bg-[#6B7184]',
+    success: 'bg-emerald-500 dark:bg-[#34C38F]',
+    warning: 'bg-amber-500 dark:bg-[#F5B544]',
+    danger: 'bg-rose-500 dark:bg-[#F0616D]',
+    info: 'bg-teal-500 dark:bg-[#38BDF8]',
+    outline: 'bg-zinc-400 dark:bg-[#6B7184]',
   };
 
   const sizeClasses = {

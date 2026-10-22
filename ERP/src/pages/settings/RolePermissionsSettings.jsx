@@ -29,7 +29,7 @@ const PermissionCheckbox = ({ checked, indeterminate, disabled, onChange }) => {
     }
   }, [indeterminate]);
 
-  if (disabled) return <div className="w-4 h-4 mx-auto opacity-20 bg-zinc-100 rounded border border-zinc-200" title="Not applicable" />;
+  if (disabled) return <div className="w-4 h-4 mx-auto opacity-20 bg-zinc-100 dark:bg-zinc-800 rounded border border-zinc-200 dark:border-zinc-700" title="Not applicable" />;
 
   return (
     <div className="flex justify-center">
@@ -38,7 +38,7 @@ const PermissionCheckbox = ({ checked, indeterminate, disabled, onChange }) => {
         ref={ref}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="w-4 h-4 text-emerald-600 border-zinc-300 rounded focus:ring-emerald-500 cursor-pointer transition-all"
+        className="w-4 h-4 text-emerald-600 dark:text-emerald-500 border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 rounded focus:ring-emerald-500 cursor-pointer transition-all"
       />
     </div>
   );
@@ -365,7 +365,7 @@ export default function RolePermissionsSettings() {
   const selectedRoleData = roles.find(r => r.id === selectedRoleId);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 relative">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] relative">
       <PageHeader
         title="Role & Permissions"
         description="Configure module access and actions for each organizational role"
@@ -384,18 +384,18 @@ export default function RolePermissionsSettings() {
       <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-6 p-6">
         
         {/* LEFT PANEL: Role List */}
-        <div className="md:col-span-4 lg:col-span-3 flex flex-col bg-white rounded-xl border border-zinc-200/90 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
-            <h3 className="font-semibold text-zinc-800 mb-1">Roles</h3>
-            <p className="text-xs text-zinc-500 mb-4">Select a role to view and manage permissions</p>
+        <div className="md:col-span-4 lg:col-span-3 flex flex-col bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/60">
+            <h3 className="font-semibold text-zinc-800 dark:text-zinc-200 mb-1">Roles</h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4">Select a role to view and manage permissions</p>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={15} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" size={15} />
               <input
                 type="text"
                 placeholder="Search roles..."
                 value={searchRole}
                 onChange={e => setSearchRole(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 text-sm bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
+                className="w-full h-9 pl-9 pr-3 text-sm bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-blue-500/20 focus:border-zinc-900 dark:focus:border-blue-500"
               />
             </div>
           </div>
@@ -403,7 +403,7 @@ export default function RolePermissionsSettings() {
             {isLoadingRoles ? (
               <div className="p-8 text-center text-zinc-400"><Loader2 className="animate-spin mx-auto" /></div>
             ) : filteredRoles.length === 0 ? (
-              <div className="p-4 text-center text-sm text-zinc-500">No roles found.</div>
+              <div className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">No roles found.</div>
             ) : (
               filteredRoles.map(role => (
                 <button
@@ -411,26 +411,26 @@ export default function RolePermissionsSettings() {
                   onClick={() => setSelectedRoleId(role.id)}
                   className={`w-full text-left p-3 rounded-lg border transition-all ${
                     selectedRoleId === role.id 
-                      ? 'bg-blue-50/50 border-blue-200 ring-1 ring-blue-500/10' 
-                      : 'bg-white border-zinc-100 hover:border-zinc-300 hover:bg-zinc-50'
+                      ? 'bg-blue-50/50 dark:bg-blue-500/15 border-blue-200 dark:border-blue-500/40 ring-1 ring-blue-500/10' 
+                      : 'bg-white dark:bg-[#161922] border-zinc-100 dark:border-[#2A2F3D] hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-[#1D212C]'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex gap-3">
-                      <div className={`mt-0.5 p-1.5 rounded-md ${selectedRoleId === role.id ? 'bg-blue-100 text-blue-600' : 'bg-zinc-100 text-zinc-500'}`}>
+                      <div className={`mt-0.5 p-1.5 rounded-md ${selectedRoleId === role.id ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'}`}>
                         <Users size={16} />
                       </div>
                       <div>
-                        <div className="font-bold text-sm text-zinc-900 tracking-tight">{role.name}</div>
-                        <div className="text-xs text-zinc-500 mt-1 flex items-center gap-1.5">
+                        <div className="font-bold text-sm text-zinc-900 dark:text-zinc-100 tracking-tight">{role.name}</div>
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5">
                           <span>{role.roleType || 'System Role'}</span>
-                          <span className="w-1 h-1 rounded-full bg-zinc-300"></span>
+                          <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
                           <span>{role.usersCount ?? 0} users</span>
                         </div>
                       </div>
                     </div>
                     {role.active !== false && (
-                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/50">
+                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/30">
                         <CheckCircle2 size={10} /> Active
                       </span>
                     )}
@@ -442,35 +442,35 @@ export default function RolePermissionsSettings() {
         </div>
 
         {/* RIGHT PANEL: Permissions Matrix */}
-        <div className="md:col-span-8 lg:col-span-9 flex flex-col bg-white rounded-xl border border-zinc-200/90 shadow-sm overflow-hidden">
+        <div className="md:col-span-8 lg:col-span-9 flex flex-col bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
           {selectedRoleData ? (
             <>
               {/* Role Header */}
-              <div className="p-5 border-b border-zinc-100 shrink-0">
+              <div className="p-5 border-b border-zinc-100 dark:border-[#2A2F3D] shrink-0">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-3 mb-1.5">
-                      <h2 className="text-xl font-bold text-zinc-900">{selectedRoleData.name}</h2>
+                      <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{selectedRoleData.name}</h2>
                       {selectedRoleData.active !== false && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/50">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/30">
                           <CheckCircle2 size={12} /> Active
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-zinc-500 flex items-center gap-2">
+                    <div className="text-sm text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
                       <span>{selectedRoleData.roleType || 'System Role'}</span>
-                      <span className="w-1 h-1 rounded-full bg-zinc-300"></span>
+                      <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
                       <span>{selectedRoleData.usersCount ?? 0} assigned users</span>
                       {selectedRoleData.description && (
                         <>
-                          <span className="w-1 h-1 rounded-full bg-zinc-300"></span>
+                          <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
                           <span>{selectedRoleData.description}</span>
                         </>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm">
+                    <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors shadow-sm">
                       <Copy size={16} /> Duplicate Role
                     </button>
                     <button 
@@ -486,9 +486,9 @@ export default function RolePermissionsSettings() {
               </div>
 
               {/* Info Alert */}
-              <div className="px-5 py-4 bg-blue-50/50 border-b border-blue-100 flex items-start gap-3 shrink-0">
-                <Info size={18} className="text-blue-600 mt-0.5 shrink-0" />
-                <p className="text-sm text-blue-800">
+              <div className="px-5 py-4 bg-blue-50/50 dark:bg-blue-500/10 border-b border-blue-100 dark:border-blue-500/20 flex items-start gap-3 shrink-0">
+                <Info size={18} className="text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                <p className="text-sm text-blue-800 dark:text-blue-300">
                   These permissions control access to modules and features. Some permissions may be inherited from higher-level roles.
                 </p>
               </div>
@@ -499,38 +499,38 @@ export default function RolePermissionsSettings() {
                   <div className="p-12 flex justify-center text-zinc-400"><Loader2 className="animate-spin w-8 h-8" /></div>
                 ) : (
                   <table className="w-full text-left border-collapse min-w-[800px]" aria-label="Role Permissions Matrix">
-                    <thead className="sticky top-0 bg-zinc-50 z-20 border-b border-zinc-200">
+                    <thead className="sticky top-0 bg-zinc-50 dark:bg-[#1D212C] z-20 border-b border-zinc-200 dark:border-[#2A2F3D]">
                       <tr>
-                        <th scope="col" className="py-3 px-6 text-xs font-semibold text-zinc-600 uppercase tracking-wider border-b border-zinc-200">
+                        <th scope="col" className="py-3 px-6 text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-[#2A2F3D]">
                           Feature
                         </th>
-                        <th scope="col" className="py-3 px-4 text-xs font-semibold text-zinc-600 uppercase tracking-wider text-center border-b border-zinc-200 w-24">
+                        <th scope="col" className="py-3 px-4 text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider text-center border-b border-zinc-200 dark:border-[#2A2F3D] w-24">
                           Select all
                         </th>
                         {ACTIONS.map(action => (
-                          <th key={action.value} scope="col" className="py-3 px-4 text-xs font-semibold text-zinc-600 uppercase tracking-wider text-center border-b border-zinc-200 w-24">
+                          <th key={action.value} scope="col" className="py-3 px-4 text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider text-center border-b border-zinc-200 dark:border-[#2A2F3D] w-24">
                             {action.label}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100">
+                    <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                       {modules.map(mod => {
                         const isExpanded = expandedModules.has(mod.name);
                         const modAllState = getModuleAllState(mod.name);
                         return (
                           <React.Fragment key={mod.name}>
                             {/* Module Row */}
-                            <tr className={`group transition-colors ${isExpanded ? 'bg-zinc-50/50' : 'bg-white hover:bg-zinc-50'}`}>
+                            <tr className={`group transition-colors ${isExpanded ? 'bg-zinc-50/50 dark:bg-[#1D212C]/60' : 'bg-white dark:bg-[#161922] hover:bg-zinc-50 dark:hover:bg-[#1D212C]'}`}>
                               <td className="py-3 px-6">
                                 <button 
                                   onClick={() => toggleModuleExpanded(mod.name)}
-                                  className="flex items-center gap-2.5 w-full text-left font-bold text-zinc-800 text-sm"
+                                  className="flex items-center gap-2.5 w-full text-left font-bold text-zinc-800 dark:text-zinc-200 text-sm"
                                 >
-                                  <div className={`text-zinc-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                                  <div className={`text-zinc-400 dark:text-zinc-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
                                     <ChevronRight size={16} />
                                   </div>
-                                  <LayoutGrid size={16} className="text-zinc-400" />
+                                  <LayoutGrid size={16} className="text-zinc-400 dark:text-zinc-500" />
                                   {mod.name}
                                 </button>
                               </td>
@@ -561,11 +561,11 @@ export default function RolePermissionsSettings() {
                             {isExpanded && mod.features.map(feature => {
                               const featAllState = getFeatureState(feature.code);
                               return (
-                                <tr key={feature.code} className="bg-white hover:bg-zinc-50/50 transition-colors">
+                                <tr key={feature.code} className="bg-white dark:bg-[#161922] hover:bg-zinc-50/50 dark:hover:bg-[#1D212C]/50 transition-colors">
                                   <td className="py-2.5 px-6 pl-14">
-                                    <div className="text-sm font-medium text-zinc-600">{feature.name}</div>
+                                    <div className="text-sm font-medium text-zinc-600 dark:text-zinc-300">{feature.name}</div>
                                   </td>
-                                  <td className="py-2.5 px-4 bg-zinc-50/30">
+                                  <td className="py-2.5 px-4 bg-zinc-50/30 dark:bg-[#1D212C]/30">
                                     <PermissionCheckbox 
                                       checked={featAllState.checked}
                                       indeterminate={featAllState.indeterminate}
@@ -597,9 +597,9 @@ export default function RolePermissionsSettings() {
               </div>
               
               {/* Footer Actions */}
-              <div className="p-5 border-t border-zinc-200 bg-zinc-50/80 flex justify-end gap-3 mt-auto shrink-0">
+              <div className="p-5 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C]/80 flex justify-end gap-3 mt-auto shrink-0">
                 <button 
-                  className="px-4 py-2 text-sm font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-300 rounded-lg shadow-sm hover:bg-zinc-50 transition-all"
+                  className="px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 bg-white dark:bg-[#161922] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg shadow-sm hover:bg-zinc-50 dark:hover:bg-[#1D212C] transition-all"
                 >
                   Cancel
                 </button>
@@ -614,7 +614,7 @@ export default function RolePermissionsSettings() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-zinc-500 bg-zinc-50/50">
+            <div className="flex-1 flex items-center justify-center text-zinc-500 dark:text-zinc-400 bg-zinc-50/50 dark:bg-[#161922]">
               Select a role from the left panel to configure its permissions.
             </div>
           )}
@@ -628,7 +628,7 @@ export default function RolePermissionsSettings() {
       >
         <form onSubmit={handleCreateRole} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
               Role Name <span className="text-rose-500">*</span>
             </label>
             <input
@@ -636,13 +636,13 @@ export default function RolePermissionsSettings() {
               value={newRoleData.name}
               onChange={(e) => setNewRoleData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="e.g. Finance Manager"
-              className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
+              className="w-full px-3 py-2 bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-blue-500/20 focus:border-zinc-900 dark:focus:border-blue-500"
               disabled={isCreatingRole}
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
               Description
             </label>
             <textarea
@@ -650,7 +650,7 @@ export default function RolePermissionsSettings() {
               onChange={(e) => setNewRoleData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Role description..."
               rows={3}
-              className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 resize-none"
+              className="w-full px-3 py-2 bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-blue-500/20 focus:border-zinc-900 dark:focus:border-blue-500 resize-none"
               disabled={isCreatingRole}
             />
           </div>
@@ -660,19 +660,19 @@ export default function RolePermissionsSettings() {
               id="role-active"
               checked={newRoleData.active}
               onChange={(e) => setNewRoleData(prev => ({ ...prev, active: e.target.checked }))}
-              className="w-4 h-4 text-zinc-900 border-zinc-300 rounded focus:ring-zinc-900 accent-zinc-900"
+              className="w-4 h-4 text-zinc-900 dark:text-blue-500 border-zinc-300 dark:border-zinc-700 dark:bg-zinc-800 rounded focus:ring-zinc-900 dark:focus:ring-blue-500 accent-zinc-900 dark:accent-blue-500"
               disabled={isCreatingRole}
             />
-            <label htmlFor="role-active" className="text-sm font-medium text-zinc-700">
+            <label htmlFor="role-active" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               Active Status
             </label>
           </div>
-          <div className="pt-4 flex justify-end gap-3 border-t border-zinc-100 mt-6">
+          <div className="pt-4 flex justify-end gap-3 border-t border-zinc-100 dark:border-[#2A2F3D] mt-6">
             <button
               type="button"
               onClick={() => setIsRoleModalOpen(false)}
               disabled={isCreatingRole}
-              className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50"
+              className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-[#161922] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#1D212C]"
             >
               Cancel
             </button>

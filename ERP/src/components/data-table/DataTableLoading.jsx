@@ -7,7 +7,7 @@ export default function DataTableLoading({ columnCount = 6, rowCount = 8 }) {
   return (
     <>
       {Array.from({ length: rowCount }).map((_, rIdx) => (
-        <tr key={`skeleton-row-${rIdx}`} className="border-b border-zinc-100 animate-pulse">
+        <tr key={`skeleton-row-${rIdx}`} className="border-b border-zinc-100 dark:border-[#2A2F3D] animate-pulse">
           {Array.from({ length: columnCount }).map((_, cIdx) => (
             <td key={`skeleton-cell-${cIdx}`} className="p-3.5">
               <div

@@ -117,14 +117,14 @@ const GstRegistrationFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+          <div className="p-3 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/60 rounded-lg text-sm">
             {error}
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">GSTIN *</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">GSTIN *</label>
             <input
               type="text"
               name="gstin"
@@ -137,7 +137,7 @@ const GstRegistrationFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">PAN</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">PAN</label>
             <input
               type="text"
               name="pan"
@@ -152,7 +152,7 @@ const GstRegistrationFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">Registration Type *</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Registration Type *</label>
             <CustomSelect
               name="registrationType"
               value={formData.registrationType}
@@ -166,7 +166,7 @@ const GstRegistrationFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
             </CustomSelect>
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">Registered Date</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Registered Date</label>
             <input
               type="date"
               name="registeredDate"
@@ -179,7 +179,7 @@ const GstRegistrationFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">Legal Name *</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Legal Name *</label>
             <input
               type="text"
               name="legalName"
@@ -191,7 +191,7 @@ const GstRegistrationFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">Trade Name</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Trade Name</label>
             <input
               type="text"
               name="tradeName"
@@ -204,7 +204,7 @@ const GstRegistrationFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">State Code *</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">State Code *</label>
           <CustomSelect
             name="stateCodeId"
             value={formData.stateCodeId}
@@ -229,14 +229,14 @@ const GstRegistrationFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
               name="isDefault"
               checked={formData.isDefault}
               onChange={handleChange}
-              className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-zinc-900/10"
+              className="w-4 h-4 rounded border-zinc-300 dark:border-border-dark dark:bg-card-dark text-blue-600 focus:ring-zinc-900/10 dark:focus:ring-primary/20"
             />
-            <span className="text-sm font-medium text-zinc-700">Default GST Registration</span>
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Default GST Registration</span>
           </label>
-          <p className="text-xs text-zinc-500 ml-6">Use this GST registration by default for accounting and invoice calculations.</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 ml-6">Use this GST registration by default for accounting and invoice calculations.</p>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-zinc-100">
+        <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-zinc-100 dark:border-border-dark">
           <button
             type="button"
             onClick={onClose}

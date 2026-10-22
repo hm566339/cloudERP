@@ -57,10 +57,10 @@ export default function HRDashboard() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE]">
             HR &amp; Employees
           </h1>
-          <p className="text-xs text-zinc-500 font-medium">
+          <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium">
             Manage staff listings, attendance punch sheets, rosters and performance reviews
           </p>
         </div>
@@ -75,10 +75,10 @@ export default function HRDashboard() {
 
       {/* Attendance punch card */}
       {(canViewModule('hr_attendance') || canViewModule('hr')) && (
-        <div className="card p-4 bg-gradient-to-r from-primary-50 to-indigo-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="card p-4 bg-gradient-to-r from-primary-50 to-indigo-50 dark:from-[#1D212C] dark:to-[#161922] dark:border-[#2A2F3D] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h3 className="text-sm font-bold text-zinc-900">Attendance Punch Station</h3>
-            <p className="text-xs text-zinc-500">
+            <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">Attendance Punch Station</h3>
+            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">
               {clockedIn ? `Clocked in since ${clockTime}` : 'You are currently off-duty'}
             </p>
           </div>
@@ -97,7 +97,7 @@ export default function HRDashboard() {
       )}
 
       {/* Sub tabs navigation */}
-      <div className="border-b border-zinc-200">
+      <div className="border-b border-zinc-200 dark:border-[#2A2F3D]">
         <nav className="flex gap-6 -mb-px">
           {['directory', 'roster', 'payroll']
                     .filter(tab => {
@@ -112,8 +112,8 @@ export default function HRDashboard() {
                 onClick={() => setActiveSubTab(tab)}
                 className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
                   activeSubTab === tab
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-zinc-400 hover:text-zinc-600'
+                    ? 'border-primary text-primary dark:text-[#4C8DFF] dark:border-[#4C8DFF]'
+                    : 'border-transparent text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE]'
                 }`}
               >
                 {tab}
@@ -124,12 +124,12 @@ export default function HRDashboard() {
 
       {/* Directory Content */}
       {activeSubTab === 'directory' && (
-        <div className="card overflow-hidden relative">
+        <div className="card overflow-hidden relative dark:bg-[#161922] dark:border-[#2A2F3D]">
           {isLoading && <div className="p-6 w-full"><TableSkeleton columns={5} rows={3} /></div>}
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="bg-zinc-50 text-[8px] font-bold uppercase tracking-wider text-zinc-500 border-b border-zinc-200">
+                <tr className="bg-zinc-50 dark:bg-[#1D212C] text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] border-b border-zinc-200 dark:border-[#2A2F3D]">
                 <th className="w-12 text-center">S.No.</th>
                   <th className="py-4 px-6">Name</th>
                   <th className="py-4 px-6">Department</th>
@@ -138,17 +138,17 @@ export default function HRDashboard() {
                   <th className="py-4 px-6">State</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 text-zinc-700 staggered-list">
+              <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] staggered-list">
                 {staff.map((emp, index) => (
-                  <tr key={emp.id} className="hover:bg-zinc-50/50">
-                    <td className="text-center font-medium text-zinc-500">{index + 1}</td>
-                    <td className="py-4 px-6 font-semibold text-zinc-900">
+                  <tr key={emp.id} className="hover:bg-zinc-50/50 dark:hover:bg-[#222736]">
+                    <td className="text-center font-medium text-zinc-500 dark:text-[#A0A6B5]">{index + 1}</td>
+                    <td className="py-4 px-6 font-semibold text-zinc-900 dark:text-[#E6E8EE]">
                       {emp.name}
-                      <span className="block text-[8px] text-zinc-400 font-normal">{emp.email}</span>
+                      <span className="block text-[8px] text-zinc-400 dark:text-[#6B7184] font-normal">{emp.email}</span>
                     </td>
-                    <td className="py-4 px-6 font-medium text-zinc-500">{emp.dept}</td>
-                    <td className="py-4 px-6 font-mono text-xs">{emp.role}</td>
-                    <td className="py-4 px-6 text-xs text-zinc-500">{emp.shift}</td>
+                    <td className="py-4 px-6 font-medium text-zinc-500 dark:text-[#A0A6B5]">{emp.dept}</td>
+                    <td className="py-4 px-6 font-mono text-xs text-zinc-700 dark:text-[#E6E8EE]">{emp.role}</td>
+                    <td className="py-4 px-6 text-xs text-zinc-500 dark:text-[#A0A6B5]">{emp.shift}</td>
                     <td className="py-4 px-6">
                       <span
                         className={`badge ${
@@ -164,7 +164,7 @@ export default function HRDashboard() {
                 ))}
                 {!isLoading && staff.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-10 text-center text-zinc-400 text-sm">
+                    <td colSpan={6} className="py-10 text-center text-zinc-400 dark:text-[#6B7184] text-sm">
                       No employees found. Register one to get started.
                     </td>
                   </tr>
@@ -177,13 +177,13 @@ export default function HRDashboard() {
 
       {/* Roster & Payroll placeholder states */}
       {activeSubTab !== 'directory' && (
-        <div className="card p-4 text-center py-12 space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto">
+        <div className="card p-4 text-center py-12 space-y-3 dark:bg-[#161922] dark:border-[#2A2F3D]">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 dark:text-indigo-400 flex items-center justify-center mx-auto">
             {activeSubTab === 'roster' ? <Calendar size={24} /> : <Heart size={24} />}
           </div>
           <div>
-            <h3 className="font-bold text-zinc-900 capitalize">{activeSubTab} Dashboard</h3>
-            <p className="text-xs text-zinc-500 max-w-sm mx-auto mt-1">
+            <h3 className="font-bold text-zinc-900 dark:text-[#E6E8EE] capitalize">{activeSubTab} Dashboard</h3>
+            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] max-w-sm mx-auto mt-1">
               Roster allocations, shift planning, payouts processing and salary slips are managed here.
             </p>
           </div>
@@ -193,17 +193,17 @@ export default function HRDashboard() {
       {/* Register Staff Modal */}
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm">
-          <div className="card max-w-md w-full p-4 space-y-4 animate-slide-up">
+          <div className="card max-w-md w-full p-4 space-y-4 animate-slide-up bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D]">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-bold text-zinc-900">
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">
                 Register New Employee
               </h3>
-              <button onClick={() => setShowAdd(false)} className="text-zinc-400 hover:text-zinc-600">✕</button>
+              <button onClick={() => setShowAdd(false)} className="text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE]">✕</button>
             </div>
 
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-500 block">Staff Name *</label>
+                <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Staff Name *</label>
                 <input
                   type="text"
                   placeholder="e.g. Liam Johnson"
@@ -215,7 +215,7 @@ export default function HRDashboard() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-500 block">Workspace Email *</label>
+                <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Workspace Email *</label>
                 <input
                   type="email"
                   placeholder="liam@company.com"
@@ -228,7 +228,7 @@ export default function HRDashboard() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-500 block">Designation *</label>
+                  <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Designation *</label>
                   <input
                     type="text"
                     placeholder="HR Assistant"
@@ -240,7 +240,7 @@ export default function HRDashboard() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-500 block">Department</label>
+                  <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Department</label>
                   <CustomSelect
                     value={dept}
                     onChange={(e) => setDept(e.target.value)}

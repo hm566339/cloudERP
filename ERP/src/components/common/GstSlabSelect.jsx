@@ -96,7 +96,7 @@ export default function GstSlabSelect({
               closeDropdown();
               setIsCreateModalOpen(true);
             }} 
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 mt-1 text-sm font-semibold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 mt-1 text-sm font-semibold text-primary dark:text-blue-400 bg-primary/10 dark:bg-primary/20 hover:bg-primary/20 dark:hover:bg-primary/30 rounded-lg transition-colors"
           >
             <Plus size={16} />
             {isEmpty ? 'Create First GST Slab' : 'Create New GST Slab'}
@@ -110,7 +110,7 @@ export default function GstSlabSelect({
               closeDropdown();
               setIsCreateModalOpen(true);
             }} 
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-[10.4px] font-semibold text-primary bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-[10.4px] font-semibold text-primary dark:text-blue-400 bg-primary/5 dark:bg-primary/20 hover:bg-primary/10 dark:hover:bg-primary/30 rounded-lg transition-colors"
           >
             <Plus size={15} />
             Create New GST Slab

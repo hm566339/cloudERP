@@ -165,7 +165,7 @@ export default function SystemLogsPage() {
         <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-auto">
           <button
             onClick={handleExport}
-            className="inline-flex items-center gap-1.5 h-9 px-3.5 bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-700 rounded-lg text-xs font-semibold transition-all shadow-2xs active:scale-95"
+            className="inline-flex items-center gap-1.5 h-9 px-3.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-50 text-zinc-700 rounded-lg text-xs font-semibold transition-all shadow-2xs active:scale-95"
             title="Export logs as CSV"
           >
             <Download size={14} />
@@ -183,11 +183,11 @@ export default function SystemLogsPage() {
       </div>
 
       {/* ── Filter / Search Bar (RFQ / Enterprise Style) ── */}
-      <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-4">
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D]/90 shadow-2xs p-4">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_320px_auto] gap-2.5 items-end">
           {/* Search Input */}
           <div className="min-w-0">
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1.5">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1.5">
               Search Logs
             </label>
             <div className="relative">
@@ -197,7 +197,7 @@ export default function SystemLogsPage() {
                 value={searchQuery}
                 onChange={(e) => filterBarProps.onSearchChange(e.target.value)}
                 placeholder="Search logs by message or context..."
-                className="w-full h-10 pl-9 pr-8 bg-zinc-50/50 hover:bg-white focus:bg-white border border-zinc-200 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10/15 rounded-lg text-xs font-medium text-zinc-800 placeholder:text-zinc-400 outline-none transition-all"
+                className="w-full h-10 pl-9 pr-8 bg-zinc-50/50 hover:bg-white focus:bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10/15 rounded-lg text-xs font-medium text-zinc-800 placeholder:text-zinc-400 outline-none transition-all"
               />
               {searchQuery && (
                 <button
@@ -215,13 +215,13 @@ export default function SystemLogsPage() {
 
           {/* Level Select */}
           <div className="w-full md:w-[320px]">
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1.5">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1.5">
               Level
             </label>
             <CustomSelect
               value={filterLevel}
               onChange={(e) => filterBarProps.onFilterChange('level', e.target.value)}
-              className="w-full h-10 px-3 bg-zinc-50/50 hover:bg-white focus:bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10/15 transition-all cursor-pointer"
+              className="w-full h-10 px-3 bg-zinc-50/50 hover:bg-white focus:bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10/15 transition-all cursor-pointer"
             >
               <option value="all">All Levels</option>
               <option value="debug">Debug</option>
@@ -237,7 +237,7 @@ export default function SystemLogsPage() {
             <button
               type="button"
               onClick={filterBarProps.onClearAll}
-              className="h-10 px-4 border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 rounded-lg text-xs font-medium transition-all shadow-2xs flex items-center justify-center gap-1.5 whitespace-nowrap"
+              className="h-10 px-4 border border-zinc-200 dark:border-border-dark bg-white dark:bg-surface-dark hover:bg-zinc-50 dark:hover:bg-hover-dark/40 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-medium transition-all shadow-2xs flex items-center justify-center gap-1.5 whitespace-nowrap"
               title="Reset filters"
             >
               <RotateCcw size={14} />
@@ -250,7 +250,7 @@ export default function SystemLogsPage() {
       {/* ── Logs Table Card ── */}
       <div className="w-full min-w-0">
         {filteredLogs.length === 0 ? (
-          <div className="border border-dashed border-zinc-200 rounded-xl bg-white py-14 flex flex-col items-center text-center p-6">
+          <div className="border border-dashed border-zinc-200 dark:border-border-dark rounded-xl bg-white dark:bg-card-dark py-14 flex flex-col items-center text-center p-6">
             <div className="w-12 h-12 rounded-full bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-400 mb-3">
               <ScrollText size={22} className="stroke-[1.5]" />
             </div>
@@ -258,7 +258,7 @@ export default function SystemLogsPage() {
             <p className="text-xs text-zinc-500 mt-1 max-w-sm">No log entries match your current search query or filter criteria.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D]/90 shadow-2xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full table-fixed divide-y divide-zinc-200 text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }}>
                 <thead>
@@ -315,7 +315,7 @@ export default function SystemLogsPage() {
 
             {/* Table Footer */}
             {filteredLogs.length > 0 && (
-              <div className="p-4 border-t border-zinc-100 bg-white">
+              <div className="p-4 border-t border-zinc-100 dark:border-border-dark bg-white dark:bg-card-dark rounded-b-xl">
                 <Pagination
                   {...paginationProps}
                   page={page}

@@ -158,21 +158,21 @@ export default function PlanFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl border border-zinc-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-scale-up my-auto">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl shadow-2xl border border-zinc-200 dark:border-[#2A2F3D] w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-scale-up my-auto">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/70">
+        <div className="px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/70 dark:bg-[#1D212C]/60">
           <div>
-            <h3 className="text-base font-bold font-display text-zinc-900">
+            <h3 className="text-base font-bold font-display text-zinc-900 dark:text-[#E6E8EE]">
               {editingPlan ? `Edit Subscription Plan: ${editingPlan.name}` : 'Create Subscription Plan'}
             </h3>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
               Configure plan identity, duration, company & user quotas, and module entitlements.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-600 rounded-lg p-1.5 hover:bg-zinc-100 transition-colors"
+            className="text-zinc-400 hover:text-zinc-600 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] rounded-lg p-1.5 hover:bg-zinc-100 dark:hover:bg-[#1D212C] transition-colors"
             aria-label="Close dialog"
           >
             <X size={18} />
@@ -184,24 +184,24 @@ export default function PlanFormModal({
           {/* Left / Main Form (7 Cols on desktop) */}
           <form id="plan-form" onSubmit={handleSubmit} className="lg:col-span-7 space-y-6">
             {serverFormError && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2">
-                <AlertTriangle size={15} className="text-rose-600 shrink-0 mt-0.5" />
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-950/30 dark:border-rose-900/40 dark:text-rose-200 text-xs flex items-start gap-2">
+                <AlertTriangle size={15} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                 <span>{serverFormError}</span>
               </div>
             )}
 
             {/* SECTION 1: BASIC INFORMATION */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-1 border-b border-zinc-100">
-                <Info size={14} className="text-zinc-700" />
-                <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+              <div className="flex items-center gap-2 pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                <Info size={14} className="text-zinc-700 dark:text-[#A0A6B5]" />
+                <h4 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">
                   Basic Information
                 </h4>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">
+                  <label className="block text-xs font-bold text-zinc-700 dark:text-[#A0A6B5] mb-1">
                     Plan Name <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -220,17 +220,17 @@ export default function PlanFormModal({
                       }
                     }}
                     placeholder="e.g. 30 Day Free Trial, Pro Plan"
-                    className={`w-full px-3 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10 ${
-                      formValidationErrors.name ? 'border-rose-400 bg-rose-50/20' : 'border-zinc-300 focus:border-zinc-900'
+                    className={`w-full px-3 py-2 border rounded-xl text-xs sm:text-sm bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 ${
+                      formValidationErrors.name ? 'border-rose-400 bg-rose-50/20' : 'border-zinc-300 dark:border-[#2A2F3D] focus:border-zinc-900 dark:focus:border-[#4C8DFF]'
                     }`}
                   />
                   {formValidationErrors.name && (
-                    <p className="text-[11px] text-rose-600 mt-1 font-medium">{formValidationErrors.name}</p>
+                    <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1 font-medium">{formValidationErrors.name}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">
+                  <label className="block text-xs font-bold text-zinc-700 dark:text-[#A0A6B5] mb-1">
                     Plan Code <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -244,18 +244,18 @@ export default function PlanFormModal({
                       }
                     }}
                     placeholder="e.g. 30_DAY_FREE_TRIAL"
-                    className={`w-full px-3 py-2 border rounded-xl text-xs sm:text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-zinc-900/10 ${
-                      formValidationErrors.code ? 'border-rose-400 bg-rose-50/20' : 'border-zinc-300 focus:border-zinc-900'
+                    className={`w-full px-3 py-2 border rounded-xl text-xs sm:text-sm font-mono uppercase bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 ${
+                      formValidationErrors.code ? 'border-rose-400 bg-rose-50/20' : 'border-zinc-300 dark:border-[#2A2F3D] focus:border-zinc-900 dark:focus:border-[#4C8DFF]'
                     }`}
                   />
                   {formValidationErrors.code && (
-                    <p className="text-[11px] text-rose-600 mt-1 font-medium">{formValidationErrors.code}</p>
+                    <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1 font-medium">{formValidationErrors.code}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
+                <label className="block text-xs font-bold text-zinc-700 dark:text-[#A0A6B5] mb-1">
                   Description
                 </label>
                 <textarea
@@ -263,13 +263,13 @@ export default function PlanFormModal({
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Summary of modules and entitlements included in this tier..."
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
+                  className="w-full px-3 py-2 border border-zinc-300 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 focus:border-zinc-900 dark:focus:border-[#4C8DFF]"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">
+                  <label className="block text-xs font-bold text-zinc-700 dark:text-[#A0A6B5] mb-1">
                     Duration (Days) <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -285,33 +285,33 @@ export default function PlanFormModal({
                       }
                     }}
                     placeholder="30"
-                    className={`w-full px-3 py-2 border rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10 ${
-                      formValidationErrors.durationDays ? 'border-rose-400 bg-rose-50/20' : 'border-zinc-300 focus:border-zinc-900'
+                    className={`w-full px-3 py-2 border rounded-xl text-xs sm:text-sm bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 ${
+                      formValidationErrors.durationDays ? 'border-rose-400 bg-rose-50/20' : 'border-zinc-300 dark:border-[#2A2F3D] focus:border-zinc-900 dark:focus:border-[#4C8DFF]'
                     }`}
                   />
                   {formValidationErrors.durationDays && (
-                    <p className="text-[11px] text-rose-600 mt-1 font-medium">{formValidationErrors.durationDays}</p>
+                    <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1 font-medium">{formValidationErrors.durationDays}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">Price</label>
+                  <label className="block text-xs font-bold text-zinc-700 dark:text-[#A0A6B5] mb-1">Price</label>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
+                    className="w-full px-3 py-2 border border-zinc-300 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 focus:border-zinc-900 dark:focus:border-[#4C8DFF]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1">Currency</label>
+                  <label className="block text-xs font-bold text-zinc-700 dark:text-[#A0A6B5] mb-1">Currency</label>
                   <select
                     value={formData.currency}
                     onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-xl text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900"
+                    className="w-full px-3 py-2 border border-zinc-300 dark:border-[#2A2F3D] rounded-xl text-xs sm:text-sm bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 focus:border-zinc-900 dark:focus:border-[#4C8DFF]"
                   >
                     <option value="INR">INR (₹)</option>
                     <option value="USD">USD ($)</option>
@@ -322,22 +322,22 @@ export default function PlanFormModal({
               </div>
 
               <div className="flex items-center gap-6 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-zinc-700 select-none">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] select-none">
                   <input
                     type="checkbox"
                     checked={formData.isTrial}
                     onChange={(e) => setFormData({ ...formData, isTrial: e.target.checked })}
-                    className="w-4 h-4 text-zinc-900 rounded border-zinc-300 focus:ring-zinc-900 accent-zinc-900"
+                    className="w-4 h-4 text-zinc-900 rounded border-zinc-300 dark:border-[#2A2F3D] focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] accent-zinc-900 dark:accent-[#4C8DFF]"
                   />
                   <span>Is Free Trial Tier</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-zinc-700 select-none">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] select-none">
                   <input
                     type="checkbox"
                     checked={formData.active}
                     onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                    className="w-4 h-4 text-zinc-900 rounded border-zinc-300 focus:ring-zinc-900 accent-zinc-900"
+                    className="w-4 h-4 text-zinc-900 rounded border-zinc-300 dark:border-[#2A2F3D] focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] accent-zinc-900 dark:accent-[#4C8DFF]"
                   />
                   <span>Active</span>
                 </label>
@@ -346,31 +346,31 @@ export default function PlanFormModal({
 
             {/* SECTION 2: LIMITS / RULES */}
             <div className="space-y-4 pt-2">
-              <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
+              <div className="flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
                 <div className="flex items-center gap-2">
-                  <Building2 size={14} className="text-zinc-700" />
-                  <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+                  <Building2 size={14} className="text-zinc-700 dark:text-[#A0A6B5]" />
+                  <h4 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">
                     Plan Limits & Quotas
                   </h4>
                 </div>
-                <span className="text-[10.5px] font-medium text-zinc-400">
+                <span className="text-[10.5px] font-medium text-zinc-400 dark:text-[#6B7184]">
                   NULL in backend = Unlimited
                 </span>
               </div>
 
               {/* 1. Maximum Companies */}
-              <div className="p-4 bg-zinc-50/80 rounded-xl border border-zinc-200/70 space-y-3">
+              <div className="p-4 bg-zinc-50/80 dark:bg-[#1D212C]/60 rounded-xl border border-zinc-200/70 dark:border-[#2A2F3D] space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-xs font-bold text-zinc-900 block">
+                    <label className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] block">
                       Maximum Companies
                     </label>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">
+                    <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
                       Maximum number of active companies allowed for this organization.
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs font-semibold text-zinc-700 bg-white p-1 rounded-lg border border-zinc-200 shadow-2xs">
+                  <div className="flex items-center gap-3 text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] bg-white dark:bg-[#161922] p-1 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
                     <label className="flex items-center gap-1.5 cursor-pointer px-2 py-0.5 rounded select-none">
                       <input
                         type="radio"
@@ -383,7 +383,7 @@ export default function PlanFormModal({
                             maxCompanies: prev.maxCompanies || 4,
                           }));
                         }}
-                        className="text-zinc-900 focus:ring-zinc-900 accent-zinc-900"
+                        className="text-zinc-900 focus:ring-zinc-900 accent-zinc-900 dark:accent-[#4C8DFF]"
                       />
                       <span>Limited</span>
                     </label>
@@ -401,16 +401,16 @@ export default function PlanFormModal({
                             setFormValidationErrors((prev) => ({ ...prev, maxCompanies: undefined }));
                           }
                         }}
-                        className="text-zinc-900 focus:ring-zinc-900 accent-zinc-900"
+                        className="text-zinc-900 focus:ring-zinc-900 accent-zinc-900 dark:accent-[#4C8DFF]"
                       />
-                      <span className="font-bold text-zinc-900">Unlimited</span>
+                      <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">Unlimited</span>
                     </label>
                   </div>
                 </div>
 
                 {formData.isUnlimitedCompanies ? (
-                  <div className="p-2.5 rounded-lg bg-zinc-100/90 border border-zinc-200 text-zinc-800 text-xs font-medium flex items-center gap-2">
-                    <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                  <div className="p-2.5 rounded-lg bg-zinc-100/90 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-800 dark:text-[#E6E8EE] text-xs font-medium flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span>Unlimited active companies allowed. Backend limit check bypassed.</span>
                   </div>
                 ) : (
@@ -429,34 +429,34 @@ export default function PlanFormModal({
                           }
                         }}
                         placeholder="e.g. 4"
-                        className={`w-full px-3 py-2 border rounded-xl text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900/10 ${
-                          formValidationErrors.maxCompanies ? 'border-rose-400 bg-rose-50/20' : 'border-zinc-300 focus:border-zinc-900'
+                        className={`w-full px-3 py-2 border rounded-xl text-xs sm:text-sm bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 ${
+                          formValidationErrors.maxCompanies ? 'border-rose-400 bg-rose-50/20' : 'border-zinc-300 dark:border-[#2A2F3D] focus:border-zinc-900 dark:focus:border-[#4C8DFF]'
                         }`}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-zinc-400">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-zinc-400 dark:text-[#6B7184]">
                         companies
                       </span>
                     </div>
                     {formValidationErrors.maxCompanies && (
-                      <p className="text-[11px] text-rose-600 font-medium">{formValidationErrors.maxCompanies}</p>
+                      <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">{formValidationErrors.maxCompanies}</p>
                     )}
                   </div>
                 )}
               </div>
 
               {/* 2. Maximum Users Per Company */}
-              <div className="p-4 bg-zinc-50/80 rounded-xl border border-zinc-200/70 space-y-3">
+              <div className="p-4 bg-zinc-50/80 dark:bg-[#1D212C]/60 rounded-xl border border-zinc-200/70 dark:border-[#2A2F3D] space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-xs font-bold text-zinc-900 block">
+                    <label className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] block">
                       Maximum Users Per Company
                     </label>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">
+                    <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
                       Maximum number of active users allowed in each company workspace.
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs font-semibold text-zinc-700 bg-white p-1 rounded-lg border border-zinc-200 shadow-2xs">
+                  <div className="flex items-center gap-3 text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] bg-white dark:bg-[#161922] p-1 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
                     <label className="flex items-center gap-1.5 cursor-pointer px-2 py-0.5 rounded select-none">
                       <input
                         type="radio"
@@ -469,7 +469,7 @@ export default function PlanFormModal({
                             maxUsersPerCompany: prev.maxUsersPerCompany || 10,
                           }));
                         }}
-                        className="text-zinc-900 focus:ring-zinc-900 accent-zinc-900"
+                        className="text-zinc-900 focus:ring-zinc-900 accent-zinc-900 dark:accent-[#4C8DFF]"
                       />
                       <span>Limited</span>
                     </label>
@@ -487,16 +487,16 @@ export default function PlanFormModal({
                             setFormValidationErrors((prev) => ({ ...prev, maxUsersPerCompany: undefined }));
                           }
                         }}
-                        className="text-zinc-900 focus:ring-zinc-900 accent-zinc-900"
+                        className="text-zinc-900 focus:ring-zinc-900 accent-zinc-900 dark:accent-[#4C8DFF]"
                       />
-                      <span className="font-bold text-zinc-900">Unlimited</span>
+                      <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">Unlimited</span>
                     </label>
                   </div>
                 </div>
 
                 {formData.isUnlimitedUsers ? (
-                  <div className="p-2.5 rounded-lg bg-zinc-100/90 border border-zinc-200 text-zinc-800 text-xs font-medium flex items-center gap-2">
-                    <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                  <div className="p-2.5 rounded-lg bg-zinc-100/90 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-800 dark:text-[#E6E8EE] text-xs font-medium flex items-center gap-2">
+                    <CheckCircle2 size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span>Unlimited active users per company allowed.</span>
                   </div>
                 ) : (
@@ -515,16 +515,16 @@ export default function PlanFormModal({
                           }
                         }}
                         placeholder="e.g. 10"
-                        className={`w-full px-3 py-2 border rounded-xl text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900/10 ${
-                          formValidationErrors.maxUsersPerCompany ? 'border-rose-400 bg-rose-50/20' : 'border-zinc-300 focus:border-zinc-900'
+                        className={`w-full px-3 py-2 border rounded-xl text-xs sm:text-sm bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 ${
+                          formValidationErrors.maxUsersPerCompany ? 'border-rose-400 bg-rose-50/20' : 'border-zinc-300 dark:border-[#2A2F3D] focus:border-zinc-900 dark:focus:border-[#4C8DFF]'
                         }`}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-zinc-400">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-zinc-400 dark:text-[#6B7184]">
                         users/co.
                       </span>
                     </div>
                     {formValidationErrors.maxUsersPerCompany && (
-                      <p className="text-[11px] text-rose-600 font-medium">{formValidationErrors.maxUsersPerCompany}</p>
+                      <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">{formValidationErrors.maxUsersPerCompany}</p>
                     )}
                   </div>
                 )}
@@ -543,75 +543,75 @@ export default function PlanFormModal({
           </form>
 
           {/* Right / Live Plan Preview Panel (5 Cols on desktop) */}
-          <div className="lg:col-span-5 bg-zinc-50/80 rounded-2xl p-5 border border-zinc-200/80 flex flex-col justify-between space-y-4">
+          <div className="lg:col-span-5 bg-zinc-50/80 dark:bg-[#1D212C]/60 rounded-2xl p-5 border border-zinc-200/80 dark:border-[#2A2F3D] flex flex-col justify-between space-y-4">
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-200/60">
-                <span className="text-[10.5px] font-extrabold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles size={12} className="text-zinc-600" />
+              <div className="flex items-center justify-between pb-2 border-b border-zinc-200/60 dark:border-[#2A2F3D]">
+                <span className="text-[10.5px] font-extrabold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles size={12} className="text-zinc-600 dark:text-[#A0A6B5]" />
                   <span>LIVE PREVIEW</span>
                 </span>
-                <span className="text-[10px] font-semibold text-zinc-400 bg-white px-2 py-0.5 rounded-full border border-zinc-200">
+                <span className="text-[10px] font-semibold text-zinc-400 dark:text-[#A0A6B5] bg-white dark:bg-[#161922] px-2 py-0.5 rounded-full border border-zinc-200 dark:border-[#2A2F3D]">
                   UI Preview
                 </span>
               </div>
 
               {/* Card Simulation */}
-              <div className="bg-white rounded-xl border border-zinc-200 p-4 shadow-2xs space-y-3">
+              <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] p-4 shadow-2xs space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h4 className="text-sm font-bold text-zinc-900 tracking-tight">
+                    <h4 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                       {formData.name || 'Untitled Plan'}
                     </h4>
-                    <span className="font-mono text-[10.5px] font-semibold text-zinc-400 uppercase">
+                    <span className="font-mono text-[10.5px] font-semibold text-zinc-400 dark:text-[#6B7184] uppercase">
                       {formData.code || 'PLAN_CODE'}
                     </span>
                   </div>
                   <div className="text-right">
-                    <div className="text-base font-black text-zinc-900 font-mono">
+                    <div className="text-base font-black text-zinc-900 dark:text-[#E6E8EE] font-mono">
                       {formData.price > 0
                         ? `${formData.currency === 'INR' ? '₹' : formData.currency + ' '}${Number(formData.price).toLocaleString('en-IN')}`
                         : 'Free'}
                     </div>
-                    <span className="text-[10px] text-zinc-400">
+                    <span className="text-[10px] text-zinc-400 dark:text-[#6B7184]">
                       {formData.durationDays || 30} days
                     </span>
                   </div>
                 </div>
 
-                <p className="text-[11px] text-zinc-500 line-clamp-2">
+                <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] line-clamp-2">
                   {formData.description || 'Configured SaaS subscription plan with modular application access.'}
                 </p>
 
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-100 text-xs">
-                  <div className="bg-zinc-50 p-2 rounded-lg border border-zinc-100">
-                    <span className="text-[9.5px] font-bold text-zinc-400 uppercase block">Companies</span>
-                    <span className="font-bold text-zinc-900">
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-100 dark:border-[#2A2F3D] text-xs">
+                  <div className="bg-zinc-50 dark:bg-[#1D212C] p-2 rounded-lg border border-zinc-100 dark:border-[#2A2F3D]">
+                    <span className="text-[9.5px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase block">Companies</span>
+                    <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">
                       {formData.isUnlimitedCompanies ? 'Unlimited' : `${formData.maxCompanies || 0}`}
                     </span>
                   </div>
-                  <div className="bg-zinc-50 p-2 rounded-lg border border-zinc-100">
-                    <span className="text-[9.5px] font-bold text-zinc-400 uppercase block">Users/Co.</span>
-                    <span className="font-bold text-zinc-900">
+                  <div className="bg-zinc-50 dark:bg-[#1D212C] p-2 rounded-lg border border-zinc-100 dark:border-[#2A2F3D]">
+                    <span className="text-[9.5px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase block">Users/Co.</span>
+                    <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">
                       {formData.isUnlimitedUsers ? 'Unlimited' : `${formData.maxUsersPerCompany || 0}`}
                     </span>
                   </div>
                 </div>
 
                 <div className="pt-2">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">
+                  <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase block mb-1">
                     Modules ({formData.moduleIds.length})
                   </span>
                   <div className="flex flex-wrap gap-1">
                     {formData.moduleIds.slice(0, 6).map((id) => {
                       const m = availableModules.find((mod) => mod.id === id);
                       return (
-                        <span key={id} className="text-[9.5px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-800 font-medium border border-zinc-200/60">
+                        <span key={id} className="text-[9.5px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE] font-medium border border-zinc-200/60 dark:border-[#2A2F3D]">
                           {m?.name || 'MOD'}
                         </span>
                       );
                     })}
                     {formData.moduleIds.length > 6 && (
-                      <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600 font-semibold">
+                      <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] font-semibold">
                         +{formData.moduleIds.length - 6} more
                       </span>
                     )}
@@ -623,9 +623,9 @@ export default function PlanFormModal({
               </div>
             </div>
 
-            <div className="p-3 bg-white rounded-xl border border-zinc-200/70 text-[11px] text-zinc-500 space-y-1">
-              <div className="flex items-center gap-1.5 font-bold text-zinc-700">
-                <HelpCircle size={13} className="text-zinc-600" />
+            <div className="p-3 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/70 dark:border-[#2A2F3D] text-[11px] text-zinc-500 dark:text-[#A0A6B5] space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-zinc-700 dark:text-[#E6E8EE]">
+                <HelpCircle size={13} className="text-zinc-600 dark:text-[#A0A6B5]" />
                 <span>Contract Notes</span>
               </div>
               <p className="leading-relaxed">
@@ -636,12 +636,12 @@ export default function PlanFormModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-zinc-100 bg-zinc-50/50 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/60 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="px-4 py-2 border border-zinc-200 hover:bg-zinc-100 rounded-xl text-xs font-semibold text-zinc-700 transition-colors"
+            className="px-4 py-2 border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-100 dark:hover:bg-[#1D212C] rounded-xl text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] transition-colors"
           >
             Cancel
           </button>
@@ -649,7 +649,7 @@ export default function PlanFormModal({
             type="submit"
             form="plan-form"
             disabled={isSaving}
-            className="inline-flex items-center gap-2 px-5 py-2 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-[#4C8DFF] dark:hover:bg-[#3B7AE8] disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
           >
             {isSaving ? (
               <>

@@ -7,12 +7,12 @@ import { workflowAuditApi } from '../services/workflowService';
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
-      <span className="flex items-center gap-2 text-xs font-semibold text-zinc-600">
-        <Icon size={14} className="text-zinc-700" />
+    <div className="flex items-center justify-between rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] p-3 shadow-sm">
+      <span className="flex items-center gap-2 text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5]">
+        <Icon size={14} className="text-zinc-700 dark:text-[#E6E8EE]" />
         {label}
       </span>
-      <span className="text-xs font-bold text-zinc-900">{value}</span>
+      <span className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE]">{value}</span>
     </div>
   );
 }
@@ -61,20 +61,20 @@ export default function WorkflowAuditTrailPanel({ companyId, module, selectedId,
       <InfoRow icon={Activity} label="Last updated" value={latest ? formatDateTime(latest.performedAt) : 'No changes recorded yet'} />
       <InfoRow icon={User} label="Updated by" value={latest?.performedBy || currentUser?.name || currentUser?.email || 'No changes recorded yet'} />
       {entries.length === 0 && (
-        <p className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4 text-xs text-zinc-500 leading-relaxed">
+        <p className="rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/60 dark:bg-[#1D212C]/50 p-4 text-xs text-zinc-500 dark:text-[#A0A6B5] leading-relaxed">
           No transaction history recorded yet for this workflow configuration. Document approval actions, step reviews, and status transitions will appear here in real time as business documents (such as Quotations, Invoices, Purchase Orders, or Production Orders) are submitted for approval.
         </p>
       )}
       {entries.length > 0 && (
-        <div className="divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
+        <div className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] shadow-sm overflow-hidden">
           {entries.map((entry) => (
-            <div key={entry.id || `${entry.performedAt}-${entry.actionType}`} className="flex items-start gap-3 p-3 hover:bg-zinc-50/50 transition-colors">
-              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-zinc-900" />
+            <div key={entry.id || `${entry.performedAt}-${entry.actionType}`} className="flex items-start gap-3 p-3 hover:bg-zinc-50/50 dark:hover:bg-[#1D212C]/50 transition-colors">
+              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-zinc-900 dark:bg-blue-500" />
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-zinc-900">{entry.performedBy || 'System'}</p>
-                <p className="mt-0.5 text-[11px] text-zinc-500">{(entry.entityName || module)} · {String(entry.actionType || 'ACTION').toUpperCase()}</p>
-                <p className="mt-0.5 text-[10px] text-zinc-400">{formatDateTime(entry.performedAt)}{entry.ipAddress ? ` · ${entry.ipAddress}` : ''}</p>
-                {entry.description && <p className="mt-1 text-xs text-zinc-600 bg-zinc-50 p-2 rounded-md">{entry.description}</p>}
+                <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE]">{entry.performedBy || 'System'}</p>
+                <p className="mt-0.5 text-[11px] text-zinc-500 dark:text-[#A0A6B5]">{(entry.entityName || module)} · {String(entry.actionType || 'ACTION').toUpperCase()}</p>
+                <p className="mt-0.5 text-[10px] text-zinc-400 dark:text-zinc-500">{formatDateTime(entry.performedAt)}{entry.ipAddress ? ` · ${entry.ipAddress}` : ''}</p>
+                {entry.description && <p className="mt-1 text-xs text-zinc-600 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] p-2 rounded-md">{entry.description}</p>}
               </div>
             </div>
           ))}

@@ -24,7 +24,7 @@ export default function TrialBalanceSummary({
   const isBalanced = difference < 0.01;
 
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl shadow-2xs overflow-hidden flex-none animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-2xs overflow-hidden flex-none animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="bg-zinc-50 border-b border-zinc-200 px-5 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Scale size={16} className="text-zinc-500" />
@@ -47,7 +47,7 @@ export default function TrialBalanceSummary({
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
-          <thead className="bg-zinc-50/40 border-b border-zinc-100 text-zinc-500 font-semibold text-[11px] uppercase tracking-wider">
+          <thead className="bg-zinc-50/40 border-b border-zinc-100 dark:border-[#2A2F3D] text-zinc-500 font-semibold text-[11px] uppercase tracking-wider">
             <tr>
               <th className="px-5 py-3">Classification</th>
               <th className="px-5 py-3 text-right text-zinc-600">Accounts</th>

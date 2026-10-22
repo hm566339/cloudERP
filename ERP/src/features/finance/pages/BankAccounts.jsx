@@ -39,47 +39,47 @@ const DEFAULT_COLUMNS = [
 const BankAccountOverview = ({ account }) => {
   const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
   return (
-    <div className="p-5 bg-white border border-zinc-100 rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2">
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100">
+    <div className="p-5 bg-white dark:bg-[#161922] border border-zinc-100 dark:border-[#2A2F3D] rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded border border-zinc-200">
+          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE] rounded border border-zinc-200 dark:border-[#2A2F3D]">
             {account.accountNumber ? `XXXX${account.accountNumber.slice(-4)}` : '-'}
           </span>
           <div>
-            <h3 className="text-lg font-bold text-zinc-900">{account.bankName}</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">Branch: {account.branchName} | IFSC: {account.ifscCode}</p>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">{account.bankName}</h3>
+            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">Branch: {account.branchName} | IFSC: {account.ifscCode}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${account.isActive || account.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${account.isActive || account.status === 'ACTIVE' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30' : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/30'}`}>
             {account.isActive || account.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE'}
           </span>
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Opening Balance</p>
-          <p className="text-sm font-bold text-zinc-900 mt-1">₹ {fmt(account.openingBalance)}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Opening Balance</p>
+          <p className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">₹ {fmt(account.openingBalance)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Current Balance</p>
-          <p className="text-sm font-bold text-emerald-600 mt-1">₹ {fmt(account.currentBalance)}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Current Balance</p>
+          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1">₹ {fmt(account.currentBalance)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Reconciled</p>
-          <p className="text-sm font-bold text-amber-600 mt-1">₹ {fmt(account.reconciledBalance)}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Reconciled</p>
+          <p className="text-sm font-bold text-amber-600 dark:text-amber-400 mt-1">₹ {fmt(account.reconciledBalance)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Transactions</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{account.transactionCount || 0}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Transactions</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{account.transactionCount || 0}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Account Type</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{account.accountType}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Account Type</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{account.accountType}</p>
         </div>
         <div className="col-span-2">
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">GL Account</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{account.glAccountName || account.glAccountCode || '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">GL Account</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{account.glAccountName || account.glAccountCode || '-'}</p>
         </div>
       </div>
     </div>
@@ -296,14 +296,14 @@ export default function BankAccounts() {
       id: 'ifscCode',
       label: 'IFSC Code',
       sortable: true,
-      render: (val, row) => <span className="font-mono text-xs text-zinc-600">{row.ifscCode}</span>
+      render: (val, row) => <span className="font-mono text-xs text-zinc-600 dark:text-[#A0A6B5]">{row.ifscCode}</span>
     },
     {
       id: 'accountType',
       label: 'Account Type',
       sortable: false,
       render: (val, row) => (
-        <span className="px-2 py-1 text-[8.8px] font-semibold rounded-md bg-blue-50 text-blue-700 border border-blue-200 uppercase">
+        <span className="px-2 py-1 text-[8.8px] font-semibold rounded-md bg-blue-50 dark:bg-[#4C8DFF]/10 text-blue-700 dark:text-[#4C8DFF] border border-blue-200 dark:border-[#4C8DFF]/30 uppercase">
           {row.accountType}
         </span>
       )
@@ -315,11 +315,11 @@ export default function BankAccounts() {
       align: 'center',
       render: (val, row) => (
         row.isPrimary ? (
-          <span className="px-2 py-1 text-[8px] font-bold rounded-md bg-amber-50 text-amber-700 border border-amber-200 uppercase">
+          <span className="px-2 py-1 text-[8px] font-bold rounded-md bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 uppercase">
             PRIMARY
           </span>
         ) : (
-          <span className="text-zinc-300">-</span>
+          <span className="text-zinc-300 dark:text-[#6B7184]">-</span>
         )
       )
     },
@@ -328,21 +328,21 @@ export default function BankAccounts() {
       label: 'Opening Balance',
       sortable: true,
       align: 'right',
-      render: (val, row) => <span className="text-zinc-600 font-mono">{formatCurrency(row.openingBalance)}</span>
+      render: (val, row) => <span className="text-zinc-600 dark:text-[#A0A6B5] font-mono">{formatCurrency(row.openingBalance)}</span>
     },
     {
       id: 'currentBalance',
       label: 'Current Balance',
       sortable: true,
       align: 'right',
-      render: (val, row) => <span className="font-medium text-emerald-600 font-mono">{formatCurrency(row.currentBalance)}</span>
+      render: (val, row) => <span className="font-medium text-emerald-600 dark:text-emerald-400 font-mono">{formatCurrency(row.currentBalance)}</span>
     },
     {
       id: 'reconciledBalance',
       label: 'Reconciled Balance',
       sortable: true,
       align: 'right',
-      render: (val, row) => <span className="font-medium text-amber-600 font-mono">{formatCurrency(row.reconciledBalance)}</span>
+      render: (val, row) => <span className="font-medium text-amber-600 dark:text-amber-400 font-mono">{formatCurrency(row.reconciledBalance)}</span>
     },
     {
       id: 'transactionCount',
@@ -394,7 +394,7 @@ export default function BankAccounts() {
       icon: Eye,
       onClick: (row) => navigate(buildPath(`/accounts/masters/bank-accounts/${row.id}`)),
       tooltip: 'View Account',
-      className: 'hover:text-blue-600 hover:bg-blue-50'
+      className: 'hover:text-blue-600 dark:hover:text-[#4C8DFF] hover:bg-blue-50 dark:hover:bg-[#4C8DFF]/10'
     },
     {
       key: 'audit',
@@ -407,7 +407,7 @@ export default function BankAccounts() {
       permission: { module: 'BANKING', action: 'UPDATE' },
       onClick: (row) => { setSelectedAccount(row); setIsEditModalOpen(true); },
       tooltip: 'Edit Account',
-      className: 'hover:text-indigo-600 hover:bg-indigo-50'
+      className: 'hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10'
     },
     {
       key: 'ledger',
@@ -415,7 +415,7 @@ export default function BankAccounts() {
       icon: BookOpen,
       onClick: (row) => navigate(buildPath(`/accounts/masters/bank-accounts/${row.id}/ledger`)),
       tooltip: 'View Ledger',
-      className: 'hover:text-cyan-600 hover:bg-cyan-50'
+      className: 'hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-500/10'
     },
     {
       key: 'setPrimary',
@@ -424,7 +424,7 @@ export default function BankAccounts() {
       hidden: (row) => row.isPrimary || (!row.isActive && row.status !== 'ACTIVE'),
       onClick: (row) => handleSetPrimary(row),
       tooltip: 'Set as Primary',
-      className: 'hover:text-amber-600 hover:bg-amber-50'
+      className: 'hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10'
     },
     {
       key: 'removePrimary',
@@ -433,7 +433,7 @@ export default function BankAccounts() {
       hidden: (row) => !row.isPrimary,
       onClick: (row) => handleRemovePrimary(row),
       tooltip: 'Remove Primary',
-      className: 'hover:text-zinc-600 hover:bg-zinc-50'
+      className: 'hover:text-zinc-600 dark:hover:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736]'
     },
     {
       key: 'delete',
@@ -491,7 +491,7 @@ export default function BankAccounts() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Bank Accounts"
         description="Manage company bank accounts and balances"

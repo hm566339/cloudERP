@@ -292,7 +292,7 @@ export default function BudgetLines() {
       permission: { module: 'BUDGET', action: 'UPDATE' },
       onClick: (row) => handleEdit(row),
       tooltip: 'Edit',
-      className: 'hover:text-indigo-600 hover:bg-indigo-50'
+      className: 'hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400'
     },
     {
       key: 'delete',
@@ -306,7 +306,7 @@ export default function BudgetLines() {
   ], []);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Budget Lines"
         description="Manage budget allocations at the account level"

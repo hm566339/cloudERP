@@ -52,7 +52,7 @@ export default function EmployeeProfile() {
           </div>
 
           <div className="card p-4 space-y-4">
-            <h3 className="text-sm font-bold text-zinc-800 border-b border-zinc-100 pb-2">Contact Info</h3>
+            <h3 className="text-sm font-bold text-zinc-800 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">Contact Info</h3>
             <div className="flex items-center gap-3 text-sm">
               <Mail size={16} className="text-zinc-400" />
               <span className="text-zinc-700">{employee.email || employee.workEmail || 'N/A'}</span>

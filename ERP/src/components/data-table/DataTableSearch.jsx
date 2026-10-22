@@ -165,14 +165,14 @@ export default function DataTableSearch({
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       {label && (
-        <label className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block">
+        <label className="text-[8.8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
           {label}
         </label>
       )}
       <div className="relative">
         <Search
           size={15}
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184] pointer-events-none"
         />
         <input
           type="text"
@@ -181,13 +181,13 @@ export default function DataTableSearch({
           onChange={handleInputChange}
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
-          className="w-full h-9 pl-8 pr-8 bg-white border border-zinc-200 rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
+          className="w-full h-9 pl-8 pr-8 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] placeholder-zinc-400 dark:placeholder-[#6B7184] focus:border-zinc-400 dark:focus:border-[#4C8DFF] focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 outline-none transition-all"
         />
         {localValue && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5 focus:outline-none transition-colors"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] p-0.5 focus:outline-none transition-colors"
             aria-label="Clear search"
           >
             <X size={13} />
@@ -196,19 +196,19 @@ export default function DataTableSearch({
 
         {/* Suggestion Dropdown */}
         {shouldShowCreateOption && (
-          <div className="absolute top-full left-0 mt-1 w-full bg-white border border-zinc-200 rounded-lg shadow-lg z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg shadow-lg dark:shadow-2xl z-50 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
             {createOption?.enabled ? (
               <button
                 type="button"
                 onClick={handleTriggerCreate}
                 className={`w-full text-left px-3 py-2 text-[10.4px] transition-colors flex items-center gap-2 ${
                   isHighlighted
-                    ? 'bg-zinc-100 text-zinc-900'
-                    : 'text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900'
+                    ? 'bg-zinc-100 text-zinc-900 dark:bg-[#222736] dark:text-[#E6E8EE]'
+                    : 'text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'
                 }`}
               >
-                <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                  <Plus size={14} className="text-primary" />
+                <div className="w-6 h-6 rounded-md bg-primary/10 dark:bg-[#4C8DFF]/15 flex items-center justify-center shrink-0">
+                  <Plus size={14} className="text-primary dark:text-[#4C8DFF]" />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="font-semibold truncate">
@@ -217,7 +217,7 @@ export default function DataTableSearch({
                       : (createOption.label || `Create "${localValue}"`)}
                   </span>
                   {createOption.description && (
-                    <span className="text-[8.8px] text-zinc-500 truncate">
+                    <span className="text-[8.8px] text-zinc-500 dark:text-[#A0A6B5] truncate">
                       {typeof createOption.description === 'function'
                         ? createOption.description(localValue)
                         : createOption.description}

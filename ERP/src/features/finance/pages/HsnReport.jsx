@@ -57,12 +57,12 @@ const HsnReport = () => {
     <div className="animate-fade-in space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
         <div className="flex items-center gap-4">
-          <Link to={buildPath('/accounts/masters/hsn-sac')} className="p-2 hover:bg-zinc-100 rounded-full transition-colors">
-            <ArrowLeft size={20} className="text-zinc-500" />
+          <Link to={buildPath('/accounts/masters/hsn-sac')} className="p-2 hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-full transition-colors">
+            <ArrowLeft size={20} className="text-zinc-500 dark:text-[#A0A6B5]" />
           </Link>
           <div>
             <h1 className="page-title flex items-center gap-2">
-              <Tag size={22} className="text-blue-600" />
+              <Tag size={22} className="text-blue-600 dark:text-[#4C8DFF]" />
               HSN Report
             </h1>
             <p className="page-subtitle">Goods specific report</p>
@@ -79,7 +79,7 @@ const HsnReport = () => {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 print:hidden">
+        <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922] print:hidden">
           <input
             type="text"
             placeholder="Search code, description..."
@@ -110,7 +110,7 @@ const HsnReport = () => {
               ) : dataList.length === 0 ? (
                 <tr>
                   <td colSpan={10}>
-                    <div className="p-8 text-center text-zinc-500">
+                    <div className="p-8 text-center text-zinc-500 dark:text-[#A0A6B5]">
                       No HSN records found
                     </div>
                   </td>
@@ -118,7 +118,7 @@ const HsnReport = () => {
               ) : (
                 dataList.map((item, idx) => (
                   <tr key={item.id}>
-                    <td className="text-center text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: idx, pageBase: 0 })}</td>
+                    <td className="text-center text-zinc-500 dark:text-[#A0A6B5] tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: idx, pageBase: 0 })}</td>
                     <td className="font-mono text-primary font-semibold">{item.code}</td>
                     <td>{item.description}</td>
                     <td>{item.gstSlabName || 'N/A'}</td>
@@ -134,7 +134,7 @@ const HsnReport = () => {
             </tbody>
           </table>
           {!isLoading && dataList.length > 0 && (
-            <div className="p-4 border-t border-zinc-100 bg-white rounded-b-xl print:hidden">
+            <div className="p-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] rounded-b-xl print:hidden">
               <Pagination
                 page={pageInfo.page || page || 0}
                 pageSize={pageInfo.size || pageSize || 10}

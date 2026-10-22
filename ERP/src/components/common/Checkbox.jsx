@@ -55,7 +55,7 @@ const Checkbox = React.forwardRef(function Checkbox(
           className="peer sr-only"
           {...props}
         />
-        <div className="w-4 h-4 rounded border border-zinc-300 bg-white transition-all duration-150 peer-checked:bg-zinc-900 peer-checked:border-zinc-900 peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-900/15 flex items-center justify-center shadow-2xs">
+        <div className="w-4 h-4 rounded border border-zinc-300 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] transition-all duration-150 peer-checked:bg-zinc-900 dark:peer-checked:bg-[#4C8DFF] peer-checked:border-zinc-900 dark:peer-checked:border-[#4C8DFF] peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-900/15 dark:peer-focus-visible:ring-[#4C8DFF]/30 flex items-center justify-center shadow-2xs">
           {indeterminate ? (
             <Minus size={11} className="text-white stroke-[2.5]" />
           ) : checked ? (
@@ -67,12 +67,12 @@ const Checkbox = React.forwardRef(function Checkbox(
       {(label || description) && (
         <div className="flex flex-col">
           {label && (
-            <span className="text-xs font-medium text-zinc-900 leading-tight">
+            <span className="text-xs font-medium text-zinc-900 dark:text-[#E6E8EE] leading-tight">
               {label}
             </span>
           )}
           {description && (
-            <span className="text-[11px] text-zinc-500 mt-0.5 leading-snug">
+            <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] mt-0.5 leading-snug">
               {description}
             </span>
           )}

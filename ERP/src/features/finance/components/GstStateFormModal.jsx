@@ -66,14 +66,14 @@ const GstStateFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+          <div className="p-3 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/60 rounded-lg text-sm">
             {error}
           </div>
         )}
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">State Code *</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">State Code *</label>
             <input
               type="text"
               name="stateCode"
@@ -86,7 +86,7 @@ const GstStateFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">State Name *</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">State Name *</label>
             <input
               type="text"
               name="stateName"
@@ -108,13 +108,13 @@ const GstStateFormModal = ({ isOpen, onClose, onSuccess, editData }) => {
               name="unionTerritory"
               checked={formData.unionTerritory}
               onChange={handleChange}
-              className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-zinc-900/10"
+              className="w-4 h-4 rounded border-zinc-300 dark:border-border-dark dark:bg-card-dark text-blue-600 focus:ring-zinc-900/10 dark:focus:ring-primary/20"
             />
-            <span className="text-sm font-medium text-zinc-700">Is Union Territory?</span>
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Is Union Territory?</span>
           </label>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-zinc-100">
+        <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-zinc-100 dark:border-border-dark">
           <button
             type="button"
             onClick={onClose}

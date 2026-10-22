@@ -61,34 +61,34 @@ export default function WorkflowSettingsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <Link
           to={`${prefix}/workflows`}
-          className="p-3.5 bg-white border border-zinc-200/80 rounded-xl hover:border-zinc-300 hover:shadow-xs transition-all flex items-center justify-between group"
+          className="p-3.5 bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-xs transition-all flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-400 flex items-center justify-center">
               <Workflow size={16} />
             </div>
             <div>
-              <p className="text-xs font-bold text-zinc-900">Workflow Definitions</p>
-              <p className="text-[10px] text-zinc-500">Design approval flows & steps</p>
+              <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Workflow Definitions</p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Design approval flows & steps</p>
             </div>
           </div>
-          <ArrowRight size={14} className="text-zinc-400 group-hover:text-zinc-700 group-hover:translate-x-0.5 transition-all" />
+          <ArrowRight size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all" />
         </Link>
 
         <Link
           to={`${prefix}/workflows/approvals`}
-          className="p-3.5 bg-white border border-zinc-200/80 rounded-xl hover:border-zinc-300 hover:shadow-xs transition-all flex items-center justify-between group"
+          className="p-3.5 bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-xs transition-all flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
               <FileCheck size={16} />
             </div>
             <div>
-              <p className="text-xs font-bold text-zinc-900">Pending Approvals</p>
-              <p className="text-[10px] text-zinc-500">Review & approve transaction queue</p>
+              <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Pending Approvals</p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Review & approve transaction queue</p>
             </div>
           </div>
-          <ArrowRight size={14} className="text-zinc-400 group-hover:text-zinc-700 group-hover:translate-x-0.5 transition-all" />
+          <ArrowRight size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all" />
         </Link>
       </div>
 

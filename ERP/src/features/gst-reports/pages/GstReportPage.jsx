@@ -37,7 +37,7 @@ export default function GstReportPage({ reportType }) {
 
   if (!meta || typeof fetcher !== 'function') {
     return (
-      <div className="bg-white border border-zinc-200 rounded-2xl p-10 text-center">
+      <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-2xl p-10 text-center">
         <p className="text-sm font-semibold text-zinc-500">Unknown report type: {reportType}</p>
       </div>
     );

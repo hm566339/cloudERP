@@ -120,7 +120,7 @@ function TextField({ ...rest }) {
     <input
       type="text"
       {...rest}
-      className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none"
+      className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark text-sm text-zinc-800 dark:text-zinc-200 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none"
     />
   );
 }
@@ -128,7 +128,7 @@ function TextField({ ...rest }) {
 function MetaItem({ label, value }) {
   return (
     <div className="min-w-[120px]">
-      <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400">{label}</p>
+      <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">{label}</p>
       <p className="text-[10.4px] font-semibold text-zinc-800 mt-0.5">{value}</p>
     </div>
   );
@@ -432,14 +432,14 @@ export default function GstSummaryDashboardPage() {
   const selectProps = {
     onChange: handleFilterChange,
     buttonClassName:
-      'w-full h-9 px-3 bg-white border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none cursor-pointer',
+      'w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-[#E6E8EE] rounded-lg text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none cursor-pointer',
     ...selectControl,
   };
 
   return (
-    <div className="animate-fade-in pb-12 bg-zinc-50/30 min-h-screen">
+    <div className="animate-fade-in pb-12 bg-zinc-50/30 dark:bg-[#0F1117] min-h-screen">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-40 bg-white border-b border-zinc-200 shadow-sm pt-4 pb-4 mb-6">
+      <div className="sticky top-0 z-40 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] shadow-sm pt-4 pb-4 mb-6">
         <div className="max-w-[1280px] mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -450,9 +450,9 @@ export default function GstSummaryDashboardPage() {
                 <ChevronRight size={12} />
                 <span>GST Reports</span>
                 <ChevronRight size={12} />
-                <span className="text-zinc-700">GST Summary</span>
+                <span className="text-zinc-700 dark:text-[#E6E8EE]">GST Summary</span>
               </nav>
-              <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
+              <h1 className="text-2xl font-black text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                 GST Summary Dashboard
               </h1>
               <p className="text-sm font-medium text-zinc-500 mt-1">Period-wise tax liability, input tax credit and compliance overview.</p>
@@ -567,7 +567,7 @@ export default function GstSummaryDashboardPage() {
           )}
 
           {/* Report header block */}
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 animate-slide-up">
+          <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-2xl shadow-sm p-5 animate-slide-up">
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
               <MetaItem label="Company" value={companyName || '—'} />
               <MetaItem label="GSTIN" value={gstin || '—'} />

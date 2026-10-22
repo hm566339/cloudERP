@@ -35,7 +35,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white font-sans text-zinc-900 selection:bg-emerald-500/20 selection:text-zinc-900 overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-[#0F1117] font-sans text-zinc-900 dark:text-[#E6E8EE] selection:bg-emerald-500/20 selection:text-zinc-900 overflow-x-hidden">
       {/* 1. Navigation Header with Announcement & Smooth-scroll Nav links */}
       <LandingNavbar isAuthenticated={isAuthenticated} />
 

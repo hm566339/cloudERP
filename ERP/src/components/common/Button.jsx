@@ -31,21 +31,21 @@ const Button = React.forwardRef(function Button(
   ref
 ) {
   const baseClasses =
-    'inline-flex items-center justify-center font-medium select-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/10 focus-visible:ring-offset-1 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 cursor-pointer';
+    'inline-flex items-center justify-center font-medium select-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/10 dark:focus-visible:ring-[#4C8DFF]/40 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-[#0F1117] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 cursor-pointer';
 
   const variantClasses = {
     primary:
-      'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-950 border border-transparent shadow-xs',
+      'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-950 dark:bg-[#4C8DFF] dark:text-white dark:hover:bg-[#6AA1FF] dark:active:bg-[#3A78E6] border border-transparent shadow-xs',
     secondary:
-      'bg-white text-zinc-800 hover:text-zinc-950 hover:bg-zinc-50 border border-zinc-200 hover:border-zinc-300 shadow-2xs',
+      'bg-white text-zinc-800 hover:text-zinc-950 hover:bg-zinc-50 dark:bg-[#1D212C] dark:text-[#E6E8EE] dark:hover:bg-[#222736] dark:hover:text-white border border-zinc-200 dark:border-[#2A2F3D] hover:border-zinc-300 dark:hover:border-[#3A4154] shadow-2xs',
     danger:
-      'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 border border-transparent shadow-xs',
+      'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 dark:bg-[#F0616D] dark:text-white dark:hover:bg-[#f27782] dark:active:bg-[#d94f5b] border border-transparent shadow-xs',
     ghost:
-      'bg-transparent text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/80 active:bg-zinc-200/60 border border-transparent',
+      'bg-transparent text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/80 active:bg-zinc-200/60 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:hover:bg-[#222736] dark:active:bg-[#1D212C] border border-transparent',
     outline:
-      'bg-transparent text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 border border-zinc-300',
+      'bg-transparent text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 dark:text-[#E6E8EE] dark:hover:text-white dark:hover:bg-[#222736] border border-zinc-300 dark:border-[#2A2F3D]',
     link:
-      'bg-transparent text-zinc-900 hover:underline p-0 h-auto border-none shadow-none',
+      'bg-transparent text-zinc-900 hover:underline dark:text-[#4C8DFF] dark:hover:text-[#6AA1FF] p-0 h-auto border-none shadow-none',
   };
 
   const sizeClasses = {

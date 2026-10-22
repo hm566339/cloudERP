@@ -80,9 +80,9 @@ export default function PurchaseOrderDetails() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* Header */}
-      <div className="bg-white border-b border-zinc-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-20">
+      <div className="bg-white dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-20">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(buildPath('/accounts/transactions/purchase-orders'))} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors" title="Back to Purchase Orders">
             <ArrowLeft size={18} />
@@ -123,7 +123,7 @@ export default function PurchaseOrderDetails() {
             {showMoreActions && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowMoreActions(false)}></div>
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-zinc-200 rounded-xl shadow-lg z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-lg z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-200">
                   {po.status === 'DRAFT' && (
                     <button onClick={() => handleAction('Submit', submitMutation, 'Submit this PO for approval?')} className="w-full text-left px-4 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-50 hover:text-blue-600 flex items-center gap-2">
                       <CheckCircle size={14} /> Submit for Approval
@@ -167,7 +167,7 @@ export default function PurchaseOrderDetails() {
       </div>
 
       {/* Tabs */}
-      <div className="px-6 border-b border-zinc-200 bg-white">
+      <div className="px-6 border-b border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark">
         <div className="flex space-x-6 overflow-x-auto custom-scrollbar">
           {tabs.map(t => (
             <button
@@ -257,8 +257,8 @@ export default function PurchaseOrderDetails() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <div className="card bg-white p-5 border border-zinc-200 rounded-xl">
-                <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-4 border-b border-zinc-100 pb-2">Purchase Order Overview</h3>
+              <div className="card bg-white dark:bg-card-dark p-5 border border-zinc-200 dark:border-border-dark rounded-xl">
+                <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-4 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">Purchase Order Overview</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                   <div>
                     <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">PO Number</label>
@@ -283,8 +283,8 @@ export default function PurchaseOrderDetails() {
                 </div>
               </div>
 
-              <div className="card bg-white p-5 border border-zinc-200 rounded-xl">
-                 <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-4 border-b border-zinc-100 pb-2">Terms & Notes</h3>
+              <div className="card bg-white dark:bg-card-dark p-5 border border-zinc-200 dark:border-border-dark rounded-xl">
+                 <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-4 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">Terms & Notes</h3>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Payment Terms</label>
@@ -326,7 +326,7 @@ export default function PurchaseOrderDetails() {
         )}
 
         {activeTab === 'items' && (
-          <div className="card bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="card bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
               <table className="w-full min-w-[650px] text-left text-sm whitespace-nowrap" aria-label="Purchase Order Items Table">
                 <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 text-xs font-semibold sticky top-0 z-10">

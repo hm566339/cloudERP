@@ -230,7 +230,7 @@ export default function SalesOrdersPage() {
       'aria-label': 'View Sales Order Details',
       icon: <FileText size={14} />,
       onClick: () => navigate(`/accounts/transactions/sales-orders/${o.id}`),
-      className: 'text-zinc-600 hover:text-indigo-600'
+      className: 'text-zinc-600 dark:text-[#A0A6B5] hover:text-indigo-600 dark:hover:text-[#4C8DFF]'
     },
     {
       key: 'audit',
@@ -290,7 +290,7 @@ export default function SalesOrdersPage() {
   });
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 animate-in fade-in">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] animate-in fade-in">
       {/* ── Page Header ── */}
       <PageHeader title="Sales Orders" description="Manage sales orders" icon={ShoppingCart}>
         <button

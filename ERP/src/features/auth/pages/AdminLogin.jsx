@@ -129,7 +129,7 @@ export default function AdminLogin() {
   const loading = isLoading || isGetMeLoading;
 
   return (
-    <div className="bg-white/95 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] p-8 sm:p-12 w-full max-w-lg mx-auto animate-fade-in-up relative overflow-hidden">
+    <div className="bg-white/95 dark:bg-[#161922]/95 backdrop-blur-2xl border border-white dark:border-[#2A2F3D] shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] p-8 sm:p-12 w-full max-w-lg mx-auto animate-fade-in-up relative overflow-hidden">
       
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
@@ -137,27 +137,27 @@ export default function AdminLogin() {
 
       <div className="space-y-3 mb-10 text-center relative z-10 mt-2">
         <div className="inline-flex items-center justify-center p-3 bg-rose-500/10 rounded-2xl mb-2">
-          <ShieldAlert size={24} className="text-rose-600" />
+          <ShieldAlert size={24} className="text-rose-600 dark:text-rose-400" />
         </div>
-        <h2 className="text-3xl sm:text-4xl font-display font-black text-zinc-900 tracking-tight leading-tight pt-1">
+        <h2 className="text-3xl sm:text-4xl font-display font-black text-zinc-900 dark:text-[#E6E8EE] tracking-tight leading-tight pt-1">
           Super Admin
         </h2>
-        <p className="text-[12px] text-zinc-500 font-medium">Sign in to the administration console.</p>
+        <p className="text-[12px] text-zinc-500 dark:text-[#A0A6B5] font-medium">Sign in to the administration console.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative z-10">
         {/* Username Field */}
         <div className="space-y-2">
-          <label className="text-[11.2px] font-bold text-zinc-700 block">Username</label>
+          <label className="text-[11.2px] font-bold text-zinc-700 dark:text-[#A0A6B5] block">Username</label>
           <div className="relative group">
-            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-zinc-400 group-focus-within:text-rose-500 transition-colors pointer-events-none z-10">
+            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-zinc-400 dark:text-[#6B7184] group-focus-within:text-rose-500 transition-colors pointer-events-none z-10">
               <Mail size={20} />
             </span>
             <input
               type="text"
               {...register('username')}
               placeholder="superadmin"
-              className={`w-full pl-12 pr-4 py-4 bg-white/50 hover:bg-white border ${errors.username ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-rose-500 focus:ring-rose-500/20'} rounded-2xl text-[12px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+              className={`w-full pl-12 pr-4 py-4 bg-white/50 dark:bg-[#1D212C] hover:bg-white dark:hover:bg-[#1D212C] border ${errors.username ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 dark:border-[#2A2F3D] focus:border-rose-500 focus:ring-rose-500/20'} rounded-2xl text-[12px] font-semibold text-zinc-800 dark:text-[#E6E8EE] placeholder:text-zinc-400 dark:placeholder-[#6B7184] focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
             />
           </div>
           {errors.username && <p className="text-[10.4px] text-rose-500 font-medium mt-1.5 animate-fade-in flex items-center gap-1.5"><ShieldAlert size={14} />{errors.username.message}</p>}
@@ -166,22 +166,22 @@ export default function AdminLogin() {
         {/* Password Field */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-[11.2px] font-bold text-zinc-700 block">Password</label>
+            <label className="text-[11.2px] font-bold text-zinc-700 dark:text-[#A0A6B5] block">Password</label>
           </div>
           <div className="relative group">
-            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-zinc-400 group-focus-within:text-rose-500 transition-colors pointer-events-none z-10">
+            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-zinc-400 dark:text-[#6B7184] group-focus-within:text-rose-500 transition-colors pointer-events-none z-10">
               <KeyRound size={20} />
             </span>
             <input
               type={showPassword ? 'text' : 'password'}
               {...register('password')}
               placeholder="••••••••"
-              className={`w-full pl-12 pr-12 py-4 bg-white/50 hover:bg-white border ${errors.password ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-rose-500 focus:ring-rose-500/20'} rounded-2xl text-[12px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+              className={`w-full pl-12 pr-12 py-4 bg-white/50 dark:bg-[#1D212C] hover:bg-white dark:hover:bg-[#1D212C] border ${errors.password ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 dark:border-[#2A2F3D] focus:border-rose-500 focus:ring-rose-500/20'} rounded-2xl text-[12px] font-semibold text-zinc-800 dark:text-[#E6E8EE] placeholder:text-zinc-400 dark:placeholder-[#6B7184] focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-600 transition-colors z-10"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] transition-colors z-10"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -192,7 +192,7 @@ export default function AdminLogin() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-10 flex justify-center items-center gap-2 px-4 py-4 bg-zinc-900 hover:bg-zinc-800 text-white text-[12.8px] font-bold rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-xl shadow-zinc-900/20 disabled:opacity-70 disabled:cursor-not-allowed group"
+          className="w-full mt-10 flex justify-center items-center gap-2 px-4 py-4 bg-zinc-900 dark:bg-[#4C8DFF] hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] text-white text-[12.8px] font-bold rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-xl shadow-zinc-900/20 disabled:opacity-70 disabled:cursor-not-allowed group"
         >
           {loading ? (
             <div className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
@@ -204,8 +204,8 @@ export default function AdminLogin() {
           )}
         </button>
 
-        <div className="mt-8 pt-6 border-t border-zinc-100 text-center">
-          <Link to={buildPath('/')} className="inline-flex items-center justify-center gap-2 px-4 py-2 text-[11.2px] font-bold text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-xl transition-colors border border-zinc-200/50">
+        <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-[#2A2F3D] text-center">
+          <Link to={buildPath('/')} className="inline-flex items-center justify-center gap-2 px-4 py-2 text-[11.2px] font-bold text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-xl transition-colors border border-zinc-200/50 dark:border-[#2A2F3D]">
             Return to ERP Home
           </Link>
         </div>

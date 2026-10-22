@@ -30,8 +30,8 @@ const VoucherOverview = ({ voucher }) => {
     ? Math.round(((voucher.totalAllocatedAmount || 0) / voucher.paymentAmount) * 100) 
     : 0;
   return (
-    <div className="p-5 bg-white border border-zinc-100 rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2">
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100">
+    <div className="p-5 bg-white dark:bg-card-dark border border-zinc-100 dark:border-border-dark rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
           <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded border border-zinc-200">
             {voucher.voucherNo}
@@ -66,31 +66,31 @@ const VoucherOverview = ({ voucher }) => {
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Payment Amount</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Payment Amount</p>
           <p className="text-sm font-bold text-zinc-900 mt-1">INR {fmt(voucher.paymentAmount)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Allocated</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Allocated</p>
           <p className="text-sm font-bold text-emerald-600 mt-1">INR {fmt(voucher.totalAllocatedAmount)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Remaining</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Remaining</p>
           <p className="text-sm font-bold text-red-600 mt-1">INR {fmt(voucher.remainingBalance)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Allocation %</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Allocation %</p>
           <p className="text-sm font-bold text-emerald-600 mt-1">{allocPct}%</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Bank</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Bank</p>
           <p className="text-sm font-medium text-zinc-900 mt-1">{voucher.bankName || '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Account</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Account</p>
           <p className="text-sm font-medium text-zinc-900 mt-1">{voucher.bankAccountNumber || '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Remarks</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Remarks</p>
           <p className="text-sm font-medium text-zinc-900 mt-1 truncate" title={voucher.remarks}>{voucher.remarks || '-'}</p>
         </div>
       </div>
@@ -275,7 +275,7 @@ export default function PaymentVouchers() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 pb-2">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Payment Vouchers</h1>
@@ -287,7 +287,7 @@ export default function PaymentVouchers() {
             visibleColumns={visibleColumns} 
             onToggle={setVisibleColumns} 
           />
-          <button onClick={() => setIsExportModalOpen(true)} className="btn-secondary flex items-center gap-2 text-[10.4px] h-9 px-3 bg-white border-zinc-200 hover:bg-zinc-50">
+          <button onClick={() => setIsExportModalOpen(true)} className="btn-secondary flex items-center gap-2 text-[10.4px] h-9 px-3 bg-white dark:bg-surface-dark border-zinc-200 dark:border-border-dark hover:bg-zinc-50 dark:hover:bg-hover-dark/40">
             <Download size={15} /> Export
           </button>
           <RequirePermission module="PAYMENT_VOUCHERS" action="CREATE">
@@ -303,9 +303,9 @@ export default function PaymentVouchers() {
       <ModuleTabs tabs={purchaseTabs} />
 
       <div className="p-6 overflow-hidden">
-        <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
+        <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden">
           {/* Filter Bar Section */}
-          <div className="p-4 border-b border-zinc-200 bg-white space-y-3">
+          <div className="p-4 border-b border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark space-y-3">
             <form onSubmit={(e) => { e.preventDefault(); refetch(); }}>
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 flex-1">
@@ -333,7 +333,7 @@ export default function PaymentVouchers() {
                       type="date"
                       value={filters.voucherDateFrom || ''}
                       onChange={(e) => setFilter('voucherDateFrom', e.target.value)}
-                      className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
+                      className="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
                     />
                   </div>
                   
@@ -346,7 +346,7 @@ export default function PaymentVouchers() {
                       type="date"
                       value={filters.voucherDateTo || ''}
                       onChange={(e) => setFilter('voucherDateTo', e.target.value)}
-                      className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
+                      className="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
                     />
                   </div>
 
@@ -358,7 +358,7 @@ export default function PaymentVouchers() {
                     <CustomSelect
                       value={filters.paymentStatuses || ''}
                       onChange={(e) => setFilter('paymentStatuses', e.target.value)}
-                      className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all cursor-pointer"
+                      className="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all cursor-pointer"
                     >
                       <option value="">All Statuses</option>
                       <option value="DRAFT">DRAFT</option>
@@ -378,7 +378,7 @@ export default function PaymentVouchers() {
                   <button
                     type="button"
                     onClick={handleClearFilters}
-                    className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95"
+                    className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95"
                     title="Reset All Filters"
                   >
                     <RotateCcw size={14} />
@@ -391,7 +391,7 @@ export default function PaymentVouchers() {
                     className={`h-9 px-3 text-[10.4px] font-semibold rounded-lg border transition-all flex items-center gap-1.5 active:scale-95 ${
                       showAdvancedFilters || activeAdvancedFilterCount > 0
                         ? 'bg-zinc-100 border-zinc-300 text-zinc-900 shadow-sm'
-                        : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                        : 'bg-white dark:bg-surface-dark border-zinc-200 dark:border-border-dark text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-hover-dark/40'
                     }`}
                   >
                     <SlidersHorizontal size={14} />
@@ -407,7 +407,7 @@ export default function PaymentVouchers() {
                   <button
                     type="button"
                     onClick={() => refetch()}
-                    className="h-9 w-9 text-zinc-500 hover:text-zinc-800 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 flex items-center justify-center transition-all active:scale-95"
+                    className="h-9 w-9 text-zinc-500 hover:text-zinc-800 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 flex items-center justify-center transition-all active:scale-95"
                     title="Refresh List"
                   >
                     <RefreshCw size={14} className={isLoading || isFetching ? 'animate-spin' : ''} />
@@ -440,7 +440,7 @@ export default function PaymentVouchers() {
                         <CustomSelect
                           value={filters.vendorId || ''}
                           onChange={(e) => setFilter('vendorId', e.target.value)}
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none cursor-pointer"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none cursor-pointer"
                         >
                           <option value="">All Vendors</option>
                           {vendors.map(v => (
@@ -454,7 +454,7 @@ export default function PaymentVouchers() {
                         <CustomSelect
                           value={filters.paymentMode || ''}
                           onChange={(e) => setFilter('paymentMode', e.target.value)}
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none cursor-pointer"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none cursor-pointer"
                         >
                           <option value="">All Modes</option>
                           <option value="CASH">CASH</option>
@@ -470,7 +470,7 @@ export default function PaymentVouchers() {
                         <input type="text"
                           value={filters.voucherNo || ''}
                           onChange={(e) => setFilter('voucherNo', e.target.value)}
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
                         />
                       </div>
 
@@ -479,7 +479,7 @@ export default function PaymentVouchers() {
                         <input type="text"
                           value={filters.referenceNo || ''}
                           onChange={(e) => setFilter('referenceNo', e.target.value)}
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
                         />
                       </div>
 
@@ -488,7 +488,7 @@ export default function PaymentVouchers() {
                         <input type="number" step="0.01"
                           value={filters.minAmount || ''}
                           onChange={(e) => setFilter('minAmount', e.target.value)}
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
                         />
                       </div>
 
@@ -497,7 +497,7 @@ export default function PaymentVouchers() {
                         <input type="number" step="0.01"
                           value={filters.maxAmount || ''}
                           onChange={(e) => setFilter('maxAmount', e.target.value)}
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
                         />
                       </div>
 
@@ -506,7 +506,7 @@ export default function PaymentVouchers() {
                         <CustomSelect
                           value={filters.glPostingStatuses || ''}
                           onChange={(e) => setFilter('glPostingStatuses', e.target.value)}
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none cursor-pointer"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none cursor-pointer"
                         >
                           <option value="">All Statuses</option>
                           <option value="UNPOSTED">UNPOSTED</option>
@@ -554,7 +554,7 @@ export default function PaymentVouchers() {
                   {visibleColumns.includes('createdAt') && (
                     <SortableHeader field="createdAt" currentSortBy={sortBy} currentSortOrder={sortOrder} onSort={handleColumnSort} className="p-4">Created Date</SortableHeader>
                   )}
-                  <th className="p-4 text-[8.8px] font-semibold text-zinc-500 uppercase tracking-wider text-right sticky right-0 bg-white z-10 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">Actions</th>
+                  <th className="p-4 text-[8.8px] font-semibold text-zinc-500 uppercase tracking-wider text-right sticky right-0 bg-white dark:bg-card-dark z-10 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -640,7 +640,7 @@ export default function PaymentVouchers() {
                         <td className="p-4 text-zinc-600">{new Date(voucher.createdAt || voucher.voucherDate).toLocaleDateString()}</td>
                       )}
 
-                      <td className="p-4 text-right sticky right-0 bg-white shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] group-hover:bg-zinc-50/80 transition-colors" onClick={(e) => e.stopPropagation()}>
+                      <td className="p-4 text-right sticky right-0 bg-white dark:bg-card-dark shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] group-hover:bg-zinc-50/80 transition-colors" onClick={(e) => e.stopPropagation()}>
                         <TableRowActions
                           onView={() => navigate(buildPath(`/accounts/transactions/payments/${voucher.id}`))}
                           onEdit={voucher.paymentStatus === 'DRAFT' && canUpdate ? (e) => { e.stopPropagation(); handleEdit(voucher); } : undefined}

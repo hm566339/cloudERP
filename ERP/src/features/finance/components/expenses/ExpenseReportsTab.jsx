@@ -245,11 +245,11 @@ export default function ExpenseReportsTab({ companyId }) {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* CARD 1 */}
-        <div className="p-4 bg-white rounded-xl border border-zinc-200 shadow-xs relative overflow-hidden group hover:border-zinc-300 transition-colors">
+        <div className="p-4 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-xs relative overflow-hidden group hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <IndianRupee size={48} />
           </div>
-          <span className="text-[8.8px] font-bold text-zinc-400 uppercase tracking-wider block">Total Recorded Expenses</span>
+          <span className="text-[8.8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Total Recorded Expenses</span>
           {isLoadingSummary ? (
             <div className="mt-1 space-y-1.5">
               <Skeleton className="h-8 w-32" />
@@ -257,10 +257,10 @@ export default function ExpenseReportsTab({ companyId }) {
             </div>
           ) : (
             <>
-              <span className="text-2xl font-extrabold text-zinc-900 mt-1 block">
+              <span className="text-2xl font-extrabold text-zinc-900 dark:text-[#E6E8EE] mt-1 block">
                 ₹{(summaryData?.totalRecordedExpenses || 0).toLocaleString()}
               </span>
-              <span className="text-[8.8px] text-zinc-500 mt-0.5 block">
+              <span className="text-[8.8px] text-zinc-500 dark:text-[#6B7184] mt-0.5 block">
                 {summaryData?.totalRecordedExpenseCount || 0} vouchers in selected period
               </span>
             </>
@@ -268,11 +268,11 @@ export default function ExpenseReportsTab({ companyId }) {
         </div>
 
         {/* CARD 2 */}
-        <div className="p-4 bg-white rounded-xl border border-zinc-200 shadow-xs relative overflow-hidden group hover:border-zinc-300 transition-colors">
+        <div className="p-4 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-xs relative overflow-hidden group hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <LayoutDashboard size={48} />
           </div>
-          <span className="text-[8.8px] font-bold text-zinc-400 uppercase tracking-wider block">Pending Advance / Requests</span>
+          <span className="text-[8.8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Pending Advance / Requests</span>
           {isLoadingSummary ? (
              <div className="mt-1 space-y-1.5">
               <Skeleton className="h-8 w-32" />
@@ -280,20 +280,20 @@ export default function ExpenseReportsTab({ companyId }) {
             </div>
           ) : (
             <>
-              <span className="text-2xl font-extrabold text-amber-600 mt-1 block">
+              <span className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 block">
                 ₹{(summaryData?.pendingAdvanceRequests || 0).toLocaleString()}
               </span>
-              <span className="text-[8.8px] text-zinc-500 mt-0.5 block">Awaiting management authorization</span>
+              <span className="text-[8.8px] text-zinc-500 dark:text-[#6B7184] mt-0.5 block">Awaiting management authorization</span>
             </>
           )}
         </div>
 
         {/* CARD 3 */}
-        <div className="p-4 bg-white rounded-xl border border-zinc-200 shadow-xs relative overflow-hidden group hover:border-zinc-300 transition-colors">
+        <div className="p-4 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-xs relative overflow-hidden group hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <RotateCcw size={48} />
           </div>
-          <span className="text-[8.8px] font-bold text-zinc-400 uppercase tracking-wider block">Pending Reimbursement Due</span>
+          <span className="text-[8.8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Pending Reimbursement Due</span>
           {isLoadingSummary ? (
              <div className="mt-1 space-y-1.5">
               <Skeleton className="h-8 w-32" />
@@ -301,20 +301,20 @@ export default function ExpenseReportsTab({ companyId }) {
             </div>
           ) : (
             <>
-              <span className="text-2xl font-extrabold text-rose-600 mt-1 block">
+              <span className="text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1 block">
                 ₹{(summaryData?.pendingReimbursementDue || 0).toLocaleString()}
               </span>
-              <span className="text-[8.8px] text-zinc-500 mt-0.5 block">Driver & staff payable balance</span>
+              <span className="text-[8.8px] text-zinc-500 dark:text-[#6B7184] mt-0.5 block">Driver & staff payable balance</span>
             </>
           )}
         </div>
 
         {/* CARD 4 */}
-        <div className="p-4 bg-white rounded-xl border border-zinc-200 shadow-xs relative overflow-hidden group hover:border-zinc-300 transition-colors">
+        <div className="p-4 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-xs relative overflow-hidden group hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
             <ShoppingCart size={48} />
           </div>
-          <span className="text-[8.8px] font-bold text-zinc-400 uppercase tracking-wider block">Total Reimbursements Settled</span>
+          <span className="text-[8.8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Total Reimbursements Settled</span>
           {isLoadingSummary ? (
              <div className="mt-1 space-y-1.5">
               <Skeleton className="h-8 w-32" />
@@ -322,34 +322,34 @@ export default function ExpenseReportsTab({ companyId }) {
             </div>
           ) : (
             <>
-              <span className="text-2xl font-extrabold text-emerald-600 mt-1 block">
+              <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">
                 ₹{(summaryData?.totalReimbursementsSettled || 0).toLocaleString()}
               </span>
-              <span className="text-[8.8px] text-zinc-500 mt-0.5 block">Disbursed via bank / cash accounts</span>
+              <span className="text-[8.8px] text-zinc-500 dark:text-[#6B7184] mt-0.5 block">Disbursed via bank / cash accounts</span>
             </>
           )}
         </div>
       </div>
 
       {/* Advanced Filter Bar */}
-      <div className="p-4 bg-white rounded-xl border border-zinc-200 shadow-sm space-y-3">
+      <div className="p-4 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
-            <BarChart3 size={14} className="text-zinc-500" />
+          <h3 className="text-xs font-bold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider flex items-center gap-1.5">
+            <BarChart3 size={14} className="text-zinc-500 dark:text-[#A0A6B5]" />
             Report Filters & Range
           </h3>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={resetFilters}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-600 dark:text-[#A0A6B5] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-lg transition-colors"
             >
               <RotateCcw size={13} /> Reset
             </button>
             <button
               type="button"
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-zinc-700 dark:text-[#E6E8EE] bg-zinc-100 dark:bg-[#222736] hover:bg-zinc-200 dark:hover:bg-[#2A2F3D] rounded-lg transition-colors"
             >
               <Download size={13} /> Export CSV
             </button>
@@ -358,27 +358,27 @@ export default function ExpenseReportsTab({ companyId }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
           <div>
-            <label className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Date From</label>
+            <label className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Date From</label>
             <input
               type="date"
               value={filters.dateFrom}
               onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-              className="w-full h-8 px-2 bg-zinc-50 border border-zinc-200 rounded-md text-xs text-zinc-800 focus:bg-white outline-none"
+              className="w-full h-8 px-2 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-xs text-zinc-800 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#1D212C] outline-none"
             />
           </div>
 
           <div>
-            <label className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Date To</label>
+            <label className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Date To</label>
             <input
               type="date"
               value={filters.dateTo}
               onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-              className="w-full h-8 px-2 bg-zinc-50 border border-zinc-200 rounded-md text-xs text-zinc-800 focus:bg-white outline-none"
+              className="w-full h-8 px-2 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-xs text-zinc-800 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#1D212C] outline-none"
             />
           </div>
 
           <div>
-            <label className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Staff / Driver</label>
+            <label className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Staff / Driver</label>
             <CustomSelect
               options={[{ value: 'ALL', label: 'All Staff' }, ...staffOptions]}
               value={filters.employeeId}
@@ -389,7 +389,7 @@ export default function ExpenseReportsTab({ companyId }) {
           </div>
 
           <div>
-            <label className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Category</label>
+            <label className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Category</label>
             <CustomSelect
               options={[{ value: 'ALL', label: 'All Categories' }, ...categoryOptions]}
               value={filters.categoryId}
@@ -400,7 +400,7 @@ export default function ExpenseReportsTab({ companyId }) {
           </div>
 
           <div>
-            <label className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Vehicle</label>
+            <label className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Vehicle</label>
             <CustomSelect
               options={[{ value: 'ALL', label: 'All Vehicles' }, ...vehicleOptions]}
               value={filters.vehicleId}
@@ -411,7 +411,7 @@ export default function ExpenseReportsTab({ companyId }) {
           </div>
           
           <div>
-            <label className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Payment Type</label>
+            <label className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Payment Type</label>
             <CustomSelect
               options={paymentTypeOptions}
               value={filters.paymentType}
@@ -424,96 +424,96 @@ export default function ExpenseReportsTab({ companyId }) {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden flex flex-col">
-        <div className="flex items-center overflow-x-auto border-b border-zinc-200 hide-scrollbar">
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden flex flex-col">
+        <div className="flex items-center overflow-x-auto border-b border-zinc-200 dark:border-[#2A2F3D] hide-scrollbar">
           <button
             onClick={() => { setActiveTab('staff-driver'); setPagination(p => ({...p, page: 0})); }}
             className={`flex items-center gap-2 px-5 py-3.5 text-xs font-bold whitespace-nowrap transition-colors relative ${
-              activeTab === 'staff-driver' ? 'text-indigo-600 bg-indigo-50/50' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
+              activeTab === 'staff-driver' ? 'text-indigo-600 dark:text-blue-400 bg-indigo-50/50 dark:bg-blue-950/20' : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#1D212C] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'
             }`}
           >
             <User size={14} />
             Staff & Driver Analysis
-            {activeTab === 'staff-driver' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900" />}
+            {activeTab === 'staff-driver' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-blue-500" />}
           </button>
           <button
             onClick={() => { setActiveTab('category'); setPagination(p => ({...p, page: 0})); }}
             className={`flex items-center gap-2 px-5 py-3.5 text-xs font-bold whitespace-nowrap transition-colors relative ${
-              activeTab === 'category' ? 'text-indigo-600 bg-indigo-50/50' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
+              activeTab === 'category' ? 'text-indigo-600 dark:text-blue-400 bg-indigo-50/50 dark:bg-blue-950/20' : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#1D212C] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'
             }`}
           >
             <Tag size={14} />
             Category-wise Breakdown
-            {activeTab === 'category' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900" />}
+            {activeTab === 'category' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-blue-500" />}
           </button>
           <button
             onClick={() => { setActiveTab('vehicles'); setPagination(p => ({...p, page: 0})); }}
             className={`flex items-center gap-2 px-5 py-3.5 text-xs font-bold whitespace-nowrap transition-colors relative ${
-              activeTab === 'vehicles' ? 'text-indigo-600 bg-indigo-50/50' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
+              activeTab === 'vehicles' ? 'text-indigo-600 dark:text-blue-400 bg-indigo-50/50 dark:bg-blue-950/20' : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#1D212C] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'
             }`}
           >
             <Truck size={14} />
             Vehicle & Fleet Expenses
-            {activeTab === 'vehicles' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900" />}
+            {activeTab === 'vehicles' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-blue-500" />}
           </button>
           <button
             onClick={() => { setActiveTab('sales-order-dc'); setPagination(p => ({...p, page: 0})); }}
             className={`flex items-center gap-2 px-5 py-3.5 text-xs font-bold whitespace-nowrap transition-colors relative ${
-              activeTab === 'sales-order-dc' ? 'text-indigo-600 bg-indigo-50/50' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
+              activeTab === 'sales-order-dc' ? 'text-indigo-600 dark:text-blue-400 bg-indigo-50/50 dark:bg-blue-950/20' : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#1D212C] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'
             }`}
           >
             <ShoppingCart size={14} />
             Sales Order / DC Linked Expenses
-            {activeTab === 'sales-order-dc' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900" />}
+            {activeTab === 'sales-order-dc' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-blue-500" />}
           </button>
         </div>
 
         {/* Tab Content (Table Container) */}
         <div className="overflow-x-auto min-h-[300px]">
           <table className="w-full text-left border-collapse min-w-[800px]">
-            <thead className="bg-zinc-50/50 border-b border-zinc-200">
+            <thead className="bg-zinc-50/50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D]">
               <tr>
                 {activeTab === 'staff-driver' && (
                   <>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider">Staff / Driver Name</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider">Role</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Vouchers</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Self Paid (Reimbursable)</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Company Paid</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Total Amount (₹)</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Staff / Driver Name</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Role</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Vouchers</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Self Paid (Reimbursable)</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Company Paid</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Total Amount (₹)</th>
                   </>
                 )}
                 {activeTab === 'category' && (
                   <>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider">Category</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Vouchers</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Self Paid</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Company Paid</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Total Amount (₹)</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Category</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Vouchers</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Self Paid</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Company Paid</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Total Amount (₹)</th>
                   </>
                 )}
                 {activeTab === 'vehicles' && (
                   <>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider">Vehicle</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Vouchers</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Fuel</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Maintenance</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Total Amount (₹)</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Vehicle</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Vouchers</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Fuel</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Maintenance</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Total Amount (₹)</th>
                   </>
                 )}
                 {activeTab === 'sales-order-dc' && (
                   <>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider">Sales Order</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider">Delivery Challan</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider">Employee / Driver</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider">Vehicle</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Vouchers</th>
-                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 uppercase tracking-wider text-right">Total Amount (₹)</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Sales Order</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Delivery Challan</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Employee / Driver</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Vehicle</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Vouchers</th>
+                    <th className="px-4 py-2.5 text-[9.6px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider text-right">Total Amount (₹)</th>
                   </>
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
               {isLoadingReport ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
@@ -525,54 +525,54 @@ export default function ExpenseReportsTab({ companyId }) {
               ) : reportData.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center">
-                    <div className="flex flex-col items-center justify-center text-zinc-400">
+                    <div className="flex flex-col items-center justify-center text-zinc-400 dark:text-[#6B7184]">
                       <BarChart3 size={40} className="mb-3 opacity-20" />
-                      <span className="text-sm font-bold text-zinc-600">No report data found</span>
-                      <span className="text-xs mt-1">Try changing your filters or date range.</span>
+                      <span className="text-sm font-bold text-zinc-600 dark:text-[#A0A6B5]">No report data found</span>
+                      <span className="text-xs mt-1 text-zinc-400 dark:text-[#6B7184]">Try changing your filters or date range.</span>
                     </div>
                   </td>
                 </tr>
               ) : (
                 <>
                   {activeTab === 'staff-driver' && reportData.map((row, idx) => (
-                    <tr key={row.employeeId || idx} className="hover:bg-zinc-50/60 transition-colors group">
-                      <td className="p-3.5 pl-4 text-[10.4px] font-bold text-zinc-900">{row.employeeName || '—'}</td>
-                      <td className="p-3.5 text-[10.4px] text-zinc-600">{row.role || '—'}</td>
-                      <td className="p-3.5 text-[10.4px] text-right font-medium">{row.voucherCount || 0}</td>
-                      <td className="p-3.5 text-[10.4px] text-right text-rose-600 font-medium">₹{(row.selfPaidReimbursable || 0).toLocaleString()}</td>
-                      <td className="p-3.5 text-[10.4px] text-right text-emerald-600 font-medium">₹{(row.companyPaid || 0).toLocaleString()}</td>
-                      <td className="p-3.5 pr-4 text-[10.4px] text-right font-extrabold text-zinc-900">₹{(row.totalAmount || 0).toLocaleString()}</td>
+                    <tr key={row.employeeId || idx} className="hover:bg-zinc-50/60 dark:hover:bg-[#1D212C]/60 transition-colors group">
+                      <td className="p-3.5 pl-4 text-[10.4px] font-bold text-zinc-900 dark:text-[#E6E8EE]">{row.employeeName || '—'}</td>
+                      <td className="p-3.5 text-[10.4px] text-zinc-600 dark:text-[#A0A6B5]">{row.role || '—'}</td>
+                      <td className="p-3.5 text-[10.4px] text-right font-medium text-zinc-900 dark:text-[#E6E8EE]">{row.voucherCount || 0}</td>
+                      <td className="p-3.5 text-[10.4px] text-right text-rose-600 dark:text-rose-400 font-medium">₹{(row.selfPaidReimbursable || 0).toLocaleString()}</td>
+                      <td className="p-3.5 text-[10.4px] text-right text-emerald-600 dark:text-emerald-400 font-medium">₹{(row.companyPaid || 0).toLocaleString()}</td>
+                      <td className="p-3.5 pr-4 text-[10.4px] text-right font-extrabold text-zinc-900 dark:text-[#E6E8EE]">₹{(row.totalAmount || 0).toLocaleString()}</td>
                     </tr>
                   ))}
                   
                   {activeTab === 'category' && reportData.map((row, idx) => (
-                    <tr key={row.categoryId || idx} className="hover:bg-zinc-50/60 transition-colors group">
-                      <td className="p-3.5 pl-4 text-[10.4px] font-bold text-zinc-900">{row.categoryName || '—'}</td>
-                      <td className="p-3.5 text-[10.4px] text-right font-medium">{row.voucherCount || 0}</td>
-                      <td className="p-3.5 text-[10.4px] text-right text-rose-600 font-medium">₹{(row.selfPaidAmount || 0).toLocaleString()}</td>
-                      <td className="p-3.5 text-[10.4px] text-right text-emerald-600 font-medium">₹{(row.companyPaidAmount || 0).toLocaleString()}</td>
-                      <td className="p-3.5 pr-4 text-[10.4px] text-right font-extrabold text-zinc-900">₹{(row.totalAmount || 0).toLocaleString()}</td>
+                    <tr key={row.categoryId || idx} className="hover:bg-zinc-50/60 dark:hover:bg-[#1D212C]/60 transition-colors group">
+                      <td className="p-3.5 pl-4 text-[10.4px] font-bold text-zinc-900 dark:text-[#E6E8EE]">{row.categoryName || '—'}</td>
+                      <td className="p-3.5 text-[10.4px] text-right font-medium text-zinc-900 dark:text-[#E6E8EE]">{row.voucherCount || 0}</td>
+                      <td className="p-3.5 text-[10.4px] text-right text-rose-600 dark:text-rose-400 font-medium">₹{(row.selfPaidAmount || 0).toLocaleString()}</td>
+                      <td className="p-3.5 text-[10.4px] text-right text-emerald-600 dark:text-emerald-400 font-medium">₹{(row.companyPaidAmount || 0).toLocaleString()}</td>
+                      <td className="p-3.5 pr-4 text-[10.4px] text-right font-extrabold text-zinc-900 dark:text-[#E6E8EE]">₹{(row.totalAmount || 0).toLocaleString()}</td>
                     </tr>
                   ))}
 
                   {activeTab === 'vehicles' && reportData.map((row, idx) => (
-                    <tr key={row.vehicleId || idx} className="hover:bg-zinc-50/60 transition-colors group">
-                      <td className="p-3.5 pl-4 text-[10.4px] font-mono font-bold text-zinc-900">{row.vehicleNumber || '—'}</td>
-                      <td className="p-3.5 text-[10.4px] text-right font-medium">{row.voucherCount || 0}</td>
-                      <td className="p-3.5 text-[10.4px] text-right text-amber-600 font-medium">₹{(row.fuelAmount || 0).toLocaleString()}</td>
-                      <td className="p-3.5 text-[10.4px] text-right text-blue-600 font-medium">₹{(row.maintenanceAmount || 0).toLocaleString()}</td>
-                      <td className="p-3.5 pr-4 text-[10.4px] text-right font-extrabold text-zinc-900">₹{(row.totalAmount || 0).toLocaleString()}</td>
+                    <tr key={row.vehicleId || idx} className="hover:bg-zinc-50/60 dark:hover:bg-[#1D212C]/60 transition-colors group">
+                      <td className="p-3.5 pl-4 text-[10.4px] font-mono font-bold text-zinc-900 dark:text-[#E6E8EE]">{row.vehicleNumber || '—'}</td>
+                      <td className="p-3.5 text-[10.4px] text-right font-medium text-zinc-900 dark:text-[#E6E8EE]">{row.voucherCount || 0}</td>
+                      <td className="p-3.5 text-[10.4px] text-right text-amber-600 dark:text-amber-400 font-medium">₹{(row.fuelAmount || 0).toLocaleString()}</td>
+                      <td className="p-3.5 text-[10.4px] text-right text-blue-600 dark:text-blue-400 font-medium">₹{(row.maintenanceAmount || 0).toLocaleString()}</td>
+                      <td className="p-3.5 pr-4 text-[10.4px] text-right font-extrabold text-zinc-900 dark:text-[#E6E8EE]">₹{(row.totalAmount || 0).toLocaleString()}</td>
                     </tr>
                   ))}
 
                   {activeTab === 'sales-order-dc' && reportData.map((row, idx) => (
-                    <tr key={row.salesOrderId || row.deliveryChallanId || idx} className="hover:bg-zinc-50/60 transition-colors group">
-                      <td className="p-3.5 pl-4 text-[10.4px] font-bold text-indigo-600">{row.salesOrderNo || '—'}</td>
-                      <td className="p-3.5 text-[10.4px] font-bold text-blue-600">{row.deliveryChallanNo || '—'}</td>
-                      <td className="p-3.5 text-[10.4px] font-medium text-zinc-700">{row.employeeName || '—'}</td>
-                      <td className="p-3.5 text-[10.4px] font-mono text-zinc-600">{row.vehicleNumber || '—'}</td>
-                      <td className="p-3.5 text-[10.4px] text-right font-medium">{row.voucherCount || 0}</td>
-                      <td className="p-3.5 pr-4 text-[10.4px] text-right font-extrabold text-zinc-900">₹{(row.totalAmount || 0).toLocaleString()}</td>
+                    <tr key={row.salesOrderId || row.deliveryChallanId || idx} className="hover:bg-zinc-50/60 dark:hover:bg-[#1D212C]/60 transition-colors group">
+                      <td className="p-3.5 pl-4 text-[10.4px] font-bold text-indigo-600 dark:text-indigo-400">{row.salesOrderNo || '—'}</td>
+                      <td className="p-3.5 text-[10.4px] font-bold text-blue-600 dark:text-blue-400">{row.deliveryChallanNo || '—'}</td>
+                      <td className="p-3.5 text-[10.4px] font-medium text-zinc-700 dark:text-[#A0A6B5]">{row.employeeName || '—'}</td>
+                      <td className="p-3.5 text-[10.4px] font-mono text-zinc-600 dark:text-[#A0A6B5]">{row.vehicleNumber || '—'}</td>
+                      <td className="p-3.5 text-[10.4px] text-right font-medium text-zinc-900 dark:text-[#E6E8EE]">{row.voucherCount || 0}</td>
+                      <td className="p-3.5 pr-4 text-[10.4px] text-right font-extrabold text-zinc-900 dark:text-[#E6E8EE]">₹{(row.totalAmount || 0).toLocaleString()}</td>
                     </tr>
                   ))}
                 </>
@@ -583,7 +583,7 @@ export default function ExpenseReportsTab({ companyId }) {
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="border-t border-zinc-200 bg-zinc-50 rounded-b-xl">
+          <div className="border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C] rounded-b-xl">
             <Pagination
               currentPage={pagination.page}
               totalPages={pagination.totalPages}

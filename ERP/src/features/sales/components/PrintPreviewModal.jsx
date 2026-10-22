@@ -29,8 +29,9 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
   const fetchPrinters = async () => {
     setIsLoadingPrinters(true);
     setPrintError('');
+    const localPrintUrl = (import.meta.env.VITE_LOCAL_PRINT_URL || 'http://localhost:8089').replace(/\/+$/, '');
     try {
-      const res = await fetch('http://localhost:8089/printers');
+      const res = await fetch(`${localPrintUrl}/printers`);
       if (!res.ok) throw new Error('Local print service not running.');
       const list = await res.json();
       setPrinters(list);
@@ -76,7 +77,8 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
       formData.append('orientation', orientation);
       formData.append('paperSize', paperSize);
 
-      const printRes = await fetch('http://localhost:8089/print', {
+      const localPrintUrl = (import.meta.env.VITE_LOCAL_PRINT_URL || 'http://localhost:8089').replace(/\/+$/, '');
+      const printRes = await fetch(`${localPrintUrl}/print`, {
         method: 'POST',
         body: formData,
       });
@@ -101,7 +103,7 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[600] flex bg-zinc-50 overflow-hidden">
+    <div className="fixed inset-0 z-[600] flex bg-zinc-50 dark:bg-[#0F1117] overflow-hidden">
       {/* Top Header */}
       <div className="absolute top-0 left-0 right-0 h-12 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-6 z-10 shadow-md">
         <h1 className="text-[13.6px] font-bold text-white flex items-center gap-2.5">
@@ -115,8 +117,8 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
 
       <div className="flex flex-col md:flex-row w-full h-full pt-12 overflow-y-auto md:overflow-hidden">
         {/* Left Panel: Preview */}
-        <div className="flex-1 min-h-[360px] md:min-h-0 md:flex-[7] bg-zinc-400/80 p-3 sm:p-6 md:p-8 flex items-center justify-center relative">
-          <div className="w-full h-full max-w-5xl mx-auto flex items-center justify-center shadow-2xl bg-white rounded-sm overflow-hidden border border-zinc-300/50">
+        <div className="flex-1 min-h-[360px] md:min-h-0 md:flex-[7] bg-zinc-400/80 dark:bg-[#0F1117] p-3 sm:p-6 md:p-8 flex items-center justify-center relative">
+          <div className="w-full h-full max-w-5xl mx-auto flex items-center justify-center shadow-2xl bg-white dark:bg-white keep-white rounded-sm overflow-hidden border border-zinc-300/50 dark:border-[#2A2F3D]">
             {pdfUrl ? (
               <iframe
                 src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
@@ -134,17 +136,17 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
         </div>
 
         {/* Right Panel: Settings */}
-        <div className="w-full md:w-auto md:flex-[3] bg-white border-t md:border-t-0 md:border-l border-zinc-200 flex flex-col md:min-w-[272px] md:max-w-[336px] relative shadow-[-10px_0_20px_rgba(0,0,0,0.05)] z-10">
+        <div className="w-full md:w-auto md:flex-[3] bg-white dark:bg-[#161922] border-t md:border-t-0 md:border-l border-zinc-200 dark:border-[#2A2F3D] flex flex-col md:min-w-[272px] md:max-w-[336px] relative shadow-[-10px_0_20px_rgba(0,0,0,0.05)] z-10">
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
             
             {/* Printer Selection */}
             <div>
-              <label className="block text-[10.4px] font-bold text-zinc-800 mb-2.5 uppercase tracking-wide">Printer</label>
+              <label className="block text-[10.4px] font-bold text-zinc-800 dark:text-zinc-200 mb-2.5 uppercase tracking-wide">Printer</label>
               <select
                 value={selectedPrinter}
                 onChange={(e) => setSelectedPrinter(e.target.value)}
                 disabled={isLoadingPrinters}
-                className="input-field w-full h-[33.6px] text-[11.2px] font-medium bg-zinc-50 border-zinc-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20"
+                className="input-field w-full h-[33.6px] text-[11.2px] font-medium bg-zinc-50 dark:bg-[#1D212C] border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-zinc-100 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20"
               >
                 {isLoadingPrinters ? (
                   <option>Loading printers...</option>
@@ -161,35 +163,35 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
 
             {/* Pages Selection */}
             <div>
-              <label className="block text-[10.4px] font-bold text-zinc-800 mb-3 uppercase tracking-wide">Pages</label>
-              <div className="space-y-3.5 bg-zinc-50 p-4 border border-zinc-200 rounded-lg">
-                <label className="flex items-center gap-3 text-[11.2px] text-zinc-800 cursor-pointer font-medium hover:text-primary transition-colors">
+              <label className="block text-[10.4px] font-bold text-zinc-800 dark:text-zinc-200 mb-3 uppercase tracking-wide">Pages</label>
+              <div className="space-y-3.5 bg-zinc-50 dark:bg-[#1D212C] p-4 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg">
+                <label className="flex items-center gap-3 text-[11.2px] text-zinc-800 dark:text-zinc-200 cursor-pointer font-medium hover:text-primary transition-colors">
                   <input
                     type="radio"
                     name="pages"
                     checked={pagesOption === 'all'}
                     onChange={() => setPagesOption('all')}
-                    className="w-4 h-4 text-primary focus:ring-primary border-zinc-300 cursor-pointer"
+                    className="w-4 h-4 text-primary focus:ring-primary border-zinc-300 dark:border-zinc-700 cursor-pointer"
                   />
                   All
                 </label>
-                <label className="flex items-center gap-3 text-[11.2px] text-zinc-800 cursor-pointer font-medium hover:text-primary transition-colors">
+                <label className="flex items-center gap-3 text-[11.2px] text-zinc-800 dark:text-zinc-200 cursor-pointer font-medium hover:text-primary transition-colors">
                   <input
                     type="radio"
                     name="pages"
                     checked={pagesOption === 'current'}
                     onChange={() => setPagesOption('current')}
-                    className="w-4 h-4 text-primary focus:ring-primary border-zinc-300 cursor-pointer"
+                    className="w-4 h-4 text-primary focus:ring-primary border-zinc-300 dark:border-zinc-700 cursor-pointer"
                   />
                   Current Page
                 </label>
-                <label className="flex items-center gap-3 text-[11.2px] text-zinc-800 cursor-pointer font-medium hover:text-primary transition-colors">
+                <label className="flex items-center gap-3 text-[11.2px] text-zinc-800 dark:text-zinc-200 cursor-pointer font-medium hover:text-primary transition-colors">
                   <input
                     type="radio"
                     name="pages"
                     checked={pagesOption === 'custom'}
                     onChange={() => setPagesOption('custom')}
-                    className="w-4 h-4 text-primary focus:ring-primary border-zinc-300 cursor-pointer"
+                    className="w-4 h-4 text-primary focus:ring-primary border-zinc-300 dark:border-zinc-700 cursor-pointer"
                   />
                   Selected Pages
                 </label>
@@ -202,33 +204,33 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
                     value={customRange}
                     onChange={(e) => setCustomRange(e.target.value)}
                     placeholder="e.g. 1-3, 5"
-                    className="input-field w-full h-[33.6px] text-[11.2px] font-medium border-zinc-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20"
+                    className="input-field w-full h-[33.6px] text-[11.2px] font-medium bg-zinc-50 dark:bg-[#1D212C] border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-zinc-100 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20"
                   />
-                  <p className="text-[9.6px] text-zinc-500 mt-1.5 font-medium">Page Range (e.g. 1-3, 5)</p>
+                  <p className="text-[9.6px] text-zinc-500 dark:text-zinc-400 mt-1.5 font-medium">Page Range (e.g. 1-3, 5)</p>
                 </div>
               )}
             </div>
 
-            <div className="w-full h-[0.8px] bg-zinc-200"></div>
+            <div className="w-full h-[0.8px] bg-zinc-200 dark:bg-[#2A2F3D]"></div>
 
             {/* Copies */}
             <div>
-              <label className="block text-[10.4px] font-bold text-zinc-800 mb-2.5 uppercase tracking-wide">Copies</label>
-              <div className="flex items-center border border-zinc-300 rounded-lg w-36 overflow-hidden h-[33.6px] shadow-sm">
+              <label className="block text-[10.4px] font-bold text-zinc-800 dark:text-zinc-200 mb-2.5 uppercase tracking-wide">Copies</label>
+              <div className="flex items-center border border-zinc-300 dark:border-[#2A2F3D] rounded-lg w-36 overflow-hidden h-[33.6px] shadow-sm">
                 <button
                   type="button"
                   onClick={() => setCopies(Math.max(1, copies - 1))}
-                  className="w-12 h-full flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors"
+                  className="w-12 h-full flex items-center justify-center bg-zinc-100 dark:bg-[#1D212C] hover:bg-zinc-200 dark:hover:bg-[#222736] text-zinc-700 dark:text-zinc-300 transition-colors"
                 >
                   −
                 </button>
-                <div className="flex-1 flex items-center justify-center font-bold text-[12px] text-zinc-900 border-x border-zinc-300 h-full bg-white">
+                <div className="flex-1 flex items-center justify-center font-bold text-[12px] text-zinc-900 dark:text-zinc-100 border-x border-zinc-300 dark:border-[#2A2F3D] h-full bg-white dark:bg-[#161922]">
                   {copies}
                 </div>
                 <button
                   type="button"
                   onClick={() => setCopies(copies + 1)}
-                  className="w-12 h-full flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors"
+                  className="w-12 h-full flex items-center justify-center bg-zinc-100 dark:bg-[#1D212C] hover:bg-zinc-200 dark:hover:bg-[#222736] text-zinc-700 dark:text-zinc-300 transition-colors"
                 >
                   +
                 </button>
@@ -238,22 +240,22 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
             {/* Paper Settings */}
             <div className="grid grid-cols-2 gap-5">
               <div>
-                <label className="block text-[10.4px] font-bold text-zinc-800 mb-2.5 uppercase tracking-wide">Orientation</label>
+                <label className="block text-[10.4px] font-bold text-zinc-800 dark:text-zinc-200 mb-2.5 uppercase tracking-wide">Orientation</label>
                 <select
                   value={orientation}
                   onChange={(e) => setOrientation(e.target.value)}
-                  className="input-field w-full h-[33.6px] text-[11.2px] font-medium bg-zinc-50 border-zinc-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20"
+                  className="input-field w-full h-[33.6px] text-[11.2px] font-medium bg-zinc-50 dark:bg-[#1D212C] border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-zinc-100 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="portrait">Portrait</option>
                   <option value="landscape">Landscape</option>
                 </select>
               </div>
               <div>
-                <label className="block text-[10.4px] font-bold text-zinc-800 mb-2.5 uppercase tracking-wide">Paper Size</label>
+                <label className="block text-[10.4px] font-bold text-zinc-800 dark:text-zinc-200 mb-2.5 uppercase tracking-wide">Paper Size</label>
                 <select
                   value={paperSize}
                   onChange={(e) => setPaperSize(e.target.value)}
-                  className="input-field w-full h-[33.6px] text-[11.2px] font-medium bg-zinc-50 border-zinc-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20"
+                  className="input-field w-full h-[33.6px] text-[11.2px] font-medium bg-zinc-50 dark:bg-[#1D212C] border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-zinc-100 rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="A4">A4</option>
                   <option value="Letter">Letter</option>
@@ -264,13 +266,13 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
 
             {/* Status Messages */}
             {printError && (
-              <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg text-[10.4px] leading-relaxed font-medium flex items-start gap-2 shadow-sm">
+              <div className="p-4 bg-red-50 dark:bg-rose-500/15 text-red-700 dark:text-rose-300 border border-red-200 dark:border-rose-500/30 rounded-lg text-[10.4px] leading-relaxed font-medium flex items-start gap-2 shadow-sm">
                 <div className="mt-0.5">⚠️</div>
                 <div>{printError}</div>
               </div>
             )}
             {printSuccess && (
-              <div className="p-4 bg-green-50 text-green-700 border border-green-200 rounded-lg text-[11.2px] leading-relaxed flex items-center gap-2 font-bold shadow-sm">
+              <div className="p-4 bg-green-50 dark:bg-emerald-500/15 text-green-700 dark:text-emerald-300 border border-green-200 dark:border-emerald-500/30 rounded-lg text-[11.2px] leading-relaxed flex items-center gap-2 font-bold shadow-sm">
                 <div className="text-xl">✅</div>
                 Invoice printed successfully!
               </div>
@@ -279,7 +281,7 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
           </div>
 
           {/* Bottom Actions */}
-          <div className="p-6 bg-zinc-50 border-t border-zinc-200 shrink-0 shadow-[0_-4px_15px_rgba(0,0,0,0.02)]">
+          <div className="p-6 bg-zinc-50 dark:bg-[#161922] border-t border-zinc-200 dark:border-[#2A2F3D] shrink-0 shadow-[0_-4px_15px_rgba(0,0,0,0.02)]">
             <div className="flex gap-4">
               <button
                 type="button"
@@ -292,7 +294,7 @@ export default function PrintPreviewModal({ isOpen, onClose, pdfUrl, invoiceNo }
                 type="button"
                 onClick={handlePrint}
                 disabled={isPrinting || !selectedPrinter || isLoadingPrinters}
-                className="flex-[2] bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg shadow-md hover:shadow-lg flex items-center justify-center gap-2 font-bold text-[12px] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
+                className="flex-[2] bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white rounded-lg shadow-md hover:shadow-lg flex items-center justify-center gap-2 font-bold text-[12px] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
               >
                 {isPrinting ? (
                   <>

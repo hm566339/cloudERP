@@ -5,7 +5,7 @@ export default function StatusToggle({ active, onChange }) {
     <button
       onClick={() => onChange(!active)}
       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-        active ? 'bg-emerald-500' : 'bg-zinc-200'
+        active ? 'bg-emerald-500' : 'bg-zinc-200 dark:bg-zinc-700'
       }`}
     >
       <span

@@ -1,25 +1,29 @@
 import React, { useState } from 'react';
+import { useAppSelector } from '../../app/hooks';
 
 /**
  * MarkLogo Component
  * Renders the official MARK2 SVG logo with environment-aware base path resolution
  * and an inline SVG brand fallback if asset loading fails.
  *
- * @param {'light' | 'dark'} variant - 'light' for light backgrounds, 'dark' for dark backgrounds (white wordmark).
+ * @param {'auto' | 'light' | 'dark'} variant - 'auto' detects active theme, 'light' for light backgrounds, 'dark' for dark backgrounds (white wordmark).
  * @param {string} className - CSS styling classes for width, height, object-fit.
  * @param {string} alt - Alt text (default: 'Mark2 Logo').
  */
 export default function MarkLogo({
-  variant = 'light',
+  variant = 'auto',
   className = 'h-9 w-auto object-contain',
   alt = 'Mark2 Logo',
   ...props
 }) {
   const [hasError, setHasError] = useState(false);
+  const resolvedTheme = useAppSelector((s) => s.theme?.resolvedTheme || 'light');
+
+  const effectiveVariant = variant === 'auto' ? resolvedTheme : variant;
 
   const basePath = import.meta.env.BASE_URL || '/';
   const cleanBase = basePath.endsWith('/') ? basePath : `${basePath}/`;
-  const logoFile = variant === 'dark' ? 'MARK2_transparent_logo.svg' : 'MARK2_logo.svg';
+  const logoFile = effectiveVariant === 'dark' ? 'MARK2_transparent_logo.svg' : 'MARK2_logo.svg';
   const logoSrc = `${cleanBase}${logoFile}`;
 
   if (hasError) {

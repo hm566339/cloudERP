@@ -20,43 +20,43 @@ import { addAlert } from '../../notifications/notificationSlice';
 
 const HsnSacOverview = ({ item }) => {
   return (
-    <div className="p-5 flex flex-col bg-zinc-50/50 rounded-lg border-t border-zinc-200">
+    <div className="p-5 flex flex-col bg-zinc-50/50 dark:bg-[#1D212C] rounded-lg border-t border-zinc-200 dark:border-[#2A2F3D]">
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">CGST Rate</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{item.cgstRate != null ? `${item.cgstRate}%` : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">CGST Rate</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{item.cgstRate != null ? `${item.cgstRate}%` : '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">SGST Rate</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{item.sgstRate != null ? `${item.sgstRate}%` : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">SGST Rate</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{item.sgstRate != null ? `${item.sgstRate}%` : '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">IGST Rate</p>
-          <p className="text-sm font-medium text-emerald-600 mt-1">{item.igstRate != null ? `${item.igstRate}%` : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">IGST Rate</p>
+          <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mt-1">{item.igstRate != null ? `${item.igstRate}%` : '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">CESS Rate</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{item.cessRate != null ? `${item.cessRate}%` : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">CESS Rate</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{item.cessRate != null ? `${item.cessRate}%` : '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Item Mappings</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{item.itemMappingCount || 0}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Item Mappings</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{item.itemMappingCount || 0}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Invoice Usages</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{item.invoiceUsageCount || 0}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Invoice Usages</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{item.invoiceUsageCount || 0}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Tax Transactions</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{item.taxTransactionCount || 0}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Tax Transactions</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{item.taxTransactionCount || 0}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Created At</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Created At</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Updated At</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Updated At</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '-'}</p>
         </div>
       </div>
     </div>
@@ -322,7 +322,7 @@ const HsnSacMaster = () => {
   ], [navigate, buildPath]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="HSN / SAC Master"
         description="Manage Harmonized System of Nomenclature (HSN) and Service Accounting Codes (SAC)."

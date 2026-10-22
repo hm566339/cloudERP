@@ -273,33 +273,33 @@ export default function StockMovementManagement() {
   const renderExpandedRow = (mov) => (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Movement No</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Movement No</span>
         <p className="text-sm font-semibold text-zinc-900">{mov.movementNo || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Movement Type</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Movement Type</span>
         <p className="text-sm font-semibold text-zinc-900">{mov.movementType || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Date</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Date</span>
         <p className="text-sm font-medium text-zinc-700">{mov.movementDate ? new Date(mov.movementDate).toLocaleDateString() : '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Status</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Status</span>
         <div>
           <DataTableStatusBadge status={mov.status} />
         </div>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Reference</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Reference</span>
         <p className="text-sm font-medium text-zinc-700 font-mono">{mov.referenceType ? `${mov.referenceType}: ` : ''}{mov.referenceNumber || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Total Quantity</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Total Quantity</span>
         <p className="text-sm font-medium text-zinc-900 font-mono">{mov.totalQuantity ?? 0}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Total Value</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Total Value</span>
         <p className="text-sm font-medium text-zinc-900 font-mono">
           {typeof mov.totalValue === 'number' 
             ? mov.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -308,7 +308,7 @@ export default function StockMovementManagement() {
       </div>
       {mov.remarks && (
         <div className="space-y-1 col-span-2">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Remarks</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Remarks</span>
           <p className="text-sm font-medium text-zinc-700">{mov.remarks}</p>
         </div>
       )}
@@ -316,7 +316,7 @@ export default function StockMovementManagement() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Stock Movements"
         description="Manage stock movement transaction headers and metadata"

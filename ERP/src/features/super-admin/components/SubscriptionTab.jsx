@@ -76,9 +76,9 @@ export default function SubscriptionTab({ organizationId, org }) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-8 flex items-center justify-center">
-        <div className="flex items-center gap-2.5 text-xs text-zinc-500 font-semibold">
-          <RefreshCw size={16} className="animate-spin text-zinc-700" />
+      <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-8 flex items-center justify-center">
+        <div className="flex items-center gap-2.5 text-xs text-zinc-500 dark:text-[#A0A6B5] font-semibold">
+          <RefreshCw size={16} className="animate-spin text-zinc-700 dark:text-[#E6E8EE]" />
           <span>Loading organization subscription & billing telemetry...</span>
         </div>
       </div>
@@ -99,10 +99,10 @@ export default function SubscriptionTab({ organizationId, org }) {
       {/* ── Top Header Actions ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-bold text-zinc-900 tracking-tight">
+          <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
             Tenant Subscription & Billing Console
           </h3>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">
             Administrative overview of licensing tier, quotas, transaction receipts, and access state.
           </p>
         </div>
@@ -117,44 +117,44 @@ export default function SubscriptionTab({ organizationId, org }) {
       </div>
 
       {/* ── Subscription Status Overview Card ── */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-4">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 dark:border-[#2A2F3D] pb-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-zinc-100 border border-zinc-200/80 flex items-center justify-center text-zinc-800 shadow-2xs">
+            <div className="w-11 h-11 rounded-2xl bg-zinc-100 dark:bg-[#1D212C] border border-zinc-200/80 dark:border-[#2A2F3D] flex items-center justify-center text-zinc-800 dark:text-[#E6E8EE] shadow-2xs">
               <CreditCard size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">
                   Active Subscription Tier
                 </span>
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                   status === 'ACTIVE'
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60'
                     : isTrial
-                    ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                    : 'bg-zinc-100 text-zinc-600 border border-zinc-200'
+                    ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60'
+                    : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200 dark:border-[#2A2F3D]'
                 }`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${status === 'ACTIVE' || isTrial ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
                   {isTrial ? 'Trialing' : status}
                 </span>
               </div>
-              <h2 className="text-xl font-bold text-zinc-900 tracking-tight mt-0.5">
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight mt-0.5">
                 {planName}
               </h2>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-500 font-medium">
+            <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium">
               Access Mode:
             </span>
             <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold ${
               accessMode === 'FULL'
-                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60'
                 : accessMode === 'READ_ONLY'
-                ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                : 'bg-rose-50 text-rose-800 border border-rose-200'
+                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60'
+                : 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60'
             }`}>
               <Lock size={12} />
               <span>{accessMode}</span>
@@ -164,68 +164,68 @@ export default function SubscriptionTab({ organizationId, org }) {
 
         {/* Quota & Dates Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-          <div className="bg-zinc-50/80 rounded-xl p-3 border border-zinc-100 space-y-1">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Validity / Expiry</span>
-            <span className="font-bold text-zinc-900 block text-sm">
+          <div className="bg-zinc-50/80 dark:bg-[#1D212C] rounded-xl p-3 border border-zinc-100 dark:border-[#2A2F3D] space-y-1">
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Validity / Expiry</span>
+            <span className="font-bold text-zinc-900 dark:text-[#E6E8EE] block text-sm">
               {currentPeriodEnd || trialEndsAt || 'No expiry configured'}
             </span>
             {daysRemaining !== null && (
-              <span className="text-[11px] text-zinc-500">{daysRemaining} days remaining</span>
+              <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">{daysRemaining} days remaining</span>
             )}
           </div>
 
-          <div className="bg-zinc-50/80 rounded-xl p-3 border border-zinc-100 space-y-1">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Max Companies</span>
-            <span className="font-bold text-zinc-900 block text-sm">
+          <div className="bg-zinc-50/80 dark:bg-[#1D212C] rounded-xl p-3 border border-zinc-100 dark:border-[#2A2F3D] space-y-1">
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Max Companies</span>
+            <span className="font-bold text-zinc-900 dark:text-[#E6E8EE] block text-sm">
               {formatPlanLimit(subscription?.maxCompanies ?? subscription?.plan?.maxCompanies, 'companies')}
             </span>
-            <span className="text-[11px] text-zinc-500">Allowed corporate entities</span>
+            <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">Allowed corporate entities</span>
           </div>
 
-          <div className="bg-zinc-50/80 rounded-xl p-3 border border-zinc-100 space-y-1">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Users Per Company</span>
-            <span className="font-bold text-zinc-900 block text-sm">
+          <div className="bg-zinc-50/80 dark:bg-[#1D212C] rounded-xl p-3 border border-zinc-100 dark:border-[#2A2F3D] space-y-1">
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Users Per Company</span>
+            <span className="font-bold text-zinc-900 dark:text-[#E6E8EE] block text-sm">
               {formatPlanLimit(subscription?.maxUsersPerCompany ?? subscription?.plan?.maxUsersPerCompany, 'users')}
             </span>
-            <span className="text-[11px] text-zinc-500">Seat quota per company</span>
+            <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">Seat quota per company</span>
           </div>
 
-          <div className="bg-zinc-50/80 rounded-xl p-3 border border-zinc-100 space-y-1">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Plan Code</span>
-            <span className="font-mono font-bold text-zinc-800 block text-sm">{planCode}</span>
-            <span className="text-[11px] text-zinc-500">System identifier</span>
+          <div className="bg-zinc-50/80 dark:bg-[#1D212C] rounded-xl p-3 border border-zinc-100 dark:border-[#2A2F3D] space-y-1">
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Plan Code</span>
+            <span className="font-mono font-bold text-zinc-800 dark:text-[#E6E8EE] block text-sm">{planCode}</span>
+            <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">System identifier</span>
           </div>
         </div>
       </div>
 
       {/* ── Payments & Transaction History ── */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-zinc-100 dark:border-[#2A2F3D] pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-zinc-100 text-zinc-700 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-[#A0A6B5] flex items-center justify-center">
               <Receipt size={14} />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-zinc-900">Payment Transactions</h4>
-              <p className="text-[11px] text-zinc-500">Razorpay order records and verified gateway settlements</p>
+              <h4 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">Payment Transactions</h4>
+              <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">Razorpay order records and verified gateway settlements</p>
             </div>
           </div>
-          <span className="text-xs font-semibold text-zinc-500">
+          <span className="text-xs font-semibold text-zinc-500 dark:text-[#A0A6B5]">
             {payments.length} Records
           </span>
         </div>
 
         {payments.length === 0 ? (
-          <div className="text-center py-8 text-zinc-400 text-xs">
-            <Receipt size={24} className="mx-auto mb-2 text-zinc-300" />
-            <p className="font-semibold text-zinc-600">No payment records found for this organization</p>
-            <p className="text-zinc-400 mt-0.5">Payments processed via checkout will appear here.</p>
+          <div className="text-center py-8 text-zinc-400 dark:text-[#6B7184] text-xs">
+            <Receipt size={24} className="mx-auto mb-2 text-zinc-300 dark:text-[#6B7184]" />
+            <p className="font-semibold text-zinc-600 dark:text-[#E6E8EE]">No payment records found for this organization</p>
+            <p className="text-zinc-400 dark:text-[#6B7184] mt-0.5">Payments processed via checkout will appear here.</p>
           </div>
         ) : (
           <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
             <table className="w-full text-left text-xs whitespace-nowrap min-w-[580px]" aria-label="Payment Transactions Table">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs font-semibold text-zinc-600 uppercase tracking-wider bg-zinc-50/80 sticky top-0 z-10">
+                <tr className="border-b border-zinc-200 dark:border-[#2A2F3D] text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider bg-zinc-50/80 dark:bg-[#1D212C] sticky top-0 z-10">
                   <th scope="col" className="py-2.5 px-3">Transaction / Order ID</th>
                   <th scope="col" className="py-2.5 px-3">Gateway Payment ID</th>
                   <th scope="col" className="py-2.5 px-3">Amount</th>
@@ -233,28 +233,28 @@ export default function SubscriptionTab({ organizationId, org }) {
                   <th scope="col" className="py-2.5 px-3">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 text-zinc-700">
+              <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE]">
                 {payments.map((p, idx) => (
-                  <tr key={p.id || p.orderId || idx} className="hover:bg-zinc-50/60">
-                    <td className="py-2.5 px-3 font-mono font-semibold text-zinc-900">
+                  <tr key={p.id || p.orderId || idx} className="hover:bg-zinc-50/60 dark:hover:bg-[#1D212C]/60">
+                    <td className="py-2.5 px-3 font-mono font-semibold text-zinc-900 dark:text-[#E6E8EE]">
                       {p.orderId || p.subscriptionId || '—'}
                     </td>
-                    <td className="py-2.5 px-3 font-mono text-zinc-600">
+                    <td className="py-2.5 px-3 font-mono text-zinc-600 dark:text-[#A0A6B5]">
                       {p.paymentId || p.razorpayPaymentId || '—'}
                     </td>
-                    <td className="py-2.5 px-3 font-bold text-zinc-900 tabular-nums">
+                    <td className="py-2.5 px-3 font-bold text-zinc-900 dark:text-[#E6E8EE] tabular-nums">
                       {p.amount ? formatINR(p.amount, false) : (p.amountInPaise ? formatINR(p.amountInPaise, true) : '—')}
                     </td>
                     <td className="py-2.5 px-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                         p.status === 'SUCCESS' || p.status === 'PAID' || p.status === 'CAPTURED'
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-zinc-100 text-zinc-600'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
+                          : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5]'
                       }`}>
                         {p.status || 'SUCCESS'}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-zinc-500 tabular-nums">
+                    <td className="py-2.5 px-3 text-zinc-500 dark:text-[#A0A6B5] tabular-nums">
                       {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—'}
                     </td>
                   </tr>
@@ -266,33 +266,33 @@ export default function SubscriptionTab({ organizationId, org }) {
       </div>
 
       {/* ── Generated Invoices ── */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-zinc-100 dark:border-[#2A2F3D] pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-zinc-100 text-zinc-700 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-[#A0A6B5] flex items-center justify-center">
               <FileText size={14} />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-zinc-900">Generated Billing Invoices</h4>
-              <p className="text-[11px] text-zinc-500">Official GST-compliant tax invoices issued to the organization</p>
+              <h4 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">Generated Billing Invoices</h4>
+              <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">Official GST-compliant tax invoices issued to the organization</p>
             </div>
           </div>
-          <span className="text-xs font-semibold text-zinc-500">
+          <span className="text-xs font-semibold text-zinc-500 dark:text-[#A0A6B5]">
             {invoices.length} Invoices
           </span>
         </div>
 
         {invoices.length === 0 ? (
-          <div className="text-center py-8 text-zinc-400 text-xs">
-            <FileText size={24} className="mx-auto mb-2 text-zinc-300" />
-            <p className="font-semibold text-zinc-600">No invoices generated yet</p>
-            <p className="text-zinc-400 mt-0.5">Invoices will automatically generate following successful recurring billing or checkout.</p>
+          <div className="text-center py-8 text-zinc-400 dark:text-[#6B7184] text-xs">
+            <FileText size={24} className="mx-auto mb-2 text-zinc-300 dark:text-[#6B7184]" />
+            <p className="font-semibold text-zinc-600 dark:text-[#E6E8EE]">No invoices generated yet</p>
+            <p className="text-zinc-400 dark:text-[#6B7184] mt-0.5">Invoices will automatically generate following successful recurring billing or checkout.</p>
           </div>
         ) : (
           <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
             <table className="w-full text-left text-xs whitespace-nowrap min-w-[580px]" aria-label="Billing Invoices Table">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs font-semibold text-zinc-600 uppercase tracking-wider bg-zinc-50/80 sticky top-0 z-10">
+                <tr className="border-b border-zinc-200 dark:border-[#2A2F3D] text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider bg-zinc-50/80 dark:bg-[#1D212C] sticky top-0 z-10">
                   <th scope="col" className="py-2.5 px-3">Invoice Number</th>
                   <th scope="col" className="py-2.5 px-3">Period</th>
                   <th scope="col" className="py-2.5 px-3">Total Amount</th>
@@ -300,24 +300,24 @@ export default function SubscriptionTab({ organizationId, org }) {
                   <th scope="col" className="py-2.5 px-3">Issued Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 text-zinc-700">
+              <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE]">
                 {invoices.map((inv, idx) => (
-                  <tr key={inv.id || inv.invoiceNumber || idx} className="hover:bg-zinc-50/60">
-                    <td className="py-2.5 px-3 font-mono font-bold text-zinc-900">
+                  <tr key={inv.id || inv.invoiceNumber || idx} className="hover:bg-zinc-50/60 dark:hover:bg-[#1D212C]/60">
+                    <td className="py-2.5 px-3 font-mono font-bold text-zinc-900 dark:text-[#E6E8EE]">
                       {inv.invoiceNumber || `#INV-${idx + 1}`}
                     </td>
-                    <td className="py-2.5 px-3 text-zinc-600">
+                    <td className="py-2.5 px-3 text-zinc-600 dark:text-[#A0A6B5]">
                       {inv.period || 'Annual Cycle'}
                     </td>
-                    <td className="py-2.5 px-3 font-bold text-zinc-900 tabular-nums">
+                    <td className="py-2.5 px-3 font-bold text-zinc-900 dark:text-[#E6E8EE] tabular-nums">
                       {inv.amount ? formatINR(inv.amount, false) : '—'}
                     </td>
                     <td className="py-2.5 px-3">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400">
                         {inv.status || 'PAID'}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-zinc-500 tabular-nums">
+                    <td className="py-2.5 px-3 text-zinc-500 dark:text-[#A0A6B5] tabular-nums">
                       {inv.issuedAt ? new Date(inv.issuedAt).toLocaleDateString() : '—'}
                     </td>
                   </tr>

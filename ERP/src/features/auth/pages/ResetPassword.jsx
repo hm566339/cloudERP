@@ -80,19 +80,19 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] p-8 sm:p-12 w-full max-w-lg mx-auto animate-fade-in-up relative overflow-hidden">
+    <div className="bg-white/95 dark:bg-card-dark/95 backdrop-blur-2xl border border-white dark:border-border-dark shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] p-8 sm:p-12 w-full max-w-lg mx-auto animate-fade-in-up relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
 
       <div className="space-y-3 mb-10 text-center relative z-10 mt-2">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 mb-2 shadow-inner">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 mb-2 shadow-inner">
           <ShieldCheck size={26} />
         </div>
-        <h2 className="text-3xl sm:text-4xl font-display font-black text-zinc-900 tracking-tight leading-tight">
+        <h2 className="text-3xl sm:text-4xl font-display font-black text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
           {isSetPassword ? "Set Your Password" : "New password"}
         </h2>
-        <p className="text-[12px] text-zinc-500 font-medium">
+        <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium">
           {isSetPassword 
             ? "Create a secure password to activate your company user account" 
             : "Please enter and confirm your new credentials"}
@@ -102,23 +102,23 @@ export default function ResetPassword() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative z-10">
         {/* New Password */}
         <div className="space-y-2">
-          <label className="text-[11.2px] font-bold text-zinc-700 block">
+          <label className="text-[11.2px] font-bold text-zinc-700 dark:text-zinc-300 block">
             {isSetPassword ? "New Password" : "New Password"}
           </label>
           <div className="relative group">
-            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-zinc-400 group-focus-within:text-primary transition-colors pointer-events-none z-10">
+            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-zinc-400 dark:text-zinc-500 group-focus-within:text-primary transition-colors pointer-events-none z-10">
               <Lock size={20} />
             </span>
             <input
               type={showPassword ? "text" : "password"}
               {...register("password")}
               placeholder="••••••••"
-              className={`w-full pl-12 pr-12 py-4 bg-white/50 hover:bg-white border ${errors.password ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-2xl text-[12px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+              className={`w-full pl-12 pr-12 py-4 bg-white/50 dark:bg-surface-dark/80 hover:bg-white dark:hover:bg-surface-dark border ${errors.password ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 dark:border-border-dark focus:border-primary focus:ring-primary/20'} rounded-2xl text-[12px] font-semibold text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-600 transition-colors z-10"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors z-10"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -132,18 +132,18 @@ export default function ResetPassword() {
 
         {/* Confirm Password */}
         <div className="space-y-2">
-          <label className="text-[11.2px] font-bold text-zinc-700 block">
+          <label className="text-[11.2px] font-bold text-zinc-700 dark:text-zinc-300 block">
             Confirm Password
           </label>
           <div className="relative group">
-            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-zinc-400 group-focus-within:text-primary transition-colors pointer-events-none z-10">
+            <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-zinc-400 dark:text-zinc-500 group-focus-within:text-primary transition-colors pointer-events-none z-10">
               <KeyRound size={20} />
             </span>
             <input
               type={showPassword ? "text" : "password"}
               {...register("confirmPassword")}
               placeholder="••••••••"
-              className={`w-full pl-12 pr-4 py-4 bg-white/50 hover:bg-white border ${errors.confirmPassword ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-2xl text-[12px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+              className={`w-full pl-12 pr-4 py-4 bg-white/50 dark:bg-surface-dark/80 hover:bg-white dark:hover:bg-surface-dark border ${errors.confirmPassword ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 dark:border-border-dark focus:border-primary focus:ring-primary/20'} rounded-2xl text-[12px] font-semibold text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
             />
           </div>
           {errors.confirmPassword && (
@@ -156,7 +156,7 @@ export default function ResetPassword() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-10 flex justify-center items-center gap-2 px-4 py-4 bg-zinc-900 hover:bg-zinc-800 text-white text-[12.8px] font-bold rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-xl shadow-zinc-900/20 disabled:opacity-70 disabled:cursor-not-allowed group"
+          className="w-full mt-10 flex justify-center items-center gap-2 px-4 py-4 bg-zinc-900 hover:bg-zinc-800 dark:bg-primary dark:hover:bg-primary-600 text-white text-[12.8px] font-bold rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-xl shadow-zinc-900/20 disabled:opacity-70 disabled:cursor-not-allowed group"
         >
           {loading ? (
             <div className="w-6 h-6 border-2 border-zinc-300 border-t-white rounded-full animate-spin"></div>

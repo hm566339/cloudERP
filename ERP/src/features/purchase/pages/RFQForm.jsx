@@ -328,7 +328,7 @@ export default function RFQForm() {
   if (isEditing && isLoadingExisting) return <PageLoader message="Loading RFQ..." />;
   if (isEditing && !existing) {
     return (
-      <div className="fixed inset-0 z-[100] flex flex-col h-full bg-zinc-50/50">
+      <div className="fixed inset-0 z-[100] flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
         <ErrorState
           title="RFQ Not Found"
           message="The requested RFQ could not be found."
@@ -347,14 +347,14 @@ export default function RFQForm() {
   );
 
   /* ── Shared style tokens (mirror PurchaseRequisitionForm) ── */
-  const sidebarCard = 'flex-none border border-zinc-200 rounded-lg p-3 bg-white shadow-2xs space-y-2';
-  const cardHead = 'flex items-center justify-between pb-1.5 border-b border-zinc-100';
+  const sidebarCard = 'flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-3 bg-white dark:bg-card-dark shadow-2xs space-y-2';
+  const cardHead = 'flex items-center justify-between pb-1.5 border-b border-zinc-100 dark:border-[#2A2F3D]';
   const cardTitle = 'text-[9.6px] font-bold text-zinc-800 uppercase tracking-wider';
   const label = 'text-[9.6px] font-semibold text-zinc-700 block mb-1';
-  const field = (hasErr = false) => `input-field w-full h-8 text-[9.6px] text-zinc-700 bg-white border border-zinc-200 rounded-md px-2 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${hasErr ? 'border-rose-300' : ''}`;
-  const tableField = (hasErr = false) => `input-field w-full h-8 text-[9.6px] text-zinc-700 bg-white border border-zinc-200 rounded-md px-1.5 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${hasErr ? 'border-rose-300' : ''}`;
+  const field = (hasErr = false) => `input-field w-full h-8 text-[9.6px] text-zinc-700 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md px-2 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${hasErr ? 'border-rose-300' : ''}`;
+  const tableField = (hasErr = false) => `input-field w-full h-8 text-[9.6px] text-zinc-700 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md px-1.5 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${hasErr ? 'border-rose-300' : ''}`;
   const errText = 'text-[8.8px] text-rose-600 mt-0.5 font-medium';
-  const btnSecondary = 'px-4 py-2 text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 shadow-xs transition-colors flex items-center gap-2';
+  const btnSecondary = 'px-4 py-2 text-xs font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 shadow-xs transition-colors flex items-center gap-2';
   const btnPrimary = 'px-4 py-2 text-xs font-bold text-white bg-primary rounded-md hover:bg-primary/90 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2';
   const colTemplate = 'grid-cols-[4%_16%_16%_12%_12%_10%_12%_18%]';
 
@@ -364,7 +364,7 @@ export default function RFQForm() {
       {/* ═══════════════════════════════════════════════════════════════════
           PAGE HEADER
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-wrap xl:flex-nowrap items-center justify-between p-3 bg-white border-b border-zinc-200 shadow-sm flex-none">
+      <div className="flex flex-wrap xl:flex-nowrap items-center justify-between p-3 bg-white dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark shadow-sm flex-none">
         <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
@@ -399,7 +399,7 @@ export default function RFQForm() {
       {/* ═══════════════════════════════════════════════════════════════════
           MAIN WORKSPACE: TWO COLUMN LAYOUT
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 bg-white">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-border-dark bg-white dark:bg-page-dark">
 
         {/* ── LEFT COLUMN (FORM SIDEBAR) ── */}
         <div className="w-full lg:w-[260px] flex-none p-2.5 bg-zinc-50/40 overflow-y-auto overflow-x-hidden flex flex-col gap-2.5">
@@ -500,12 +500,12 @@ export default function RFQForm() {
                     }}
                     onFocus={() => setIsVendorDropdownOpen(true)}
                     placeholder="Add a vendor..."
-                    className={`w-full h-8 pl-8 pr-2 text-[9.6px] text-zinc-700 bg-white border rounded-md outline-none transition-all ${errors.vendors ? 'border-rose-300' : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'}`}
+                    className={`w-full h-8 pl-8 pr-2 text-[9.6px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark border dark:border-border-dark rounded-md outline-none transition-all ${errors.vendors ? 'border-rose-300' : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'}`}
                   />
                 </div>
 
                 {isVendorDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-zinc-200 rounded-md shadow-lg max-h-48 overflow-y-auto py-1">
+                  <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md shadow-lg max-h-48 overflow-y-auto py-1">
                     {vendorsLoading ? (
                       <div className="px-3 py-2 text-[10px] text-zinc-500 text-center">Loading vendors...</div>
                     ) : filteredVendors.length === 0 ? (
@@ -517,7 +517,7 @@ export default function RFQForm() {
                           <div
                             key={vendor.id}
                             onClick={() => toggleVendor(vendor.id)}
-                            className={`px-3 py-1.5 cursor-pointer flex items-center gap-2 hover:bg-zinc-50 transition-colors ${isSelected ? 'bg-primary/5' : ''}`}
+                            className={`px-3 py-1.5 cursor-pointer flex items-center gap-2 hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors ${isSelected ? 'bg-primary/5' : ''}`}
                           >
                             <input
                               type="checkbox"
@@ -549,7 +549,7 @@ export default function RFQForm() {
                   selectedVendorIds.map(vid => {
                     const vendor = vendorList.find(v => v.id === vid) || { vendorName: vendorNameMap[vid] || vid };
                     return (
-                      <div key={vid} className="flex items-center justify-between gap-2 p-1.5 bg-white border border-zinc-200 rounded-md shadow-2xs group">
+                      <div key={vid} className="flex items-center justify-between gap-2 p-1.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md shadow-2xs group">
                         <div className="flex flex-col min-w-0">
                           <span className="text-[9.6px] font-medium text-zinc-800 truncate">{vendor.vendorName || vendor.name}</span>
                           {(vendor.vendorCode || vendor.code) && (
@@ -604,13 +604,13 @@ export default function RFQForm() {
         </div>
 
         {/* ── RIGHT COLUMN: LARGE REQUESTED ITEMS AREA ── */}
-        <div className="w-full flex-1 flex flex-col overflow-y-auto min-h-0 bg-white">
+        <div className="w-full flex-1 flex flex-col overflow-y-auto min-h-0 bg-white dark:bg-page-dark">
           {/* Requested Items Section Header */}
           <div className="px-4 py-3 bg-zinc-50/80 border-b border-zinc-200 flex items-center justify-between flex-none sticky top-0 z-20">
             <div className="flex items-center gap-2">
               <h3 className="text-[11px] font-bold text-zinc-800 uppercase tracking-wider">Requested Items</h3>
               {items.length > 0 && (
-                <span className="text-[9.6px] font-semibold text-zinc-500 bg-white px-2 py-0.5 rounded-full border border-zinc-200 shadow-2xs">
+                <span className="text-[9.6px] font-semibold text-zinc-500 dark:text-zinc-400 bg-white dark:bg-surface-dark px-2 py-0.5 rounded-full border border-zinc-200 dark:border-border-dark shadow-2xs">
                   {items.length} {items.length === 1 ? 'item' : 'items'} loaded
                 </span>
               )}
@@ -653,7 +653,7 @@ export default function RFQForm() {
                 </div>
 
                 {/* Table Body */}
-                <div className="w-full bg-white divide-y divide-zinc-100 flex-1 overflow-y-auto pb-4">
+                <div className="w-full bg-white dark:bg-card-dark divide-y divide-zinc-100 dark:divide-border-dark/60 flex-1 overflow-y-auto pb-4">
                   {items.map((item, index) => (
                     <div key={index} className={`grid ${colTemplate} w-full min-w-0 hover:bg-zinc-50/50 transition-colors`}>
                       <div className="p-1.5 flex items-center justify-center text-[10.4px] text-zinc-400 font-medium">
@@ -735,8 +735,8 @@ export default function RFQForm() {
 
           {/* REQUEST SUMMARY - pinned to bottom of the Right Area */}
           <div className="p-4 border-t border-zinc-200 bg-zinc-50/40 mt-auto flex-none">
-            <div className="bg-white p-3.5 rounded-xl border border-zinc-200 flex flex-col shadow-2xs space-y-2.5">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+            <div className="bg-white dark:bg-card-dark p-3.5 rounded-xl border border-zinc-200 dark:border-border-dark flex flex-col shadow-2xs space-y-2.5">
+              <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
                 <h3 className="text-[10px] font-bold text-zinc-800 uppercase tracking-wider">Request Summary</h3>
               </div>
               <div className="space-y-2">

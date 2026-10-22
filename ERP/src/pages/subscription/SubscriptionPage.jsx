@@ -59,31 +59,31 @@ const MODULE_METADATA = {
     label: 'Finance & Accounts',
     desc: 'General ledger, journal vouchers, bank reconciliation & GST ledger',
     icon: Calculator,
-    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40',
   },
   INVENTORY: {
     label: 'Inventory & Warehousing',
     desc: 'Multi-warehouse stock visibility, batch tracking & stock adjustments',
     icon: Boxes,
-    badgeColor: 'bg-amber-50 text-amber-700 border-amber-100',
+    badgeColor: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40',
   },
   CRM: {
     label: 'Sales & Invoicing',
     desc: 'Quotations, proforma invoices, sales orders & GST compliant tax invoices',
     icon: ShoppingCart,
-    badgeColor: 'bg-blue-50 text-blue-700 border-blue-100',
+    badgeColor: 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/40',
   },
   PURCHASES: {
     label: 'Procurement & Purchase',
     desc: 'Purchase requisitions, supplier RFQs, purchase orders & vendor bills',
     icon: Briefcase,
-    badgeColor: 'bg-rose-50 text-rose-700 border-rose-100',
+    badgeColor: 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/40',
   },
   WORKFLOW: {
     label: 'Workflow & Approvals',
     desc: 'Multi-stage approval pipelines, transition guards & audit compliance',
     icon: Activity,
-    badgeColor: 'bg-violet-50 text-violet-700 border-violet-100',
+    badgeColor: 'bg-violet-50 text-violet-700 border-violet-100 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800/40',
   },
 };
 
@@ -277,30 +277,30 @@ function SubscriptionContent() {
     <div className="w-full px-6 lg:px-8 py-6 space-y-6 animate-fade-in pb-12">
 
       {/* ── 1. Page Header with Breadcrumbs ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200/70">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-200/70 dark:border-[#2A2F3D]">
         <div>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-zinc-500 mb-1.5">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-zinc-500 dark:text-[#A0A6B5] mb-1.5">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/50">
               <ShieldCheck size={11} />
               Enterprise Licensing
             </span>
-            <span className="text-zinc-300">•</span>
-            <span className="text-zinc-600">
-              Tenant: <strong className="text-zinc-900">{orgName}</strong>
+            <span className="text-zinc-300 dark:text-[#2A2F3D]">•</span>
+            <span className="text-zinc-600 dark:text-[#A0A6B5]">
+              Tenant: <strong className="text-zinc-900 dark:text-[#E6E8EE]">{orgName}</strong>
             </span>
             {orgCode && (
               <>
-                <span className="text-zinc-300">•</span>
-                <span className="font-mono text-[10.5px] font-bold text-zinc-700 bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200">
+                <span className="text-zinc-300 dark:text-[#2A2F3D]">•</span>
+                <span className="font-mono text-[10.5px] font-bold text-zinc-700 dark:text-[#E6E8EE] bg-zinc-100 dark:bg-[#1D212C] px-1.5 py-0.5 rounded border border-zinc-200 dark:border-[#2A2F3D]">
                   {orgCode}
                 </span>
               </>
             )}
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
             Subscription & Plan Management
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-zinc-500 dark:text-[#A0A6B5] mt-1 max-w-2xl leading-relaxed">
             Manage licensing tier, multi-company workspace allocations, billing cadence, and platform module entitlements.
           </p>
         </div>
@@ -330,9 +330,9 @@ function SubscriptionContent() {
 
       {/* ── Alerts: Read-Only or Blocked Status ── */}
       {isReadOnly && (
-        <div className="flex items-start justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
+        <div className="flex items-start justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 dark:bg-amber-950/30 dark:border-amber-800/40 dark:text-amber-200">
           <div className="flex items-start gap-2.5">
-            <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-700" />
+            <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-700 dark:text-amber-400" />
             <div>
               <span className="font-semibold">Free Trial Expired:</span>{' '}
               Your account is currently in <strong>read-only mode</strong>. You can view existing records and reports, but creating transactions requires an active subscription.
@@ -349,8 +349,8 @@ function SubscriptionContent() {
       )}
 
       {isBlocked && (
-        <div className="flex items-start gap-3 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
-          <ShieldAlert size={16} className="shrink-0 mt-0.5 text-rose-600" />
+        <div className="flex items-start gap-3 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 dark:bg-rose-950/30 dark:border-rose-800/40 dark:text-rose-200">
+          <ShieldAlert size={16} className="shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
           <div>
             <span className="font-semibold">Account Access Restricted:</span>{' '}
             Access to this organization has been paused by the administrator. Please contact your account executive to restore active access.
@@ -359,31 +359,31 @@ function SubscriptionContent() {
       )}
 
       {/* ── 2. Current Plan Executive Summary Card ── */}
-      <section className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+      <section className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
         <div className="p-6">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="space-y-3 max-w-2xl">
               <div className="flex flex-wrap items-center gap-2.5">
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider border ${
                   isTrial
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40'
                     : isActive
-                    ? 'bg-blue-50 text-blue-700 border-blue-200'
-                    : 'bg-zinc-100 text-zinc-700 border-zinc-200'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/40'
+                    : 'bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]'
                 }`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${isTrial || isActive ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'}`} />
                   {isTrial ? 'Trial Active' : (status || 'Active')}
                 </span>
-                <span className="text-xs text-zinc-500">
-                  Tenant Organization: <strong className="text-zinc-800 font-semibold">{orgName}</strong>
+                <span className="text-xs text-zinc-500 dark:text-[#A0A6B5]">
+                  Tenant Organization: <strong className="text-zinc-800 dark:text-[#E6E8EE] font-semibold">{orgName}</strong>
                 </span>
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">
+                <h2 className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                   {activePlanName}
                 </h2>
-                <p className="text-xs sm:text-sm text-zinc-500 mt-1 leading-relaxed">
+                <p className="text-xs sm:text-sm text-zinc-500 dark:text-[#A0A6B5] mt-1 leading-relaxed">
                   {activePlanDescription}
                 </p>
               </div>
@@ -391,22 +391,22 @@ function SubscriptionContent() {
               {/* Trial Countdown Progress Bar */}
               {isTrial && (
                 <div className="pt-1 max-w-md space-y-1.5">
-                  <div className="flex justify-between text-xs text-zinc-600 font-medium">
+                  <div className="flex justify-between text-xs text-zinc-600 dark:text-[#A0A6B5] font-medium">
                     <span className="flex items-center gap-1.5">
-                      <Clock size={13} className="text-emerald-600" />
+                      <Clock size={13} className="text-emerald-600 dark:text-emerald-400" />
                       <span>Trial Validity Period</span>
                     </span>
-                    <span className="font-bold text-zinc-900">
+                    <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">
                       {daysRemaining !== null ? `${daysRemaining} days remaining` : 'Active'}
                     </span>
                   </div>
-                  <div className="w-full bg-zinc-100 rounded-full h-2 overflow-hidden border border-zinc-200">
+                  <div className="w-full bg-zinc-100 dark:bg-[#1D212C] rounded-full h-2 overflow-hidden border border-zinc-200 dark:border-[#2A2F3D]">
                     <div
                       className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
                       style={{ width: `${Math.max(5, 100 - trialProgressPercent)}%` }}
                     />
                   </div>
-                  <div className="flex justify-between text-[11px] text-zinc-400">
+                  <div className="flex justify-between text-[11px] text-zinc-400 dark:text-[#6B7184]">
                     <span>Day {trialDaysPassed} of {totalTrialDays}</span>
                     <span>Valid until: {formattedTrialEndDate}</span>
                   </div>
@@ -417,14 +417,14 @@ function SubscriptionContent() {
             {/* Pricing & CTAs */}
             <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-3 shrink-0">
               <div className="text-left lg:text-right">
-                <div className="text-3xl font-bold text-zinc-900 tracking-tight font-sans">
+                <div className="text-3xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight font-sans">
                   {activePlanPricing.priceDisplay}
-                  <span className="text-xs text-zinc-500 font-normal ml-1">
+                  <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-normal ml-1">
                     {activePlanPricing.durationDisplay}
                   </span>
                 </div>
-                <div className="text-xs text-zinc-500 mt-0.5">
-                  Access: <strong className="text-zinc-800 font-semibold">{accessMode}</strong> • Status: <strong className="text-zinc-800 capitalize">{status.toLowerCase()}</strong>
+                <div className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+                  Access: <strong className="text-zinc-800 dark:text-[#E6E8EE] font-semibold">{accessMode}</strong> • Status: <strong className="text-zinc-800 dark:text-[#E6E8EE] capitalize">{status.toLowerCase()}</strong>
                 </div>
               </div>
 
@@ -445,7 +445,7 @@ function SubscriptionContent() {
                   <button
                     type="button"
                     onClick={() => setShowCancelModal(true)}
-                    className="btn-secondary h-8 px-3 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+                    className="btn-secondary h-8 px-3 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/30 dark:border-rose-900/40 flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
                   >
                     <span>Cancel Subscription</span>
                   </button>
@@ -454,7 +454,7 @@ function SubscriptionContent() {
                   href={`mailto:sales@mark2erp.com?subject=Subscription%20Inquiry%20-%20${encodeURIComponent(orgName)}`}
                   className="btn-secondary h-8 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs transition-all"
                 >
-                  <Mail size={13} className="text-zinc-500" />
+                  <Mail size={13} className="text-zinc-500 dark:text-[#A0A6B5]" />
                   <span>Contact Sales</span>
                 </a>
               </div>
@@ -463,23 +463,23 @@ function SubscriptionContent() {
         </div>
 
         {/* Integrated Metadata Ribbon (Replaces disconnected chunky tiles) */}
-        <div className="bg-zinc-50/70 border-t border-zinc-100 px-6 py-3.5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+        <div className="bg-zinc-50/70 dark:bg-[#1D212C]/60 border-t border-zinc-100 dark:border-[#2A2F3D] px-6 py-3.5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
           <div className="space-y-0.5">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Assigned Tier</span>
-            <span className="font-semibold text-zinc-900">{activePlanName}</span>
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Assigned Tier</span>
+            <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{activePlanName}</span>
           </div>
           <div className="space-y-0.5">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Billing Cadence</span>
-            <span className="font-semibold text-zinc-900">{activePlanObj?.durationDays ? `${activePlanObj.durationDays} Days` : '30-Day Cycle'}</span>
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Billing Cadence</span>
+            <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{activePlanObj?.durationDays ? `${activePlanObj.durationDays} Days` : '30-Day Cycle'}</span>
           </div>
           <div className="space-y-0.5">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Company Quota</span>
-            <span className="font-semibold text-zinc-900">{companyQuotaLabel}</span>
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Company Quota</span>
+            <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{companyQuotaLabel}</span>
           </div>
           <div className="space-y-0.5">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">Tenant Isolation</span>
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
-              <ShieldCheck size={13} className="text-emerald-600" />
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Tenant Isolation</span>
+            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
+              <ShieldCheck size={13} className="text-emerald-600 dark:text-emerald-400" />
               <span>Multi-Tenant Encrypted</span>
             </span>
           </div>
@@ -490,51 +490,51 @@ function SubscriptionContent() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
         {/* Left Column: Registered Legal Companies */}
-        <div className="lg:col-span-6 bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-5 flex flex-col justify-between">
+        <div className="lg:col-span-6 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-5 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-4">
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-[#2A2F3D] pb-3 mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50 flex items-center justify-center">
                   <Building2 size={15} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-zinc-900">
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE]">
                     Registered Legal Companies ({companies.length})
                   </h3>
-                  <p className="text-[11px] text-zinc-500">
+                  <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">
                     Active legal operating entities under {orgName}
                   </p>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-700 border border-zinc-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-700 border border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]">
                 Limit: {companyQuotaLabel}
               </span>
             </div>
 
             {companies.length === 0 ? (
-              <div className="p-6 text-center text-xs text-zinc-400 bg-zinc-50 rounded-lg border border-zinc-100">
+              <div className="p-6 text-center text-xs text-zinc-400 dark:text-[#6B7184] bg-zinc-50 dark:bg-[#1D212C]/40 rounded-lg border border-zinc-100 dark:border-[#2A2F3D]">
                 No companies currently registered under this tenant.
               </div>
             ) : (
-              <div className="divide-y divide-zinc-100">
+              <div className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                 {companies.map((company, index) => (
                   <div key={company.id || index} className="py-3 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-700 font-bold text-xs flex items-center justify-center shrink-0 border border-zinc-200/60">
+                      <div className="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-700 font-bold text-xs flex items-center justify-center shrink-0 border border-zinc-200/60 dark:bg-[#1D212C] dark:text-[#E6E8EE] dark:border-[#2A2F3D]">
                         {company.name?.charAt(0)?.toUpperCase() || index + 1}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold text-zinc-900 truncate">
+                        <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate">
                           {company.name}
                         </p>
-                        <p className="text-[11px] text-zinc-400 font-mono">
+                        <p className="text-[11px] text-zinc-400 dark:text-[#6B7184] font-mono">
                           Code: {company.code || '—'}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
                       </span>
                       <Link
@@ -553,20 +553,20 @@ function SubscriptionContent() {
           </div>
 
           {/* Genuine Workspace Quota Card */}
-          <div className="mt-4 pt-3.5 border-t border-zinc-100 bg-zinc-50/70 p-3.5 rounded-lg text-xs space-y-2">
-            <div className="flex items-center justify-between text-zinc-700 font-medium">
+          <div className="mt-4 pt-3.5 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/70 dark:bg-[#1D212C]/60 p-3.5 rounded-lg text-xs space-y-2">
+            <div className="flex items-center justify-between text-zinc-700 dark:text-[#A0A6B5] font-medium">
               <span className="text-[11.5px]">Workspace Quota Allocation</span>
-              <span className="font-semibold text-zinc-900 text-[11px]">
+              <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-[11px]">
                 {companies.length} of {companyQuotaLabel}
               </span>
             </div>
-            <div className="w-full bg-zinc-200/80 rounded-full h-1.5 overflow-hidden">
+            <div className="w-full bg-zinc-200/80 dark:bg-[#2A2F3D] rounded-full h-1.5 overflow-hidden">
               <div
-                className="bg-zinc-900 h-1.5 rounded-full transition-all duration-300"
+                className="bg-zinc-900 dark:bg-[#4C8DFF] h-1.5 rounded-full transition-all duration-300"
                 style={{ width: `${maxAllowedCompanies ? Math.min(100, (companies.length / maxAllowedCompanies) * 100) : 100}%` }}
               />
             </div>
-            <p className="text-[11px] text-zinc-500 leading-relaxed">
+            <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] leading-relaxed">
               {isAtCompanyLimit
                 ? 'Your organization has reached the company limit for this tier. Upgrade to the Growth tier for up to 3 legal entities, or Enterprise for uncapped company provisioning.'
                 : 'You have available capacity to provision additional legal companies under this organization.'}
@@ -575,7 +575,7 @@ function SubscriptionContent() {
               <button
                 type="button"
                 onClick={() => handleOpenUpgrade()}
-                className="text-[11px] font-bold text-zinc-900 hover:underline inline-flex items-center gap-1 mt-0.5"
+                className="text-[11px] font-bold text-zinc-900 dark:text-[#4C8DFF] hover:underline inline-flex items-center gap-1 mt-0.5"
               >
                 <span>Unlock Additional Workspaces</span>
                 <ArrowRight size={11} />
@@ -585,23 +585,23 @@ function SubscriptionContent() {
         </div>
 
         {/* Right Column: Entitled Platform Modules */}
-        <div className="lg:col-span-6 bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-5 space-y-3.5 flex flex-col justify-between">
+        <div className="lg:col-span-6 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-5 space-y-3.5 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-3">
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-[#2A2F3D] pb-3 mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-md bg-blue-50 text-blue-700 border border-blue-100 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-md bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/50 flex items-center justify-center">
                   <Layers size={15} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-zinc-900">
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE]">
                     Active Platform Modules ({entitledModuleKeys.length})
                   </h3>
-                  <p className="text-[11px] text-zinc-500">
+                  <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">
                     Subscribed capabilities provisioned for this organization
                   </p>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Entitled
               </span>
             </div>
@@ -616,8 +616,8 @@ function SubscriptionContent() {
                     key={key}
                     className={`p-2.5 rounded-lg border transition-all flex items-center justify-between gap-3 ${
                       isEnabled
-                        ? 'bg-zinc-50/50 border-zinc-200/80 hover:bg-zinc-50'
-                        : 'bg-zinc-50/20 border-zinc-100 opacity-60'
+                        ? 'bg-zinc-50/50 border-zinc-200/80 hover:bg-zinc-50 dark:bg-[#1D212C] dark:border-[#2A2F3D] dark:hover:bg-[#222736]'
+                        : 'bg-zinc-50/20 border-zinc-100 opacity-60 dark:bg-[#1D212C]/40 dark:border-[#2A2F3D]/60'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -625,10 +625,10 @@ function SubscriptionContent() {
                         <Icon size={14} />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-xs font-semibold text-zinc-900 block truncate">
+                        <span className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] block truncate">
                           {meta.label}
                         </span>
-                        <span className="text-[10.5px] text-zinc-500 block truncate">
+                        <span className="text-[10.5px] text-zinc-500 dark:text-[#A0A6B5] block truncate">
                           {meta.desc}
                         </span>
                       </div>
@@ -636,8 +636,8 @@ function SubscriptionContent() {
 
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider border shrink-0 ${
                       isEnabled
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-zinc-100 text-zinc-500 border-zinc-200'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50'
+                        : 'bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-[#161922] dark:text-[#6B7184] dark:border-[#2A2F3D]'
                     }`}>
                       {isEnabled ? 'Included' : 'Locked'}
                     </span>
@@ -647,9 +647,9 @@ function SubscriptionContent() {
             </div>
           </div>
 
-          <div className="pt-2 text-[11px] text-zinc-400 border-t border-zinc-100 flex items-center justify-between">
+          <div className="pt-2 text-[11px] text-zinc-400 dark:text-[#6B7184] border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between">
             <span>Modules reflect live subscription entitlements</span>
-            <span className="font-medium text-zinc-600">{entitledModuleKeys.length} of {Object.keys(MODULE_METADATA).length} Active</span>
+            <span className="font-medium text-zinc-600 dark:text-[#A0A6B5]">{entitledModuleKeys.length} of {Object.keys(MODULE_METADATA).length} Active</span>
           </div>
         </div>
 
@@ -659,24 +659,24 @@ function SubscriptionContent() {
       <section className="space-y-4 pt-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-zinc-900 tracking-tight">
+            <h2 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
               Available Subscription Plans
             </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
               Select a tier to unlock additional legal companies and platform capabilities.
             </p>
           </div>
 
           {/* Billing Cycle Switcher & Sync Button */}
           <div className="flex items-center gap-2.5">
-            <div className="bg-zinc-100 p-0.5 rounded-lg flex items-center border border-zinc-200 shadow-2xs">
+            <div className="bg-zinc-100 dark:bg-[#1D212C] p-0.5 rounded-lg flex items-center border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
               <button
                 type="button"
                 onClick={() => setBillingCycle('monthly')}
                 className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                   billingCycle === 'monthly'
-                    ? 'bg-white text-zinc-900 shadow-2xs'
-                    : 'text-zinc-600 hover:text-zinc-900'
+                    ? 'bg-white text-zinc-900 shadow-2xs dark:bg-[#161922] dark:text-[#E6E8EE]'
+                    : 'text-zinc-600 hover:text-zinc-900 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE]'
                 }`}
               >
                 Monthly
@@ -686,12 +686,12 @@ function SubscriptionContent() {
                 onClick={() => setBillingCycle('annual')}
                 className={`px-3 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
                   billingCycle === 'annual'
-                    ? 'bg-white text-zinc-900 shadow-2xs'
-                    : 'text-zinc-600 hover:text-zinc-900'
+                    ? 'bg-white text-zinc-900 shadow-2xs dark:bg-[#161922] dark:text-[#E6E8EE]'
+                    : 'text-zinc-600 hover:text-zinc-900 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE]'
                 }`}
               >
                 <span>Annual</span>
-                <span className="bg-emerald-100 text-emerald-700 text-[9.5px] font-bold px-1 py-0.2 rounded">
+                <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 text-[9.5px] font-bold px-1 py-0.2 rounded">
                   -20%
                 </span>
               </button>
@@ -712,15 +712,15 @@ function SubscriptionContent() {
 
         {/* Dynamic Plans Grid from Backend */}
         {!canView ? (
-          <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-8 text-center space-y-3">
-            <div className="w-10 h-10 rounded-full bg-zinc-100 text-zinc-500 mx-auto flex items-center justify-center">
-              <ShieldCheck size={20} className="text-zinc-600" />
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-8 text-center space-y-3">
+            <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-[#1D212C] text-zinc-500 dark:text-[#A0A6B5] mx-auto flex items-center justify-center">
+              <ShieldCheck size={20} className="text-zinc-600 dark:text-[#A0A6B5]" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-zinc-900">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE]">
                 Subscription Plan Catalog Restricted
               </h3>
-              <p className="text-xs text-zinc-500 max-w-lg mx-auto mt-1 leading-relaxed">
+              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] max-w-lg mx-auto mt-1 leading-relaxed">
                 Available subscription tiers and upgrade options are restricted to Organization Owners and System Administrators. As an organization member, your workspace access is governed by your organization's active tier shown above.
               </p>
             </div>
@@ -728,37 +728,37 @@ function SubscriptionContent() {
         ) : plansLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[1, 2, 3].map((idx) => (
-              <div key={idx} className="bg-white rounded-xl p-6 border border-zinc-200/80 animate-pulse space-y-4">
+              <div key={idx} className="bg-white dark:bg-[#161922] rounded-xl p-6 border border-zinc-200/80 dark:border-[#2A2F3D] animate-pulse space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="h-5 bg-zinc-200 rounded w-1/3" />
-                  <div className="h-4 bg-zinc-100 rounded w-1/4" />
+                  <div className="h-5 bg-zinc-200 dark:bg-[#2A2F3D] rounded w-1/3" />
+                  <div className="h-4 bg-zinc-100 dark:bg-[#1D212C] rounded w-1/4" />
                 </div>
-                <div className="h-3 bg-zinc-100 rounded w-3/4" />
-                <div className="h-10 bg-zinc-100 rounded w-1/2 my-3" />
-                <div className="h-14 bg-zinc-50 rounded" />
+                <div className="h-3 bg-zinc-100 dark:bg-[#1D212C] rounded w-3/4" />
+                <div className="h-10 bg-zinc-100 dark:bg-[#1D212C] rounded w-1/2 my-3" />
+                <div className="h-14 bg-zinc-50 dark:bg-[#1D212C]/60 rounded" />
                 <div className="space-y-2 pt-2">
-                  <div className="h-3 bg-zinc-100 rounded w-full" />
-                  <div className="h-3 bg-zinc-100 rounded w-4/5" />
-                  <div className="h-3 bg-zinc-100 rounded w-3/5" />
+                  <div className="h-3 bg-zinc-100 dark:bg-[#1D212C] rounded w-full" />
+                  <div className="h-3 bg-zinc-100 dark:bg-[#1D212C] rounded w-4/5" />
+                  <div className="h-3 bg-zinc-100 dark:bg-[#1D212C] rounded w-3/5" />
                 </div>
-                <div className="h-9 bg-zinc-100 rounded mt-4" />
+                <div className="h-9 bg-zinc-100 dark:bg-[#1D212C] rounded mt-4" />
               </div>
             ))}
           </div>
         ) : plans.length === 0 ? (
-          <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-8 text-center space-y-3">
-            <div className={`w-10 h-10 rounded-full mx-auto flex items-center justify-center ${plansError?.status === 403 ? 'bg-amber-100 text-amber-700' : 'bg-zinc-100 text-zinc-500'}`}>
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-8 text-center space-y-3">
+            <div className={`w-10 h-10 rounded-full mx-auto flex items-center justify-center ${plansError?.status === 403 ? 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400' : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-500 dark:text-[#A0A6B5]'}`}>
               {plansError?.status === 403 ? <Lock size={20} /> : <Layers size={20} />}
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-zinc-900">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE]">
                 {plansError?.status === 403
                   ? 'Subscription Catalog Authorization Pending'
                   : plansError
                   ? 'Subscription Plans Unavailable'
                   : 'No Plans Configured on Server'}
               </h3>
-              <p className="text-xs text-zinc-500 max-w-md mx-auto mt-1 leading-relaxed">
+              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] max-w-md mx-auto mt-1 leading-relaxed">
                 {plansError?.status === 403
                   ? 'The backend authorization filter requires SUBSCRIPTION_PLAN:READ permission to query the plan catalog. Please contact your platform administrator.'
                   : plansError
@@ -789,71 +789,71 @@ function SubscriptionContent() {
               return (
                 <div
                   key={p.id || p.code}
-                  className={`bg-white rounded-xl p-6 border flex flex-col justify-between transition-all duration-200 ${
+                  className={`rounded-xl p-6 border flex flex-col justify-between transition-all duration-200 ${
                     current
-                      ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+                      ? 'bg-white dark:bg-[#161922] border-emerald-500 dark:border-emerald-500/60 ring-2 ring-emerald-500/20 shadow-xs'
                       : isPopular
-                      ? 'border-zinc-900 ring-1 ring-zinc-900/10 shadow-xs'
-                      : 'border-zinc-200/90 hover:border-zinc-300 hover:shadow-xs'
+                      ? 'bg-white dark:bg-[#161922] border-zinc-900 dark:border-[#4C8DFF]/60 ring-1 ring-zinc-900/10 dark:ring-[#4C8DFF]/20 shadow-xs'
+                      : 'bg-white dark:bg-[#161922] border-zinc-200/90 dark:border-[#2A2F3D] hover:border-zinc-300 dark:hover:border-[#383F52] hover:shadow-xs'
                   }`}
                 >
                   {/* Header with Integrated Badge */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-base font-bold text-zinc-900">
+                      <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">
                         {p.name}
                       </h3>
                       {current ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50">
                           <Check size={10} className="stroke-[3]" /> Current Plan
                         </span>
                       ) : isPopular ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-zinc-900 text-white">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-zinc-900 text-white dark:bg-[#4C8DFF] dark:text-white">
                           <Sparkles size={10} className="text-amber-300" /> Recommended
                         </span>
                       ) : p.isTrial ? (
-                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100 uppercase">
+                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/50 uppercase">
                           Evaluation
                         </span>
                       ) : (
-                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 border border-zinc-200 uppercase">
+                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 border border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D] uppercase">
                           Scalable
                         </span>
                       )}
                     </div>
 
-                    <p className="text-xs text-zinc-500 min-h-[34px] leading-relaxed">
+                    <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] min-h-[34px] leading-relaxed">
                       {p.description || 'Full platform capabilities and administrative tools.'}
                     </p>
 
                     {/* Pricing Display */}
-                    <div className="pt-3 pb-3 border-y border-zinc-100 my-3">
+                    <div className="pt-3 pb-3 border-y border-zinc-100 dark:border-[#2A2F3D] my-3">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold text-zinc-900 tracking-tight font-sans">
+                        <span className="text-3xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight font-sans">
                           {pricing.priceDisplay}
                         </span>
-                        <span className="text-xs text-zinc-500 font-normal">
+                        <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-normal">
                           {pricing.durationDisplay}
                         </span>
                       </div>
                       {pricing.monthlyRateDisplay && (
-                        <p className="text-[10px] text-emerald-600 font-medium mt-0.5">
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
                           Equivalent to {pricing.monthlyRateDisplay} (billed annually)
                         </p>
                       )}
                     </div>
 
                     {/* Quota Highlights directly from Backend */}
-                    <div className="grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-zinc-50 border border-zinc-100 text-xs mb-3.5">
+                    <div className="grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-zinc-50 dark:bg-[#1D212C] border border-zinc-100 dark:border-[#2A2F3D] text-xs mb-3.5">
                       <div>
-                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">Max Companies</span>
-                        <span className="font-bold text-zinc-800">
+                        <span className="text-[9px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Max Companies</span>
+                        <span className="font-bold text-zinc-800 dark:text-[#E6E8EE]">
                           {formatPlanLimit(p.maxCompanies, 'companies')}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">Users / Co.</span>
-                        <span className="font-bold text-zinc-800">
+                        <span className="text-[9px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">Users / Co.</span>
+                        <span className="font-bold text-zinc-800 dark:text-[#E6E8EE]">
                           {formatPlanLimit(p.maxUsersPerCompany ?? p.maxUsers, 'users')}
                         </span>
                       </div>
@@ -861,21 +861,21 @@ function SubscriptionContent() {
 
                     {/* Real Modules from Backend Plan */}
                     <div className="space-y-1.5">
-                      <span className="text-[9.5px] font-bold text-zinc-400 uppercase tracking-wider block">
+                      <span className="text-[9.5px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">
                         Included Platform Modules {modules.length > 0 ? `(${modules.length})` : ''}
                       </span>
                       {modules.length > 0 ? (
-                        <ul className="space-y-1.5 text-xs text-zinc-700">
+                        <ul className="space-y-1.5 text-xs text-zinc-700 dark:text-[#A0A6B5]">
                           {modules.map((m, idx) => (
                             <li key={m.id || m.moduleId || idx} className="flex items-center gap-2">
-                              <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                              <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                               <span className="truncate">{formatModuleName(m.moduleName)}</span>
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        <div className="flex items-center gap-2 text-xs text-zinc-600">
-                          <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                        <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-[#A0A6B5]">
+                          <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span>All core modules included</span>
                         </div>
                       )}
@@ -883,14 +883,14 @@ function SubscriptionContent() {
                   </div>
 
                   {/* Action Button */}
-                  <div className="pt-5 mt-4 border-t border-zinc-100">
+                  <div className="pt-5 mt-4 border-t border-zinc-100 dark:border-[#2A2F3D]">
                     {current ? (
                       <button
                         type="button"
                         disabled
-                        className="btn-secondary w-full py-2.5 rounded-lg text-xs font-semibold text-zinc-400 bg-zinc-50 border-zinc-200 cursor-default flex items-center justify-center gap-1.5"
+                        className="btn-secondary w-full py-2.5 rounded-lg text-xs font-semibold text-zinc-400 dark:text-[#6B7184] bg-zinc-50 dark:bg-[#1D212C] border-zinc-200 dark:border-[#2A2F3D] cursor-default flex items-center justify-center gap-1.5"
                       >
-                        <CheckCircle2 size={13} className="text-emerald-600" />
+                        <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400" />
                         <span>Active Current Plan</span>
                       </button>
                     ) : (
@@ -899,7 +899,7 @@ function SubscriptionContent() {
                           type="button"
                           disabled={!canBuy}
                           onClick={() => handleOpenUpgrade(p)}
-                          className={`btn-primary w-full py-2.5 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white transition-all flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs ${
+                          className={`btn-primary w-full py-2.5 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-[#4C8DFF] dark:hover:bg-[#3B7AE8] dark:text-white transition-all flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs ${
                             !canBuy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                           }`}
                           title={!canBuy ? buyDisabledReason : (p.isTrial ? 'Choose Trial' : `Upgrade to ${p.name}`)}
@@ -908,7 +908,7 @@ function SubscriptionContent() {
                           <ArrowRight size={13} />
                         </button>
                         {!canBuy && (
-                          <p className="text-[10.5px] text-zinc-400 text-center mt-1.5">
+                          <p className="text-[10.5px] text-zinc-400 dark:text-[#6B7184] text-center mt-1.5">
                             Owner or Admin role required
                           </p>
                         )}
@@ -923,45 +923,45 @@ function SubscriptionContent() {
       </section>
 
       {/* ── 5. Enterprise Invoicing & Statutory Compliance (High Trust, Zero Gimmick) ── */}
-      <section className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-3">
+      <section className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-[#2A2F3D] pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-zinc-100 text-zinc-700 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-md bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-[#E6E8EE] flex items-center justify-center">
               <Receipt size={15} />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-zinc-900">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE]">
                 Enterprise Billing Receipts & Compliance
               </h3>
-              <p className="text-[11px] text-zinc-500">
+              <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">
                 Official billing statements and statutory tax receipts
               </p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1 text-[10px] text-zinc-500 font-medium">
-            Currency: <strong className="text-zinc-800">INR (₹)</strong>
+          <span className="inline-flex items-center gap-1 text-[10px] text-zinc-500 dark:text-[#A0A6B5] font-medium">
+            Currency: <strong className="text-zinc-800 dark:text-[#E6E8EE]">INR (₹)</strong>
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Panel 1: Current Cycle Statement */}
-          <div className="rounded-lg border border-zinc-200/80 bg-zinc-50/50 p-4 space-y-3 text-xs">
+          <div className="rounded-lg border border-zinc-200/80 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/60 p-4 space-y-3 text-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-zinc-900 font-mono text-[11px]">
+                <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE] font-mono text-[11px]">
                   #INV-{new Date().getFullYear()}-001
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center gap-1 px-2 py-0.2 rounded text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50">
                   Active Cycle
                 </span>
               </div>
-              <span className="font-bold text-zinc-900 font-mono text-sm">
+              <span className="font-bold text-zinc-900 dark:text-[#E6E8EE] font-mono text-sm">
                 {activePlanPricing.priceDisplay}
               </span>
             </div>
 
-            <p className="text-zinc-500 text-[11.5px] leading-relaxed">
-              {activePlanName} Evaluation statement issued to <strong>{orgName}</strong> ({orgCode}). Billed with zero outstanding dues.
+            <p className="text-zinc-500 dark:text-[#A0A6B5] text-[11.5px] leading-relaxed">
+              {activePlanName} Evaluation statement issued to <strong className="text-zinc-800 dark:text-[#E6E8EE]">{orgName}</strong> ({orgCode}). Billed with zero outstanding dues.
             </p>
 
             <div className="pt-1 flex items-center gap-2">
@@ -976,17 +976,17 @@ function SubscriptionContent() {
           </div>
 
           {/* Panel 2: Corporate Purchase Orders */}
-          <div className="rounded-lg border border-zinc-200/80 bg-zinc-50/50 p-4 space-y-3 text-xs">
+          <div className="rounded-lg border border-zinc-200/80 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/60 p-4 space-y-3 text-xs">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-zinc-900 text-[11px]">
+              <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-[11px]">
                 Purchase Orders & Custom Quotas
               </span>
-              <span className="text-[10px] text-zinc-400 font-mono">
+              <span className="text-[10px] text-zinc-400 dark:text-[#6B7184] font-mono">
                 Corporate Billing
               </span>
             </div>
 
-            <p className="text-zinc-500 text-[11.5px] leading-relaxed">
+            <p className="text-zinc-500 dark:text-[#A0A6B5] text-[11.5px] leading-relaxed">
               Need custom annual billing, multi-subsidiary quota expansion, or procurement via corporate Purchase Order (PO) / NEFT / RTGS?
             </p>
 
@@ -1004,12 +1004,12 @@ function SubscriptionContent() {
         </div>
 
         {/* Backend Gap Notice */}
-        <div className="bg-zinc-50 rounded-xl p-3 border border-zinc-200/60 text-[11px] text-zinc-500 flex items-center justify-between">
+        <div className="bg-zinc-50 dark:bg-[#1D212C]/40 rounded-xl p-3 border border-zinc-200/60 dark:border-[#2A2F3D] text-[11px] text-zinc-500 dark:text-[#A0A6B5] flex items-center justify-between">
           <span className="flex items-center gap-1.5">
-            <Info size={13} className="text-zinc-400 shrink-0" />
+            <Info size={13} className="text-zinc-400 dark:text-[#6B7184] shrink-0" />
             <span>Automated tenant billing transaction history API is not yet provisioned in the backend. System administrators can access organization payment records via the Global Console.</span>
           </span>
-          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider shrink-0 ml-2">
+          <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider shrink-0 ml-2">
             Status: Graceful Fallback
           </span>
         </div>
@@ -1018,19 +1018,19 @@ function SubscriptionContent() {
       {/* ── Cancel Subscription Confirmation Modal ── */}
       {showCancelModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-zinc-200 space-y-4 animate-scale-up">
+          <div className="bg-white dark:bg-[#161922] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-zinc-200 dark:border-[#2A2F3D] space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40 flex items-center justify-center shrink-0">
                 <AlertTriangle size={20} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-zinc-900">Cancel Active Subscription?</h3>
-                <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
-                  Are you sure you want to cancel the subscription for <strong>{orgName}</strong>? Your workspace will remain active until the end of the billing period, after which it will transition to read-only access.
+                <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">Cancel Active Subscription?</h3>
+                <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-1 leading-relaxed">
+                  Are you sure you want to cancel the subscription for <strong className="text-zinc-800 dark:text-[#E6E8EE]">{orgName}</strong>? Your workspace will remain active until the end of the billing period, after which it will transition to read-only access.
                 </p>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-100">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-100 dark:border-[#2A2F3D]">
               <button
                 type="button"
                 disabled={isCancelling}

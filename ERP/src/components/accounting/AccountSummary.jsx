@@ -13,14 +13,14 @@ const formatINR = (val) => {
 
 export default function AccountSummary({ openingBalance, totalDebit, totalCredit, closingBalance }) {
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl shadow-2xs overflow-hidden flex-none animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-2xs overflow-hidden flex-none animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="bg-zinc-50 border-b border-zinc-200 px-5 py-3.5 flex items-center gap-2">
         <FileText size={16} className="text-zinc-500" />
         <h3 className="text-sm font-bold text-zinc-800 uppercase tracking-wider">Account Summary</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
-          <thead className="bg-zinc-50/30 border-b border-zinc-100 text-zinc-500 font-semibold text-[11px] uppercase tracking-wider">
+          <thead className="bg-zinc-50/30 border-b border-zinc-100 dark:border-[#2A2F3D] text-zinc-500 font-semibold text-[11px] uppercase tracking-wider">
             <tr>
               <th className="px-5 py-3">Description</th>
               <th className="px-5 py-3 text-right text-emerald-700 w-1/3">Debit (DR)</th>

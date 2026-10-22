@@ -30,10 +30,9 @@ export default function SecuritySettings() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 relative">
-      <ModuleTabs tabs={securityTabs} activeKey="security-overview" />
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] relative">
       <div className="flex-1 overflow-y-auto">
-        <SettingsLayout>
+        <SettingsLayout activeTab="security">
           <SettingsPageHeader
             title="Security Settings"
             description="Manage authentication, password policies, and access controls."

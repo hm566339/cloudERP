@@ -309,10 +309,10 @@ export default function CreateRfqModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 bg-zinc-950/40 backdrop-blur-xs overflow-hidden animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl shadow-2xl shadow-zinc-900/10 w-full max-w-[960px] max-h-[90vh] flex flex-col border border-zinc-200/90 overflow-hidden">
+      <div className="bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full max-w-[960px] max-h-[90vh] flex flex-col border border-zinc-200/90 dark:border-border-dark overflow-hidden">
         
         {/* ── 1. HEADER ── */}
-        <div className="flex items-center justify-between px-6 py-4.5 border-b border-zinc-200/80 bg-white shrink-0 sticky top-0 z-10">
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-zinc-200/80 dark:border-border-dark bg-white dark:bg-card-dark shrink-0 sticky top-0 z-10">
           <div className="flex items-center gap-3.5">
             <div className="w-9 h-9 rounded-lg bg-zinc-100 border border-zinc-200/70 flex items-center justify-center text-zinc-700 shadow-2xs">
               <FileSearch size={18} />
@@ -343,7 +343,7 @@ export default function CreateRfqModal({
         </div>
 
         {/* ── 2. SCROLLABLE FORM CONTENT ── */}
-        <div className="p-6 overflow-y-auto space-y-5 bg-white flex-1">
+        <div className="p-6 overflow-y-auto space-y-5 bg-white dark:bg-card-dark flex-1">
           {/* API Error Banner */}
           {apiError && (
             <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3 text-xs text-rose-700">
@@ -428,7 +428,7 @@ export default function CreateRfqModal({
                         type="date"
                         value={formData.issueDate}
                         onChange={(e) => handleFieldChange('issueDate', e.target.value)}
-                        className={`w-full h-9 px-3 bg-white border rounded-lg text-xs text-zinc-800 outline-none transition-all ${
+                        className={`w-full h-9 px-3 bg-white dark:bg-surface-dark border dark:border-border-dark rounded-lg text-xs text-zinc-800 dark:text-zinc-200 outline-none transition-all ${
                           errors.issueDate
                             ? 'border-rose-400 focus:ring-1 focus:ring-rose-200'
                             : 'border-zinc-200 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10'
@@ -451,7 +451,7 @@ export default function CreateRfqModal({
                         value={formData.quotationDeadline}
                         min={formData.issueDate}
                         onChange={(e) => handleFieldChange('quotationDeadline', e.target.value)}
-                        className={`w-full h-9 px-3 bg-white border rounded-lg text-xs text-zinc-800 outline-none transition-all ${
+                        className={`w-full h-9 px-3 bg-white dark:bg-surface-dark border dark:border-border-dark rounded-lg text-xs text-zinc-800 dark:text-zinc-200 outline-none transition-all ${
                           errors.quotationDeadline
                             ? 'border-rose-400 focus:ring-1 focus:ring-rose-200'
                             : 'border-zinc-200 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10'
@@ -476,7 +476,7 @@ export default function CreateRfqModal({
                         value={formData.expectedDeliveryDate}
                         min={formData.issueDate}
                         onChange={(e) => handleFieldChange('expectedDeliveryDate', e.target.value)}
-                        className={`w-full h-9 px-3 bg-white border rounded-lg text-xs text-zinc-800 outline-none transition-all ${
+                        className={`w-full h-9 px-3 bg-white dark:bg-surface-dark border dark:border-border-dark rounded-lg text-xs text-zinc-800 dark:text-zinc-200 outline-none transition-all ${
                           errors.expectedDeliveryDate
                             ? 'border-rose-400 focus:ring-1 focus:ring-rose-200'
                             : 'border-zinc-200 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10'
@@ -547,7 +547,7 @@ export default function CreateRfqModal({
                       }}
                       onFocus={() => setIsVendorDropdownOpen(true)}
                       placeholder="Search vendors by name or code..."
-                      className={`w-full h-9 pl-9 pr-8 bg-white border rounded-lg text-xs text-zinc-800 placeholder-zinc-400 outline-none transition-all ${
+                      className={`w-full h-9 pl-9 pr-8 bg-white dark:bg-surface-dark border dark:border-border-dark rounded-lg text-xs text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 outline-none transition-all ${
                         errors.vendors
                           ? 'border-rose-400 focus:ring-1 focus:ring-rose-200'
                           : 'border-zinc-200 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10'
@@ -569,7 +569,7 @@ export default function CreateRfqModal({
                   )}
 
                   {isVendorDropdownOpen && (
-                    <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-zinc-200 rounded-xl shadow-xl max-h-52 overflow-y-auto py-1 divide-y divide-zinc-50 animate-in fade-in zoom-in-95 duration-100">
+                    <div className="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-xl max-h-52 overflow-y-auto py-1 divide-y divide-zinc-50 animate-in fade-in zoom-in-95 duration-100">
                       {isVendorsLoading ? (
                         <div className="px-4 py-3 text-xs text-zinc-400 text-center flex items-center justify-center gap-2">
                           <RefreshCw size={14} className="animate-spin" />
@@ -587,7 +587,7 @@ export default function CreateRfqModal({
                             <div
                               key={vendor.id}
                               onClick={() => toggleVendor(vendor.id)}
-                              className={`px-3 py-2 cursor-pointer flex items-center justify-between hover:bg-zinc-50 transition-colors text-xs ${
+                              className={`px-3 py-2 cursor-pointer flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors text-xs ${
                                 isSelected ? 'bg-zinc-50' : ''
                               }`}
                             >
@@ -596,7 +596,7 @@ export default function CreateRfqModal({
                                   className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
                                     isSelected
                                       ? 'bg-zinc-900 border-zinc-900 text-white'
-                                      : 'border-zinc-300 bg-white'
+                                      : 'border-zinc-300 dark:border-border-dark bg-white dark:bg-surface-dark text-zinc-800 dark:text-zinc-200'
                                   }`}
                                 >
                                   {isSelected && <Check size={11} strokeWidth={3} />}
@@ -642,7 +642,7 @@ export default function CreateRfqModal({
                   </div>
                 )}
 
-                <div className="overflow-x-auto rounded-xl border border-zinc-200/80 bg-white">
+                <div className="overflow-x-auto rounded-xl border border-zinc-200/80 dark:border-border-dark bg-white dark:bg-card-dark">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-[#fafafa] border-b border-zinc-200/80 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
                       <tr>
@@ -681,7 +681,7 @@ export default function CreateRfqModal({
                               min="1"
                               value={item.quantity}
                               onChange={(e) => handleItemQuantityChange(idx, e.target.value)}
-                              className={`w-16 h-8 px-2 text-right font-mono bg-white border rounded-lg text-xs outline-none transition-all ${
+                              className={`w-16 h-8 px-2 text-right font-mono bg-white dark:bg-surface-dark border dark:border-border-dark text-zinc-900 dark:text-zinc-100 rounded-lg text-xs outline-none transition-all ${
                                 errors[`item_${idx}_quantity`]
                                   ? 'border-rose-400 text-rose-600'
                                   : 'border-zinc-200 text-zinc-900 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10'
@@ -705,7 +705,7 @@ export default function CreateRfqModal({
                               value={item.specifications || ''}
                               onChange={(e) => handleSpecificationChange(idx, e.target.value)}
                               placeholder="Enter specifications or remarks..."
-                              className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
+                              className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
                             />
                           </td>
                           <td className="py-3 px-3 text-center">
@@ -739,7 +739,7 @@ export default function CreateRfqModal({
                     value={formData.terms}
                     onChange={(e) => handleFieldChange('terms', e.target.value)}
                     placeholder="Enter payment terms, delivery requirements, warranty, etc."
-                    className="w-full p-2.5 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10 outline-none resize-none transition-all"
+                    className="w-full p-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10 outline-none resize-none transition-all"
                   />
                 </div>
 
@@ -755,7 +755,7 @@ export default function CreateRfqModal({
                     value={formData.notes}
                     onChange={(e) => handleFieldChange('notes', e.target.value)}
                     placeholder="Enter internal notes, reference codes or instructions..."
-                    className="w-full p-2.5 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10 outline-none resize-none transition-all"
+                    className="w-full p-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-800 placeholder-zinc-400 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10 outline-none resize-none transition-all"
                   />
                 </div>
               </div>
@@ -764,7 +764,7 @@ export default function CreateRfqModal({
         </div>
 
         {/* ── 8. FOOTER ── */}
-        <div className="px-6 py-5 border-t border-zinc-200/80 bg-white flex items-center justify-between gap-3 shrink-0 sticky bottom-0 z-10">
+        <div className="px-6 py-5 border-t border-zinc-200/80 dark:border-border-dark bg-white dark:bg-card-dark flex items-center justify-between gap-3 shrink-0 sticky bottom-0 z-10">
           <div>
             {apiError && (
               <div className="text-xs text-rose-600 flex items-center gap-1.5 max-w-md truncate">
@@ -778,7 +778,7 @@ export default function CreateRfqModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="h-9 px-4 text-xs font-semibold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 active:bg-zinc-100 transition-all inline-flex items-center justify-center cursor-pointer"
+              className="h-9 px-4 text-xs font-semibold text-zinc-700 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 active:bg-zinc-100 transition-all inline-flex items-center justify-center cursor-pointer"
             >
               Cancel
             </button>

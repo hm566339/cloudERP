@@ -160,22 +160,22 @@ export default function BankTransactionDetails() {
   };
 
   const typeColors = {
-    DEPOSIT: 'bg-emerald-50 text-emerald-700',
-    WITHDRAWAL: 'bg-rose-50 text-rose-700',
-    TRANSFER: 'bg-blue-50 text-blue-700',
-    PAYMENT: 'bg-amber-50 text-amber-700'
+    DEPOSIT: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50',
+    WITHDRAWAL: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50',
+    TRANSFER: 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/50',
+    PAYMENT: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/50'
   };
 
   return (
     <div className="animate-fade-in space-y-6 max-w-5xl mx-auto">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Link to={buildPath("/accounts/transactions/bank-transactions")} className="p-2 hover:bg-zinc-100 rounded-full transition-colors">
-            <ArrowLeft size={20} className="text-zinc-500" />
+          <Link to={buildPath("/accounts/transactions/bank-transactions")} className="p-2 hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-full transition-colors">
+            <ArrowLeft size={20} className="text-zinc-500 dark:text-zinc-400" />
           </Link>
           <div>
             <h1 className="page-title flex items-center gap-2">
-              <Building2 size={22} className="text-blue-600" />
+              <Building2 size={22} className="text-blue-600 dark:text-[#4C8DFF]" />
               Transaction Details
             </h1>
             <p className="page-subtitle">Ref: {record.referenceNo || 'N/A'} • {new Date(record.transactionDate).toLocaleDateString()}</p>
@@ -184,22 +184,22 @@ export default function BankTransactionDetails() {
 
         <div className="flex items-center gap-2">
           {record.reconciled ? (
-            <button onClick={handleUnreconcile} className="btn-secondary text-amber-600 flex items-center gap-2">
+            <button onClick={handleUnreconcile} className="btn-secondary text-amber-600 dark:text-amber-400 flex items-center gap-2">
               <XCircle size={15} /> Unreconcile
             </button>
           ) : (
-            <button onClick={handleReconcile} className="btn-secondary text-emerald-600 flex items-center gap-2">
+            <button onClick={handleReconcile} className="btn-secondary text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
               <CheckCircle size={15} /> Reconcile
             </button>
           )}
           
-          <button onClick={() => { setReverseNarration(''); setIsReverseModalOpen(true); }} className="btn-secondary text-rose-600 flex items-center gap-2">
+          <button onClick={() => { setReverseNarration(''); setIsReverseModalOpen(true); }} className="btn-secondary text-rose-600 dark:text-rose-400 flex items-center gap-2">
             <RotateCcw size={15} /> Reverse
           </button>
           <button onClick={handleOpenEditModal} className="btn-secondary flex items-center gap-2">
             <Edit size={15} /> Edit
           </button>
-          <button onClick={handleDelete} className="btn-secondary text-rose-600 flex items-center gap-2">
+          <button onClick={handleDelete} className="btn-secondary text-rose-600 dark:text-rose-400 flex items-center gap-2">
             <Trash2 size={15} /> Delete
           </button>
         </div>
@@ -207,31 +207,31 @@ export default function BankTransactionDetails() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Transaction Summary Card */}
-        <div className="card p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 md:col-span-2 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="card p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-[#1D212C] dark:to-[#161922] border-blue-100 dark:border-[#2A2F3D] md:col-span-2 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-4">
             <div className={`p-4 rounded-2xl ${
-              record.debitAmount > 0 ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'
+              record.debitAmount > 0 ? 'bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400' : 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'
             }`}>
               <Building2 size={32} />
             </div>
             <div>
-              <p className="text-sm font-medium text-blue-800 uppercase tracking-wider mb-1">Transaction Amount</p>
-              <h2 className={`text-4xl font-bold ${record.debitAmount > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-300 uppercase tracking-wider mb-1">Transaction Amount</p>
+              <h2 className={`text-4xl font-bold ${record.debitAmount > 0 ? 'text-rose-700 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
                 {record.transactionAmount?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
               </h2>
-              <p className="text-sm font-medium text-blue-600 mt-1">
+              <p className="text-sm font-medium text-blue-600 dark:text-[#4C8DFF] mt-1">
                 Running Balance: {record.runningBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
               </p>
             </div>
           </div>
           
           <div className="flex gap-4">
-            <div className={`px-4 py-2 rounded-xl border flex flex-col items-center justify-center ${typeColors[record.transactionType] || 'bg-white border-zinc-200'}`}>
+            <div className={`px-4 py-2 rounded-xl border flex flex-col items-center justify-center ${typeColors[record.transactionType] || 'bg-white dark:bg-[#1D212C] border-zinc-200 dark:border-[#2A2F3D]'}`}>
               <span className="text-xs uppercase tracking-wider opacity-70">Type</span>
               <span className="font-bold">{record.transactionType}</span>
             </div>
             <div className={`px-4 py-2 rounded-xl border flex flex-col items-center justify-center ${
-              record.reconciled ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700'
+              record.reconciled ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/50 text-amber-700 dark:text-amber-400'
             }`}>
               <span className="text-xs uppercase tracking-wider opacity-70">Status</span>
               <span className="font-bold flex items-center gap-1">
@@ -244,72 +244,72 @@ export default function BankTransactionDetails() {
 
         {/* Bank Information */}
         <div className="card p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-zinc-800 flex items-center gap-2 border-b pb-2">
-            <Building2 size={18} className="text-blue-600" />
+          <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-2 border-b border-zinc-200 dark:border-[#2A2F3D] pb-2">
+            <Building2 size={18} className="text-blue-600 dark:text-[#4C8DFF]" />
             Bank Information
           </h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Bank Name</p>
-              <p className="font-medium text-zinc-900">{record.bankAccount?.bankName || 'N/A'}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Bank Name</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{record.bankAccount?.bankName || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Branch</p>
-              <p className="font-medium text-zinc-900">{record.bankAccount?.branchName || 'N/A'}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Branch</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{record.bankAccount?.branchName || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Account Number</p>
-              <p className="font-medium text-zinc-900">{record.bankAccount?.accountNumber || 'N/A'}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Account Number</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{record.bankAccount?.accountNumber || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">IFSC Code</p>
-              <p className="font-medium text-zinc-900">{record.bankAccount?.ifscCode || 'N/A'}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">IFSC Code</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{record.bankAccount?.ifscCode || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Account Type</p>
-              <p className="font-medium text-zinc-900">{record.bankAccount?.accountType || 'N/A'}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Account Type</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{record.bankAccount?.accountType || 'N/A'}</p>
             </div>
           </div>
         </div>
 
         {/* Transaction Information */}
         <div className="card p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-zinc-800 flex items-center gap-2 border-b pb-2">
-            <FileText size={18} className="text-blue-600" />
+          <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-2 border-b border-zinc-200 dark:border-[#2A2F3D] pb-2">
+            <FileText size={18} className="text-blue-600 dark:text-[#4C8DFF]" />
             Transaction Details
           </h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Date</p>
-              <p className="font-medium text-zinc-900">{new Date(record.transactionDate).toLocaleDateString()}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Date</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{new Date(record.transactionDate).toLocaleDateString()}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Reference No</p>
-              <p className="font-medium text-zinc-900">{record.referenceNo || 'N/A'}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Reference No</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{record.referenceNo || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">UTR No</p>
-              <p className="font-medium text-zinc-900">{record.utrNo || 'N/A'}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">UTR No</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{record.utrNo || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Transaction Type</p>
-              <p className="font-medium text-zinc-900">{record.transactionType}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Transaction Type</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{record.transactionType}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Debit</p>
-              <p className="font-medium text-rose-600">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Debit</p>
+              <p className="font-medium text-rose-600 dark:text-rose-400">
                 {record.debitAmount > 0 ? record.debitAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : '-'}
               </p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Credit</p>
-              <p className="font-medium text-emerald-600">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Credit</p>
+              <p className="font-medium text-emerald-600 dark:text-emerald-400">
                 {record.creditAmount > 0 ? record.creditAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : '-'}
               </p>
             </div>
             <div className="col-span-2">
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Narration</p>
-              <p className="font-medium text-zinc-900 bg-zinc-50 p-2 rounded border mt-1">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Narration</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] p-2 rounded border border-zinc-200 dark:border-[#2A2F3D] mt-1">
                 {record.narration || 'No narration provided'}
               </p>
             </div>
@@ -318,51 +318,51 @@ export default function BankTransactionDetails() {
 
         {/* GL & Ledger Information */}
         <div className="card p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-zinc-800 flex items-center gap-2 border-b pb-2">
-            <BookOpen size={18} className="text-blue-600" />
+          <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-2 border-b border-zinc-200 dark:border-[#2A2F3D] pb-2">
+            <BookOpen size={18} className="text-blue-600 dark:text-[#4C8DFF]" />
             GL & Ledger Information
           </h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">GL Status</p>
-              <p className={`font-medium ${record.glStatus === 'POSTED' ? 'text-blue-600' : 'text-zinc-600'}`}>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">GL Status</p>
+              <p className={`font-medium ${record.glStatus === 'POSTED' ? 'text-blue-600 dark:text-[#4C8DFF]' : 'text-zinc-600 dark:text-zinc-400'}`}>
                 {record.glStatus || 'PENDING'}
               </p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">GL Account</p>
-              <p className="font-medium text-zinc-900">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">GL Account</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">
                 {record.bankAccount?.glAccountName 
                   ? `${record.bankAccount.glAccountCode} - ${record.bankAccount.glAccountName}` 
                   : 'N/A'}
               </p>
             </div>
             <div className="col-span-2">
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Ledger Account</p>
-              <p className="font-medium text-zinc-900">{record.bankAccount?.ledgerAccountName || 'N/A'}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Ledger Account</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{record.bankAccount?.ledgerAccountName || 'N/A'}</p>
             </div>
           </div>
         </div>
 
         {/* Audit Information */}
         <div className="card p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-zinc-800 flex items-center gap-2 border-b pb-2">
-            <Clock size={18} className="text-blue-600" />
+          <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-2 border-b border-zinc-200 dark:border-[#2A2F3D] pb-2">
+            <Clock size={18} className="text-blue-600 dark:text-[#4C8DFF]" />
             Audit Information
           </h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Created At</p>
-              <p className="font-medium text-zinc-900">{new Date(record.createdAt).toLocaleString()}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Created At</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{new Date(record.createdAt).toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Updated At</p>
-              <p className="font-medium text-zinc-900">{new Date(record.updatedAt).toLocaleString()}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Updated At</p>
+              <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{new Date(record.updatedAt).toLocaleString()}</p>
             </div>
             {record.reconciledDate && (
               <div className="col-span-2">
-                <p className="text-xs text-zinc-500 uppercase tracking-wider">Reconciled On</p>
-                <p className="font-medium text-emerald-700">{new Date(record.reconciledDate).toLocaleString()}</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Reconciled On</p>
+                <p className="font-medium text-emerald-700 dark:text-emerald-400">{new Date(record.reconciledDate).toLocaleString()}</p>
               </div>
             )}
           </div>
@@ -379,7 +379,7 @@ export default function BankTransactionDetails() {
         <form onSubmit={handleEditSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5 md:col-span-2">
-              <label className="text-sm font-semibold text-zinc-700">Bank Account *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Bank Account *</label>
               <CustomSelect
                 options={bankAccountsList.map(a => ({ value: a.id, label: `${a.bankName} - ${a.accountNumber} (${a.accountType})` }))}
                 value={formData.bankAccountId}
@@ -388,7 +388,7 @@ export default function BankTransactionDetails() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Transaction Date *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Transaction Date *</label>
               <input
                 type="date"
                 name="transactionDate"
@@ -400,7 +400,7 @@ export default function BankTransactionDetails() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Transaction Type *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Transaction Type *</label>
               <CustomSelect
                 options={[
                   { value: 'DEPOSIT', label: 'Deposit' },
@@ -414,7 +414,7 @@ export default function BankTransactionDetails() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Reference Number</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Reference Number</label>
               <input
                 type="text"
                 name="referenceNo"
@@ -425,7 +425,7 @@ export default function BankTransactionDetails() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">UTR Number</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">UTR Number</label>
               <input
                 type="text"
                 name="utrNo"
@@ -436,9 +436,9 @@ export default function BankTransactionDetails() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Debit Amount</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Debit Amount</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-400 font-medium">₹</span>
                 <input
                   type="number"
                   step="0.01"
@@ -453,9 +453,9 @@ export default function BankTransactionDetails() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Credit Amount</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Credit Amount</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-400 font-medium">₹</span>
                 <input
                   type="number"
                   step="0.01"
@@ -470,7 +470,7 @@ export default function BankTransactionDetails() {
             </div>
 
             <div className="space-y-1.5 md:col-span-2">
-              <label className="text-sm font-semibold text-zinc-700">Narration</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Narration</label>
               <textarea
                 name="narration"
                 value={formData.narration}
@@ -488,13 +488,13 @@ export default function BankTransactionDetails() {
                 onChange={handleEditChange}
                 className="w-4 h-4 text-blue-600 border-zinc-300 rounded focus:ring-zinc-900/10"
               />
-              <label htmlFor="reconciled-edit" className="text-sm font-medium text-zinc-700">
+              <label htmlFor="reconciled-edit" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 Mark as Reconciled
               </label>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
+          <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100 dark:border-[#2A2F3D]">
             <button type="button" onClick={() => setIsEditModalOpen(false)} className="btn-secondary">Cancel</button>
             <button type="submit" disabled={updateMutation.isPending} className="btn-primary">
               {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
@@ -511,12 +511,12 @@ export default function BankTransactionDetails() {
         maxWidth="max-w-md"
       >
         <form onSubmit={handleReverseSubmit} className="space-y-4">
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-sm flex gap-3 mb-4">
+          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 p-3 rounded-lg text-sm flex gap-3 mb-4">
             <RotateCcw size={20} className="shrink-0 mt-0.5" />
             <p>Reversing a transaction creates a mirrored entry to cancel its effect. This action cannot be undone.</p>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-zinc-700">Reason for Reversal *</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Reason for Reversal *</label>
             <textarea
               value={reverseNarration}
               onChange={(e) => setReverseNarration(e.target.value)}
@@ -525,7 +525,7 @@ export default function BankTransactionDetails() {
               required
             ></textarea>
           </div>
-          <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
+          <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100 dark:border-[#2A2F3D]">
             <button type="button" onClick={() => setIsReverseModalOpen(false)} className="btn-secondary">Cancel</button>
             <button type="submit" disabled={reverseMutation.isPending} className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors">
               {reverseMutation.isPending ? 'Reversing...' : 'Confirm Reversal'}

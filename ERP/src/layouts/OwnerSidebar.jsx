@@ -191,12 +191,12 @@ export default function OwnerSidebar({
   const renderHeader = (collapsedMode = false) => {
     if (collapsedMode) {
       return (
-        <div className="h-[56px] flex items-center justify-center border-b border-zinc-100/50 px-2 shrink-0">
+        <div className="h-[56px] flex items-center justify-center border-b border-zinc-100/50 dark:border-[#2A2F3D] px-2 shrink-0">
           <Tooltip content={`${orgName} (${orgCode || 'OWNER'})`}>
             <button
               type="button"
               onClick={() => navigate('/owner/dashboard')}
-              className="flex items-center justify-center p-1.5 rounded-xl hover:bg-zinc-100 transition-colors focus:outline-hidden"
+              className="flex items-center justify-center p-1.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors focus:outline-hidden"
               aria-label="Go to Owner Dashboard"
             >
               <MarkLogo className="h-7 w-7 object-contain cursor-pointer" />
@@ -207,14 +207,14 @@ export default function OwnerSidebar({
     }
 
     return (
-      <div className="h-[56px] px-6 flex items-center gap-3 shrink-0 bg-transparent border-b border-zinc-100/50">
+      <div className="h-[56px] px-6 flex items-center gap-3 shrink-0 bg-transparent border-b border-zinc-100/50 dark:border-[#2A2F3D]">
         <div
           className="w-24 h-10 flex items-center justify-start transform transition-transform hover:scale-105 cursor-pointer"
           onClick={() => navigate('/owner/dashboard')}
         >
-          <MarkLogo variant="light" className="w-full h-full object-contain object-left" />
+          <MarkLogo variant="auto" className="w-full h-full object-contain object-left" />
         </div>
-        <span className="ml-auto text-[10px] font-bold bg-zinc-100 text-zinc-800 px-2 py-0.5 rounded border border-zinc-200/50 uppercase tracking-wider shrink-0">
+        <span className="ml-auto text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-2 py-0.5 rounded border border-zinc-200/50 dark:border-zinc-700/50 uppercase tracking-wider shrink-0">
           Owner
         </span>
 
@@ -222,7 +222,7 @@ export default function OwnerSidebar({
           <button
             type="button"
             onClick={onMobileClose}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors ml-1"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ml-1"
             aria-label="Close sidebar"
           >
             <X size={18} />
@@ -243,9 +243,9 @@ export default function OwnerSidebar({
             <div key={group.id} className="space-y-0.5">
               {group.title && (
                 collapsedMode ? (
-                  <div className="h-px bg-zinc-200/60 my-2 mx-1" aria-hidden="true" />
+                  <div className="h-px bg-zinc-200/60 dark:bg-[#2A2F3D] my-2 mx-1" aria-hidden="true" />
                 ) : (
-                  <div className="px-3 pt-2 pb-1 text-[10px] font-bold tracking-wider text-zinc-400 uppercase select-none">
+                  <div className="px-3 pt-2 pb-1 text-[10px] font-bold tracking-wider text-zinc-400 dark:text-[#6B7184] uppercase select-none">
                     {group.title}
                   </div>
                 )
@@ -265,22 +265,22 @@ export default function OwnerSidebar({
                       <div
                         className={`sidebar-item select-none cursor-default ${
                           collapsedMode ? 'justify-center p-2.5' : 'justify-between'
-                        } text-zinc-700 hover:bg-zinc-100/60 transition-colors`}
+                        } text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-100/60 dark:hover:bg-[#222736] transition-colors`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <Icon
                             size={18}
-                            className={`shrink-0 ${item.accentColor || 'text-zinc-500'}`}
+                            className={`shrink-0 ${item.accentColor || 'text-zinc-500 dark:text-[#A0A6B5]'}`}
                           />
                           {!collapsedMode && (
-                            <span className="truncate text-xs font-medium text-zinc-700">
+                            <span className="truncate text-xs font-medium text-zinc-700 dark:text-[#E6E8EE]">
                               {item.label}
                             </span>
                           )}
                         </div>
 
                         {!collapsedMode && (
-                          <span className="inline-flex items-center gap-1 text-[9.5px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60 shrink-0">
+                          <span className="inline-flex items-center gap-1 text-[9.5px] font-semibold text-emerald-600 bg-emerald-50 dark:bg-[#34C38F]/15 dark:text-[#34C38F] dark:border-[#34C38F]/30 px-2 py-0.5 rounded-full border border-emerald-200/60 shrink-0">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             Active
                           </span>
@@ -317,17 +317,17 @@ export default function OwnerSidebar({
                         title={collapsedMode ? lockedTooltipText : item.label}
                       >
                         <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-1.5">
-                          <Icon size={18} className="shrink-0 text-zinc-400 group-hover:text-zinc-600 transition-colors" />
+                          <Icon size={18} className="shrink-0 text-zinc-400 group-hover:text-zinc-600 dark:text-[#6B7184] dark:group-hover:text-[#A0A6B5] transition-colors" />
                           {!collapsedMode && (
-                            <span className="truncate text-xs text-zinc-500 font-medium" title={item.label}>
+                            <span className="truncate text-xs text-zinc-500 dark:text-[#6B7184] font-medium" title={item.label}>
                               {item.label}
                             </span>
                           )}
                         </div>
 
                         {!collapsedMode && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200/80 shrink-0">
-                            <Lock size={10} className="text-zinc-400 shrink-0" />
+                          <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-zinc-500 bg-zinc-100 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D] px-2 py-0.5 rounded-full border border-zinc-200/80 shrink-0">
+                            <Lock size={10} className="text-zinc-400 dark:text-[#6B7184] shrink-0" />
                             <span>Locked</span>
                           </span>
                         )}
@@ -369,11 +369,11 @@ export default function OwnerSidebar({
                         <Icon
                           size={18}
                           className={`shrink-0 transition-colors ${
-                            active ? 'text-white' : (item.accentColor || 'text-zinc-500 group-hover:text-zinc-800')
+                            active ? 'text-white' : (item.accentColor || 'text-zinc-500 group-hover:text-zinc-800 dark:text-[#A0A6B5] dark:group-hover:text-[#E6E8EE]')
                           }`}
                         />
                         {!collapsedMode && (
-                          <span className="truncate text-xs font-medium" title={item.label}>
+                          <span className="truncate text-xs font-medium dark:text-[#E6E8EE]" title={item.label}>
                             {item.label}
                           </span>
                         )}
@@ -384,7 +384,7 @@ export default function OwnerSidebar({
                           className={`inline-flex items-center gap-1 text-[9px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
                             active
                               ? 'bg-zinc-800 text-emerald-400 border border-zinc-700'
-                              : (item.badgeColor || 'bg-emerald-50 text-emerald-700 border border-emerald-200/80')
+                              : (item.badgeColor || 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-[#34C38F]/15 dark:text-[#34C38F] dark:border-[#34C38F]/30')
                           }`}
                         >
                           {(item.badge === 'Active' || !item.badge) && (
@@ -421,13 +421,13 @@ export default function OwnerSidebar({
    */
   const renderFooter = (collapsedMode = false) => {
     return (
-      <div className="shrink-0 p-3 border-t border-zinc-100 bg-zinc-50/50 backdrop-blur-sm">
+      <div className="shrink-0 p-3 border-t border-zinc-100 bg-zinc-50/50 dark:border-[#2A2F3D] dark:bg-[#161922] backdrop-blur-sm">
         {onToggleCollapse && (
           <button
             type="button"
             onClick={onToggleCollapse}
             aria-label={collapsedMode ? 'Expand sidebar' : 'Collapse sidebar'}
-            className={`w-full flex items-center rounded-xl text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 hover:bg-white border border-zinc-200/80 shadow-xs transition-all duration-200 ${
+            className={`w-full flex items-center rounded-xl text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 hover:bg-white border border-zinc-200/80 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:hover:bg-[#222736] dark:border-[#2A2F3D] shadow-xs transition-all duration-200 ${
               collapsedMode ? 'justify-center p-2.5' : 'px-3 py-2 justify-between'
             }`}
           >
@@ -436,7 +436,7 @@ export default function OwnerSidebar({
               {!collapsedMode && <span>Collapse Sidebar</span>}
             </div>
             {!collapsedMode && (
-              <span className="text-[10px] font-mono text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200/50">
+              <span className="text-[10px] font-mono text-zinc-400 bg-zinc-100 dark:text-[#6B7184] dark:bg-[#1D212C] dark:border-[#2A2F3D] px-1.5 py-0.5 rounded border border-zinc-200/50">
                 ⌘B
               </span>
             )}
@@ -450,7 +450,7 @@ export default function OwnerSidebar({
     <>
       {/* ── DESKTOP SIDEBAR (Fixed left) ── */}
       <aside
-        className={`hidden lg:flex flex-col bg-[var(--color-sidebar-bg)] border-r border-black/[0.06] fixed top-0 bottom-0 left-0 z-20 transition-[width] duration-large ease-move overscroll-contain ${
+        className={`hidden lg:flex flex-col bg-[var(--color-sidebar-bg)] border-r border-black/[0.06] dark:border-[#2A2F3D] fixed top-0 bottom-0 left-0 z-20 transition-[width] duration-large ease-move overscroll-contain ${
           isCollapsed ? 'w-[72px]' : 'w-[260px]'
         }`}
         style={{ height: '100vh' }}
@@ -472,15 +472,15 @@ export default function OwnerSidebar({
 
           {/* Off-canvas sidebar */}
           <aside
-            className="relative flex flex-col w-[280px] max-w-[85vw] bg-[var(--color-sidebar-bg)] h-full shadow-2xl border-r border-[var(--color-border)] z-50 animate-slide-in-right overscroll-contain"
+            className="relative flex flex-col w-[280px] max-w-[85vw] bg-[var(--color-sidebar-bg)] h-full shadow-2xl border-r border-[var(--color-border)] dark:border-[#2A2F3D] z-50 animate-slide-in-right overscroll-contain"
           >
             {renderHeader(false)}
             {renderNav(false)}
-            <div className="p-3 border-t border-zinc-100 bg-zinc-50/50 shrink-0">
+            <div className="p-3 border-t border-zinc-100 bg-zinc-50/50 dark:border-[#2A2F3D] dark:bg-[#161922] shrink-0">
               <button
                 type="button"
                 onClick={onMobileClose}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 shadow-xs hover:bg-zinc-50 transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 dark:text-[#E6E8EE] dark:bg-[#1D212C] dark:border-[#2A2F3D] dark:hover:bg-[#222736] shadow-xs hover:bg-zinc-50 transition-colors"
               >
                 <X size={15} />
                 <span>Close Menu</span>

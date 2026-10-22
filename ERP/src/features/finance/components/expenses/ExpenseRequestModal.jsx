@@ -328,25 +328,25 @@ export default function ExpenseRequestModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-zinc-950/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-      <div className="bg-white rounded-xl shadow-2xl border border-zinc-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-[#161922] rounded-xl shadow-2xl border border-zinc-200 dark:border-[#2A2F3D] w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-zinc-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-blue-600 text-white flex items-center justify-center">
               <ClipboardList size={16} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-zinc-900">
+              <h2 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">
                 {initialData ? 'Edit Expense Request' : 'New Expense Request'}
               </h2>
-              <p className="text-xs text-zinc-500">Submit an authorization or advance request to the finance module</p>
+              <p className="text-xs text-zinc-500 dark:text-[#6B7184]">Submit an authorization or advance request to the finance module</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-lg hover:bg-zinc-100 transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-[#E6E8EE] rounded-lg hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors"
           >
             <X size={18} />
           </button>
@@ -357,7 +357,7 @@ export default function ExpenseRequestModal({
           {/* Request Type & Date */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[8.8px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+              <label className="text-[8.8px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                 Request Type <span className="text-rose-500">*</span>
               </label>
               <CustomSelect
@@ -370,7 +370,7 @@ export default function ExpenseRequestModal({
                     requiresAdvance: val === 'ADVANCE_REQUEST',
                   }));
                 }}
-                className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 focus:border-zinc-400 outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none"
               >
                 <option value="EXPENSE_REQUEST">Expense Request</option>
                 <option value="ADVANCE_REQUEST">Advance Request</option>
@@ -378,7 +378,7 @@ export default function ExpenseRequestModal({
             </div>
 
             <div>
-              <label className="text-[8.8px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+              <label className="text-[8.8px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                 Date <span className="text-rose-500">*</span>
               </label>
               <input
@@ -386,7 +386,7 @@ export default function ExpenseRequestModal({
                 required
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 focus:border-zinc-400 outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none"
               />
               {validationErrors.date && <p className="text-[8px] text-rose-500 mt-0.5">{validationErrors.date}</p>}
             </div>
@@ -396,13 +396,13 @@ export default function ExpenseRequestModal({
           <div className="grid grid-cols-2 gap-4">
             {/* ROLE / TYPE Dropdown */}
             <div>
-              <label className="text-[8.8px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+              <label className="text-[8.8px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                 Role / Type <span className="text-rose-500">*</span>
               </label>
               <CustomSelect
                 value={formData.roleType}
                 onChange={handleRoleTypeChange}
-                className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 focus:border-zinc-400 outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none"
               >
                 <option value="EMPLOYEE">Employee (Staff)</option>
                 <option value="DRIVER">Driver / Fleet</option>
@@ -412,7 +412,7 @@ export default function ExpenseRequestModal({
             {/* EMPLOYEE / DRIVER Searchable Dropdown */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[8.8px] font-bold text-zinc-600 uppercase tracking-wider block">
+                <label className="text-[8.8px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider block">
                   Employee / Driver <span className="text-rose-500">*</span>
                 </label>
                 {peopleError && (
@@ -444,7 +444,7 @@ export default function ExpenseRequestModal({
                 emptyMessage={
                   formData.roleType === 'DRIVER' ? 'No drivers found' : 'No employees found'
                 }
-                className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 focus:border-zinc-400 outline-none cursor-not-allowed"
+                className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C]/60 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none cursor-not-allowed"
               />
 
               {validationErrors.employeeDriverId && (
@@ -459,7 +459,7 @@ export default function ExpenseRequestModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[8.8px] font-bold text-zinc-600 uppercase tracking-wider block">
+                <label className="text-[8.8px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider block">
                   Category <span className="text-rose-500">*</span>
                 </label>
                 {categoriesError && (
@@ -487,8 +487,8 @@ export default function ExpenseRequestModal({
                     : '-- Choose Category --'
                 }
                 emptyMessage="No categories found"
-                className={`w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 focus:border-zinc-400 outline-none ${
-                  categoriesError ? 'border-rose-200 bg-rose-50' : ''
+                className={`w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none ${
+                  categoriesError ? 'border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30' : ''
                 } ${(isLoadingCategories || !!categoriesError) ? 'cursor-not-allowed' : ''}`}
               >
                 <option value="">
@@ -510,11 +510,11 @@ export default function ExpenseRequestModal({
             </div>
 
             <div>
-              <label className="text-[8.8px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+              <label className="text-[8.8px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                 Requested Amount (₹) <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
-                <IndianRupee size={14} className="absolute left-3 top-2.5 text-zinc-400" />
+                <IndianRupee size={14} className="absolute left-3 top-2.5 text-zinc-400 dark:text-[#6B7184]" />
                 <input
                   type="number"
                   required
@@ -523,7 +523,7 @@ export default function ExpenseRequestModal({
                   placeholder="0.00"
                   value={formData.requestedAmount}
                   onChange={(e) => setFormData({ ...formData, requestedAmount: e.target.value })}
-                  className="w-full h-9 pl-8 pr-3 bg-white border border-zinc-200 rounded-lg text-xs font-bold text-zinc-800 focus:border-zinc-400 outline-none"
+                  className="w-full h-9 pl-8 pr-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none"
                 />
               </div>
               {validationErrors.requestedAmount && (
@@ -535,7 +535,7 @@ export default function ExpenseRequestModal({
           {/* Vehicle Number (optional if Driver) */}
           {formData.roleType === 'DRIVER' && (
             <div>
-              <label className="text-[8.8px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+              <label className="text-[8.8px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                 Vehicle Number (Optional)
               </label>
               <input
@@ -543,14 +543,14 @@ export default function ExpenseRequestModal({
                 placeholder="e.g. MH-12-AB-1234"
                 value={formData.vehicleNumber}
                 onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value })}
-                className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 focus:border-zinc-400 outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none"
               />
             </div>
           )}
 
           {/* Purpose / Description */}
           <div>
-            <label className="text-[8.8px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+            <label className="text-[8.8px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
               Purpose / Description <span className="text-rose-500">*</span>
             </label>
             <textarea
@@ -559,7 +559,7 @@ export default function ExpenseRequestModal({
               placeholder="e.g. Fuel and toll charges for dispatch to client warehouse"
               value={formData.purposeDescription}
               onChange={(e) => setFormData({ ...formData, purposeDescription: e.target.value })}
-              className="w-full p-2.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 focus:border-zinc-400 outline-none"
+              className="w-full p-2.5 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none"
             />
             {validationErrors.purposeDescription && (
               <p className="text-[8px] text-rose-500 mt-0.5">{validationErrors.purposeDescription}</p>
@@ -568,7 +568,7 @@ export default function ExpenseRequestModal({
 
           {/* Additional Notes */}
           <div>
-            <label className="text-[8.8px] font-bold text-zinc-600 uppercase tracking-wider mb-1 block">
+            <label className="text-[8.8px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
               Additional Notes (Optional)
             </label>
             <input
@@ -576,24 +576,24 @@ export default function ExpenseRequestModal({
               placeholder="Optional trip reference, delivery challan, or remarks"
               value={formData.additionalNotes}
               onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
-              className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 focus:border-zinc-400 outline-none"
+              className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none"
             />
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-zinc-100">
+          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-zinc-100 dark:border-[#2A2F3D]">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="h-9 px-4 text-xs font-semibold text-zinc-600 hover:text-zinc-800 hover:bg-zinc-100 rounded-lg transition-colors"
+              className="h-9 px-4 text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-800 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="h-9 px-5 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg shadow-sm transition-colors active:scale-98 disabled:opacity-60 flex items-center gap-1.5"
+              className="h-9 px-5 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-lg shadow-sm transition-colors active:scale-98 disabled:opacity-60 flex items-center gap-1.5"
             >
               {isSubmitting && <Loader2 size={13} className="animate-spin" />}
               {initialData ? 'Update Request' : 'Submit Request'}

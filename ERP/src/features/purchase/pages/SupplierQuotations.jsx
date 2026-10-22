@@ -68,8 +68,8 @@ const fmt = (n) => {
 
 const SupplierQuotationOverview = ({ quote: q }) => {
   return (
-    <div className="p-5 bg-white border border-zinc-100 rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2 cursor-default" onClick={(e) => e.stopPropagation()}>
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100">
+    <div className="p-5 bg-white dark:bg-card-dark border border-zinc-100 dark:border-border-dark rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2 cursor-default" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
           <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded border border-zinc-200">
             {q.quotationNumber || '—'}
@@ -111,7 +111,7 @@ const SupplierQuotationOverview = ({ quote: q }) => {
           <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
             {q.items && q.items.length > 0 ? (
               q.items.map((item, idx) => (
-                <div key={item.id || idx} className="bg-white p-2.5 rounded border border-zinc-200 text-xs">
+                <div key={item.id || idx} className="bg-white dark:bg-surface-dark p-2.5 rounded border border-zinc-200 dark:border-border-dark text-xs text-zinc-800 dark:text-zinc-200">
                   <div className="flex justify-between font-semibold text-zinc-900">
                     <span>{item.itemName || '—'}</span>
                     <span className="text-primary font-mono">{fmt((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}</span>
@@ -134,7 +134,7 @@ const SupplierQuotationOverview = ({ quote: q }) => {
           <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5">
             <Users size={13} /> Supplier Details
           </h4>
-          <div className="bg-white p-3 rounded-lg border border-zinc-200/60 space-y-2 text-xs">
+          <div className="bg-white dark:bg-card-dark p-3 rounded-lg border border-zinc-200/60 dark:border-border-dark space-y-2 text-xs">
             <div className="flex justify-between"><span className="text-zinc-500">Supplier:</span> <span className="font-semibold text-zinc-900">{q.vendorName || q.vendor?.name || '—'}</span></div>
             <div className="flex justify-between"><span className="text-zinc-500">Contact:</span> <span className="font-medium text-zinc-700">{q.vendor?.primaryContactName || q.vendor?.contactName || q.vendor?.email || '—'}</span></div>
             <div className="flex justify-between"><span className="text-zinc-500">Phone:</span> <span className="font-medium text-zinc-700">{q.vendor?.phone || q.vendor?.phoneNumber || '—'}</span></div>
@@ -504,7 +504,7 @@ export default function SupplierQuotations() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* Top Header */}
       <PageHeader
         title="Supplier Quotes"

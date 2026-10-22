@@ -54,8 +54,8 @@ function ChartCard({ title, data, colors }) {
   const hasData = data && data.some(d => d.value > 0);
 
   return (
-    <div className="card p-5 h-[240px] flex flex-col bg-white border border-zinc-200 rounded-xl shadow-sm">
-      <h3 className="text-sm font-bold text-zinc-700 mb-4">{title}</h3>
+    <div className="card p-5 h-[240px] flex flex-col bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm">
+      <h3 className="text-sm font-bold text-zinc-700 dark:text-[#E6E8EE] mb-4">{title}</h3>
       <div 
         ref={containerRef}
         style={{ height: '160px', minHeight: '160px', minWidth: 0 }} 
@@ -79,14 +79,20 @@ function ChartCard({ title, data, colors }) {
                 ))}
               </Pie>
               <Tooltip 
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                contentStyle={{ 
+                  borderRadius: '8px', 
+                  border: '1px solid var(--color-border, #e4e4e7)', 
+                  backgroundColor: 'var(--color-surface-elevated, #ffffff)', 
+                  color: 'var(--color-text-primary, #09090b)', 
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
+                }}
                 itemStyle={{ fontWeight: 600 }}
               />
-              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 500 }} />
+              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary, #6B7184)' }} />
             </PieChart>
           </ResponsiveContainer>
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-400">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-400 dark:text-[#6B7184]">
             <PieChartIcon size={32} className="opacity-50 mb-2" />
             <p className="text-sm font-medium">No data available</p>
           </div>

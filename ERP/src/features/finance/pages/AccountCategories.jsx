@@ -140,7 +140,7 @@ export default function AccountCategories() {
       label: 'Code',
       sortable: true,
       render: (val, row) => (
-        <span className="font-mono text-xs bg-zinc-100 px-2 py-1 rounded text-zinc-800 font-semibold border border-zinc-200/60">
+        <span className="font-mono text-xs bg-zinc-100 dark:bg-[#1D212C] px-2 py-1 rounded text-zinc-800 dark:text-[#E6E8EE] font-semibold border border-zinc-200/60 dark:border-[#2A2F3D]">
           {row.code || '-'}
         </span>
       )
@@ -150,7 +150,7 @@ export default function AccountCategories() {
       label: 'Category Name',
       sortable: true,
       render: (val, row) => (
-        <span className="font-semibold text-zinc-900">{row.name || '-'}</span>
+        <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{row.name || '-'}</span>
       )
     },
     {
@@ -158,7 +158,7 @@ export default function AccountCategories() {
       label: 'Nature',
       sortable: true,
       render: (val, row) => (
-        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${row.nature === 'DEBIT' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
+        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase ${row.nature === 'DEBIT' ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'}`}>
           {row.nature || '-'}
         </span>
       )
@@ -168,7 +168,7 @@ export default function AccountCategories() {
       label: 'Created At',
       sortable: true,
       render: (val, row) => (
-        <span className="text-zinc-600 text-xs">
+        <span className="text-zinc-600 dark:text-[#A0A6B5] text-xs">
           {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}
         </span>
       )
@@ -241,7 +241,7 @@ export default function AccountCategories() {
       icon: Eye,
       onClick: (row) => navigate(buildPath(`/accounts/masters/account-categories/${row.id}`)),
       tooltip: 'View Details',
-      className: 'hover:text-blue-600 hover:bg-blue-50'
+      className: 'hover:text-blue-600 dark:hover:text-[#4C8DFF] hover:bg-blue-50 dark:hover:bg-[#4C8DFF]/10'
     },
     {
       key: 'audit',
@@ -253,7 +253,7 @@ export default function AccountCategories() {
       icon: Edit,
       onClick: (row) => handleOpenFormModal(row),
       tooltip: 'Edit',
-      className: 'hover:text-indigo-600 hover:bg-indigo-50'
+      className: 'hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10'
     },
     {
       key: 'delete',
@@ -267,49 +267,49 @@ export default function AccountCategories() {
 
   // Sub-row drawer renderer
   const renderExpandedRow = (category) => (
-    <div className="p-4 bg-white border border-zinc-100 rounded-lg shadow-2xs">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100">
+    <div className="p-4 bg-white dark:bg-[#161922] border border-zinc-100 dark:border-[#2A2F3D] rounded-lg shadow-2xs">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div>
-          <h3 className="text-base font-bold text-zinc-900">{category.name}</h3>
-          <p className="text-xs font-mono text-zinc-500 mt-0.5">{category.code}</p>
+          <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">{category.name}</h3>
+          <p className="text-xs font-mono text-zinc-500 dark:text-[#A0A6B5] mt-0.5">{category.code}</p>
         </div>
         <div className="flex gap-2">
           <DataTableStatusBadge status={!category.isDeleted} activeLabel="Active" inactiveLabel="Deleted" />
-          <span className={`px-2 py-0.5 text-xs font-semibold rounded-md border ${category.nature === 'DEBIT' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
+          <span className={`px-2 py-0.5 text-xs font-semibold rounded-md border ${category.nature === 'DEBIT' ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'}`}>
             {category.nature}
           </span>
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Account Groups</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{category.totalAccountGroups || 0}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Account Groups</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{category.totalAccountGroups || 0}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Ledgers</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1 flex flex-col gap-0.5">
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Ledgers</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1 flex flex-col gap-0.5">
             <span>{category.totalLedgers || 0} Total</span>
-            <span className="text-xs text-emerald-600">{category.activeLedgers || 0} Active</span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400">{category.activeLedgers || 0} Active</span>
           </p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Net Balance</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Net Balance</p>
           <p className="text-sm font-medium mt-1 flex flex-col gap-0.5">
-            <span className={(category.netBalance || 0) < 0 ? 'text-red-600 font-bold' : 'text-emerald-600 font-bold'}>
+            <span className={(category.netBalance || 0) < 0 ? 'text-red-600 dark:text-red-400 font-bold' : 'text-emerald-600 dark:text-emerald-400 font-bold'}>
               ₹{Math.abs(category.netBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               {(category.netBalance || 0) < 0 ? ' Cr' : ' Dr'}
             </span>
           </p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Last Transaction</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Last Transaction</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">
             {category.lastTransactionDate ? new Date(category.lastTransactionDate).toLocaleDateString() : '-'}
           </p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Created Date</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Created Date</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">
             {category.createdAt ? new Date(category.createdAt).toLocaleDateString() : '-'}
           </p>
         </div>
@@ -318,7 +318,7 @@ export default function AccountCategories() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Account Categories"
         description="Manage account categories"

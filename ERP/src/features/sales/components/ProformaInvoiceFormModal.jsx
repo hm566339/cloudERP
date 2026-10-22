@@ -601,7 +601,7 @@ export default function ProformaInvoiceFormModal({
             return {
               ...field,
               render: ({ value, setValue, error, disabled }) => mode === 'create' ? (
-                <input value={formData.customerName || sourceQuotation?.customerName || ''} disabled className="input-field w-full h-8 text-[8.8px] bg-zinc-50" />
+                <input value={formData.customerName || sourceQuotation?.customerName || ''} disabled className="input-field w-full h-8 text-[8.8px] bg-zinc-50 dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE]" />
               ) : (
                 <div>
                   <CustomerCombobox value={value || ''} onChange={setValue} error={error} disabled={disabled} />
@@ -701,19 +701,19 @@ export default function ProformaInvoiceFormModal({
       />
       {isAddProductOpen && (
         <div className="fixed inset-0 z-[400] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-2xl h-[95vh] max-h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200">
-            <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
+          <div className="bg-white dark:bg-[#161922] w-full max-w-2xl h-[95vh] max-h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200 dark:border-[#2A2F3D]">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C] shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center border border-zinc-200 text-zinc-700">
+                <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-[#222736] flex items-center justify-center border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#A0A6B5]">
                   <Package size={16} />
                 </div>
-                <h2 className="text-base font-bold text-zinc-900 tracking-tight">New Product</h2>
+                <h2 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">New Product</h2>
               </div>
-              <button type="button" onClick={closeProductModal} className="p-1 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors active:scale-95">
+              <button type="button" onClick={closeProductModal} className="p-1 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200 dark:hover:bg-[#222736] rounded-md transition-colors active:scale-95">
                 <X size={18} strokeWidth={2.5} />
               </button>
             </div>
-            <div className="flex-1 overflow-hidden bg-white flex flex-col">
+            <div className="flex-1 overflow-hidden bg-white dark:bg-[#161922] flex flex-col">
               <ProductForm
                 initialData={{ productName: newProductName }}
                 onSubmit={handleCreateProduct}

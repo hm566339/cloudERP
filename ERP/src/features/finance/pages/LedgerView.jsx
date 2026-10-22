@@ -51,15 +51,15 @@ const LedgerView = () => {
     <div className="animate-fade-in space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
         <div className="flex items-center gap-4">
-          <Link to={buildPath('/accounts/transactions/journal-lines')} className="p-2 hover:bg-zinc-100 rounded-full transition-colors">
-            <ArrowLeft size={20} className="text-zinc-500" />
+          <Link to={buildPath('/accounts/transactions/journal-lines')} className="p-2 hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-full transition-colors">
+            <ArrowLeft size={20} className="text-zinc-500 dark:text-[#A0A6B5]" />
           </Link>
           <div>
             <h1 className="page-title flex items-center gap-2">
-              <BookOpen size={22} className="text-emerald-600" />
+              <BookOpen size={22} className="text-emerald-600 dark:text-emerald-400" />
               Ledger View
             </h1>
-            <p className="page-subtitle text-xs truncate max-w-sm">Account ID: {accountId}</p>
+            <p className="page-subtitle text-xs text-zinc-500 dark:text-[#A0A6B5] truncate max-w-sm">Account ID: {accountId}</p>
           </div>
         </div>
         
@@ -86,7 +86,7 @@ const LedgerView = () => {
                 <th>Description</th>
                 <th className="text-right">Debit</th>
                 <th className="text-right">Credit</th>
-                <th className="text-right bg-zinc-50">Running Balance</th>
+                <th className="text-right bg-zinc-50 dark:bg-[#1D212C]">Running Balance</th>
                 <th>Currency</th>
                 <th className="text-right">Base Amount</th>
               </tr>
@@ -97,7 +97,7 @@ const LedgerView = () => {
               ) : lines.length === 0 ? (
                 <tr>
                   <td colSpan={11}>
-                    <div className="p-12 text-center text-zinc-500">
+                    <div className="p-12 text-center text-zinc-500 dark:text-[#A0A6B5]">
                       No ledger entries found for this account
                     </div>
                   </td>
@@ -107,16 +107,16 @@ const LedgerView = () => {
                   runningBalance += (line.debitAmount || 0) - (line.creditAmount || 0);
                   return (
                     <tr key={line.id}>
-                      <td className="text-center text-zinc-500">{index + 1}</td>
+                      <td className="text-center text-zinc-500 dark:text-[#6B7184]">{index + 1}</td>
                       <td className="whitespace-nowrap">{line.voucherDate}</td>
-                      <td className="font-mono text-zinc-600">{line.voucherNo}</td>
+                      <td className="font-mono text-zinc-600 dark:text-[#A0A6B5]">{line.voucherNo}</td>
                       <td className="font-mono">{line.accountCode}</td>
                       <td className="font-semibold">{line.accountName}</td>
                       <td className="text-sm truncate max-w-[120px]" title={line.lineDescription}>{line.lineDescription}</td>
-                      <td className="text-right text-emerald-600 font-medium">{line.debitAmount > 0 ? line.debitAmount.toLocaleString() : '-'}</td>
-                      <td className="text-right text-rose-600 font-medium">{line.creditAmount > 0 ? line.creditAmount.toLocaleString() : '-'}</td>
-                      <td className="text-right font-bold bg-zinc-50/50">
-                        <span className={runningBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'}>
+                      <td className="text-right text-emerald-600 dark:text-emerald-400 font-medium">{line.debitAmount > 0 ? line.debitAmount.toLocaleString() : '-'}</td>
+                      <td className="text-right text-rose-600 dark:text-rose-400 font-medium">{line.creditAmount > 0 ? line.creditAmount.toLocaleString() : '-'}</td>
+                      <td className="text-right font-bold bg-zinc-50/50 dark:bg-[#1D212C]/50">
+                        <span className={runningBalance >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}>
                           {Math.abs(runningBalance).toLocaleString()} {runningBalance >= 0 ? 'Dr' : 'Cr'}
                         </span>
                       </td>

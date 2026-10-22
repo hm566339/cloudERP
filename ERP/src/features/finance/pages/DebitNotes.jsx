@@ -42,19 +42,19 @@ const DEFAULT_COLUMNS = [
 
 const DebitNoteOverview = ({ debitNote }) => {
   return (
-    <div className="p-5 bg-white border border-zinc-100 rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2">
+    <div className="p-5 bg-white dark:bg-[#161922] border border-zinc-100 dark:border-[#2A2F3D] rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2">
       {/* Header Pill & Title */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 mb-4 border-b border-zinc-100">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 mb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xs font-semibold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded-md border border-zinc-200">
+          <span className="font-mono text-xs font-semibold px-2.5 py-1 bg-zinc-100 dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE] rounded-md border border-zinc-200 dark:border-[#2A2F3D]">
             {debitNote.debitNoteNo || debitNote.id?.substring(0, 8)}
           </span>
           <div>
-            <h4 className="text-sm font-bold text-zinc-900">{debitNote.vendorName || 'Vendor Debit Note'}</h4>
-            <div className="flex items-center gap-2 text-[11px] text-zinc-500 mt-0.5">
-              <span>Bill/Invoice: <strong className="text-zinc-700 font-medium">{debitNote.invoiceNo || debitNote.apInvoiceId || '—'}</strong></span>
+            <h4 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">{debitNote.vendorName || 'Vendor Debit Note'}</h4>
+            <div className="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+              <span>Bill/Invoice: <strong className="text-zinc-700 dark:text-[#E6E8EE] font-medium">{debitNote.invoiceNo || debitNote.apInvoiceId || '—'}</strong></span>
               <span>•</span>
-              <span>Date: <strong className="text-zinc-700 font-medium">{debitNote.noteDate ? new Date(debitNote.noteDate).toLocaleDateString() : '—'}</strong></span>
+              <span>Date: <strong className="text-zinc-700 dark:text-[#E6E8EE] font-medium">{debitNote.noteDate ? new Date(debitNote.noteDate).toLocaleDateString() : '—'}</strong></span>
             </div>
           </div>
         </div>
@@ -67,39 +67,39 @@ const DebitNoteOverview = ({ debitNote }) => {
       {/* 3-Column Info Cards matching RFQ pattern */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Card 1: Debit Note Details */}
-        <div className="bg-zinc-50/50 p-4 rounded-lg border border-zinc-200/60 space-y-2.5">
-          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5 pb-1 border-b border-zinc-200/60">
+        <div className="bg-zinc-50/50 dark:bg-[#1D212C] p-4 rounded-lg border border-zinc-200/60 dark:border-[#2A2F3D] space-y-2.5">
+          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] flex items-center gap-1.5 pb-1 border-b border-zinc-200/60 dark:border-[#2A2F3D]">
             <FileText size={13} /> Note Details
           </h5>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Vendor:</span> <span className="font-medium text-zinc-800">{debitNote.vendorName || '—'}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Bill/Invoice:</span> <span className="font-medium text-zinc-800">{debitNote.invoiceNo || debitNote.apInvoiceId || '—'}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Reference No:</span> <span className="font-medium text-zinc-800">{debitNote.referenceNo || '—'}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Reason:</span> <span className="font-medium text-zinc-800 truncate max-w-[180px]">{debitNote.reason || '—'}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Created:</span> <span className="font-medium text-zinc-800">{debitNote.createdAt ? new Date(debitNote.createdAt).toLocaleDateString() : '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Vendor:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{debitNote.vendorName || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Bill/Invoice:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{debitNote.invoiceNo || debitNote.apInvoiceId || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Reference No:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{debitNote.referenceNo || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Reason:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE] truncate max-w-[180px]">{debitNote.reason || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Created:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{debitNote.createdAt ? new Date(debitNote.createdAt).toLocaleDateString() : '—'}</span></div>
         </div>
 
         {/* Card 2: Financials & Taxes */}
-        <div className="bg-zinc-50/50 p-4 rounded-lg border border-zinc-200/60 space-y-2.5">
-          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5 pb-1 border-b border-zinc-200/60">
+        <div className="bg-zinc-50/50 dark:bg-[#1D212C] p-4 rounded-lg border border-zinc-200/60 dark:border-[#2A2F3D] space-y-2.5">
+          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] flex items-center gap-1.5 pb-1 border-b border-zinc-200/60 dark:border-[#2A2F3D]">
             <Receipt size={13} /> Financial Breakdown
           </h5>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Total Amount:</span> <span className="font-bold text-zinc-900">{debitNote.currency || 'INR'} {Number(debitNote.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">GST Amount:</span> <span className="font-medium text-zinc-800">{debitNote.currency || 'INR'} {Number(debitNote.gstAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Allocated:</span> <span className="font-medium text-zinc-800">{debitNote.currency || 'INR'} {Number(debitNote.allocatedAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Remaining Credit:</span> <span className="font-bold text-emerald-600">{debitNote.currency || 'INR'} {Number(debitNote.remainingBalance ?? debitNote.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Total Amount:</span> <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">{debitNote.currency || 'INR'} {Number(debitNote.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">GST Amount:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{debitNote.currency || 'INR'} {Number(debitNote.gstAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Allocated:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{debitNote.currency || 'INR'} {Number(debitNote.allocatedAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Remaining Credit:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{debitNote.currency || 'INR'} {Number(debitNote.remainingBalance ?? debitNote.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
         </div>
 
         {/* Card 3: Workflow & GL Accounts */}
-        <div className="bg-zinc-50/50 p-4 rounded-lg border border-zinc-200/60 space-y-2.5">
-          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5 pb-1 border-b border-zinc-200/60">
+        <div className="bg-zinc-50/50 dark:bg-[#1D212C] p-4 rounded-lg border border-zinc-200/60 dark:border-[#2A2F3D] space-y-2.5">
+          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] flex items-center gap-1.5 pb-1 border-b border-zinc-200/60 dark:border-[#2A2F3D]">
             <BookOpen size={13} /> Workflow & Ledger
           </h5>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Approval Status:</span> <span>{getStatusBadge(debitNote.status)}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">GL Status:</span> <span>{getPostingBadge(debitNote.glPostingStatus)}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Payable A/C:</span> <span className="font-medium text-zinc-800 font-mono text-[11px] truncate max-w-[160px]">{debitNote.payableAccountName || debitNote.payableAccountId || '—'}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Purchase Return A/C:</span> <span className="font-medium text-zinc-800 font-mono text-[11px] truncate max-w-[160px]">{debitNote.purchaseReturnAccountName || debitNote.purchaseReturnAccountId || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Approval Status:</span> <span>{getStatusBadge(debitNote.status)}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">GL Status:</span> <span>{getPostingBadge(debitNote.glPostingStatus)}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Payable A/C:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE] font-mono text-[11px] truncate max-w-[160px]">{debitNote.payableAccountName || debitNote.payableAccountId || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Purchase Return A/C:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE] font-mono text-[11px] truncate max-w-[160px]">{debitNote.purchaseReturnAccountName || debitNote.purchaseReturnAccountId || '—'}</span></div>
           {debitNote.approvedDate && (
-            <div className="flex justify-between text-xs"><span className="text-zinc-500">Approved Date:</span> <span className="font-medium text-zinc-800">{new Date(debitNote.approvedDate).toLocaleDateString()}</span></div>
+            <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Approved Date:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{new Date(debitNote.approvedDate).toLocaleDateString()}</span></div>
           )}
         </div>
       </div>
@@ -111,24 +111,24 @@ const getStatusBadge = (status) => {
   switch (status) {
     case 'POSTED':
     case 'APPROVED':
-      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200">{status}</span>;
+      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30">{status}</span>;
     case 'CANCELLED':
     case 'REJECTED':
-      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-rose-50 text-rose-700 border-rose-200">{status}</span>;
+      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30">{status}</span>;
     case 'DRAFT':
     case 'REVERSED':
-      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 text-zinc-600 border-zinc-200">{status}</span>;
+      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]">{status}</span>;
     case 'SUBMITTED':
     default:
-      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200">{status || 'UNKNOWN'}</span>;
+      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-blue-50 dark:bg-[#4C8DFF]/10 text-blue-700 dark:text-[#4C8DFF] border-blue-200 dark:border-[#4C8DFF]/30">{status || 'UNKNOWN'}</span>;
   }
 };
 
 const getPostingBadge = (status) => {
   switch (status) {
-    case 'POSTED': return <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[8.8px] font-semibold rounded-md border border-emerald-200">POSTED</span>;
-    case 'REVERSED': return <span className="px-2.5 py-1 bg-amber-50 text-amber-700 text-[8.8px] font-semibold rounded-md border border-amber-200">REVERSED</span>;
-    default: return <span className="px-2.5 py-1 bg-zinc-50 text-zinc-600 text-[8.8px] font-semibold rounded-md border border-zinc-200">{status || 'UNPOSTED'}</span>;
+    case 'POSTED': return <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[8.8px] font-semibold rounded-md border border-emerald-200 dark:border-emerald-500/30">POSTED</span>;
+    case 'REVERSED': return <span className="px-2.5 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[8.8px] font-semibold rounded-md border border-amber-200 dark:border-amber-500/30">REVERSED</span>;
+    default: return <span className="px-2.5 py-1 bg-zinc-50 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] text-[8.8px] font-semibold rounded-md border border-zinc-200 dark:border-[#2A2F3D]">{status || 'UNPOSTED'}</span>;
   }
 };
 
@@ -358,7 +358,7 @@ export default function DebitNotes() {
       return {
         icon: <IconComponent size={14} />,
         tooltip: action.label,
-        className: `text-zinc-700 hover:bg-zinc-100`,
+        className: `text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736]`,
         onClick: () => handleWorkflowAction(debitNote.id, action),
       };
     });
@@ -493,7 +493,7 @@ export default function DebitNotes() {
             e.stopPropagation();
             setExpandedRowId(prev => prev === row.id ? null : row.id);
           }}
-          className="font-mono text-xs font-semibold px-2.5 py-1 bg-zinc-100 text-zinc-900 rounded-md border border-zinc-200 cursor-pointer hover:bg-zinc-200 transition-colors"
+          className="font-mono text-xs font-semibold px-2.5 py-1 bg-zinc-100 dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] rounded-md border border-zinc-200 dark:border-[#2A2F3D] cursor-pointer hover:bg-zinc-200 dark:hover:bg-[#222736] transition-colors"
         >
           {val || row.id?.substring(0, 8) || '—'}
         </span>
@@ -729,7 +729,7 @@ export default function DebitNotes() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         icon={FilePlus}
         title="Debit Notes"
@@ -828,11 +828,11 @@ export default function DebitNotes() {
                   setIsAddInvoiceOpen(true);
                 }}
                 createSubtext="Create new bill/invoice"
-                inputClassName="w-full h-9 pl-8 pr-2 bg-white border border-zinc-200 rounded-lg text-sm hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                inputClassName="w-full h-9 pl-8 pr-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-sm hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none dark:text-[#E6E8EE]"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Debit Note No.</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Debit Note No.</label>
               <input
                 type="text"
                 name="debitNoteNo"
@@ -846,7 +846,7 @@ export default function DebitNotes() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Note Date *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Note Date *</label>
               <input
                 type="date"
                 name="noteDate"
@@ -857,7 +857,7 @@ export default function DebitNotes() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Reference No.</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Reference No.</label>
               <input
                 type="text"
                 name="referenceNo"
@@ -870,7 +870,7 @@ export default function DebitNotes() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Amount *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Amount *</label>
               <input
                 type="number"
                 step="0.01"
@@ -883,7 +883,7 @@ export default function DebitNotes() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">GST Amount</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">GST Amount</label>
               <input
                 type="number"
                 step="0.01"
@@ -898,7 +898,7 @@ export default function DebitNotes() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Payable Account *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Payable Account *</label>
               <ComboBox
                 name="payableAccountId"
                 value={formData.payableAccountId}
@@ -911,11 +911,11 @@ export default function DebitNotes() {
                   setIsAddAccountOpen(true);
                 }}
                 createSubtext="Add as new account"
-                inputClassName="w-full h-9 pl-8 pr-2 bg-white border border-zinc-200 rounded-lg text-sm hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                inputClassName="w-full h-9 pl-8 pr-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-sm hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none dark:text-[#E6E8EE]"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Purchase Return Account *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Purchase Return Account *</label>
               <ComboBox
                 name="purchaseReturnAccountId"
                 value={formData.purchaseReturnAccountId}
@@ -928,7 +928,7 @@ export default function DebitNotes() {
                   setIsAddAccountOpen(true);
                 }}
                 createSubtext="Add as new account"
-                inputClassName="w-full h-9 pl-8 pr-2 bg-white border border-zinc-200 rounded-lg text-sm hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                inputClassName="w-full h-9 pl-8 pr-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-sm hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none dark:text-[#E6E8EE]"
               />
             </div>
           </div>

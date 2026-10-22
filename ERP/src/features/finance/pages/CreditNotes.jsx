@@ -50,25 +50,25 @@ const getStatusBadge = (status) => {
   switch (status) {
     case 'POSTED':
     case 'APPROVED':
-      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200 uppercase">{status}</span>;
+      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 uppercase">{status}</span>;
     case 'CANCELLED':
     case 'REJECTED':
-      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-rose-50 text-rose-700 border-rose-200 uppercase">{status}</span>;
+      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30 uppercase">{status}</span>;
     case 'DRAFT':
     case 'REVERSED':
-      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 text-zinc-600 border-zinc-200 uppercase">{status}</span>;
+      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D] uppercase">{status}</span>;
     case 'SUBMITTED':
     default:
-      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200 uppercase">{status || 'UNKNOWN'}</span>;
+      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-blue-50 dark:bg-[#4C8DFF]/10 text-blue-700 dark:text-[#4C8DFF] border-blue-200 dark:border-[#4C8DFF]/30 uppercase">{status || 'UNKNOWN'}</span>;
   }
 };
 
 const getPostingBadge = (status) => {
   switch (status) {
-    case 'POSTED': return <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[8.8px] font-semibold rounded-md border border-emerald-200 uppercase">POSTED</span>;
-    case 'REVERSED': return <span className="px-2.5 py-1 bg-amber-50 text-amber-700 text-[8.8px] font-semibold rounded-md border border-amber-200 uppercase">REVERSED</span>;
-    case 'FAILED': return <span className="px-2.5 py-1 bg-rose-50 text-rose-700 text-[8.8px] font-semibold rounded-md border border-rose-200 uppercase">FAILED</span>;
-    default: return <span className="px-2.5 py-1 bg-zinc-50 text-zinc-600 text-[8.8px] font-semibold rounded-md border border-zinc-200 uppercase">{status || 'UNPOSTED'}</span>;
+    case 'POSTED': return <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[8.8px] font-semibold rounded-md border border-emerald-200 dark:border-emerald-500/30 uppercase">POSTED</span>;
+    case 'REVERSED': return <span className="px-2.5 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[8.8px] font-semibold rounded-md border border-amber-200 dark:border-amber-500/30 uppercase">REVERSED</span>;
+    case 'FAILED': return <span className="px-2.5 py-1 bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 text-[8.8px] font-semibold rounded-md border border-rose-200 dark:border-rose-500/30 uppercase">FAILED</span>;
+    default: return <span className="px-2.5 py-1 bg-zinc-50 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] text-[8.8px] font-semibold rounded-md border border-zinc-200 dark:border-[#2A2F3D] uppercase">{status || 'UNPOSTED'}</span>;
   }
 };
 
@@ -76,19 +76,19 @@ const CreditNoteOverview = ({ creditNote, onViewDetails }) => {
   const calculatedRemaining = Number(creditNote.remainingBalance ?? (Number(creditNote.amount || 0) - Number(creditNote.allocatedAmount || 0)));
 
   return (
-    <div className="p-5 bg-white border border-zinc-100 rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2">
+    <div className="p-5 bg-white dark:bg-[#161922] border border-zinc-100 dark:border-[#2A2F3D] rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2">
       {/* Header Pill & Title */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 mb-4 border-b border-zinc-100">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 mb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xs font-semibold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded-md border border-zinc-200">
+          <span className="font-mono text-xs font-semibold px-2.5 py-1 bg-zinc-100 dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE] rounded-md border border-zinc-200 dark:border-[#2A2F3D]">
             {creditNote.creditNoteNo || creditNote.id?.substring(0, 8)}
           </span>
           <div>
-            <h4 className="text-sm font-bold text-zinc-900">{creditNote.customerName || 'Customer Credit Note'}</h4>
-            <div className="flex items-center gap-2 text-[11px] text-zinc-500 mt-0.5">
-              <span>Invoice: <strong className="text-zinc-700 font-medium">{creditNote.invoiceNo || creditNote.salesInvoiceId || '—'}</strong></span>
+            <h4 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">{creditNote.customerName || 'Customer Credit Note'}</h4>
+            <div className="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+              <span>Invoice: <strong className="text-zinc-700 dark:text-[#E6E8EE] font-medium">{creditNote.invoiceNo || creditNote.salesInvoiceId || '—'}</strong></span>
               <span>•</span>
-              <span>Date: <strong className="text-zinc-700 font-medium">{creditNote.noteDate ? new Date(creditNote.noteDate).toLocaleDateString() : '—'}</strong></span>
+              <span>Date: <strong className="text-zinc-700 dark:text-[#E6E8EE] font-medium">{creditNote.noteDate ? new Date(creditNote.noteDate).toLocaleDateString() : '—'}</strong></span>
             </div>
           </div>
         </div>
@@ -98,7 +98,7 @@ const CreditNoteOverview = ({ creditNote, onViewDetails }) => {
           {onViewDetails && (
             <button
               onClick={() => onViewDetails(creditNote)}
-              className="ml-2 px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 flex items-center gap-1.5 transition-colors"
+              className="ml-2 px-3 py-1 text-xs font-medium text-blue-600 dark:text-[#4C8DFF] bg-blue-50 dark:bg-[#4C8DFF]/10 border border-blue-200 dark:border-[#4C8DFF]/30 rounded-lg hover:bg-blue-100 dark:hover:bg-[#4C8DFF]/20 flex items-center gap-1.5 transition-colors"
             >
               <ExternalLink size={13} /> View Full Details
             </button>
@@ -109,39 +109,39 @@ const CreditNoteOverview = ({ creditNote, onViewDetails }) => {
       {/* 3-Column Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Card 1: Credit Note Details */}
-        <div className="bg-zinc-50/50 p-4 rounded-lg border border-zinc-200/60 space-y-2.5">
-          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5 pb-1 border-b border-zinc-200/60">
+        <div className="bg-zinc-50/50 dark:bg-[#1D212C] p-4 rounded-lg border border-zinc-200/60 dark:border-[#2A2F3D] space-y-2.5">
+          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] flex items-center gap-1.5 pb-1 border-b border-zinc-200/60 dark:border-[#2A2F3D]">
             <FileText size={13} /> Note Details
           </h5>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Customer:</span> <span className="font-medium text-zinc-800">{creditNote.customerName || '—'}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Sales Invoice:</span> <span className="font-medium text-zinc-800">{creditNote.invoiceNo || creditNote.salesInvoiceId || '—'}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Reference No:</span> <span className="font-medium text-zinc-800">{creditNote.referenceNo || '—'}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Reason:</span> <span className="font-medium text-zinc-800 truncate max-w-[180px]">{creditNote.reason || '—'}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Created:</span> <span className="font-medium text-zinc-800">{creditNote.createdAt ? new Date(creditNote.createdAt).toLocaleDateString() : '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Customer:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{creditNote.customerName || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Sales Invoice:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{creditNote.invoiceNo || creditNote.salesInvoiceId || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Reference No:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{creditNote.referenceNo || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Reason:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE] truncate max-w-[180px]">{creditNote.reason || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Created:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{creditNote.createdAt ? new Date(creditNote.createdAt).toLocaleDateString() : '—'}</span></div>
         </div>
 
         {/* Card 2: Financials & Taxes */}
-        <div className="bg-zinc-50/50 p-4 rounded-lg border border-zinc-200/60 space-y-2.5">
-          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5 pb-1 border-b border-zinc-200/60">
+        <div className="bg-zinc-50/50 dark:bg-[#1D212C] p-4 rounded-lg border border-zinc-200/60 dark:border-[#2A2F3D] space-y-2.5">
+          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] flex items-center gap-1.5 pb-1 border-b border-zinc-200/60 dark:border-[#2A2F3D]">
             <Receipt size={13} /> Financial Breakdown
           </h5>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Total Amount:</span> <span className="font-bold text-zinc-900">{creditNote.currency || 'INR'} {Number(creditNote.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">GST Amount:</span> <span className="font-medium text-zinc-800">{creditNote.currency || 'INR'} {Number(creditNote.gstAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Allocated:</span> <span className="font-medium text-zinc-800">{creditNote.currency || 'INR'} {Number(creditNote.allocatedAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Remaining Credit:</span> <span className="font-bold text-emerald-600">{creditNote.currency || 'INR'} {calculatedRemaining.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Total Amount:</span> <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">{creditNote.currency || 'INR'} {Number(creditNote.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">GST Amount:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{creditNote.currency || 'INR'} {Number(creditNote.gstAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Allocated:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{creditNote.currency || 'INR'} {Number(creditNote.allocatedAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Remaining Credit:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{creditNote.currency || 'INR'} {calculatedRemaining.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
         </div>
 
         {/* Card 3: Workflow & GL Accounts */}
-        <div className="bg-zinc-50/50 p-4 rounded-lg border border-zinc-200/60 space-y-2.5">
-          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5 pb-1 border-b border-zinc-200/60">
+        <div className="bg-zinc-50/50 dark:bg-[#1D212C] p-4 rounded-lg border border-zinc-200/60 dark:border-[#2A2F3D] space-y-2.5">
+          <h5 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] flex items-center gap-1.5 pb-1 border-b border-zinc-200/60 dark:border-[#2A2F3D]">
             <BookOpen size={13} /> Workflow & Ledger
           </h5>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Approval Status:</span> <span>{getStatusBadge(creditNote.status)}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">GL Status:</span> <span>{getPostingBadge(creditNote.glPostingStatus)}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Receivable A/C:</span> <span className="font-medium text-zinc-800 font-mono text-[11px] truncate max-w-[160px]">{creditNote.receivableAccountName || creditNote.receivableAccountId || '—'}</span></div>
-          <div className="flex justify-between text-xs"><span className="text-zinc-500">Revenue Adj A/C:</span> <span className="font-medium text-zinc-800 font-mono text-[11px] truncate max-w-[160px]">{creditNote.revenueAdjustmentAccountName || creditNote.revenueAdjustmentAccountId || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Approval Status:</span> <span>{getStatusBadge(creditNote.status)}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">GL Status:</span> <span>{getPostingBadge(creditNote.glPostingStatus)}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Receivable A/C:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE] font-mono text-[11px] truncate max-w-[160px]">{creditNote.receivableAccountName || creditNote.receivableAccountId || '—'}</span></div>
+          <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Revenue Adj A/C:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE] font-mono text-[11px] truncate max-w-[160px]">{creditNote.revenueAdjustmentAccountName || creditNote.revenueAdjustmentAccountId || '—'}</span></div>
           {creditNote.approvedDate && (
-            <div className="flex justify-between text-xs"><span className="text-zinc-500">Approved Date:</span> <span className="font-medium text-zinc-800">{new Date(creditNote.approvedDate).toLocaleDateString()}</span></div>
+            <div className="flex justify-between text-xs"><span className="text-zinc-500 dark:text-[#A0A6B5]">Approved Date:</span> <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{new Date(creditNote.approvedDate).toLocaleDateString()}</span></div>
           )}
         </div>
       </div>
@@ -516,7 +516,7 @@ export default function CreditNotes() {
             e.stopPropagation();
             navigate(buildPath(`transactions/credit-notes/${row.id}`));
           }}
-          className="font-mono text-xs font-semibold px-2.5 py-1 bg-zinc-100 text-zinc-900 rounded-md border border-zinc-200 cursor-pointer hover:bg-zinc-200 hover:text-blue-600 transition-colors"
+          className="font-mono text-xs font-semibold px-2.5 py-1 bg-zinc-100 dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] rounded-md border border-zinc-200 dark:border-[#2A2F3D] cursor-pointer hover:bg-zinc-200 dark:hover:bg-[#222736] hover:text-blue-600 dark:hover:text-[#4C8DFF] transition-colors"
           title="Click to view full details"
         >
           {val || row.id?.substring(0, 8) || '—'}
@@ -764,7 +764,7 @@ export default function CreditNotes() {
   }, [formData.salesInvoiceId, invoicesList]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         icon={FileMinus}
         title="Credit Notes"
@@ -872,11 +872,11 @@ export default function CreditNotes() {
                   setIsAddInvoiceOpen(true);
                 }}
                 createSubtext="Create new sales invoice"
-                inputClassName="w-full h-9 pl-8 pr-2 bg-white border border-zinc-200 rounded-lg text-sm hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                inputClassName="w-full h-9 pl-8 pr-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-sm hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none dark:text-[#E6E8EE]"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Credit Note No. *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Credit Note No. *</label>
               <input
                 type="text"
                 name="creditNoteNo"
@@ -890,7 +890,7 @@ export default function CreditNotes() {
           </div>
 
           {selectedInvoice && (
-            <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-lg text-xs space-y-1 text-blue-900">
+            <div className="p-3 bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 rounded-lg text-xs space-y-1 text-blue-900 dark:text-blue-300">
               <div className="flex justify-between">
                 <span>Customer: <strong>{selectedInvoice.customerName || '—'}</strong></span>
                 <span>Outstanding: <strong>{selectedInvoice.invoiceCurrency || 'INR'} {Number(selectedInvoice.outstandingAmount || selectedInvoice.eligibleCreditAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong></span>
@@ -900,7 +900,7 @@ export default function CreditNotes() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Note Date *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Note Date *</label>
               <input
                 type="date"
                 name="noteDate"
@@ -911,7 +911,7 @@ export default function CreditNotes() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Reference No.</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Reference No.</label>
               <input
                 type="text"
                 name="referenceNo"
@@ -925,7 +925,7 @@ export default function CreditNotes() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Amount *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Amount *</label>
               <input
                 type="number"
                 step="0.01"
@@ -939,7 +939,7 @@ export default function CreditNotes() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">GST Amount</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">GST Amount</label>
               <input
                 type="number"
                 step="0.01"
@@ -955,7 +955,7 @@ export default function CreditNotes() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Receivable Account *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Receivable Account *</label>
               <ComboBox
                 name="receivableAccountId"
                 value={formData.receivableAccountId}
@@ -968,11 +968,11 @@ export default function CreditNotes() {
                   setIsAddAccountOpen(true);
                 }}
                 createSubtext="Add as new account"
-                inputClassName="w-full h-9 pl-8 pr-2 bg-white border border-zinc-200 rounded-lg text-sm hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                inputClassName="w-full h-9 pl-8 pr-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-sm hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none dark:text-[#E6E8EE]"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-zinc-700">Revenue Adjustment Account *</label>
+              <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Revenue Adjustment Account *</label>
               <ComboBox
                 name="revenueAdjustmentAccountId"
                 value={formData.revenueAdjustmentAccountId}
@@ -985,7 +985,7 @@ export default function CreditNotes() {
                   setIsAddAccountOpen(true);
                 }}
                 createSubtext="Add as new account"
-                inputClassName="w-full h-9 pl-8 pr-2 bg-white border border-zinc-200 rounded-lg text-sm hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                inputClassName="w-full h-9 pl-8 pr-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-sm hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none dark:text-[#E6E8EE]"
               />
             </div>
           </div>

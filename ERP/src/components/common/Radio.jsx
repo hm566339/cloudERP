@@ -43,20 +43,20 @@ const Radio = React.forwardRef(function Radio(
           className="peer sr-only"
           {...props}
         />
-        <div className="w-4 h-4 rounded-full border border-zinc-300 bg-white transition-all duration-150 peer-checked:border-zinc-900 peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-900/15 flex items-center justify-center shadow-2xs">
-          {checked && <div className="w-2 h-2 rounded-full bg-zinc-900" />}
+        <div className="w-4 h-4 rounded-full border border-zinc-300 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] transition-all duration-150 peer-checked:border-zinc-900 dark:peer-checked:border-[#4C8DFF] peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-900/15 dark:peer-focus-visible:ring-[#4C8DFF]/30 flex items-center justify-center shadow-2xs">
+          {checked && <div className="w-2 h-2 rounded-full bg-zinc-900 dark:bg-[#4C8DFF]" />}
         </div>
       </div>
 
       {(label || description) && (
         <div className="flex flex-col">
           {label && (
-            <span className="text-xs font-medium text-zinc-900 leading-tight">
+            <span className="text-xs font-medium text-zinc-900 dark:text-[#E6E8EE] leading-tight">
               {label}
             </span>
           )}
           {description && (
-            <span className="text-[11px] text-zinc-500 mt-0.5 leading-snug">
+            <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] mt-0.5 leading-snug">
               {description}
             </span>
           )}

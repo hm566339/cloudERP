@@ -13,12 +13,12 @@ function NavigationCard({ items = [] }) {
           <Link
             key={nav.id || idx}
             to={nav.path || '#'}
-            className="flex items-center gap-3 p-3 rounded-xl bg-white border border-zinc-200 hover:border-zinc-300 hover:shadow-sm transition-all group active:scale-[0.98] min-w-0"
+            className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-sm transition-all group active:scale-[0.98] min-w-0"
           >
-            <div className="w-8 h-8 rounded-lg bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-500 group-hover:bg-zinc-100 group-hover:text-zinc-900 group-hover:border-zinc-200 transition-colors shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-[#1D212C] border border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-center text-zinc-500 dark:text-[#A0A6B5] group-hover:bg-zinc-100 dark:group-hover:bg-[#222736] group-hover:text-zinc-900 dark:group-hover:text-[#E6E8EE] group-hover:border-zinc-200 dark:group-hover:border-[#2A2F3D] transition-colors shrink-0">
               <Icon size={16} />
             </div>
-            <span className="text-sm font-semibold text-zinc-700 group-hover:text-zinc-900 line-clamp-2">
+            <span className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE] group-hover:text-zinc-900 dark:group-hover:text-white line-clamp-2">
               {nav.title}
             </span>
           </Link>

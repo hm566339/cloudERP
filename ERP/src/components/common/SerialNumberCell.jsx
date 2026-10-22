@@ -14,7 +14,7 @@ export default function SerialNumberCell({
   index,
   pageBase = 0,
   offset,
-  className = 'text-center font-medium text-zinc-500 tabular-nums',
+  className = 'text-center font-medium text-zinc-500 dark:text-zinc-400 tabular-nums',
   as: Component = 'span',
   ...rest
 }) {

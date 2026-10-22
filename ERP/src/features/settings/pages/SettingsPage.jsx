@@ -146,8 +146,8 @@ export default function SettingsPage() {
       badge="GENERAL"
     >
       {isError && (
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-center gap-3">
-          <Shield size={18} className="text-amber-600 shrink-0" />
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-400 rounded-xl flex items-center gap-3">
+          <Shield size={18} className="text-amber-600 dark:text-amber-400 shrink-0" />
           <p className="text-xs font-medium">Using cached workspace settings. Connect to backend to sync live data.</p>
         </div>
       )}
@@ -249,18 +249,18 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-zinc-700">Active Tax Slabs</h4>
+              <h4 className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Active Tax Slabs</h4>
               <div className="flex flex-wrap gap-2">
                 {currentTaxSlabs.map((slab, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 bg-zinc-100 text-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-200/80 text-xs font-semibold"
+                    className="flex items-center gap-2 bg-zinc-100 dark:bg-hover-dark text-zinc-800 dark:text-zinc-200 px-3 py-1.5 rounded-lg border border-zinc-200/80 dark:border-border-dark text-xs font-semibold"
                   >
                     <span>{slab}% GST</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveTaxSlab(slab)}
-                      className="text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
+                      className="text-zinc-400 dark:text-zinc-500 hover:text-red-500 transition-colors cursor-pointer"
                     >
                       <X size={13} />
                     </button>

@@ -9,14 +9,14 @@ import AuditLogHover from '../../../../components/common/AuditLogHover';
 import ExportModal from '../../../../components/common/ExportModal';
 
 const STATUS_BADGE = {
-  DRAFT: 'bg-zinc-100 text-zinc-700 border-zinc-200',
-  SUBMITTED: 'bg-amber-100 text-amber-700 border-amber-200',
-  PENDING_APPROVAL: 'bg-amber-100 text-amber-700 border-amber-200',
-  FINANCE_APPROVED: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  APPROVED: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  PAID: 'bg-teal-100 text-teal-700 border-teal-200',
-  REJECTED: 'bg-rose-100 text-rose-700 border-rose-200',
-  CANCELLED: 'bg-zinc-100 text-zinc-400 border-zinc-200',
+  DRAFT: 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-[#2A2F3D]',
+  SUBMITTED: 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/50',
+  PENDING_APPROVAL: 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/50',
+  FINANCE_APPROVED: 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50',
+  APPROVED: 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50',
+  PAID: 'bg-teal-100 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-900/50',
+  REJECTED: 'bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50',
+  CANCELLED: 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-[#2A2F3D]',
 };
 
 const DEFAULT_COLUMNS = [
@@ -75,55 +75,55 @@ const ExpenseOverview = ({
 
   return (
     <div
-      className="p-5 bg-white border border-zinc-200/80 rounded-xl shadow-2xs m-2 mb-3 animate-in fade-in slide-in-from-top-2 cursor-default"
+      className="p-5 bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl shadow-2xs m-2 mb-3 animate-in fade-in slide-in-from-top-2 cursor-default"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-zinc-100">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded border border-zinc-200">
+          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE] rounded border border-zinc-200 dark:border-[#2A2F3D]">
             {exp.claimNo || 'Draft'}
           </span>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-zinc-900">
+              <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">
                 {exp.purposeDescription || exp.title || `Expense Claim ${exp.claimNo || ''}`}
               </h3>
               {exp.expenseRequestNumber && (
-                <span className="font-mono text-xs text-zinc-500 bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-200">
+                <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-[#1D212C] px-1.5 py-0.5 rounded border border-zinc-200 dark:border-[#2A2F3D]">
                   Ref: {exp.expenseRequestNumber}
                 </span>
               )}
             </div>
-            <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-2">
-              <span>Date: <span className="font-medium text-zinc-700">{exp.claimDate || exp.createdAt?.split('T')[0] || '—'}</span></span>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex items-center gap-2">
+              <span>Date: <span className="font-medium text-zinc-700 dark:text-zinc-300">{exp.claimDate || exp.createdAt?.split('T')[0] || '—'}</span></span>
               <span>•</span>
-              <span>Staff: <span className="font-semibold text-zinc-800">{staffName}</span></span>
+              <span>Staff: <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{staffName}</span></span>
               <span>•</span>
-              <span>Payment: <span className="font-medium text-zinc-700">{mainPaymentType}</span></span>
+              <span>Payment: <span className="font-medium text-zinc-700 dark:text-zinc-300">{mainPaymentType}</span></span>
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${STATUS_BADGE[status] || 'bg-zinc-50 text-zinc-700 border-zinc-200'}`}>
+          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${STATUS_BADGE[status] || 'bg-zinc-50 dark:bg-[#1D212C] text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-[#2A2F3D]'}`}>
             {status.replace(/_/g, ' ')}
           </span>
 
           <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wide border ${
-            isPosted ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-100 text-zinc-500 border-zinc-200'
+            isPosted ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-[#2A2F3D]'
           }`}>
             {isPosted ? 'GL Posted' : 'Not Posted'}
           </span>
 
           {/* Inline Action Buttons */}
-          <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-zinc-200">
+          <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-zinc-200 dark:border-[#2A2F3D]">
             {isDraft && onEditExpense && (
               <button
                 type="button"
                 onClick={() => onEditExpense(exp)}
                 disabled={isProcessing}
-                className="px-2.5 py-1 text-xs font-semibold text-zinc-700 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-md transition-colors flex items-center gap-1.5"
+                className="px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] border border-zinc-200 dark:border-[#2A2F3D] rounded-md transition-colors flex items-center gap-1.5"
               >
                 <Edit size={13} /> Edit
               </button>
@@ -134,7 +134,7 @@ const ExpenseOverview = ({
                 type="button"
                 onClick={() => onSubmitForApproval(exp)}
                 disabled={isProcessing}
-                className="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors flex items-center gap-1.5"
+                className="px-2.5 py-1 text-xs font-semibold text-blue-700 dark:text-[#4C8DFF] bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-blue-200 dark:border-blue-900/50 rounded-md transition-colors flex items-center gap-1.5"
               >
                 {isProcessing ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
                 Submit
@@ -146,7 +146,7 @@ const ExpenseOverview = ({
                 type="button"
                 onClick={() => onApprove(exp)}
                 disabled={isProcessing}
-                className="px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-colors flex items-center gap-1.5"
+                className="px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-900/50 rounded-md transition-colors flex items-center gap-1.5"
               >
                 {isProcessing ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
                 Approve
@@ -158,7 +158,7 @@ const ExpenseOverview = ({
                 type="button"
                 onClick={() => onReject(exp)}
                 disabled={isProcessing}
-                className="px-2.5 py-1 text-xs font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition-colors flex items-center gap-1.5"
+                className="px-2.5 py-1 text-xs font-semibold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-900/50 rounded-md transition-colors flex items-center gap-1.5"
               >
                 {isProcessing ? <Loader2 size={13} className="animate-spin" /> : <X size={13} />}
                 Reject
@@ -170,7 +170,7 @@ const ExpenseOverview = ({
                 type="button"
                 onClick={() => onPostToAccounting(exp)}
                 disabled={isProcessing}
-                className="px-2.5 py-1 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-md transition-colors flex items-center gap-1.5"
+                className="px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-900/50 rounded-md transition-colors flex items-center gap-1.5"
               >
                 <ShieldCheck size={13} /> Post to GL
               </button>
@@ -180,7 +180,7 @@ const ExpenseOverview = ({
               <button
                 type="button"
                 onClick={() => onViewAccounting(exp)}
-                className="px-2.5 py-1 text-xs font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 rounded-md transition-colors flex items-center gap-1.5"
+                className="px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-[#1D212C] hover:bg-zinc-200 dark:hover:bg-[#222736] border border-zinc-200 dark:border-[#2A2F3D] rounded-md transition-colors flex items-center gap-1.5"
               >
                 <Layers size={13} /> GL Journal
               </button>
@@ -190,7 +190,7 @@ const ExpenseOverview = ({
               <button
                 type="button"
                 onClick={() => onViewDetails(exp)}
-                className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded transition-colors"
+                className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded transition-colors"
                 title="Open Complete Details Modal"
               >
                 <ExternalLink size={14} />
@@ -203,79 +203,79 @@ const ExpenseOverview = ({
       {/* 3-Column RFQ-Style Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Card 1: Staff & Expense Details */}
-        <div className="space-y-2 bg-zinc-50/60 p-4 rounded-xl border border-zinc-200/70 text-xs">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-2.5 flex items-center gap-1.5">
+        <div className="space-y-2 bg-zinc-50/60 dark:bg-[#1D212C]/60 p-4 rounded-xl border border-zinc-200/70 dark:border-[#2A2F3D] text-xs">
+          <h4 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2.5 flex items-center gap-1.5">
             <User size={13} /> Staff & Expense Details
           </h4>
-          <div className="flex justify-between py-1 border-b border-zinc-200/50">
-            <span className="text-zinc-500">Staff / Driver:</span>
-            <span className="font-semibold text-zinc-900">{staffName}</span>
+          <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+            <span className="text-zinc-500 dark:text-zinc-400">Staff / Driver:</span>
+            <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{staffName}</span>
           </div>
-          <div className="flex justify-between py-1 border-b border-zinc-200/50">
-            <span className="text-zinc-500">Role Type:</span>
-            <span className="font-medium text-zinc-800">{exp.roleType || 'EMPLOYEE'}</span>
+          <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+            <span className="text-zinc-500 dark:text-zinc-400">Role Type:</span>
+            <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{exp.roleType || 'EMPLOYEE'}</span>
           </div>
-          <div className="flex justify-between py-1 border-b border-zinc-200/50">
-            <span className="text-zinc-500">Primary Category:</span>
-            <span className="font-medium text-zinc-800">{mainCategory}</span>
+          <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+            <span className="text-zinc-500 dark:text-zinc-400">Primary Category:</span>
+            <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{mainCategory}</span>
           </div>
-          <div className="flex justify-between py-1 border-b border-zinc-200/50">
-            <span className="text-zinc-500">Payment Type:</span>
-            <span className="font-medium text-zinc-800 uppercase">{mainPaymentType}</span>
+          <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+            <span className="text-zinc-500 dark:text-zinc-400">Payment Type:</span>
+            <span className="font-medium text-zinc-800 dark:text-[#E6E8EE] uppercase">{mainPaymentType}</span>
           </div>
           {exp.vehicleNumber && (
-            <div className="flex justify-between py-1 border-b border-zinc-200/50">
-              <span className="text-zinc-500">Vehicle:</span>
-              <span className="font-mono font-semibold text-zinc-800">{exp.vehicleNumber}</span>
+            <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+              <span className="text-zinc-500 dark:text-zinc-400">Vehicle:</span>
+              <span className="font-mono font-semibold text-zinc-800 dark:text-[#E6E8EE]">{exp.vehicleNumber}</span>
             </div>
           )}
           {exp.salesOrderId && (
-            <div className="flex justify-between py-1 border-b border-zinc-200/50">
-              <span className="text-zinc-500">Linked Sales Order:</span>
-              <span className="font-mono text-zinc-800">{exp.salesOrderId}</span>
+            <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+              <span className="text-zinc-500 dark:text-zinc-400">Linked Sales Order:</span>
+              <span className="font-mono text-zinc-800 dark:text-[#E6E8EE]">{exp.salesOrderId}</span>
             </div>
           )}
           {exp.deliveryChallanId && (
-            <div className="flex justify-between py-1 border-b border-zinc-200/50">
-              <span className="text-zinc-500">Linked Delivery Challan:</span>
-              <span className="font-mono text-zinc-800">{exp.deliveryChallanId}</span>
+            <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+              <span className="text-zinc-500 dark:text-zinc-400">Linked Delivery Challan:</span>
+              <span className="font-mono text-zinc-800 dark:text-[#E6E8EE]">{exp.deliveryChallanId}</span>
             </div>
           )}
         </div>
 
         {/* Card 2: Financials & Items Breakdown */}
-        <div className="space-y-2 bg-zinc-50/60 p-4 rounded-xl border border-zinc-200/70 text-xs">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-2.5 flex items-center gap-1.5">
+        <div className="space-y-2 bg-zinc-50/60 dark:bg-[#1D212C]/60 p-4 rounded-xl border border-zinc-200/70 dark:border-[#2A2F3D] text-xs">
+          <h4 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2.5 flex items-center gap-1.5">
             <IndianRupee size={13} /> Financials & Items Breakdown
           </h4>
-          <div className="flex justify-between py-1 border-b border-zinc-200/50">
-            <span className="text-zinc-500">Total Claim Amount:</span>
-            <span className="font-bold text-zinc-900 font-mono text-sm">
+          <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+            <span className="text-zinc-500 dark:text-zinc-400">Total Claim Amount:</span>
+            <span className="font-bold text-zinc-900 dark:text-[#E6E8EE] font-mono text-sm">
               ₹{Number(exp.claimAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
           </div>
-          <div className="flex justify-between py-1 border-b border-zinc-200/50">
-            <span className="text-zinc-500">Line Items Count:</span>
-            <span className="font-semibold text-zinc-800">{exp.items?.length || 0} items</span>
+          <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+            <span className="text-zinc-500 dark:text-zinc-400">Line Items Count:</span>
+            <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{exp.items?.length || 0} items</span>
           </div>
 
           <div className="pt-1.5">
-            <span className="text-[11px] text-zinc-500 block mb-1">Items List:</span>
+            <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block mb-1">Items List:</span>
             <div className="max-h-28 overflow-y-auto space-y-1.5 pr-1">
               {exp.items && exp.items.length > 0 ? (
                 exp.items.map((item, idx) => (
-                  <div key={item.id || idx} className="bg-white p-2 rounded border border-zinc-200 text-[11px] flex items-center justify-between">
+                  <div key={item.id || idx} className="bg-white dark:bg-[#161922] p-2 rounded border border-zinc-200 dark:border-[#2A2F3D] text-[11px] flex items-center justify-between">
                     <div>
-                      <div className="font-semibold text-zinc-900">{item.description || item.categoryName || `Item #${idx + 1}`}</div>
-                      <div className="text-zinc-400 text-[10px]">{item.categoryName || 'General'} • {item.paymentType || 'CASH'}</div>
+                      <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{item.description || item.categoryName || `Item #${idx + 1}`}</div>
+                      <div className="text-zinc-400 dark:text-zinc-500 text-[10px]">{item.categoryName || 'General'} • {item.paymentType || 'CASH'}</div>
                     </div>
-                    <span className="font-mono font-bold text-zinc-800">
+                    <span className="font-mono font-bold text-zinc-800 dark:text-[#E6E8EE]">
                       ₹{Number(item.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-zinc-400 italic bg-white p-2 rounded border border-zinc-200 text-center">
+                <p className="text-xs text-zinc-400 italic bg-white dark:bg-[#161922] p-2 rounded border border-zinc-200 dark:border-[#2A2F3D] text-center">
                   No line items detailed
                 </p>
               )}
@@ -284,45 +284,45 @@ const ExpenseOverview = ({
         </div>
 
         {/* Card 3: Accounting & Workflow */}
-        <div className="space-y-2 bg-zinc-50/60 p-4 rounded-xl border border-zinc-200/70 text-xs">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-2.5 flex items-center gap-1.5">
+        <div className="space-y-2 bg-zinc-50/60 dark:bg-[#1D212C]/60 p-4 rounded-xl border border-zinc-200/70 dark:border-[#2A2F3D] text-xs">
+          <h4 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2.5 flex items-center gap-1.5">
             <Clock size={13} /> Accounting & Workflow
           </h4>
-          <div className="flex justify-between py-1 border-b border-zinc-200/50">
-            <span className="text-zinc-500">GL Posting:</span>
+          <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+            <span className="text-zinc-500 dark:text-zinc-400">GL Posting:</span>
             <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wide border ${
-              isPosted ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-100 text-zinc-500 border-zinc-200'
+              isPosted ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-[#2A2F3D]'
             }`}>
               {isPosted ? 'Posted' : 'Not Posted'}
             </span>
           </div>
           {exp.approvedBy && (
-            <div className="bg-emerald-50/70 p-2 rounded border border-emerald-200 text-emerald-800">
+            <div className="bg-emerald-50/70 dark:bg-emerald-950/30 p-2 rounded border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300">
               <div className="font-semibold text-[11px]">Approved By: {exp.approvedBy}</div>
-              {exp.approvedAt && <div className="text-[10px] text-emerald-600 mt-0.5">{new Date(exp.approvedAt).toLocaleString()}</div>}
+              {exp.approvedAt && <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">{new Date(exp.approvedAt).toLocaleString()}</div>}
             </div>
           )}
           {exp.rejectedBy && (
-            <div className="bg-rose-50/70 p-2 rounded border border-rose-200 text-rose-800">
+            <div className="bg-rose-50/70 dark:bg-rose-950/30 p-2 rounded border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-300">
               <div className="font-semibold text-[11px]">Rejected By: {exp.rejectedBy}</div>
-              {exp.rejectionReason && <div className="text-[10px] italic text-rose-700 mt-0.5">Reason: {exp.rejectionReason}</div>}
+              {exp.rejectionReason && <div className="text-[10px] italic text-rose-700 dark:text-rose-400 mt-0.5">Reason: {exp.rejectionReason}</div>}
             </div>
           )}
           {exp.createdAt && (
-            <div className="flex justify-between py-1 border-b border-zinc-200/50">
-              <span className="text-zinc-500">Created At:</span>
-              <span className="font-medium text-zinc-700">{new Date(exp.createdAt).toLocaleDateString()}</span>
+            <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+              <span className="text-zinc-500 dark:text-zinc-400">Created At:</span>
+              <span className="font-medium text-zinc-700 dark:text-zinc-300">{new Date(exp.createdAt).toLocaleDateString()}</span>
             </div>
           )}
           {exp.createdBy && (
-            <div className="flex justify-between py-1 border-b border-zinc-200/50">
-              <span className="text-zinc-500">Created By:</span>
-              <span className="font-medium text-zinc-700">{exp.createdBy}</span>
+            <div className="flex justify-between py-1 border-b border-zinc-200/50 dark:border-[#2A2F3D]/50">
+              <span className="text-zinc-500 dark:text-zinc-400">Created By:</span>
+              <span className="font-medium text-zinc-700 dark:text-zinc-300">{exp.createdBy}</span>
             </div>
           )}
           {exp.audit && (
             <div className="pt-1 flex items-center justify-between">
-              <span className="text-[11px] text-zinc-500">Audit Trail:</span>
+              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Audit Trail:</span>
               <AuditLogHover audit={exp.audit} />
             </div>
           )}
@@ -441,11 +441,11 @@ export default function ExpensesTab({
       accessor: 'employeeDriverName',
       render: (val, row) => {
         const name = row.employeeDriverName || row.employeeName || row.requesterName || (row.roleType === 'DRIVER' ? 'Driver' : 'Employee');
-        return <span className="text-xs font-medium text-zinc-900">{name}</span>;
+        return <span className="text-xs font-medium text-zinc-900 dark:text-[#E6E8EE]">{name}</span>;
       },
       cell: (row) => {
         const name = row.employeeDriverName || row.employeeName || row.requesterName || (row.roleType === 'DRIVER' ? 'Driver' : 'Employee');
-        return <span className="text-xs font-medium text-zinc-900">{name}</span>;
+        return <span className="text-xs font-medium text-zinc-900 dark:text-[#E6E8EE]">{name}</span>;
       }
     },
     {
@@ -459,7 +459,7 @@ export default function ExpensesTab({
           ? row.items[0].categoryName 
           : (row.categoryName || 'General');
         return (
-          <span className="px-2 py-0.5 text-[9px] font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 rounded">
+          <span className="px-2 py-0.5 text-[9px] font-medium bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-[#2A2F3D] rounded">
             {cat}
           </span>
         );
@@ -469,7 +469,7 @@ export default function ExpensesTab({
           ? row.items[0].categoryName 
           : (row.categoryName || 'General');
         return (
-          <span className="px-2 py-0.5 text-[9px] font-medium bg-zinc-100 text-zinc-700 border border-zinc-200 rounded">
+          <span className="px-2 py-0.5 text-[9px] font-medium bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-[#2A2F3D] rounded">
             {cat}
           </span>
         );
@@ -485,13 +485,13 @@ export default function ExpensesTab({
         const type = row.items && row.items.length > 0 && row.items[0].paymentType 
           ? row.items[0].paymentType 
           : (row.paymentType || '—');
-        return <span className="text-xs text-zinc-600 font-medium">{type}</span>;
+        return <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">{type}</span>;
       },
       cell: (row) => {
         const type = row.items && row.items.length > 0 && row.items[0].paymentType 
           ? row.items[0].paymentType 
           : (row.paymentType || '—');
-        return <span className="text-xs text-zinc-600 font-medium">{type}</span>;
+        return <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">{type}</span>;
       }
     },
     {
@@ -502,20 +502,20 @@ export default function ExpensesTab({
       accessor: 'expenseRequestNumber',
       render: (val, row) => (
         row.expenseRequestNumber ? (
-          <span className="font-mono text-[9px] bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200 text-zinc-600">
+          <span className="font-mono text-[9px] bg-zinc-100 dark:bg-[#1D212C] px-2 py-0.5 rounded border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-zinc-400">
             {row.expenseRequestNumber}
           </span>
         ) : (
-          <span className="text-zinc-300">—</span>
+          <span className="text-zinc-300 dark:text-zinc-600">—</span>
         )
       ),
       cell: (row) => (
         row.expenseRequestNumber ? (
-          <span className="font-mono text-[9px] bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200 text-zinc-600">
+          <span className="font-mono text-[9px] bg-zinc-100 dark:bg-[#1D212C] px-2 py-0.5 rounded border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-zinc-400">
             {row.expenseRequestNumber}
           </span>
         ) : (
-          <span className="text-zinc-300">—</span>
+          <span className="text-zinc-300 dark:text-zinc-600">—</span>
         )
       )
     },
@@ -527,13 +527,13 @@ export default function ExpensesTab({
       headerClassName: 'text-center',
       align: 'center',
       render: (val, row) => (
-        <span className="px-2 py-0.5 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-700 font-bold text-[9px]">
+        <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 dark:text-zinc-300 font-bold text-[9px]">
           {row.items?.length || 0}
         </span>
       ),
       cell: (row) => (
         <div className="text-center">
-          <span className="px-2 py-0.5 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-700 font-bold text-[9px]">
+          <span className="px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 dark:text-zinc-300 font-bold text-[9px]">
             {row.items?.length || 0}
           </span>
         </div>
@@ -548,12 +548,12 @@ export default function ExpensesTab({
       align: 'right',
       accessor: 'claimAmount',
       render: (val, row) => (
-        <span className="font-medium text-zinc-900 text-xs font-mono">
+        <span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-xs font-mono">
           ₹{Number(row.claimAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       ),
       cell: (row) => (
-        <div className="text-right font-medium text-zinc-900 text-xs font-mono">
+        <div className="text-right font-medium text-zinc-900 dark:text-[#E6E8EE] text-xs font-mono">
           ₹{Number(row.claimAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
       )
@@ -568,11 +568,11 @@ export default function ExpensesTab({
       render: (val, row) => {
         const isPosted = row.postedToGl || row.glPosted || row.isPosted || (row.status === 'PAID');
         return isPosted ? (
-          <span className="px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wide bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
             Posted
           </span>
         ) : (
-          <span className="text-[9px] uppercase tracking-wider font-medium text-zinc-400">
+          <span className="text-[9px] uppercase tracking-wider font-medium text-zinc-400 dark:text-zinc-500">
             Not Posted
           </span>
         );
@@ -582,11 +582,11 @@ export default function ExpensesTab({
         return (
           <div className="text-center">
             {isPosted ? (
-              <span className="px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wide bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                 Posted
               </span>
             ) : (
-              <span className="text-[9px] uppercase tracking-wider font-medium text-zinc-400">
+              <span className="text-[9px] uppercase tracking-wider font-medium text-zinc-400 dark:text-zinc-500">
                 Not Posted
               </span>
             )}
@@ -607,7 +607,7 @@ export default function ExpensesTab({
         return (
           <span
             className={`px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wide border ${
-              STATUS_BADGE[s] || 'bg-zinc-50 text-zinc-700 border-zinc-200'
+              STATUS_BADGE[s] || 'bg-zinc-50 dark:bg-[#1D212C] text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-[#2A2F3D]'
             }`}
           >
             {s.replace(/_/g, ' ')}
@@ -620,7 +620,7 @@ export default function ExpensesTab({
           <div className="text-center">
             <span
               className={`px-2 py-0.5 text-[9px] font-bold rounded uppercase tracking-wide border ${
-                STATUS_BADGE[s] || 'bg-zinc-50 text-zinc-700 border-zinc-200'
+                STATUS_BADGE[s] || 'bg-zinc-50 dark:bg-[#1D212C] text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-[#2A2F3D]'
               }`}
             >
               {s.replace(/_/g, ' ')}
@@ -790,7 +790,7 @@ export default function ExpensesTab({
         onClick: () => {
           setExpandedRowId(prev => prev === exp.id ? null : exp.id);
         },
-        className: isExpanded ? 'text-indigo-600 bg-indigo-50/80 rounded' : 'text-zinc-600 hover:text-indigo-600',
+        className: isExpanded ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/80 dark:bg-indigo-950/40 rounded' : 'text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400',
       },
       ...(exp.audit ? [
         {
@@ -808,7 +808,7 @@ export default function ExpensesTab({
           icon: isProcessing ? <Loader2 size={14} className="animate-spin" /> : <Edit size={14} />,
           disabled: isProcessing,
           onClick: () => onEditExpense(exp),
-          className: 'text-zinc-600 hover:text-blue-600',
+          className: 'text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-[#4C8DFF]',
         }
       ] : []),
       // Submit: Only when DRAFT
@@ -821,7 +821,7 @@ export default function ExpensesTab({
           icon: isProcessing ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />,
           disabled: isProcessing,
           onClick: () => onSubmitForApproval(exp),
-          className: 'text-zinc-600 hover:text-blue-600',
+          className: 'text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-[#4C8DFF]',
         }
       ] : []),
       // Approve: Only when SUBMITTED
@@ -831,10 +831,10 @@ export default function ExpensesTab({
           label: 'Approve',
           tooltip: isProcessing ? 'Approving...' : 'Approve Claim',
           'aria-label': 'Approve Claim',
-          icon: isProcessing ? <Loader2 size={14} className="animate-spin text-emerald-600" /> : <CheckCircle size={14} />,
+          icon: isProcessing ? <Loader2 size={14} className="animate-spin text-emerald-600 dark:text-emerald-400" /> : <CheckCircle size={14} />,
           disabled: isProcessing,
           onClick: () => onApprove(exp),
-          className: 'text-emerald-600 hover:text-emerald-700',
+          className: 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300',
         }
       ] : []),
       // Reject: Only when SUBMITTED
@@ -844,11 +844,11 @@ export default function ExpensesTab({
           label: 'Reject',
           tooltip: isProcessing ? 'Rejecting...' : 'Reject Claim',
           'aria-label': 'Reject Claim',
-          icon: isProcessing ? <Loader2 size={14} className="animate-spin text-red-600" /> : <X size={14} />,
+          icon: isProcessing ? <Loader2 size={14} className="animate-spin text-red-600 dark:text-red-400" /> : <X size={14} />,
           danger: true,
           disabled: isProcessing,
           onClick: () => onReject(exp),
-          className: 'text-red-600 hover:text-red-700',
+          className: 'text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300',
         }
       ] : []),
       // Post to GL: When approved and not posted
@@ -858,10 +858,10 @@ export default function ExpensesTab({
           label: 'Post to GL',
           tooltip: 'Post to General Ledger',
           'aria-label': 'Post to General Ledger',
-          icon: <ShieldCheck size={14} className="text-indigo-600" />,
+          icon: <ShieldCheck size={14} className="text-indigo-600 dark:text-indigo-400" />,
           disabled: isProcessing,
           onClick: () => onPostToAccounting(exp),
-          className: 'text-zinc-900 hover:text-zinc-700',
+          className: 'text-zinc-900 dark:text-[#E6E8EE] hover:text-zinc-700 dark:hover:text-zinc-300',
         }
       ] : []),
       // Cancel: Only when DRAFT or SUBMITTED

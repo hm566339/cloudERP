@@ -36,10 +36,10 @@ import { useRoutePath } from "../../../hooks/useRoutePath";
 // Sub-components
 // ------------------------------------------------------------
 
-const ReadOnlyField = ({ label, value, valueClass = "text-zinc-900", icon: Icon }) => (
-  <div className="bg-zinc-50/70 rounded-2xl p-4 border border-zinc-100">
-    <div className="flex items-center gap-1.5 text-[8.8px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-1.5">
-      {Icon && <Icon size={13} className="text-zinc-400" />}
+const ReadOnlyField = ({ label, value, valueClass = "text-zinc-900 dark:text-zinc-100", icon: Icon }) => (
+  <div className="bg-zinc-50/70 dark:bg-[#1D212C] rounded-2xl p-4 border border-zinc-100 dark:border-[#2A2F3D]">
+    <div className="flex items-center gap-1.5 text-[8.8px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500 mb-1.5">
+      {Icon && <Icon size={13} className="text-zinc-400 dark:text-zinc-500" />}
       {label}
     </div>
     <p className={`font-semibold break-words text-sm ${valueClass}`}>{value || '-'}</p>
@@ -47,22 +47,22 @@ const ReadOnlyField = ({ label, value, valueClass = "text-zinc-900", icon: Icon 
 );
 
 const SummaryCard = ({ label, value, valueClass, icon: Icon, subtitle }) => (
-  <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-all">
-    <div className="flex items-center justify-between text-[8.8px] font-bold uppercase tracking-[0.24em] text-zinc-400">
+  <div className="rounded-3xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] p-6 shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-all">
+    <div className="flex items-center justify-between text-[8.8px] font-bold uppercase tracking-[0.24em] text-zinc-400 dark:text-zinc-500">
       <span>{label}</span>
-      {Icon && <Icon size={18} className="text-zinc-400" />}
+      {Icon && <Icon size={18} className="text-zinc-400 dark:text-zinc-500" />}
     </div>
     <div className="mt-4">
       <p className={`text-3xl font-bold ${valueClass}`}>{value}</p>
-      {subtitle && <p className="text-xs text-zinc-500 mt-1 font-medium">{subtitle}</p>}
+      {subtitle && <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-medium">{subtitle}</p>}
     </div>
   </div>
 );
 
 const DetailCard = ({ title, icon: Icon, children, className = "" }) => (
-  <div className={`rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm h-full ${className}`}>
-    <div className="flex items-center gap-2.5 text-xs font-bold uppercase tracking-[0.22em] text-zinc-900 mb-6 pb-4 border-b border-zinc-100">
-      {Icon && <Icon size={16} className="text-zinc-500" />}
+  <div className={`rounded-3xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] p-6 shadow-sm h-full ${className}`}>
+    <div className="flex items-center gap-2.5 text-xs font-bold uppercase tracking-[0.22em] text-zinc-900 dark:text-zinc-100 mb-6 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
+      {Icon && <Icon size={16} className="text-zinc-500 dark:text-zinc-400" />}
       <span>{title}</span>
     </div>
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -76,10 +76,10 @@ const HealthBanner = ({ health }) => {
   const isWarning = health?.riskLevel === 'MEDIUM';
   
   const bgClass = isHealthy 
-    ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900' 
+    ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200' 
     : isWarning 
-    ? 'bg-amber-50/80 border-amber-200 text-amber-900' 
-    : 'bg-rose-50/80 border-rose-200 text-rose-900';
+    ? 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200' 
+    : 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60 text-rose-900 dark:text-rose-200';
 
   const badgeClass = isHealthy 
     ? 'bg-emerald-600 text-white' 
@@ -104,7 +104,7 @@ const HealthBanner = ({ health }) => {
             <p className="text-sm mt-1 opacity-90">{health?.recommendation || 'Budget utilization is on track. No action needed.'}</p>
           </div>
         </div>
-        <div className="shrink-0 text-right md:border-l border-zinc-200/60 md:pl-6">
+        <div className="shrink-0 text-right md:border-l border-zinc-200/60 dark:border-[#2A2F3D] md:pl-6">
           <p className="text-[8.8px] uppercase tracking-wider font-bold opacity-75">Progress</p>
           <p className="text-2xl font-bold">{health?.progressPercentage?.toFixed(1) || '0.0'}%</p>
         </div>
@@ -116,28 +116,28 @@ const HealthBanner = ({ health }) => {
 const LoadingSkeleton = () => (
   <div className="p-6 space-y-6 max-w-7xl mx-auto">
     <div className="flex justify-between items-center">
-      <div className="w-1/3 h-10 bg-zinc-200 rounded-xl animate-pulse" />
-      <div className="w-48 h-10 bg-zinc-200 rounded-xl animate-pulse" />
+      <div className="w-1/3 h-10 bg-zinc-200 dark:bg-[#1D212C] rounded-xl animate-pulse" />
+      <div className="w-48 h-10 bg-zinc-200 dark:bg-[#1D212C] rounded-xl animate-pulse" />
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-      {[...Array(5)].map((_, i) => <div key={i} className="h-32 bg-zinc-200 rounded-3xl animate-pulse" />)}
+      {[...Array(5)].map((_, i) => <div key={i} className="h-32 bg-zinc-200 dark:bg-[#1D212C] rounded-3xl animate-pulse" />)}
     </div>
-    <div className="h-28 bg-zinc-200 rounded-3xl animate-pulse" />
+    <div className="h-28 bg-zinc-200 dark:bg-[#1D212C] rounded-3xl animate-pulse" />
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="h-64 bg-zinc-200 rounded-3xl animate-pulse" />
-      <div className="h-64 bg-zinc-200 rounded-3xl animate-pulse" />
+      <div className="h-64 bg-zinc-200 dark:bg-[#1D212C] rounded-3xl animate-pulse" />
+      <div className="h-64 bg-zinc-200 dark:bg-[#1D212C] rounded-3xl animate-pulse" />
     </div>
   </div>
 );
 
 const ErrorState = ({ onRetry }) => (
   <div className="flex flex-col items-center justify-center py-20 text-center">
-    <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-4">
+    <div className="w-16 h-16 bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400 rounded-full flex items-center justify-center mb-4">
       <AlertTriangle size={32} />
     </div>
-    <h2 className="text-lg font-bold text-zinc-900">Unable to load Budget Line details</h2>
-    <p className="text-sm text-zinc-500 mt-1 mb-4">Please check your network connection or try again.</p>
-    <button onClick={onRetry} className="px-5 py-2.5 bg-zinc-900 text-white rounded-xl text-sm font-semibold hover:bg-zinc-800 transition-colors">
+    <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Unable to load Budget Line details</h2>
+    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 mb-4">Please check your network connection or try again.</p>
+    <button onClick={onRetry} className="px-5 py-2.5 bg-zinc-900 dark:bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors">
       Retry Loading
     </button>
   </div>
@@ -145,11 +145,11 @@ const ErrorState = ({ onRetry }) => (
 
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center py-20 text-center">
-    <div className="w-16 h-16 bg-zinc-100 text-zinc-400 rounded-full flex items-center justify-center mb-4">
+    <div className="w-16 h-16 bg-zinc-100 dark:bg-[#1D212C] text-zinc-400 dark:text-zinc-500 rounded-full flex items-center justify-center mb-4">
       <FolderTree size={32} />
     </div>
-    <h2 className="text-lg font-bold text-zinc-900">Budget Line not found</h2>
-    <p className="text-sm text-zinc-500 mt-1">The requested budget line could not be retrieved.</p>
+    <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Budget Line not found</h2>
+    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">The requested budget line could not be retrieved.</p>
   </div>
 );
 
@@ -209,34 +209,34 @@ export default function BudgetLineDetails() {
   const isFavorable = varianceType === 'FAVORABLE' || (budgetLine.varianceAmount || 0) >= 0;
 
   return (
-    <div className="min-h-full bg-zinc-50/60 pb-12">
+    <div className="min-h-full bg-zinc-50/60 dark:bg-[#0F1117] pb-12">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-20 bg-white border-b border-zinc-200 shadow-xs">
+      <div className="sticky top-0 z-20 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] shadow-xs">
         <div className="mx-auto max-w-7xl px-6 py-5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={handleBack}
-                className="w-10 h-10 rounded-xl border border-zinc-200 bg-white text-zinc-600 hover:text-zinc-900 hover:border-zinc-300 transition-all flex items-center justify-center shadow-2xs shrink-0"
+                className="w-10 h-10 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-600 transition-all flex items-center justify-center shadow-2xs shrink-0"
               >
                 <ArrowLeft size={18} />
               </button>
               <div>
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">
+                  <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
                     {budgetLine.accountName || glAccount.accountName || 'Budget Line'}
                   </h1>
-                  <span className="font-mono text-xs px-2.5 py-1 rounded-md bg-zinc-100 text-zinc-700 font-semibold border border-zinc-200">
+                  <span className="font-mono text-xs px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-[#2A2F3D]">
                     {budgetLine.accountCode || glAccount.accountCode || '-'}
                   </span>
                   <span className={`px-2.5 py-1 text-[8.8px] font-bold uppercase rounded-md border ${
-                    approval.approvalStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
+                    approval.approvalStatus === 'APPROVED' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/60'
                   }`}>
                     {approval.approvalStatus || 'APPROVED'}
                   </span>
                 </div>
-                <p className="text-sm text-zinc-500 mt-1 font-medium">
-                  Budget Header: <span className="text-zinc-800 font-semibold">{budgetHeader.budgetName || budgetLine.budgetHeaderId || '-'}</span> ({budgetHeader.budgetCode || '-'})
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
+                  Budget Header: <span className="text-zinc-800 dark:text-zinc-200 font-semibold">{budgetHeader.budgetName || budgetLine.budgetHeaderId || '-'}</span> ({budgetHeader.budgetCode || '-'})
                 </p>
               </div>
             </div>
@@ -245,14 +245,14 @@ export default function BudgetLineDetails() {
               <button
                 onClick={refetch}
                 disabled={isFetching}
-                className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors disabled:opacity-50 shadow-2xs"
+                className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors disabled:opacity-50 shadow-2xs"
               >
                 <RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} />
                 Refresh
               </button>
               <button
                 onClick={() => window.print()}
-                className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors shadow-2xs"
+                className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors shadow-2xs"
               >
                 <Printer size={16} />
                 Print
@@ -260,7 +260,7 @@ export default function BudgetLineDetails() {
               {(permissions.canEdit || metadata.editable) && (
                 <button
                   onClick={() => navigate(buildPath('/accounts/budget/budget-lines'))}
-                  className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 transition-colors shadow-sm"
+                  className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 dark:bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 dark:hover:bg-blue-700 transition-colors shadow-sm"
                 >
                   <Edit size={16} />
                   Manage Lines
@@ -270,7 +270,7 @@ export default function BudgetLineDetails() {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex items-center gap-2 mt-6 pt-2 border-t border-zinc-100 overflow-x-auto">
+          <div className="flex items-center gap-2 mt-6 pt-2 border-t border-zinc-100 dark:border-[#2A2F3D] overflow-x-auto">
             {[
               { id: 'overview', label: 'Overview & Details', icon: BookOpen },
               { id: 'analytics', label: 'Monthly Trend & Analytics', icon: BarChart3 },
@@ -285,14 +285,14 @@ export default function BudgetLineDetails() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all whitespace-nowrap ${
                     isActive
-                      ? 'bg-zinc-900 text-white shadow-sm'
-                      : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/80'
+                      ? 'bg-zinc-900 dark:bg-blue-600 text-white shadow-sm'
+                      : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/80 dark:hover:bg-[#222736]'
                   }`}
                 >
                   <TabIcon size={14} />
                   <span>{tab.label}</span>
                   {tab.count !== undefined && (
-                    <span className={`px-2 py-0.5 text-[8px] rounded-full font-extrabold ${isActive ? 'bg-zinc-700 text-white' : 'bg-zinc-200 text-zinc-700'}`}>
+                    <span className={`px-2 py-0.5 text-[8px] rounded-full font-extrabold ${isActive ? 'bg-zinc-700 dark:bg-blue-800 text-white' : 'bg-zinc-200 dark:bg-[#2A2F3D] text-zinc-700 dark:text-zinc-300'}`}>
                       {tab.count}
                     </span>
                   )}
@@ -309,28 +309,28 @@ export default function BudgetLineDetails() {
           <SummaryCard
             label="Allocated Amount"
             value={formatCurrency(allocated)}
-            valueClass="text-zinc-900"
+            valueClass="text-zinc-900 dark:text-zinc-100"
             icon={IndianRupee}
             subtitle="Base Budget Limit"
           />
           <SummaryCard
             label="Utilized Amount"
             value={formatCurrency(utilized)}
-            valueClass="text-emerald-700"
+            valueClass="text-emerald-700 dark:text-emerald-400"
             icon={TrendingUp}
             subtitle="Consumed so far"
           />
           <SummaryCard
             label="Actual Expense"
             value={formatCurrency(actual)}
-            valueClass="text-blue-700"
+            valueClass="text-blue-700 dark:text-blue-400"
             icon={Activity}
             subtitle="Actual posted entries"
           />
           <SummaryCard
             label="Remaining Budget"
             value={formatCurrency(remaining)}
-            valueClass="text-amber-700"
+            valueClass="text-amber-700 dark:text-amber-400"
             icon={Layers}
             subtitle="Available balance"
           />
@@ -353,13 +353,13 @@ export default function BudgetLineDetails() {
               <DetailCard title="Budget Line & Financials" icon={BookOpen}>
                 <ReadOnlyField label="Budget Line ID" value={budgetLine.id} icon={Layers} />
                 <ReadOnlyField label="Budget Header ID" value={budgetLine.budgetHeaderId} icon={FolderTree} />
-                <ReadOnlyField label="Allocated Amount" value={formatCurrency(allocated)} valueClass="text-zinc-900" />
-                <ReadOnlyField label="Utilized Amount" value={formatCurrency(utilized)} valueClass="text-emerald-700" />
-                <ReadOnlyField label="Actual Expense" value={formatCurrency(actual)} valueClass="text-blue-700" />
-                <ReadOnlyField label="Remaining Amount" value={formatCurrency(remaining)} valueClass="text-amber-700" />
-                <ReadOnlyField label="Variance Amount" value={formatCurrency(budgetLine.varianceAmount)} valueClass={isFavorable ? 'text-emerald-700' : 'text-rose-700'} />
+                <ReadOnlyField label="Allocated Amount" value={formatCurrency(allocated)} valueClass="text-zinc-900 dark:text-zinc-100" />
+                <ReadOnlyField label="Utilized Amount" value={formatCurrency(utilized)} valueClass="text-emerald-700 dark:text-emerald-400" />
+                <ReadOnlyField label="Actual Expense" value={formatCurrency(actual)} valueClass="text-blue-700 dark:text-blue-400" />
+                <ReadOnlyField label="Remaining Amount" value={formatCurrency(remaining)} valueClass="text-amber-700 dark:text-amber-400" />
+                <ReadOnlyField label="Variance Amount" value={formatCurrency(budgetLine.varianceAmount)} valueClass={isFavorable ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'} />
                 <ReadOnlyField label="Variance %" value={`${(budgetLine.variancePercentage || 0).toFixed(1)}%`} />
-                <ReadOnlyField label="Variance Type" value={varianceType} valueClass={isFavorable ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'} />
+                <ReadOnlyField label="Variance Type" value={varianceType} valueClass={isFavorable ? 'text-emerald-700 dark:text-emerald-400 font-bold' : 'text-rose-700 dark:text-rose-400 font-bold'} />
                 <ReadOnlyField label="Utilization %" value={`${utilPct.toFixed(1)}%`} valueClass={utilPctColor} />
               </DetailCard>
 
@@ -384,7 +384,7 @@ export default function BudgetLineDetails() {
                 <ReadOnlyField label="Start Date" value={formatDate(budgetHeader.startDate)} icon={Calendar} />
                 <ReadOnlyField label="End Date" value={formatDate(budgetHeader.endDate)} icon={Calendar} />
                 <ReadOnlyField label="Header Total Budget" value={formatCurrency(budgetHeader.totalBudget)} />
-                <ReadOnlyField label="Header Status" value={budgetHeader.status} valueClass="text-emerald-700 font-bold" />
+                <ReadOnlyField label="Header Status" value={budgetHeader.status} valueClass="text-emerald-700 dark:text-emerald-400 font-bold" />
               </DetailCard>
 
               <DetailCard title="Company Details" icon={Building2}>
@@ -401,17 +401,17 @@ export default function BudgetLineDetails() {
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             {/* Monthly Trend Visual Breakdown */}
-            <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-100">
+            <div className="rounded-3xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
                 <div>
-                  <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-zinc-900">Monthly Allocation & Utilization Trend</h2>
-                  <p className="text-xs text-zinc-500 mt-1">Breakdown by fiscal calendar months</p>
+                  <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-zinc-900 dark:text-zinc-100">Monthly Allocation & Utilization Trend</h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Breakdown by fiscal calendar months</p>
                 </div>
                 <BarChart3 size={20} className="text-zinc-400" />
               </div>
 
               {monthlyTrend.length === 0 ? (
-                <p className="text-sm text-zinc-500 py-6 text-center">No monthly trend data available.</p>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 py-6 text-center">No monthly trend data available.</p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {monthlyTrend.map((m, idx) => {
@@ -419,20 +419,20 @@ export default function BudgetLineDetails() {
                     const itemAlloc = m.allocated || 0;
                     const itemPct = itemAlloc > 0 ? (itemUtil / itemAlloc) * 100 : 0;
                     return (
-                      <div key={idx} className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4 space-y-3">
+                      <div key={idx} className="rounded-2xl border border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/70 dark:bg-[#1D212C] p-4 space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-zinc-900">{m.month}</span>
-                          <span className="text-xs font-semibold text-zinc-500">{itemPct.toFixed(1)}%</span>
+                          <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{m.month}</span>
+                          <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{itemPct.toFixed(1)}%</span>
                         </div>
-                        <div className="h-2 rounded-full bg-zinc-200 overflow-hidden">
+                        <div className="h-2 rounded-full bg-zinc-200 dark:bg-[#222736] overflow-hidden">
                           <div
                             className={`h-full transition-all ${itemPct > 85 ? 'bg-rose-500' : itemPct > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`}
                             style={{ width: `${Math.min(itemPct, 100)}%` }}
                           />
                         </div>
-                        <div className="flex justify-between text-[8.8px] text-zinc-600 font-medium pt-1">
+                        <div className="flex justify-between text-[8.8px] text-zinc-600 dark:text-zinc-400 font-medium pt-1">
                           <span>Allocated: {formatCurrency(itemAlloc)}</span>
-                          <span className="text-emerald-700 font-semibold">Utilized: {formatCurrency(itemUtil)}</span>
+                          <span className="text-emerald-700 dark:text-emerald-400 font-semibold">Utilized: {formatCurrency(itemUtil)}</span>
                         </div>
                       </div>
                     );
@@ -445,18 +445,18 @@ export default function BudgetLineDetails() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <DetailCard title="Performance Summary Metrics" icon={TrendingUp}>
                 <ReadOnlyField label="Allocated Amount" value={formatCurrency(performanceSummary.allocatedAmount)} />
-                <ReadOnlyField label="Utilized Amount" value={formatCurrency(performanceSummary.utilizedAmount)} valueClass="text-emerald-700" />
+                <ReadOnlyField label="Utilized Amount" value={formatCurrency(performanceSummary.utilizedAmount)} valueClass="text-emerald-700 dark:text-emerald-400" />
                 <ReadOnlyField label="Committed Amount" value={formatCurrency(performanceSummary.committedAmount)} />
-                <ReadOnlyField label="Actual Expense" value={formatCurrency(performanceSummary.actualExpense)} valueClass="text-blue-700" />
-                <ReadOnlyField label="Remaining Amount" value={formatCurrency(performanceSummary.remainingAmount)} valueClass="text-amber-700" />
-                <ReadOnlyField label="Available Budget" value={formatCurrency(performanceSummary.availableBudget)} valueClass="text-emerald-700 font-bold" />
+                <ReadOnlyField label="Actual Expense" value={formatCurrency(performanceSummary.actualExpense)} valueClass="text-blue-700 dark:text-blue-400" />
+                <ReadOnlyField label="Remaining Amount" value={formatCurrency(performanceSummary.remainingAmount)} valueClass="text-amber-700 dark:text-amber-400" />
+                <ReadOnlyField label="Available Budget" value={formatCurrency(performanceSummary.availableBudget)} valueClass="text-emerald-700 dark:text-emerald-400 font-bold" />
               </DetailCard>
 
               <DetailCard title="Expense Analytics" icon={Activity}>
                 <ReadOnlyField label="Transaction Count" value={analytics.transactionCount ?? 0} />
                 <ReadOnlyField label="Average Monthly Expense" value={formatCurrency(analytics.averageMonthlyExpense)} />
-                <ReadOnlyField label="Highest Expense" value={formatCurrency(analytics.highestExpense)} valueClass="text-rose-700 font-semibold" />
-                <ReadOnlyField label="Lowest Expense" value={formatCurrency(analytics.lowestExpense)} valueClass="text-emerald-700 font-semibold" />
+                <ReadOnlyField label="Highest Expense" value={formatCurrency(analytics.highestExpense)} valueClass="text-rose-700 dark:text-rose-400 font-semibold" />
+                <ReadOnlyField label="Lowest Expense" value={formatCurrency(analytics.lowestExpense)} valueClass="text-emerald-700 dark:text-emerald-400 font-semibold" />
                 <ReadOnlyField label="Last Expense Date" value={formatDate(analytics.lastExpenseDate)} icon={Calendar} />
                 <ReadOnlyField label="Total Attachments" value={analytics.totalAttachments ?? 0} icon={Paperclip} />
               </DetailCard>
@@ -468,9 +468,9 @@ export default function BudgetLineDetails() {
         {activeTab === 'documents' && (
           <div className="space-y-6">
             {/* Related Documents Grid */}
-            <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-zinc-900 mb-6 pb-4 border-b border-zinc-100">
-                <FileText size={16} className="text-zinc-500" />
+            <div className="rounded-3xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] p-6 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-zinc-900 dark:text-zinc-100 mb-6 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                <FileText size={16} className="text-zinc-500 dark:text-zinc-400" />
                 <span>Related Document Counters</span>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -482,36 +482,36 @@ export default function BudgetLineDetails() {
                   { label: 'Credit Notes', count: relatedDocuments.creditNotes ?? 0 },
                   { label: 'Debit Notes', count: relatedDocuments.debitNotes ?? 0 }
                 ].map((doc, idx) => (
-                  <div key={idx} className="rounded-2xl border border-zinc-100 bg-zinc-50/70 p-4 text-center">
-                    <p className="text-2xl font-bold text-zinc-900">{doc.count}</p>
-                    <p className="text-[8.8px] font-semibold text-zinc-500 uppercase tracking-wider mt-1">{doc.label}</p>
+                  <div key={idx} className="rounded-2xl border border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/70 dark:bg-[#1D212C] p-4 text-center">
+                    <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{doc.count}</p>
+                    <p className="text-[8.8px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mt-1">{doc.label}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Transactions Table */}
-            <div className="rounded-3xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
-              <div className="px-6 py-5 bg-zinc-50/70 border-b border-zinc-200 flex items-center justify-between">
+            <div className="rounded-3xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] shadow-sm overflow-hidden">
+              <div className="px-6 py-5 bg-zinc-50/70 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between">
                 <div>
-                  <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-zinc-900">Budget Transactions</h2>
-                  <p className="text-xs text-zinc-500 mt-1">Direct postings and journal lines associated with this line</p>
+                  <h2 className="text-xs font-bold uppercase tracking-[0.22em] text-zinc-900 dark:text-zinc-100">Budget Transactions</h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Direct postings and journal lines associated with this line</p>
                 </div>
-                <span className="px-3 py-1 text-xs font-bold bg-zinc-200 text-zinc-800 rounded-full">
+                <span className="px-3 py-1 text-xs font-bold bg-zinc-200 dark:bg-[#222736] text-zinc-800 dark:text-zinc-200 rounded-full">
                   {transactions.length} items
                 </span>
               </div>
 
               {transactions.length === 0 ? (
-                <div className="p-12 text-center text-zinc-500">
-                  <Activity size={36} className="mx-auto mb-3 text-zinc-300" />
-                  <p className="font-semibold text-zinc-800">No Transactions Found</p>
-                  <p className="text-xs text-zinc-500 mt-1">There are no financial transactions recorded under this budget line yet.</p>
+                <div className="p-12 text-center text-zinc-500 dark:text-zinc-400">
+                  <Activity size={36} className="mx-auto mb-3 text-zinc-300 dark:text-zinc-600" />
+                  <p className="font-semibold text-zinc-800 dark:text-zinc-200">No Transactions Found</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">There are no financial transactions recorded under this budget line yet.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm text-zinc-700">
-                    <thead className="bg-zinc-50 text-[8.8px] uppercase tracking-wider text-zinc-500 font-bold">
+                  <table className="min-w-full text-left text-sm text-zinc-700 dark:text-zinc-300">
+                    <thead className="bg-zinc-50 dark:bg-[#1D212C] text-[8.8px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-bold border-b border-zinc-200 dark:border-[#2A2F3D]">
                       <tr>
                         <th className="px-6 py-4">Transaction ID</th>
                         <th className="px-6 py-4">Date</th>
@@ -519,13 +519,13 @@ export default function BudgetLineDetails() {
                         <th className="px-6 py-4 text-right">Amount</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100">
+                    <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                       {transactions.map((tx, index) => (
-                        <tr key={tx.id || index} className="hover:bg-zinc-50 transition-colors">
-                          <td className="px-6 py-4 font-mono text-xs text-zinc-600">{tx.id || `-`}</td>
+                        <tr key={tx.id || index} className="hover:bg-zinc-50 dark:hover:bg-[#222736]/50 transition-colors">
+                          <td className="px-6 py-4 font-mono text-xs text-zinc-600 dark:text-zinc-400">{tx.id || `-`}</td>
                           <td className="px-6 py-4">{formatDate(tx.date || tx.createdAt)}</td>
-                          <td className="px-6 py-4 font-medium text-zinc-900">{tx.description || '-'}</td>
-                          <td className="px-6 py-4 text-right font-bold text-zinc-900">{formatCurrency(tx.amount)}</td>
+                          <td className="px-6 py-4 font-medium text-zinc-900 dark:text-zinc-100">{tx.description || '-'}</td>
+                          <td className="px-6 py-4 text-right font-bold text-zinc-900 dark:text-zinc-100">{formatCurrency(tx.amount)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -535,22 +535,22 @@ export default function BudgetLineDetails() {
             </div>
 
             {/* Attachments Section */}
-            <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-zinc-900 mb-6 pb-4 border-b border-zinc-100">
-                <Paperclip size={16} className="text-zinc-500" />
+            <div className="rounded-3xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] p-6 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-zinc-900 dark:text-zinc-100 mb-6 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                <Paperclip size={16} className="text-zinc-500 dark:text-zinc-400" />
                 <span>Attachments</span>
               </div>
               {attachments.length === 0 ? (
-                <p className="text-sm text-zinc-500 py-4 text-center">No attachments uploaded for this budget line.</p>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 py-4 text-center">No attachments uploaded for this budget line.</p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {attachments.map((att, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-2xl border border-zinc-100 bg-zinc-50">
+                    <div key={i} className="flex items-center justify-between p-3 rounded-2xl border border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]">
                       <div className="flex items-center gap-2 truncate">
-                        <Paperclip size={14} className="text-zinc-400 shrink-0" />
-                        <span className="text-xs font-medium text-zinc-800 truncate">{att.fileName || `Attachment ${i + 1}`}</span>
+                        <Paperclip size={14} className="text-zinc-400 dark:text-zinc-500 shrink-0" />
+                        <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">{att.fileName || `Attachment ${i + 1}`}</span>
                       </div>
-                      <a href={att.fileUrl || '#'} target="_blank" rel="noreferrer" className="text-xs font-semibold text-blue-600 hover:underline shrink-0">
+                      <a href={att.fileUrl || '#'} target="_blank" rel="noreferrer" className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline shrink-0">
                         View
                       </a>
                     </div>
@@ -566,7 +566,7 @@ export default function BudgetLineDetails() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <DetailCard title="Approval Workflow Details" icon={UserCheck}>
-                <ReadOnlyField label="Approval Status" value={approval.approvalStatus || 'APPROVED'} valueClass="text-emerald-700 font-bold" />
+                <ReadOnlyField label="Approval Status" value={approval.approvalStatus || 'APPROVED'} valueClass="text-emerald-700 dark:text-emerald-400 font-bold" />
                 <ReadOnlyField label="Approval Level" value={approval.approvalLevel ?? 1} />
                 <ReadOnlyField label="Approved By" value={approval.approvedBy || '-'} icon={UserCheck} />
                 <ReadOnlyField label="Approved Date" value={formatDate(approval.approvedDate, 'dd MMM yyyy hh:mm a')} icon={Clock} />
@@ -583,11 +583,11 @@ export default function BudgetLineDetails() {
             </div>
 
             <DetailCard title="Permissions & Access Rights" icon={ShieldCheck}>
-              <ReadOnlyField label="Can Edit" value={permissions.canEdit ? 'Yes' : 'No'} valueClass={permissions.canEdit ? 'text-emerald-700 font-bold' : 'text-zinc-500'} />
-              <ReadOnlyField label="Can Delete" value={permissions.canDelete ? 'Yes' : 'No'} valueClass={permissions.canDelete ? 'text-emerald-700 font-bold' : 'text-zinc-500'} />
-              <ReadOnlyField label="Can Approve" value={permissions.canApprove ? 'Yes' : 'No'} valueClass={permissions.canApprove ? 'text-emerald-700 font-bold' : 'text-zinc-500'} />
-              <ReadOnlyField label="Can Export" value={permissions.canExport ? 'Yes' : 'No'} valueClass={permissions.canExport ? 'text-emerald-700 font-bold' : 'text-zinc-500'} />
-              <ReadOnlyField label="Can Update Utilization" value={permissions.canUpdateUtilization ? 'Yes' : 'No'} valueClass={permissions.canUpdateUtilization ? 'text-emerald-700 font-bold' : 'text-zinc-500'} />
+              <ReadOnlyField label="Can Edit" value={permissions.canEdit ? 'Yes' : 'No'} valueClass={permissions.canEdit ? 'text-emerald-700 dark:text-emerald-400 font-bold' : 'text-zinc-500 dark:text-zinc-400'} />
+              <ReadOnlyField label="Can Delete" value={permissions.canDelete ? 'Yes' : 'No'} valueClass={permissions.canDelete ? 'text-emerald-700 dark:text-emerald-400 font-bold' : 'text-zinc-500 dark:text-zinc-400'} />
+              <ReadOnlyField label="Can Approve" value={permissions.canApprove ? 'Yes' : 'No'} valueClass={permissions.canApprove ? 'text-emerald-700 dark:text-emerald-400 font-bold' : 'text-zinc-500 dark:text-zinc-400'} />
+              <ReadOnlyField label="Can Export" value={permissions.canExport ? 'Yes' : 'No'} valueClass={permissions.canExport ? 'text-emerald-700 dark:text-emerald-400 font-bold' : 'text-zinc-500 dark:text-zinc-400'} />
+              <ReadOnlyField label="Can Update Utilization" value={permissions.canUpdateUtilization ? 'Yes' : 'No'} valueClass={permissions.canUpdateUtilization ? 'text-emerald-700 dark:text-emerald-400 font-bold' : 'text-zinc-500 dark:text-zinc-400'} />
             </DetailCard>
           </div>
         )}

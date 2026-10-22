@@ -149,7 +149,7 @@ function SearchableAccountSelect({ accounts, apGroup, value, onChange, onCreateN
           onChange={handleSearchChange}
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
-          className="w-full h-9 pl-8 pr-8 bg-white border border-zinc-200 rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
+          className="w-full h-9 pl-8 pr-8 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] placeholder-zinc-400 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
         />
         {searchTerm && (
           <button
@@ -169,7 +169,7 @@ function SearchableAccountSelect({ accounts, apGroup, value, onChange, onCreateN
       </div>
 
       {isFocused && (filteredAccounts.length > 0 || showCreateOption || isLoading) && (
-        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-zinc-200 rounded-lg shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100 max-h-60 overflow-y-auto z-50">
+        <div className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100 max-h-60 overflow-y-auto z-50">
           <div className="py-1" ref={listRef}>
             {isLoading && (
                <div className="py-3 flex justify-center items-center">
@@ -194,13 +194,13 @@ function SearchableAccountSelect({ accounts, apGroup, value, onChange, onCreateN
                   onMouseEnter={() => setHighlightedIndex(index)}
                   className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors ${
                     isSelected
-                      ? 'bg-blue-50/50'
+                      ? 'bg-blue-50/50 dark:bg-blue-900/20'
                       : isHighlighted
-                      ? 'bg-zinc-50'
-                      : 'hover:bg-zinc-50'
+                      ? 'bg-zinc-50 dark:bg-[#222736]'
+                      : 'hover:bg-zinc-50 dark:hover:bg-[#222736]'
                   }`}
                 >
-                  <div className={`text-[10.4px] truncate ${isSelected ? 'font-semibold text-blue-700' : 'text-zinc-900 font-medium'}`}>
+                  <div className={`text-[10.4px] truncate ${isSelected ? 'font-semibold text-blue-700 dark:text-blue-400' : 'text-zinc-900 dark:text-[#E6E8EE] font-medium'}`}>
                     {acc.accountName} {acc.accountCode ? `(${acc.accountCode})` : ''}
                   </div>
                   {isSelected && <Check size={14} className="text-blue-600 shrink-0" />}
@@ -210,7 +210,7 @@ function SearchableAccountSelect({ accounts, apGroup, value, onChange, onCreateN
 
             {!isLoading && showCreateOption && (
               <>
-                {filteredAccounts.length > 0 && <div className="h-px bg-zinc-100 my-1"></div>}
+                {filteredAccounts.length > 0 && <div className="h-px bg-zinc-100 dark:bg-[#2A2F3D] my-1"></div>}
                 <button
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
@@ -220,12 +220,12 @@ function SearchableAccountSelect({ accounts, apGroup, value, onChange, onCreateN
                   }}
                   onMouseEnter={() => setHighlightedIndex(filteredAccounts.length)}
                   className={`w-full flex items-start gap-3 p-3 text-left transition-colors ${
-                    highlightedIndex === filteredAccounts.length ? 'bg-zinc-50' : 'hover:bg-zinc-50'
+                    highlightedIndex === filteredAccounts.length ? 'bg-zinc-50 dark:bg-[#222736]' : 'hover:bg-zinc-50 dark:hover:bg-[#222736]'
                   }`}
                 >
-                  <Plus size={16} className="text-zinc-600 mt-0.5 shrink-0" />
+                  <Plus size={16} className="text-zinc-600 dark:text-[#A0A6B5] mt-0.5 shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-zinc-900 text-[10.4px] truncate">
+                    <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-[10.4px] truncate">
                       {searchTerm && searchTerm !== 'Create Payable Account' ? `Create "${searchTerm}"` : 'Create Payable Account'}
                     </div>
                     {searchTerm && searchTerm !== 'Create Payable Account' && (
@@ -657,69 +657,69 @@ export default function VendorFormModal({ isOpen, onClose, initialData, onSucces
   return (
     <>
       <div className="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm flex justify-center items-center z-[400] p-4">
-        <div className="bg-white w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl animate-slide-up border border-zinc-200 overflow-hidden rounded-md">
+        <div className="bg-white dark:bg-[#161922] w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl animate-slide-up border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden rounded-md">
         
         {/* Header */}
-        <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
-          <h2 className="text-base font-bold text-zinc-900 tracking-tight">
+        <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C] shrink-0">
+          <h2 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
             {isEditing ? 'Edit Vendor' : 'Create New Vendor'}
           </h2>
-          <button onClick={onClose} className="p-1 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors">
+          <button onClick={onClose} className="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-[#2A2F3D] rounded-md transition-colors">
             <X size={18} className="stroke-[2.5]" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar bg-white">
+        <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar bg-white dark:bg-[#161922]">
           <form id="vendor-form" onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
             
             <div className="space-y-6">
               {/* Basic Information */}
             <div>
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100">Basic Information</h3>
+              <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Vendor Code</label>
-                  <input type="text" name="vendorCode" value={formData.vendorCode} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all uppercase placeholder:normal-case placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Vendor Code</label>
+                  <input type="text" name="vendorCode" value={formData.vendorCode} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all uppercase placeholder:normal-case placeholder:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Vendor Name <span className="text-red-500">*</span></label>
-                  <input type="text" name="vendorName" value={formData.vendorName} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" required />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Vendor Name <span className="text-red-500">*</span></label>
+                  <input type="text" name="vendorName" value={formData.vendorName} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" required />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Email</label>
-                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Email</label>
+                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Phone</label>
-                  <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Phone</label>
+                  <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
                 </div>
               </div>
             </div>
 
             {/* Address Details */}
             <div>
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100">Address Details</h3>
+              <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Address Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Address Line 1</label>
-                  <input type="text" name="addressLine1" value={formData.addressLine1} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Address Line 1</label>
+                  <input type="text" name="addressLine1" value={formData.addressLine1} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">City</label>
-                  <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">City</label>
+                  <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">State</label>
-                  <input type="text" name="state" value={formData.state} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">State</label>
+                  <input type="text" name="state" value={formData.state} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Country</label>
-                  <input type="text" name="country" value={formData.country} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Country</label>
+                  <input type="text" name="country" value={formData.country} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Pin Code</label>
-                  <input type="text" name="pinCode" value={formData.pinCode} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Pin Code</label>
+                  <input type="text" name="pinCode" value={formData.pinCode} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
                 </div>
               </div>
             </div>
@@ -728,10 +728,10 @@ export default function VendorFormModal({ isOpen, onClose, initialData, onSucces
           <div className="space-y-6">
               {/* Financial Details */}
             <div>
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100">Financial Details</h3>
+              <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Financial Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Payable Account <span className="text-red-500">*</span></label>
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Payable Account <span className="text-red-500">*</span></label>
                   <SearchableAccountSelect
                     accounts={payableAccounts}
                     apGroup={apGroup}
@@ -747,23 +747,23 @@ export default function VendorFormModal({ isOpen, onClose, initialData, onSucces
                   />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Credit Limit (₹) <span className="text-red-500">*</span></label>
-                  <input type="number" step="0.01" name="creditLimit" value={formData.creditLimit} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Credit Limit (₹) <span className="text-red-500">*</span></label>
+                  <input type="number" step="0.01" name="creditLimit" value={formData.creditLimit} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Opening Balance</label>
-                  <input type="number" step="0.01" name="openingBalance" value={formData.openingBalance} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Opening Balance</label>
+                  <input type="number" step="0.01" name="openingBalance" value={formData.openingBalance} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Opening Balance Date</label>
-                  <input type="date" name="openingBalanceDate" value={formData.openingBalanceDate} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Opening Balance Date</label>
+                  <input type="date" name="openingBalanceDate" value={formData.openingBalanceDate} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Payment Term (Days)</label>
-                  <input type="number" name="paymentTermDays" value={formData.paymentTermDays} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Payment Term (Days)</label>
+                  <input type="number" name="paymentTermDays" value={formData.paymentTermDays} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">Default Currency</label>
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Default Currency</label>
                   <div className="h-9 flex items-center px-3 text-[10.4px] font-medium text-zinc-800 bg-zinc-50/50 rounded-md">
                     {formData.defaultCurrency} - Company Currency
                   </div>
@@ -773,15 +773,15 @@ export default function VendorFormModal({ isOpen, onClose, initialData, onSucces
 
             {/* Tax & Compliance */}
             <div>
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100">Tax & Compliance</h3>
+              <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Tax & Compliance</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">GSTIN</label>
-                  <input type="text" name="gstin" value={formData.gstin} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all uppercase placeholder:normal-case placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">GSTIN</label>
+                  <input type="text" name="gstin" value={formData.gstin} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all uppercase placeholder:normal-case placeholder:text-zinc-400" />
                 </div>
                 <div className="space-y-1.5 max-w-md">
-                  <label className="text-[9.6px] font-semibold text-zinc-700">PAN Number</label>
-                  <input type="text" name="panNo" value={formData.panNo} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all uppercase placeholder:normal-case placeholder:text-zinc-400" />
+                  <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">PAN Number</label>
+                  <input type="text" name="panNo" value={formData.panNo} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all uppercase placeholder:normal-case placeholder:text-zinc-400" />
                 </div>
                 
                 <div className="md:col-span-2 pt-2 flex flex-row items-center gap-8 pb-1">
@@ -794,7 +794,7 @@ export default function VendorFormModal({ isOpen, onClose, initialData, onSucces
                       onChange={handleInputChange} 
                       className="w-4 h-4 rounded-md border-zinc-300 text-zinc-900 focus:ring-0 focus:ring-offset-0 cursor-pointer transition-colors" 
                     />
-                    <span className="text-[10.4px] font-bold text-zinc-700 select-none group-hover:text-zinc-900 transition-colors">TDS Applicable</span>
+                    <span className="text-[10.4px] font-bold text-zinc-700 select-none group-hover:text-zinc-900 dark:text-[#E6E8EE] dark:group-hover:text-white transition-colors">TDS Applicable</span>
                   </label>
                   
                   <label className="flex items-center gap-2.5 cursor-pointer group w-max">
@@ -806,19 +806,19 @@ export default function VendorFormModal({ isOpen, onClose, initialData, onSucces
                       onChange={handleInputChange} 
                       className="w-4 h-4 rounded-md border-zinc-300 text-zinc-900 focus:ring-0 focus:ring-offset-0 cursor-pointer transition-colors" 
                     />
-                    <span className="text-[10.4px] font-bold text-zinc-700 select-none group-hover:text-zinc-900 transition-colors">Active Vendor <span className="text-red-500">*</span></span>
+                    <span className="text-[10.4px] font-bold text-zinc-700 select-none group-hover:text-zinc-900 dark:text-[#E6E8EE] dark:group-hover:text-white transition-colors">Active Vendor <span className="text-red-500">*</span></span>
                   </label>
                 </div>
 
                 {Boolean(formData.tdsApplicable) && (
                   <>
                     <div className="space-y-1.5 max-w-md">
-                      <label className="text-[9.6px] font-semibold text-zinc-700">TDS Section</label>
+                      <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">TDS Section</label>
                       <CustomSelect 
                         name="tdsSection" 
                         value={formData.tdsSection} 
                         onChange={handleInputChange} 
-                        className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all"
+                        className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all"
                       >
                         <option value="">— Select Section —</option>
                         <option value="194C">194C - Payments to Contractors</option>
@@ -830,7 +830,7 @@ export default function VendorFormModal({ isOpen, onClose, initialData, onSucces
                       </CustomSelect>
                     </div>
                     <div className="space-y-1.5 max-w-md">
-                      <label className="text-[9.6px] font-semibold text-zinc-700">TDS Rate (%)</label>
+                      <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">TDS Rate (%)</label>
                       <input 
                         type="number" 
                         step="0.01" 
@@ -839,7 +839,7 @@ export default function VendorFormModal({ isOpen, onClose, initialData, onSucces
                         name="tdsRate" 
                         value={formData.tdsRate} 
                         onChange={handleInputChange} 
-                        className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" 
+                        className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-blue-500 focus:ring-0 outline-none transition-all placeholder:text-zinc-400" 
                       />
                     </div>
                   </>
@@ -851,8 +851,8 @@ export default function VendorFormModal({ isOpen, onClose, initialData, onSucces
         </div>
 
         {/* Footer */}
-        <div className="flex shrink-0 gap-3 border-t border-zinc-200 bg-zinc-50/80 px-5 py-4 justify-end">
-          <button type="button" onClick={onClose} className="px-5 py-2 text-[10.4px] font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/50 bg-white border border-zinc-300 rounded-md transition-all active:scale-95">
+        <div className="flex shrink-0 gap-3 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C] px-5 py-4 justify-end">
+          <button type="button" onClick={onClose} className="px-5 py-2 text-[10.4px] font-bold text-zinc-700 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#2A2F3D] bg-white dark:bg-[#161922] border border-zinc-300 dark:border-[#2A2F3D] rounded-md transition-all active:scale-95">
             Cancel
           </button>
           <button type="submit" form="vendor-form" className="flex items-center justify-center gap-2 px-5 py-2 text-[10.4px] font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-md transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none" disabled={createMutation.isPending || updateMutation.isPending}>

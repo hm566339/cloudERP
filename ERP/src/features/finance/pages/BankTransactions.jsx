@@ -245,12 +245,12 @@ export default function BankTransactions() {
       sortable: true,
       render: (val) => {
         const typeColors = {
-          DEPOSIT: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-          WITHDRAWAL: 'bg-rose-50 text-rose-700 border-rose-200',
-          TRANSFER: 'bg-blue-50 text-blue-700 border-blue-200',
-          PAYMENT: 'bg-amber-50 text-amber-700 border-amber-200'
+          DEPOSIT: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30',
+          WITHDRAWAL: 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30',
+          TRANSFER: 'bg-blue-50 dark:bg-[#4C8DFF]/10 text-blue-700 dark:text-[#4C8DFF] border-blue-200 dark:border-[#4C8DFF]/30',
+          PAYMENT: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'
         };
-        const colorClass = typeColors[val] || 'bg-zinc-50 text-zinc-700 border-zinc-200';
+        const colorClass = typeColors[val] || 'bg-zinc-50 dark:bg-[#1D212C] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]';
         return (
           <span className={`px-2.5 py-1 rounded-md text-[8.8px] font-bold uppercase tracking-wider border ${colorClass}`}>
             {val}
@@ -263,7 +263,7 @@ export default function BankTransactions() {
       label: 'Ref / UTR',
       sortable: false,
       render: (val, row) => (
-        <span className="text-[10.4px] text-zinc-600">
+        <span className="text-[10.4px] text-zinc-600 dark:text-[#A0A6B5]">
           {row.referenceNo || '-'} {row.utrNo ? ` / ${row.utrNo}` : ''}
         </span>
       )
@@ -274,7 +274,7 @@ export default function BankTransactions() {
       sortable: true,
       align: 'right',
       render: (val) => (
-        <span className="font-semibold text-rose-600">
+        <span className="font-semibold text-rose-600 dark:text-rose-400">
           {val > 0 ? val.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : '-'}
         </span>
       )
@@ -285,7 +285,7 @@ export default function BankTransactions() {
       sortable: true,
       align: 'right',
       render: (val) => (
-        <span className="font-semibold text-emerald-600">
+        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
           {val > 0 ? val.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : '-'}
         </span>
       )
@@ -296,7 +296,7 @@ export default function BankTransactions() {
       sortable: true,
       align: 'right',
       render: (val) => (
-        <span className="font-semibold text-zinc-900">
+        <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">
           {val != null ? val.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : '-'}
         </span>
       )
@@ -307,7 +307,7 @@ export default function BankTransactions() {
       sortable: false,
       align: 'center',
       render: (val) => (
-        <span className={`px-2.5 py-1 rounded-md text-[8.8px] font-bold uppercase tracking-wider border ${val === 'POSTED' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-zinc-50 text-zinc-700 border-zinc-200'}`}>
+        <span className={`px-2.5 py-1 rounded-md text-[8.8px] font-bold uppercase tracking-wider border ${val === 'POSTED' ? 'bg-blue-50 dark:bg-[#4C8DFF]/10 text-blue-700 dark:text-[#4C8DFF] border-blue-200 dark:border-[#4C8DFF]/30' : 'bg-zinc-50 dark:bg-[#1D212C] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]'}`}>
           {val || 'PENDING'}
         </span>
       )
@@ -318,7 +318,7 @@ export default function BankTransactions() {
       sortable: true,
       align: 'center',
       render: (val) => (
-        <span className={`px-2.5 py-1 rounded-md text-[8.8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 w-max mx-auto border ${val ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+        <span className={`px-2.5 py-1 rounded-md text-[8.8px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 w-max mx-auto border ${val ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'}`}>
           {val ? 'Reconciled' : 'Unreconciled'}
         </span>
       )
@@ -332,7 +332,7 @@ export default function BankTransactions() {
       icon: Eye,
       onClick: (row) => navigate(buildPath(`/accounts/transactions/bank-transactions/${row.id}`)),
       tooltip: 'View Details',
-      className: 'hover:text-blue-600 hover:bg-blue-50'
+      className: 'hover:text-blue-600 dark:hover:text-[#4C8DFF] hover:bg-blue-50 dark:hover:bg-[#4C8DFF]/10'
     },
     {
       key: 'audit',
@@ -345,7 +345,7 @@ export default function BankTransactions() {
       permission: { module: 'BANKING', action: 'UPDATE' },
       onClick: handleOpenModal,
       tooltip: 'Edit',
-      className: 'hover:text-zinc-900 hover:bg-zinc-100'
+      className: 'hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736]'
     },
     {
       key: 'delete',
@@ -403,7 +403,7 @@ export default function BankTransactions() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Bank Transactions"
         description="Manage deposits, withdrawals, and bank reconciliation"
@@ -411,7 +411,7 @@ export default function BankTransactions() {
         <button onClick={() => setIsExportModalOpen(true)} className="btn-secondary flex items-center gap-2">
           <Download size={15} /> Export
         </button>
-        <Link to={buildPath("/accounts/transactions/bank-reconciliation")} className="px-4 py-2 bg-zinc-100 text-zinc-700 hover:bg-zinc-200 rounded-lg text-sm font-medium transition-colors border border-zinc-200">
+        <Link to={buildPath("/accounts/transactions/bank-reconciliation")} className="px-4 py-2 bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-200 dark:hover:bg-[#222736] rounded-lg text-sm font-medium transition-colors border border-zinc-200 dark:border-[#2A2F3D]">
           Reconciliation
         </Link>
         <button

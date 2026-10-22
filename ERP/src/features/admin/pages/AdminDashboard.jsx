@@ -46,7 +46,7 @@ export default function AdminDashboard() {
       {/* ── Top Status Cards (4-Column Responsive Grid) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
         {/* Backend Health */}
-        <div className="min-h-[140px] p-5 bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
+        <div className="min-h-[140px] p-5 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100/60 flex items-center justify-center text-indigo-600 shrink-0">
               <Server size={18} strokeWidth={1.75} />
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Active Users */}
-        <div className="min-h-[140px] p-5 bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
+        <div className="min-h-[140px] p-5 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100/60 flex items-center justify-center text-blue-600 shrink-0">
               <Users size={18} strokeWidth={1.75} />
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* System Uptime */}
-        <div className="min-h-[140px] p-5 bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
+        <div className="min-h-[140px] p-5 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100/60 flex items-center justify-center text-emerald-600 shrink-0">
               <Clock size={18} strokeWidth={1.75} />
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* System Load */}
-        <div className="min-h-[140px] p-5 bg-white rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
+        <div className="min-h-[140px] p-5 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-100/60 flex items-center justify-center text-amber-600 shrink-0">
               <Activity size={18} strokeWidth={1.75} />
@@ -134,8 +134,8 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Current User Info (2-Column Information Grid) ── */}
-      <div className="bg-white rounded-xl border border-zinc-200 shadow-2xs p-6 mb-5">
-        <div className="flex items-center justify-between pb-3.5 mb-5 border-b border-zinc-100">
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs p-6 mb-5">
+        <div className="flex items-center justify-between pb-3.5 mb-5 border-b border-zinc-100 dark:border-[#2A2F3D]">
           <h2 className="text-[15px] font-semibold text-zinc-900 flex items-center gap-2">
             <User size={16} className="text-zinc-500" />
             Current User Info
@@ -177,8 +177,8 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── System Information (2-Column Information Grid) ── */}
-      <div className="bg-white rounded-xl border border-zinc-200 shadow-2xs p-6">
-        <div className="flex items-center justify-between pb-3.5 mb-5 border-b border-zinc-100">
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs p-6">
+        <div className="flex items-center justify-between pb-3.5 mb-5 border-b border-zinc-100 dark:border-[#2A2F3D]">
           <h2 className="text-[15px] font-semibold text-zinc-900 flex items-center gap-2">
             <Info size={16} className="text-zinc-500" />
             System Information

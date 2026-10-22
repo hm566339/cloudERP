@@ -211,14 +211,14 @@ export default function PortalAccessList() {
         <div className="flex items-center gap-3">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 border ${
             row.status
-              ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
-              : 'bg-zinc-100 text-zinc-500 border-zinc-200'
+              ? 'bg-indigo-50 text-indigo-600 border-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-400 dark:border-indigo-800/40'
+              : 'bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]'
           }`}>
             {row.username?.charAt(0)?.toUpperCase() || <Users size={14} />}
           </div>
           <div>
-            <div className="font-semibold text-zinc-900 text-xs">{row.username || '—'}</div>
-            <div className="text-[10px] text-zinc-400 font-mono truncate w-32">{row.userId || row.id || '—'}</div>
+            <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-xs">{row.username || '—'}</div>
+            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono truncate w-32">{row.userId || row.id || '—'}</div>
           </div>
         </div>
       )
@@ -230,12 +230,12 @@ export default function PortalAccessList() {
       render: (val, row) => (
         <div>
           <div className="flex items-center gap-1.5 mb-0.5">
-            <Layers size={13} className="text-indigo-500" />
-            <span className="text-xs font-semibold text-zinc-800">{row.moduleName || '—'}</span>
+            <Layers size={13} className="text-indigo-500 dark:text-indigo-400" />
+            <span className="text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE]">{row.moduleName || '—'}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Server size={12} className="text-zinc-400" />
-            <span className="text-[10px] text-zinc-500 font-mono">{row.host || '—'}</span>
+            <Server size={12} className="text-zinc-400 dark:text-zinc-500" />
+            <span className="text-[10px] text-zinc-500 dark:text-[#A0A6B5] font-mono">{row.host || '—'}</span>
           </div>
         </div>
       )
@@ -244,13 +244,13 @@ export default function PortalAccessList() {
       id: 'createdAt',
       label: 'Created',
       sortable: true,
-      render: (val, row) => <span className="text-xs text-zinc-600 font-medium">{formatDateShort(row.createdAt)}</span>
+      render: (val, row) => <span className="text-xs text-zinc-600 dark:text-[#A0A6B5] font-medium">{formatDateShort(row.createdAt)}</span>
     },
     {
       id: 'updatedAt',
       label: 'Updated',
       sortable: true,
-      render: (val, row) => <span className="text-xs text-zinc-600 font-medium">{formatDateShort(row.updatedAt)}</span>
+      render: (val, row) => <span className="text-xs text-zinc-600 dark:text-[#A0A6B5] font-medium">{formatDateShort(row.updatedAt)}</span>
     },
     {
       id: 'status',
@@ -327,33 +327,33 @@ export default function PortalAccessList() {
 
   const renderExpandedRow = (portal) => {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-2 bg-zinc-50/50 rounded-lg">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-4 bg-zinc-50/80 dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-lg">
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">User / Username</span>
-          <p className="text-sm font-semibold text-zinc-900">{portal.username || '—'}</p>
-          <span className="text-[10px] text-zinc-400 font-mono">{portal.userId || portal.id || '—'}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">User / Username</span>
+          <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE]">{portal.username || '—'}</p>
+          <span className="text-[11px] text-zinc-400 dark:text-zinc-500 font-mono">{portal.userId || portal.id || '—'}</span>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Module / Feature Host</span>
-          <p className="text-sm font-semibold text-zinc-900">{portal.moduleName || '—'}</p>
-          <span className="text-[10px] text-zinc-500 font-mono">{portal.host || '—'}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Module / Feature Host</span>
+          <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE]">{portal.moduleName || '—'}</p>
+          <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] font-mono">{portal.host || '—'}</span>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Access Status</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Access Status</span>
           <div>
             <DataTableStatusBadge status={portal.status ? 'ACTIVE' : 'INACTIVE'} />
           </div>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Granted Date</span>
-          <p className="text-sm font-medium text-zinc-700">{formatDateShort(portal.createdAt)}</p>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Granted Date</span>
+          <p className="text-sm font-medium text-zinc-700 dark:text-[#E6E8EE]">{formatDateShort(portal.createdAt)}</p>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 relative">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] relative">
       <PageHeader
         title="Feature Management"
         description="Manage company features and user portal access."
@@ -460,33 +460,33 @@ export default function PortalAccessList() {
 
       {showAssignModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4">
-          <div className="max-w-md w-full bg-white rounded-xl border border-zinc-200 shadow-2xl p-6 space-y-5 animate-slide-up">
-            <div className="flex justify-between items-center border-b border-zinc-100 pb-3.5">
-              <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
-                <Users size={18} className="text-indigo-600" />
+          <div className="max-w-md w-full bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xl p-6 space-y-5 animate-slide-up">
+            <div className="flex justify-between items-center border-b border-zinc-100 dark:border-[#2A2F3D] pb-3.5">
+              <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-2">
+                <Users size={18} className="text-indigo-600 dark:text-primary" />
                 Assign Portal Access
               </h3>
               <button 
                 onClick={() => setShowAssignModal(false)} 
-                className="w-7 h-7 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 flex items-center justify-center transition-colors"
+                className="w-7 h-7 rounded-lg text-zinc-400 dark:text-[#A0A6B5] hover:text-zinc-700 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] flex items-center justify-center transition-colors"
               >
                 &times;
               </button>
             </div>
 
             {isModalLoading ? (
-              <div className="py-8 text-center text-zinc-500 text-xs font-medium flex flex-col items-center gap-2">
-                <div className="w-6 h-6 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
+              <div className="py-8 text-center text-zinc-500 dark:text-[#A0A6B5] text-xs font-medium flex flex-col items-center gap-2">
+                <div className="w-6 h-6 border-2 border-zinc-900 dark:border-primary border-t-transparent rounded-full animate-spin" />
                 <span>Loading users and modules...</span>
               </div>
             ) : (
               <form onSubmit={handleGrantAccessSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-700 block">Select User *</label>
+                  <label className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] block">Select User *</label>
                   <CustomSelect
                     value={selectedUserId}
                     onChange={(e) => setSelectedUserId(e.target.value)}
-                    className="w-full h-10 px-3 bg-zinc-50 hover:bg-white focus:bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10/15 transition-all"
+                    className="w-full h-10 px-3 bg-zinc-50 dark:bg-[#1D212C] hover:bg-white dark:hover:bg-[#1D212C] focus:bg-white dark:focus:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] outline-none focus:border-zinc-400 focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                   >
                     <option value="">— Select User —</option>
@@ -499,11 +499,11 @@ export default function PortalAccessList() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-zinc-700 block">Select Module *</label>
+                  <label className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] block">Select Module *</label>
                   <CustomSelect
                     value={selectedModuleId}
                     onChange={(e) => setSelectedModuleId(e.target.value)}
-                    className="w-full h-10 px-3 bg-zinc-50 hover:bg-white focus:bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10/15 transition-all"
+                    className="w-full h-10 px-3 bg-zinc-50 dark:bg-[#1D212C] hover:bg-white dark:hover:bg-[#1D212C] focus:bg-white dark:focus:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] outline-none focus:border-zinc-400 focus:ring-2 focus:ring-primary/20 transition-all"
                     required
                   >
                     <option value="">— Select Module —</option>
@@ -519,18 +519,18 @@ export default function PortalAccessList() {
                   </CustomSelect>
                 </div>
 
-                <div className="pt-4 flex justify-end gap-2.5 border-t border-zinc-100">
+                <div className="pt-4 flex justify-end gap-2.5 border-t border-zinc-100 dark:border-[#2A2F3D]">
                   <button
                     type="button"
                     onClick={() => setShowAssignModal(false)}
-                    className="px-4 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors"
+                    className="px-4 py-2 text-xs font-medium text-zinc-700 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isAssigning}
-                    className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                    className="px-4 py-2 bg-zinc-900 dark:bg-primary hover:bg-zinc-800 dark:hover:bg-primary-600 text-white rounded-lg text-xs font-semibold transition-all shadow-sm active:scale-95 disabled:opacity-50"
                   >
                     {isAssigning ? "Granting..." : "Grant Portal Access"}
                   </button>

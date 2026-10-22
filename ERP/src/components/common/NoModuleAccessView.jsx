@@ -31,7 +31,7 @@ export default function NoModuleAccessView() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-50 p-6">
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-zinc-200 max-w-lg w-full text-center">
+      <div className="bg-white dark:bg-card-dark p-8 rounded-2xl shadow-sm border border-zinc-200 dark:border-border-dark max-w-lg w-full text-center">
         <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <ShieldX size={32} />
         </div>
@@ -46,7 +46,7 @@ export default function NoModuleAccessView() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={handleSwitchCompany}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-200 font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-200 font-medium text-zinc-700 hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors"
           >
             <ArrowLeftRight size={16} />
             <span>Switch Company</span>

@@ -505,10 +505,10 @@ export default function CreateGrnModal({ isOpen, onClose, purchaseOrder, company
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-[1240px] w-full max-h-[92vh] flex flex-col overflow-hidden border border-zinc-200">
+      <div className="bg-white dark:bg-card-dark rounded-2xl shadow-2xl max-w-[1240px] w-full max-h-[92vh] flex flex-col overflow-hidden border border-zinc-200 dark:border-border-dark">
 
         {/* ── Modal Header ── */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-600 shadow-2xs">
               <Truck size={20} />
@@ -553,33 +553,33 @@ export default function CreateGrnModal({ isOpen, onClose, purchaseOrder, company
           )}
 
           {/* 1. PURCHASE ORDER SUMMARY (READ-ONLY) */}
-          <div className="bg-white rounded-xl border border-zinc-200/80 p-4 shadow-2xs">
-            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-100">
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D]/80 p-4 shadow-2xs">
+            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
               <div className="flex items-center gap-2">
                 <FileText size={14} className="text-zinc-400" />
                 <span className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider">Purchase Order Summary</span>
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">
                 Read-Only
               </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">PO Number</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">PO Number</p>
                 <p className="text-xs font-bold text-zinc-900 font-mono mt-0.5">{po.poNumber || '-'}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Supplier</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Supplier</p>
                 <p className="text-xs font-semibold text-zinc-800 mt-0.5 truncate" title={po.vendorName || po.vendor?.name}>
                   {po.vendorName || po.vendor?.name || '-'}
                 </p>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">PO Date</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">PO Date</p>
                 <p className="text-xs font-medium text-zinc-700 mt-0.5">{formatDate(po.poDate)}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Expected Delivery</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Expected Delivery</p>
                 <p className="text-xs font-medium text-zinc-700 mt-0.5">{formatDate(po.expectedDeliveryDate)}</p>
               </div>
             </div>
@@ -587,7 +587,7 @@ export default function CreateGrnModal({ isOpen, onClose, purchaseOrder, company
 
           {/* 2. GRN DETAILS & WAREHOUSE */}
           {/* 2. RECEIPT DETAILS & DESTINATION WAREHOUSE */}
-          <div className="bg-white rounded-xl border border-zinc-200/80 p-4 shadow-2xs space-y-3.5">
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D]/80 p-4 shadow-2xs space-y-3.5">
             {/* PR Loading indicator */}
             {loadingPr && (
               <div className="px-3.5 py-2 bg-blue-50/80 border border-blue-200/70 rounded-xl flex items-center gap-2.5 text-xs text-blue-700 animate-pulse">
@@ -613,7 +613,7 @@ export default function CreateGrnModal({ isOpen, onClose, purchaseOrder, company
               </div>
             )}
 
-            <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-100">
+            <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-100 dark:border-[#2A2F3D]">
               <Building2 size={14} className="text-zinc-400" />
               <span className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider">Receipt Details & Destination Warehouse</span>
             </div>
@@ -626,7 +626,7 @@ export default function CreateGrnModal({ isOpen, onClose, purchaseOrder, company
                 </label>
                 <input
                   type="text"
-                  className="w-full h-8 px-2.5 text-xs text-zinc-800 bg-white border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5 font-mono"
+                  className="w-full h-8 px-2.5 text-xs text-zinc-800 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5 font-mono"
                   placeholder="Auto-generated if blank"
                   value={grnNumber}
                   onChange={e => setGrnNumber(e.target.value)}
@@ -670,7 +670,7 @@ export default function CreateGrnModal({ isOpen, onClose, purchaseOrder, company
                 </label>
                 <input
                   type="text"
-                  className="w-full h-8 px-2.5 text-xs text-zinc-800 bg-white border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5 font-mono"
+                  className="w-full h-8 px-2.5 text-xs text-zinc-800 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5 font-mono"
                   placeholder="e.g. DN-2026-0089"
                   value={deliveryNoteNumber}
                   onChange={e => setDeliveryNoteNumber(e.target.value)}
@@ -697,7 +697,7 @@ export default function CreateGrnModal({ isOpen, onClose, purchaseOrder, company
                 </label>
                 <input
                   type="text"
-                  className="w-full h-8 px-2.5 text-xs text-zinc-800 bg-white border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
+                  className="w-full h-8 px-2.5 text-xs text-zinc-800 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
                   placeholder="e.g. MH-12-AB-1234"
                   value={vehicleNumber}
                   onChange={e => setVehicleNumber(e.target.value)}
@@ -711,7 +711,7 @@ export default function CreateGrnModal({ isOpen, onClose, purchaseOrder, company
                 </label>
                 <input
                   type="text"
-                  className="w-full h-8 px-2.5 text-xs text-zinc-800 bg-white border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
+                  className="w-full h-8 px-2.5 text-xs text-zinc-800 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5"
                   placeholder="e.g. Blue Dart / DHL Express / Freight Carrier"
                   value={transporterName}
                   onChange={e => setTransporterName(e.target.value)}
@@ -733,20 +733,20 @@ export default function CreateGrnModal({ isOpen, onClose, purchaseOrder, company
 
           {/* 4. RECEIVING SUMMARY & REMARKS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 bg-white rounded-xl border border-zinc-200/80 p-4 shadow-2xs space-y-2">
+            <div className="md:col-span-2 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D]/80 p-4 shadow-2xs space-y-2">
               <label className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
                 <FileText size={13} className="text-zinc-400" />
                 Receiving / Inspection Notes
               </label>
               <textarea
-                className="w-full h-18 p-2.5 text-xs text-zinc-800 bg-white border border-zinc-200 rounded-lg outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5 resize-none placeholder-zinc-400"
+                className="w-full h-18 p-2.5 text-xs text-zinc-800 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5 resize-none placeholder-zinc-400"
                 placeholder="Add general receiving remarks, package condition notes, or gate inspection comments..."
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
               />
             </div>
 
-            <div className="bg-white rounded-xl border border-zinc-200/80 p-4 shadow-2xs flex flex-col justify-between">
+            <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D]/80 p-4 shadow-2xs flex flex-col justify-between">
               <span className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider block mb-2">
                 Receipt Summary
               </span>
@@ -781,7 +781,7 @@ export default function CreateGrnModal({ isOpen, onClose, purchaseOrder, company
         </form>
 
         {/* ── Modal Footer ── */}
-        <div className="px-6 py-4 border-t border-zinc-200 bg-white flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark flex items-center justify-between">
           <div className="flex items-center gap-3 text-xs text-zinc-500">
             <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-100 font-medium">
               <Package size={13} className="text-zinc-400" />
@@ -806,7 +806,7 @@ export default function CreateGrnModal({ isOpen, onClose, purchaseOrder, company
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="h-9 px-4 text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-2xs cursor-pointer"
+              className="h-9 px-4 text-xs font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors shadow-2xs cursor-pointer"
             >
               Cancel
             </button>

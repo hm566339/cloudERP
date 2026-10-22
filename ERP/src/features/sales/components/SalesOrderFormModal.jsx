@@ -103,10 +103,10 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-zinc-950/60 backdrop-blur-sm px-3 py-6 sm:px-4 sm:py-8">
-      <div className="card my-auto w-full max-w-3xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] overflow-hidden animate-slide-up flex flex-col bg-white shadow-xl">
-        <div className="flex justify-between items-center p-6 border-b border-zinc-100 sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-bold text-zinc-800">Create Sales Order</h2>
-          <button onClick={onClose} className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-50 transition-colors">
+      <div className="card my-auto w-full max-w-3xl max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] overflow-hidden animate-slide-up flex flex-col bg-white dark:bg-[#161922] border border-transparent dark:border-[#2A2F3D] shadow-xl">
+        <div className="flex justify-between items-center p-6 border-b border-zinc-100 dark:border-[#2A2F3D] sticky top-0 bg-white dark:bg-[#161922] z-10">
+          <h2 className="text-xl font-bold text-zinc-800 dark:text-[#E6E8EE]">Create Sales Order</h2>
+          <button onClick={onClose} className="p-2 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] rounded-full hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -114,7 +114,7 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6 flex-1 min-h-0 overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Customer</label>
+              <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">Customer</label>
               <CustomSelect 
                 className="input-field" 
                 value={customerId} 
@@ -130,7 +130,7 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Order Date</label>
+                <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">Order Date</label>
                 <input 
                   type="date" 
                   className="input-field" 
@@ -140,7 +140,7 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Expected Delivery</label>
+                <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">Expected Delivery</label>
                 <input 
                   type="date" 
                   className="input-field" 
@@ -153,7 +153,7 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Payment Terms</label>
+                <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">Payment Terms</label>
                 <select
                   className="input-field mb-2"
                   value={paymentTermId}
@@ -184,7 +184,7 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
                 )}
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Terms & Conditions</label>
+                <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">Terms & Conditions</label>
                 <select
                   className="input-field mb-2"
                   value={termsConditionId}
@@ -219,15 +219,15 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
 
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <h3 className="text-sm font-bold text-zinc-700">Order Items</h3>
+              <h3 className="text-sm font-bold text-zinc-700 dark:text-[#E6E8EE]">Order Items</h3>
               <button type="button" onClick={handleAddItem} className="btn-secondary text-xs py-1.5 px-3">
                 <Plus size={14} /> Add Item
               </button>
             </div>
 
-            <div className="border border-zinc-200 rounded-xl overflow-x-auto">
+            <div className="border border-zinc-200 dark:border-[#2A2F3D] rounded-xl overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 text-xs uppercase">
+                <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] text-xs uppercase">
                   <tr>
                 <th className="w-12 text-center">S.No.</th>
                     <th className="p-3 font-semibold">Item Details</th>
@@ -237,10 +237,10 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
                     <th className="p-3 w-12"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 staggered-list">
+                <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] staggered-list">
                   {items.map((item, index) => (
-                    <tr key={item.id} className="bg-white">
-                    <td className="text-center font-medium text-zinc-500">{index + 1}</td>
+                    <tr key={item.id} className="bg-white dark:bg-[#161922]">
+                    <td className="text-center font-medium text-zinc-500 dark:text-[#A0A6B5]">{index + 1}</td>
                       <td className="p-2">
                         <input 
                           type="text" 
@@ -271,14 +271,14 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
                           required
                         />
                       </td>
-                      <td className="p-2 text-right font-medium text-zinc-700">
+                      <td className="p-2 text-right font-medium text-zinc-700 dark:text-[#E6E8EE]">
                         ₹{((parseFloat(item.qty) || 0) * (parseFloat(item.rate) || 0)).toLocaleString()}
                       </td>
                       <td className="p-2 text-center">
                         <button 
                           type="button" 
                           onClick={() => handleRemoveItem(item.id)}
-                          className="text-zinc-400 hover:text-red-500 transition-colors p-1"
+                          className="text-zinc-400 dark:text-[#6B7184] hover:text-red-500 dark:hover:text-red-400 transition-colors p-1"
                           disabled={items.length === 1}
                         >
                           <Trash2 size={16} />
@@ -291,7 +291,7 @@ export default function SalesOrderFormModal({ isOpen, onClose, onSubmit }) {
             </div>
           </div>
 
-          <div className="flex justify-end pt-4 border-t border-zinc-100">
+          <div className="flex justify-end pt-4 border-t border-zinc-100 dark:border-[#2A2F3D]">
             <div className="flex justify-between text-lg font-bold text-primary w-full max-w-xs">
               <span>Order Total:</span>
               <span>₹{subtotal.toLocaleString()}</span>

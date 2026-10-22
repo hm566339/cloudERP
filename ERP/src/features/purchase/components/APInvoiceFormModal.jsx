@@ -30,11 +30,11 @@ const APInvoiceLineItemRow = ({ item, products, warehouses, expenseAccountOption
   const locations = Array.isArray(locationsData) ? locationsData : locationsData?.data?.content || locationsData?.data || [];
 
   return (
-    <div className="w-full min-w-0 bg-white hover:bg-zinc-50/50 border-b border-zinc-100 last:border-0 p-2" style={gridStyle}>
+    <div className="w-full min-w-0 bg-white dark:bg-card-dark hover:bg-zinc-50/50 dark:hover:bg-hover-dark/40 border-b border-zinc-100 dark:border-[#2A2F3D] last:border-0 p-2" style={gridStyle}>
       {/* Type */}
       <div className="min-w-0 max-w-full">
         <CustomSelect
-          className="input-field w-full min-w-0 h-8 text-[8.8px] text-zinc-700 bg-white box-border"
+          className="input-field w-full min-w-0 h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark box-border"
           value={item.itemType}
           onChange={e => onUpdate(item.id, 'itemType', e.target.value)}
         >
@@ -47,7 +47,7 @@ const APInvoiceLineItemRow = ({ item, products, warehouses, expenseAccountOption
       <div className="min-w-0 max-w-full">
         {item.itemType === 'PRODUCT' ? (
           <CustomSelect
-            className="input-field w-full min-w-0 h-8 text-[8.8px] text-zinc-700 bg-white box-border overflow-hidden text-ellipsis whitespace-nowrap"
+            className="input-field w-full min-w-0 h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark box-border overflow-hidden text-ellipsis whitespace-nowrap"
             value={item.itemId || ''}
             onChange={e => onUpdate(item.id, 'itemId', e.target.value)}
             searchable={true}
@@ -82,7 +82,7 @@ const APInvoiceLineItemRow = ({ item, products, warehouses, expenseAccountOption
           <input
             type="text"
             placeholder="Description"
-            className="input-field w-full min-w-0 h-8 text-[8.8px] text-zinc-700 bg-white px-2 box-border overflow-hidden text-ellipsis whitespace-nowrap"
+            className="input-field w-full min-w-0 h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark px-2 box-border overflow-hidden text-ellipsis whitespace-nowrap"
             title={item.description}
             value={item.description}
             onChange={e => onUpdate(item.id, 'description', e.target.value)}
@@ -97,7 +97,7 @@ const APInvoiceLineItemRow = ({ item, products, warehouses, expenseAccountOption
           value={item.hsnSacId}
           onChange={e => onUpdate(item.id, 'hsnSacId', e.target.value)}
           onAddNew={() => setAddHsnSacTargetRowId(item.id)}
-          buttonClassName="w-full h-8 border border-zinc-200 rounded-md text-[8.8px] hover:border-zinc-300 flex items-center justify-between bg-white"
+          buttonClassName="w-full h-8 border border-zinc-200 rounded-md text-[8.8px] hover:border-zinc-300 flex items-center justify-between bg-white dark:bg-surface-dark text-zinc-800 dark:text-zinc-200"
           placeholder="HSN/SAC"
         />
       </div>
@@ -106,7 +106,7 @@ const APInvoiceLineItemRow = ({ item, products, warehouses, expenseAccountOption
       <div className="min-w-0 max-w-full">
         {item.itemType === 'PRODUCT' ? (
           <CustomSelect
-            className="input-field w-full min-w-0 h-8 text-[8.8px] text-zinc-700 bg-white box-border"
+            className="input-field w-full min-w-0 h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark box-border"
             value={item.warehouseId || ''}
             onChange={e => onUpdate(item.id, 'warehouseId', e.target.value)}
             required
@@ -122,7 +122,7 @@ const APInvoiceLineItemRow = ({ item, products, warehouses, expenseAccountOption
             onChange={val => onUpdate(item.id, 'expenseAccountId', val)}
             options={expenseAccountOptions}
             placeholder="Search A/C..."
-            inputClassName="w-full min-w-0 box-border h-8 pl-8 pr-2 bg-white border border-zinc-200 rounded-md text-[8.8px] hover:border-zinc-300 focus:border-zinc-400 outline-none"
+            inputClassName="w-full min-w-0 box-border h-8 pl-8 pr-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[8.8px] hover:border-zinc-300 focus:border-zinc-400 outline-none"
             required={item.itemType === 'EXPENSE'}
             onCreateClick={(searchTerm) => { setActiveAccountTarget({ type: 'item', id: item.id }); setIsAddAccountOpen(true); }}
             createSubtext="Add as new account"
@@ -134,7 +134,7 @@ const APInvoiceLineItemRow = ({ item, products, warehouses, expenseAccountOption
       <div className="min-w-0 max-w-full">
         {item.itemType === 'PRODUCT' ? (
           <CustomSelect
-            className="input-field w-full min-w-0 h-8 text-[8.8px] text-zinc-700 bg-white box-border"
+            className="input-field w-full min-w-0 h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark box-border"
             value={item.locationId || ''}
             onChange={e => onUpdate(item.id, 'locationId', e.target.value)}
             required
@@ -152,7 +152,7 @@ const APInvoiceLineItemRow = ({ item, products, warehouses, expenseAccountOption
 
       {/* Qty */}
       <div className="min-w-0 max-w-full">
-        <input type="number" min="0.01" step="0.01" className="input-field w-full min-w-0 h-8 text-center text-[8.8px] bg-white box-border" value={item.quantity} onChange={e => onUpdate(item.id, 'quantity', e.target.value)} required />
+        <input type="number" min="0.01" step="0.01" className="input-field w-full min-w-0 h-8 text-center text-[8.8px] bg-white dark:bg-surface-dark dark:text-zinc-100 box-border" value={item.quantity} onChange={e => onUpdate(item.id, 'quantity', e.target.value)} required />
       </div>
 
       {/* UOM */}
@@ -168,12 +168,12 @@ const APInvoiceLineItemRow = ({ item, products, warehouses, expenseAccountOption
 
       {/* Price */}
       <div className="min-w-0 max-w-full">
-        <input type="number" min="0" step="0.01" className="input-field w-full min-w-0 h-8 text-right text-[8.8px] bg-white box-border" value={item.unitPrice} onChange={e => onUpdate(item.id, 'unitPrice', e.target.value)} required />
+        <input type="number" min="0" step="0.01" className="input-field w-full min-w-0 h-8 text-right text-[8.8px] bg-white dark:bg-surface-dark dark:text-zinc-100 box-border" value={item.unitPrice} onChange={e => onUpdate(item.id, 'unitPrice', e.target.value)} required />
       </div>
 
       {/* Tax % */}
       <div className="min-w-0 max-w-full">
-        <input type="number" min="0" step="1" className="input-field w-full min-w-0 h-8 text-center text-[8.8px] bg-white box-border" value={item.taxSlab} onChange={e => onUpdate(item.id, 'taxSlab', parseFloat(e.target.value) || 0)} />
+        <input type="number" min="0" step="1" className="input-field w-full min-w-0 h-8 text-center text-[8.8px] bg-white dark:bg-surface-dark dark:text-zinc-100 box-border" value={item.taxSlab} onChange={e => onUpdate(item.id, 'taxSlab', parseFloat(e.target.value) || 0)} />
       </div>
 
       {/* Total */}
@@ -776,8 +776,8 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
   return createPortal(
     <>
       <div className="fixed inset-0 z-[300] flex items-center justify-center bg-zinc-900/50 backdrop-blur-sm">
-        <div className="bg-white shadow-2xl w-full h-full flex flex-col overflow-hidden">
-          <div className="flex justify-between items-center p-4 border-b border-zinc-100 bg-zinc-50/50 flex-none">
+        <div className="bg-white dark:bg-card-dark shadow-2xl w-full h-full flex flex-col overflow-hidden">
+          <div className="flex justify-between items-center p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 flex-none">
             <h2 className="text-base font-bold text-zinc-800">{initialData?.id ? 'Edit Purchase Invoice' : 'Create Purchase Invoice'}</h2>
             <button type="button" onClick={onClose} className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100 transition-colors">
               <X size={16} />
@@ -786,20 +786,20 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
 
           <form className="flex-1 flex flex-col overflow-hidden text-xs min-h-0">
             {/* ── MAIN WORKSPACE: LEFT FORM (30%) | RIGHT ITEMS (70%) ── */}
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 bg-white">
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-border-dark bg-white dark:bg-card-dark">
 
               {/* ── LEFT COLUMN: DETAILS & SETTINGS (~30%) ── */}
               <div className="w-full lg:w-[30%] flex-none p-3 bg-zinc-50/40 overflow-y-auto overflow-x-hidden flex flex-col gap-2.5">
                 
                 {/* 0. PROCUREMENT REFERENCE (PO / GRN) */}
-                <div className="flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-2">
-                  <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
+                <div className="flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-2.5 bg-white dark:bg-surface-dark/40 shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
                     <h3 className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider">Procurement Link (Optional)</h3>
                   </div>
                   <div>
                     <label className="text-[8px] font-semibold text-zinc-700 block mb-1">Link Goods Receipt (GRN)</label>
                     <CustomSelect
-                      className="input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white"
+                      className="input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark"
                       value={formData.goodsReceiptId || ''}
                       onChange={e => handleSelectGRN(e.target.value)}
                     >
@@ -814,7 +814,7 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
                   <div>
                     <label className="text-[8px] font-semibold text-zinc-700 block mb-1">Link Purchase Order</label>
                     <CustomSelect
-                      className="input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white"
+                      className="input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark"
                       value={formData.purchaseOrderId || ''}
                       onChange={e => handleSelectPO(e.target.value)}
                     >
@@ -841,8 +841,8 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
                 </div>
 
                 {/* 1. VENDOR DETAILS (COMPACT SINGLE COLUMN) */}
-                <div className="flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-2">
-                  <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
+                <div className="flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-2.5 bg-white dark:bg-surface-dark/40 shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
                     <h3 className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider">Vendor Details</h3>
                   </div>
                     
@@ -866,7 +866,7 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
                           setIsAddVendorOpen(true);
                         }}
                         createSubtext="Add as new vendor"
-                        inputClassName="w-full h-8 pl-8 pr-2 bg-white border border-zinc-200 rounded-md text-[8.8px] hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                        inputClassName="w-full h-8 pl-8 pr-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[8.8px] hover:border-zinc-300 focus:border-zinc-400 outline-none"
                       />
                     </div>
                     
@@ -971,22 +971,22 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
                   </div>
 
                   {/* 2. TAX / ACCOUNT DETAILS (COMPACT 2-COLUMN) */}
-                  <div className="flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-1.5">
-                    <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
+                  <div className="flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-2.5 bg-white dark:bg-surface-dark/40 shadow-2xs space-y-1.5">
+                    <div className="flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
                       <h3 className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider">Tax & Account Details</h3>
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1">
                       <div>
                         <label className="text-[8px] font-semibold text-zinc-700 block mb-1 truncate">Input CGST A/C</label>
-                        <ComboBox name="inputCgstAccountId" value={formData.inputCgstAccountId} onChange={(val) => handleChange({ target: { name: 'inputCgstAccountId', value: val } })} options={cgstAccountOptions} placeholder="Search account..." inputClassName="w-full h-8 pl-8 pr-2 bg-white border border-zinc-200 rounded-md text-[8.8px] hover:border-zinc-300 focus:border-zinc-400 outline-none" onCreateClick={(searchTerm) => { setAccountSearchTerm(searchTerm); setActiveAccountTarget('cgst'); setIsAddAccountOpen(true); }} createSubtext="Add as new account" />
+                        <ComboBox name="inputCgstAccountId" value={formData.inputCgstAccountId} onChange={(val) => handleChange({ target: { name: 'inputCgstAccountId', value: val } })} options={cgstAccountOptions} placeholder="Search account..." inputClassName="w-full h-8 pl-8 pr-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[8.8px] hover:border-zinc-300 focus:border-zinc-400 outline-none" onCreateClick={(searchTerm) => { setAccountSearchTerm(searchTerm); setActiveAccountTarget('cgst'); setIsAddAccountOpen(true); }} createSubtext="Add as new account" />
                       </div>
                       <div>
                         <label className="text-[8px] font-semibold text-zinc-700 block mb-1 truncate">Input SGST A/C</label>
-                        <ComboBox name="inputSgstAccountId" value={formData.inputSgstAccountId} onChange={(val) => handleChange({ target: { name: 'inputSgstAccountId', value: val } })} options={sgstAccountOptions} placeholder="Search account..." inputClassName="w-full h-8 pl-8 pr-2 bg-white border border-zinc-200 rounded-md text-[8.8px] hover:border-zinc-300 focus:border-zinc-400 outline-none" onCreateClick={(searchTerm) => { setAccountSearchTerm(searchTerm); setActiveAccountTarget('sgst'); setIsAddAccountOpen(true); }} createSubtext="Add as new account" />
+                        <ComboBox name="inputSgstAccountId" value={formData.inputSgstAccountId} onChange={(val) => handleChange({ target: { name: 'inputSgstAccountId', value: val } })} options={sgstAccountOptions} placeholder="Search account..." inputClassName="w-full h-8 pl-8 pr-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[8.8px] hover:border-zinc-300 focus:border-zinc-400 outline-none" onCreateClick={(searchTerm) => { setAccountSearchTerm(searchTerm); setActiveAccountTarget('sgst'); setIsAddAccountOpen(true); }} createSubtext="Add as new account" />
                       </div>
                       <div>
                         <label className="text-[8px] font-semibold text-zinc-700 block mb-1 truncate">Input IGST A/C</label>
-                        <ComboBox name="inputIgstAccountId" value={formData.inputIgstAccountId} onChange={(val) => handleChange({ target: { name: 'inputIgstAccountId', value: val } })} options={igstAccountOptions} placeholder="Search account..." inputClassName="w-full h-8 pl-8 pr-2 bg-white border border-zinc-200 rounded-md text-[8.8px] hover:border-zinc-300 focus:border-zinc-400 outline-none" onCreateClick={(searchTerm) => { setAccountSearchTerm(searchTerm); setActiveAccountTarget('igst'); setIsAddAccountOpen(true); }} createSubtext="Add as new account" />
+                        <ComboBox name="inputIgstAccountId" value={formData.inputIgstAccountId} onChange={(val) => handleChange({ target: { name: 'inputIgstAccountId', value: val } })} options={igstAccountOptions} placeholder="Search account..." inputClassName="w-full h-8 pl-8 pr-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[8.8px] hover:border-zinc-300 focus:border-zinc-400 outline-none" onCreateClick={(searchTerm) => { setAccountSearchTerm(searchTerm); setActiveAccountTarget('igst'); setIsAddAccountOpen(true); }} createSubtext="Add as new account" />
                       </div>
                       <div>
                         <label className="text-[8px] font-semibold text-zinc-700 block mb-1 truncate">TDS Amount</label>
@@ -996,8 +996,8 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
                   </div>
 
                   {/* 3. INVOICE DETAILS (COMPACT 2-COLUMN ROWS) */}
-                  <div className="flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-1.5">
-                    <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
+                  <div className="flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-2.5 bg-white dark:bg-surface-dark/40 shadow-2xs space-y-1.5">
+                    <div className="flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
                       <h3 className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider">Invoice Details</h3>
                     </div>
                     <div className="space-y-2 pt-1">
@@ -1029,13 +1029,13 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
                   </div>
 
                   {/* 4. NOTES */}
-                  <div className="flex-none border border-zinc-200 rounded-lg p-2 bg-white shadow-2xs space-y-1">
-                    <div className="flex items-center justify-between pb-0.5 border-b border-zinc-100">
+                  <div className="flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-2 bg-white dark:bg-surface-dark/40 shadow-2xs space-y-1">
+                    <div className="flex items-center justify-between pb-0.5 border-b border-zinc-100 dark:border-[#2A2F3D]">
                       <label className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider block">Notes</label>
                     </div>
                     <textarea
                       name="notes"
-                      className="input-field w-full h-[48px] min-h-[48px] max-h-[48px] resize-none text-[8.8px] p-1.5 rounded-md border border-zinc-200 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 bg-white"
+                      className="input-field w-full h-[48px] min-h-[48px] max-h-[48px] resize-none text-[8.8px] p-1.5 rounded-md border border-zinc-200 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 bg-white dark:bg-surface-dark dark:text-zinc-100"
                       value={formData.notes}
                       onChange={handleChange}
                       placeholder="Additional notes or payment terms..."
@@ -1045,13 +1045,13 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
                 </div>
 
               {/* ── RIGHT COLUMN: ITEMS + SUMMARY (~70%) ── */}
-              <div className="w-full lg:w-[70%] flex-1 flex flex-col overflow-y-auto min-h-0 bg-white">
+              <div className="w-full lg:w-[70%] flex-1 flex flex-col overflow-y-auto min-h-0 bg-white dark:bg-card-dark">
                 
                 {/* Items Section Header */}
                 <div className="px-4 py-2.5 bg-zinc-50/80 border-b border-zinc-200 flex justify-between items-center flex-none sticky top-0 z-20">
                   <div className="flex items-center gap-2">
                     <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Items</h3>
-                    <span className="text-[8.8px] font-medium text-zinc-500 bg-white px-2 py-0.5 rounded-full border border-zinc-200">
+                    <span className="text-[8.8px] font-medium text-zinc-500 dark:text-zinc-400 bg-white dark:bg-surface-dark px-2 py-0.5 rounded-full border border-zinc-200 dark:border-border-dark">
                       {items.length} {items.length === 1 ? 'item' : 'items'}
                     </span>
                   </div>
@@ -1083,7 +1083,7 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
                 </div>
 
                 {/* Items Table Body */}
-                <div className="flex flex-col flex-1 min-h-[112px] w-full max-w-full bg-white divide-y divide-zinc-100">
+                <div className="flex flex-col flex-1 min-h-[112px] w-full max-w-full bg-white dark:bg-card-dark divide-y divide-zinc-100 dark:divide-border-dark/60">
                   {items.map((item) => (
                     <APInvoiceLineItemRow
                       key={item.id}
@@ -1111,8 +1111,8 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
 
                 {/* Summary Section */}
                 <div className="p-4 border-t border-zinc-200 bg-zinc-50/40 mt-auto flex-none">
-                  <div className="bg-white p-3.5 rounded-xl border border-zinc-200 flex flex-col justify-between shadow-2xs space-y-2.5">
-                    <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+                  <div className="bg-white dark:bg-card-dark p-3.5 rounded-xl border border-zinc-200 dark:border-border-dark flex flex-col justify-between shadow-2xs space-y-2.5">
+                    <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
                       <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Invoice Summary</h3>
                     </div>
 
@@ -1232,7 +1232,7 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
       {/* Embedded Item Creation Modal */}
       {isAddItemOpen && (
         <div className="fixed inset-0 z-[400] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-2xl h-[95vh] max-h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200">
+          <div className="bg-white dark:bg-card-dark w-full max-w-2xl h-[95vh] max-h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200 dark:border-border-dark">
             <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center border border-zinc-200 text-zinc-700">
@@ -1250,7 +1250,7 @@ export default function APInvoiceFormModal({ isOpen, onClose, onSubmit, initialD
                 <X size={18} strokeWidth={2.5} />
               </button>
             </div>
-            <div className="flex-1 overflow-hidden bg-white flex flex-col">
+            <div className="flex-1 overflow-hidden bg-white dark:bg-card-dark flex flex-col">
               <ProductForm
                 initialData={{ productName: newItemName }}
                 onSubmit={async (payload) => {

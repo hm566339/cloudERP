@@ -219,9 +219,9 @@ export default function APInvoiceDetails() {
   const isEmpty = (arr) => !arr || arr.length === 0;
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white border-b border-zinc-200 shadow-sm">
+      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark shadow-sm">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(buildPath('/accounts/purchases/invoices'))}
@@ -267,7 +267,7 @@ export default function APInvoiceDetails() {
               </button>
               {showMoreActions && (
                 <div 
-                  className="absolute right-0 mt-2 w-56 bg-white border border-zinc-200 rounded-xl shadow-lg z-30 py-1.5 text-xs animate-in fade-in slide-in-from-top-2"
+                  className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-lg z-30 py-1.5 text-xs animate-in fade-in slide-in-from-top-2"
                 >
                   {/* ─── Dynamic Workflow Actions ─── */}
                   {workflowActions.length > 0 && (
@@ -375,10 +375,10 @@ export default function APInvoiceDetails() {
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left Sidebar (30%) */}
-        <div className="w-full lg:w-80 flex-shrink-0 border-r border-zinc-200 bg-white overflow-y-auto hidden lg:block">
+        <div className="w-full lg:w-80 flex-shrink-0 border-r border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark overflow-y-auto hidden lg:block">
           <div className="p-6 space-y-8">
             <div>
-              <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100">Purchase Invoice Summary</h3>
+              <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Purchase Invoice Summary</h3>
               <dl className="space-y-4">
                 {[
                   ['Invoice Number', displayValue(inv.invoiceNo || inv.invoiceNumber)],
@@ -401,7 +401,7 @@ export default function APInvoiceDetails() {
             </div>
 
             <div>
-              <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100">Quick Actions</h3>
+              <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Quick Actions</h3>
               <div className="space-y-2">
                 {[
                   { icon: <Edit size={16} className="text-zinc-400" />, label: 'Edit Invoice', onClick: handleOpenEditModal },
@@ -429,7 +429,7 @@ export default function APInvoiceDetails() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-bold rounded-md transition-all ${
                     activeTab === tab.id 
-                      ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/50' 
+                      ? 'bg-white dark:bg-card-dark text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200/50 dark:border-border-dark' 
                       : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100/50'
                   }`}
                 >
@@ -447,8 +447,8 @@ export default function APInvoiceDetails() {
             {/* ── OVERVIEW TAB ── */}
             {activeTab === 'overview' && (
               <div className="space-y-6 max-w-4xl animate-in fade-in slide-in-from-bottom-2">
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
+                <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden">
+                  <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50">
                     <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Invoice Information</h3>
                   </div>
                   <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -473,8 +473,8 @@ export default function APInvoiceDetails() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
+                <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden">
+                  <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50">
                     <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Company Information</h3>
                   </div>
                   <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -494,8 +494,8 @@ export default function APInvoiceDetails() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
+                <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden">
+                  <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50">
                     <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Vendor Information</h3>
                   </div>
                   <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -549,8 +549,8 @@ export default function APInvoiceDetails() {
                     { label: 'Total Tax', val: taxSummary.totalTax, color: 'text-blue-700' },
                     { label: 'Grand Total', val: taxSummary.grandTotal, color: 'text-emerald-700' },
                   ].map(({ label, val, color }) => (
-                    <div key={label} className="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm flex flex-col">
-                      <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">{label}</p>
+                    <div key={label} className="p-5 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex flex-col">
+                      <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1">{label}</p>
                       <p className={`text-xl font-black ${color}`}>{curr} {fmt(val)}</p>
                     </div>
                   ))}
@@ -576,8 +576,8 @@ export default function APInvoiceDetails() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50 flex items-center justify-between">
+                <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden">
+                  <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 flex items-center justify-between">
                     <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Payment History</h3>
                     {outstandingAmount > 0 && (
                       <button 
@@ -624,21 +624,21 @@ export default function APInvoiceDetails() {
             {activeTab === 'vendorLedger' && (
               <div className="space-y-6 max-w-4xl animate-in fade-in">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm flex flex-col">
-                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Opening Balance</p>
+                  <div className="p-5 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex flex-col">
+                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1">Opening Balance</p>
                     <p className="text-xl font-black text-zinc-900">₹{fmt(vendorLedger.openingBalance)}</p>
                   </div>
-                  <div className="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm flex flex-col">
-                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Current Balance</p>
+                  <div className="p-5 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex flex-col">
+                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1">Current Balance</p>
                     <p className="text-xl font-black text-zinc-900">₹{fmt(vendorLedger.currentBalance)}</p>
                   </div>
-                  <div className="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm flex flex-col">
-                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Closing Balance</p>
+                  <div className="p-5 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex flex-col">
+                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] mb-1">Closing Balance</p>
                     <p className="text-xl font-black text-zinc-900">₹{fmt(vendorLedger.closingBalance)}</p>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 p-6">
+                <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark p-6">
                   <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider mb-4">Ledger Entries</h3>
                   {isEmpty(vendorLedger.ledgerEntries) ? (
                     <EmptyState icon={<BookOpen size={48} />} title="Vendor Ledger" desc="No ledger entries available." />
@@ -665,8 +665,8 @@ export default function APInvoiceDetails() {
 
             {/* ── JOURNAL ENTRY TAB ── */}
             {activeTab === 'journals' && (
-              <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden animate-in fade-in max-w-4xl">
-                <div className="p-5 border-b border-zinc-100 bg-zinc-50/50 flex flex-wrap items-center justify-between gap-4">
+              <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden animate-in fade-in max-w-4xl">
+                <div className="p-5 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">Voucher Number</p>
                     <p className="text-base font-mono font-bold text-zinc-900">{journalEntry.voucherNumber || `JV-PUR-${inv.invoiceNo || 'INV'}`}</p>
@@ -733,7 +733,7 @@ export default function APInvoiceDetails() {
                   </div>
                 ) : (
                   ledgerImpact.map(({ accountName, accountCode, entryType, amount }) => (
-                    <div key={accountCode} className="p-5 bg-white rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-between">
+                    <div key={accountCode} className="p-5 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex flex-col justify-between">
                       <div>
                         <div className="flex items-center justify-between">
                           <span className="font-mono text-xs font-bold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded">{displayValue(accountCode)}</span>
@@ -750,8 +750,8 @@ export default function APInvoiceDetails() {
 
             {/* ── INVENTORY TAB ── */}
             {activeTab === 'inventory' && (
-              <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden max-w-4xl animate-in fade-in">
-                <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
+              <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden max-w-4xl animate-in fade-in">
+                <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50">
                   <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Inventory Movements</h3>
                 </div>
                 <div className="p-6">
@@ -772,7 +772,7 @@ export default function APInvoiceDetails() {
                   
                   {inventoryInfo.warehouses && inventoryInfo.warehouses.length > 0 && (
                     <div className="mt-8">
-                      <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider mb-4 border-b border-zinc-100 pb-2">Locations Affected</h4>
+                      <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider mb-4 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">Locations Affected</h4>
                       <div className="space-y-4">
                         {inventoryInfo.warehouses.map((wh, idx) => (
                           <div key={idx} className="bg-zinc-50 p-4 rounded-lg border border-zinc-100">
@@ -800,8 +800,8 @@ export default function APInvoiceDetails() {
 
             {/* ── RELATED DOCUMENTS TAB ── */}
             {activeTab === 'docs' && (
-              <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden max-w-4xl animate-in fade-in">
-                <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
+              <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden max-w-4xl animate-in fade-in">
+                <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50">
                   <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Linked Purchasing Documents</h3>
                 </div>
                 <div className="p-6">
@@ -825,8 +825,8 @@ export default function APInvoiceDetails() {
 
             {/* ── APPROVAL WORKFLOW TAB ── */}
             {activeTab === 'approval' && (
-              <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden max-w-4xl animate-in fade-in">
-                <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
+              <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden max-w-4xl animate-in fade-in">
+                <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50">
                   <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Approval Workflow</h3>
                 </div>
                 <div className="p-6">
@@ -878,13 +878,13 @@ export default function APInvoiceDetails() {
                     <button
                       key={st}
                       onClick={() => setRelatedSubTab(st)}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-lg uppercase tracking-wider ${relatedSubTab === st ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-600 border border-zinc-200'}`}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg uppercase tracking-wider ${relatedSubTab === st ? 'bg-zinc-900 dark:bg-primary text-white' : 'bg-white dark:bg-card-dark text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-border-dark'}`}
                     >
                       {st}
                     </button>
                   ))}
                 </div>
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 p-6">
+                <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark p-6">
                   {relatedSubTab === 'vendorPayments' && (isEmpty(inv.relatedTransactions?.vendorPayments) ? <EmptyState icon={<CreditCard size={36} />} title="No Vendor Payments" desc="No payment transactions linked." /> : <p className="text-sm font-medium text-zinc-700">{inv.relatedTransactions.vendorPayments.length} payment(s) linked.</p>)}
                   {relatedSubTab === 'journalEntries' && (isEmpty(inv.relatedTransactions?.journalEntries) ? <EmptyState icon={<BookOpen size={36} />} title="No Journal Entries" desc="No journals linked." /> : <p className="text-sm font-medium text-zinc-700">{inv.relatedTransactions.journalEntries.length} GL Journal Entry linked.</p>)}
                   {relatedSubTab === 'inventoryTxns' && (isEmpty(inv.relatedTransactions?.inventoryTransactions) ? <EmptyState icon={<Package size={36} />} title="No Inventory Transactions" desc="No inventory actions linked." /> : <p className="text-sm font-medium text-zinc-700">{inv.relatedTransactions.inventoryTransactions.length} Inventory Txn linked.</p>)}
@@ -896,7 +896,7 @@ export default function APInvoiceDetails() {
 
             {/* ── ATTACHMENTS TAB ── */}
             {activeTab === 'attachments' && (
-              <div className="bg-white rounded-xl shadow-sm border border-zinc-200 p-6 max-w-4xl animate-in fade-in">
+              <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark p-6 max-w-4xl animate-in fade-in">
                 {isEmpty(attachments) ? (
                   <EmptyState icon={<Paperclip size={48} />} title="No Attachments" desc="No file attachments uploaded for this purchase invoice." />
                 ) : (
@@ -914,8 +914,8 @@ export default function APInvoiceDetails() {
 
             {/* ── AUDIT LOG TAB ── */}
             {activeTab === 'audit' && (
-              <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden animate-in fade-in max-w-4xl">
-                <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
+              <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden animate-in fade-in max-w-4xl">
+                <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50">
                   <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Audit Trail & Permissions</h3>
                 </div>
                 <div className="p-6 space-y-6">

@@ -15,18 +15,18 @@ export default function DataTableAdvancedFilters({
   if (!isOpen || !Array.isArray(groups) || groups.length === 0) return null;
 
   return (
-    <div className="pt-3 border-t border-zinc-100 animate-in fade-in slide-in-from-top-2 duration-200">
-      <div className="bg-zinc-50/70 p-4 rounded-xl border border-zinc-200/80 space-y-4">
+    <div className="pt-3 border-t border-zinc-100 dark:border-[#2A2F3D] animate-in fade-in slide-in-from-top-2 duration-200">
+      <div className="bg-zinc-50/70 dark:bg-[#161922] p-4 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <span className="text-[9.6px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
-            <Filter size={13} className="text-zinc-500" />
+          <span className="text-[9.6px] font-bold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider flex items-center gap-1.5">
+            <Filter size={13} className="text-zinc-500 dark:text-[#A0A6B5]" />
             Extended Search & Filter Options
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-zinc-400 hover:text-zinc-600 flex items-center gap-1 transition-colors"
+            className="text-xs text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] flex items-center gap-1 transition-colors"
           >
             <X size={14} />
             Close
@@ -42,12 +42,12 @@ export default function DataTableAdvancedFilters({
             return (
               <div
                 key={title || gIdx}
-                className={`space-y-3 bg-white p-3.5 rounded-lg border border-zinc-200/60 shadow-2xs ${
+                className={`space-y-3 bg-white dark:bg-[#1D212C] p-3.5 rounded-lg border border-zinc-200/60 dark:border-[#2A2F3D] shadow-2xs ${
                   isFullWidth ? 'md:col-span-2' : ''
                 }`}
               >
                 {title && (
-                  <h4 className="text-[9.6px] font-bold text-zinc-800 border-b border-zinc-100 pb-1.5">
+                  <h4 className="text-[9.6px] font-bold text-zinc-800 dark:text-[#E6E8EE] border-b border-zinc-100 dark:border-[#2A2F3D] pb-1.5">
                     {title}
                   </h4>
                 )}
@@ -75,14 +75,14 @@ export default function DataTableAdvancedFilters({
                     if (field.type === 'select') {
                       return (
                         <div key={fieldKey}>
-                          <label className="text-[8.8px] font-semibold text-zinc-600 mb-1 block">
+                          <label className="text-[8.8px] font-semibold text-zinc-600 dark:text-[#A0A6B5] mb-1 block">
                             {field.label}
                           </label>
                           <CustomSelect
                             value={value !== null && value !== undefined ? String(value) : ''}
                             onChange={handleFieldChange}
                             searchable={field.searchable || false}
-                            buttonClassName="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
+                            buttonClassName="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none"
                           >
                             <option value="">{field.placeholder || 'Select...'}</option>
                             {(field.options || []).map((opt) => (
@@ -97,7 +97,7 @@ export default function DataTableAdvancedFilters({
 
                     return (
                       <div key={fieldKey}>
-                        <label className="text-[8.8px] font-semibold text-zinc-600 mb-1 block">
+                        <label className="text-[8.8px] font-semibold text-zinc-600 dark:text-[#A0A6B5] mb-1 block">
                           {field.label}
                         </label>
                         <input
@@ -105,7 +105,7 @@ export default function DataTableAdvancedFilters({
                           placeholder={field.placeholder || field.label}
                           value={value}
                           onChange={handleFieldChange}
-                          className={`w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none ${
+                          className={`w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] placeholder-zinc-400 dark:placeholder-[#6B7184] focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none ${
                             field.uppercase ? 'uppercase' : ''
                           }`}
                         />

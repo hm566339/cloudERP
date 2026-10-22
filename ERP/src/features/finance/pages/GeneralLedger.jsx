@@ -83,12 +83,12 @@ const formatINR = (val) => {
 };
 
 const getStatusBadge = (status) => {
-  if (!status) return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-zinc-50 text-zinc-600 border-zinc-200">DRAFT</span>;
+  if (!status) return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-zinc-50 text-zinc-600 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]">DRAFT</span>;
   const s = status.toString().toUpperCase();
-  if (s === 'POSTED' || s === 'APPROVED' || s === 'PAID') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200">{status}</span>;
-  if (s === 'CREATED' || s === 'DRAFT' || s === 'PENDING_APPROVAL' || s === 'PARTIALLY_PAID') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-amber-50 text-amber-700 border-amber-200">{status}</span>;
-  if (s === 'CANCELLED' || s === 'REJECTED') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-rose-50 text-rose-700 border-rose-200">{status}</span>;
-  return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-blue-50 text-blue-700 border-blue-200">{status}</span>;
+  if (s === 'POSTED' || s === 'APPROVED' || s === 'PAID') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50">{status}</span>;
+  if (s === 'CREATED' || s === 'DRAFT' || s === 'PENDING_APPROVAL' || s === 'PARTIALLY_PAID') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/50">{status}</span>;
+  if (s === 'CANCELLED' || s === 'REJECTED') return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/50">{status}</span>;
+  return <span className="px-2.5 py-0.5 text-[8px] font-bold uppercase rounded-md border bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/50">{status}</span>;
 };
 
 /**
@@ -100,60 +100,60 @@ const TransactionOverview = ({ transaction, reportData }) => {
   const voucherTypeDisplay = transaction.type || (transaction.voucherType ? transaction.voucherType.replace(/_/g, ' ') : '') || '—';
 
   return (
-    <div className="p-4 bg-zinc-50/60 border-y border-zinc-200 animate-in fade-in slide-in-from-top-1 duration-200" onClick={e => e.stopPropagation()}>
+    <div className="p-4 bg-zinc-50/60 dark:bg-[#161922]/60 border-y border-zinc-200 dark:border-[#2A2F3D] animate-in fade-in slide-in-from-top-1 duration-200" onClick={e => e.stopPropagation()}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Column 1: Transaction Information */}
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
-            <BookMarked size={16} className="text-zinc-600" />
-            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">Transaction Info</h4>
+        <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs space-y-3">
+          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+            <BookMarked size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+            <h4 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">Transaction Info</h4>
           </div>
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Voucher No</span>
-              <span className="font-semibold text-zinc-900">{transaction.voucherNumber || '—'}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Voucher No</span>
+              <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{transaction.voucherNumber || '—'}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Date</span>
-              <span className="font-semibold text-zinc-900">{formatLedgerDate(transaction.voucherDate)}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Date</span>
+              <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{formatLedgerDate(transaction.voucherDate)}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Voucher Type</span>
-              <span className="font-medium text-zinc-800">{voucherTypeDisplay}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Voucher Type</span>
+              <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{voucherTypeDisplay}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Ref / UTR</span>
-              <span className="font-mono text-zinc-800">{transaction.referenceNo || '—'}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Ref / UTR</span>
+              <span className="font-mono text-zinc-800 dark:text-[#E6E8EE]">{transaction.referenceNo || '—'}</span>
             </div>
           </div>
         </div>
 
         {/* Column 2: Financial Summary */}
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
-            <Coins size={16} className="text-zinc-600" />
-            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">Financial Impact</h4>
+        <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs space-y-3">
+          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+            <Coins size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+            <h4 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">Financial Impact</h4>
           </div>
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Account</span>
-              <span className="font-semibold text-zinc-900 truncate block">{reportData?.accountName || transaction.accountName || '—'}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Account</span>
+              <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate block">{reportData?.accountName || transaction.accountName || '—'}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Status</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Status</span>
               <div className="mt-0.5">{getStatusBadge(transaction.status)}</div>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Debit (DR)</span>
-              <span className="font-bold text-emerald-600">{debitNum > 0 ? formatINR(debitNum) : '—'}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Debit (DR)</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{debitNum > 0 ? formatINR(debitNum) : '—'}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Credit (CR)</span>
-              <span className="font-bold text-rose-600">{creditNum > 0 ? formatINR(creditNum) : '—'}</span>
+              <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Credit (CR)</span>
+              <span className="font-bold text-rose-600 dark:text-rose-400">{creditNum > 0 ? formatINR(creditNum) : '—'}</span>
             </div>
-            <div className="col-span-2 pt-2 border-t border-zinc-100 flex items-center justify-between">
-              <span className="text-zinc-500 text-[10px] uppercase font-semibold">Running Balance</span>
-              <span className="font-bold text-zinc-900">
+            <div className="col-span-2 pt-2 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between">
+              <span className="text-zinc-500 dark:text-[#A0A6B5] text-[10px] uppercase font-semibold">Running Balance</span>
+              <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">
                 {transaction.runningBalance?.amount != null ? formatINR(transaction.runningBalance.amount) : '₹0.00'}
               </span>
             </div>
@@ -161,32 +161,32 @@ const TransactionOverview = ({ transaction, reportData }) => {
         </div>
 
         {/* Column 3: Remarks & Metadata */}
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
-            <FileText size={16} className="text-zinc-600" />
-            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">Narration & Metadata</h4>
+        <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs space-y-3">
+          <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+            <FileText size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+            <h4 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">Narration & Metadata</h4>
           </div>
           <div className="space-y-2 text-xs">
             {transaction.narration && (
               <div>
-                <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Narration</span>
-                <p className="text-zinc-800 text-[11px] leading-relaxed">{transaction.narration}</p>
+                <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Narration</span>
+                <p className="text-zinc-800 dark:text-[#E6E8EE] text-[11px] leading-relaxed">{transaction.narration}</p>
               </div>
             )}
             {transaction.description && (
               <div>
-                <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Description</span>
-                <p className="text-zinc-800 text-[11px] leading-relaxed">{transaction.description}</p>
+                <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Description</span>
+                <p className="text-zinc-800 dark:text-[#E6E8EE] text-[11px] leading-relaxed">{transaction.description}</p>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-100">
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-100 dark:border-[#2A2F3D]">
               <div>
-                <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Created By</span>
-                <span className="text-zinc-700">{transaction.createdBy || 'System'}</span>
+                <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Created By</span>
+                <span className="text-zinc-700 dark:text-[#A0A6B5]">{transaction.createdBy || 'System'}</span>
               </div>
               <div>
-                <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Currency</span>
-                <span className="text-zinc-700">{transaction.currency || 'INR'}</span>
+                <span className="text-zinc-400 dark:text-[#6B7184] block text-[9px] uppercase font-semibold">Currency</span>
+                <span className="text-zinc-700 dark:text-[#A0A6B5]">{transaction.currency || 'INR'}</span>
               </div>
             </div>
           </div>
@@ -454,7 +454,7 @@ export default function GeneralLedger() {
       sortable: true,
       className: 'w-32 whitespace-nowrap',
       render: (val) => (
-        <span className="font-medium text-zinc-700">
+        <span className="font-medium text-zinc-700 dark:text-[#A0A6B5]">
           {formatLedgerDate(val)}
         </span>
       )
@@ -465,10 +465,10 @@ export default function GeneralLedger() {
       sortable: false,
       className: 'w-48 whitespace-nowrap',
       render: (val, row) => (
-        <div className="flex flex-col gap-0.5 font-mono text-zinc-800">
+        <div className="flex flex-col gap-0.5 font-mono text-zinc-800 dark:text-[#E6E8EE]">
           <span className="font-semibold">{row.voucherNumber || '—'}</span>
           {val ? (
-            <span className="text-zinc-500 text-[8.5px] uppercase font-semibold">
+            <span className="text-zinc-500 dark:text-[#6B7184] text-[8.5px] uppercase font-semibold">
               UTR: {val}
             </span>
           ) : null}
@@ -484,11 +484,11 @@ export default function GeneralLedger() {
         const voucherTypeDisplay = row.type || (row.voucherType ? row.voucherType.replace(/_/g, ' ') : '');
         return (
           <div className="space-y-1">
-            <div className="font-medium text-zinc-800 leading-snug">
+            <div className="font-medium text-zinc-800 dark:text-[#E6E8EE] leading-snug">
               {val || row.description || `${voucherTypeDisplay ? voucherTypeDisplay + ' - ' : ''}${row.accountName || '—'}`}
             </div>
             {voucherTypeDisplay && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[7.5px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-600 border border-zinc-200">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[7.5px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200 dark:border-[#2A2F3D]">
                 {voucherTypeDisplay}
               </span>
             )}
@@ -504,9 +504,9 @@ export default function GeneralLedger() {
       render: (val) => {
         const num = Number(val || 0);
         return num > 0 ? (
-          <span className="font-bold text-emerald-600">{formatINR(num)}</span>
+          <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatINR(num)}</span>
         ) : (
-          <span className="text-zinc-400 font-medium">—</span>
+          <span className="text-zinc-400 dark:text-[#6B7184] font-medium">—</span>
         );
       }
     },
@@ -518,9 +518,9 @@ export default function GeneralLedger() {
       render: (val) => {
         const num = Number(val || 0);
         return num > 0 ? (
-          <span className="font-bold text-rose-600">{formatINR(num)}</span>
+          <span className="font-bold text-rose-600 dark:text-rose-400">{formatINR(num)}</span>
         ) : (
-          <span className="text-zinc-400 font-medium">—</span>
+          <span className="text-zinc-400 dark:text-[#6B7184] font-medium">—</span>
         );
       }
     },
@@ -530,7 +530,7 @@ export default function GeneralLedger() {
       sortable: false,
       className: 'text-right w-36 whitespace-nowrap',
       render: (val) => (
-        <span className="font-bold text-zinc-900">
+        <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">
           {val?.amount != null ? formatINR(val.amount) : '₹0.00'}
         </span>
       )
@@ -668,7 +668,7 @@ export default function GeneralLedger() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* 1. Common Enterprise Page Header */}
       <PageHeader
         title="General Ledger"
@@ -713,7 +713,7 @@ export default function GeneralLedger() {
       <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-5 min-h-0">
         {/* Error Alert */}
         {error && (
-          <div className="flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium">
+          <div className="flex items-center gap-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-400 px-4 py-3 rounded-xl text-sm font-medium">
             <AlertCircle size={16} className="shrink-0" />
             {error}
           </div>
@@ -770,7 +770,7 @@ export default function GeneralLedger() {
                     if (!filters.accountId) { setError("Please select an account first."); return; }
                     window.print();
                   }}
-                  className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs"
+                  className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs"
                   title="Print Report"
                 >
                   <Printer size={14} />

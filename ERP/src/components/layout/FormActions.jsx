@@ -21,7 +21,7 @@ export default function FormActions({
   return (
     <div
       className={`mt-6 pt-4 ${
-        border ? 'border-t border-zinc-200' : ''
+        border ? 'border-t border-zinc-200 dark:border-[#2A2F3D]' : ''
       } flex items-center ${
         leftContent ? 'justify-between' : 'justify-end'
       } gap-3 ${className}`}

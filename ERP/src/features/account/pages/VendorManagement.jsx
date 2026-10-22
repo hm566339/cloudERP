@@ -364,41 +364,41 @@ export default function VendorManagement() {
   const renderExpandedRow = (vendor) => (
     <div className="bg-zinc-50 border-x-4 border-l-blue-500 border-r-transparent p-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
       <div>
-        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Vendor Name</p>
+        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Vendor Name</p>
         <p className="text-sm font-semibold text-zinc-900 mt-1">{vendor.vendorName || '-'}</p>
       </div>
       <div>
-        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Vendor Code</p>
-        <p className="text-sm font-mono font-semibold text-zinc-900 mt-1 bg-white px-2 py-0.5 rounded border inline-block">{vendor.vendorCode || '-'}</p>
+        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Vendor Code</p>
+        <p className="text-sm font-mono font-semibold text-zinc-900 dark:text-zinc-100 mt-1 bg-white dark:bg-surface-dark px-2 py-0.5 rounded border border-zinc-200 dark:border-border-dark inline-block">{vendor.vendorCode || '-'}</p>
       </div>
       <div>
-        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Company Name</p>
+        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Company Name</p>
         <p className="text-sm font-medium text-zinc-900 mt-1 flex items-center gap-2">
           <Building2 size={14} className="text-zinc-400" /> {vendor.companyName || '-'}
         </p>
       </div>
       <div>
-        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Status</p>
+        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Status</p>
         <div className="mt-1">
           <DataTableStatusBadge status={vendor.isActive} />
         </div>
       </div>
       <div>
-        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Contact</p>
+        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Contact</p>
         <div className="text-sm font-medium text-zinc-900 mt-1 flex flex-col">
           <span>{vendor.email || '-'}</span>
           <span className="text-zinc-500 text-xs">{vendor.phone || '-'}</span>
         </div>
       </div>
       <div>
-        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Tax IDs</p>
+        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Tax IDs</p>
         <div className="text-sm font-medium text-zinc-900 mt-1 flex flex-col gap-0.5">
-          <span className="flex items-center gap-1.5"><span className="text-xs text-zinc-400 w-10">GSTIN</span> <span className="font-mono bg-white px-1.5 py-0.5 border rounded text-xs">{vendor.gstin || '-'}</span></span>
-          <span className="flex items-center gap-1.5"><span className="text-xs text-zinc-400 w-10">PAN</span> <span className="font-mono bg-white px-1.5 py-0.5 border rounded text-xs">{vendor.panNo || vendor.pan || '-'}</span></span>
+          <span className="flex items-center gap-1.5"><span className="text-xs text-zinc-400 w-10">GSTIN</span> <span className="font-mono bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark text-zinc-800 dark:text-zinc-200 px-1.5 py-0.5 rounded text-xs">{vendor.gstin || '-'}</span></span>
+          <span className="flex items-center gap-1.5"><span className="text-xs text-zinc-400 w-10">PAN</span> <span className="font-mono bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark text-zinc-800 dark:text-zinc-200 px-1.5 py-0.5 rounded text-xs">{vendor.panNo || vendor.pan || '-'}</span></span>
         </div>
       </div>
       <div>
-        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Financials</p>
+        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Financials</p>
         <div className="text-sm font-medium text-zinc-900 mt-1 flex flex-col gap-0.5">
           <span className="flex items-center justify-between gap-4"><span className="text-xs text-zinc-400">Limit</span> <span>{vendor.creditLimit ? `₹${vendor.creditLimit.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '-'}</span></span>
           <span className="flex items-center justify-between gap-4"><span className="text-xs text-zinc-400">Outst.</span> <span className={vendor.outstandingBalance > 0 ? "text-rose-600 font-bold" : ""}>{vendor.outstandingBalance ? `₹${vendor.outstandingBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '₹0.00'}</span></span>
@@ -406,28 +406,28 @@ export default function VendorManagement() {
         </div>
       </div>
       <div>
-        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Activity</p>
+        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Activity</p>
         <div className="text-sm font-medium text-zinc-900 mt-1 flex flex-col gap-0.5">
           <span className="flex items-center justify-between gap-4"><span className="text-xs text-zinc-400">Invoices</span> <span>{vendor.totalInvoices || '0'}</span></span>
           <span className="flex items-center justify-between gap-4"><span className="text-xs text-zinc-400">Payments</span> <span>{vendor.totalPayments || '0'}</span></span>
         </div>
       </div>
       <div>
-        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Terms & Currency</p>
+        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Terms & Currency</p>
         <div className="text-sm font-medium text-zinc-900 mt-1 flex flex-col gap-0.5">
           <span className="text-xs">{vendor.paymentTermDays ? `${vendor.paymentTermDays} Days` : 'No terms'}</span>
           <span className="text-xs">{vendor.currency || 'INR'}</span>
         </div>
       </div>
       <div>
-        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Location</p>
+        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Location</p>
         <div className="text-sm font-medium text-zinc-900 mt-1 flex flex-col">
           <span>{vendor.city || '-'}</span>
           <span className="text-zinc-500 text-xs">{vendor.state || '-'} {vendor.country ? `, ${vendor.country}` : ''}</span>
         </div>
       </div>
       <div>
-        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Last Updated</p>
+        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Last Updated</p>
         <p className="text-sm font-medium text-zinc-900 mt-1">
           {vendor.updatedAt ? new Date(vendor.updatedAt).toLocaleDateString() : '-'}
         </p>
@@ -436,7 +436,7 @@ export default function VendorManagement() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Vendor Management"
         description="Manage vendor accounts and information"

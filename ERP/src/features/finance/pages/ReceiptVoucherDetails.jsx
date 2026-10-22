@@ -59,25 +59,25 @@ export default function ReceiptVoucherDetails() {
   };
 
   const renderEmptyState = (title, message) => (
-    <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-zinc-200 rounded-xl bg-zinc-50/50 min-h-[240px]">
-      <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center mb-4">
-        <SearchX className="text-zinc-400" size={24} />
+    <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-zinc-200 dark:border-[#2A2F3D] rounded-xl bg-zinc-50/50 dark:bg-[#1D212C]/50 min-h-[240px]">
+      <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-[#222736] flex items-center justify-center mb-4">
+        <SearchX className="text-zinc-400 dark:text-zinc-500" size={24} />
       </div>
-      <h3 className="text-sm font-semibold text-zinc-900 mb-1">{title}</h3>
-      <p className="text-xs text-zinc-500 max-w-sm">{message}</p>
+      <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-1">{title}</h3>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm">{message}</p>
     </div>
   );
 
   if (isLoading) {
     return (
-      <div className="p-8 space-y-6 animate-pulse bg-zinc-50/50 min-h-screen">
-        <div className="h-20 bg-zinc-200 rounded-xl w-full"></div>
+      <div className="p-8 space-y-6 animate-pulse bg-zinc-50/50 dark:bg-[#0F1117] min-h-screen">
+        <div className="h-20 bg-zinc-200 dark:bg-[#1D212C] rounded-xl w-full"></div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-zinc-200 rounded-xl"></div>)}
+          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-zinc-200 dark:bg-[#1D212C] rounded-xl"></div>)}
         </div>
         <div className="flex gap-6">
-          <div className="w-[30%] h-96 bg-zinc-200 rounded-xl"></div>
-          <div className="w-[70%] h-96 bg-zinc-200 rounded-xl"></div>
+          <div className="w-[30%] h-96 bg-zinc-200 dark:bg-[#1D212C] rounded-xl"></div>
+          <div className="w-[70%] h-96 bg-zinc-200 dark:bg-[#1D212C] rounded-xl"></div>
         </div>
       </div>
     );
@@ -85,10 +85,10 @@ export default function ReceiptVoucherDetails() {
 
   if (isError || !apiData) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[320px] bg-zinc-50/50">
+      <div className="flex flex-col items-center justify-center h-full min-h-[320px] bg-zinc-50/50 dark:bg-[#0F1117]">
         <XCircle className="w-12 h-12 text-red-400 mb-4" />
-        <h2 className="text-lg font-semibold text-zinc-900 mb-2">Receipt Not Found</h2>
-        <p className="text-sm text-zinc-500 mb-4">{error?.message || 'The requested Receipt Voucher could not be found.'}</p>
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-2">Receipt Not Found</h2>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">{error?.message || 'The requested Receipt Voucher could not be found.'}</p>
         <button onClick={() => navigate(buildPath('/accounts/transactions/receipts'))} className="btn-secondary">
           Back to Receipts
         </button>
@@ -103,56 +103,56 @@ export default function ReceiptVoucherDetails() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'POSTED':
-      case 'CLEARED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'DRAFT': return 'bg-zinc-50 text-zinc-600 border-zinc-200';
+      case 'CLEARED': return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60';
+      case 'DRAFT': return 'bg-zinc-50 dark:bg-[#1D212C] text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-[#2A2F3D]';
       case 'CANCELLED':
-      case 'REJECTED': return 'bg-rose-50 text-rose-700 border-rose-200';
-      case 'REVERSED': return 'bg-amber-50 text-amber-700 border-amber-200';
-      default: return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'REJECTED': return 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/60';
+      case 'REVERSED': return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/60';
+      default: return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/60';
     }
   };
   
   const isFullyAllocated = receipt.statistics?.remainingBalance === 0 && receipt.statistics?.totalAllocatedAmount > 0;
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50">
+    <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-[#0F1117]">
       
       {/* 1. Sticky Header */}
-      <div className="sticky top-0 z-20 bg-white border-b border-zinc-200 shadow-sm px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="sticky top-0 z-20 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] shadow-sm px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => navigate(buildPath('/accounts/transactions/receipts'))}
-            className="p-2 hover:bg-zinc-100 rounded-lg text-zinc-500 transition-colors"
+            className="p-2 hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg text-zinc-500 dark:text-zinc-400 transition-colors"
           >
             <ArrowLeft size={18} />
           </button>
           
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/60">
             <DollarSign size={20} />
           </div>
           
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-zinc-900 leading-none">{receipt.receiptNo || 'New Receipt'}</h1>
+              <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 leading-none">{receipt.receiptNo || 'New Receipt'}</h1>
               <span className={`px-2 py-0.5 text-[8px] font-bold rounded-md border ${getStatusColor(receipt.receiptStatus)}`}>
                 {receipt.receiptStatus}
               </span>
               {receipt.glPostingStatus && (
-                <span className="px-2 py-0.5 text-[8px] font-bold rounded-md bg-zinc-50 text-zinc-600 border border-zinc-200 uppercase">
+                <span className="px-2 py-0.5 text-[8px] font-bold rounded-md bg-zinc-50 dark:bg-[#1D212C] text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-[#2A2F3D] uppercase">
                   GL: {receipt.glPostingStatus}
                 </span>
               )}
               {isFullyAllocated && (
-                <span className="px-2 py-0.5 text-[8px] font-bold rounded-md bg-emerald-50 text-emerald-600 border border-emerald-200 uppercase">
+                <span className="px-2 py-0.5 text-[8px] font-bold rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 uppercase">
                   ALLOCATED
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 mt-1.5 text-xs text-zinc-500 font-medium">
+            <div className="flex items-center gap-2 mt-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium">
               <span>{receipt.customerInformation?.customerName}</span>
-              <span className="w-1 h-1 rounded-full bg-zinc-300"></span>
+              <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
               <span>Date: {receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : '-'}</span>
-              <span className="w-1 h-1 rounded-full bg-zinc-300"></span>
+              <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
               <span>Mode: {receipt.paymentMode || '-'}</span>
             </div>
           </div>
@@ -162,30 +162,30 @@ export default function ReceiptVoucherDetails() {
 
           {/* More Actions Dropdown */}
           <div className="relative group">
-            <button className="h-9 px-3 text-[10.4px] font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
+            <button className="h-9 px-3 text-[10.4px] font-semibold text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
               More Actions <MoreVertical size={14} className="text-zinc-400" />
             </button>
-            <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-zinc-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+            <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
               <div className="p-1">
                 {canRead && (
                   <>
-                    <button onClick={(e) => { e.stopPropagation(); window.print(); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg text-left">
+                    <button onClick={(e) => { e.stopPropagation(); window.print(); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-lg text-left">
                       <Printer size={14} /> Print Receipt
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); alert('Export PDF coming soon'); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg text-left">
+                    <button onClick={(e) => { e.stopPropagation(); alert('Export PDF coming soon'); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-lg text-left">
                       <Download size={14} /> Export PDF
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); alert('Email coming soon'); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg text-left">
+                    <button onClick={(e) => { e.stopPropagation(); alert('Email coming soon'); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-lg text-left">
                       <Mail size={14} /> Email Receipt
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); alert('Share coming soon'); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg text-left">
+                    <button onClick={(e) => { e.stopPropagation(); alert('Share coming soon'); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-lg text-left">
                       <Share2 size={14} /> Share Receipt
                     </button>
-                    <div className="h-px bg-zinc-100 my-1"></div>
-                    <button onClick={(e) => { e.stopPropagation(); setActiveTab('customer-ledger'); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg text-left">
+                    <div className="h-px bg-zinc-100 dark:bg-[#2A2F3D] my-1"></div>
+                    <button onClick={(e) => { e.stopPropagation(); setActiveTab('customer-ledger'); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-lg text-left">
                       <User size={14} /> View Customer Ledger
                     </button>
-                    <div className="h-px bg-zinc-100 my-1"></div>
+                    <div className="h-px bg-zinc-100 dark:bg-[#2A2F3D] my-1"></div>
                   </>
                 )}
                 
@@ -206,26 +206,26 @@ export default function ReceiptVoucherDetails() {
         
         {/* 2. Top KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-center">
-            <span className="text-[8px] font-bold text-zinc-500 uppercase mb-1">Receipt Amount</span>
-            <span className="text-lg font-bold text-emerald-600">{ccy} {receipt.receiptAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</span>
+          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex flex-col justify-center">
+            <span className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1">Receipt Amount</span>
+            <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{ccy} {receipt.receiptAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</span>
           </div>
           
-          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-center">
-            <span className="text-[8px] font-bold text-zinc-500 uppercase mb-1">Allocated Amount</span>
-            <span className="text-lg font-bold text-zinc-700">{ccy} {receipt.statistics?.totalAllocatedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</span>
+          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex flex-col justify-center">
+            <span className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1">Allocated Amount</span>
+            <span className="text-lg font-bold text-zinc-700 dark:text-zinc-300">{ccy} {receipt.statistics?.totalAllocatedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</span>
           </div>
           
-          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-center">
-            <span className="text-[8px] font-bold text-zinc-500 uppercase mb-1">Remaining Balance</span>
-            <span className={`text-lg font-bold ${receipt.statistics?.remainingBalance > 0 ? 'text-orange-500' : 'text-zinc-400'}`}>
+          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex flex-col justify-center">
+            <span className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1">Remaining Balance</span>
+            <span className={`text-lg font-bold ${receipt.statistics?.remainingBalance > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-zinc-400 dark:text-zinc-500'}`}>
               {ccy} {receipt.statistics?.remainingBalance?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}
             </span>
           </div>
 
-          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-center">
-            <span className="text-[8px] font-bold text-zinc-500 uppercase mb-1">Invoices Allocated</span>
-            <span className="text-lg font-bold text-blue-600">
+          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex flex-col justify-center">
+            <span className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1">Invoices Allocated</span>
+            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
               {receipt.statistics?.numberOfAllocatedInvoices || 0}
             </span>
           </div>
@@ -237,49 +237,49 @@ export default function ReceiptVoucherDetails() {
           {/* Left Sidebar (30%) */}
           <div className="w-full lg:w-[30%] space-y-6">
             {/* Summary */}
-            <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-              <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                <h3 className="font-semibold text-zinc-900 flex items-center gap-2 text-sm">
+            <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
+              <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2 text-sm">
                   <FileText size={16} className="text-emerald-500" />
                   Receipt Summary
                 </h3>
               </div>
               <div className="p-5 space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
-                  <span className="text-xs text-zinc-500 font-medium">Receipt No</span>
-                  <span className="text-sm font-semibold text-zinc-900">{receipt.receiptNo}</span>
+                <div className="flex justify-between items-center pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Receipt No</span>
+                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{receipt.receiptNo}</span>
                 </div>
-                <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
-                  <span className="text-xs text-zinc-500 font-medium">Customer</span>
-                  <span className="text-sm font-semibold text-zinc-900 text-right">{receipt.customerInformation?.customerName}</span>
+                <div className="flex justify-between items-center pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Customer</span>
+                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 text-right">{receipt.customerInformation?.customerName}</span>
                 </div>
-                <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
-                  <span className="text-xs text-zinc-500 font-medium">Receipt Date</span>
-                  <span className="text-sm font-medium text-zinc-800">{receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : '-'}</span>
+                <div className="flex justify-between items-center pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Receipt Date</span>
+                  <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : '-'}</span>
                 </div>
-                <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
-                  <span className="text-xs text-zinc-500 font-medium">Payment Mode</span>
-                  <span className="text-sm font-medium text-zinc-800">{receipt.paymentMode || '-'}</span>
+                <div className="flex justify-between items-center pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Payment Mode</span>
+                  <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.paymentMode || '-'}</span>
                 </div>
-                <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
-                  <span className="text-xs text-zinc-500 font-medium">Status</span>
+                <div className="flex justify-between items-center pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Status</span>
                   <span className={`text-[8px] font-bold px-2 py-0.5 rounded-md border ${getStatusColor(receipt.receiptStatus)}`}>{receipt.receiptStatus}</span>
                 </div>
-                <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
-                  <span className="text-xs text-zinc-500 font-medium">GL Status</span>
-                  <span className="text-sm font-medium text-zinc-800">{receipt.glPostingStatus || '-'}</span>
+                <div className="flex justify-between items-center pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">GL Status</span>
+                  <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.glPostingStatus || '-'}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-zinc-500 font-medium">Ref Number</span>
-                  <span className="text-sm font-medium text-zinc-800">{receipt.referenceNo || '-'}</span>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Ref Number</span>
+                  <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.referenceNo || '-'}</span>
                 </div>
               </div>
             </div>
             
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-              <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                <h3 className="font-semibold text-zinc-900 flex items-center gap-2 text-sm">
+            <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
+              <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2 text-sm">
                   <Activity size={16} className="text-blue-500" />
                   Quick Actions
                 </h3>
@@ -288,14 +288,14 @@ export default function ReceiptVoucherDetails() {
                 <div className="flex flex-col gap-1">
                   {canRead && (
                     <>
-                      <button onClick={() => window.print()} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 rounded-lg transition-colors w-full text-left">
-                        <Download size={15} className="text-zinc-400" /> Export PDF
+                      <button onClick={() => window.print()} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-lg transition-colors w-full text-left">
+                        <Download size={15} className="text-zinc-400 dark:text-zinc-500" /> Export PDF
                       </button>
-                      <button onClick={() => alert('Email functionality coming soon')} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 rounded-lg transition-colors w-full text-left">
-                        <Mail size={15} className="text-zinc-400" /> Email Receipt
+                      <button onClick={() => alert('Email functionality coming soon')} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-lg transition-colors w-full text-left">
+                        <Mail size={15} className="text-zinc-400 dark:text-zinc-500" /> Email Receipt
                       </button>
-                      <button onClick={() => navigate(buildPath('/accounts/masters/customers'))} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 rounded-lg transition-colors w-full text-left">
-                        <User size={15} className="text-zinc-400" /> View Customer Ledger
+                      <button onClick={() => navigate(buildPath('/accounts/masters/customers'))} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-lg transition-colors w-full text-left">
+                        <User size={15} className="text-zinc-400 dark:text-zinc-500" /> View Customer Ledger
                       </button>
                     </>
                   )}
@@ -304,21 +304,21 @@ export default function ReceiptVoucherDetails() {
             </div>
 
             {/* Statistics */}
-            <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-              <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                <h3 className="font-semibold text-zinc-900 flex items-center gap-2 text-sm">
+            <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
+              <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2 text-sm">
                   <BarChart2 size={16} className="text-purple-500" />
                   Statistics
                 </h3>
               </div>
               <div className="p-5 grid grid-cols-2 gap-4">
-                <div className="bg-zinc-50 rounded-lg p-3 text-center border border-zinc-100">
-                  <p className="text-[8px] font-bold text-zinc-500 uppercase">Journal Entries</p>
-                  <p className="text-lg font-bold text-zinc-800">{receipt.statistics?.totalJournalEntries || 0}</p>
+                <div className="bg-zinc-50 dark:bg-[#1D212C] rounded-lg p-3 text-center border border-zinc-100 dark:border-[#2A2F3D]">
+                  <p className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase">Journal Entries</p>
+                  <p className="text-lg font-bold text-zinc-800 dark:text-zinc-100">{receipt.statistics?.totalJournalEntries || 0}</p>
                 </div>
-                <div className="bg-zinc-50 rounded-lg p-3 text-center border border-zinc-100">
-                  <p className="text-[8px] font-bold text-zinc-500 uppercase">Linked Docs</p>
-                  <p className="text-lg font-bold text-zinc-800">{receipt.statistics?.totalLinkedDocuments || 0}</p>
+                <div className="bg-zinc-50 dark:bg-[#1D212C] rounded-lg p-3 text-center border border-zinc-100 dark:border-[#2A2F3D]">
+                  <p className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase">Linked Docs</p>
+                  <p className="text-lg font-bold text-zinc-800 dark:text-zinc-100">{receipt.statistics?.totalLinkedDocuments || 0}</p>
                 </div>
               </div>
             </div>
@@ -326,10 +326,10 @@ export default function ReceiptVoucherDetails() {
           
           {/* Main Content (70%) */}
           <div className="w-full lg:w-[70%]">
-            <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden flex flex-col h-full min-h-[480px]">
+            <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm overflow-hidden flex flex-col h-full min-h-[480px]">
               
               {/* Sticky Tabs */}
-              <div className="bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm sticky top-0 z-10 overflow-x-auto no-scrollbar">
+              <div className="bg-zinc-50/80 dark:bg-[#1D212C] backdrop-blur-sm p-1.5 border-b border-zinc-200 dark:border-[#2A2F3D] shadow-sm sticky top-0 z-10 overflow-x-auto no-scrollbar">
                 <div className="flex overflow-x-auto no-scrollbar gap-1.5 pb-0.5 min-w-max">
                   {TABS.map(tab => (
                     <button
@@ -337,8 +337,8 @@ export default function ReceiptVoucherDetails() {
                       onClick={() => setActiveTab(tab.id)}
                       className={`flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all shrink-0 whitespace-nowrap ${
                         activeTab === tab.id 
-                          ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/50' 
-                          : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100/50'
+                          ? 'bg-white dark:bg-[#161922] text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200/50 dark:border-[#2A2F3D]' 
+                          : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100/50 dark:hover:bg-[#222736]'
                       }`}
                     >
                       {tab.label}
@@ -348,77 +348,77 @@ export default function ReceiptVoucherDetails() {
               </div>
 
               {/* Tab Contents */}
-              <div className="p-6 overflow-y-auto bg-zinc-50/30 flex-1">
+              <div className="p-6 overflow-y-auto bg-zinc-50/30 dark:bg-[#161922] flex-1">
                 
                 {/* 1. OVERVIEW TAB */}
                 {activeTab === 'overview' && (
                   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                     <div>
-                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                         <FileText size={14} /> Receipt Information
                       </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white p-5 rounded-xl border border-zinc-100 shadow-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white dark:bg-[#1D212C] p-5 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm">
                         <div>
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Receipt Number</p>
-                          <p className="text-sm font-semibold text-zinc-900">{receipt.receiptNo || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Receipt Number</p>
+                          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{receipt.receiptNo || '-'}</p>
                         </div>
                         <div>
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Receipt Date</p>
-                          <p className="text-sm font-medium text-zinc-800">{receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Receipt Date</p>
+                          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : '-'}</p>
                         </div>
                         <div>
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Receipt Amount</p>
-                          <p className="text-sm font-semibold text-emerald-600">{ccy} {receipt.receiptAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Receipt Amount</p>
+                          <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{ccy} {receipt.receiptAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                         </div>
                         <div>
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Payment Mode</p>
-                          <p className="text-sm font-medium text-zinc-800">{receipt.paymentMode || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Payment Mode</p>
+                          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.paymentMode || '-'}</p>
                         </div>
                         <div>
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Reference No</p>
-                          <p className="text-sm font-medium text-zinc-800">{receipt.referenceNo || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Reference No</p>
+                          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.referenceNo || '-'}</p>
                         </div>
                         <div>
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Transaction Ref</p>
-                          <p className="text-sm font-medium text-zinc-800 break-all">{receipt.transactionReference || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Transaction Ref</p>
+                          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 break-all">{receipt.transactionReference || '-'}</p>
                         </div>
                         <div className="col-span-2">
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Remarks</p>
-                          <p className="text-sm text-zinc-700">{receipt.remarks || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Remarks</p>
+                          <p className="text-sm text-zinc-700 dark:text-zinc-300">{receipt.remarks || '-'}</p>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                         <Building2 size={14} /> Bank & Instrument Details
                       </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white p-5 rounded-xl border border-zinc-100 shadow-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white dark:bg-[#1D212C] p-5 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm">
                         <div className="col-span-2">
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Bank Name</p>
-                          <p className="text-sm font-semibold text-zinc-900">{receipt.bankAccountInformation?.bankName || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Bank Name</p>
+                          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{receipt.bankAccountInformation?.bankName || '-'}</p>
                         </div>
                         <div className="col-span-2">
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Bank Account / Branch</p>
-                          <p className="text-sm font-medium text-zinc-800">{receipt.bankAccountInformation?.bankAccount || '-'} {receipt.bankAccountInformation?.branch ? `(${receipt.bankAccountInformation.branch})` : ''}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Bank Account / Branch</p>
+                          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.bankAccountInformation?.bankAccount || '-'} {receipt.bankAccountInformation?.branch ? `(${receipt.bankAccountInformation.branch})` : ''}</p>
                         </div>
                         {receipt.receiptInstrumentDetails && (
                           <>
                             <div>
-                              <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Instrument No</p>
-                              <p className="text-sm font-medium text-zinc-800">{receipt.receiptInstrumentDetails.instrumentNumber || '-'}</p>
+                              <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Instrument No</p>
+                              <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.receiptInstrumentDetails.instrumentNumber || '-'}</p>
                             </div>
                             <div>
-                              <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Instrument Date</p>
-                              <p className="text-sm font-medium text-zinc-800">{receipt.receiptInstrumentDetails.instrumentDate ? new Date(receipt.receiptInstrumentDetails.instrumentDate).toLocaleDateString() : '-'}</p>
+                              <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Instrument Date</p>
+                              <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.receiptInstrumentDetails.instrumentDate ? new Date(receipt.receiptInstrumentDetails.instrumentDate).toLocaleDateString() : '-'}</p>
                             </div>
                             <div>
-                              <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Drawn On Bank</p>
-                              <p className="text-sm font-medium text-zinc-800">{receipt.receiptInstrumentDetails.drawnOnBank || '-'}</p>
+                              <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Drawn On Bank</p>
+                              <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.receiptInstrumentDetails.drawnOnBank || '-'}</p>
                             </div>
                             <div>
-                              <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Clearing Date</p>
-                              <p className="text-sm font-medium text-zinc-800">{receipt.receiptInstrumentDetails.clearingDate ? new Date(receipt.receiptInstrumentDetails.clearingDate).toLocaleDateString() : '-'}</p>
+                              <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Clearing Date</p>
+                              <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.receiptInstrumentDetails.clearingDate ? new Date(receipt.receiptInstrumentDetails.clearingDate).toLocaleDateString() : '-'}</p>
                             </div>
                           </>
                         )}
@@ -426,25 +426,25 @@ export default function ReceiptVoucherDetails() {
                     </div>
 
                     <div>
-                      <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                         <User size={14} /> Customer Information
                       </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white p-5 rounded-xl border border-zinc-100 shadow-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white dark:bg-[#1D212C] p-5 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm">
                         <div className="col-span-2">
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Customer Name</p>
-                          <p className="text-sm font-semibold text-zinc-900">{receipt.customerInformation?.customerName || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Customer Name</p>
+                          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{receipt.customerInformation?.customerName || '-'}</p>
                         </div>
                         <div>
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Customer Code</p>
-                          <p className="text-sm font-medium text-zinc-800">{receipt.customerInformation?.customerCode || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Customer Code</p>
+                          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.customerInformation?.customerCode || '-'}</p>
                         </div>
                         <div>
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">GSTIN</p>
-                          <p className="text-sm font-medium text-zinc-800">{receipt.customerInformation?.gstin || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">GSTIN</p>
+                          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.customerInformation?.gstin || '-'}</p>
                         </div>
                         <div className="col-span-4">
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Receivable Account</p>
-                          <p className="text-sm font-medium text-zinc-800 break-all">{receipt.customerInformation?.receivableAccount || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Receivable Account</p>
+                          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 break-all">{receipt.customerInformation?.receivableAccount || '-'}</p>
                         </div>
                       </div>
                     </div>
@@ -455,33 +455,33 @@ export default function ReceiptVoucherDetails() {
                 {activeTab === 'allocations' && (
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                     {receipt.invoiceAllocations?.length > 0 ? (
-                      <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+                      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-x-auto min-w-0 max-w-full custom-scrollbar">
                         <table className="w-full min-w-[720px] text-left text-sm whitespace-nowrap" aria-label="Invoice Allocations Table">
-                          <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
+                          <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] sticky top-0 z-10">
                             <tr>
-                              <th scope="col" className="px-4 py-3 text-xs font-semibold text-zinc-600">Invoice Number</th>
-                              <th scope="col" className="px-4 py-3 text-xs font-semibold text-zinc-600">Invoice Date</th>
-                              <th scope="col" className="px-4 py-3 text-xs font-semibold text-zinc-600">Due Date</th>
-                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600">Invoice Amount</th>
-                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600">Previously Received</th>
-                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600">Allocated Amount</th>
-                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600">Remaining</th>
-                              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-zinc-600">Status</th>
+                              <th scope="col" className="px-4 py-3 text-xs font-semibold text-zinc-600 dark:text-zinc-400">Invoice Number</th>
+                              <th scope="col" className="px-4 py-3 text-xs font-semibold text-zinc-600 dark:text-zinc-400">Invoice Date</th>
+                              <th scope="col" className="px-4 py-3 text-xs font-semibold text-zinc-600 dark:text-zinc-400">Due Date</th>
+                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-400">Invoice Amount</th>
+                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-400">Previously Received</th>
+                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-400">Allocated Amount</th>
+                              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-400">Remaining</th>
+                              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-400">Status</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-zinc-100">
+                          <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                             {receipt.invoiceAllocations.map((alloc, idx) => (
-                              <tr key={idx} className="hover:bg-zinc-50/50">
-                                <td className="px-4 py-3 font-medium text-blue-600 cursor-pointer hover:underline">{alloc.invoiceNumber || '-'}</td>
-                                <td className="px-4 py-3 text-zinc-600">{alloc.invoiceDate ? new Date(alloc.invoiceDate).toLocaleDateString() : '-'}</td>
-                                <td className="px-4 py-3 text-zinc-600">{alloc.dueDate ? new Date(alloc.dueDate).toLocaleDateString() : '-'}</td>
-                                <td className="px-4 py-3 text-right text-zinc-600 tabular-nums">{alloc.invoiceAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                                <td className="px-4 py-3 text-right text-zinc-600 tabular-nums">{alloc.previouslyReceivedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</td>
-                                <td className="px-4 py-3 text-right font-semibold text-emerald-600 tabular-nums">{alloc.allocatedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                                <td className="px-4 py-3 text-right font-medium text-orange-500 tabular-nums">{alloc.remainingOutstanding?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                              <tr key={idx} className="hover:bg-zinc-50/50 dark:hover:bg-[#222736]/50">
+                                <td className="px-4 py-3 font-medium text-blue-600 dark:text-blue-400 cursor-pointer hover:underline">{alloc.invoiceNumber || '-'}</td>
+                                <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">{alloc.invoiceDate ? new Date(alloc.invoiceDate).toLocaleDateString() : '-'}</td>
+                                <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">{alloc.dueDate ? new Date(alloc.dueDate).toLocaleDateString() : '-'}</td>
+                                <td className="px-4 py-3 text-right text-zinc-600 dark:text-zinc-400 tabular-nums">{alloc.invoiceAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                <td className="px-4 py-3 text-right text-zinc-600 dark:text-zinc-400 tabular-nums">{alloc.previouslyReceivedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</td>
+                                <td className="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{alloc.allocatedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                <td className="px-4 py-3 text-right font-medium text-orange-500 dark:text-orange-400 tabular-nums">{alloc.remainingOutstanding?.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                                 <td className="px-4 py-3 text-center">
                                   <span className={`px-2 py-0.5 text-xs font-medium rounded-md border ${
-                                    alloc.allocationStatus === 'FULLY_ALLOCATED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-blue-50 text-blue-700 border-blue-200'
+                                    alloc.allocationStatus === 'FULLY_ALLOCATED' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60' : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/60'
                                   }`}>{alloc.allocationStatus}</span>
                                 </td>
                               </tr>
@@ -498,21 +498,21 @@ export default function ReceiptVoucherDetails() {
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                     {receipt.taxInformation ? (
                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm text-center">
-                            <p className="text-[8.8px] font-bold text-zinc-500 uppercase mb-1">TDS Amount</p>
-                            <p className="text-lg font-bold text-rose-600">{ccy} {receipt.taxInformation.tdsAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</p>
+                          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm text-center">
+                            <p className="text-[8.8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1">TDS Amount</p>
+                            <p className="text-lg font-bold text-rose-600 dark:text-rose-400">{ccy} {receipt.taxInformation.tdsAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</p>
                           </div>
-                          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm text-center">
-                            <p className="text-[8.8px] font-bold text-zinc-500 uppercase mb-1">TDS Section</p>
-                            <p className="text-lg font-bold text-zinc-700">{receipt.taxInformation.tdsSection || '-'}</p>
+                          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm text-center">
+                            <p className="text-[8.8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1">TDS Section</p>
+                            <p className="text-lg font-bold text-zinc-700 dark:text-zinc-300">{receipt.taxInformation.tdsSection || '-'}</p>
                           </div>
-                          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm text-center">
-                            <p className="text-[8.8px] font-bold text-zinc-500 uppercase mb-1">TDS Percentage</p>
-                            <p className="text-lg font-bold text-zinc-700">{receipt.taxInformation.tdsPercentage || '0'}%</p>
+                          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm text-center">
+                            <p className="text-[8.8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1">TDS Percentage</p>
+                            <p className="text-lg font-bold text-zinc-700 dark:text-zinc-300">{receipt.taxInformation.tdsPercentage || '0'}%</p>
                           </div>
-                          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm text-center">
-                            <p className="text-[8.8px] font-bold text-zinc-500 uppercase mb-1">Exchange Gain/Loss</p>
-                            <p className="text-lg font-bold text-zinc-700">{ccy} {receipt.taxInformation.exchangeGainLossAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</p>
+                          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm text-center">
+                            <p className="text-[8.8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase mb-1">Exchange Gain/Loss</p>
+                            <p className="text-lg font-bold text-zinc-700 dark:text-zinc-300">{ccy} {receipt.taxInformation.exchangeGainLossAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</p>
                           </div>
                        </div>
                     ) : renderEmptyState('No Tax Data', 'No tax deductions or exchange variations apply to this receipt.')}
@@ -524,51 +524,51 @@ export default function ReceiptVoucherDetails() {
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
                     {receipt.generalLedgerPosting ? (
                       <>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white p-5 rounded-xl border border-zinc-100 shadow-sm">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white dark:bg-[#1D212C] p-5 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm">
                           <div>
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Journal Number</p>
-                            <p className="text-sm font-semibold text-zinc-900">{receipt.generalLedgerPosting.journalNumber || '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Journal Number</p>
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{receipt.generalLedgerPosting.journalNumber || '-'}</p>
                           </div>
                           <div>
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Reverse Journal</p>
-                            <p className="text-sm font-medium text-zinc-800">{receipt.generalLedgerPosting.reverseJournalEntryId || '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Reverse Journal</p>
+                            <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.generalLedgerPosting.reverseJournalEntryId || '-'}</p>
                           </div>
                           <div>
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Posting Status</p>
-                            <p className="text-sm font-medium text-zinc-800">{receipt.generalLedgerPosting.postingStatus || '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Posting Status</p>
+                            <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.generalLedgerPosting.postingStatus || '-'}</p>
                           </div>
                           <div>
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Posting Date</p>
-                            <p className="text-sm font-medium text-zinc-800">{receipt.generalLedgerPosting.postingDate ? new Date(receipt.generalLedgerPosting.postingDate).toLocaleString() : '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Posting Date</p>
+                            <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.generalLedgerPosting.postingDate ? new Date(receipt.generalLedgerPosting.postingDate).toLocaleString() : '-'}</p>
                           </div>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4">Debit Entries</h4>
-                            <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-                              <ul className="divide-y divide-zinc-100 max-h-[240px] overflow-y-auto">
+                            <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">Debit Entries</h4>
+                            <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+                              <ul className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] max-h-[240px] overflow-y-auto">
                                 {(receipt.generalLedgerPosting.debitEntries || []).length > 0 ? (
                                   receipt.generalLedgerPosting.debitEntries.map((entry, idx) => (
-                                    <li key={idx} className="p-3 text-sm text-zinc-700">{entry}</li>
+                                    <li key={idx} className="p-3 text-sm text-zinc-700 dark:text-zinc-300">{entry}</li>
                                   ))
                                 ) : (
-                                  <li className="p-4 text-sm text-zinc-500 text-center">No debit entries</li>
+                                  <li className="p-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">No debit entries</li>
                                 )}
                               </ul>
                             </div>
                           </div>
                           
                           <div>
-                            <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4">Credit Entries</h4>
-                            <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-                              <ul className="divide-y divide-zinc-100 max-h-[240px] overflow-y-auto">
+                            <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">Credit Entries</h4>
+                            <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+                              <ul className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] max-h-[240px] overflow-y-auto">
                                 {(receipt.generalLedgerPosting.creditEntries || []).length > 0 ? (
                                   receipt.generalLedgerPosting.creditEntries.map((entry, idx) => (
-                                    <li key={idx} className="p-3 text-sm text-zinc-700">{entry}</li>
+                                    <li key={idx} className="p-3 text-sm text-zinc-700 dark:text-zinc-300">{entry}</li>
                                   ))
                                 ) : (
-                                  <li className="p-4 text-sm text-zinc-500 text-center">No credit entries</li>
+                                  <li className="p-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">No credit entries</li>
                                 )}
                               </ul>
                             </div>
@@ -584,32 +584,32 @@ export default function ReceiptVoucherDetails() {
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                     {receipt.ledgerImpact ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600"><Layers size={18} /></div>
+                        <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-blue-600 dark:text-blue-400"><Layers size={18} /></div>
                           <div>
-                            <p className="text-[8.8px] font-bold text-zinc-500 uppercase">Receivable Ledger</p>
-                            <p className="text-sm font-semibold text-zinc-900 mt-1 break-all">{receipt.ledgerImpact.receivableLedger || '-'}</p>
+                            <p className="text-[8.8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase">Receivable Ledger</p>
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1 break-all">{receipt.ledgerImpact.receivableLedger || '-'}</p>
                           </div>
                         </div>
-                        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600"><Layers size={18} /></div>
+                        <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400"><Layers size={18} /></div>
                           <div>
-                            <p className="text-[8.8px] font-bold text-zinc-500 uppercase">Bank/Cash Ledger</p>
-                            <p className="text-sm font-semibold text-zinc-900 mt-1 break-all">{receipt.ledgerImpact.bankCashLedger || '-'}</p>
+                            <p className="text-[8.8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase">Bank/Cash Ledger</p>
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1 break-all">{receipt.ledgerImpact.bankCashLedger || '-'}</p>
                           </div>
                         </div>
-                        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600"><Layers size={18} /></div>
+                        <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center text-rose-600 dark:text-rose-400"><Layers size={18} /></div>
                           <div>
-                            <p className="text-[8.8px] font-bold text-zinc-500 uppercase">TDS Ledger</p>
-                            <p className="text-sm font-semibold text-zinc-900 mt-1 break-all">{receipt.ledgerImpact.tdsLedger || '-'}</p>
+                            <p className="text-[8.8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase">TDS Ledger</p>
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1 break-all">{receipt.ledgerImpact.tdsLedger || '-'}</p>
                           </div>
                         </div>
-                        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-600"><Layers size={18} /></div>
+                        <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-[#222736] flex items-center justify-center text-zinc-600 dark:text-zinc-400"><Layers size={18} /></div>
                           <div>
-                            <p className="text-[8.8px] font-bold text-zinc-500 uppercase">Exchange Gain/Loss Ledger</p>
-                            <p className="text-sm font-semibold text-zinc-900 mt-1 break-all">{receipt.ledgerImpact.exchangeGainLossLedger || '-'}</p>
+                            <p className="text-[8.8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase">Exchange Gain/Loss Ledger</p>
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1 break-all">{receipt.ledgerImpact.exchangeGainLossLedger || '-'}</p>
                           </div>
                         </div>
                       </div>
@@ -621,18 +621,18 @@ export default function ReceiptVoucherDetails() {
                 {activeTab === 'reconciliation' && (
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
                     {receipt.receiptReconciliation ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 bg-white p-5 rounded-xl border border-zinc-100 shadow-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 bg-white dark:bg-[#1D212C] p-5 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm">
                         <div>
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Reconciliation Status</p>
-                          <p className="text-sm font-semibold text-zinc-900">{receipt.receiptReconciliation.reconciliationStatus || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Reconciliation Status</p>
+                          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{receipt.receiptReconciliation.reconciliationStatus || '-'}</p>
                         </div>
                         <div>
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Cleared Date</p>
-                          <p className="text-sm font-medium text-zinc-800">{receipt.receiptReconciliation.clearedDate ? new Date(receipt.receiptReconciliation.clearedDate).toLocaleDateString() : '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Cleared Date</p>
+                          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.receiptReconciliation.clearedDate ? new Date(receipt.receiptReconciliation.clearedDate).toLocaleDateString() : '-'}</p>
                         </div>
                         <div>
-                          <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Bank Statement Ref</p>
-                          <p className="text-sm font-medium text-zinc-800">{receipt.receiptReconciliation.bankStatementReference || '-'}</p>
+                          <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Bank Statement Ref</p>
+                          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.receiptReconciliation.bankStatementReference || '-'}</p>
                         </div>
                       </div>
                     ) : renderEmptyState('No Reconciliation', 'This receipt has not been reconciled with the bank statement.')}
@@ -645,31 +645,31 @@ export default function ReceiptVoucherDetails() {
                     {receipt.relatedDocuments ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4"><Link size={14} className="inline mr-1" /> Sales Invoices</h4>
-                          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-                            <ul className="divide-y divide-zinc-100 max-h-[240px] overflow-y-auto">
+                          <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4"><Link size={14} className="inline mr-1" /> Sales Invoices</h4>
+                          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+                            <ul className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] max-h-[240px] overflow-y-auto">
                               {(receipt.relatedDocuments.linkedSalesInvoices || []).length > 0 ? (
                                 receipt.relatedDocuments.linkedSalesInvoices.map((doc, idx) => (
-                                  <li key={idx} className="p-3 text-sm text-blue-600 hover:bg-zinc-50 cursor-pointer">{doc}</li>
+                                  <li key={idx} className="p-3 text-sm text-blue-600 dark:text-blue-400 hover:bg-zinc-50 dark:hover:bg-[#222736] cursor-pointer">{doc}</li>
                                 ))
                               ) : (
-                                <li className="p-4 text-sm text-zinc-500 text-center">No linked sales invoices</li>
+                                <li className="p-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">No linked sales invoices</li>
                               )}
                             </ul>
                           </div>
                         </div>
                         <div>
-                          <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4"><Link size={14} className="inline mr-1" /> Other Documents</h4>
-                          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-                            <ul className="divide-y divide-zinc-100 max-h-[240px] overflow-y-auto">
+                          <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4"><Link size={14} className="inline mr-1" /> Other Documents</h4>
+                          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+                            <ul className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] max-h-[240px] overflow-y-auto">
                               {(receipt.relatedDocuments.creditNotes || []).length > 0 && receipt.relatedDocuments.creditNotes.map((doc, idx) => (
-                                <li key={`cn-${idx}`} className="p-3 text-sm text-blue-600 hover:bg-zinc-50 cursor-pointer">[Credit Note] {doc}</li>
+                                <li key={`cn-${idx}`} className="p-3 text-sm text-blue-600 dark:text-blue-400 hover:bg-zinc-50 dark:hover:bg-[#222736] cursor-pointer">[Credit Note] {doc}</li>
                               ))}
                               {(receipt.relatedDocuments.debitNotes || []).length > 0 && receipt.relatedDocuments.debitNotes.map((doc, idx) => (
-                                <li key={`dn-${idx}`} className="p-3 text-sm text-blue-600 hover:bg-zinc-50 cursor-pointer">[Debit Note] {doc}</li>
+                                <li key={`dn-${idx}`} className="p-3 text-sm text-blue-600 dark:text-blue-400 hover:bg-zinc-50 dark:hover:bg-[#222736] cursor-pointer">[Debit Note] {doc}</li>
                               ))}
                               {(!(receipt.relatedDocuments.creditNotes?.length > 0) && !(receipt.relatedDocuments.debitNotes?.length > 0)) && (
-                                <li className="p-4 text-sm text-zinc-500 text-center">No other linked documents</li>
+                                <li className="p-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">No other linked documents</li>
                               )}
                             </ul>
                           </div>
@@ -684,40 +684,40 @@ export default function ReceiptVoucherDetails() {
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
                     {receipt.approvalWorkflow ? (
                       <>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white p-5 rounded-xl border border-zinc-100 shadow-sm">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white dark:bg-[#1D212C] p-5 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm">
                           <div>
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Approval Status</p>
-                            <p className="text-sm font-semibold text-zinc-900">{receipt.approvalWorkflow.approvalStatus || '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Approval Status</p>
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{receipt.approvalWorkflow.approvalStatus || '-'}</p>
                           </div>
                           <div>
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Approved Date</p>
-                            <p className="text-sm font-medium text-zinc-800">{receipt.approvalWorkflow.approvedDate ? new Date(receipt.approvalWorkflow.approvedDate).toLocaleString() : '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Approved Date</p>
+                            <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.approvalWorkflow.approvedDate ? new Date(receipt.approvalWorkflow.approvedDate).toLocaleString() : '-'}</p>
                           </div>
                           <div className="col-span-2">
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Approved By</p>
-                            <p className="text-sm font-medium text-zinc-800 break-all">{receipt.approvalWorkflow.approvedBy || '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Approved By</p>
+                            <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 break-all">{receipt.approvalWorkflow.approvedBy || '-'}</p>
                           </div>
                           <div className="col-span-4">
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1">Approval Notes</p>
-                            <p className="text-sm text-zinc-700 whitespace-pre-wrap">{receipt.approvalWorkflow.approvalNotes || '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1">Approval Notes</p>
+                            <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">{receipt.approvalWorkflow.approvalNotes || '-'}</p>
                           </div>
                         </div>
                         
                         <div>
-                          <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <History size={14} /> Workflow Timeline
                           </h4>
-                          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
-                            <div className="relative border-l border-zinc-200 ml-3 space-y-6">
+                          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-6">
+                            <div className="relative border-l border-zinc-200 dark:border-[#2A2F3D] ml-3 space-y-6">
                               {(receipt.approvalWorkflow.workflowHistory || []).length > 0 ? (
                                 receipt.approvalWorkflow.workflowHistory.map((history, idx) => (
                                   <div key={idx} className="relative pl-6">
-                                    <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-blue-100 border-2 border-blue-500"></div>
-                                    <p className="text-sm text-zinc-700">{history}</p>
+                                    <div className="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-blue-100 dark:bg-blue-950 border-2 border-blue-500"></div>
+                                    <p className="text-sm text-zinc-700 dark:text-zinc-300">{history}</p>
                                   </div>
                                 ))
                               ) : (
-                                <p className="text-sm text-zinc-500 pl-6">No workflow history recorded.</p>
+                                <p className="text-sm text-zinc-500 dark:text-zinc-400 pl-6">No workflow history recorded.</p>
                               )}
                             </div>
                           </div>
@@ -733,52 +733,52 @@ export default function ReceiptVoucherDetails() {
                     {receipt.attachments ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <FileText size={14} /> System Documents
                           </h4>
-                          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-4 space-y-3">
-                            <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 hover:bg-zinc-50 transition-colors group">
+                          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-4 space-y-3">
+                            <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors group">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-red-50 text-red-500 flex items-center justify-center"><FileText size={20} /></div>
+                                <div className="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-500 flex items-center justify-center"><FileText size={20} /></div>
                                 <div>
-                                  <p className="text-sm font-medium text-zinc-900">Receipt PDF</p>
-                                  <p className="text-xs text-zinc-500">System generated receipt copy</p>
+                                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Receipt PDF</p>
+                                  <p className="text-xs text-zinc-500 dark:text-zinc-400">System generated receipt copy</p>
                                 </div>
                               </div>
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-                                <button className="p-2 text-zinc-400 hover:text-blue-600 rounded-lg hover:bg-blue-50" title="Preview"><Search size={16} /></button>
-                                <button className="p-2 text-zinc-400 hover:text-blue-600 rounded-lg hover:bg-blue-50" title="Download"><Download size={16} /></button>
+                                <button className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40" title="Preview"><Search size={16} /></button>
+                                <button className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40" title="Download"><Download size={16} /></button>
                               </div>
                             </div>
                             
                             {receipt.attachments.depositSlip && (
-                              <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 hover:bg-zinc-50 transition-colors group">
+                              <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors group">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center"><FileText size={20} /></div>
+                                  <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center"><FileText size={20} /></div>
                                   <div>
-                                    <p className="text-sm font-medium text-zinc-900">Deposit Slip</p>
-                                    <p className="text-xs text-zinc-500">Bank deposit slip</p>
+                                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Deposit Slip</p>
+                                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Bank deposit slip</p>
                                   </div>
                                 </div>
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-                                  <button className="p-2 text-zinc-400 hover:text-blue-600 rounded-lg hover:bg-blue-50" title="Preview"><Search size={16} /></button>
-                                  <button className="p-2 text-zinc-400 hover:text-blue-600 rounded-lg hover:bg-blue-50" title="Download"><Download size={16} /></button>
+                                  <button className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40" title="Preview"><Search size={16} /></button>
+                                  <button className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40" title="Download"><Download size={16} /></button>
                                 </div>
                               </div>
                             )}
                             
                             {receipt.attachments.chequeScan && (
-                              <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 hover:bg-zinc-50 transition-colors group">
+                              <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-100 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors group">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center"><FileText size={20} /></div>
+                                  <div className="w-10 h-10 rounded-lg bg-orange-50 dark:bg-orange-950/40 text-orange-500 flex items-center justify-center"><FileText size={20} /></div>
                                   <div>
-                                    <p className="text-sm font-medium text-zinc-900">Cheque Scan</p>
-                                    <p className="text-xs text-zinc-500">Scanned instrument image</p>
+                                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Cheque Scan</p>
+                                    <p className="text-xs text-zinc-500 dark:text-zinc-400">Scanned instrument image</p>
                                   </div>
                                 </div>
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-                                  <button className="p-2 text-zinc-400 hover:text-blue-600 rounded-lg hover:bg-blue-50" title="Preview"><Search size={16} /></button>
-                                  <button className="p-2 text-zinc-400 hover:text-blue-600 rounded-lg hover:bg-blue-50" title="Download"><Download size={16} /></button>
+                                  <button className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40" title="Preview"><Search size={16} /></button>
+                                  <button className="p-2 text-zinc-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40" title="Download"><Download size={16} /></button>
                                 </div>
                               </div>
                             )}
@@ -786,21 +786,21 @@ export default function ReceiptVoucherDetails() {
                         </div>
                         
                         <div>
-                          <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <Paperclip size={14} /> Supporting Documents
                           </h4>
-                          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-                            <ul className="divide-y divide-zinc-100 max-h-[240px] overflow-y-auto">
+                          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+                            <ul className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] max-h-[240px] overflow-y-auto">
                               {(receipt.attachments.supportingDocuments || []).length > 0 ? (
                                 receipt.attachments.supportingDocuments.map((doc, idx) => (
-                                  <li key={idx} className="p-3 text-sm text-blue-600 hover:bg-zinc-50 cursor-pointer flex items-center gap-2">
-                                    <Paperclip size={14} className="text-zinc-400" /> {doc}
+                                  <li key={idx} className="p-3 text-sm text-blue-600 dark:text-blue-400 hover:bg-zinc-50 dark:hover:bg-[#222736] cursor-pointer flex items-center gap-2">
+                                    <Paperclip size={14} className="text-zinc-400 dark:text-zinc-500" /> {doc}
                                   </li>
                                 ))
                               ) : (
                                 <li className="p-6 flex flex-col items-center justify-center text-center">
-                                  <Paperclip size={24} className="text-zinc-300 mb-2" />
-                                  <p className="text-sm text-zinc-500">No supporting documents attached</p>
+                                  <Paperclip size={24} className="text-zinc-300 dark:text-zinc-600 mb-2" />
+                                  <p className="text-sm text-zinc-500 dark:text-zinc-400">No supporting documents attached</p>
                                 </li>
                               )}
                             </ul>
@@ -816,40 +816,40 @@ export default function ReceiptVoucherDetails() {
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
                     {receipt.auditInformation ? (
                       <>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white p-5 rounded-xl border border-zinc-100 shadow-sm">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white dark:bg-[#1D212C] p-5 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm">
                           <div className="col-span-2">
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1 flex items-center gap-1"><User size={12}/> Created By</p>
-                            <p className="text-sm font-semibold text-zinc-900 break-all">{receipt.auditInformation.createdBy || '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1 flex items-center gap-1"><User size={12}/> Created By</p>
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 break-all">{receipt.auditInformation.createdBy || '-'}</p>
                           </div>
                           <div className="col-span-2">
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1 flex items-center gap-1"><Calendar size={12}/> Created At</p>
-                            <p className="text-sm font-medium text-zinc-800">{receipt.auditInformation.createdAt ? new Date(receipt.auditInformation.createdAt).toLocaleString() : '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1 flex items-center gap-1"><Calendar size={12}/> Created At</p>
+                            <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.auditInformation.createdAt ? new Date(receipt.auditInformation.createdAt).toLocaleString() : '-'}</p>
                           </div>
                           <div className="col-span-2">
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1 flex items-center gap-1"><User size={12}/> Updated By</p>
-                            <p className="text-sm font-semibold text-zinc-900 break-all">{receipt.auditInformation.updatedBy || '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1 flex items-center gap-1"><User size={12}/> Updated By</p>
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 break-all">{receipt.auditInformation.updatedBy || '-'}</p>
                           </div>
                           <div className="col-span-2">
-                            <p className="text-[8.8px] text-zinc-500 font-medium mb-1 flex items-center gap-1"><Calendar size={12}/> Updated At</p>
-                            <p className="text-sm font-medium text-zinc-800">{receipt.auditInformation.updatedAt ? new Date(receipt.auditInformation.updatedAt).toLocaleString() : '-'}</p>
+                            <p className="text-[8.8px] text-zinc-500 dark:text-zinc-400 font-medium mb-1 flex items-center gap-1"><Calendar size={12}/> Updated At</p>
+                            <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{receipt.auditInformation.updatedAt ? new Date(receipt.auditInformation.updatedAt).toLocaleString() : '-'}</p>
                           </div>
                         </div>
                         
                         <div>
-                          <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <h4 className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <ShieldAlert size={14} /> Document Permissions
                           </h4>
-                          <div className="bg-white p-5 rounded-xl border border-zinc-100 shadow-sm flex flex-wrap gap-4">
-                            <div className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 ${receipt.auditInformation.editable ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-50 text-zinc-500 border-zinc-200'}`}>
+                          <div className="bg-white dark:bg-[#1D212C] p-5 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] shadow-sm flex flex-wrap gap-4">
+                            <div className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 ${receipt.auditInformation.editable ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60' : 'bg-zinc-50 dark:bg-[#161922] text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-[#2A2F3D]'}`}>
                               {receipt.auditInformation.editable ? <CheckCircle size={14}/> : <XCircle size={14}/>} Editable
                             </div>
-                            <div className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 ${receipt.auditInformation.deletable ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-50 text-zinc-500 border-zinc-200'}`}>
+                            <div className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 ${receipt.auditInformation.deletable ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60' : 'bg-zinc-50 dark:bg-[#161922] text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-[#2A2F3D]'}`}>
                               {receipt.auditInformation.deletable ? <CheckCircle size={14}/> : <XCircle size={14}/>} Deletable
                             </div>
-                            <div className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 ${receipt.auditInformation.approvable ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-50 text-zinc-500 border-zinc-200'}`}>
+                            <div className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 ${receipt.auditInformation.approvable ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60' : 'bg-zinc-50 dark:bg-[#161922] text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-[#2A2F3D]'}`}>
                               {receipt.auditInformation.approvable ? <CheckCircle size={14}/> : <XCircle size={14}/>} Approvable
                             </div>
-                            <div className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 ${receipt.auditInformation.postable ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-50 text-zinc-500 border-zinc-200'}`}>
+                            <div className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 ${receipt.auditInformation.postable ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60' : 'bg-zinc-50 dark:bg-[#161922] text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-[#2A2F3D]'}`}>
                               {receipt.auditInformation.postable ? <CheckCircle size={14}/> : <XCircle size={14}/>} Postable
                             </div>
                           </div>

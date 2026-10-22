@@ -143,8 +143,8 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
               setSearchTerm(selectedCustomer.customerName || selectedCustomer.companyName || selectedCustomer.name || '');
             }
           }}
-          className={`w-full h-8 pl-8 pr-8 bg-white border rounded-md text-[10px] text-zinc-800 placeholder-zinc-400 focus:outline-none transition-all ${
-            error ? 'border-red-500 focus:ring-1 focus:ring-red-500 focus:border-red-500' : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
+          className={`w-full h-8 pl-8 pr-8 bg-white dark:bg-[#1D212C] border rounded-md text-[10px] text-zinc-800 dark:text-[#E6E8EE] placeholder-zinc-400 dark:placeholder-[#6B7184] focus:outline-none transition-all ${
+            error ? 'border-red-500 focus:ring-1 focus:ring-red-500 focus:border-red-500' : 'border-zinc-200 dark:border-[#2A2F3D] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
           }`}
           onKeyDown={handleKeyDown}
         />
@@ -162,7 +162,7 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
               setSearchTerm('');
               setIsOpen(true);
             }}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors focus:outline-none"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] transition-colors focus:outline-none"
           >
             <X size={14} />
           </button>
@@ -171,13 +171,13 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full min-w-full sm:min-w-[260px] max-w-[calc(100vw-2rem)] rounded-xl border border-zinc-200 bg-white shadow-xl animate-in fade-in zoom-in-95 duration-100 overflow-hidden flex flex-col">
+        <div className="absolute z-50 mt-1 w-full min-w-full sm:min-w-[260px] max-w-[calc(100vw-2rem)] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] shadow-xl animate-in fade-in zoom-in-95 duration-100 overflow-hidden flex flex-col">
 
 
           {/* Customer List (Scrollable) */}
           <div className="max-h-[240px] overflow-y-auto overflow-x-hidden p-1">
             {displayCustomers.length === 0 && !isFetching && !searchTerm && (
-              <div className="py-6 text-center text-sm text-zinc-500">
+              <div className="py-6 text-center text-sm text-zinc-500 dark:text-[#6B7184]">
                 <p className="text-base mb-1">😕</p>
                 No customer found
               </div>
@@ -199,11 +199,11 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
                     setIsOpen(false);
                   }}
                   className={`relative flex w-full cursor-pointer select-none items-center rounded-lg px-2 py-2 text-sm outline-none transition-colors
-                    ${isHighlighted ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-700'}
-                    ${isSelected ? 'bg-primary/5 font-medium text-primary' : 'hover:bg-zinc-100 hover:text-zinc-900'}
+                    ${isHighlighted ? 'bg-zinc-100 dark:bg-[#222736] text-zinc-900 dark:text-[#E6E8EE]' : 'text-zinc-700 dark:text-[#A0A6B5]'}
+                    ${isSelected ? 'bg-primary/5 dark:bg-primary/20 font-medium text-primary dark:text-[#4C8DFF]' : 'hover:bg-zinc-100 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'}
                   `}
                 >
-                  <div className="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-500">
+                  <div className="mr-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-[#1D212C] text-zinc-500 dark:text-[#A0A6B5]">
                     {isCompany ? <Building2 size={14} /> : <User size={14} />}
                   </div>
                   
@@ -212,7 +212,7 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
                       {cName}
                     </span>
                     {contactInfo && (
-                      <span className="flex items-center gap-1 text-[8.8px] text-zinc-500 truncate mt-0.5">
+                      <span className="flex items-center gap-1 text-[8.8px] text-zinc-500 dark:text-[#6B7184] truncate mt-0.5">
                         {isMobile ? <Phone size={10} /> : <Mail size={10} />}
                         {contactInfo}
                       </span>
@@ -229,22 +229,22 @@ export default function CustomerCombobox({ value, onChange, onAddNewCustomer, er
             {/* Dynamic Create Button */}
             {(!searchTerm || !displayCustomers.some(c => (c.customerName || c.companyName || c.name || '').toLowerCase() === searchTerm.toLowerCase())) && (
               <>
-                {displayCustomers.length > 0 && <div className="h-px bg-zinc-100 my-1"></div>}
+                {displayCustomers.length > 0 && <div className="h-px bg-zinc-100 dark:bg-[#2A2F3D] my-1"></div>}
                 <button
                   type="button"
                   onClick={() => {
                     setIsOpen(false);
                     if(onAddNewCustomer) onAddNewCustomer(searchTerm);
                   }}
-                  className="w-full flex items-start gap-3 p-3 hover:bg-zinc-50 text-left transition-colors rounded-lg"
+                  className="w-full flex items-start gap-3 p-3 hover:bg-zinc-50 dark:hover:bg-[#222736] text-left transition-colors rounded-lg"
                 >
-                  <Plus size={16} className="text-zinc-600 mt-0.5 shrink-0" />
+                  <Plus size={16} className="text-zinc-600 dark:text-[#A0A6B5] mt-0.5 shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-zinc-900 text-[10.4px] truncate">
+                    <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-[10.4px] truncate">
                       {searchTerm ? `Create "${searchTerm}"` : 'Add New Customer'}
                     </div>
                     {searchTerm && (
-                      <div className="text-[8.8px] text-zinc-500 mt-0.5 truncate">
+                      <div className="text-[8.8px] text-zinc-500 dark:text-[#6B7184] mt-0.5 truncate">
                         Add New Customer
                       </div>
                     )}

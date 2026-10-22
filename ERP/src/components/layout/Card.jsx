@@ -6,7 +6,7 @@ import React from 'react';
  * Spacing Specs:
  * - Standard Padding: p-5 (20px)
  * - Compact Padding: p-4 (16px)
- * - Header: pb-3 mb-4 border-b border-zinc-100
+ * - Header: pb-3 mb-4 border-b border-zinc-100 dark:border-[#2A2F3D]
  * - Footer: pt-3 mt-4 border-t border-zinc-100
  */
 export default function Card({
@@ -21,21 +21,21 @@ export default function Card({
 }) {
   return (
     <div
-      className={`bg-white border border-zinc-200 rounded-lg ${
+      className={`bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg ${
         compact ? 'p-4' : 'p-5'
       } ${className}`}
       {...props}
     >
       {(title || subtitle || actions) && (
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-zinc-100 gap-3">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-zinc-100 dark:border-[#2A2F3D] gap-3">
           <div>
             {title && (
-              <h3 className="text-sm font-semibold text-zinc-900 tracking-tight">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                 {title}
               </h3>
             )}
             {subtitle && (
-              <p className="text-xs text-zinc-500 mt-0.5">
+              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
                 {subtitle}
               </p>
             )}
@@ -49,7 +49,7 @@ export default function Card({
       )}
       {children}
       {footer && (
-        <div className="pt-3 mt-4 border-t border-zinc-100 flex items-center justify-between">
+        <div className="pt-3 mt-4 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between">
           {footer}
         </div>
       )}

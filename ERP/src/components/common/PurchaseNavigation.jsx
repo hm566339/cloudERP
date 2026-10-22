@@ -112,7 +112,7 @@ export default function PurchaseNavigation() {
   ];
 
   return (
-    <div className="bg-white/80 backdrop-blur-md border-b border-zinc-200 px-6 py-2.5 overflow-x-auto hide-scrollbar shrink-0 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.02)]">
+    <div className="bg-white/80 dark:bg-card-dark/80 backdrop-blur-md border-b border-zinc-200 dark:border-border-dark px-6 py-2.5 overflow-x-auto hide-scrollbar shrink-0 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.02)]">
       <div className="flex items-center gap-1 min-w-max">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -126,11 +126,11 @@ export default function PurchaseNavigation() {
               to={targetUrl}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10.4px] font-semibold transition-all duration-200 ${
                 isActive
-                  ? 'bg-zinc-100 text-zinc-900 shadow-sm border border-zinc-200'
-                  : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 border border-transparent'
+                  ? 'bg-zinc-100 dark:bg-hover-dark text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-border-dark'
+                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-hover-dark border border-transparent'
               }`}
             >
-              <Icon size={14} className={isActive ? 'text-zinc-700' : 'text-zinc-400'} />
+              <Icon size={14} className={isActive ? 'text-zinc-700 dark:text-zinc-200' : 'text-zinc-400 dark:text-zinc-500'} />
               <span>{item.label}</span>
             </Link>
           );

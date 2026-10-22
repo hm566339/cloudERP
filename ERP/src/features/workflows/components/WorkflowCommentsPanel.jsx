@@ -19,8 +19,8 @@ export default function WorkflowCommentsPanel({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden flex flex-col">
-      <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
+    <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden flex flex-col">
+      <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MessageSquare size={16} className="text-zinc-500" />
           <h3 className="text-sm font-bold text-zinc-900">Discussion & Comments</h3>
@@ -66,7 +66,7 @@ export default function WorkflowCommentsPanel({
       </div>
 
       {canAddComment && (
-        <form onSubmit={handleSubmit} className="p-3 border-t border-zinc-100 bg-zinc-50/50 space-y-2">
+        <form onSubmit={handleSubmit} className="p-3 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 space-y-2">
           <textarea
             rows={2}
             placeholder="Write a comment or reviewer feedback..."

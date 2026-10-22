@@ -77,30 +77,30 @@ export default class ErrorBoundary extends React.Component {
 
       if (this.state.isChunkLoadError && !isRecurring) {
         return (
-          <div className="min-h-screen bg-zinc-50 flex flex-col items-center justify-center p-4">
-             <div className="w-8 h-8 border-2 border-zinc-300 border-t-zinc-700 rounded-full animate-spin mb-4"></div>
-             <p className="text-zinc-600 font-medium">Updating application...</p>
-             <p className="text-zinc-400 text-sm mt-1">Fetching the latest version</p>
+          <div className="min-h-screen bg-zinc-50 dark:bg-[#0F1117] flex flex-col items-center justify-center p-4">
+             <div className="w-8 h-8 border-2 border-zinc-300 dark:border-zinc-700 border-t-zinc-700 dark:border-t-zinc-200 rounded-full animate-spin mb-4"></div>
+             <p className="text-zinc-600 dark:text-[#E6E8EE] font-medium">Updating application...</p>
+             <p className="text-zinc-400 dark:text-[#A0A6B5] text-sm mt-1">Fetching the latest version</p>
           </div>
         );
       }
 
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="min-h-screen bg-background dark:bg-[#0F1117] flex items-center justify-center p-4">
           <div className="w-full max-w-md">
             {/* Error Icon */}
             <div className="mb-6 flex justify-center">
-              <div className="p-4 bg-red-50 rounded-full">
-                <AlertTriangle size={32} className="text-red-600" />
+              <div className="p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 rounded-full">
+                <AlertTriangle size={32} className="text-red-600 dark:text-red-400" />
               </div>
             </div>
 
             {/* Error Message */}
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-foreground mb-2">
+              <h1 className="text-2xl font-bold text-foreground dark:text-[#E6E8EE] mb-2">
                 Something Went Wrong
               </h1>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-muted-foreground dark:text-[#A0A6B5] mb-4">
                 {isRecurring
                   ? 'We&apos;re experiencing recurring issues. Please try refreshing the page.'
                   : 'An unexpected error occurred. Please try refreshing the page or contact support if the problem persists.'}
@@ -108,20 +108,20 @@ export default class ErrorBoundary extends React.Component {
 
               {/* Development Error Details */}
               {isDevelopment && this.state.error && (
-                <div className="mt-4 p-4 bg-red-50 rounded-lg text-left">
-                  <p className="text-xs font-mono text-red-600 mb-2">
+                <div className="mt-4 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 rounded-lg text-left">
+                  <p className="text-xs font-mono text-red-600 dark:text-red-400 mb-2">
                     <strong>Error:</strong>
                   </p>
-                  <p className="text-xs font-mono text-red-600 mb-4 break-all">
+                  <p className="text-xs font-mono text-red-600 dark:text-red-300 mb-4 break-all">
                     {this.state.error.toString()}
                   </p>
 
                   {this.state.errorInfo && (
                     <>
-                      <p className="text-xs font-mono text-red-600 mb-2">
+                      <p className="text-xs font-mono text-red-600 dark:text-red-400 mb-2">
                         <strong>Component Stack:</strong>
                       </p>
-                      <pre className="text-xs font-mono text-red-600 bg-white p-2 rounded overflow-auto max-h-40">
+                      <pre className="text-xs font-mono text-red-600 dark:text-red-400 bg-white dark:bg-[#161922] border border-red-100 dark:border-red-950 p-2 rounded overflow-auto max-h-40">
                         {this.state.errorInfo.componentStack}
                       </pre>
                     </>
@@ -134,7 +134,7 @@ export default class ErrorBoundary extends React.Component {
             <div className="flex gap-3">
               <button
                 onClick={this.handleReset}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary dark:bg-blue-600 text-white rounded-lg hover:bg-primary/90 dark:hover:bg-blue-700 transition-colors font-medium shadow-sm"
               >
                 <RotateCcw size={18} />
                 Refresh Page
@@ -144,7 +144,7 @@ export default class ErrorBoundary extends React.Component {
                   const basePath = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_BASE_PATH || import.meta.env?.BASE_URL)) || '/erp/';
                   window.location.href = basePath.endsWith('/') ? basePath : `${basePath}/`;
                 }}
-                className="flex-1 px-4 py-2 border border-input rounded-lg hover:bg-accent transition-colors font-medium text-foreground"
+                className="flex-1 px-4 py-2 border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#1D212C] transition-colors font-medium text-zinc-900 dark:text-[#E6E8EE]"
               >
                 Go Home
               </button>

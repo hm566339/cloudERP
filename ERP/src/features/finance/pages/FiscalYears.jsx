@@ -284,8 +284,8 @@ export default function FiscalYears() {
       label: 'Fiscal Year',
       sortable: true,
       render: (val, row) => (
-        <span className="font-semibold text-zinc-900 flex items-center gap-1.5">
-          <Calendar size={13} className="text-zinc-400" />
+        <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-1.5">
+          <Calendar size={13} className="text-zinc-400 dark:text-[#6B7184]" />
           {row.fiscalYear || '-'}
         </span>
       )
@@ -294,19 +294,19 @@ export default function FiscalYears() {
       id: 'companyName',
       label: 'Company Name',
       sortable: true,
-      render: (val, row) => <span className="text-zinc-700">{row.companyName || '-'}</span>
+      render: (val, row) => <span className="text-zinc-700 dark:text-[#E6E8EE]">{row.companyName || '-'}</span>
     },
     {
       id: 'startDate',
       label: 'Start Date',
       sortable: true,
-      render: (val, row) => <span className="text-zinc-600 text-xs">{row.startDate || '-'}</span>
+      render: (val, row) => <span className="text-zinc-600 dark:text-[#A0A6B5] text-xs">{row.startDate || '-'}</span>
     },
     {
       id: 'endDate',
       label: 'End Date',
       sortable: true,
-      render: (val, row) => <span className="text-zinc-600 text-xs">{row.endDate || '-'}</span>
+      render: (val, row) => <span className="text-zinc-600 dark:text-[#A0A6B5] text-xs">{row.endDate || '-'}</span>
     },
     {
       id: 'isClosed',
@@ -322,7 +322,7 @@ export default function FiscalYears() {
       label: 'Duration',
       sortable: false,
       render: (val, row) => (
-        <span className="text-xs text-zinc-500 font-medium">
+        <span className="text-xs text-zinc-500 dark:text-[#6B7184] font-medium">
           {getDuration(row.startDate, row.endDate)}
         </span>
       )
@@ -406,11 +406,11 @@ export default function FiscalYears() {
 
   // Sub-row drawer renderer
   const renderExpandedRow = (fy) => (
-    <div className="p-4 bg-white border border-zinc-100 rounded-lg shadow-2xs">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100">
+    <div className="p-4 bg-white dark:bg-[#161922] border border-zinc-100 dark:border-[#2A2F3D] rounded-lg shadow-2xs">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div>
-          <h3 className="text-base font-bold text-zinc-900">{fy.fiscalYear}</h3>
-          <p className="text-xs font-medium text-zinc-500 mt-0.5">{fy.companyName || 'Company'}</p>
+          <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">{fy.fiscalYear}</h3>
+          <p className="text-xs font-medium text-zinc-500 dark:text-[#A0A6B5] mt-0.5">{fy.companyName || 'Company'}</p>
         </div>
         <div>
           <DataTableStatusBadge status={!fy.isClosed} activeLabel="Open" inactiveLabel="Closed" />
@@ -418,35 +418,35 @@ export default function FiscalYears() {
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Start Date</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{fy.startDate || '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Start Date</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{fy.startDate || '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">End Date</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{fy.endDate || '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">End Date</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{fy.endDate || '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Total Periods</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{fy.totalAccountingPeriods || fy.totalPeriods || 0}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Total Periods</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{fy.totalAccountingPeriods || fy.totalPeriods || 0}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Open Periods</p>
-          <p className="text-sm font-medium text-emerald-600 mt-1">{fy.openPeriods || 0}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Open Periods</p>
+          <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mt-1">{fy.openPeriods || 0}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Closed Periods</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{fy.closedPeriods || 0}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Closed Periods</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{fy.closedPeriods || 0}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Duration</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{getDuration(fy.startDate, fy.endDate)}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Duration</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{getDuration(fy.startDate, fy.endDate)}</p>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Fiscal Years"
         description="Manage fiscal years"
@@ -539,7 +539,7 @@ export default function FiscalYears() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 mb-1">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
               Fiscal Year <span className="text-red-500">*</span>
             </label>
             <input
@@ -548,14 +548,14 @@ export default function FiscalYears() {
               value={formData.fiscalYear}
               onChange={handleInputChange}
               placeholder="e.g. 2026-2027"
-              className="w-full h-9 px-3 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
+              className="w-full h-9 px-3 border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] rounded-lg text-sm focus:outline-none focus:border-zinc-400 dark:focus:border-[#4C8DFF]"
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-zinc-700 mb-1">
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
                 Start Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -563,12 +563,12 @@ export default function FiscalYears() {
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleInputChange}
-                className="w-full h-9 px-3 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
+                className="w-full h-9 px-3 border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] rounded-lg text-sm focus:outline-none focus:border-zinc-400 dark:focus:border-[#4C8DFF]"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-700 mb-1">
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
                 End Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -576,7 +576,7 @@ export default function FiscalYears() {
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleInputChange}
-                className="w-full h-9 px-3 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-zinc-400"
+                className="w-full h-9 px-3 border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] rounded-lg text-sm focus:outline-none focus:border-zinc-400 dark:focus:border-[#4C8DFF]"
                 required
               />
             </div>
@@ -590,19 +590,19 @@ export default function FiscalYears() {
                 name="isClosed"
                 checked={formData.isClosed}
                 onChange={handleInputChange}
-                className="rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                className="rounded border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 focus:ring-zinc-900"
               />
-              <label htmlFor="isClosed" className="text-xs font-medium text-zinc-700 select-none">
+              <label htmlFor="isClosed" className="text-xs font-medium text-zinc-700 dark:text-[#E6E8EE] select-none">
                 Mark as Closed
               </label>
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-zinc-100">
+          <div className="flex justify-end gap-2 pt-4 border-t border-zinc-100 dark:border-[#2A2F3D]">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50"
+              className="px-4 py-2 text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736]"
             >
               Cancel
             </button>

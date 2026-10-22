@@ -198,7 +198,7 @@ export default function AccountGroups() {
     return (
       <div key={node.id} className="w-full">
         <div
-          className="flex items-center py-2.5 px-4 hover:bg-zinc-50 border-b border-zinc-100 cursor-pointer group transition-colors"
+          className="flex items-center py-2.5 px-4 hover:bg-zinc-50 dark:hover:bg-[#222736] border-b border-zinc-100 dark:border-[#2A2F3D] cursor-pointer group transition-colors"
           style={{ paddingLeft: `${level * 24 + 16}px` }}
           onClick={() => {
             if (hasChildren) {
@@ -211,21 +211,21 @@ export default function AccountGroups() {
           <div className="w-6 flex items-center justify-center mr-2">
             {hasChildren ? (
               isExpanded ? (
-                <ChevronDown size={16} className="text-zinc-500" />
+                <ChevronDown size={16} className="text-zinc-500 dark:text-[#A0A6B5]" />
               ) : (
-                <ChevronRight size={16} className="text-zinc-500" />
+                <ChevronRight size={16} className="text-zinc-500 dark:text-[#A0A6B5]" />
               )
             ) : (
-              <div className="w-1.5 h-1.5 rounded-full bg-zinc-300"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-600"></div>
             )}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-semibold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded">{node.code}</span>
-              <span className="text-sm font-medium text-zinc-900">{node.name}</span>
+              <span className="font-mono text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-zinc-100 dark:bg-[#1D212C] px-2 py-0.5 rounded">{node.code}</span>
+              <span className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{node.name}</span>
             </div>
           </div>
-          <div className="w-48 text-xs text-zinc-500 font-medium">
+          <div className="w-48 text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium">
             {node.categoryName || '-'}
           </div>
           <div className="w-24 flex justify-end">
@@ -233,7 +233,7 @@ export default function AccountGroups() {
           </div>
           <div className="w-16 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity ml-3">
             <button
-              className="p-1 text-zinc-400 hover:text-blue-600 rounded transition-colors"
+              className="p-1 text-zinc-400 dark:text-[#6B7184] hover:text-blue-600 dark:hover:text-[#4C8DFF] rounded transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(buildPath(`/accounts/masters/account-groups/${node.id}`));
@@ -260,7 +260,7 @@ export default function AccountGroups() {
       label: 'Code',
       sortable: true,
       render: (val, row) => (
-        <span className="font-mono text-xs bg-zinc-100 px-2 py-1 rounded text-zinc-800 font-semibold border border-zinc-200/60">
+        <span className="font-mono text-xs bg-zinc-100 dark:bg-[#1D212C] px-2 py-1 rounded text-zinc-800 dark:text-[#E6E8EE] font-semibold border border-zinc-200/60 dark:border-[#2A2F3D]">
           {row.code || '-'}
         </span>
       )
@@ -270,7 +270,7 @@ export default function AccountGroups() {
       label: 'Group Name',
       sortable: true,
       render: (val, row) => (
-        <span className="font-semibold text-zinc-900">{row.name || '-'}</span>
+        <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{row.name || '-'}</span>
       )
     },
     {
@@ -278,7 +278,7 @@ export default function AccountGroups() {
       label: 'Category',
       sortable: true,
       render: (val, row) => (
-        <span className="text-zinc-600 font-medium">{row.categoryName || '-'}</span>
+        <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">{row.categoryName || '-'}</span>
       )
     },
     {
@@ -287,9 +287,9 @@ export default function AccountGroups() {
       sortable: true,
       render: (val, row) => (
         row.parentGroupName ? (
-          <span className="text-zinc-700">{row.parentGroupName}</span>
+          <span className="text-zinc-700 dark:text-[#E6E8EE]">{row.parentGroupName}</span>
         ) : (
-          <span className="text-zinc-400 italic text-xs">Root</span>
+          <span className="text-zinc-400 dark:text-[#6B7184] italic text-xs">Root</span>
         )
       )
     },
@@ -360,7 +360,7 @@ export default function AccountGroups() {
       icon: Eye,
       onClick: (row) => navigate(buildPath(`/accounts/masters/account-groups/${row.id}`)),
       tooltip: 'View Details',
-      className: 'hover:text-blue-600 hover:bg-blue-50'
+      className: 'hover:text-blue-600 dark:hover:text-[#4C8DFF] hover:bg-blue-50 dark:hover:bg-[#4C8DFF]/10'
     },
     {
       key: 'audit',
@@ -372,7 +372,7 @@ export default function AccountGroups() {
       icon: Edit,
       onClick: (row) => handleOpenFormModal(row),
       tooltip: 'Edit',
-      className: 'hover:text-indigo-600 hover:bg-indigo-50'
+      className: 'hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10'
     },
     {
       key: 'delete',
@@ -386,11 +386,11 @@ export default function AccountGroups() {
 
   // Sub-row drawer renderer
   const renderExpandedRow = (group) => (
-    <div className="p-4 bg-white border border-zinc-100 rounded-lg shadow-2xs">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100">
+    <div className="p-4 bg-white dark:bg-[#161922] border border-zinc-100 dark:border-[#2A2F3D] rounded-lg shadow-2xs">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div>
-          <h3 className="text-base font-bold text-zinc-900">{group.name}</h3>
-          <p className="text-xs font-mono text-zinc-500 mt-0.5">{group.code}</p>
+          <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">{group.name}</h3>
+          <p className="text-xs font-mono text-zinc-500 dark:text-[#A0A6B5] mt-0.5">{group.code}</p>
         </div>
         <div>
           <DataTableStatusBadge status={!group.deleted} activeLabel="Active" inactiveLabel="Deleted" />
@@ -398,38 +398,38 @@ export default function AccountGroups() {
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Category & Parent</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1 flex flex-col gap-0.5">
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Category & Parent</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1 flex flex-col gap-0.5">
             <span>{group.categoryName || '-'}</span>
-            <span className="text-xs text-zinc-500">{group.parentGroupName || 'Root'}</span>
+            <span className="text-xs text-zinc-500 dark:text-[#A0A6B5]">{group.parentGroupName || 'Root'}</span>
           </p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Hierarchy & Depth</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1 flex flex-col gap-0.5">
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Hierarchy & Depth</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1 flex flex-col gap-0.5">
             <span>Level {group.levelDepth ?? group.level ?? 1}</span>
-            <span className="text-xs text-zinc-500">{group.totalChildGroups || 0} Sub-groups</span>
+            <span className="text-xs text-zinc-500 dark:text-[#A0A6B5]">{group.totalChildGroups || 0} Sub-groups</span>
           </p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Ledgers</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1 flex flex-col gap-0.5">
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Ledgers</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1 flex flex-col gap-0.5">
             <span>{group.totalLedgers || 0} Total</span>
-            <span className="text-xs text-emerald-600">{group.activeLedgerCount || group.totalLedgers || 0} Active</span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400">{group.activeLedgerCount || group.totalLedgers || 0} Active</span>
           </p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Net Balance</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Net Balance</p>
           <p className="text-sm font-medium mt-1 flex flex-col gap-0.5">
-            <span className={(group.netBalance || 0) < 0 ? 'text-emerald-600 font-bold' : 'text-red-600 font-bold'}>
+            <span className={(group.netBalance || 0) < 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-red-600 dark:text-red-400 font-bold'}>
               ₹{Math.abs(group.netBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               {(group.netBalance || 0) < 0 ? ' Cr' : ' Dr'}
             </span>
           </p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Last Updated</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Last Updated</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">
             {group.updatedAt ? new Date(group.updatedAt).toLocaleDateString() : '-'}
           </p>
         </div>
@@ -438,7 +438,7 @@ export default function AccountGroups() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Account Groups"
         description="Manage account groups"
@@ -520,31 +520,31 @@ export default function AccountGroups() {
             emptyDescription="Try adjusting your search keywords or filter criteria to find account groups."
           />
         ) : (
-          <div className="bg-white rounded-xl shadow-xs border border-zinc-200 flex flex-col h-full overflow-hidden">
-            <div className="p-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50/50">
+          <div className="bg-white dark:bg-[#161922] rounded-xl shadow-xs border border-zinc-200 dark:border-[#2A2F3D] flex flex-col h-full overflow-hidden">
+            <div className="p-4 border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/50 dark:bg-[#161922]">
               <div className="flex items-center gap-2">
                 <button
                   onClick={expandAll}
-                  className="px-3 py-1.5 text-xs font-semibold text-zinc-700 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50"
+                  className="px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 dark:hover:bg-[#222736]"
                 >
                   Expand All
                 </button>
                 <button
                   onClick={collapseAll}
-                  className="px-3 py-1.5 text-xs font-semibold text-zinc-700 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50"
+                  className="px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 dark:hover:bg-[#222736]"
                 >
                   Collapse All
                 </button>
               </div>
-              <span className="text-xs text-zinc-500 font-medium">
+              <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium">
                 {rawGroups.length} Total Groups
               </span>
             </div>
-            <div className="flex-1 overflow-y-auto divide-y divide-zinc-100">
+            <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
               {treeData.length > 0 ? (
                 treeData.map(node => renderTreeNode(node))
               ) : (
-                <div className="p-12 text-center text-zinc-500 text-sm">
+                <div className="p-12 text-center text-zinc-500 dark:text-[#A0A6B5] text-sm">
                   No hierarchy nodes found.
                 </div>
               )}

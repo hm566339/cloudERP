@@ -97,7 +97,7 @@ export default function ExpenseCategoryDetails() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <EntityHeader
         title={category.categoryName || 'Unknown Category'}
         subtitle={category.categoryCode || 'No Code'}
@@ -132,7 +132,7 @@ export default function ExpenseCategoryDetails() {
 
           {/* Right Column - Main Content */}
           <div className="xl:col-span-8">
-            <div className="bg-white rounded-xl shadow-xs border border-zinc-200 p-8 text-center flex flex-col items-center justify-center min-h-[400px]">
+            <div className="bg-white dark:bg-card-dark rounded-xl shadow-xs border border-zinc-200 dark:border-border-dark p-8 text-center flex flex-col items-center justify-center min-h-[400px]">
               <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mb-4">
                 <FileText className="text-zinc-400" size={32} />
               </div>

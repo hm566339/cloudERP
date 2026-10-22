@@ -81,7 +81,7 @@ export default function BudgetVarianceReport() {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 flex flex-wrap gap-3">
+        <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922] flex flex-wrap gap-3">
           <div className="w-56">
             <CustomSelect
               options={budgetHeadersList.map(h => ({ value: h.id, label: h.budgetName || h.name || h.budgetHeaderName || h.id }))}
@@ -114,9 +114,9 @@ export default function BudgetVarianceReport() {
         </div>
 
         <div className="overflow-x-auto">
-          <div className="print-header hidden p-6 text-center border-b border-zinc-200">
-            <h1 className="text-2xl font-bold text-zinc-900">Budget Variance Report</h1>
-            <p className="text-zinc-500 mt-2">Generated on {new Date().toLocaleString()}</p>
+          <div className="print-header hidden p-6 text-center border-b border-zinc-200 dark:border-[#2A2F3D]">
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE]">Budget Variance Report</h1>
+            <p className="text-zinc-500 dark:text-[#A0A6B5] mt-2">Generated on {new Date().toLocaleString()}</p>
           </div>
           <table className="erp-table">
             <thead>
@@ -139,7 +139,7 @@ export default function BudgetVarianceReport() {
               ) : reportData.length === 0 ? (
                 <tr>
                   <td colSpan={10}>
-                    <div className="p-12 text-center text-zinc-500">
+                    <div className="p-12 text-center text-zinc-500 dark:text-[#A0A6B5]">
                       No report data found for the selected criteria.
                     </div>
                   </td>
@@ -149,22 +149,22 @@ export default function BudgetVarianceReport() {
                   const departmentName = departmentsList.find(d => d.id === row.departmentId)?.name || row.departmentId || '-';
                   return (
                     <tr key={index}>
-                      <td className="font-medium text-zinc-900">{row.budgetHeaderName || row.budgetHeaderId}</td>
-                      <td className="font-mono text-sm text-blue-600">{row.accountCode}</td>
+                      <td className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{row.budgetHeaderName || row.budgetHeaderId}</td>
+                      <td className="font-mono text-sm text-blue-600 dark:text-[#4C8DFF]">{row.accountCode}</td>
                       <td>{row.accountName}</td>
                       <td>{departmentName}</td>
                       <td className="text-right font-medium">{row.allocatedAmount?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}</td>
                       <td className="text-right">{row.actualExpense?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}</td>
                       <td className="text-right">{row.remainingAmount?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}</td>
-                      <td className={`text-right font-semibold ${row.varianceAmount < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                      <td className={`text-right font-semibold ${row.varianceAmount < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                         {row.varianceAmount?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}
                       </td>
                       <td className="text-right font-medium">{row.variancePercentage?.toFixed(1) || 0}%</td>
                       <td className="text-center">
                         <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${
-                          row.varianceType === 'FAVORABLE' ? 'bg-emerald-50 text-emerald-700' :
-                          row.varianceType === 'ADVERSE' ? 'bg-red-50 text-red-700' :
-                          'bg-zinc-100 text-zinc-700'
+                          row.varianceType === 'FAVORABLE' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' :
+                          row.varianceType === 'ADVERSE' ? 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400' :
+                          'bg-zinc-100 dark:bg-[#222736] text-zinc-700 dark:text-[#A0A6B5]'
                         }`}>
                           {row.varianceType || 'NONE'}
                         </span>
@@ -178,7 +178,7 @@ export default function BudgetVarianceReport() {
         </div>
         
         {!isLoading && reportData.length > 0 && (
-          <div className="p-4 border-t border-zinc-100 bg-white rounded-b-xl">
+          <div className="p-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] rounded-b-xl">
             <Pagination
               page={pageInfo.page || pageInfo.currentPage || page || 0}
               pageSize={pageInfo.size || pageInfo.pageSize || pageSize || 10}

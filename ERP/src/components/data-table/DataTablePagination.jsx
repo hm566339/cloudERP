@@ -66,12 +66,12 @@ export default function DataTablePagination({
   if (total === 0) return null;
 
   return (
-    <div className="w-full px-4 py-3 sm:px-6 border-t border-zinc-200/80 bg-white">
+    <div className="w-full px-4 py-3 sm:px-6 border-t border-zinc-200/80 dark:border-[#2A2F3D] bg-white dark:bg-[#161922]">
       {/* Mobile view (< sm) */}
       <div className="flex sm:hidden items-center justify-between gap-2">
-        <p className="text-xs text-zinc-500 truncate">
-          <span className="font-semibold text-zinc-800">{from}–{to}</span> of{' '}
-          <span className="font-semibold text-zinc-800">{total.toLocaleString()}</span>
+        <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] truncate">
+          <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{from}–{to}</span> of{' '}
+          <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{total.toLocaleString()}</span>
         </p>
 
         <div className="flex items-center gap-1.5 shrink-0">
@@ -83,7 +83,7 @@ export default function DataTablePagination({
             onClick={() => canPrev && handlePageClick(displayPage - 1)}
             disabled={!canPrev}
             aria-label="Previous page"
-            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
           >
             <ChevronLeft size={14} />
           </button>
@@ -92,7 +92,7 @@ export default function DataTablePagination({
             onClick={() => canNext && handlePageClick(displayPage + 1)}
             disabled={!canNext}
             aria-label="Next page"
-            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
           >
             <ChevronRight size={14} />
           </button>
@@ -103,21 +103,21 @@ export default function DataTablePagination({
       <div className="hidden sm:flex flex-wrap gap-4 items-center justify-between">
         {/* Left: summary */}
         <div className="flex items-center justify-center md:justify-start">
-          <p className="text-xs text-zinc-500 whitespace-nowrap">
-            Showing <span className="font-semibold text-zinc-800">{from}–{to}</span> of{' '}
-            <span className="font-semibold text-zinc-800">{total.toLocaleString()}</span> {itemName}
+          <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] whitespace-nowrap">
+            Showing <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{from}–{to}</span> of{' '}
+            <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{total.toLocaleString()}</span> {itemName}
           </p>
         </div>
 
         {/* Middle: rows per page */}
         {onPageSizeChange && (
           <div className="flex items-center justify-center gap-2">
-            <label className="text-xs text-zinc-500 whitespace-nowrap">Rows per page:</label>
+            <label className="text-xs text-zinc-500 dark:text-[#A0A6B5] whitespace-nowrap">Rows per page:</label>
             <CustomSelect
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
               searchable={false}
-              className="bg-transparent text-xs font-semibold text-zinc-700 focus:outline-none appearance-none cursor-pointer pr-4 hover:text-zinc-900 transition-colors"
+              className="bg-transparent text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] focus:outline-none appearance-none cursor-pointer pr-4 hover:text-zinc-900 dark:hover:text-[#E6E8EE] transition-colors"
             >
               {pageSizeOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -135,7 +135,7 @@ export default function DataTablePagination({
             onClick={() => canPrev && handlePageClick(displayPage - 1)}
             disabled={!canPrev}
             aria-label="Previous page"
-            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
           >
             <ChevronLeft size={14} />
           </button>
@@ -144,7 +144,7 @@ export default function DataTablePagination({
             p === '...' ? (
               <span
                 key={`dots-${idx}`}
-                className="h-8 min-w-8 px-1 flex items-center justify-center text-zinc-400 text-xs"
+                className="h-8 min-w-8 px-1 flex items-center justify-center text-zinc-400 dark:text-[#6B7184] text-xs"
               >
                 …
               </span>
@@ -155,8 +155,8 @@ export default function DataTablePagination({
                 onClick={() => p !== displayPage && handlePageClick(p)}
                 className={`h-8 min-w-8 px-2 flex items-center justify-center rounded-lg text-xs font-semibold transition-all active:scale-95 ${
                   p === displayPage
-                    ? 'bg-zinc-900 text-white border border-zinc-900 shadow-xs'
-                    : 'border border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300'
+                    ? 'bg-zinc-900 text-white dark:bg-[#4C8DFF] dark:text-white border border-zinc-900 dark:border-[#4C8DFF] shadow-xs'
+                    : 'border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154]'
                 }`}
               >
                 {p}
@@ -169,7 +169,7 @@ export default function DataTablePagination({
             onClick={() => canNext && handlePageClick(displayPage + 1)}
             disabled={!canNext}
             aria-label="Next page"
-            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
           >
             <ChevronRight size={14} />
           </button>

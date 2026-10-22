@@ -51,26 +51,26 @@ export default function UserChangePasswordModal({ isOpen, onClose, user, changeU
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4">
-      <div className="card max-w-sm w-full p-4 space-y-4 animate-slide-up">
+      <div className="card max-w-sm w-full p-4 space-y-4 animate-slide-up bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] shadow-xl dark:shadow-2xl">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-bold text-zinc-900">
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">
             Change Password
           </h3>
           <button
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-650"
+            className="text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE]"
           >
             ✕
           </button>
         </div>
         
-        <p className="text-xs text-zinc-500 font-medium">
-          Updating password for <strong className="text-zinc-800">{user.name}</strong>.
+        <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium">
+          Updating password for <strong className="text-zinc-800 dark:text-[#E6E8EE]">{user.name}</strong>.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-zinc-500 block">
+            <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">
               Current Password *
             </label>
             <input
@@ -83,7 +83,7 @@ export default function UserChangePasswordModal({ isOpen, onClose, user, changeU
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-zinc-500 block">
+            <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">
               New Password *
             </label>
             <input
@@ -100,7 +100,7 @@ export default function UserChangePasswordModal({ isOpen, onClose, user, changeU
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full btn-primary justify-center py-2.5 font-bold bg-amber-500 hover:bg-amber-600 text-white border-amber-600"
+            className="w-full btn-primary justify-center py-2.5 font-bold bg-amber-500 hover:bg-amber-600 dark:bg-[#F5B544] dark:hover:bg-[#e0a233] text-white border-amber-600 dark:border-[#F5B544]"
           >
             {isSubmitting ? "Updating..." : "Update Password"}
           </button>

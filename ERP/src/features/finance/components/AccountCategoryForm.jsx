@@ -108,14 +108,14 @@ export default function AccountCategoryForm({ initialData, onSubmit, onSuccess, 
     <>
       <form id="account-category-form" onSubmit={handleSubmit} className="flex flex-col gap-y-4">
         {displayError && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs font-medium text-red-700">
+          <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-lg text-xs font-medium text-red-700 dark:text-red-400">
             {displayError}
           </div>
         )}
 
         {/* Category Name */}
         <div className="space-y-1 w-full">
-          <label className="text-[10.4px] font-semibold text-zinc-700">
+          <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">
             Category Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -124,9 +124,9 @@ export default function AccountCategoryForm({ initialData, onSubmit, onSuccess, 
             value={formData.name}
             onChange={handleChange}
             disabled={isLoading}
-            className={`w-full h-9 px-3 bg-white border rounded-lg text-[10.4px] font-medium text-zinc-800 outline-none transition-colors ${
-              errors.name ? 'border-red-500 focus:border-red-500' : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
-            } disabled:bg-zinc-50 disabled:text-zinc-500`}
+            className={`w-full h-9 px-3 bg-white dark:bg-[#161922] border rounded-lg text-[10.4px] font-medium text-zinc-800 dark:text-[#E6E8EE] outline-none transition-colors ${
+              errors.name ? 'border-red-500 focus:border-red-500' : 'border-zinc-200 dark:border-[#2A2F3D] focus:border-zinc-400 dark:focus:border-zinc-500 focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-white/10'
+            } disabled:bg-zinc-50 dark:disabled:bg-[#1D212C] disabled:text-zinc-500 dark:disabled:text-zinc-400`}
             placeholder="e.g. Cash Account"
           />
           {errors.name && <p className="text-red-500 text-xs mt-0.5">{errors.name}</p>}
@@ -153,12 +153,12 @@ export default function AccountCategoryForm({ initialData, onSubmit, onSuccess, 
       </form>
 
       {/* Footer Buttons */}
-      <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-zinc-200">
+      <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-zinc-200 dark:border-[#2A2F3D]">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-5 py-2 text-[10.4px] font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/50 bg-white border border-zinc-300 rounded-md transition-all active:scale-95 disabled:opacity-50"
+          className="px-5 py-2 text-[10.4px] font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/50 dark:hover:bg-[#222736] bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-md transition-all active:scale-95 disabled:opacity-50"
         >
           Cancel
         </button>
@@ -166,7 +166,7 @@ export default function AccountCategoryForm({ initialData, onSubmit, onSuccess, 
           type="submit"
           form="account-category-form"
           disabled={isLoading}
-          className="flex items-center justify-center gap-2 px-5 py-2 text-[10.4px] font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-md transition-all active:scale-95 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-5 py-2 text-[10.4px] font-bold text-white bg-zinc-900 dark:bg-[#4C8DFF] hover:bg-zinc-800 dark:hover:bg-[#3A78E6] rounded-md transition-all active:scale-95 disabled:opacity-50"
         >
           {isLoading ? (
             <>

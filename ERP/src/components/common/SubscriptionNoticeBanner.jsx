@@ -14,11 +14,11 @@ export default function SubscriptionNoticeBanner() {
     return (
       <div
         role="alert"
-        className="w-full bg-rose-50 border-b border-rose-200 px-4 py-2.5 text-rose-900 transition-all flex items-center justify-between text-xs font-medium z-40"
+        className="w-full bg-rose-50 dark:bg-rose-950/40 border-b border-rose-200 dark:border-rose-900/50 px-4 py-2.5 text-rose-900 dark:text-rose-300 transition-all flex items-center justify-between text-xs font-medium z-40"
       >
         <div className="flex items-center justify-between max-w-7xl mx-auto w-full gap-3">
           <div className="flex items-center gap-2.5">
-            <span className="p-1 rounded-md bg-rose-100 text-rose-700 shrink-0">
+            <span className="p-1 rounded-md bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-400 shrink-0">
               <ShieldAlert size={15} />
             </span>
             <span className="leading-snug">
@@ -35,11 +35,11 @@ export default function SubscriptionNoticeBanner() {
     return (
       <div
         role="alert"
-        className="w-full bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 text-amber-900 transition-all flex items-center justify-between gap-3 text-xs font-medium z-40"
+        className="w-full bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 text-amber-900 dark:text-amber-300 transition-all flex items-center justify-between gap-3 text-xs font-medium z-40"
       >
         <div className="flex items-center justify-between max-w-7xl mx-auto w-full gap-3">
           <div className="flex items-center gap-2.5">
-            <span className="p-1 rounded-md bg-amber-500/20 text-amber-700 shrink-0">
+            <span className="p-1 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-400 shrink-0">
               <AlertTriangle size={15} />
             </span>
             <span className="leading-snug">

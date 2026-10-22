@@ -225,7 +225,7 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
       {/* Overview Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="col-span-1 md:col-span-2">
-          <h3 className="text-lg font-medium text-zinc-900 border-b pb-2 mb-4">Payment Information</h3>
+          <h3 className="text-lg font-medium text-zinc-900 dark:text-[#E6E8EE] border-b border-zinc-200 dark:border-[#2A2F3D] pb-2 mb-4">Payment Information</h3>
         </div>
 
         <div>
@@ -237,38 +237,38 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
             error={errors.vendorId}
           />
           {selectedVendor && (
-            <p className="text-sm text-zinc-500 mt-1">
-              Outstanding Balance: <span className="font-medium text-zinc-900">{formatCurrency(selectedVendor.outstandingBalance || 0)}</span>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              Outstanding Balance: <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(selectedVendor.outstandingBalance || 0)}</span>
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">Payment Number *</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Payment Number *</label>
           <input
             type="text"
             name="paymentNo"
             value={formData.paymentNo}
             onChange={handleChange}
-            className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 ${errors.paymentNo ? 'border-red-500' : 'border-zinc-300'}`}
+            className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] ${errors.paymentNo ? 'border-red-500' : 'border-zinc-300 dark:border-[#2A2F3D]'}`}
           />
           {errors.paymentNo && <p className="text-red-500 text-xs mt-1">{errors.paymentNo}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">Payment Date *</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Payment Date *</label>
           <input
             type="date"
             name="paymentDate"
             value={formData.paymentDate}
             onChange={handleChange}
-            className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 ${errors.paymentDate ? 'border-red-500' : 'border-zinc-300'}`}
+            className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] ${errors.paymentDate ? 'border-red-500' : 'border-zinc-300 dark:border-[#2A2F3D]'}`}
           />
           {errors.paymentDate && <p className="text-red-500 text-xs mt-1">{errors.paymentDate}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">Payment Amount *</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Payment Amount *</label>
           <input
             type="number"
             step="0.01"
@@ -276,7 +276,7 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
             name="paymentAmount"
             value={formData.paymentAmount}
             onChange={handleChange}
-            className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 ${errors.paymentAmount ? 'border-red-500' : 'border-zinc-300'}`}
+            className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] ${errors.paymentAmount ? 'border-red-500' : 'border-zinc-300 dark:border-[#2A2F3D]'}`}
           />
           {errors.paymentAmount && <p className="text-red-500 text-xs mt-1">{errors.paymentAmount}</p>}
         </div>
@@ -306,24 +306,24 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
         {formData.paymentMode === 'CHEQUE' && (
           <>
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">Cheque Number *</label>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Cheque Number *</label>
               <input
                 type="text"
                 name="chequeNumber"
                 value={formData.chequeNumber}
                 onChange={handleChange}
-                className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 ${errors.chequeNumber ? 'border-red-500' : 'border-zinc-300'}`}
+                className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] ${errors.chequeNumber ? 'border-red-500' : 'border-zinc-300 dark:border-[#2A2F3D]'}`}
               />
               {errors.chequeNumber && <p className="text-red-500 text-xs mt-1">{errors.chequeNumber}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">Cheque Date *</label>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Cheque Date *</label>
               <input
                 type="date"
                 name="chequeDate"
                 value={formData.chequeDate || ''}
                 onChange={handleChange}
-                className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 ${errors.chequeDate ? 'border-red-500' : 'border-zinc-300'}`}
+                className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] ${errors.chequeDate ? 'border-red-500' : 'border-zinc-300 dark:border-[#2A2F3D]'}`}
               />
               {errors.chequeDate && <p className="text-red-500 text-xs mt-1">{errors.chequeDate}</p>}
             </div>
@@ -332,31 +332,31 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
 
         {['BANK', 'UPI', 'NEFT', 'RTGS', 'IMPS'].includes(formData.paymentMode) && (
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">UTR / Transaction ID</label>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">UTR / Transaction ID</label>
             <input
               type="text"
               name="utrNumber"
               value={formData.utrNumber}
               onChange={handleChange}
-              className="w-full p-2 border border-zinc-300 rounded focus:ring-2 focus:ring-zinc-900/10"
+              className="w-full p-2 border border-zinc-300 dark:border-[#2A2F3D] rounded focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE]"
               placeholder="Enter UTR or TXN ID"
             />
           </div>
         )}
         
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">Reference No</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Reference No</label>
           <input
             type="text"
             name="referenceNo"
             value={formData.referenceNo}
             onChange={handleChange}
-            className="w-full p-2 border border-zinc-300 rounded focus:ring-2 focus:ring-zinc-900/10"
+            className="w-full p-2 border border-zinc-300 dark:border-[#2A2F3D] rounded focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE]"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 mb-1">TDS Amount</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">TDS Amount</label>
           <input
             type="number"
             step="0.01"
@@ -364,7 +364,7 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
             name="tdsAmount"
             value={formData.tdsAmount}
             onChange={handleChange}
-            className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 ${errors.tdsAmount ? 'border-red-500' : 'border-zinc-300'}`}
+            className={`w-full p-2 border rounded focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] ${errors.tdsAmount ? 'border-red-500' : 'border-zinc-300 dark:border-[#2A2F3D]'}`}
           />
           {errors.tdsAmount && <p className="text-red-500 text-xs mt-1">{errors.tdsAmount}</p>}
         </div>
@@ -382,51 +382,51 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
         )}
 
         <div className="col-span-1 md:col-span-2">
-          <label className="block text-sm font-medium text-zinc-700 mb-1">Remarks</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Remarks</label>
           <textarea
             name="remarks"
             value={formData.remarks}
             onChange={handleChange}
             rows={2}
-            className="w-full p-2 border border-zinc-300 rounded focus:ring-2 focus:ring-zinc-900/10"
+            className="w-full p-2 border border-zinc-300 dark:border-[#2A2F3D] rounded focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-white/10 bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE]"
           />
         </div>
       </div>
 
       {/* Invoice Allocation Section */}
       <div className="mt-8">
-        <div className="flex justify-between items-center border-b pb-2 mb-4">
-          <h3 className="text-lg font-medium text-zinc-900">Invoice Allocation</h3>
+        <div className="flex justify-between items-center border-b border-zinc-200 dark:border-[#2A2F3D] pb-2 mb-4">
+          <h3 className="text-lg font-medium text-zinc-900 dark:text-[#E6E8EE]">Invoice Allocation</h3>
           <button
             type="button"
             onClick={addAllocation}
-            className="px-3 py-1 bg-blue-50 text-blue-600 rounded border border-blue-200 hover:bg-blue-100 flex items-center text-sm font-medium"
+            className="px-3 py-1 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-[#4C8DFF] rounded border border-blue-200 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900/40 flex items-center text-sm font-medium"
           >
             <Plus size={16} className="mr-1" /> Add Allocation
           </button>
         </div>
 
         {errors.allocations && (
-          <div className="bg-red-50 text-red-700 p-3 rounded mb-4 text-sm border border-red-200">
+          <div className="bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 p-3 rounded mb-4 text-sm border border-red-200 dark:border-red-900/50">
             {errors.allocations}
           </div>
         )}
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-zinc-50 border-b border-zinc-200">
+            <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D]">
               <tr>
-                <th className="px-4 py-3 font-semibold text-zinc-700">Invoice</th>
-                <th className="px-4 py-3 font-semibold text-zinc-700 text-right">Invoice Total</th>
-                <th className="px-4 py-3 font-semibold text-zinc-700 text-right">Outstanding</th>
-                <th className="px-4 py-3 font-semibold text-zinc-700">Allocated Amount</th>
-                <th className="px-4 py-3 font-semibold text-center text-zinc-700">Actions</th>
+                <th className="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Invoice</th>
+                <th className="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300 text-right">Invoice Total</th>
+                <th className="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300 text-right">Outstanding</th>
+                <th className="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Allocated Amount</th>
+                <th className="px-4 py-3 font-semibold text-center text-zinc-700 dark:text-zinc-300">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-200">
+            <tbody className="divide-y divide-zinc-200 dark:divide-[#2A2F3D]">
               {formData.allocations.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">
                     No invoices allocated. Click 'Add Allocation' to allocate payment to an invoice.
                   </td>
                 </tr>
@@ -442,13 +442,13 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
                   ];
 
                   return (
-                    <tr key={idx} className="hover:bg-zinc-50">
+                    <tr key={idx} className="hover:bg-zinc-50 dark:hover:bg-[#222736]/50">
                       <td className="px-4 py-3">
                         <CustomSelect
                           value={alloc.apInvoiceId}
                           onChange={(e) => updateAllocation(idx, 'apInvoiceId', e.target.value)}
-                          className={`w-full p-2 border rounded focus:ring-zinc-900/10 focus:border-zinc-400 bg-white ${
-                            errors[`alloc_${idx}_apInvoiceId`] ? 'border-red-500' : 'border-zinc-300'
+                          className={`w-full p-2 border rounded focus:ring-zinc-900/10 focus:border-zinc-400 bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] ${
+                            errors[`alloc_${idx}_apInvoiceId`] ? 'border-red-500' : 'border-zinc-300 dark:border-[#2A2F3D]'
                           }`}
                         >
                           <option value="">Select Invoice</option>
@@ -458,10 +458,10 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
                         </CustomSelect>
                         {errors[`alloc_${idx}_apInvoiceId`] && <p className="text-red-500 text-xs mt-1">{errors[`alloc_${idx}_apInvoiceId`]}</p>}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right text-zinc-900 dark:text-[#E6E8EE]">
                         {inv ? formatCurrency(inv.totalAmount) : '-'}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right text-zinc-900 dark:text-[#E6E8EE]">
                         {inv ? formatCurrency(inv.outstandingAmount) : '-'}
                       </td>
                       <td className="px-4 py-3">
@@ -470,8 +470,8 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
                           step="0.01"
                           value={alloc.allocatedAmount}
                           onChange={(e) => updateAllocation(idx, 'allocatedAmount', e.target.value === '' ? '' : Number(e.target.value))}
-                          className={`w-full p-2 border rounded text-right focus:ring-zinc-900/10 focus:border-zinc-400 ${
-                            errors[`alloc_${idx}_allocatedAmount`] ? 'border-red-500' : 'border-zinc-300'
+                          className={`w-full p-2 border rounded text-right focus:ring-zinc-900/10 focus:border-zinc-400 bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] ${
+                            errors[`alloc_${idx}_allocatedAmount`] ? 'border-red-500' : 'border-zinc-300 dark:border-[#2A2F3D]'
                           }`}
                         />
                         {errors[`alloc_${idx}_allocatedAmount`] && <p className="text-red-500 text-xs mt-1">{errors[`alloc_${idx}_allocatedAmount`]}</p>}
@@ -480,7 +480,7 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
                         <button
                           type="button"
                           onClick={() => removeAllocation(idx)}
-                          className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+                          className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded"
                           title="Remove Allocation"
                         >
                           <Trash2 size={16} />
@@ -491,17 +491,17 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
                 })
               )}
             </tbody>
-            <tfoot className="bg-zinc-50 border-t border-zinc-200">
+            <tfoot className="bg-zinc-50 dark:bg-[#1D212C] border-t border-zinc-200 dark:border-[#2A2F3D]">
               <tr>
-                <td colSpan={3} className="px-4 py-3 font-semibold text-right text-zinc-700">Total Allocated:</td>
-                <td className="px-4 py-3 text-right font-bold text-zinc-900">
+                <td colSpan={3} className="px-4 py-3 font-semibold text-right text-zinc-700 dark:text-zinc-300">Total Allocated:</td>
+                <td className="px-4 py-3 text-right font-bold text-zinc-900 dark:text-[#E6E8EE]">
                   {formatCurrency(totalAllocatedAmount)}
                 </td>
                 <td></td>
               </tr>
               <tr>
-                <td colSpan={3} className="px-4 py-2 font-medium text-right text-zinc-500">Unallocated Amount:</td>
-                <td className={`px-4 py-2 text-right font-medium ${Number(formData.paymentAmount) - totalAllocatedAmount < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <td colSpan={3} className="px-4 py-2 font-medium text-right text-zinc-500 dark:text-zinc-400">Unallocated Amount:</td>
+                <td className={`px-4 py-2 text-right font-medium ${Number(formData.paymentAmount) - totalAllocatedAmount < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                   {formatCurrency(Number(formData.paymentAmount) - totalAllocatedAmount)}
                 </td>
                 <td></td>
@@ -511,19 +511,19 @@ export default function ApPaymentForm({ initialData, onSubmit, onCancel, isLoadi
         </div>
       </div>
 
-      <div className="flex justify-end space-x-3 pt-6 border-t mt-8">
+      <div className="flex justify-end space-x-3 pt-6 border-t border-zinc-200 dark:border-[#2A2F3D] mt-8">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded hover:bg-zinc-50 disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded hover:bg-zinc-50 dark:hover:bg-[#222736] disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-2 text-sm font-medium text-white bg-zinc-900 rounded hover:bg-zinc-800 disabled:opacity-50 flex items-center"
+          className="px-4 py-2 text-sm font-medium text-white bg-zinc-900 dark:bg-[#4C8DFF] rounded hover:bg-zinc-800 dark:hover:bg-[#3A78E6] disabled:opacity-50 flex items-center"
         >
           {isLoading ? (
             <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />

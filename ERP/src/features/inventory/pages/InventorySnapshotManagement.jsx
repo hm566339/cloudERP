@@ -427,53 +427,53 @@ export default function InventorySnapshotManagement() {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Product Name</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Product Name</span>
           <p className="text-sm font-semibold text-zinc-900">{prod}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Warehouse</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Warehouse</span>
           <p className="text-sm font-medium text-zinc-700">{wh}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Location</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Location</span>
           <p className="text-sm font-medium text-zinc-700">{loc}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Snapshot Date</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Snapshot Date</span>
           <p className="text-sm font-medium text-zinc-700">{formatDisplayDate(snap.snapshotDate)}</p>
         </div>
         {snap.snapshotScope && (
           <div className="space-y-1">
-            <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Scope</span>
+            <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Scope</span>
             <p className="text-sm font-medium text-zinc-700 font-mono">{snap.snapshotScope}</p>
           </div>
         )}
         {(snap.batchNumber || snap.batchNo) && (
           <div className="space-y-1">
-            <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Batch No</span>
+            <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Batch No</span>
             <p className="text-sm font-medium text-zinc-700 font-mono">{snap.batchNumber || snap.batchNo}</p>
           </div>
         )}
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Quantity</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Quantity</span>
           <p className="text-sm font-medium text-zinc-900 font-mono">{formatQuantity(snap.quantity)}</p>
         </div>
         {snap.reservedQuantity !== undefined && snap.reservedQuantity !== null && (
           <div className="space-y-1">
-            <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Reserved Qty</span>
+            <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Reserved Qty</span>
             <p className="text-sm font-medium text-zinc-700 font-mono">{formatQuantity(snap.reservedQuantity)}</p>
           </div>
         )}
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Unit Cost</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Unit Cost</span>
           <p className="text-sm font-medium text-zinc-700 font-mono">{formatCurrency(snap.averageCost)}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Stock Value</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Stock Value</span>
           <p className="text-sm font-bold text-zinc-900 font-mono">{formatCurrency(snap.stockValue)}</p>
         </div>
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Valuation Method</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Valuation Method</span>
           <p className="text-sm font-medium text-zinc-700 font-mono uppercase">{snap.valuationMethod || 'FIFO'}</p>
         </div>
       </div>
@@ -481,7 +481,7 @@ export default function InventorySnapshotManagement() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Inventory Snapshots"
         description="Capture point-in-time stock quantities and valuations for audits"

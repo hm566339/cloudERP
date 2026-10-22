@@ -806,21 +806,21 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
   return (
     <>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-zinc-900/40 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl lg:max-w-5xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-[#161922] border border-transparent dark:border-[#2A2F3D] rounded-xl shadow-xl w-full max-w-4xl lg:max-w-5xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50 rounded-t-xl shrink-0">
+        <div className="px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/50 dark:bg-[#1D212C] rounded-t-xl shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center border border-indigo-100 text-indigo-600">
+            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-blue-500/10 flex items-center justify-center border border-indigo-100 dark:border-blue-500/20 text-indigo-600 dark:text-[#4C8DFF]">
               <Truck size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-zinc-900 tracking-tight">Generate Delivery Challan</h2>
-              <p className="text-xs font-medium text-zinc-500 mt-0.5">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Generate Delivery Challan</h2>
+              <p className="text-xs font-medium text-zinc-500 dark:text-[#6B7184] mt-0.5">
                 {isReceiptMode ? (
-                  <>From Receipt Voucher <span className="font-mono text-zinc-900 font-semibold">{displayReceiptNo}</span></>
+                  <>From Receipt Voucher <span className="font-mono text-zinc-900 dark:text-[#E6E8EE] font-semibold">{displayReceiptNo}</span></>
                 ) : (
-                  <>From Sales Order <span className="font-mono text-zinc-900 font-semibold">{displayOrderNo}</span></>
+                  <>From Sales Order <span className="font-mono text-zinc-900 dark:text-[#E6E8EE] font-semibold">{displayOrderNo}</span></>
                 )}
               </p>
             </div>
@@ -828,7 +828,7 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
           <button
             onClick={onClose}
             disabled={isSubmittingInProgress}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors disabled:opacity-50"
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] transition-colors disabled:opacity-50"
             title="Close modal"
           >
             <X size={18} />
@@ -836,12 +836,12 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 bg-zinc-50/30 space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 bg-zinc-50/30 dark:bg-[#0F1117] space-y-4">
           
           {/* Status Alert if not confirmed/approved */}
           {!isStatusConfirmed && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-800 text-xs">
-              <AlertCircle size={15} className="shrink-0 mt-0.5 text-amber-600" />
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-lg flex items-start gap-2 text-amber-800 dark:text-amber-400 text-xs">
+              <AlertCircle size={15} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
               <p className="font-medium">
                 {isReceiptMode ? (
                   <>This Receipt Voucher status is <strong>{orderStatus}</strong>. The server requires Receipt Vouchers to be <strong>APPROVED</strong> or <strong>POSTED</strong> before generating Delivery Challans.</>
@@ -854,13 +854,13 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
 
           {/* Linked Sales Invoice Selector (Receipt mode) */}
           {isReceiptMode && (
-            <div className="bg-white p-3.5 rounded-lg border border-indigo-100 bg-indigo-50/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="bg-white dark:bg-[#161922] p-3.5 rounded-lg border border-indigo-100 dark:border-[#2A2F3D] bg-indigo-50/20 dark:bg-[#1D212C]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <Package size={14} className="text-indigo-600" />
+                <p className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider flex items-center gap-1.5">
+                  <Package size={14} className="text-indigo-600 dark:text-[#4C8DFF]" />
                   Target Sales Invoice <span className="text-red-500">*</span>
                 </p>
-                <p className="text-[11px] text-zinc-500 mt-0.5">
+                <p className="text-[11px] text-zinc-500 dark:text-[#6B7184] mt-0.5">
                   {receiptAllocations.length > 1
                     ? 'Select which allocated Sales Invoice to generate this Delivery Challan for:'
                     : 'Linked Sales Invoice for line items dispatch.'}
@@ -869,19 +869,19 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
 
               <div className="w-full sm:w-80">
                 {isLoadingReceipt ? (
-                  <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-500 bg-white border border-zinc-200 rounded-lg">
-                    <div className="w-3.5 h-3.5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
+                  <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-500 dark:text-[#6B7184] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg">
+                    <div className="w-3.5 h-3.5 border-2 border-zinc-900 dark:border-primary border-t-transparent rounded-full animate-spin" />
                     <span>Loading receipt allocations...</span>
                   </div>
                 ) : receiptAllocations.length === 0 ? (
-                  <div className="px-3 py-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg font-medium">
+                  <div className="px-3 py-1.5 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-lg font-medium">
                     No linked Sales Invoice found on this receipt.
                   </div>
                 ) : receiptAllocations.length === 1 ? (
-                  <div className="px-3 py-1.5 text-xs font-semibold text-zinc-800 bg-white border border-zinc-200 rounded-lg flex items-center justify-between">
+                  <div className="px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg flex items-center justify-between">
                     <span className="font-mono">{receiptAllocations[0].invoiceNumber || selectedSalesInvoiceId}</span>
                     {receiptAllocations[0].allocatedAmount !== undefined && (
-                      <span className="text-[11px] text-indigo-600 font-bold">
+                      <span className="text-[11px] text-indigo-600 dark:text-[#4C8DFF] font-bold">
                         Allocated: ₹{fmt(receiptAllocations[0].allocatedAmount)}
                       </span>
                     )}
@@ -891,7 +891,7 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
                     value={selectedSalesInvoiceId}
                     onChange={(e) => setSelectedSalesInvoiceId(e.target.value)}
                     disabled={isSubmittingInProgress}
-                    className="w-full px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-300 bg-white text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
+                    className="w-full px-3 py-1.5 text-xs font-semibold rounded-lg border border-zinc-300 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE] outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
                   >
                     {receiptAllocations.map(a => {
                       const invId = a.salesInvoiceId || a.salesInvoice?.id;
@@ -911,10 +911,10 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
 
           {/* Invoice Load Error Banner */}
           {invoiceLoadError && (
-            <div className="p-3.5 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2.5 text-red-800 text-xs">
-              <AlertCircle size={17} className="shrink-0 mt-0.5 text-red-600" />
+            <div className="p-3.5 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 rounded-lg flex items-start gap-2.5 text-red-800 dark:text-red-400 text-xs">
+              <AlertCircle size={17} className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
               <div>
-                <p className="font-bold text-red-950">Sales Invoice Error</p>
+                <p className="font-bold text-red-950 dark:text-red-300">Sales Invoice Error</p>
                 <p className="mt-0.5 font-medium">{invoiceLoadError}</p>
               </div>
             </div>
@@ -922,13 +922,13 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
 
           {/* Fully Dispatched Alert Banner */}
           {isAllFullyDispatched && (
-            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2.5 text-amber-900 text-xs">
-              <AlertCircle size={17} className="shrink-0 mt-0.5 text-amber-600" />
+            <div className="p-3.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-lg flex items-start gap-2.5 text-amber-900 dark:text-amber-400 text-xs">
+              <AlertCircle size={17} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
               <div>
-                <p className="font-bold text-amber-950">
+                <p className="font-bold text-amber-950 dark:text-amber-300">
                   This {isReceiptMode ? 'Sales Invoice' : 'Sales Order'} has already been fully dispatched or reserved.
                 </p>
-                <p className="mt-0.5 text-amber-800">
+                <p className="mt-0.5 text-amber-800 dark:text-amber-400">
                   All items have a remaining open quantity of 0. No additional Delivery Challan can be created.
                 </p>
               </div>
@@ -937,10 +937,10 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
 
           {/* Backend / Submission Error Banner */}
           {submitError && (
-            <div className="p-3.5 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2.5 text-red-800 text-xs">
-              <AlertCircle size={17} className="shrink-0 mt-0.5 text-red-600" />
+            <div className="p-3.5 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 rounded-lg flex items-start gap-2.5 text-red-800 dark:text-red-400 text-xs">
+              <AlertCircle size={17} className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
               <div>
-                <p className="font-bold text-red-950">Generation Error</p>
+                <p className="font-bold text-red-950 dark:text-red-300">Generation Error</p>
                 <p className="mt-0.5 font-medium">{submitError}</p>
               </div>
             </div>
@@ -948,21 +948,21 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
 
           {/* Cards: Customer, Date, Status */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Customer</p>
-              <p className="text-sm font-semibold text-zinc-900 truncate" title={customerName}>{customerName}</p>
+            <div className="bg-white dark:bg-[#161922] p-4 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] shadow-sm">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Customer</p>
+              <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={customerName}>{customerName}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Date</p>
-              <p className="text-sm font-semibold text-zinc-900">{displayDate}</p>
+            <div className="bg-white dark:bg-[#161922] p-4 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] shadow-sm">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Date</p>
+              <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE]">{displayDate}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Status</p>
+            <div className="bg-white dark:bg-[#161922] p-4 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] shadow-sm">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Status</p>
               <div>
                 <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-md border inline-flex items-center ${
                   isStatusConfirmed 
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                    : 'bg-zinc-100 text-zinc-700 border-zinc-200'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40' 
+                    : 'bg-zinc-100 dark:bg-[#222736] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]'
                 }`}>
                   {orderStatus}
                 </span>
@@ -1005,22 +1005,22 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
           
           {/* Validation & Error Alerts */}
           {hasExcessStockError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 text-red-700 text-xs">
-              <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600" />
+            <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 rounded-lg flex items-start gap-2 text-red-700 dark:text-red-400 text-xs">
+              <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
               <p className="font-medium">Dispatch quantity cannot exceed available stock for any item.</p>
             </div>
           )}
 
           {hasExcessOrderError && !hasExcessStockError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 text-red-700 text-xs">
-              <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600" />
+            <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 rounded-lg flex items-start gap-2 text-red-700 dark:text-red-400 text-xs">
+              <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
               <p className="font-medium">Dispatch quantity cannot exceed pending order quantity for any item.</p>
             </div>
           )}
 
           {hasMissingLocation && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 text-red-700 text-xs">
-              <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600" />
+            <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 rounded-lg flex items-start gap-2 text-red-700 dark:text-red-400 text-xs">
+              <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
               <p className="font-medium">Please select a warehouse location for each item being dispatched.</p>
             </div>
           )}
@@ -1029,12 +1029,12 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-200 bg-white flex items-center justify-between rounded-b-xl shrink-0">
-          <div className="text-sm text-zinc-500">
-            Total Dispatch Items: <span className="font-bold text-zinc-900">{totalDispatchItems}</span>
+        <div className="px-6 py-4 border-t border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] flex items-center justify-between rounded-b-xl shrink-0">
+          <div className="text-sm text-zinc-500 dark:text-[#6B7184]">
+            Total Dispatch Items: <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">{totalDispatchItems}</span>
             {totalDispatchQty > 0 && (
-              <span className="text-xs text-zinc-400 ml-1.5 font-normal">
-                (Total Qty: <span className="font-semibold text-zinc-700">{fmt(totalDispatchQty)}</span>)
+              <span className="text-xs text-zinc-400 dark:text-[#6B7184] ml-1.5 font-normal">
+                (Total Qty: <span className="font-semibold text-zinc-700 dark:text-[#A0A6B5]">{fmt(totalDispatchQty)}</span>)
               </span>
             )}
           </div>
@@ -1043,7 +1043,7 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
               type="button"
               onClick={onClose}
               disabled={isSubmittingInProgress}
-              className="px-4 py-2 text-sm font-semibold text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
@@ -1051,7 +1051,7 @@ export default function DeliveryChallanFromSoModal({ isOpen, onClose, companyId,
               type="button"
               onClick={handleSubmit}
               disabled={!isFormValid || isSubmittingInProgress || isSourceLoading || isLoadingWarehouses || isLoadingStock}
-              className="px-5 py-2 text-sm font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-xs"
+              className="px-5 py-2 text-sm font-semibold text-white bg-zinc-900 dark:bg-primary rounded-lg hover:bg-zinc-800 dark:hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-xs"
             >
               {isSubmittingInProgress ? (
                 <>

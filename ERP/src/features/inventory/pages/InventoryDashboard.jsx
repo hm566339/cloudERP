@@ -52,15 +52,15 @@ function MetricCard({ label, value, type, icon }) {
     : value !== null && value !== undefined ? String(value) : "—";
 
   return (
-    <div className="bg-white p-5 rounded-xl border border-zinc-200/80 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between">
+    <div className="bg-white dark:bg-[#161922] p-5 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between">
       <div className="flex items-center justify-between w-full">
-        <p className="text-[10px] font-bold text-zinc-500 tracking-wider uppercase truncate">{label}</p>
-        <div className="w-9 h-9 rounded-lg bg-zinc-50 flex items-center justify-center shrink-0 border border-zinc-200/60 text-zinc-600">
+        <p className="text-[10px] font-bold text-zinc-500 dark:text-[#A0A6B5] tracking-wider uppercase truncate">{label}</p>
+        <div className="w-9 h-9 rounded-lg bg-zinc-50 dark:bg-[#1D212C] flex items-center justify-center shrink-0 border border-zinc-200/60 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5]">
           <Icon size={18} />
         </div>
       </div>
       <div className="mt-3">
-        <p className="text-2xl font-bold text-zinc-900 tracking-tight leading-none font-mono">{displayValue}</p>
+        <p className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight leading-none font-mono">{displayValue}</p>
       </div>
     </div>
   );
@@ -68,10 +68,10 @@ function MetricCard({ label, value, type, icon }) {
 
 function AlertBanner({ label, value, type }) {
   const colorMap = {
-    warning: "bg-amber-50/70 border-amber-200/80 text-amber-900",
-    danger:  "bg-rose-50/70 border-rose-200/80 text-rose-900",
-    info:    "bg-sky-50/70 border-sky-200/80 text-sky-900",
-    default: "bg-zinc-50 border-zinc-200 text-zinc-800",
+    warning: "bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/80 dark:border-amber-800/40 text-amber-900 dark:text-amber-300",
+    danger:  "bg-rose-50/70 dark:bg-rose-950/30 border-rose-200/80 dark:border-rose-800/40 text-rose-900 dark:text-rose-300",
+    info:    "bg-sky-50/70 dark:bg-sky-950/30 border-sky-200/80 dark:border-sky-800/40 text-sky-900 dark:text-sky-300",
+    default: "bg-zinc-50 dark:bg-[#1D212C] border-zinc-200 dark:border-[#2A2F3D] text-zinc-800 dark:text-[#E6E8EE]",
   };
   const cls = colorMap[type] || colorMap.default;
   return (
@@ -80,7 +80,7 @@ function AlertBanner({ label, value, type }) {
         <AlertTriangle size={14} className="shrink-0" />
         <span className="truncate">{label}</span>
       </span>
-      <span className="font-bold font-mono px-2 py-0.5 rounded-md bg-white border border-current/20 shadow-2xs shrink-0 ml-2">
+      <span className="font-bold font-mono px-2 py-0.5 rounded-md bg-white dark:bg-[#161922] border border-current/20 shadow-2xs shrink-0 ml-2">
         {value !== null && value !== undefined ? String(value) : "—"}
       </span>
     </div>
@@ -213,7 +213,7 @@ export default function InventoryDashboard() {
   const totalPages = Math.max(1, Math.ceil(filteredStock.length / pageSize));
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* Top PageHeader matching Account Groups standard */}
       <PageHeader
         title="Inventory & Warehouse"
@@ -224,10 +224,10 @@ export default function InventoryDashboard() {
           type="button"
           onClick={refetchDashboard}
           disabled={dashboardFetching}
-          className="btn-secondary flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+          className="btn-secondary flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
           title="Refresh inventory data"
         >
-          <RefreshCw size={14} className={dashboardFetching ? "animate-spin text-zinc-500" : "text-zinc-500"} />
+          <RefreshCw size={14} className={dashboardFetching ? "animate-spin text-zinc-500 dark:text-[#A0A6B5]" : "text-zinc-500 dark:text-[#A0A6B5]"} />
           <span>Refresh</span>
         </button>
       </PageHeader>
@@ -238,7 +238,7 @@ export default function InventoryDashboard() {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white p-5 rounded-xl border border-zinc-200/80 h-24 animate-pulse" />
+              <div key={i} className="bg-white dark:bg-[#161922] p-5 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] h-24 animate-pulse" />
             ))}
           </div>
         ) : (
@@ -252,7 +252,7 @@ export default function InventoryDashboard() {
         {/* Backend Alert Banners */}
         {alerts.length > 0 && (
           <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Alerts</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Alerts</p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
               {alerts.map((a, i) => (
                 <AlertBanner key={i} label={a.label} value={a.value} type={a.type} />
@@ -263,8 +263,8 @@ export default function InventoryDashboard() {
 
         {/* Fallback low-stock warnings when no backend alerts array */}
         {alerts.length === 0 && (canViewModule("inv_alerts") || canViewModule("inventory")) && lowStockItems.length > 0 && (
-          <div className="bg-rose-50/60 border border-rose-200/80 p-4 rounded-xl space-y-3">
-            <div className="flex items-center gap-2 text-rose-800">
+          <div className="bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-800/40 p-4 rounded-xl space-y-3">
+            <div className="flex items-center gap-2 text-rose-800 dark:text-rose-400">
               <AlertTriangle size={16} className="shrink-0" />
               <h3 className="text-xs font-bold uppercase tracking-wider">Low Stock Warnings ({lowStockItems.length})</h3>
             </div>
@@ -274,9 +274,9 @@ export default function InventoryDashboard() {
                 const qty = item.inStock ?? item.availableQuantity ?? item.quantity ?? 0;
                 const min = item.reorderLevel ?? item.reorderPoint ?? 10;
                 return (
-                  <div key={item.id} className="text-xs flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-rose-100 shadow-2xs">
-                    <span className="font-semibold text-zinc-800 truncate mr-2">{itemName}</span>
-                    <span className="text-[9px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded font-mono font-bold shrink-0">
+                  <div key={item.id} className="text-xs flex items-center justify-between bg-white dark:bg-[#161922] px-3 py-2 rounded-lg border border-rose-100 dark:border-rose-900/40 shadow-2xs">
+                    <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE] truncate mr-2">{itemName}</span>
+                    <span className="text-[9px] bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 px-2 py-0.5 rounded font-mono font-bold shrink-0">
                       QTY: {qty} / Min: {min}
                     </span>
                   </div>
@@ -290,13 +290,13 @@ export default function InventoryDashboard() {
         {(canViewModule("inv_tracking") || canViewModule("inventory")) && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             {/* Stock Registry Table Card (2 cols on lg) */}
-            <div className="bg-white rounded-xl border border-zinc-200/80 shadow-2xs lg:col-span-2 flex flex-col overflow-hidden">
+            <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs lg:col-span-2 flex flex-col overflow-hidden">
               {/* Toolbar */}
-              <div className="px-5 py-3.5 border-b border-zinc-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50/50">
+              <div className="px-5 py-3.5 border-b border-zinc-200/80 dark:border-[#2A2F3D] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50/50 dark:bg-[#161922]">
                 <div className="flex items-center gap-2">
-                  <Boxes size={16} className="text-zinc-600" />
-                  <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Stock Registry</h3>
-                  <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-200/70 text-zinc-700">
+                  <Boxes size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+                  <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Stock Registry</h3>
+                  <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-200/70 dark:bg-[#1D212C] text-zinc-700 dark:text-[#A0A6B5]">
                     {filteredStock.length}
                   </span>
                 </div>
@@ -319,7 +319,7 @@ export default function InventoryDashboard() {
               <div className="overflow-x-auto relative">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold uppercase tracking-wider text-zinc-600 select-none">
+                    <tr className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-[#A0A6B5] select-none">
                       <th scope="col" className="w-16 p-3.5 sm:p-4 text-center">S.No.</th>
                       <th scope="col" className="p-3.5 sm:p-4">Item Name / SKU</th>
                       <th scope="col" className="p-3.5 sm:p-4">Warehouse</th>
@@ -327,7 +327,7 @@ export default function InventoryDashboard() {
                       <th scope="col" className="w-20 p-3.5 sm:p-4 text-center">Label</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-100 bg-white">
+                  <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] bg-white dark:bg-[#161922]">
                     {stockLoading ? (
                       <DataTableLoading columnCount={5} rowCount={4} />
                     ) : displayedStock.length === 0 ? (
@@ -350,14 +350,14 @@ export default function InventoryDashboard() {
                         return (
                           <React.Fragment key={item.id || index}>
                             <tr
-                              className={`group cursor-pointer transition-colors ${isExpanded ? 'bg-zinc-50/80' : 'hover:bg-zinc-50/70'}`}
+                              className={`group cursor-pointer transition-colors ${isExpanded ? 'bg-zinc-50/80 dark:bg-[#1D212C]' : 'hover:bg-zinc-50/70 dark:hover:bg-[#222736]'}`}
                               onClick={() => setExpandedRowId(isExpanded ? null : item.id)}
                             >
-                              <td className="p-3.5 sm:p-4 text-zinc-500 font-medium">
+                              <td className="p-3.5 sm:p-4 text-zinc-500 dark:text-[#A0A6B5] font-medium">
                                 <div className="flex items-center justify-center gap-1.5">
                                   <button
                                     type="button"
-                                    className="text-zinc-400 hover:text-zinc-700 focus:outline-none p-1 rounded hover:bg-zinc-200/60 transition-colors"
+                                    className="text-zinc-400 hover:text-zinc-700 dark:text-[#6B7184] dark:hover:text-[#E6E8EE] focus:outline-none p-1 rounded hover:bg-zinc-200/60 dark:hover:bg-[#222736] transition-colors"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setExpandedRowId(isExpanded ? null : item.id);
@@ -373,22 +373,22 @@ export default function InventoryDashboard() {
                               </td>
                               <td className="p-3.5 sm:p-4">
                                 <div className="flex flex-col gap-0.5">
-                                  <span className="font-bold text-zinc-900 group-hover:text-indigo-600 transition-colors">
+                                  <span className="font-bold text-zinc-900 dark:text-[#E6E8EE] group-hover:text-indigo-600 dark:group-hover:text-[#4C8DFF] transition-colors">
                                     {itemName}
                                   </span>
-                                  <span className="text-[10px] text-zinc-500 font-mono tracking-wide">
+                                  <span className="text-[10px] text-zinc-500 dark:text-[#A0A6B5] font-mono tracking-wide">
                                     SKU: {itemSku}
                                   </span>
                                 </div>
                               </td>
                               <td className="p-3.5 sm:p-4">
-                                <span className="text-[11px] font-medium text-zinc-700 bg-zinc-100 px-2.5 py-1 rounded-md border border-zinc-200/60 inline-flex items-center gap-1.5">
-                                  <Warehouse size={12} className="text-zinc-400" />
+                                <span className="text-[11px] font-medium text-zinc-700 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1D212C] px-2.5 py-1 rounded-md border border-zinc-200/60 dark:border-[#2A2F3D] inline-flex items-center gap-1.5">
+                                  <Warehouse size={12} className="text-zinc-400 dark:text-[#6B7184]" />
                                   <span>{warehouseName}</span>
                                 </span>
                               </td>
                               <td className="p-3.5 sm:p-4 text-right font-mono text-sm">
-                                <span className={isLow ? "text-rose-600 font-bold" : "text-emerald-700 font-bold"}>
+                                <span className={isLow ? "text-rose-600 dark:text-rose-400 font-bold" : "text-emerald-700 dark:text-emerald-400 font-bold"}>
                                   {qty}
                                 </span>
                               </td>
@@ -399,7 +399,7 @@ export default function InventoryDashboard() {
                                     e.stopPropagation();
                                     setSelectedBarcodeItem({ ...item, name: itemName, sku: itemSku, warehouseName });
                                   }}
-                                  className="p-1.5 bg-white border border-zinc-200 hover:bg-indigo-50 rounded-lg text-zinc-500 hover:text-indigo-600 hover:border-indigo-200 transition-all inline-flex items-center justify-center active:scale-95 shadow-2xs"
+                                  className="p-1.5 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-indigo-50 dark:hover:bg-[#222736] rounded-lg text-zinc-500 dark:text-[#A0A6B5] hover:text-indigo-600 dark:hover:text-[#4C8DFF] hover:border-indigo-200 dark:hover:border-[#4C8DFF]/40 transition-all inline-flex items-center justify-center active:scale-95 shadow-2xs"
                                   title="Generate Barcode / QR Label"
                                 >
                                   <Barcode size={16} />
@@ -438,18 +438,18 @@ export default function InventoryDashboard() {
             </div>
 
             {/* Barcode / QR Utility Panel Card (1 col on lg) */}
-            <div className="bg-white rounded-xl border border-zinc-200/80 shadow-2xs lg:col-span-1 flex flex-col overflow-hidden">
+            <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs lg:col-span-1 flex flex-col overflow-hidden">
               {/* Header */}
-              <div className="px-5 py-3.5 border-b border-zinc-200/80 flex items-center justify-between bg-zinc-50/50">
+              <div className="px-5 py-3.5 border-b border-zinc-200/80 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/50 dark:bg-[#161922]">
                 <div className="flex items-center gap-2">
-                  <QrCode size={16} className="text-zinc-600" />
-                  <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Barcode / QR Utility</h3>
+                  <QrCode size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+                  <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Barcode / QR Utility</h3>
                 </div>
                 {selectedBarcodeItem && (
                   <button
                     type="button"
                     onClick={() => setSelectedBarcodeItem(null)}
-                    className="text-xs font-medium text-zinc-500 hover:text-zinc-800 transition-colors flex items-center gap-1"
+                    className="text-xs font-medium text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-800 dark:hover:text-[#E6E8EE] transition-colors flex items-center gap-1"
                     title="Clear selection"
                   >
                     <X size={13} />
@@ -463,46 +463,46 @@ export default function InventoryDashboard() {
                 <div className="p-6 space-y-5 animate-fade-in flex flex-col justify-between">
                   <div className="space-y-4">
                     <div className="text-center">
-                      <p className="text-sm font-bold text-zinc-900">{selectedBarcodeItem.name}</p>
-                      <span className="text-[10px] text-zinc-600 uppercase font-mono mt-1 bg-zinc-100 inline-block px-2.5 py-0.5 rounded-md border border-zinc-200/60 font-semibold">
+                      <p className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">{selectedBarcodeItem.name}</p>
+                      <span className="text-[10px] text-zinc-600 dark:text-[#A0A6B5] uppercase font-mono mt-1 bg-zinc-100 dark:bg-[#1D212C] inline-block px-2.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-[#2A2F3D] font-semibold">
                         SKU: {selectedBarcodeItem.sku}
                       </span>
                       {selectedBarcodeItem.warehouseName && (
-                        <p className="text-xs text-zinc-500 mt-1 font-medium">{selectedBarcodeItem.warehouseName}</p>
+                        <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-1 font-medium">{selectedBarcodeItem.warehouseName}</p>
                       )}
                     </div>
 
                     {/* Barcode Visualization */}
-                    <div className="bg-white p-4 rounded-xl border border-zinc-200/80 shadow-2xs text-center">
+                    <div className="bg-white dark:bg-[#1D212C] p-4 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs text-center">
                       <div className="flex gap-0.5 h-12 w-48 mx-auto items-center justify-center p-1">
                         {[1, 3, 2, 1, 4, 2, 1, 3, 1, 2, 4, 1, 2].map((w, i) => (
-                          <div key={i} style={{ width: `${w}px` }} className="h-full bg-zinc-900 rounded-xs" />
+                          <div key={i} style={{ width: `${w}px` }} className="h-full bg-zinc-900 dark:bg-[#E6E8EE] rounded-xs" />
                         ))}
                       </div>
-                      <span className="text-[9px] font-mono tracking-widest mt-2 block text-zinc-500 font-semibold">
+                      <span className="text-[9px] font-mono tracking-widest mt-2 block text-zinc-500 dark:text-[#A0A6B5] font-semibold">
                         {selectedBarcodeItem.sku}-*BAR*
                       </span>
                     </div>
 
                     {/* QR Code Visualization */}
-                    <div className="bg-white p-4 rounded-xl border border-zinc-200/80 shadow-2xs text-center flex flex-col items-center">
-                      <div className="w-24 h-24 p-1.5 flex flex-col justify-between border border-zinc-100 rounded-lg bg-zinc-50/50">
+                    <div className="bg-white dark:bg-[#1D212C] p-4 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs text-center flex flex-col items-center">
+                      <div className="w-24 h-24 p-1.5 flex flex-col justify-between border border-zinc-100 dark:border-[#2A2F3D] rounded-lg bg-zinc-50/50 dark:bg-[#161922]">
                         <div className="flex justify-between">
-                          <div className="w-6 h-6 border-[2.4px] border-zinc-900 flex items-center justify-center rounded-xs">
-                            <div className="w-2 h-2 bg-zinc-900 rounded-xs" />
+                          <div className="w-6 h-6 border-[2.4px] border-zinc-900 dark:border-[#E6E8EE] flex items-center justify-center rounded-xs">
+                            <div className="w-2 h-2 bg-zinc-900 dark:bg-[#E6E8EE] rounded-xs" />
                           </div>
-                          <div className="w-6 h-6 border-[2.4px] border-zinc-900 flex items-center justify-center rounded-xs">
-                            <div className="w-2 h-2 bg-zinc-900 rounded-xs" />
+                          <div className="w-6 h-6 border-[2.4px] border-zinc-900 dark:border-[#E6E8EE] flex items-center justify-center rounded-xs">
+                            <div className="w-2 h-2 bg-zinc-900 dark:bg-[#E6E8EE] rounded-xs" />
                           </div>
                         </div>
                         <div className="flex justify-between items-end">
-                          <div className="w-6 h-6 border-[2.4px] border-zinc-900 flex items-center justify-center rounded-xs">
-                            <div className="w-2 h-2 bg-zinc-900 rounded-xs" />
+                          <div className="w-6 h-6 border-[2.4px] border-zinc-900 dark:border-[#E6E8EE] flex items-center justify-center rounded-xs">
+                            <div className="w-2 h-2 bg-zinc-900 dark:bg-[#E6E8EE] rounded-xs" />
                           </div>
-                          <div className="w-4 h-4 bg-zinc-900 rounded-xs" />
+                          <div className="w-4 h-4 bg-zinc-900 dark:bg-[#E6E8EE] rounded-xs" />
                         </div>
                       </div>
-                      <span className="text-[9px] font-mono tracking-wide mt-2 block text-zinc-500 font-semibold">
+                      <span className="text-[9px] font-mono tracking-wide mt-2 block text-zinc-500 dark:text-[#A0A6B5] font-semibold">
                         Scan QR to verify
                       </span>
                     </div>
@@ -512,7 +512,7 @@ export default function InventoryDashboard() {
                     <button
                       type="button"
                       onClick={() => window.print()}
-                      className="btn-secondary w-full flex items-center justify-center gap-2 text-xs font-semibold py-2 rounded-lg border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 shadow-2xs transition-colors cursor-pointer"
+                      className="btn-secondary w-full flex items-center justify-center gap-2 text-xs font-semibold py-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] shadow-2xs transition-colors cursor-pointer"
                     >
                       <Printer size={14} />
                       <span>Print Label</span>
@@ -521,10 +521,10 @@ export default function InventoryDashboard() {
                 </div>
               ) : (
                 <div className="p-8 text-center flex-1 flex flex-col items-center justify-center min-h-[300px]">
-                  <div className="w-14 h-14 rounded-2xl bg-zinc-50 border border-zinc-200/60 flex items-center justify-center mb-3 text-zinc-400">
+                  <div className="w-14 h-14 rounded-2xl bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200/60 dark:border-[#2A2F3D] flex items-center justify-center mb-3 text-zinc-400 dark:text-[#6B7184]">
                     <QrCode size={28} />
                   </div>
-                  <p className="text-xs font-medium text-zinc-500 max-w-[200px] leading-relaxed">
+                  <p className="text-xs font-medium text-zinc-500 dark:text-[#A0A6B5] max-w-[200px] leading-relaxed">
                     Click the barcode icon next to any inventory item to generate label tags.
                   </p>
                 </div>

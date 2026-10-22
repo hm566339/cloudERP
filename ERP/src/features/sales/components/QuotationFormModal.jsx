@@ -25,11 +25,11 @@ export const QuotationLineItemRow = ({ item, products, productsLoading, companyI
 
 
   return (
-    <div className="grid gap-1 w-full bg-white hover:bg-zinc-50/50 min-w-0 border-b border-zinc-100 last:border-0 box-border" style={{ gridTemplateColumns: gridTemplateColumns || 'repeat(12, minmax(90px, 1fr))' }}>
+    <div className="grid gap-1 w-full bg-white dark:bg-[#161922] hover:bg-zinc-50/50 dark:hover:bg-[#222736] min-w-0 border-b border-zinc-100 dark:border-[#2A2F3D] last:border-0 box-border" style={{ gridTemplateColumns: gridTemplateColumns || 'repeat(12, minmax(90px, 1fr))' }}>
       <div className="p-1 pt-2 min-w-0">
         <CustomSelect
           className="w-full min-w-0"
-          buttonClassName="w-full h-8 px-2 border border-zinc-200 rounded-md bg-white text-[8.8px] text-zinc-800 hover:border-zinc-300 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
+          buttonClassName="w-full h-8 px-2 border border-zinc-200 rounded-md bg-white text-[8.8px] text-zinc-800 dark:border-[#2A2F3D] dark:bg-[#1D212C] dark:text-[#E6E8EE] hover:border-zinc-300 dark:hover:border-[#3A4050] flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
           value={item.itemId || ''}
           onChange={e => {
             const prod = products.find(p => p.productId === e.target.value);
@@ -46,7 +46,7 @@ export const QuotationLineItemRow = ({ item, products, productsLoading, companyI
                 closeDropdown();
                 onAddNewProduct?.(item.id, searchTerm);
               }}
-              className="w-full text-left px-3 py-2 text-[9.6px] text-primary hover:bg-zinc-50 flex items-center gap-1 font-semibold border-t border-zinc-100"
+              className="w-full text-left px-3 py-2 text-[9.6px] text-primary hover:bg-zinc-50 dark:hover:bg-[#222736] flex items-center gap-1 font-semibold border-t border-zinc-100 dark:border-[#2A2F3D]"
             >
               <Plus size={14} /> Add New Product
             </button>
@@ -92,7 +92,7 @@ export const QuotationLineItemRow = ({ item, products, productsLoading, companyI
               });
             }
           }}
-          buttonClassName="w-full h-8 border border-zinc-200 rounded-md text-[8.8px] hover:border-zinc-300 flex items-center justify-between bg-white"
+          buttonClassName="w-full h-8 border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[8.8px] text-zinc-800 dark:text-[#E6E8EE] hover:border-zinc-300 dark:hover:border-[#3A4050] flex items-center justify-between bg-white dark:bg-[#1D212C]"
           placeholder="Select HSN/SAC"
           preSelectedCode={item.hsnSacCode}
           preSelectedName={item.hsnSacName}
@@ -103,7 +103,7 @@ export const QuotationLineItemRow = ({ item, products, productsLoading, companyI
         <input
           type="text"
           placeholder="Description"
-          className="input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white truncate"
+          className="input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] truncate"
           value={item.description}
           onChange={e => onUpdate(item.id, 'description', e.target.value)}
         />
@@ -164,7 +164,7 @@ export const QuotationLineItemRow = ({ item, products, productsLoading, companyI
       <div className="p-1 pt-2 min-w-0 flex flex-col justify-center text-[8px] leading-tight">
         {item.hsnSacId ? (
           <div className="flex flex-col gap-1 w-full px-1">
-            <div className="text-zinc-800 font-semibold mb-0.5 border-b border-zinc-100 pb-0.5">
+            <div className="text-zinc-800 font-semibold mb-0.5 border-b border-zinc-100 dark:border-[#2A2F3D] pb-0.5">
               GST {item.isInterState ? item.igstRate : (item.cgstRate + item.sgstRate)}%
             </div>
             {item.isInterState ? (
@@ -206,8 +206,8 @@ export const QuotationLineItemRow = ({ item, products, productsLoading, companyI
           onClick={() => onRemove(item.id)}
           disabled={!canRemove}
           className={`p-1.5 rounded-md transition-colors ${!canRemove
-              ? 'text-zinc-300 cursor-not-allowed'
-              : 'text-zinc-400 hover:text-red-500 hover:bg-red-50'
+              ? 'text-zinc-300 dark:text-zinc-600 cursor-not-allowed'
+              : 'text-zinc-400 dark:text-[#6B7184] hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20'
             }`}
         >
           <Trash2 size={14} />
@@ -1063,7 +1063,7 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
           }}
           disabled={disabled}
           className="w-full"
-          buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 disabled:bg-zinc-50 disabled:text-zinc-400"
+          buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between dark:border-[#2A2F3D] dark:bg-[#1D212C] dark:text-[#E6E8EE] outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 disabled:bg-zinc-50 dark:disabled:bg-[#161922] disabled:text-zinc-400 dark:disabled:text-[#6B7184]"
         >
           <option value="">{placeholder || 'Select an option'}</option>
           {options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -1076,7 +1076,7 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
               onChange={e => setFormValue(customKey, e.target.value)}
               disabled={disabled}
               placeholder={`Enter custom ${field.label.toLowerCase()}...`}
-              className={`w-full h-auto py-2 px-2.5 border rounded-md bg-white text-[10px] text-zinc-800 outline-none focus:ring-1 disabled:bg-zinc-50 disabled:text-zinc-400 resize-y min-h-[60px] ${errors?.[customKey] ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200 focus:border-zinc-400 focus:ring-zinc-900/10'}`}
+              className={`w-full h-auto py-2 px-2.5 border rounded-md bg-white dark:bg-[#1D212C] text-[10px] text-zinc-800 dark:text-[#E6E8EE] outline-none focus:ring-1 disabled:bg-zinc-50 dark:disabled:bg-[#161922] disabled:text-zinc-400 dark:disabled:text-[#6B7184] resize-y min-h-[60px] ${errors?.[customKey] ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200 dark:border-[#2A2F3D] focus:border-zinc-400 focus:ring-zinc-900/10'}`}
             />
             {errors?.[customKey] && <p className="text-[8px] text-rose-500">{errors[customKey]}</p>}
           </div>
@@ -1107,7 +1107,7 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
               key: 'customerId', label: 'Customer', required: true,
               render: ({ value, setValue, error }) => (
                 <div>
-                  <label className="block mb-1 text-[8.5px] font-semibold text-zinc-700">Customer *</label>
+                  <label className="block mb-1 text-[8.5px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Customer *</label>
                   <CustomerCombobox value={value || ''} onChange={setValue} error={error} />
                   {error && <p className="mt-1 text-[8px] text-red-600">{error}</p>}
                 </div>
@@ -1118,7 +1118,7 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
               key: 'placeOfSupplyStateId', label: 'Place of Supply', required: true,
               render: ({ value, setValue, error }) => (
                 <div>
-                  <label className="block mb-1 text-[8.5px] font-semibold text-zinc-700">Place of Supply *</label>
+                  <label className="block mb-1 text-[8.5px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Place of Supply *</label>
                   <CustomSelect
                     value={value || ''}
                     onChange={event => setValue(event.target.value)}
@@ -1126,7 +1126,7 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
                     placeholder="Select State..."
                     searchable
                     className="w-full"
-                    buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
+                    buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between dark:border-[#2A2F3D] dark:bg-[#1D212C] dark:text-[#E6E8EE] outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
                   />
                   {error && <p className="mt-1 text-[8px] text-red-600">{error}</p>}
                 </div>
@@ -1227,19 +1227,19 @@ export default function QuotationFormModal({ isOpen, onClose, quotationId, onSuc
 
       {isAddProductOpen && (
         <div className="fixed inset-0 z-[400] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-2xl h-[95vh] max-h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200">
-            <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
+          <div className="bg-white dark:bg-[#161922] w-full max-w-2xl h-[95vh] max-h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200 dark:border-[#2A2F3D]">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C] shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center border border-zinc-200 text-zinc-700">
+                <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-[#222736] flex items-center justify-center border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#A0A6B5]">
                   <Package size={16} />
                 </div>
-                <h2 className="text-base font-bold text-zinc-900 tracking-tight">New Product</h2>
+                <h2 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">New Product</h2>
               </div>
-              <button type="button" onClick={closeProductModal} className="p-1 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors active:scale-95">
+              <button type="button" onClick={closeProductModal} className="p-1 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200 dark:hover:bg-[#222736] rounded-md transition-colors active:scale-95">
                 <X size={18} strokeWidth={2.5} />
               </button>
             </div>
-            <div className="flex-1 overflow-hidden bg-white flex flex-col">
+            <div className="flex-1 overflow-hidden bg-white dark:bg-[#161922] flex flex-col">
               <ProductForm
                 initialData={{ productName: newProductName }}
                 onSubmit={handleCreateProduct}

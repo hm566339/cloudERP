@@ -9,7 +9,7 @@ import { FileX, ChevronLeft, ChevronRight } from 'lucide-react';
 export function TableContainer({ children, className = '', scrollHint = false, ...props }) {
   return (
     <div
-      className={`w-full max-w-full min-w-0 overflow-x-auto custom-scrollbar bg-white rounded-xl border border-zinc-200 shadow-2xs relative ${
+      className={`w-full max-w-full min-w-0 overflow-x-auto custom-scrollbar bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs relative ${
         scrollHint ? 'after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-6 after:bg-gradient-to-l after:from-black/5 after:to-transparent sm:after:hidden' : ''
       } ${className}`}
       {...props}
@@ -34,7 +34,7 @@ export function Table({ children, className = '', ariaLabel = 'Data table', ...p
 export function TableHeader({ children, className = '', sticky = true, ...props }) {
   return (
     <thead
-      className={`bg-zinc-50 border-b border-zinc-200 text-zinc-600 ${
+      className={`bg-zinc-50 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] ${
         sticky ? 'sticky top-0 z-20' : ''
       } ${className}`}
       {...props}
@@ -46,7 +46,7 @@ export function TableHeader({ children, className = '', sticky = true, ...props 
 
 export function TableBody({ children, className = '', ...props }) {
   return (
-    <tbody className={`divide-y divide-zinc-100 bg-white ${className}`} {...props}>
+    <tbody className={`divide-y divide-zinc-100 dark:divide-[#2A2F3D] bg-white dark:bg-[#161922] ${className}`} {...props}>
       {children}
     </tbody>
   );
@@ -55,7 +55,7 @@ export function TableBody({ children, className = '', ...props }) {
 export function TableFooter({ children, className = '', ...props }) {
   return (
     <tfoot
-      className={`border-t border-zinc-200 bg-zinc-50/70 font-medium ${className}`}
+      className={`border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/70 dark:bg-[#161922] font-medium ${className}`}
       {...props}
     >
       {children}
@@ -75,12 +75,12 @@ export function TableRow({
     <tr
       className={`transition-colors duration-150 ${
         isSelected
-          ? 'bg-zinc-100/90 font-medium'
+          ? 'bg-zinc-100/90 dark:bg-[#222736] font-medium'
           : isClickable
-          ? 'cursor-pointer hover:bg-zinc-50'
+          ? 'cursor-pointer hover:bg-zinc-50 dark:hover:bg-[#222736]'
           : isZebra
-          ? 'odd:bg-white even:bg-zinc-50/40 hover:bg-zinc-50/80'
-          : 'hover:bg-zinc-50/70'
+          ? 'odd:bg-white odd:dark:bg-[#161922] even:bg-zinc-50/40 even:dark:bg-[#1D212C] hover:bg-zinc-50/80 dark:hover:bg-[#222736]'
+          : 'hover:bg-zinc-50/70 dark:hover:bg-[#222736]'
       } ${className}`}
       {...props}
     >
@@ -104,7 +104,7 @@ export function TableHead({
     <th
       scope="col"
       style={width ? { width, minWidth: width } : undefined}
-      className={`px-4 py-3 text-xs font-semibold text-zinc-600 uppercase tracking-wider whitespace-nowrap align-middle select-none ${alignClass} ${className}`}
+      className={`px-4 py-3 text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider whitespace-nowrap align-middle select-none ${alignClass} ${className}`}
       {...props}
     >
       {children}
@@ -130,7 +130,7 @@ export function TableCell({
   return (
     <td
       style={width ? { width, minWidth: width } : undefined}
-      className={`px-4 py-3 text-zinc-700 whitespace-nowrap align-middle font-medium text-[13px] md:text-sm ${alignClass} ${className}`}
+      className={`px-4 py-3 text-zinc-700 dark:text-[#E6E8EE] whitespace-nowrap align-middle font-medium text-[13px] md:text-sm ${alignClass} ${className}`}
       {...props}
     >
       {children}
@@ -141,7 +141,7 @@ export function TableCell({
 export function TableToolbar({ children, className = '', ...props }) {
   return (
     <div
-      className={`p-4 border-b border-zinc-200/80 flex flex-wrap items-center justify-between gap-3 bg-white ${className}`}
+      className={`p-4 border-b border-zinc-200/80 dark:border-[#2A2F3D] flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#161922] ${className}`}
       {...props}
     >
       {children}
@@ -160,12 +160,12 @@ export function TableEmpty({
   return (
     <tr>
       <td colSpan={colSpan} className={`px-4 py-12 text-center ${className}`}>
-        <div className="flex flex-col items-center justify-center max-w-sm mx-auto text-zinc-500">
-          <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center mb-3 text-zinc-400">
+        <div className="flex flex-col items-center justify-center max-w-sm mx-auto text-zinc-500 dark:text-[#A0A6B5]">
+          <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-[#1D212C] flex items-center justify-center mb-3 text-zinc-400 dark:text-[#6B7184]">
             <Icon size={24} />
           </div>
-          <p className="text-sm font-semibold text-zinc-800 mb-1">{title}</p>
-          {description && <p className="text-xs text-zinc-500 mb-4">{description}</p>}
+          <p className="text-sm font-semibold text-zinc-800 dark:text-[#E6E8EE] mb-1">{title}</p>
+          {description && <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mb-4">{description}</p>}
           {action && <div className="mt-1">{action}</div>}
         </div>
       </td>
@@ -181,11 +181,11 @@ export function TableSkeleton({
   return (
     <>
       {Array.from({ length: rows }).map((_, rIdx) => (
-        <tr key={rIdx} className="animate-pulse border-b border-zinc-100">
+        <tr key={rIdx} className="animate-pulse border-b border-zinc-100 dark:border-[#2A2F3D]">
           {Array.from({ length: columns }).map((_, cIdx) => (
             <td key={cIdx} className="px-4 py-3.5">
               <div
-                className="h-4 bg-zinc-100 rounded"
+                className="h-4 bg-zinc-100 dark:bg-[#1D212C] rounded"
                 style={{
                   width: cIdx === 0 ? '40%' : cIdx === columns - 1 && hasActions ? '24px' : '75%'
                 }}
@@ -216,15 +216,15 @@ export function TablePagination({
 
   return (
     <div
-      className={`px-4 py-3 sm:px-6 border-t border-zinc-200/80 bg-white flex flex-wrap items-center justify-between gap-3 ${className}`}
+      className={`px-4 py-3 sm:px-6 border-t border-zinc-200/80 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] flex flex-wrap items-center justify-between gap-3 ${className}`}
     >
-      <p className="text-xs text-zinc-500 whitespace-nowrap">
-        Showing <span className="font-semibold text-zinc-800">{from}–{to}</span> of{' '}
-        <span className="font-semibold text-zinc-800">{totalItems.toLocaleString()}</span> {itemName}
+      <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] whitespace-nowrap">
+        Showing <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{from}–{to}</span> of{' '}
+        <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{totalItems.toLocaleString()}</span> {itemName}
       </p>
 
       <div className="flex items-center gap-2">
-        <span className="text-xs text-zinc-500 sm:hidden">
+        <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] sm:hidden">
           Page {currentPage} of {totalPages}
         </span>
 
@@ -234,7 +234,7 @@ export function TablePagination({
             onClick={() => canPrev && onPageChange && onPageChange(currentPage - 1)}
             disabled={!canPrev}
             aria-label="Previous page"
-            className="h-8 px-2.5 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-xs font-medium"
+            className="h-8 px-2.5 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-xs font-medium"
           >
             <ChevronLeft size={14} className="mr-1" /> Prev
           </button>
@@ -243,7 +243,7 @@ export function TablePagination({
             onClick={() => canNext && onPageChange && onPageChange(currentPage + 1)}
             disabled={!canNext}
             aria-label="Next page"
-            className="h-8 px-2.5 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-xs font-medium"
+            className="h-8 px-2.5 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-xs font-medium"
           >
             Next <ChevronRight size={14} className="ml-1" />
           </button>
@@ -279,14 +279,14 @@ export function TableCardView({
           <div
             key={item.id || idx}
             onClick={() => onRowClick && onRowClick(item)}
-            className={`bg-white rounded-xl border border-zinc-200 p-4 shadow-2xs space-y-3 ${
-              onRowClick ? 'cursor-pointer active:bg-zinc-50' : ''
+            className={`bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] p-4 shadow-2xs space-y-3 ${
+              onRowClick ? 'cursor-pointer active:bg-zinc-50 dark:active:bg-[#222736]' : ''
             }`}
           >
-            <div className="flex items-start justify-between gap-2 border-b border-zinc-100 pb-2">
+            <div className="flex items-start justify-between gap-2 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">
               <div>
-                <p className="font-semibold text-sm text-zinc-900">{title || `#${idx + 1}`}</p>
-                {subtitle && <p className="text-xs text-zinc-500 mt-0.5">{subtitle}</p>}
+                <p className="font-semibold text-sm text-zinc-900 dark:text-[#E6E8EE]">{title || `#${idx + 1}`}</p>
+                {subtitle && <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">{subtitle}</p>}
               </div>
               {status && <div className="shrink-0">{status}</div>}
             </div>
@@ -297,15 +297,15 @@ export function TableCardView({
                 const val = f.render ? f.render(item[f.key], item, idx) : item[f.key];
                 return (
                   <div key={fIdx} className={f.colSpan === 2 ? 'col-span-2' : ''}>
-                    <dt className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">{label}</dt>
-                    <dd className={`font-medium text-zinc-800 mt-0.5 ${f.isNumeric ? 'tabular-nums' : ''}`}>{val ?? '—'}</dd>
+                    <dt className="text-[11px] font-semibold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">{label}</dt>
+                    <dd className={`font-medium text-zinc-800 dark:text-[#E6E8EE] mt-0.5 ${f.isNumeric ? 'tabular-nums' : ''}`}>{val ?? '—'}</dd>
                   </div>
                 );
               })}
             </dl>
 
             {actions && (
-              <div className="pt-2 border-t border-zinc-100 flex items-center justify-end gap-2">
+              <div className="pt-2 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-end gap-2">
                 {typeof actions === 'function' ? actions(item, idx) : actions}
               </div>
             )}

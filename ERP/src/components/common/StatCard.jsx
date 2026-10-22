@@ -4,29 +4,29 @@ import { SkeletonBox } from './SkeletonLoader'
 
 const CARD_VARIANTS = {
  default: {
- icon: 'bg-primary/10 text-primary',
- border: 'border-l-primary-400',
- badge: 'text-primary bg-primary/10',
+ icon: 'bg-primary/10 dark:bg-[#4C8DFF]/15 text-primary dark:text-[#4C8DFF]',
+ border: 'border-l-primary-400 dark:border-l-[#4C8DFF]',
+ badge: 'text-primary dark:text-[#4C8DFF] bg-primary/10 dark:bg-[#4C8DFF]/15',
  },
  success: {
- icon: 'bg-emerald-50 text-emerald-600',
- border: 'border-l-emerald-400',
- badge: 'text-emerald-600 bg-emerald-50',
+ icon: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-600 dark:text-[#34C38F]',
+ border: 'border-l-emerald-400 dark:border-l-[#34C38F]',
+ badge: 'text-emerald-600 dark:text-[#34C38F] bg-emerald-50 dark:bg-[#34C38F]/15',
  },
  warning: {
- icon: 'bg-amber-50 text-amber-600',
- border: 'border-l-amber-400',
- badge: 'text-amber-600 bg-amber-50',
+ icon: 'bg-amber-50 dark:bg-[#F5B544]/15 text-amber-600 dark:text-[#F5B544]',
+ border: 'border-l-amber-400 dark:border-l-[#F5B544]',
+ badge: 'text-amber-600 dark:text-[#F5B544] bg-amber-50 dark:bg-[#F5B544]/15',
  },
  danger: {
- icon: 'bg-red-50 text-red-600',
- border: 'border-l-red-400',
- badge: 'text-red-600 bg-red-50',
+ icon: 'bg-red-50 dark:bg-[#F0616D]/15 text-red-600 dark:text-[#F0616D]',
+ border: 'border-l-red-400 dark:border-l-[#F0616D]',
+ badge: 'text-red-600 dark:text-[#F0616D] bg-red-50 dark:bg-[#F0616D]/15',
  },
  info: {
- icon: 'bg-sky-50 text-sky-600',
- border: 'border-l-sky-400',
- badge: 'text-sky-600 bg-sky-50',
+ icon: 'bg-sky-50 dark:bg-[#38BDF8]/15 text-sky-600 dark:text-[#38BDF8]',
+ border: 'border-l-sky-400 dark:border-l-[#38BDF8]',
+ badge: 'text-sky-600 dark:text-[#38BDF8] bg-sky-50 dark:bg-[#38BDF8]/15',
  },
 }
 
@@ -45,7 +45,7 @@ function StatCard({
 
   if (loading) {
   return (
-  <div className="card p-4 border-l-[2.4px] border-l-zinc-200">
+  <div className="card p-4 border-l-[2.4px] border-l-zinc-200 dark:border-l-[#2A2F3D] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl">
    <div className="flex items-start justify-between mb-3">
      <SkeletonBox className="w-8 h-8 rounded-xl" />
      <SkeletonBox className="w-16 h-5 rounded-lg" />
@@ -61,7 +61,7 @@ function StatCard({
  return (
  <div
  className={`
- card p-4 group cursor-default min-w-0
+ card p-4 group cursor-default min-w-0 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl
  border-l-[2.4px] ${styles.border}
  hover:shadow-sm
  transition-shadow duration-micro ease-enter
@@ -81,13 +81,13 @@ function StatCard({
  )}
  </div>
 
- <p className="text-xl font-bold text-zinc-900 leading-none mb-1 tracking-tight">
+ <p className="text-xl font-bold text-zinc-900 dark:text-[#E6E8EE] leading-none mb-1 tracking-tight">
  {value}
  </p>
- <p className="text-xs font-medium text-zinc-500">{label || title}</p>
+ <p className="text-xs font-medium text-zinc-500 dark:text-[#A0A6B5]">{label || title}</p>
 
  {subtitle && (
- <p className="text-xs text-zinc-400 mt-1">{subtitle}</p>
+ <p className="text-xs text-zinc-400 dark:text-[#6B7184] mt-1">{subtitle}</p>
  )}
  </div>
  )

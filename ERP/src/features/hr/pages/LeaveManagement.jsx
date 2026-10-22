@@ -85,24 +85,24 @@ export default function LeavePage() {
  {paginated.length === 0 && (
    <tr>
      <td colSpan={8}>
-       <div className="p-8 text-center border-2 border-dashed border-zinc-200 m-4 rounded-xl">
-         <Check className="mx-auto text-zinc-300 mb-3" size={28} />
-         <p className="text-sm font-medium text-zinc-600">No leave requests found</p>
-         <p className="text-xs text-zinc-400 mt-1">Adjust your filters to see more results.</p>
+       <div className="p-8 text-center border-2 border-dashed border-zinc-200 dark:border-border-dark m-4 rounded-xl">
+         <Check className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" size={28} />
+         <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">No leave requests found</p>
+         <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Adjust your filters to see more results.</p>
        </div>
      </td>
    </tr>
  )}
  {paginated.map((l, index) => (
  <tr key={l.id}>
-                    <td className="text-center font-medium text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
- <td className="font-medium text-zinc-800">{l.employee}</td>
- <td className="text-zinc-600">{l.type}</td>
- <td className="text-zinc-500 text-xs">
+                    <td className="text-center font-medium text-zinc-500 dark:text-zinc-400 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
+ <td className="font-medium text-zinc-800 dark:text-zinc-200">{l.employee}</td>
+ <td className="text-zinc-600 dark:text-zinc-300">{l.type}</td>
+ <td className="text-zinc-500 dark:text-zinc-400 text-xs">
  {l.from} <br />to {l.to}
  </td>
- <td className="font-medium">{l.days}</td>
- <td className="text-zinc-500 truncate max-w-[120px]" title={l.reason}>{l.reason}</td>
+ <td className="font-medium text-zinc-900 dark:text-zinc-100">{l.days}</td>
+ <td className="text-zinc-500 dark:text-zinc-400 truncate max-w-[120px]" title={l.reason}>{l.reason}</td>
  <td>
  <span className={`badge ${
  l.status === 'Approved' ? 'badge-success' :
@@ -112,10 +112,10 @@ export default function LeavePage() {
  <td className="text-right">
  {l.status === 'Pending' && (
  <div className="flex items-center justify-end gap-2">
- <button className="p-1.5 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors" title="Approve">
+ <button className="p-1.5 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-md transition-colors" title="Approve">
  <Check size={16} />
  </button>
- <button className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors" title="Reject">
+ <button className="p-1.5 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-md transition-colors" title="Reject">
  <X size={16} />
  </button>
  </div>
@@ -128,7 +128,7 @@ export default function LeavePage() {
  </div>
  )}
  {!isLoading && (
-   <div className="p-4 border-t border-zinc-100 bg-white rounded-b-xl">
+   <div className="p-4 border-t border-zinc-100 dark:border-border-dark bg-white dark:bg-card-dark rounded-b-xl">
       <Pagination
         {...paginationProps}
         totalPages={totalPages}

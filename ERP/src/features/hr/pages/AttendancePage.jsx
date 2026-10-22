@@ -68,15 +68,15 @@ export default function AttendancePage() {
  </div>
  <div className="kpi-card">
  <p className="kpi-label mb-1">Present</p>
- <p className="kpi-value text-emerald-600">112</p>
+ <p className="kpi-value text-emerald-600 dark:text-emerald-400">112</p>
  </div>
  <div className="kpi-card">
  <p className="kpi-label mb-1">Absent</p>
- <p className="kpi-value text-red-600">8</p>
+ <p className="kpi-value text-red-600 dark:text-red-400">8</p>
  </div>
  <div className="kpi-card">
  <p className="kpi-label mb-1">On Leave</p>
- <p className="kpi-value text-amber-600">4</p>
+ <p className="kpi-value text-amber-600 dark:text-amber-400">4</p>
  </div>
  </div>
 
@@ -105,21 +105,21 @@ export default function AttendancePage() {
  {paginated.length === 0 && (
    <tr>
      <td colSpan={6}>
-       <div className="p-8 text-center border-2 border-dashed border-zinc-200 m-4 rounded-xl">
-         <CalendarIcon className="mx-auto text-zinc-300 mb-3" size={28} />
-         <p className="text-sm font-medium text-zinc-600">No attendance records found</p>
-         <p className="text-xs text-zinc-400 mt-1">Adjust your filters or select a different date.</p>
+       <div className="p-8 text-center border-2 border-dashed border-zinc-200 dark:border-border-dark m-4 rounded-xl">
+         <CalendarIcon className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" size={28} />
+         <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">No attendance records found</p>
+         <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Adjust your filters or select a different date.</p>
        </div>
      </td>
    </tr>
  )}
  {paginated.map((a, index) => (
  <tr key={a.id}>
-                    <td className="text-center font-medium text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
+                    <td className="text-center font-medium text-zinc-500 dark:text-zinc-400 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
  <td className="font-medium">
  <div className="flex items-center gap-2">
- <span className="text-zinc-800">{a.name}</span>
- <span className="text-xs text-zinc-400 font-mono">({a.id})</span>
+ <span className="text-zinc-800 dark:text-zinc-200">{a.name}</span>
+ <span className="text-xs text-zinc-400 dark:text-zinc-500 font-mono">({a.id})</span>
  </div>
  </td>
  <td>
@@ -132,9 +132,9 @@ export default function AttendancePage() {
  {a.status}
  </span>
  </td>
- <td className="text-zinc-500">{a.checkIn}</td>
- <td className="text-zinc-500">{a.checkOut}</td>
- <td className="font-medium text-zinc-700">{a.hours}</td>
+ <td className="text-zinc-500 dark:text-zinc-400">{a.checkIn}</td>
+ <td className="text-zinc-500 dark:text-zinc-400">{a.checkOut}</td>
+ <td className="font-medium text-zinc-700 dark:text-zinc-300">{a.hours}</td>
  </tr>
  ))}
  </tbody>
@@ -142,7 +142,7 @@ export default function AttendancePage() {
  </div>
  )}
  {!isLoading && (
-   <div className="p-4 border-t border-zinc-100 bg-white rounded-b-xl">
+   <div className="p-4 border-t border-zinc-100 dark:border-border-dark bg-white dark:bg-card-dark rounded-b-xl">
       <Pagination
         {...paginationProps}
         totalPages={totalPages}

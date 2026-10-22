@@ -19,12 +19,12 @@ const ICON_MAP = { Send, Check, X, BookOpen, Undo, XCircle };
  * Tailwind color class map for action button styling.
  */
 const COLOR_MAP = {
-  blue:    { bg: 'bg-blue-50 hover:bg-blue-100',       text: 'text-blue-700',    icon: 'text-blue-500',    border: 'border-blue-200' },
-  emerald: { bg: 'bg-emerald-50 hover:bg-emerald-100', text: 'text-emerald-700', icon: 'text-emerald-500', border: 'border-emerald-200' },
-  rose:    { bg: 'bg-rose-50 hover:bg-rose-100',       text: 'text-rose-600',    icon: 'text-rose-500',    border: 'border-rose-200' },
-  indigo:  { bg: 'bg-indigo-50 hover:bg-indigo-100',   text: 'text-indigo-700',  icon: 'text-indigo-500',  border: 'border-indigo-200' },
-  amber:   { bg: 'bg-amber-50 hover:bg-amber-100',     text: 'text-amber-700',   icon: 'text-amber-500',   border: 'border-amber-200' },
-  zinc:    { bg: 'bg-zinc-50 hover:bg-zinc-100',       text: 'text-zinc-700',    icon: 'text-zinc-400',    border: 'border-zinc-200' },
+  blue:    { bg: 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/30 dark:hover:bg-blue-900/40',       text: 'text-blue-700 dark:text-[#4C8DFF]',    icon: 'text-blue-500 dark:text-[#4C8DFF]',    border: 'border-blue-200 dark:border-blue-900/50' },
+  emerald: { bg: 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/40', text: 'text-emerald-700 dark:text-emerald-400', icon: 'text-emerald-500 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-900/50' },
+  rose:    { bg: 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40',       text: 'text-rose-600 dark:text-rose-400',    icon: 'text-rose-500 dark:text-rose-400',    border: 'border-rose-200 dark:border-rose-900/50' },
+  indigo:  { bg: 'bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:hover:bg-indigo-900/40',   text: 'text-indigo-700 dark:text-indigo-400',  icon: 'text-indigo-500 dark:text-indigo-400',  border: 'border-indigo-200 dark:border-indigo-900/50' },
+  amber:   { bg: 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-900/40',     text: 'text-amber-700 dark:text-amber-400',   icon: 'text-amber-500 dark:text-amber-400',   border: 'border-amber-200 dark:border-amber-900/50' },
+  zinc:    { bg: 'bg-zinc-50 hover:bg-zinc-100 dark:bg-[#1D212C] dark:hover:bg-[#222736]',       text: 'text-zinc-700 dark:text-zinc-300',    icon: 'text-zinc-400 dark:text-zinc-500',    border: 'border-zinc-200 dark:border-[#2A2F3D]' },
 };
 
 /**
@@ -147,7 +147,7 @@ export default function ReceiptWorkflowActions({
               key={action.key}
               onClick={() => handleAction(action)}
               disabled={loading}
-              className={`w-full text-left px-4 py-2 hover:bg-zinc-50 flex items-center gap-2 ${colors.text} font-semibold border-t border-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed text-xs`}
+              className={`w-full text-left px-4 py-2 hover:bg-zinc-50 dark:hover:bg-[#222736] flex items-center gap-2 ${colors.text} font-semibold border-t border-zinc-100 dark:border-[#2A2F3D] disabled:opacity-50 disabled:cursor-not-allowed text-xs`}
             >
               {loading
                 ? <RefreshCw size={14} className={`animate-spin ${colors.icon}`} />
@@ -176,7 +176,7 @@ export default function ReceiptWorkflowActions({
               key={action.key}
               onClick={() => handleAction(action)}
               disabled={loading}
-              className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium ${colors.text} hover:bg-zinc-50 rounded-lg transition-colors w-full text-left disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium ${colors.text} hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-lg transition-colors w-full text-left disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {loading
                 ? <RefreshCw size={15} className={`animate-spin ${colors.icon}`} />
@@ -212,7 +212,7 @@ export function getReceiptRowActions({ receiptStatus, state }) {
     return {
       icon: <IconComponent size={14} />,
       tooltip: action.label,
-      className: `${colors.text} hover:bg-zinc-100`,
+      className: `${colors.text} hover:bg-zinc-100 dark:hover:bg-[#222736]`,
       actionDef: action, // Pass the full definition for the handler to use
     };
   });

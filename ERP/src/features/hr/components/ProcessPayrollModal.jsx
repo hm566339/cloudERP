@@ -21,9 +21,9 @@ export default function ProcessPayrollModal({ isOpen, onClose, onSubmit }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4">
       <div className="card w-full max-w-md animate-slide-up flex flex-col">
-        <div className="flex justify-between items-center p-6 border-b border-zinc-100">
+        <div className="flex justify-between items-center p-6 border-b border-zinc-100 dark:border-[#2A2F3D]">
           <h2 className="text-xl font-bold text-zinc-800">Process Payroll</h2>
-          <button onClick={onClose} className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-50 transition-colors">
+          <button onClick={onClose} className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
             <X size={20} />
           </button>
         </div>

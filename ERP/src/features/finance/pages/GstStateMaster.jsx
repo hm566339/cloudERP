@@ -30,34 +30,34 @@ const getStatusBadge = (active) => {
 
 const getTypeBadge = (isUnionTerritory) => {
   if (isUnionTerritory) {
-    return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200">Union Territory</span>;
+    return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-[#4C8DFF] dark:border-blue-500/20">Union Territory</span>;
   }
-  return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 text-zinc-600 border-zinc-200">State</span>;
+  return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 text-zinc-600 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]">State</span>;
 };
 
 const StateOverview = ({ stateData }) => {
   return (
-    <div className="p-5 flex flex-col bg-zinc-50/50 rounded-lg border-t border-zinc-200">
+    <div className="p-5 flex flex-col bg-zinc-50/50 dark:bg-[#1D212C] rounded-lg border-t border-zinc-200 dark:border-[#2A2F3D]">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-lg font-bold text-zinc-900">{stateData.stateName || '-'}</h3>
-          <p className="text-[8.8px] text-zinc-500 font-medium tracking-wide mt-1">
-            Display Name: <span className="font-semibold text-zinc-700">{stateData.displayName || '-'}</span> | 
-            Code: <span className="font-semibold text-zinc-700">{stateData.stateCode || '-'}</span>
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">{stateData.stateName || '-'}</h3>
+          <p className="text-[8.8px] text-zinc-500 dark:text-[#6B7184] font-medium tracking-wide mt-1">
+            Display Name: <span className="font-semibold text-zinc-700 dark:text-[#A0A6B5]">{stateData.displayName || '-'}</span> | 
+            Code: <span className="font-semibold text-zinc-700 dark:text-[#A0A6B5]">{stateData.stateCode || '-'}</span>
           </p>
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Country Code</p>
-          <p className="font-bold text-zinc-900 text-sm">{stateData.countryCode || 'IN'}</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase mb-0.5">Country Code</p>
+          <p className="font-bold text-zinc-900 dark:text-[#E6E8EE] text-sm">{stateData.countryCode || 'IN'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Classification</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase mb-0.5">Classification</p>
           <div>{getTypeBadge(stateData.unionTerritory !== undefined ? stateData.unionTerritory : stateData.isUnionTerritory)}</div>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Status</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase mb-0.5">Status</p>
           <div>{getStatusBadge(stateData.active)}</div>
         </div>
       </div>
@@ -273,7 +273,7 @@ export default function GstStateMaster() {
   ], [navigate, buildPath]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="GST State Master"
         description="Manage GST State Codes and Union Territories used across the ERP."

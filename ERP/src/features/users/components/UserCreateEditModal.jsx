@@ -189,23 +189,23 @@ export default function UserCreateEditModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4">
-      <div className="card max-w-3xl w-full p-4 space-y-4 animate-slide-up max-h-[90vh] overflow-y-auto">
+      <div className="card max-w-3xl w-full p-4 space-y-4 animate-slide-up max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] shadow-xl dark:shadow-2xl">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-bold text-zinc-900">
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">
             {currentUser ? "Modify User Profile" : "Provision User Account"}
           </h3>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-650">✕</button>
+          <button onClick={onClose} className="text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE]">✕</button>
         </div>
 
         <form onSubmit={handleSubmit}>
           {apiError && (
-            <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 mb-4">
+            <div className="rounded-lg border border-rose-200 dark:border-[#F0616D]/30 bg-rose-50 dark:bg-[#F0616D]/15 px-4 py-3 text-sm text-rose-700 dark:text-[#F0616D] mb-4">
               {apiError}
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-zinc-500 block">Full Name *</label>
+            <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Full Name *</label>
             <input
               type="text"
               placeholder="e.g. John Doe"
@@ -213,11 +213,11 @@ export default function UserCreateEditModal({
               onChange={(e) => setName(e.target.value)}
               className="input-field"
             />
-            {validationErrors.fullName && <p className="text-xs text-rose-600 mt-1">{validationErrors.fullName}</p>}
+            {validationErrors.fullName && <p className="text-xs text-rose-600 dark:text-[#F0616D] mt-1">{validationErrors.fullName}</p>}
           </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-zinc-500 block">Employee ID *</label>
+              <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Employee ID *</label>
               <input
                 type="text"
                 placeholder="e.g. EMP001"
@@ -227,10 +227,10 @@ export default function UserCreateEditModal({
                 minLength={1}
                 maxLength={100}
               />
-              {validationErrors.empId && <p className="text-xs text-rose-600 mt-1">{validationErrors.empId}</p>}
+              {validationErrors.empId && <p className="text-xs text-rose-600 dark:text-[#F0616D] mt-1">{validationErrors.empId}</p>}
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-zinc-500 block">Username *</label>
+              <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Username *</label>
               <input
                 type="text"
                 placeholder="e.g. john.doe"
@@ -240,11 +240,11 @@ export default function UserCreateEditModal({
                 minLength={3}
                 maxLength={100}
               />
-              {validationErrors.username && <p className="text-xs text-rose-600 mt-1">{validationErrors.username}</p>}
+              {validationErrors.username && <p className="text-xs text-rose-600 dark:text-[#F0616D] mt-1">{validationErrors.username}</p>}
             </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-zinc-500 block">Email Address *</label>
+            <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Email Address *</label>
             <input
               type="email"
               placeholder="e.g. john@techcorp.com"
@@ -253,22 +253,22 @@ export default function UserCreateEditModal({
               className="input-field"
               maxLength={255}
             />
-            {validationErrors.email && <p className="text-xs text-rose-600 mt-1">{validationErrors.email}</p>}
+            {validationErrors.email && <p className="text-xs text-rose-600 dark:text-[#F0616D] mt-1">{validationErrors.email}</p>}
           </div>
 
           {!currentUser && (
             <div className="space-y-1">
-              <label className="text-xs font-bold text-zinc-500 block">Module *</label>
+              <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Module *</label>
               {isCompanyModulesLoading ? (
-                <div className="p-3 rounded-lg bg-zinc-50 text-sm text-zinc-500 border border-zinc-100">
+                <div className="p-3 rounded-lg bg-zinc-50 dark:bg-[#161922] text-sm text-zinc-500 dark:text-[#A0A6B5] border border-zinc-100 dark:border-[#2A2F3D]">
                   Loading active modules...
                 </div>
               ) : !rawCompanyId ? (
-                <div className="p-3 rounded-lg bg-zinc-50 text-sm text-zinc-500 border border-zinc-100">
+                <div className="p-3 rounded-lg bg-zinc-50 dark:bg-[#161922] text-sm text-zinc-500 dark:text-[#A0A6B5] border border-zinc-100 dark:border-[#2A2F3D]">
                   Unable to load modules without a company.
                 </div>
               ) : activeModules.length === 0 ? (
-                <div className="p-3 rounded-lg bg-zinc-50 text-sm text-zinc-500 border border-zinc-100">
+                <div className="p-3 rounded-lg bg-zinc-50 dark:bg-[#161922] text-sm text-zinc-500 dark:text-[#A0A6B5] border border-zinc-100 dark:border-[#2A2F3D]">
                   No active modules available.
                 </div>
               ) : (
@@ -289,7 +289,7 @@ export default function UserCreateEditModal({
                   })}
                 </CustomSelect>
               )}
-              {validationErrors.module && <p className="text-xs text-rose-600 mt-1">{validationErrors.module}</p>}
+              {validationErrors.module && <p className="text-xs text-rose-600 dark:text-[#F0616D] mt-1">{validationErrors.module}</p>}
             </div>
           )}
           </div>
@@ -299,7 +299,7 @@ export default function UserCreateEditModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-bold text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-bold text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#222736] dark:hover:text-[#E6E8EE] rounded-lg transition-colors"
             >
               Cancel
             </button>

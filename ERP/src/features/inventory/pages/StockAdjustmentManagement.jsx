@@ -206,30 +206,30 @@ export default function StockAdjustmentManagement() {
   const renderExpandedRow = (adj) => (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Adjustment No</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Adjustment No</span>
         <p className="text-sm font-semibold text-zinc-900">{adj.adjustmentNo || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Date</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Date</span>
         <p className="text-sm font-medium text-zinc-700">{adj.adjustmentDate ? new Date(adj.adjustmentDate).toLocaleDateString() : '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Warehouse</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Warehouse</span>
         <p className="text-sm font-medium text-zinc-700 font-mono">{adj.warehouseName || adj.warehouseId || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Reason</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Reason</span>
         <p className="text-sm font-medium text-zinc-700">{adj.reason || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Status</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Status</span>
         <div>
           <DataTableStatusBadge status={adj.status} />
         </div>
       </div>
       {adj.remarks && (
         <div className="space-y-1 col-span-2">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Remarks</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Remarks</span>
           <p className="text-sm font-medium text-zinc-700">{adj.remarks}</p>
         </div>
       )}
@@ -237,7 +237,7 @@ export default function StockAdjustmentManagement() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Stock Adjustments"
         description="Manage manual stock adjustments for damages, shrinkage, or corrections"

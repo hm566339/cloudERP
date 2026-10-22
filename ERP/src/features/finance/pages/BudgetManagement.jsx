@@ -118,7 +118,7 @@ export default function BudgetManagement() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Allocation Chart */}
         <div className="card lg:col-span-2 overflow-hidden">
-          <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
+          <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-zinc-800">Departmental Allocations vs Spend</h3>
               <p className="text-xs text-zinc-400 mt-0.5">{budgets.length} budget{budgets.length !== 1 ? 's' : ''} active</p>
@@ -199,7 +199,7 @@ export default function BudgetManagement() {
         {/* Alerts Panel */}
         <div className="space-y-4">
           <div className="card overflow-hidden">
-            <div className="p-4 border-b border-zinc-100">
+            <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
               <h3 className="text-sm font-bold text-zinc-800 flex items-center gap-1.5">
                 <AlertTriangle size={14} className="text-amber-500" />
                 Budget Alerts

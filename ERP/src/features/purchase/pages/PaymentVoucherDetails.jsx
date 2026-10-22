@@ -32,7 +32,7 @@ const PostingBadge = ({ status }) => {
 };
 
 const KPICard = ({ title, value, subtitle, colorClass, icon: Icon }) => (
-  <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-between">
+  <div className="bg-white dark:bg-card-dark p-5 rounded-xl border border-zinc-200 dark:border-border-dark shadow-sm flex flex-col justify-between">
     <div className="flex justify-between items-start mb-2">
       <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500">{title}</h3>
       {Icon && <Icon size={16} className={colorClass} />}
@@ -45,7 +45,7 @@ const KPICard = ({ title, value, subtitle, colorClass, icon: Icon }) => (
 );
 
 const EmptyState = ({ icon: Icon, title, message }) => (
-  <div className="p-12 text-center flex flex-col items-center bg-white rounded-xl border border-zinc-100 shadow-sm h-full justify-center">
+  <div className="p-12 text-center flex flex-col items-center bg-white dark:bg-card-dark rounded-xl border border-zinc-100 dark:border-border-dark shadow-sm h-full justify-center">
     <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mb-4 border border-zinc-100">
       <Icon size={28} className="text-zinc-400" />
     </div>
@@ -217,10 +217,10 @@ export default function PaymentVoucherDetails() {
   const docCount = stats.totalLinkedDocuments || 0;
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 animate-in fade-in duration-300">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] animate-in fade-in duration-300">
       
       {/* ─── STICKY HEADER ────────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-zinc-200 sticky top-0 z-20 shadow-sm">
+      <div className="bg-white dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark sticky top-0 z-20 shadow-sm">
         <div className="px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
             <button 
@@ -254,22 +254,22 @@ export default function PaymentVoucherDetails() {
               <p className="text-lg font-black text-zinc-900 leading-none">{curr} {fmt(total)}</p>
             </div>
             
-            <button className="h-10 px-3 bg-white border border-zinc-200 text-zinc-700 rounded-lg hover:bg-zinc-50 flex items-center gap-2 font-semibold text-sm transition-colors">
+            <button className="h-10 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 rounded-lg hover:bg-zinc-50 flex items-center gap-2 font-semibold text-sm transition-colors">
               <Printer size={16} className="text-zinc-500" /> Print
             </button>
-            <button className="h-10 px-3 bg-white border border-zinc-200 text-zinc-700 rounded-lg hover:bg-zinc-50 flex items-center gap-2 font-semibold text-sm transition-colors">
+            <button className="h-10 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 rounded-lg hover:bg-zinc-50 flex items-center gap-2 font-semibold text-sm transition-colors">
               <Download size={16} className="text-zinc-500" /> Export PDF
             </button>
 
             <div className="relative">
               <button 
                 onClick={() => setShowMoreActions(!showMoreActions)}
-                className="h-10 px-3 bg-white border border-zinc-900 text-zinc-900 rounded-lg hover:bg-zinc-50 flex items-center gap-2 font-semibold text-sm transition-colors"
+                className="h-10 px-3 bg-white dark:bg-surface-dark border border-zinc-900 dark:border-border-dark text-zinc-900 dark:text-zinc-100 rounded-lg hover:bg-zinc-50 dark:hover:bg-hover-dark/40 flex items-center gap-2 font-semibold text-sm transition-colors"
               >
                 More Actions <ChevronDown size={14} className={`transition-transform ${showMoreActions ? 'rotate-180' : ''}`} />
               </button>
               {showMoreActions && (
-                <div className="absolute right-0 mt-2 w-56 bg-white border border-zinc-200 rounded-xl shadow-lg py-1.5 z-50">
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-lg py-1.5 z-50">
                   {dynamicActions.length > 0 && (
                     <>
                       {dynamicActions.map(action => (
@@ -323,8 +323,8 @@ export default function PaymentVoucherDetails() {
             <div className="w-full lg:w-[272px] flex-shrink-0 space-y-6">
               
               {/* Summary Card */}
-              <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden sticky top-6">
-                <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
+              <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden sticky top-6">
+                <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50">
                   <h3 className="font-bold text-zinc-800 flex items-center gap-2">
                     <FileText size={16} className="text-primary" />
                     Voucher Summary
@@ -363,7 +363,7 @@ export default function PaymentVoucherDetails() {
             </div>
 
             {/* ─── MAIN TABS (70%) ─────────────────────────────────────────────────── */}
-            <div className="flex-1 bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden flex flex-col min-h-[480px]">
+            <div className="flex-1 bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden flex flex-col min-h-[480px]">
               
               {/* Tabs Navigation */}
               <div className="bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm sticky top-0 z-10 overflow-x-auto no-scrollbar">
@@ -387,7 +387,7 @@ export default function PaymentVoucherDetails() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all shrink-0 whitespace-nowrap ${
                       activeTab === tab.id 
-                        ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/50' 
+                        ? 'bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200/50 dark:border-border-dark' 
                         : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/50'
                     }`}
                   >
@@ -402,7 +402,7 @@ export default function PaymentVoucherDetails() {
               </div>
 
               {/* Tab Content */}
-              <div className="p-6 flex-1 bg-white overflow-x-auto">
+              <div className="p-6 flex-1 bg-white dark:bg-card-dark overflow-x-auto">
                 
                 {/* ── OVERVIEW TAB ── */}
                 {activeTab === 'overview' && (
@@ -411,7 +411,7 @@ export default function PaymentVoucherDetails() {
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                       {/* Vendor Info */}
                       <div>
-                        <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center gap-2">
                           <User size={16} className="text-zinc-400" /> Vendor Information
                         </h3>
                         <div className="space-y-4">
@@ -456,7 +456,7 @@ export default function PaymentVoucherDetails() {
 
                       {/* Company Info */}
                       <div>
-                        <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center gap-2">
                           <Building2 size={16} className="text-zinc-400" /> Company Information
                         </h3>
                         <div className="space-y-4">
@@ -526,8 +526,8 @@ export default function PaymentVoucherDetails() {
                                     <tr className="bg-zinc-50/50">
                                       <td colSpan={6} className="p-0 border-t border-zinc-100">
                                         <div className="p-4 pl-12 animate-in slide-in-from-top-2 duration-200">
-                                          <div className="bg-white border border-zinc-200 shadow-sm rounded-lg p-4">
-                                            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100">
+                                          <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] shadow-sm rounded-lg p-4">
+                                            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider mb-3 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
                                               Allocation Details
                                             </h4>
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -572,7 +572,7 @@ export default function PaymentVoucherDetails() {
                 {/* ── BANK TAB ── */}
                 {activeTab === 'bank' && (
                   <div className="animate-in fade-in slide-in-from-bottom-2 max-w-3xl">
-                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center gap-2">
                       <Building2 size={20} className="text-primary" /> Bank Account Details
                     </h3>
                     {bankInfo.bankName || bankInfo.accountName ? (
@@ -587,7 +587,7 @@ export default function PaymentVoucherDetails() {
                         </div>
                         <div>
                           <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">Account Number</p>
-                          <p className="text-sm font-mono font-medium text-zinc-900 bg-white px-2 py-1 rounded inline-block mt-1 border border-zinc-200">
+                          <p className="text-sm font-mono font-medium text-zinc-900 dark:text-zinc-100 bg-white dark:bg-surface-dark px-2 py-1 rounded inline-block mt-1 border border-zinc-200 dark:border-border-dark">
                             {displayValue(bankInfo.accountNumber)}
                           </p>
                         </div>
@@ -617,7 +617,7 @@ export default function PaymentVoucherDetails() {
                 {/* ── PAYMENT INSTRUMENT TAB ── */}
                 {activeTab === 'instrument' && (
                   <div className="animate-in fade-in slide-in-from-bottom-2 max-w-3xl">
-                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center gap-2">
                       <CreditCard size={20} className="text-primary" /> Payment Instrument
                     </h3>
                     <div className="grid grid-cols-2 gap-y-6 gap-x-8 bg-zinc-50 p-6 rounded-xl border border-zinc-100">
@@ -633,7 +633,7 @@ export default function PaymentVoucherDetails() {
                       </div>
                       <div>
                         <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">Reference No / UTR</p>
-                        <p className="text-sm font-mono font-medium text-zinc-900 bg-white px-2 py-1 rounded inline-block mt-1 border border-zinc-200">
+                        <p className="text-sm font-mono font-medium text-zinc-900 dark:text-zinc-100 bg-white dark:bg-surface-dark px-2 py-1 rounded inline-block mt-1 border border-zinc-200 dark:border-border-dark">
                           {displayValue(instrumentInfo.utrNumber || v.referenceNo)}
                         </p>
                       </div>
@@ -656,7 +656,7 @@ export default function PaymentVoucherDetails() {
                 {/* ── TAX TAB ── */}
                 {activeTab === 'tax' && (
                   <div className="animate-in fade-in slide-in-from-bottom-2 max-w-3xl">
-                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center gap-2">
                       <Activity size={20} className="text-primary" /> Tax Information
                     </h3>
                     {(taxInfo.tdsDeducted > 0 || taxInfo.gstAdjustment > 0) ? (
@@ -707,7 +707,7 @@ export default function PaymentVoucherDetails() {
                               <span className="badge badge-success">POSTED</span>
                             </div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-zinc-200">
-                              <div className="bg-white p-4">
+                              <div className="bg-white dark:bg-card-dark p-4">
                                 <h4 className="text-sm font-bold text-emerald-600 mb-3 uppercase tracking-wider border-b border-emerald-100 pb-2">Debit Entries</h4>
                                 <table className="w-full text-left text-sm">
                                   <tbody className="divide-y divide-zinc-50">
@@ -726,7 +726,7 @@ export default function PaymentVoucherDetails() {
                                   </tbody>
                                 </table>
                               </div>
-                              <div className="bg-white p-4">
+                              <div className="bg-white dark:bg-card-dark p-4">
                                 <h4 className="text-sm font-bold text-red-600 mb-3 uppercase tracking-wider border-b border-red-100 pb-2">Credit Entries</h4>
                                 <table className="w-full text-left text-sm">
                                   <tbody className="divide-y divide-zinc-50">
@@ -762,7 +762,7 @@ export default function PaymentVoucherDetails() {
                 {/* ── LEDGER IMPACT TAB ── */}
                 {activeTab === 'ledger' && (
                   <div className="animate-in fade-in slide-in-from-bottom-2 max-w-2xl">
-                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center gap-2">
                       <Layers size={20} className="text-primary" /> Ledger Impact Summary
                     </h3>
                     {v.ledgerImpact ? (
@@ -771,15 +771,15 @@ export default function PaymentVoucherDetails() {
                         <pre>{JSON.stringify(v.ledgerImpact, null, 2)}</pre>
                       </div>
                     ) : (
-                      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm divide-y divide-zinc-100">
-                        <div className="p-4 flex justify-between items-center hover:bg-zinc-50 transition-colors">
+                      <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm divide-y divide-zinc-100">
+                        <div className="p-4 flex justify-between items-center hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
                           <div>
                             <p className="font-semibold text-zinc-900">Bank / Cash Ledger</p>
                             <p className="text-xs text-zinc-500 mt-0.5">Credited</p>
                           </div>
                           <p className="font-bold text-zinc-900">{curr} {fmt(total)}</p>
                         </div>
-                        <div className="p-4 flex justify-between items-center hover:bg-zinc-50 transition-colors">
+                        <div className="p-4 flex justify-between items-center hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
                           <div>
                             <p className="font-semibold text-zinc-900">Vendor Ledger ({vendorInfo.vendorName || '-'})</p>
                             <p className="text-xs text-zinc-500 mt-0.5">Debited</p>
@@ -787,7 +787,7 @@ export default function PaymentVoucherDetails() {
                           <p className="font-bold text-zinc-900">{curr} {fmt(total + (taxInfo.tdsDeducted || 0))}</p>
                         </div>
                         {(taxInfo.tdsDeducted > 0) && (
-                          <div className="p-4 flex justify-between items-center hover:bg-zinc-50 transition-colors">
+                          <div className="p-4 flex justify-between items-center hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
                             <div>
                               <p className="font-semibold text-zinc-900">TDS Payable Ledger</p>
                               <p className="text-xs text-zinc-500 mt-0.5">Credited</p>
@@ -803,7 +803,7 @@ export default function PaymentVoucherDetails() {
                 {/* ── RECONCILIATION TAB ── */}
                 {activeTab === 'reconciliation' && (
                   <div className="animate-in fade-in slide-in-from-bottom-2 max-w-2xl">
-                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center gap-2">
                       <RefreshCw size={20} className="text-primary" /> Bank Reconciliation
                     </h3>
                     <div className="grid grid-cols-2 gap-y-6 gap-x-8 bg-zinc-50 p-6 rounded-xl border border-zinc-100">
@@ -836,7 +836,7 @@ export default function PaymentVoucherDetails() {
                 {/* ── WORKFLOW TAB ── */}
                 {activeTab === 'workflow' && (
                   <div className="animate-in fade-in slide-in-from-bottom-2 max-w-2xl">
-                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center gap-2">
                       <CheckCircle size={20} className="text-primary" /> Approval Workflow Timeline
                     </h3>
                     
@@ -935,7 +935,7 @@ export default function PaymentVoucherDetails() {
                       <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
                         <Paperclip size={20} className="text-primary" /> Attachments
                       </h3>
-                      <button className="h-8 px-3 text-xs font-semibold text-zinc-700 bg-white border border-zinc-200 rounded-md shadow-sm hover:bg-zinc-50 flex items-center gap-1.5 transition-colors">
+                      <button className="h-8 px-3 text-xs font-semibold text-zinc-700 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md shadow-sm hover:bg-zinc-50 flex items-center gap-1.5 transition-colors">
                         <UploadCloud size={14} /> Upload File
                       </button>
                     </div>
@@ -986,7 +986,7 @@ export default function PaymentVoucherDetails() {
                 {/* ── AUDIT TAB ── */}
                 {activeTab === 'audit' && (
                   <div className="animate-in fade-in slide-in-from-bottom-2 max-w-2xl">
-                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-zinc-900 mb-6 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center gap-2">
                       <Lock size={20} className="text-primary" /> System Audit Log
                     </h3>
                     <div className="grid grid-cols-2 gap-y-6 gap-x-8 bg-zinc-50 p-6 rounded-xl border border-zinc-100">

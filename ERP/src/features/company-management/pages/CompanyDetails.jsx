@@ -436,14 +436,14 @@ export default function CompanyDetails() {
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button 
               onClick={handleOpenDelete} 
-              className="h-[38px] px-3.5 text-xs font-semibold text-rose-600 bg-white border border-rose-200 rounded-lg hover:bg-rose-50 hover:border-rose-300 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
+              className="h-[38px] px-3.5 text-xs font-semibold text-rose-600 bg-white dark:bg-card-dark border border-rose-200 dark:border-rose-900/40 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:border-rose-300 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
               title="Decommission Tenant"
             >
               <Trash2 size={15} /> <span>Delete</span>
             </button>
             <button 
               onClick={handleToggleStatus} 
-              className="h-[38px] px-3.5 text-xs font-semibold text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 hover:text-zinc-900 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
+              className="h-[38px] px-3.5 text-xs font-semibold text-zinc-700 bg-white dark:bg-card-dark border border-zinc-300 dark:border-border-dark text-zinc-700 dark:text-zinc-300 rounded-lg hover:bg-zinc-50 dark:hover:bg-hover-dark/40 hover:text-zinc-900 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
             >
               {tenant.active ? <XCircle size={15} className="text-amber-500" /> : <CheckCircle size={15} className="text-emerald-600" />}
               <span>{tenant.active ? "Suspend" : "Activate"}</span>
@@ -453,19 +453,19 @@ export default function CompanyDetails() {
                 dispatch(setSelectedCompany(tenant));
                 navigate(`/company/${tenant.id}/users`);
               }} 
-              className="h-[38px] px-3.5 text-xs font-semibold text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 hover:text-zinc-900 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
+              className="h-[38px] px-3.5 text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-[#E6E8EE] transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
             >
-              <Users size={15} className="text-zinc-500" /> <span>Users</span>
+              <Users size={15} className="text-zinc-500 dark:text-[#A0A6B5]" /> <span>Users</span>
             </button>
             <button 
               onClick={handleOpenAssignModules} 
-              className="h-[38px] px-3.5 text-xs font-semibold text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 hover:text-zinc-900 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
+              className="h-[38px] px-3.5 text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-[#E6E8EE] transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
             >
-              <ShieldAlert size={15} className="text-zinc-500" /> <span>Modules</span>
+              <ShieldAlert size={15} className="text-zinc-500 dark:text-[#A0A6B5]" /> <span>Modules</span>
             </button>
             <button 
               onClick={handleOpenEdit} 
-              className="h-[38px] px-4 text-xs font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
+              className="h-[38px] px-4 text-xs font-semibold text-white bg-zinc-900 dark:bg-primary rounded-lg hover:bg-zinc-800 dark:hover:bg-primary-600 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs cursor-pointer"
             >
               <Edit size={15} /> <span>Edit Company</span>
             </button>
@@ -480,57 +480,57 @@ export default function CompanyDetails() {
         <div className="space-y-5 min-w-0">
           
           {/* Company Info */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
-            <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100">
-              <Info size={15} className="text-zinc-500" />
-              <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Company Information</h2>
+          <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-5 shadow-xs">
+            <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+              <Info size={15} className="text-zinc-500 dark:text-[#A0A6B5]" />
+              <h2 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Company Information</h2>
             </div>
             <div className="space-y-3.5 text-xs">
               <div>
-                <div className="text-zinc-500 mb-1 font-medium">Legal Name</div>
-                <div className="font-semibold text-zinc-900 truncate" title={tenant.legalName || "-"}>{tenant.legalName || "-"}</div>
+                <div className="text-zinc-500 dark:text-[#A0A6B5] mb-1 font-medium">Legal Name</div>
+                <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={tenant.legalName || "-"}>{tenant.legalName || "-"}</div>
               </div>
               <div className="grid grid-cols-2 gap-3.5 pt-1">
                 <div>
-                  <div className="text-zinc-500 mb-1 font-medium">Company Type</div>
-                  <div className="font-semibold text-zinc-900 truncate" title={tenant.companyType || "-"}>{tenant.companyType || "-"}</div>
+                  <div className="text-zinc-500 dark:text-[#A0A6B5] mb-1 font-medium">Company Type</div>
+                  <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={tenant.companyType || "-"}>{tenant.companyType || "-"}</div>
                 </div>
                 <div>
-                  <div className="text-zinc-500 mb-1 font-medium">Base Currency</div>
-                  <div className="font-semibold text-zinc-900 truncate" title={tenant.baseCurrency || "INR"}>{tenant.baseCurrency || "INR"}</div>
+                  <div className="text-zinc-500 dark:text-[#A0A6B5] mb-1 font-medium">Base Currency</div>
+                  <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={tenant.baseCurrency || "INR"}>{tenant.baseCurrency || "INR"}</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Contact Details */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
-            <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100">
-              <Phone size={15} className="text-zinc-500" />
-              <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Contact Details</h2>
+          <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-5 shadow-xs">
+            <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+              <Phone size={15} className="text-zinc-500 dark:text-[#A0A6B5]" />
+              <h2 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Contact Details</h2>
             </div>
             <div className="space-y-3.5 text-xs">
               <div>
-                <div className="text-zinc-500 flex items-center gap-1.5 mb-1 font-medium"><Mail size={13} className="text-zinc-400"/> Email Address</div>
-                <div className="font-semibold text-zinc-900 truncate" title={tenant.email || "-"}>
-                  {tenant.email ? <a href={`mailto:${tenant.email}`} className="hover:underline hover:text-indigo-600">{tenant.email}</a> : "-"}
+                <div className="text-zinc-500 dark:text-[#A0A6B5] flex items-center gap-1.5 mb-1 font-medium"><Mail size={13} className="text-zinc-400 dark:text-[#6B7184]"/> Email Address</div>
+                <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={tenant.email || "-"}>
+                  {tenant.email ? <a href={`mailto:${tenant.email}`} className="hover:underline hover:text-indigo-600 dark:hover:text-primary">{tenant.email}</a> : "-"}
                 </div>
               </div>
               <div>
-                <div className="text-zinc-500 flex items-center gap-1.5 mb-1 font-medium"><Phone size={13} className="text-zinc-400"/> Phone Number</div>
-                <div className="font-semibold text-zinc-900 truncate" title={tenant.phone || "-"}>
-                  {tenant.phone ? <a href={`tel:${tenant.phone}`} className="hover:underline hover:text-indigo-600">{tenant.phone}</a> : "-"}
+                <div className="text-zinc-500 dark:text-[#A0A6B5] flex items-center gap-1.5 mb-1 font-medium"><Phone size={13} className="text-zinc-400 dark:text-[#6B7184]"/> Phone Number</div>
+                <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={tenant.phone || "-"}>
+                  {tenant.phone ? <a href={`tel:${tenant.phone}`} className="hover:underline hover:text-indigo-600 dark:hover:text-primary">{tenant.phone}</a> : "-"}
                 </div>
               </div>
               <div>
-                <div className="text-zinc-500 flex items-center gap-1.5 mb-1 font-medium"><Globe size={13} className="text-zinc-400"/> Website</div>
-                <div className="font-semibold text-zinc-900 truncate" title={tenant.website || "-"}>
+                <div className="text-zinc-500 dark:text-[#A0A6B5] flex items-center gap-1.5 mb-1 font-medium"><Globe size={13} className="text-zinc-400 dark:text-[#6B7184]"/> Website</div>
+                <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={tenant.website || "-"}>
                   {tenant.website ? (
                     <a 
                       href={tenant.website.startsWith('http') ? tenant.website : `https://${tenant.website}`} 
                       target="_blank" 
                       rel="noreferrer" 
-                      className="text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 truncate"
+                      className="text-indigo-600 dark:text-primary hover:text-indigo-800 dark:hover:text-primary-600 hover:underline flex items-center gap-1 truncate"
                     >
                       <span className="truncate">{tenant.website}</span>
                       <ExternalLink size={12} className="shrink-0" />
@@ -542,30 +542,30 @@ export default function CompanyDetails() {
           </div>
 
           {/* Address Details */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
-            <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100">
-              <MapPin size={15} className="text-zinc-500" />
-              <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Location Details</h2>
+          <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-5 shadow-xs">
+            <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+              <MapPin size={15} className="text-zinc-500 dark:text-[#A0A6B5]" />
+              <h2 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Location Details</h2>
             </div>
             <div className="space-y-3.5 text-xs">
               <div>
-                <div className="text-zinc-500 mb-1 font-medium">Address Line 1</div>
-                <div className="font-semibold text-zinc-900 truncate" title={tenant.address || "-"}>{tenant.address || "-"}</div>
+                <div className="text-zinc-500 dark:text-[#A0A6B5] mb-1 font-medium">Address Line 1</div>
+                <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={tenant.address || "-"}>{tenant.address || "-"}</div>
               </div>
               <div>
-                <div className="text-zinc-500 mb-1 font-medium">Address Line 2</div>
-                <div className="font-semibold text-zinc-900 truncate" title={tenant.addressLine2 || "-"}>{tenant.addressLine2 || "-"}</div>
+                <div className="text-zinc-500 dark:text-[#A0A6B5] mb-1 font-medium">Address Line 2</div>
+                <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={tenant.addressLine2 || "-"}>{tenant.addressLine2 || "-"}</div>
               </div>
               <div className="grid grid-cols-2 gap-3.5 pt-1">
                 <div>
-                  <div className="text-zinc-500 mb-1 font-medium">City / State</div>
-                  <div className="font-semibold text-zinc-900 truncate" title={[tenant.city, tenant.state].filter(Boolean).join(", ") || "-"}>
+                  <div className="text-zinc-500 dark:text-[#A0A6B5] mb-1 font-medium">City / State</div>
+                  <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={[tenant.city, tenant.state].filter(Boolean).join(", ") || "-"}>
                     {[tenant.city, tenant.state].filter(Boolean).join(", ") || "-"}
                   </div>
                 </div>
                 <div>
-                  <div className="text-zinc-500 mb-1 font-medium">Country / Postal</div>
-                  <div className="font-semibold text-zinc-900 truncate" title={[tenant.country, tenant.postalCode].filter(Boolean).join(" - ") || "-"}>
+                  <div className="text-zinc-500 dark:text-[#A0A6B5] mb-1 font-medium">Country / Postal</div>
+                  <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={[tenant.country, tenant.postalCode].filter(Boolean).join(" - ") || "-"}>
                     {[tenant.country, tenant.postalCode].filter(Boolean).join(" - ") || "-"}
                   </div>
                 </div>
@@ -578,29 +578,29 @@ export default function CompanyDetails() {
         <div className="space-y-5 min-w-0">
           
           {/* Legal & Tax Records */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
-            <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100">
-              <Shield size={15} className="text-zinc-500" />
-              <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Legal & Tax Records</h2>
+          <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-5 shadow-xs">
+            <div className="flex items-center gap-2 mb-3.5 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+              <Shield size={15} className="text-zinc-500 dark:text-[#A0A6B5]" />
+              <h2 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Legal & Tax Records</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-xs">
               <div>
-                <div className="text-zinc-500 mb-1 font-medium">GSTIN</div>
-                <div className="font-mono font-semibold text-zinc-900 truncate" title={tenant.gstin || "-"}>{tenant.gstin || "-"}</div>
+                <div className="text-zinc-500 dark:text-[#A0A6B5] mb-1 font-medium">GSTIN</div>
+                <div className="font-mono font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={tenant.gstin || "-"}>{tenant.gstin || "-"}</div>
               </div>
               <div>
-                <div className="text-zinc-500 mb-1 font-medium">PAN</div>
-                <div className="font-mono font-semibold text-zinc-900 truncate" title={tenant.pan || "-"}>{tenant.pan || "-"}</div>
+                <div className="text-zinc-500 dark:text-[#A0A6B5] mb-1 font-medium">PAN</div>
+                <div className="font-mono font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate" title={tenant.pan || "-"}>{tenant.pan || "-"}</div>
               </div>
-              <div className="pt-2 sm:pt-1 border-t border-zinc-100 sm:border-t-0">
-                <div className="text-zinc-500 mb-1 font-medium flex items-center gap-1.5"><Calendar size={13} className="text-zinc-400"/> Provision Date</div>
-                <div className="font-medium text-zinc-900">
+              <div className="pt-2 sm:pt-1 border-t border-zinc-100 dark:border-[#2A2F3D] sm:border-t-0">
+                <div className="text-zinc-500 dark:text-[#A0A6B5] mb-1 font-medium flex items-center gap-1.5"><Calendar size={13} className="text-zinc-400 dark:text-[#6B7184]"/> Provision Date</div>
+                <div className="font-medium text-zinc-900 dark:text-[#E6E8EE]">
                   {tenant.created ? new Date(tenant.created).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : "-"}
                 </div>
               </div>
-              <div className="pt-2 sm:pt-1 border-t border-zinc-100 sm:border-t-0">
-                <div className="text-zinc-500 mb-1 font-medium flex items-center gap-1.5"><Calendar size={13} className="text-zinc-400"/> Last Updated</div>
-                <div className="font-medium text-zinc-900">
+              <div className="pt-2 sm:pt-1 border-t border-zinc-100 dark:border-[#2A2F3D] sm:border-t-0">
+                <div className="text-zinc-500 dark:text-[#A0A6B5] mb-1 font-medium flex items-center gap-1.5"><Calendar size={13} className="text-zinc-400 dark:text-[#6B7184]"/> Last Updated</div>
+                <div className="font-medium text-zinc-900 dark:text-[#E6E8EE]">
                   {tenant.updated ? new Date(tenant.updated).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : "-"}
                 </div>
               </div>
@@ -608,22 +608,22 @@ export default function CompanyDetails() {
           </div>
 
           {/* Assigned Modules Table */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-2 border-b border-zinc-100">
+          <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-5 shadow-xs">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
               <div className="flex items-center gap-2">
-                <Layers size={16} className="text-zinc-600" />
-                <h2 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Assigned Application Modules</h2>
+                <Layers size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+                <h2 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Assigned Application Modules</h2>
               </div>
               <button 
                 onClick={handleOpenAssignModules} 
-                className="h-8 px-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer shrink-0"
+                className="h-8 px-3 bg-zinc-900 dark:bg-primary hover:bg-zinc-800 dark:hover:bg-primary-600 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer shrink-0"
               >
                 <Plus size={14} strokeWidth={2.5} /> <span>Assign New Module</span>
               </button>
             </div>
 
-            <div className="w-full overflow-hidden border border-zinc-200 rounded-lg bg-white">
-              <table className="w-full table-fixed text-left text-xs divide-y divide-zinc-200">
+            <div className="w-full overflow-hidden border border-zinc-200 dark:border-[#2A2F3D] rounded-lg bg-white dark:bg-[#161922]">
+              <table className="w-full table-fixed text-left text-xs divide-y divide-zinc-200 dark:divide-[#2A2F3D]">
                 <colgroup>
                   <col style={{ width: '7%' }} />
                   <col style={{ width: '23%' }} />
@@ -633,7 +633,7 @@ export default function CompanyDetails() {
                   <col style={{ width: '7%' }} />
                 </colgroup>
                 <thead>
-                  <tr className="bg-zinc-50/80 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+                  <tr className="bg-zinc-50/80 dark:bg-[#1D212C] text-[11px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">
                     <th className="py-3 px-3 text-center">S.No.</th>
                     <th className="py-3 px-3 text-left">Module Name</th>
                     <th className="py-3 px-3 text-left">Host API Pattern</th>
@@ -642,7 +642,7 @@ export default function CompanyDetails() {
                     <th className="py-3 px-2 text-center"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100">
+                <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                   {companyModulesLoading ? (
                     <tr>
                       <td colSpan={6} className="text-center py-10">

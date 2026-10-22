@@ -403,7 +403,7 @@ const CustomSelect = React.forwardRef(({
   // Segregate container classes (layout/positioning/margins) from control button classes (dimensions, borders, padding)
   const { wrapperClass, resolvedButtonClass } = useMemo(() => {
     if (!className) {
-      const fallbackBtn = buttonClassName || `w-full ${sizeClasses[size] || sizeClasses.md} bg-white border border-zinc-200 rounded-md`;
+      const fallbackBtn = buttonClassName || `w-full ${sizeClasses[size] || sizeClasses.md} bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md`;
       return { wrapperClass: 'w-full', resolvedButtonClass: fallbackBtn };
     }
 
@@ -449,7 +449,7 @@ const CustomSelect = React.forwardRef(({
       const rClass = detectedRounded || 'rounded-md';
       const otherControl = controlTokens.filter(t => !/^h-|^px-|^text-|^rounded/.test(t)).join(' ');
       
-      finalButtonClass = `w-full ${hClass} ${pClass} ${tClass} ${rClass} bg-white border ${otherControl}`.trim();
+      finalButtonClass = `w-full ${hClass} ${pClass} ${tClass} ${rClass} bg-white dark:bg-[#1D212C] border dark:border-[#2A2F3D] ${otherControl}`.trim();
     }
 
     return {
@@ -463,7 +463,7 @@ const CustomSelect = React.forwardRef(({
   return (
     <div className={`relative ${wrapperClass}`} ref={containerRef} onKeyDown={handleKeyDown}>
       {label && (
-        <label className="block text-xs font-semibold text-zinc-700 mb-1.5">
+        <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
           {label}
           {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
@@ -486,16 +486,16 @@ const CustomSelect = React.forwardRef(({
             else if (ref) ref.current = node;
           }}
           className={`flex items-center justify-between transition-all duration-150 select-none shadow-2xs ${resolvedButtonClass}
-            ${isOpen ? 'border-zinc-900 ring-2 ring-zinc-900/10' : 'border-zinc-200 hover:border-zinc-300'}
+            ${isOpen ? 'border-zinc-900 dark:border-[#4C8DFF] ring-2 ring-zinc-900/10 dark:ring-[#4C8DFF]/20' : 'border-zinc-200 dark:border-[#2A2F3D] hover:border-zinc-300 dark:hover:border-[#3A4154]'}
             ${error ? '!border-red-400 focus-within:!border-red-500 focus-within:!ring-red-500/10' : ''}
-            ${disabled ? '!bg-zinc-50 !text-zinc-400 cursor-not-allowed shadow-none !border-zinc-200' : 'cursor-pointer'}
+            ${disabled ? '!bg-zinc-50 dark:!bg-[#161922] !text-zinc-400 dark:!text-[#6B7184] cursor-not-allowed shadow-none !border-zinc-200 dark:!border-[#2A2F3D]' : 'cursor-pointer'}
           `}
           onClick={() => {
             if (!disabled && !isOpen) setIsOpen(true);
             searchInputRef.current?.focus();
           }}
         >
-          {PrefixIcon && <span className="mr-2 text-zinc-400 shrink-0">{PrefixIcon}</span>}
+          {PrefixIcon && <span className="mr-2 text-zinc-400 dark:text-[#6B7184] shrink-0">{PrefixIcon}</span>}
           <input
             ref={searchInputRef}
             type="text"
@@ -510,7 +510,7 @@ const CustomSelect = React.forwardRef(({
               if (!disabled) setIsOpen(true);
             }}
             onKeyDown={handleKeyDown}
-            className="w-full h-full bg-transparent border-none outline-none text-zinc-800 placeholder:text-zinc-400 truncate focus:ring-0 p-0 text-inherit font-medium"
+            className="w-full h-full bg-transparent border-none outline-none text-zinc-800 dark:text-[#E6E8EE] placeholder:text-zinc-400 dark:placeholder:text-[#6B7184] truncate focus:ring-0 p-0 text-inherit font-medium"
             disabled={disabled}
             style={{ fontSize: 'inherit' }}
           />
@@ -519,14 +519,14 @@ const CustomSelect = React.forwardRef(({
               <button
                 type="button"
                 onClick={handleClearAll}
-                className="p-0.5 text-zinc-400 hover:text-zinc-600 rounded"
+                className="p-0.5 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] rounded"
                 title="Clear selection"
                 aria-label="Clear selection"
               >
                 <X size={12} />
               </button>
             )}
-            <ChevronDown size={14} className={`text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={14} className={`text-zinc-400 dark:text-[#6B7184] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
           </div>
         </div>
       ) : (
@@ -545,19 +545,19 @@ const CustomSelect = React.forwardRef(({
             if (!disabled) setIsOpen(!isOpen);
           }}
           className={`flex items-center justify-between transition-all duration-150 select-none text-left shadow-2xs ${resolvedButtonClass}
-            ${isOpen ? 'border-zinc-900 ring-2 ring-zinc-900/10' : 'border-zinc-200 hover:border-zinc-300'}
+            ${isOpen ? 'border-zinc-900 dark:border-[#4C8DFF] ring-2 ring-zinc-900/10 dark:ring-[#4C8DFF]/20' : 'border-zinc-200 dark:border-[#2A2F3D] hover:border-zinc-300 dark:hover:border-[#3A4154]'}
             ${error ? '!border-red-400 !ring-red-500/10' : ''}
-            ${disabled ? '!bg-zinc-50 !text-zinc-400 cursor-not-allowed shadow-none !border-zinc-200' : 'cursor-pointer'}
+            ${disabled ? '!bg-zinc-50 dark:!bg-[#161922] !text-zinc-400 dark:!text-[#6B7184] cursor-not-allowed shadow-none !border-zinc-200 dark:!border-[#2A2F3D]' : 'cursor-pointer'}
           `}
           {...restProps}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1 pr-1.5">
-            {PrefixIcon && <span className="text-zinc-500 shrink-0">{PrefixIcon}</span>}
-            <span className={`block truncate ${!hasSelectedValue ? 'text-zinc-400 font-normal' : 'text-zinc-900 font-medium'}`}>
+            {PrefixIcon && <span className="text-zinc-500 dark:text-[#A0A6B5] shrink-0">{PrefixIcon}</span>}
+            <span className={`block truncate ${!hasSelectedValue ? 'text-zinc-400 dark:text-[#6B7184] font-normal' : 'text-zinc-900 dark:text-[#E6E8EE] font-medium'}`}>
               {displayLabel}
             </span>
             {isMulti && Array.isArray(value) && value.length > 1 && (
-              <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-700 shrink-0">
+              <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-zinc-100 dark:bg-[#222736] text-zinc-700 dark:text-[#E6E8EE] shrink-0">
                 {value.length}
               </span>
             )}
@@ -570,13 +570,13 @@ const CustomSelect = React.forwardRef(({
                 tabIndex={0}
                 onClick={handleClearAll}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClearAll(e); }}
-                className="p-0.5 text-zinc-400 hover:text-zinc-700 rounded hover:bg-zinc-100"
+                className="p-0.5 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-700 dark:hover:text-[#E6E8EE] rounded hover:bg-zinc-100 dark:hover:bg-[#222736]"
                 title="Clear"
               >
                 <X size={13} />
               </span>
             )}
-            <ChevronDown size={14} className={`text-zinc-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-zinc-700' : ''}`} />
+            <ChevronDown size={14} className={`text-zinc-400 dark:text-[#6B7184] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-zinc-700 dark:text-[#E6E8EE]' : ''}`} />
           </div>
         </button>
       )}
@@ -595,13 +595,13 @@ const CustomSelect = React.forwardRef(({
             maxWidth: 'calc(100vw - 16px)',
             zIndex: 99999,
           }}
-          className={dropdownClassName || "bg-white border border-zinc-200/90 rounded-xl shadow-xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100 ring-1 ring-black/5"}
+          className={dropdownClassName || "bg-white dark:bg-[#1D212C] border border-zinc-200/90 dark:border-[#2A2F3D] rounded-xl shadow-xl dark:shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100 ring-1 ring-black/5 dark:ring-white/5"}
         >
           {/* In-Menu Search Input */}
           {isSearchable && !comboInput && (
-            <div className="p-2 border-b border-zinc-100 bg-zinc-50/70 sticky top-0 z-10 flex items-center gap-1.5">
+            <div className="p-2 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/70 dark:bg-[#161922] sticky top-0 z-10 flex items-center gap-1.5">
               <div className="relative flex-1">
-                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184]" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -610,13 +610,13 @@ const CustomSelect = React.forwardRef(({
                   onChange={handleSearchChange}
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={handleKeyDown}
-                  className="w-full h-8 pl-8 pr-7 text-xs bg-white border border-zinc-200 rounded-lg focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900/10 placeholder:text-zinc-400 transition-all font-medium text-zinc-900"
+                  className="w-full h-8 pl-8 pr-7 text-xs bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:border-zinc-900 dark:focus:border-[#4C8DFF] focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 placeholder:text-zinc-400 dark:placeholder-[#6B7184] transition-all font-medium text-zinc-900 dark:text-[#E6E8EE]"
                 />
                 {searchTerm && (
                   <button
                     type="button"
                     onClick={() => { setSearchTerm(''); if (onSearchRef.current) onSearchRef.current(''); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] p-0.5"
                   >
                     <X size={12} />
                   </button>
@@ -627,18 +627,18 @@ const CustomSelect = React.forwardRef(({
 
           {/* Multi-Select Action Bar */}
           {isMulti && displayedOptions.length > 1 && (
-            <div className="px-2.5 py-1.5 border-b border-zinc-100 bg-zinc-50/50 flex items-center justify-between text-[11px] font-semibold text-zinc-600">
+            <div className="px-2.5 py-1.5 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922] flex items-center justify-between text-[11px] font-semibold text-zinc-600 dark:text-[#A0A6B5]">
               <button
                 type="button"
                 onClick={handleSelectAll}
-                className="hover:text-zinc-900 hover:underline"
+                className="hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:underline"
               >
                 Select All
               </button>
               <button
                 type="button"
                 onClick={handleClearAll}
-                className="hover:text-red-600"
+                className="hover:text-red-600 dark:hover:text-[#F0616D]"
               >
                 Clear All
               </button>
@@ -654,12 +654,12 @@ const CustomSelect = React.forwardRef(({
             style={{ maxHeight: `${dropdownCoords.maxHeight || 260}px` }}
           >
             {isLoading ? (
-              <div className="py-6 flex flex-col items-center justify-center gap-2 text-zinc-400 text-xs">
-                <Loader2 size={18} className="animate-spin text-zinc-500" />
+              <div className="py-6 flex flex-col items-center justify-center gap-2 text-zinc-400 dark:text-[#6B7184] text-xs">
+                <Loader2 size={18} className="animate-spin text-zinc-500 dark:text-[#A0A6B5]" />
                 <span>Loading options...</span>
               </div>
             ) : displayedOptions.length === 0 ? (
-              <div className="px-3 py-6 text-xs text-zinc-500 text-center flex flex-col items-center justify-center gap-2">
+              <div className="px-3 py-6 text-xs text-zinc-500 dark:text-[#6B7184] text-center flex flex-col items-center justify-center gap-2">
                 <span>{emptyMessage}</span>
                 {emptyStateAction && (
                   <div>
@@ -687,20 +687,20 @@ const CustomSelect = React.forwardRef(({
                     onClick={() => handleSelect(opt)}
                     className={`w-full text-left px-2.5 py-2 rounded-lg text-xs transition-colors flex items-center justify-between gap-2
                       ${isDisabled
-                        ? 'opacity-40 cursor-not-allowed text-zinc-400 bg-transparent'
+                        ? 'opacity-40 cursor-not-allowed text-zinc-400 dark:text-[#6B7184] bg-transparent'
                         : isSelected
-                        ? 'bg-zinc-900/[0.06] text-zinc-900 font-semibold'
+                        ? 'bg-zinc-900/[0.06] dark:bg-[#4C8DFF]/15 text-zinc-900 dark:text-[#4C8DFF] font-semibold'
                         : isFocused
-                        ? 'bg-zinc-100 text-zinc-900 ring-1 ring-zinc-200'
-                        : 'text-zinc-700 hover:bg-zinc-100/80 hover:text-zinc-900'}
+                        ? 'bg-zinc-100 dark:bg-[#222736] text-zinc-900 dark:text-[#E6E8EE] ring-1 ring-zinc-200 dark:ring-[#2A2F3D]'
+                        : 'text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-100/80 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'}
                     `}
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1 pr-1">
-                      {opt.icon && <span className="text-zinc-400 shrink-0">{opt.icon}</span>}
+                      {opt.icon && <span className="text-zinc-400 dark:text-[#6B7184] shrink-0">{opt.icon}</span>}
                       <div className="flex flex-col min-w-0 flex-1">
                         <span className="truncate">{optLabel}</span>
                         {opt.subLabel && (
-                          <span className={`text-[10px] truncate font-mono mt-0.5 ${isSelected ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                          <span className={`text-[10px] truncate font-mono mt-0.5 ${isSelected ? 'text-zinc-600 dark:text-[#A0A6B5]' : 'text-zinc-400 dark:text-[#6B7184]'}`}>
                             {opt.subLabel}
                           </span>
                         )}
@@ -709,12 +709,12 @@ const CustomSelect = React.forwardRef(({
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       {opt.badge && (
-                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600">
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5]">
                           {opt.badge}
                         </span>
                       )}
                       {isSelected && (
-                        <Check size={14} className="text-zinc-900 font-bold shrink-0" strokeWidth={2.5} />
+                        <Check size={14} className="text-zinc-900 dark:text-[#4C8DFF] font-bold shrink-0" strokeWidth={2.5} />
                       )}
                     </div>
                   </button>
@@ -725,7 +725,7 @@ const CustomSelect = React.forwardRef(({
 
           {/* Bottom Custom Actions */}
           {bottomAction && !isLoading && (displayedOptions.length > 0 || !emptyStateAction) && (
-            <div className="shrink-0 overflow-hidden rounded-b-xl border-t border-zinc-100 bg-zinc-50/50">
+            <div className="shrink-0 overflow-hidden rounded-b-xl border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922]">
               {typeof bottomAction === 'function'
                 ? bottomAction({ closeDropdown: () => setIsOpen(false), searchTerm })
                 : bottomAction}

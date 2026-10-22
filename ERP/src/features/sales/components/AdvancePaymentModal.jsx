@@ -129,36 +129,36 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-          <div className="flex items-center gap-2 text-indigo-600">
+      <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
+          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
             <Banknote size={20} />
-            <h2 className="text-lg font-bold text-zinc-900">Record Advance Payment</h2>
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">Record Advance Payment</h2>
           </div>
-          <button onClick={onClose} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-full transition-colors">
             <X size={20} />
           </button>
         </div>
 
-        <div className="overflow-y-auto flex-1 p-6 bg-zinc-50/50">
-          <div className="mb-6 p-4 bg-indigo-50/50 border border-indigo-100 rounded-lg">
-            <h3 className="text-xs font-bold text-indigo-800 uppercase tracking-wider mb-3">Proforma Invoice Details</h3>
+        <div className="overflow-y-auto flex-1 p-6 bg-zinc-50/50 dark:bg-[#0F1117]">
+          <div className="mb-6 p-4 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 rounded-lg">
+            <h3 className="text-xs font-bold text-indigo-800 dark:text-indigo-400 uppercase tracking-wider mb-3">Proforma Invoice Details</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="block text-zinc-500 mb-1">PI Number</span>
-                <span className="font-mono font-bold text-zinc-900">{pi.piNumber}</span>
+                <span className="block text-zinc-500 dark:text-[#A0A6B5] mb-1">PI Number</span>
+                <span className="font-mono font-bold text-zinc-900 dark:text-[#E6E8EE]">{pi.piNumber}</span>
               </div>
               <div>
-                <span className="block text-zinc-500 mb-1">Customer</span>
-                <span className="font-semibold text-zinc-900">{pi.customerName}</span>
+                <span className="block text-zinc-500 dark:text-[#A0A6B5] mb-1">Customer</span>
+                <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{pi.customerName}</span>
               </div>
               <div>
-                <span className="block text-zinc-500 mb-1">Total Amount</span>
-                <span className="font-semibold text-zinc-900">{curr} {fmt(pi.totalAmount)}</span>
+                <span className="block text-zinc-500 dark:text-[#A0A6B5] mb-1">Total Amount</span>
+                <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(pi.totalAmount)}</span>
               </div>
               <div>
-                <span className="block text-indigo-600 font-medium mb-1">Advance Required</span>
-                <span className="font-bold text-indigo-700">{curr} {fmt(pi.advanceAmount)}</span>
+                <span className="block text-indigo-600 dark:text-indigo-400 font-medium mb-1">Advance Required</span>
+                <span className="font-bold text-indigo-700 dark:text-indigo-400">{curr} {fmt(pi.advanceAmount)}</span>
               </div>
             </div>
           </div>
@@ -166,20 +166,20 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
           <form id="advance-payment-form" onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Receipt Date <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1.5">Receipt Date <span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   name="receiptDate"
                   value={formData.receiptDate}
                   onChange={handleChange}
                   required
-                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
+                  className="w-full h-9 px-3 text-sm bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-[#E6E8EE] rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Amount <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1.5">Amount <span className="text-red-500">*</span></label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500 font-medium">{curr}</span>
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500 dark:text-[#6B7184] font-medium">{curr}</span>
                   <input
                     type="number"
                     name="amount"
@@ -188,19 +188,19 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
                     required
                     min="0.01"
                     step="0.01"
-                    className="w-full h-9 pl-10 pr-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow font-semibold text-zinc-900"
+                    className="w-full h-9 pl-10 pr-3 text-sm bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow font-semibold text-zinc-900 dark:text-[#E6E8EE]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Payment Mode <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1.5">Payment Mode <span className="text-red-500">*</span></label>
                 <select
                   name="paymentMode"
                   value={formData.paymentMode}
                   onChange={handleChange}
                   required
-                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
+                  className="w-full h-9 px-3 text-sm bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-[#E6E8EE] rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
                 >
                   {PAYMENT_MODES.map(m => (
                     <option key={m.value} value={m.value}>{m.label}</option>
@@ -208,7 +208,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Bank Account <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1.5">Bank Account <span className="text-red-500">*</span></label>
                 <CustomSelect
                   options={bankAccountOptions}
                   isLoading={banksLoading}
@@ -219,7 +219,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Receivable Account <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1.5">Receivable Account <span className="text-red-500">*</span></label>
                 <CustomSelect
                   options={receivableAccountOptions}
                   isLoading={accountsLoading}
@@ -229,7 +229,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Receipt Account <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1.5">Receipt Account <span className="text-red-500">*</span></label>
                 <CustomSelect
                   options={receiptAccountOptions}
                   isLoading={accountsLoading}
@@ -240,36 +240,36 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Reference No.</label>
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1.5">Reference No.</label>
                 <input
                   type="text"
                   name="referenceNo"
                   value={formData.referenceNo}
                   onChange={handleChange}
                   placeholder="e.g. Cheque No / UTR"
-                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
+                  className="w-full h-9 px-3 text-sm bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-[#E6E8EE] rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-700 mb-1.5">Remarks</label>
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1.5">Remarks</label>
                 <input
                   type="text"
                   name="remarks"
                   value={formData.remarks}
                   onChange={handleChange}
                   placeholder="Add a note..."
-                  className="w-full h-9 px-3 text-sm bg-white border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
+                  className="w-full h-9 px-3 text-sm bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] text-zinc-900 dark:text-[#E6E8EE] rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-zinc-400 transition-shadow"
                 />
               </div>
             </div>
           </form>
         </div>
 
-        <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 bg-zinc-50 dark:bg-[#161922] border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-semibold text-zinc-700 bg-white border border-zinc-300 rounded-md hover:bg-zinc-50 transition-colors"
+            className="px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-[#A0A6B5] bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors"
           >
             Cancel
           </button>
@@ -277,7 +277,7 @@ export default function AdvancePaymentModal({ isOpen, onClose, pi, companyId, on
             type="submit"
             form="advance-payment-form"
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2 text-sm font-semibold text-white bg-zinc-900 rounded-md hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+            className="flex items-center gap-2 px-6 py-2 text-sm font-semibold text-white bg-zinc-900 dark:bg-primary hover:bg-zinc-800 dark:hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
           >
             {isSubmitting ? (
               <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />

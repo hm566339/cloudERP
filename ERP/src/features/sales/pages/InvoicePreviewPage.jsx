@@ -92,9 +92,9 @@ export default function InvoicePreviewPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-zinc-50 min-h-screen">
-        <Loader2 className="animate-spin text-indigo-600 mb-4" size={48} />
-        <h2 className="text-lg font-semibold text-zinc-700">Loading Order Details...</h2>
+      <div className="flex flex-col items-center justify-center h-full bg-zinc-50 dark:bg-[#0F1117] min-h-screen">
+        <Loader2 className="animate-spin text-indigo-600 dark:text-[#4C8DFF] mb-4" size={48} />
+        <h2 className="text-lg font-semibold text-zinc-700 dark:text-[#A0A6B5]">Loading Order Details...</h2>
       </div>
     );
   }
@@ -104,11 +104,11 @@ export default function InvoicePreviewPage() {
   if (isError || !order) {
     const msg = error?.data?.message || 'Failed to fetch Sales Order data.';
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-zinc-50 min-h-screen">
-        <h2 className="text-lg font-bold text-red-600 mb-2">{msg}</h2>
+      <div className="flex flex-col items-center justify-center h-full bg-zinc-50 dark:bg-[#0F1117] min-h-screen">
+        <h2 className="text-lg font-bold text-red-600 dark:text-red-400 mb-2">{msg}</h2>
         <button
           onClick={() => navigate(getSalesOrdersUrl())}
-          className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-zinc-900 dark:bg-[#1D212C] text-white rounded-lg text-sm font-medium hover:bg-zinc-800 dark:hover:bg-[#222736] transition-colors flex items-center gap-2"
         >
           <ArrowLeft size={16} /> Back to Sales Orders
         </button>
@@ -120,46 +120,46 @@ export default function InvoicePreviewPage() {
   const fmtCurr = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(val || 0);
 
   return (
-    <div className="h-full w-full flex-1 flex flex-col overflow-hidden text-xs bg-white animate-slide-up relative text-zinc-800 min-h-0">
+    <div className="h-full w-full flex-1 flex flex-col overflow-hidden text-xs bg-white dark:bg-[#0F1117] animate-slide-up relative text-zinc-800 dark:text-[#E6E8EE] min-h-0">
       <div className="flex flex-col flex-none">
-        <div className="flex flex-wrap xl:flex-nowrap items-center gap-4 p-3 border-b border-zinc-100 bg-zinc-50/50">
+        <div className="flex flex-wrap xl:flex-nowrap items-center gap-4 p-3 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922]">
           <div className="flex flex-col flex-none min-w-0">
             <div className="flex items-center gap-2">
               <button
                 onClick={handleClose}
-                className="text-zinc-400 hover:text-zinc-600 transition-colors"
+                className="text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] transition-colors"
                 title="Back"
                 aria-label="Back"
               >
                 <ArrowLeft size={16} />
               </button>
-              <h2 className="text-base font-bold text-zinc-800 truncate">Create Invoice</h2>
+              <h2 className="text-base font-bold text-zinc-800 dark:text-[#E6E8EE] truncate">Create Invoice</h2>
             </div>
-            <div className="text-[8px] text-zinc-500 font-medium truncate ml-6">Create a sales invoice from Sales Order: <span className="font-semibold text-zinc-700">{order.soNumber || order.id}</span></div>
+            <div className="text-[8px] text-zinc-500 dark:text-[#6B7184] font-medium truncate ml-6">Create a sales invoice from Sales Order: <span className="font-semibold text-zinc-700 dark:text-[#A0A6B5]">{order.soNumber || order.id}</span></div>
           </div>
           
           <div className="flex flex-wrap items-center gap-3 flex-1 xl:justify-end">
             <div className="flex items-center gap-1.5">
-              <label className="text-[8px] font-semibold text-zinc-700 whitespace-nowrap">Invoice No.</label>
-              <div className="input-field w-24 h-7 text-[8.8px] text-zinc-400 bg-zinc-50 flex items-center cursor-not-allowed border border-zinc-200 rounded px-2 select-none">
+              <label className="text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] whitespace-nowrap">Invoice No.</label>
+              <div className="input-field w-24 h-7 text-[8.8px] text-zinc-400 dark:text-[#6B7184] bg-zinc-50 dark:bg-[#1D212C] flex items-center cursor-not-allowed border border-zinc-200 dark:border-[#2A2F3D] rounded px-2 select-none">
                 Auto-generated
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <label className="text-[8px] font-semibold text-zinc-700 whitespace-nowrap">Date *</label>
-              <div className="input-field w-28 h-7 text-[8.8px] text-zinc-700 bg-zinc-50 flex items-center border border-zinc-200 rounded px-2">
+              <label className="text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] whitespace-nowrap">Date *</label>
+              <div className="input-field w-28 h-7 text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] flex items-center border border-zinc-200 dark:border-[#2A2F3D] rounded px-2">
                 {fmtDate(new Date())}
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <label className="text-[8px] font-semibold text-zinc-700 whitespace-nowrap">Due Date *</label>
-              <div className="input-field w-28 h-7 text-[8.8px] text-zinc-700 bg-zinc-50 flex items-center border border-zinc-200 rounded px-2">
+              <label className="text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] whitespace-nowrap">Due Date *</label>
+              <div className="input-field w-28 h-7 text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] flex items-center border border-zinc-200 dark:border-[#2A2F3D] rounded px-2">
                 {fmtDate(order.dueDate || new Date())}
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <label className="text-[8px] font-semibold text-zinc-700 whitespace-nowrap">Currency *</label>
-              <div className="input-field w-16 h-7 text-[8.8px] text-zinc-700 bg-zinc-50 flex items-center border border-zinc-200 rounded px-2">
+              <label className="text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] whitespace-nowrap">Currency *</label>
+              <div className="input-field w-16 h-7 text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] flex items-center border border-zinc-200 dark:border-[#2A2F3D] rounded px-2">
                 {currency}
               </div>
             </div>
@@ -167,7 +167,7 @@ export default function InvoicePreviewPage() {
             <button
               type="button"
               onClick={handleClose}
-              className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100 transition-colors ml-auto xl:ml-0"
+              className="p-1.5 flex-none text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors ml-auto xl:ml-0"
               aria-label="Close"
               title="Close"
             >
@@ -178,32 +178,32 @@ export default function InvoicePreviewPage() {
       </div>
 
       {/* ── MAIN WORKSPACE: LEFT FORM | RIGHT ITEMS ── */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 bg-white">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-[#2A2F3D] bg-white dark:bg-[#0F1117]">
         
         {/* ── LEFT COLUMN: ALL FORM INPUTS ── */}
-        <div className="w-full lg:w-[256px] flex-none p-2 bg-zinc-50/40 overflow-y-auto overflow-x-hidden flex flex-col gap-2">
+        <div className="w-full lg:w-[256px] flex-none p-2 bg-zinc-50/40 dark:bg-[#161922]/50 overflow-y-auto overflow-x-hidden flex flex-col gap-2">
           
           {/* 1. CUSTOMER DETAILS */}
-          <div className="flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-1.5">
-            <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
-              <h3 className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider">Customer Details</h3>
+          <div className="flex-none border border-zinc-200 dark:border-[#2A2F3D] rounded-lg p-2.5 bg-white dark:bg-[#161922] shadow-2xs space-y-1.5">
+            <div className="flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
+              <h3 className="text-[8px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Customer Details</h3>
             </div>
             <div className="space-y-2 pt-1">
               <div>
-                <label className="text-[8px] font-semibold text-zinc-700 block mb-1">Customer *</label>
-                <div className="input-field w-full min-h-[25.6px] text-[8.8px] text-zinc-700 bg-zinc-50 flex items-center border border-zinc-200 rounded px-2 font-medium">
+                <label className="text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] block mb-1">Customer *</label>
+                <div className="input-field w-full min-h-[25.6px] text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] flex items-center border border-zinc-200 dark:border-[#2A2F3D] rounded px-2 font-medium">
                   {order.customer?.name || order.customerName || order.customerId}
                 </div>
               </div>
               <div>
-                <label className="text-[8px] font-semibold text-zinc-700 block mb-1">Delivery Address</label>
-                <div className="input-field w-full min-h-[38.4px] text-[8.8px] text-zinc-700 bg-zinc-50 flex items-start border border-zinc-200 rounded px-2 py-1.5 whitespace-pre-wrap">
+                <label className="text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] block mb-1">Delivery Address</label>
+                <div className="input-field w-full min-h-[38.4px] text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] flex items-start border border-zinc-200 dark:border-[#2A2F3D] rounded px-2 py-1.5 whitespace-pre-wrap">
                   {getFormattedAddress(order.addresses?.delivery) || getFormattedAddress(order.addresses?.billing) || getFormattedAddress(order.customer?.deliveryAddress) || order.shippingAddress || order.deliveryAddressSnapshot || '—'}
                 </div>
               </div>
               <div>
-                <label className="text-[8px] font-semibold text-zinc-700 block mb-1">Place of Supply *</label>
-                <div className="input-field w-full h-8 text-[8.8px] text-zinc-700 bg-zinc-50 flex items-center border border-zinc-200 rounded px-2">
+                <label className="text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] block mb-1">Place of Supply *</label>
+                <div className="input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] flex items-center border border-zinc-200 dark:border-[#2A2F3D] rounded px-2">
                   {order.placeOfSupply || order.placeOfSupplyStateCode || order.addresses?.delivery?.state || order.addresses?.billing?.state || '—'}
                 </div>
               </div>
@@ -211,20 +211,20 @@ export default function InvoicePreviewPage() {
           </div>
 
           {/* 2. INVOICE TERMS */}
-          <div className="flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-1.5">
-            <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
-              <h3 className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider">Invoice Terms</h3>
+          <div className="flex-none border border-zinc-200 dark:border-[#2A2F3D] rounded-lg p-2.5 bg-white dark:bg-[#161922] shadow-2xs space-y-1.5">
+            <div className="flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
+              <h3 className="text-[8px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Invoice Terms</h3>
             </div>
             <div className="grid grid-cols-1 gap-2 pt-1">
               <div>
-                <label className="text-[8px] font-semibold text-zinc-700 block mb-1 truncate">Payment Terms</label>
-                <div className="input-field w-full min-h-[25.6px] text-[8.8px] text-zinc-700 bg-zinc-50 flex items-center border border-zinc-200 rounded px-2">
+                <label className="text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] block mb-1 truncate">Payment Terms</label>
+                <div className="input-field w-full min-h-[25.6px] text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] flex items-center border border-zinc-200 dark:border-[#2A2F3D] rounded px-2">
                   {order.commercial?.paymentTerms || order.paymentTerms || '—'}
                 </div>
               </div>
               <div>
-                <label className="text-[8px] font-semibold text-zinc-700 block mb-1 truncate">Delivery Terms</label>
-                <div className="input-field w-full min-h-[25.6px] text-[8.8px] text-zinc-700 bg-zinc-50 flex items-center border border-zinc-200 rounded px-2">
+                <label className="text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] block mb-1 truncate">Delivery Terms</label>
+                <div className="input-field w-full min-h-[25.6px] text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] flex items-center border border-zinc-200 dark:border-[#2A2F3D] rounded px-2">
                   {order.commercial?.deliveryTerms || order.deliveryTerms || '—'}
                 </div>
               </div>
@@ -232,20 +232,20 @@ export default function InvoicePreviewPage() {
           </div>
 
           {/* 3. NOTES */}
-          <div className="flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-1.5 mb-2">
-            <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
-              <h3 className="text-[8px] font-bold text-zinc-800 uppercase tracking-wider">Notes & Conditions</h3>
+          <div className="flex-none border border-zinc-200 dark:border-[#2A2F3D] rounded-lg p-2.5 bg-white dark:bg-[#161922] shadow-2xs space-y-1.5 mb-2">
+            <div className="flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
+              <h3 className="text-[8px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Notes & Conditions</h3>
             </div>
             <div className="space-y-2 pt-1">
               <div>
-                <label className="text-[7.2px] font-semibold text-zinc-600 block mb-0.5">Notes</label>
-                <div className="input-field w-full min-h-[38.4px] text-[8.8px] text-zinc-700 bg-zinc-50 flex items-start border border-zinc-200 rounded px-2 py-1.5 whitespace-pre-wrap">
+                <label className="text-[7.2px] font-semibold text-zinc-600 dark:text-[#A0A6B5] block mb-0.5">Notes</label>
+                <div className="input-field w-full min-h-[38.4px] text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] flex items-start border border-zinc-200 dark:border-[#2A2F3D] rounded px-2 py-1.5 whitespace-pre-wrap">
                   {order.commercial?.notes || order.notes || '—'}
                 </div>
               </div>
               <div>
-                <label className="text-[7.2px] font-semibold text-zinc-600 block mb-0.5">Terms & Conditions</label>
-                <div className="input-field w-full min-h-[51.2px] text-[8.8px] text-zinc-700 bg-zinc-50 flex items-start border border-zinc-200 rounded px-2 py-1.5 whitespace-pre-wrap">
+                <label className="text-[7.2px] font-semibold text-zinc-600 dark:text-[#A0A6B5] block mb-0.5">Terms & Conditions</label>
+                <div className="input-field w-full min-h-[51.2px] text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] flex items-start border border-zinc-200 dark:border-[#2A2F3D] rounded px-2 py-1.5 whitespace-pre-wrap">
                   {order.commercial?.termsAndConditions || order.commercial?.terms || order.termsAndConditions || '—'}
                 </div>
               </div>
@@ -254,13 +254,13 @@ export default function InvoicePreviewPage() {
         </div>
 
         {/* ── RIGHT COLUMN: ITEMS + INVOICE SUMMARY ── */}
-        <div className="w-full flex-1 flex flex-col overflow-y-auto min-h-0 bg-white">
+        <div className="w-full flex-1 flex flex-col overflow-y-auto min-h-0 bg-white dark:bg-[#0F1117]">
           
           {/* 1. Items Section Header */}
-          <div className="px-4 py-2.5 bg-zinc-50/80 border-b border-zinc-200 flex justify-between items-center flex-none sticky top-0 z-20">
+          <div className="px-4 py-2.5 bg-zinc-50/80 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] flex justify-between items-center flex-none sticky top-0 z-20">
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Items</h3>
-              <span className="text-[8.8px] font-medium text-zinc-500 bg-white px-2 py-0.5 rounded-full border border-zinc-200">
+              <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Items</h3>
+              <span className="text-[8.8px] font-medium text-zinc-500 dark:text-[#A0A6B5] bg-white dark:bg-[#1D212C] px-2 py-0.5 rounded-full border border-zinc-200 dark:border-[#2A2F3D]">
                 {order.items?.length || 0} {(order.items?.length === 1) ? 'item' : 'items'}
               </span>
             </div>
@@ -270,7 +270,7 @@ export default function InvoicePreviewPage() {
           <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar flex-1">
             <div className="min-w-[720px]">
               {/* Items Table Header */}
-              <div className="w-full text-left bg-zinc-100 text-zinc-600 border-b border-zinc-200 sticky top-0 z-10 flex-none pr-1">
+              <div className="w-full text-left bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border-b border-zinc-200 dark:border-[#2A2F3D] sticky top-0 z-10 flex-none pr-1">
                 <div className="grid grid-cols-[18%_10%_12%_7%_10%_7%_7%_12%_12%_5%] w-full min-w-0 text-xs font-semibold">
                   <div className="p-2 truncate">Product *</div>
                   <div className="p-2 truncate">HSN / SAC</div>
@@ -286,7 +286,7 @@ export default function InvoicePreviewPage() {
               </div>
 
               {/* Items Table Body */}
-              <div className="flex flex-col divide-y divide-zinc-100 pb-12">
+              <div className="flex flex-col divide-y divide-zinc-100 dark:divide-[#2A2F3D] pb-12">
                 {(order.items || []).map((item, idx) => {
                   const productName = item.item?.name || item.productName || item.itemName || item.productCode || item.itemCode || '—';
                   const hsnSac = item.item?.hsnCode || item.hsnSac || item.hsnSacCode || '—';
@@ -305,74 +305,74 @@ export default function InvoicePreviewPage() {
                   const totalAmount = Number(item.totalAmount ?? (taxable + taxAmt) ?? 0);
                   
                   return (
-                    <div key={item.id || idx} className="grid grid-cols-[18%_10%_12%_7%_10%_7%_7%_12%_12%_5%] w-full bg-white hover:bg-zinc-50/50 min-w-0 border-b border-zinc-100 last:border-0 box-border text-xs">
+                    <div key={item.id || idx} className="grid grid-cols-[18%_10%_12%_7%_10%_7%_7%_12%_12%_5%] w-full bg-white dark:bg-[#161922] hover:bg-zinc-50/50 dark:hover:bg-[#222736] min-w-0 border-b border-zinc-100 dark:border-[#2A2F3D] last:border-0 box-border text-xs">
                       <div className="p-2 min-w-0 flex items-center">
-                        <div className="text-zinc-700 font-medium truncate" title={productName}>{productName}</div>
+                        <div className="text-zinc-700 dark:text-[#E6E8EE] font-medium truncate" title={productName}>{productName}</div>
                       </div>
                       <div className="p-2 min-w-0 flex items-center">
-                        <div className="text-zinc-600 truncate">{hsnSac}</div>
+                        <div className="text-zinc-600 dark:text-[#A0A6B5] truncate">{hsnSac}</div>
                       </div>
                       <div className="p-2 min-w-0 flex items-center">
-                        <div className="text-zinc-600 truncate">{item.description || item.item?.description || '—'}</div>
+                        <div className="text-zinc-600 dark:text-[#A0A6B5] truncate">{item.description || item.item?.description || '—'}</div>
                       </div>
                       <div className="p-2 min-w-0 flex items-center justify-center">
-                        <div className="text-zinc-800 font-bold tabular-nums">{item.quantity}</div>
+                        <div className="text-zinc-800 dark:text-[#E6E8EE] font-bold tabular-nums">{item.quantity}</div>
                       </div>
                       <div className="p-2 min-w-0 flex items-center justify-end">
-                        <div className="text-zinc-800 tabular-nums">{fmtCurr(unitPrice)}</div>
+                        <div className="text-zinc-800 dark:text-[#E6E8EE] tabular-nums">{fmtCurr(unitPrice)}</div>
                       </div>
                       <div className="p-2 min-w-0 flex items-center justify-center">
-                        <div className="text-zinc-600">{item.unit || 'Pieces'}</div>
+                        <div className="text-zinc-600 dark:text-[#A0A6B5]">{item.unit || 'Pieces'}</div>
                       </div>
                       <div className="p-2 min-w-0 flex items-center justify-end">
-                        <div className="text-zinc-600 tabular-nums">{discountPct}%</div>
+                        <div className="text-zinc-600 dark:text-[#A0A6B5] tabular-nums">{discountPct}%</div>
                       </div>
                       
                       <div className="p-2 min-w-0 flex flex-col justify-center leading-tight">
                         {totalTaxRate > 0 || taxAmt > 0 ? (
                           <div className="flex flex-col gap-1 w-full">
-                            <div className="text-zinc-800 font-semibold mb-0.5 border-b border-zinc-100 pb-0.5">
+                            <div className="text-zinc-800 dark:text-[#E6E8EE] font-semibold mb-0.5 border-b border-zinc-100 dark:border-[#2A2F3D] pb-0.5">
                               {totalTaxRate > 0 ? `GST ${totalTaxRate}%` : `Tax`}
                             </div>
                             {isInterState ? (
                               <div className="flex justify-between items-center w-full">
-                                <span className="text-zinc-500">{igstRate > 0 ? `IGST ${igstRate}%` : 'IGST'}</span>
-                                <span className="text-zinc-700 font-medium tabular-nums">{fmtCurr(igstAmt || taxAmt)}</span>
+                                <span className="text-zinc-500 dark:text-[#6B7184]">{igstRate > 0 ? `IGST ${igstRate}%` : 'IGST'}</span>
+                                <span className="text-zinc-700 dark:text-[#E6E8EE] font-medium tabular-nums">{fmtCurr(igstAmt || taxAmt)}</span>
                               </div>
                             ) : (
                               <>
                                 {cgstAmt > 0 && (
                                   <div className="flex justify-between items-center w-full">
-                                    <span className="text-zinc-500">{cgstRate > 0 ? `CGST ${cgstRate}%` : 'CGST'}</span>
-                                    <span className="text-zinc-700 font-medium tabular-nums">{fmtCurr(cgstAmt)}</span>
+                                    <span className="text-zinc-500 dark:text-[#6B7184]">{cgstRate > 0 ? `CGST ${cgstRate}%` : 'CGST'}</span>
+                                    <span className="text-zinc-700 dark:text-[#E6E8EE] font-medium tabular-nums">{fmtCurr(cgstAmt)}</span>
                                   </div>
                                 )}
                                 {sgstAmt > 0 && (
                                   <div className="flex justify-between items-center w-full">
-                                    <span className="text-zinc-500">{sgstRate > 0 ? `SGST ${sgstRate}%` : 'SGST'}</span>
-                                    <span className="text-zinc-700 font-medium tabular-nums">{fmtCurr(sgstAmt)}</span>
+                                    <span className="text-zinc-500 dark:text-[#6B7184]">{sgstRate > 0 ? `SGST ${sgstRate}%` : 'SGST'}</span>
+                                    <span className="text-zinc-700 dark:text-[#E6E8EE] font-medium tabular-nums">{fmtCurr(sgstAmt)}</span>
                                   </div>
                                 )}
                                 {cgstAmt === 0 && sgstAmt === 0 && (
                                   <div className="flex justify-between items-center w-full">
-                                    <span className="text-zinc-500">Tax</span>
-                                    <span className="text-zinc-700 font-medium tabular-nums">{fmtCurr(taxAmt)}</span>
+                                    <span className="text-zinc-500 dark:text-[#6B7184]">Tax</span>
+                                    <span className="text-zinc-700 dark:text-[#E6E8EE] font-medium tabular-nums">{fmtCurr(taxAmt)}</span>
                                   </div>
                                 )}
                               </>
                             )}
                           </div>
                         ) : (
-                          <div className="text-zinc-400 text-center">-</div>
+                          <div className="text-zinc-400 dark:text-[#6B7184] text-center">-</div>
                         )}
                       </div>
                       
                       <div className="p-2 min-w-0 flex items-center justify-end">
-                        <div className="font-bold text-zinc-800 tabular-nums">{fmtCurr(totalAmount)}</div>
+                        <div className="font-bold text-zinc-800 dark:text-[#E6E8EE] tabular-nums">{fmtCurr(totalAmount)}</div>
                       </div>
                       
                       <div className="p-2 min-w-0 flex items-center justify-center">
-                        <div className="text-zinc-300">
+                        <div className="text-zinc-300 dark:text-[#6B7184]">
                           <CheckCircle size={14} className="opacity-50" />
                         </div>
                       </div>
@@ -384,53 +384,53 @@ export default function InvoicePreviewPage() {
           </div>
           
           {/* 4. Right-Side Bottom: INVOICE SUMMARY */}
-          <div className="p-4 border-t border-zinc-200 bg-zinc-50/40 mt-auto flex-none">
-            <div className="bg-white p-3.5 rounded-xl border border-zinc-200 flex flex-col justify-between shadow-2xs space-y-2.5">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
-                <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Invoice Summary</h3>
+          <div className="p-4 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/40 dark:bg-[#161922]/50 mt-auto flex-none">
+            <div className="bg-white dark:bg-[#161922] p-3.5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] flex flex-col justify-between shadow-2xs space-y-2.5">
+              <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
+                <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Invoice Summary</h3>
               </div>
               
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-[9.6px]">
-                  <span className="text-zinc-600 font-medium">Sub Total</span>
-                  <span className="font-semibold text-zinc-800">{fmtCurr(order.amounts?.subtotal ?? order.subtotal ?? order.subTotal)}</span>
+                  <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Sub Total</span>
+                  <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{fmtCurr(order.amounts?.subtotal ?? order.subtotal ?? order.subTotal)}</span>
                 </div>
                 
                 <div className="flex justify-between items-center text-[9.6px]">
-                  <span className="text-zinc-600 font-medium">Freight Charges</span>
+                  <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Freight Charges</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-zinc-500 font-medium">₹</span>
-                    <div className="input-field w-24 h-8 text-right font-semibold text-zinc-800 text-[9.6px] bg-zinc-50 border border-zinc-200 flex items-center justify-end px-2">
+                    <span className="text-xs text-zinc-500 dark:text-[#6B7184] font-medium">₹</span>
+                    <div className="input-field w-24 h-8 text-right font-semibold text-zinc-800 dark:text-[#E6E8EE] text-[9.6px] bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-end px-2">
                       {order.amounts?.freight != null ? fmt(order.amounts.freight) : (order.freightCharges || '0.00')}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center text-[9.6px]">
-                  <span className="text-zinc-600 font-medium">Other Charges</span>
+                  <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Other Charges</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-zinc-500 font-medium">₹</span>
-                    <div className="input-field w-24 h-8 text-right font-semibold text-zinc-800 text-[9.6px] bg-zinc-50 border border-zinc-200 flex items-center justify-end px-2">
+                    <span className="text-xs text-zinc-500 dark:text-[#6B7184] font-medium">₹</span>
+                    <div className="input-field w-24 h-8 text-right font-semibold text-zinc-800 dark:text-[#E6E8EE] text-[9.6px] bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-end px-2">
                       {order.amounts?.otherCharges != null ? fmt(order.amounts.otherCharges) : (order.otherCharges || '0.00')}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center text-[9.6px]">
-                  <span className="text-zinc-600 font-medium">Tax Amount</span>
-                  <span className="text-zinc-800 font-semibold">{fmtCurr(order.amounts?.tax ?? order.taxAmount ?? order.totalTaxAmount)}</span>
+                  <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Tax Amount</span>
+                  <span className="text-zinc-800 dark:text-[#E6E8EE] font-semibold">{fmtCurr(order.amounts?.tax ?? order.taxAmount ?? order.totalTaxAmount)}</span>
                 </div>
 
                 {(order.amounts?.roundOff !== 0 && order.roundOff !== 0) && (
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Round Off</span>
-                    <span className="text-zinc-700 font-medium">{fmtCurr(order.amounts?.roundOff ?? order.roundOff)}</span>
+                    <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Round Off</span>
+                    <span className="text-zinc-700 dark:text-[#E6E8EE] font-medium">{fmtCurr(order.amounts?.roundOff ?? order.roundOff)}</span>
                   </div>
                 )}
 
-                <div className="pt-2.5 border-t border-zinc-200 flex justify-between items-center">
-                  <span className="text-sm font-bold text-zinc-900">Grand Total</span>
-                  <span className="text-base font-black text-indigo-600">{fmtCurr(order.amounts?.total ?? order.totalAmount ?? order.grandTotal)}</span>
+                <div className="pt-2.5 border-t border-zinc-200 dark:border-[#2A2F3D] flex justify-between items-center">
+                  <span className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">Grand Total</span>
+                  <span className="text-base font-black text-indigo-600 dark:text-[#4C8DFF]">{fmtCurr(order.amounts?.total ?? order.totalAmount ?? order.grandTotal)}</span>
                 </div>
               </div>
             </div>
@@ -440,17 +440,17 @@ export default function InvoicePreviewPage() {
       </div>
       
       {/* ─ BOTTOM ACTION BAR ─ */}
-      <div className="flex justify-between items-center p-3 border-t border-zinc-200 bg-zinc-100 flex-none">
+      <div className="flex justify-between items-center p-3 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-100 dark:bg-[#161922] flex-none">
         <div className="flex items-center gap-6 px-2">
           <label className="flex items-center gap-2 cursor-not-allowed group opacity-50">
-            <input type="checkbox" disabled className="w-4 h-4 rounded border-zinc-300 text-indigo-600 cursor-not-allowed" />
-            <span className="text-xs font-medium text-zinc-600">Download PDF</span>
+            <input type="checkbox" disabled className="w-4 h-4 rounded border-zinc-300 dark:border-[#2A2F3D] text-indigo-600 cursor-not-allowed" />
+            <span className="text-xs font-medium text-zinc-600 dark:text-[#A0A6B5]">Download PDF</span>
           </label>
           <label className="flex items-center gap-2 cursor-not-allowed group opacity-50">
-            <input type="checkbox" disabled className="w-4 h-4 rounded border-zinc-300 text-indigo-600 cursor-not-allowed" />
-            <span className="text-xs font-medium text-zinc-600">Send Email</span>
+            <input type="checkbox" disabled className="w-4 h-4 rounded border-zinc-300 dark:border-[#2A2F3D] text-indigo-600 cursor-not-allowed" />
+            <span className="text-xs font-medium text-zinc-600 dark:text-[#A0A6B5]">Send Email</span>
           </label>
-          <button type="button" disabled className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 cursor-not-allowed opacity-50">
+          <button type="button" disabled className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400 dark:text-[#6B7184] cursor-not-allowed opacity-50">
             <Printer size={14} /> Print Invoice
           </button>
         </div>
@@ -459,7 +459,7 @@ export default function InvoicePreviewPage() {
           <button 
             type="button" 
             onClick={handleClose} 
-            className="px-4 py-2 text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 shadow-xs transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 dark:hover:bg-[#222736] shadow-xs transition-colors disabled:opacity-50"
             disabled={isGenerating}
           >
             Cancel

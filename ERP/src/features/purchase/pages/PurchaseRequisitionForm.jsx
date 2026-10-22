@@ -665,7 +665,7 @@ export default function PurchaseRequisitionForm() {
 
   if (isEditing && !existingData) {
     return (
-      <div className="flex flex-col h-full bg-zinc-50/50">
+      <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
         <ErrorState
           title="Requisition Not Found"
           message="The requested purchase requisition could not be found."
@@ -676,24 +676,24 @@ export default function PurchaseRequisitionForm() {
   }
 
   /* ── Shared style tokens (mirror Create Quotation / QuotationFormModal) ── */
-  const sidebarCard = 'flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-1.5';
-  const cardHead = 'flex items-center justify-between pb-1 border-b border-zinc-100';
+  const sidebarCard = 'flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-2.5 bg-white dark:bg-card-dark shadow-2xs space-y-1.5';
+  const cardHead = 'flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]';
   const cardTitle = 'text-[8px] font-bold text-zinc-800 uppercase tracking-wider';
   const label = 'text-[8px] font-semibold text-zinc-700 block mb-1';
   const field = (hasErr = false) =>
-    `input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white ${hasErr ? 'border-rose-300' : ''}`;
+    `input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark ${hasErr ? 'border-rose-300' : ''}`;
   const errText = 'text-[7.2px] text-rose-600 mt-0.5 font-medium';
-  const btnSecondary = 'px-4 py-2 text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 shadow-xs transition-colors flex items-center gap-2';
+  const btnSecondary = 'px-4 py-2 text-xs font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 shadow-xs transition-colors flex items-center gap-2';
   const btnPrimary = 'px-4 py-2 text-xs font-bold text-white bg-primary rounded-md hover:bg-primary/90 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2';
   const colTemplate = 'grid-cols-[3%_13%_11%_8%_8%_8%_11%_10%_10%_12%_6%]';
 
   return (
-    <div className="flex flex-col h-full bg-white animate-fade-in">
+    <div className="flex flex-col h-full bg-white dark:bg-page-dark animate-fade-in">
 
       {/* ═══════════════════════════════════════════════════════════════════
           PAGE HEADER (same structure as Create Quotation)
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-wrap xl:flex-nowrap items-center gap-4 p-3 border-b border-zinc-100 bg-zinc-50/50 flex-none">
+      <div className="flex flex-wrap xl:flex-nowrap items-center gap-4 p-3 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 flex-none">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <button
             type="button"
@@ -728,7 +728,7 @@ export default function PurchaseRequisitionForm() {
       {/* ═══════════════════════════════════════════════════════════════════
           MAIN WORKSPACE: LEFT SIDEBAR | RIGHT CONTENT (like Create Quotation)
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 bg-white">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-border-dark bg-white dark:bg-page-dark">
 
         {/* ── LEFT COLUMN (~230px) ── */}
         <PurchaseRequisitionSidebar
@@ -743,7 +743,7 @@ export default function PurchaseRequisitionForm() {
         />
 
         {/* ── RIGHT COLUMN: REQUESTED ITEMS + REQUEST SUMMARY ── */}
-        <div className="w-full flex-1 flex flex-col overflow-y-auto min-h-0 bg-white">
+        <div className="w-full flex-1 flex flex-col overflow-y-auto min-h-0 bg-white dark:bg-page-dark">
 
           <PurchaseRequisitionItemsTable
             items={items}
@@ -774,8 +774,8 @@ export default function PurchaseRequisitionForm() {
 
           {/* 3. Request Summary (non-financial, pinned to bottom of right column) */}
           <div className="p-4 border-t border-zinc-200 bg-zinc-50/40 mt-auto flex-none">
-            <div className="bg-white p-3.5 rounded-xl border border-zinc-200 flex flex-col justify-between shadow-2xs space-y-2.5">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+            <div className="bg-white dark:bg-card-dark p-3.5 rounded-xl border border-zinc-200 dark:border-border-dark flex flex-col justify-between shadow-2xs space-y-2.5">
+              <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
                 <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Request Summary</h3>
               </div>
               <div className="space-y-2">
@@ -854,7 +854,7 @@ export default function PurchaseRequisitionForm() {
       ═══════════════════════════════════════════════════════════════════ */}
       {showDiscardModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm bg-white rounded-xl shadow-xl p-6 animate-fade-in">
+          <div className="w-full max-w-sm bg-white dark:bg-card-dark rounded-xl shadow-xl border border-zinc-200 dark:border-border-dark p-6 animate-fade-in">
             <h2 className="text-base font-semibold text-zinc-900">Discard unsaved changes?</h2>
             <p className="mt-2 text-sm text-zinc-500">
               Your changes will be lost if you leave without saving.
@@ -882,7 +882,7 @@ export default function PurchaseRequisitionForm() {
       ═══════════════════════════════════════════════════════════════════ */}
       {isCreateProductOpen && (
         <div className="fixed inset-0 z-[400] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-2xl h-[95vh] max-h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200">
+          <div className="bg-white dark:bg-card-dark w-full max-w-2xl h-[95vh] max-h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200 dark:border-border-dark">
             <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center border border-zinc-200 text-zinc-700">
@@ -897,7 +897,7 @@ export default function PurchaseRequisitionForm() {
                 <X size={18} />
               </button>
             </div>
-            <div className="flex-1 overflow-hidden bg-white flex flex-col">
+            <div className="flex-1 overflow-hidden bg-white dark:bg-card-dark flex flex-col">
               <ProductForm
                 initialData={{ productName: newProductName }}
                 onSubmit={handleCreateProduct}

@@ -40,7 +40,7 @@ export default function WorkflowActionBar({
 
   return (
     <>
-      <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-zinc-700">Permitted Actions:</span>
           {permittedActions.isSystemAdmin && (

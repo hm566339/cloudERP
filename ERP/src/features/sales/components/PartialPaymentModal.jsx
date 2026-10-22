@@ -41,21 +41,21 @@ export default function PartialPaymentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-zinc-950/60 backdrop-blur-sm px-3 py-6 sm:px-4 sm:py-8">
-      <div className="card my-auto w-full max-w-md max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] overflow-hidden animate-slide-up flex flex-col bg-white shadow-xl">
+      <div className="card my-auto w-full max-w-md max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)] overflow-hidden animate-slide-up flex flex-col bg-white dark:bg-[#161922] border border-transparent dark:border-[#2A2F3D] shadow-xl">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-zinc-100 bg-zinc-50/50">
+        <div className="flex justify-between items-center p-6 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+            <div className="p-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-[#4C8DFF] rounded-lg">
               <IndianRupee size={20} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-zinc-800">Record Payment</h2>
-              <p className="text-xs text-zinc-500">Invoice {invoice.invoiceNumber}</p>
+              <h2 className="text-xl font-bold text-zinc-800 dark:text-[#E6E8EE]">Record Payment</h2>
+              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">Invoice {invoice.invoiceNumber}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100 transition-colors"
+            className="p-2 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors"
           >
             <X size={20} />
           </button>
@@ -64,27 +64,27 @@ export default function PartialPaymentModal({
         {/* Body */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6 flex-1 min-h-0 overflow-y-auto">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+            <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-lg text-sm text-red-600 dark:text-red-400">
               {error}
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-100">
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Total Amount</p>
-              <p className="text-lg font-bold text-zinc-800">₹{invoice.totalAmount?.toLocaleString()}</p>
+            <div className="p-4 bg-zinc-50 dark:bg-[#1D212C] rounded-xl border border-zinc-100 dark:border-[#2A2F3D]">
+              <p className="text-xs font-semibold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1">Total Amount</p>
+              <p className="text-lg font-bold text-zinc-800 dark:text-[#E6E8EE]">₹{invoice.totalAmount?.toLocaleString()}</p>
             </div>
-            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
-              <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-1">Outstanding</p>
-              <p className="text-lg font-bold text-amber-700">₹{invoice.outstandingAmount?.toLocaleString()}</p>
+            <div className="p-4 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-100 dark:border-amber-900/30">
+              <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">Outstanding</p>
+              <p className="text-lg font-bold text-amber-700 dark:text-amber-300">₹{invoice.outstandingAmount?.toLocaleString()}</p>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-zinc-700">Payment Amount <span className="text-red-500">*</span></label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-[#A0A6B5]">Payment Amount <span className="text-red-500">*</span></label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <IndianRupee size={16} className="text-zinc-400" />
+                <IndianRupee size={16} className="text-zinc-400 dark:text-[#6B7184]" />
               </div>
               <input
                 type="number"
@@ -104,9 +104,9 @@ export default function PartialPaymentModal({
             </div>
           </div>
           
-          <div className="flex justify-between items-center p-3 bg-zinc-50 rounded-lg text-sm">
-            <span className="text-zinc-600 font-medium">Remaining Balance:</span>
-            <span className={`font-bold ${remainingBalance < 0 ? 'text-red-600' : 'text-zinc-800'}`}>
+          <div className="flex justify-between items-center p-3 bg-zinc-50 dark:bg-[#1D212C] border border-transparent dark:border-[#2A2F3D] rounded-lg text-sm">
+            <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Remaining Balance:</span>
+            <span className={`font-bold ${remainingBalance < 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-800 dark:text-[#E6E8EE]'}`}>
               ₹{remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>

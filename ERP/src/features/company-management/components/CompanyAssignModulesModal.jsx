@@ -60,13 +60,13 @@ export default function CompanyAssignModulesModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto animate-fade-in"
     >
       <div 
-        className="bg-white w-[calc(100vw-24px)] sm:w-[560px] max-w-[560px] max-h-[calc(100vh-32px)] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200 my-auto shrink-0"
+        className="bg-white dark:bg-card-dark w-[calc(100vw-24px)] sm:w-[560px] max-w-[560px] max-h-[calc(100vh-32px)] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200 dark:border-border-dark my-auto shrink-0"
         role="dialog"
         aria-modal="true"
         aria-labelledby="assign-modules-title"
       >
         {/* ── Fixed Header ── */}
-        <div className="flex items-start justify-between p-5 border-b border-zinc-100 shrink-0 bg-zinc-50/50">
+        <div className="flex items-start justify-between p-5 border-b border-zinc-100 dark:border-[#2A2F3D] shrink-0 bg-zinc-50/50">
           <div className="flex items-start gap-3 min-w-0 pr-3">
             <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 mt-0.5 shadow-2xs">
               <Layers size={18} />
@@ -92,7 +92,7 @@ export default function CompanyAssignModulesModal({
         </div>
 
         {/* ── Scrollable Module List ── */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-2.5 custom-scrollbar bg-white">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-2.5 custom-scrollbar bg-white dark:bg-card-dark">
           {modulesLoading || companyModulesLoading ? (
             <div className="p-4 w-full"><TableSkeleton columns={3} rows={3} /></div>
           ) : modulesList.length === 0 ? (
@@ -128,7 +128,7 @@ export default function CompanyAssignModulesModal({
                     className={`shrink-0 h-[32px] px-3 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
                       isAssigned
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 group/btn'
-                        : 'bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 active:scale-95'
+                        : 'bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-hover-dark/40 hover:text-zinc-900 active:scale-95'
                     }`}
                     title={isAssigned ? "Click to unassign module" : "Click to assign module"}
                     aria-label={`${isAssigned ? 'Unassign' : 'Assign'} ${m.name}`}

@@ -30,7 +30,7 @@ export default function PurchaseRequisitionItemsTable({
 }) {
   const colTemplate = 'grid-cols-[3%_13%_11%_8%_8%_8%_11%_10%_10%_12%_6%]';
   const field = (hasErr = false) =>
-    `input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white ${hasErr ? 'border-rose-300' : ''}`;
+    `input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark ${hasErr ? 'border-rose-300' : ''}`;
   const errText = 'text-[7.2px] text-rose-600 mt-0.5 font-medium';
 
   return (
@@ -46,7 +46,7 @@ export default function PurchaseRequisitionItemsTable({
       <div className="px-4 py-2.5 bg-zinc-50/80 border-b border-zinc-200 flex justify-between items-center flex-none sticky top-0 z-20">
         <div className="flex items-center gap-2">
           <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Requested Items</h3>
-          <span className="text-[8.8px] font-medium text-zinc-500 bg-white px-2 py-0.5 rounded-full border border-zinc-200">
+          <span className="text-[8.8px] font-medium text-zinc-500 dark:text-zinc-400 bg-white dark:bg-surface-dark px-2 py-0.5 rounded-full border border-zinc-200 dark:border-border-dark">
             {items.length} {items.length === 1 ? 'item' : 'items'} requested
           </span>
         </div>
@@ -85,7 +85,7 @@ export default function PurchaseRequisitionItemsTable({
           {/* Table Body */}
           <div className="flex flex-col divide-y divide-zinc-100">
             {items.map((item, idx) => (
-              <div key={idx} className={`grid ${colTemplate} w-full bg-white hover:bg-zinc-50/50 min-w-0 border-b border-zinc-100 last:border-0 box-border`}>
+              <div key={idx} className={`grid ${colTemplate} w-full bg-white dark:bg-card-dark hover:bg-zinc-50/50 dark:hover:bg-hover-dark/40 min-w-0 border-b border-zinc-100 dark:border-[#2A2F3D] last:border-0 box-border`}>
                 {/* # */}
                 <div className="p-1 pt-2 pb-2 min-w-0 flex items-center justify-center text-[8.8px] text-zinc-400 font-medium">
                   {idx + 1}
@@ -93,7 +93,7 @@ export default function PurchaseRequisitionItemsTable({
                 {/* ITEM NAME */}
                 <div className="p-1 pt-2 min-w-0">
                   <CustomSelect
-                    className="input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white"
+                    className="input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark"
                     value={item.productId || item.itemId || ''}
                     onChange={(e) => handleProductSelect(idx, e.target.value)}
                     searchable={true}
@@ -173,7 +173,7 @@ export default function PurchaseRequisitionItemsTable({
                 {/* UNIT */}
                 <div className="p-1 pt-2 min-w-0">
                   <CustomSelect
-                    className="input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white"
+                    className="input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark"
                     value={item.unit || ''}
                     onChange={(e) => handleItemChange(idx, 'unit', e.target.value)}
                     searchable={true}
@@ -206,7 +206,7 @@ export default function PurchaseRequisitionItemsTable({
                 {/* WAREHOUSE */}
                 <div className="p-1 pt-2 min-w-0">
                   <CustomSelect
-                    className="input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white"
+                    className="input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark"
                     value={item.warehouseId || ''}
                     onChange={(e) => {
                       const newWarehouseId = e.target.value;
@@ -238,7 +238,7 @@ export default function PurchaseRequisitionItemsTable({
                 {/* LOCATION */}
                 <div className="p-1 pt-2 min-w-0">
                   <CustomSelect
-                    className="input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white"
+                    className="input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark"
                     value={item.locationId || ''}
                     onChange={(e) => handleItemChange(idx, 'locationId', e.target.value)}
                     searchable={true}

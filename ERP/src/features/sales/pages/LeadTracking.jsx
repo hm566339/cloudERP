@@ -56,7 +56,7 @@ export default function LeadsPage() {
     switch (stage) {
       case 'New': return 'badge-info'
       case 'Qualified': return 'badge-warning'
-      case 'Proposal': return 'badge-primary bg-primary/10 text-primary'
+      case 'Proposal': return 'badge-primary bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-400'
       case 'Won': return 'badge-success'
       case 'Lost': return 'badge-danger'
       default: return 'badge-draft'
@@ -82,15 +82,15 @@ export default function LeadsPage() {
         </div>
         <div className="kpi-card p-4">
           <p className="kpi-label mb-1">Qualified</p>
-          <p className="kpi-value text-2xl text-amber-600">12</p>
+          <p className="kpi-value text-2xl text-amber-600 dark:text-amber-400">12</p>
         </div>
         <div className="kpi-card p-4">
           <p className="kpi-label mb-1">Proposals Sent</p>
-          <p className="kpi-value text-2xl text-primary">8</p>
+          <p className="kpi-value text-2xl text-primary dark:text-blue-400">8</p>
         </div>
         <div className="kpi-card p-4">
           <p className="kpi-label mb-1">Conversion Rate</p>
-          <p className="kpi-value text-2xl text-emerald-600">24%</p>
+          <p className="kpi-value text-2xl text-emerald-600 dark:text-emerald-400">24%</p>
         </div>
       </div>
 
@@ -119,18 +119,18 @@ export default function LeadsPage() {
             <tbody className="staggered-list">
               {paginatedLeads.map((l, index) => (
                 <tr key={l.id}>
-                  <td className="text-center font-medium text-zinc-500 tabular-nums">
+                  <td className="text-center font-medium text-zinc-500 dark:text-zinc-400 tabular-nums">
                     {getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}
                   </td>
                   <td>
-                    <div className="font-medium text-zinc-900">{l.company}</div>
-                    <div className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
+                    <div className="font-medium text-zinc-900 dark:text-zinc-200">{l.company}</div>
+                    <div className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-0.5">
                       <UserPlus size={12} /> {l.contact}
                     </div>
                   </td>
-                  <td className="text-zinc-600">{l.source}</td>
-                  <td className="text-zinc-500">{l.date}</td>
-                  <td className="text-right font-semibold text-zinc-800">
+                  <td className="text-zinc-600 dark:text-zinc-300">{l.source}</td>
+                  <td className="text-zinc-500 dark:text-zinc-400">{l.date}</td>
+                  <td className="text-right font-semibold text-zinc-800 dark:text-zinc-200">
                     ₹{l.value?.toLocaleString()}
                   </td>
                   <td>
@@ -139,20 +139,20 @@ export default function LeadsPage() {
                     </span>
                   </td>
                   <td>
-                    <div className="flex justify-end gap-2 text-zinc-400">
+                    <div className="flex justify-end gap-2 text-zinc-400 dark:text-zinc-500">
                       {l.stage !== 'Won' && l.stage !== 'Lost' && <button onClick={() => handleUpdateStatus(l.id, 'Won')} className="hover:text-emerald-600 p-1" title="Mark Won"><CheckCircle size={15} /></button>}
                       {l.stage !== 'Won' && l.stage !== 'Lost' && <button onClick={() => handleUpdateStatus(l.id, 'Lost')} className="hover:text-red-500 p-1" title="Mark Lost"><XCircle size={15} /></button>}
                       <button className="hover:text-primary transition-colors p-1" title="Email"><Mail size={15} /></button>
                       <button className="hover:text-primary transition-colors p-1" title="Call"><Phone size={15} /></button>
-                      <button onClick={() => setViewingLead(l)} className="text-xs text-primary hover:underline font-medium ml-2">View</button>
-                      <button className="text-xs text-primary hover:underline font-medium ml-2">Edit</button>
+                      <button onClick={() => setViewingLead(l)} className="text-xs text-primary dark:text-blue-400 hover:underline font-medium ml-2">View</button>
+                      <button className="text-xs text-primary dark:text-blue-400 hover:underline font-medium ml-2">Edit</button>
                     </div>
                   </td>
                 </tr>
               ))}
               {paginatedLeads.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-zinc-500">
+                  <td colSpan={7} className="text-center py-8 text-zinc-500 dark:text-zinc-400">
                     No leads found.
                   </td>
                 </tr>
@@ -162,7 +162,7 @@ export default function LeadsPage() {
         </div>
       )}
       {!isLoading && (
-        <div className="p-4 border-t border-zinc-100">
+        <div className="p-4 border-t border-zinc-100 dark:border-border-dark bg-white dark:bg-card-dark rounded-b-xl">
           <Pagination
             {...paginationProps}
             totalPages={totalPages}

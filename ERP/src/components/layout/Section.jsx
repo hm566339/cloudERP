@@ -22,7 +22,7 @@ export default function Section({
       {...props}
     >
       {(title || actions) && (
-        <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-100">
+        <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
           <div>
             {title && (
               <h2 className="text-base font-semibold text-zinc-900 tracking-tight">

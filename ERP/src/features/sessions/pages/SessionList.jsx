@@ -152,8 +152,8 @@ export default function SessionList() {
         onClick={() => setSelectedSession(session)}
         className={`cursor-pointer transition-colors group select-none ${
           isSelected 
-            ? 'bg-indigo-50/70 border-indigo-200' 
-            : 'hover:bg-zinc-50/80'
+            ? 'bg-indigo-50/70 dark:bg-primary/10 border-indigo-200 dark:border-primary/30' 
+            : 'hover:bg-zinc-50/80 dark:hover:bg-[#222736]'
         }`}
         style={{ minHeight: '64px' }}
       >
@@ -162,16 +162,16 @@ export default function SessionList() {
           <div className="flex items-center gap-3 min-w-0">
             <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${
               isMobile 
-                ? 'bg-amber-50 text-amber-600 border-amber-100' 
-                : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/40' 
+                : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/40'
             }`}>
               {isMobile ? <Smartphone size={16} /> : <Monitor size={16} />}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-xs text-zinc-900 truncate" title={session.username || 'Unknown'}>
+              <p className="font-semibold text-xs text-zinc-900 dark:text-[#E6E8EE] truncate" title={session.username || 'Unknown'}>
                 {session.username || 'Unknown'}
               </p>
-              <p className="text-[10px] font-mono text-zinc-400 truncate" title={session.moduleName || 'System'}>
+              <p className="text-[10px] font-mono text-zinc-400 dark:text-[#6B7184] truncate" title={session.moduleName || 'System'}>
                 {session.moduleName || 'System'}
               </p>
             </div>
@@ -181,11 +181,11 @@ export default function SessionList() {
         {/* Network */}
         <td className="px-4 py-3.5">
           <div className="min-w-0">
-            <p className="text-xs font-mono font-medium text-zinc-800 truncate" title={session.ipAddress || 'Unknown IP'}>
+            <p className="text-xs font-mono font-medium text-zinc-800 dark:text-[#E6E8EE] truncate" title={session.ipAddress || 'Unknown IP'}>
               {session.ipAddress || 'Unknown IP'}
             </p>
             <p 
-              className="text-[10px] text-zinc-400 truncate max-w-full block overflow-hidden text-ellipsis whitespace-nowrap" 
+              className="text-[10px] text-zinc-400 dark:text-[#6B7184] truncate max-w-full block overflow-hidden text-ellipsis whitespace-nowrap" 
               title={session.userAgent || 'Unknown Browser'}
             >
               {session.userAgent || 'Unknown Browser'}
@@ -195,7 +195,7 @@ export default function SessionList() {
 
         {/* Login Time */}
         <td className="px-4 py-3.5">
-          <p className="text-xs text-zinc-600 font-medium whitespace-nowrap">
+          <p className="text-xs text-zinc-600 dark:text-[#A0A6B5] font-medium whitespace-nowrap">
             {session.createdAt ? new Date(session.createdAt).toLocaleString() : '—'}
           </p>
         </td>
@@ -213,7 +213,7 @@ export default function SessionList() {
               e.stopPropagation()
               handleEndSession(session, isAdminView)
             }}
-            className="w-8 h-8 rounded-lg inline-flex items-center justify-center border border-zinc-200 bg-white text-zinc-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-colors shadow-2xs"
+            className="w-8 h-8 rounded-lg inline-flex items-center justify-center border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-400 dark:text-[#A0A6B5] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:border-rose-200 dark:hover:border-rose-900/60 transition-colors shadow-2xs"
             title="Terminate Session"
             aria-label="Terminate Session"
           >
@@ -231,8 +231,8 @@ export default function SessionList() {
     >
       {/* ── Page Header ── */}
       <div className="space-y-1">
-        <h1 className="text-[22px] sm:text-[24px] font-bold text-zinc-900 tracking-tight">Session Management</h1>
-        <p className="text-[13px] text-zinc-500">
+        <h1 className="text-[22px] sm:text-[24px] font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Session Management</h1>
+        <p className="text-[13px] text-zinc-500 dark:text-[#A0A6B5]">
           Monitor current live connections, device categories and trigger security audits
         </p>
       </div>
@@ -242,21 +242,21 @@ export default function SessionList() {
         {/* ── Left Column: My Sessions & Company Sessions ── */}
         <div className="space-y-5 min-w-0">
           {/* My Sessions Card */}
-          <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/60">
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/60 dark:bg-[#1D212C]">
               <div className="flex items-center gap-2">
-                <Shield className="text-indigo-600" size={17} />
-                <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700">My Sessions</h3>
+                <Shield className="text-indigo-600 dark:text-primary" size={17} />
+                <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE]">My Sessions</h3>
               </div>
-              <span className="text-[10px] font-semibold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-semibold text-zinc-500 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#222736] px-2 py-0.5 rounded-full">
                 {mySessions.length} Active
               </span>
             </div>
             
             <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-              <table className="w-full min-w-[620px] table-fixed divide-y divide-zinc-200 text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="My Sessions Table">
-                <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
-                  <tr className="text-xs font-semibold text-zinc-600 uppercase tracking-wider select-none">
+              <table className="w-full min-w-[620px] table-fixed divide-y divide-zinc-200 dark:divide-[#2A2F3D] text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="My Sessions Table">
+                <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] sticky top-0 z-10">
+                  <tr className="text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider select-none">
                     <th scope="col" className="w-[27%] min-w-[160px] px-4 py-3">Device & User</th>
                     <th scope="col" className="w-[25%] min-w-[140px] px-4 py-3">Network</th>
                     <th scope="col" className="w-[22%] min-w-[130px] px-4 py-3">Login Time</th>
@@ -264,18 +264,18 @@ export default function SessionList() {
                     <th scope="col" className="w-[10%] min-w-[60px] px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100">
+                <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                   {isLoadingMySessions ? (
                     <tr>
                       <td colSpan={5} className="p-8 text-center">
-                        <div className="flex justify-center items-center gap-2 text-zinc-400 text-xs font-medium">
+                        <div className="flex justify-center items-center gap-2 text-zinc-400 dark:text-[#6B7184] text-xs font-medium">
                           <RefreshCw className="animate-spin" size={14} /> Loading my sessions...
                         </div>
                       </td>
                     </tr>
                   ) : mySessions.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="p-8 text-center text-zinc-400 text-xs font-medium">
+                      <td colSpan={5} className="p-8 text-center text-zinc-400 dark:text-[#6B7184] text-xs font-medium">
                         No active sessions found.
                       </td>
                     </tr>
@@ -289,21 +289,21 @@ export default function SessionList() {
 
           {/* Company Sessions (For Admins) */}
           {(isSuperAdmin || selectedCompany?.id) && (
-            <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/60">
+            <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/60 dark:bg-[#1D212C]">
                 <div className="flex items-center gap-2">
-                  <Monitor className="text-indigo-600" size={17} />
-                  <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700">Company Sessions</h3>
+                  <Monitor className="text-indigo-600 dark:text-primary" size={17} />
+                  <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE]">Company Sessions</h3>
                 </div>
-                <span className="text-[10px] font-semibold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-semibold text-zinc-500 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#222736] px-2 py-0.5 rounded-full">
                   {companySessionsData.totalCount || companySessions.length} Total
                 </span>
               </div>
 
               <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-                <table className="w-full min-w-[620px] table-fixed divide-y divide-zinc-200 text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="Company Sessions Table">
-                  <thead className="bg-zinc-50 border-b border-zinc-200 sticky top-0 z-10">
-                    <tr className="text-xs font-semibold text-zinc-600 uppercase tracking-wider select-none">
+                <table className="w-full min-w-[620px] table-fixed divide-y divide-zinc-200 dark:divide-[#2A2F3D] text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="Company Sessions Table">
+                  <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] sticky top-0 z-10">
+                    <tr className="text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider select-none">
                       <th scope="col" className="w-[27%] min-w-[160px] px-4 py-3">Device & User</th>
                       <th scope="col" className="w-[25%] min-w-[140px] px-4 py-3">Network</th>
                       <th scope="col" className="w-[22%] min-w-[130px] px-4 py-3">Login Time</th>
@@ -311,18 +311,18 @@ export default function SessionList() {
                       <th scope="col" className="w-[10%] min-w-[60px] px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-100">
+                  <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                     {isLoadingCompanySessions ? (
                       <tr>
                         <td colSpan={5} className="p-8 text-center">
-                          <div className="flex justify-center items-center gap-2 text-zinc-400 text-xs font-medium">
+                          <div className="flex justify-center items-center gap-2 text-zinc-400 dark:text-[#6B7184] text-xs font-medium">
                             <RefreshCw className="animate-spin" size={14} /> Loading company sessions...
                           </div>
                         </td>
                       </tr>
                     ) : companySessions.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-8 px-4 text-center text-zinc-400 text-xs font-medium">
+                        <td colSpan={5} className="py-8 px-4 text-center text-zinc-400 dark:text-[#6B7184] text-xs font-medium">
                           <div className="h-[75px] flex items-center justify-center">
                             {selectedCompany?.id === 'all' 
                               ? "Please select a company to view sessions." 
@@ -340,7 +340,7 @@ export default function SessionList() {
               </div>
 
               {companySessions.length > 0 && (
-                <div className="p-4 border-t border-zinc-100 bg-white">
+                <div className="p-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#161922]">
                   <Pagination 
                     page={page} 
                     totalPages={companySessionsData.totalPages} 
@@ -359,63 +359,63 @@ export default function SessionList() {
         {/* ── Right Column: Session Details & Danger Zone ── */}
         <div className="space-y-5 min-w-0">
           {/* Session Details Panel */}
-          <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-5 space-y-4">
-            <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700 border-b border-zinc-100 pb-2.5">
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-5 space-y-4">
+            <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE] border-b border-zinc-100 dark:border-[#2A2F3D] pb-2.5">
               Session Details
             </h3>
             
             {!selectedSession ? (
-              <div className="min-h-[150px] flex flex-col items-center justify-center text-center p-6 text-zinc-400">
-                <Monitor size={24} className="mb-2 text-zinc-300 stroke-[1.5]" />
+              <div className="min-h-[150px] flex flex-col items-center justify-center text-center p-6 text-zinc-400 dark:text-[#6B7184]">
+                <Monitor size={24} className="mb-2 text-zinc-300 dark:text-[#6B7184] stroke-[1.5]" />
                 <span className="text-xs font-medium">Select a session to view details</span>
               </div>
             ) : (
               <div className="space-y-3.5 animate-fade-in text-xs">
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 block">User</label>
-                  <div className="text-xs font-semibold text-zinc-900">{selectedSession.username || 'Unknown'}</div>
+                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">User</label>
+                  <div className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE]">{selectedSession.username || 'Unknown'}</div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Device & Browser</label>
-                  <div className="text-xs font-mono font-medium text-zinc-800 break-words bg-zinc-50 border border-zinc-100 p-2 rounded-lg">
+                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Device & Browser</label>
+                  <div className="text-xs font-mono font-medium text-zinc-800 dark:text-[#E6E8EE] break-words bg-zinc-50 dark:bg-[#1D212C] border border-zinc-100 dark:border-[#2A2F3D] p-2 rounded-lg">
                     {selectedSession.userAgent || 'Unknown'}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Network</label>
-                  <div className="text-xs font-mono font-medium text-zinc-800">{selectedSession.ipAddress || 'Unknown IP'}</div>
+                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Network</label>
+                  <div className="text-xs font-mono font-medium text-zinc-800 dark:text-[#E6E8EE]">{selectedSession.ipAddress || 'Unknown IP'}</div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Module</label>
-                  <div className="text-xs font-semibold text-zinc-800">{selectedSession.moduleName || 'System'}</div>
+                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Module</label>
+                  <div className="text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE]">{selectedSession.moduleName || 'System'}</div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 block">Authentication</label>
-                  <div className="text-[11px] text-zinc-600 space-y-1.5 bg-zinc-50/70 border border-zinc-100 p-2.5 rounded-lg">
+                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Authentication</label>
+                  <div className="text-[11px] text-zinc-600 dark:text-[#A0A6B5] space-y-1.5 bg-zinc-50/70 dark:bg-[#1D212C] border border-zinc-100 dark:border-[#2A2F3D] p-2.5 rounded-lg">
                     <div className="flex justify-between">
-                      <span className="text-zinc-400">Login Time:</span>
-                      <span className="font-medium text-zinc-700">{selectedSession.createdAt ? new Date(selectedSession.createdAt).toLocaleString() : '—'}</span>
+                      <span className="text-zinc-400 dark:text-[#6B7184]">Login Time:</span>
+                      <span className="font-medium text-zinc-700 dark:text-[#E6E8EE]">{selectedSession.createdAt ? new Date(selectedSession.createdAt).toLocaleString() : '—'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-400">Last Updated:</span>
-                      <span className="font-medium text-zinc-700">{selectedSession.updatedAt ? new Date(selectedSession.updatedAt).toLocaleString() : '—'}</span>
+                      <span className="text-zinc-400 dark:text-[#6B7184]">Last Updated:</span>
+                      <span className="font-medium text-zinc-700 dark:text-[#E6E8EE]">{selectedSession.updatedAt ? new Date(selectedSession.updatedAt).toLocaleString() : '—'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-400">Token Expiry:</span>
-                      <span className="font-medium text-zinc-700">{selectedSession.accessTokenValidTill ? new Date(selectedSession.accessTokenValidTill).toLocaleString() : '—'}</span>
+                      <span className="text-zinc-400 dark:text-[#6B7184]">Token Expiry:</span>
+                      <span className="font-medium text-zinc-700 dark:text-[#E6E8EE]">{selectedSession.accessTokenValidTill ? new Date(selectedSession.accessTokenValidTill).toLocaleString() : '—'}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-zinc-100">
+                <div className="pt-3 border-t border-zinc-100 dark:border-[#2A2F3D]">
                   <button
                     type="button"
                     onClick={() => handleEndSession(selectedSession, companySessions.find(s => s.id === selectedSession.id))}
-                    className="w-full h-9 bg-rose-50 hover:bg-rose-100 border border-rose-200/70 text-rose-700 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-2 active:scale-95"
+                    className="w-full h-9 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/70 dark:border-rose-900/60 text-rose-700 dark:text-rose-400 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-2 active:scale-95"
                   >
                     <LogOut size={14} /> Terminate Session
                   </button>
@@ -426,19 +426,19 @@ export default function SessionList() {
 
           {/* Danger Zone Panel */}
           {isSuperAdmin && (
-            <div className="bg-rose-50/40 rounded-xl border border-rose-200/80 shadow-2xs p-5 space-y-3.5">
-              <div className="flex items-center gap-2 text-rose-800 border-b border-rose-200/60 pb-2.5">
-                <ShieldAlert size={17} className="text-rose-600 shrink-0" />
+            <div className="bg-rose-50/40 dark:bg-rose-950/20 rounded-xl border border-rose-200/80 dark:border-rose-900/40 shadow-2xs p-5 space-y-3.5">
+              <div className="flex items-center gap-2 text-rose-800 dark:text-rose-400 border-b border-rose-200/60 dark:border-rose-900/40 pb-2.5">
+                <ShieldAlert size={17} className="text-rose-600 dark:text-rose-400 shrink-0" />
                 <h3 className="font-bold text-xs uppercase tracking-wider">Danger Zone</h3>
               </div>
-              <p className="text-xs text-rose-700/80 leading-relaxed">
+              <p className="text-xs text-rose-700/80 dark:text-rose-300/80 leading-relaxed">
                 Aggressive security actions. Use with extreme caution as this will impact active users.
               </p>
               <div className="space-y-2.5 pt-1">
                 <button
                   type="button"
                   onClick={() => handleDeleteAllSessions(false)}
-                  className="w-full h-10 bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 rounded-lg text-xs font-semibold transition-all shadow-2xs flex items-center justify-center gap-2 active:scale-95"
+                  className="w-full h-10 bg-white dark:bg-[#1D212C] border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg text-xs font-semibold transition-all shadow-2xs flex items-center justify-center gap-2 active:scale-95"
                 >
                   <AlertTriangle size={15} /> Terminate All Sessions
                 </button>

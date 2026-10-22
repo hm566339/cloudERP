@@ -10,10 +10,36 @@
     --color-bg-base: #FFFFFF;
     /* white */
     --color-surface: #FFFFFF;
+    --color-surface-2: #F4F4F5;  /* zinc-100 */
+    --color-surface-3: #FAFAFA;  /* zinc-50 */
     --color-border: #E4E4E7;
     /* zinc-200 */
     --color-border-hover: #D4D4D8;
     /* zinc-300 */
+
+    /* Standard Semantic Theme Tokens */
+    --bg: #FFFFFF;
+    --surface: #FFFFFF;
+    --surface-2: #F4F4F5;
+    --surface-hover: #FAFAFA;
+    --text: #18181B;
+    --text-muted: #A1A1AA;
+    --text-disabled: #D4D4D8;
+    --border: #E4E4E7;
+    --border-strong: #D4D4D8;
+    --primary: #18181B;
+    --primary-hover: #27272A;
+    --primary-foreground: #FFFFFF;
+    --success: #16A34A;
+    --warning: #D97706;
+    --danger: #DC2626;
+    --info: #0284C7;
+    --ring: rgba(24, 24, 27, 0.15);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --overlay: rgba(0, 0, 0, 0.5);
+    --input-bg: #FFFFFF;
+    --input-border: #E4E4E7;
+    --placeholder: #A1A1AA;
 
     /* Vibrant Primary & Accents - Zinc 900 */
     --color-primary: #18181B;
@@ -38,6 +64,9 @@
     --color-text-muted: #A1A1AA;
     /* zinc-400 */
 
+    /* Focus ring offset color (used in box-shadow outlines) */
+    --color-focus-ring-offset: #FFFFFF;
+
     /* ── Type Scale (absolute, px) ── */
     /* Use these CSS vars for consistent sizing throughout the app */
     --text-2xs: 10px;   /* micro labels, badges, table col headers */
@@ -52,9 +81,10 @@
 
     /* Sidebar */
     --color-sidebar-bg: #FBFBFC;
-    --color-sidebar-active-bg: #F0F0F1;
-    --color-sidebar-active-text: #18181B;
+    --color-sidebar-active-bg: #18181B;
+    --color-sidebar-active-text: #FFFFFF;
     --color-sidebar-hover-bg: #F4F4F5;
+    --color-sidebar-text: #52525B;
     --sidebar-width: 260px;
 
     /* Motion Design Tokens */
@@ -70,6 +100,10 @@
     --color-input-bg: #FFFFFF;
     --color-input-border: #E4E4E7;
     --color-input-focus: #0F766E;
+
+    /* Scrollbar */
+    --color-scrollbar-thumb: rgb(212 212 216);
+    --color-scrollbar-thumb-hover: rgb(161 161 170);
 
     /* ── Spacing Tokens (4px base) ── */
     --space-1: 0.25rem;  /* 4px */
@@ -103,6 +137,105 @@
     --control-h-sm: 1.75rem;  /* 28px */
     --control-h-md: 2rem;     /* 32px */
     --control-h-lg: 2.25rem;  /* 36px */
+  }
+
+  /* ── Dark Mode Token Overrides ── */
+  /* Applied when <html class="dark"> */
+  .dark {
+    color-scheme: dark;
+
+    /* Surfaces */
+    --color-bg-base: #0F1117;
+    --color-surface: #161922;
+    --color-surface-2: #1D212C;
+    --color-surface-3: #222736;
+    --color-border: #2A2F3D;
+    --color-border-hover: #3A4154;
+
+    /* Standard Semantic Theme Tokens */
+    --bg: #0F1117;
+    --surface: #161922;
+    --surface-2: #1D212C;
+    --surface-hover: #222736;
+    --text: #E6E8EE;
+    --text-muted: #A0A6B5;
+    --text-disabled: #6B7184;
+    --border: #2A2F3D;
+    --border-strong: #3A4154;
+    --primary: #4C8DFF;
+    --primary-hover: #6AA1FF;
+    --primary-foreground: #FFFFFF;
+    --success: #34C38F;
+    --warning: #F5B544;
+    --danger: #F0616D;
+    --info: #38BDF8;
+    --ring: rgba(76, 141, 255, 0.35);
+    --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+    --overlay: rgba(0, 0, 0, 0.75);
+    --input-bg: #1D212C;
+    --input-border: #2A2F3D;
+    --placeholder: #6B7184;
+
+    /* Primary Accent */
+    --color-primary: #4C8DFF;
+    --color-primary-hover: #6AA1FF;
+    --color-primary-pressed: #3A78E6;
+    --color-primary-light: rgba(76, 141, 255, 0.14);
+
+    /* Status Tokens */
+    --color-success: #34C38F;
+    --color-warning: #F5B544;
+    --color-danger: #F0616D;
+    --color-info: #38BDF8;
+
+    /* Chart Accents */
+    --color-chart-violet: #A78BFA;
+    --color-chart-teal: #2DD4BF;
+
+    /* Typography */
+    --color-text-primary: #E6E8EE;
+    --color-text-secondary: #A0A6B5;
+    --color-text-muted: #6B7184;
+
+    --color-focus-ring-offset: #1D212C;
+
+    /* Sidebar */
+    --color-sidebar-bg: #13161F;
+    --color-sidebar-active-bg: #4C8DFF;
+    --color-sidebar-active-text: #FFFFFF;
+    --color-sidebar-hover-bg: #222736;
+    --color-sidebar-text: #A0A6B5;
+
+    /* Tables & Inputs */
+    --color-table-row-hover: #222736;
+    --color-input-bg: #1D212C;
+    --color-input-border: #2A2F3D;
+    --color-input-focus: #4C8DFF;
+
+    /* Scrollbars */
+    --color-scrollbar-thumb: #2A2F3D;
+    --color-scrollbar-thumb-hover: #3A4154;
+  }
+
+  .dark ::selection {
+    background-color: rgba(76, 141, 255, 0.3);
+    color: #FFFFFF;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #6B7184;
+    opacity: 1;
+  }
+
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark textarea:-webkit-autofill,
+  .dark select:-webkit-autofill {
+    -webkit-text-fill-color: #E6E8EE;
+    -webkit-box-shadow: 0 0 0px 1000px #1D212C inset;
+    transition: background-color 5000s ease-in-out 0s;
   }
 
   *,
@@ -187,11 +320,16 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-zinc-300 rounded-full border-[2px] border-transparent bg-clip-padding;
+    background-color: var(--color-scrollbar-thumb);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-zinc-400 border-[2px] border-transparent bg-clip-padding;
+    background-color: var(--color-scrollbar-thumb-hover);
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 }
 
@@ -234,7 +372,7 @@
 
     .btn-primary:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-primary);
     }
 
     .btn-primary:disabled {
@@ -268,7 +406,7 @@
     .btn-secondary:focus-visible {
       outline: none;
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-primary);
     }
 
     .btn-secondary:disabled {
@@ -300,7 +438,7 @@
 
     .btn-danger:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--color-danger);
+      box-shadow: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-danger);
     }
 
     .btn-danger:disabled {
@@ -330,7 +468,7 @@
 
     .btn-ghost:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-primary);
     }
 
     .btn-ghost:disabled {
@@ -351,7 +489,7 @@
 
     .btn-icon:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-primary);
     }
 
     /* ── Input Fields ── */
@@ -384,7 +522,7 @@
     .input-field:focus-visible {
       outline: none;
       border-color: var(--color-input-focus);
-      box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.2);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-input-focus) 20%, transparent);
     }
 
     /* ── Badges / Status ── */
@@ -401,11 +539,21 @@
       color: #16A34A;
       border-color: #BBF7D0;
     }
+    .dark .badge-success {
+      background-color: #052e16;
+      color: #4ade80;
+      border-color: #166534;
+    }
 
     .badge-warning {
       background-color: #FFFBEB;
       color: #D97706;
       border-color: #FDE68A;
+    }
+    .dark .badge-warning {
+      background-color: #431407;
+      color: #fbbf24;
+      border-color: #92400e;
     }
 
     .badge-danger {
@@ -413,17 +561,32 @@
       color: #DC2626;
       border-color: #FECACA;
     }
+    .dark .badge-danger {
+      background-color: #450a0a;
+      color: #f87171;
+      border-color: #991b1b;
+    }
 
     .badge-draft {
       background-color: #FAFAFA;
       color: #52525B;
       border-color: #E4E4E7;
     }
+    .dark .badge-draft {
+      background-color: #22262F;
+      color: #94A3B8;
+      border-color: #2E3240;
+    }
 
     .badge-info {
       background-color: #F0FDFA;
       color: #0F766E;
       border-color: #CCFBF1;
+    }
+    .dark .badge-info {
+      background-color: #042f2e;
+      color: #2dd4bf;
+      border-color: #0f766e;
     }
 
     /* ── Table ── */
@@ -436,7 +599,7 @@
       box-shadow: none;
       overflow-x: auto;
       scrollbar-width: thin;
-      scrollbar-color: rgb(212 212 216) transparent;
+      scrollbar-color: var(--color-scrollbar-thumb) transparent;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -452,11 +615,15 @@
     }
 
     .erp-table thead {
-      @apply sticky top-0 bg-zinc-50 z-20 shadow-sm border-b border-zinc-200;
+      @apply sticky top-0 z-20 shadow-sm;
+      background-color: var(--color-surface-2);
+      border-bottom: 1px solid var(--color-border);
     }
 
     .erp-table thead th {
-      @apply px-4 py-3 font-semibold text-zinc-600 uppercase tracking-wider border-b border-zinc-200 whitespace-nowrap;
+      @apply px-4 py-3 font-semibold uppercase tracking-wider whitespace-nowrap;
+      color: var(--color-text-secondary);
+      border-bottom: 1px solid var(--color-border);
       font-size: 12px;
       /* 12px minimum — clear uppercase tracking headers */
       letter-spacing: 0.05em;
@@ -468,11 +635,13 @@
     }
 
     .erp-table tbody tr:hover {
-      @apply bg-zinc-50/80;
+      background-color: var(--color-table-row-hover);
     }
 
     .erp-table tbody td {
-      @apply px-4 py-3 text-zinc-700 border-b border-zinc-100 whitespace-nowrap align-middle;
+      @apply px-4 py-3 whitespace-nowrap align-middle;
+      color: var(--color-text-secondary);
+      border-bottom: 1px solid var(--color-border);
       font-size: var(--text-base);
       /* 13px — primary data cell text */
     }
@@ -529,7 +698,7 @@
 
     .sidebar-item:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-primary);
     }
 
     .sidebar-item:active {
@@ -537,11 +706,14 @@
     }
 
     .sidebar-item-active {
-      @apply bg-zinc-900 text-white font-semibold shadow-sm;
+      background-color: var(--color-sidebar-active-bg);
+      color: var(--color-sidebar-active-text);
+      @apply font-semibold shadow-sm;
     }
 
     .sidebar-item-inactive:hover {
-      @apply bg-zinc-100/80 text-zinc-900;
+      background-color: var(--color-sidebar-hover-bg);
+      color: var(--color-text-primary);
     }
 
     .sidebar-child-item {
@@ -550,13 +722,13 @@
       /* 12px — slightly smaller sub-links */
       border-radius: 6px;
       margin-bottom: 1px;
-      color: #52525b;
+      color: var(--color-sidebar-text);
       transition: background-color var(--duration-micro) var(--ease-enter), color var(--duration-micro) var(--ease-enter);
     }
 
     .sidebar-child-item:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-focus-ring-offset), 0 0 0 4px var(--color-primary);
     }
 
     .sidebar-child-item:active {
@@ -564,11 +736,14 @@
     }
 
     .sidebar-child-active {
-      @apply text-zinc-950 font-semibold bg-zinc-200/60 shadow-sm;
+      color: var(--color-text-primary);
+      background-color: var(--color-surface-2);
+      @apply font-semibold shadow-sm;
     }
 
     .sidebar-child-inactive:hover {
-      @apply text-zinc-900 bg-zinc-100/70;
+      color: var(--color-text-primary);
+      background-color: var(--color-sidebar-hover-bg);
     }
   }
 
@@ -592,7 +767,7 @@
      subtle so it never visually overlaps surrounding UI) */
     .custom-scrollbar {
       scrollbar-width: thin;
-      scrollbar-color: rgb(212 212 216) transparent;
+      scrollbar-color: var(--color-scrollbar-thumb) transparent;
     }
 
     .custom-scrollbar::-webkit-scrollbar {
@@ -605,12 +780,12 @@
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background-color: rgb(212 212 216);
+      background-color: var(--color-scrollbar-thumb);
       border-radius: 9999px;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background-color: rgb(161 161 170);
+      background-color: var(--color-scrollbar-thumb-hover);
     }
 
     .numeric-cell {
@@ -767,8 +942,8 @@
   }
 
   select option {
-    background-color: #ffffff;
-    color: #18181b;
+    background-color: var(--color-input-bg);
+    color: var(--color-text-primary);
     font-weight: 500;
     padding: 0.5rem;
   }
@@ -819,3 +994,195 @@
       transform: none !important;
     }
   }
+
+/* ── Theme Transition ── */
+/* Smooth transitions on theme switch. Disabled initially to prevent FOUC. */
+html.theme-transitions,
+html.theme-transitions *,
+html.theme-transitions *::before,
+html.theme-transitions *::after {
+  transition: background-color 180ms ease, border-color 180ms ease, color 100ms ease !important;
+}
+
+/* ── Print: Always use light theme ── */
+@media print {
+  :root {
+    --color-bg-base: #FFFFFF !important;
+    --color-surface: #FFFFFF !important;
+    --color-surface-2: #F4F4F5 !important;
+    --color-surface-3: #FAFAFA !important;
+    --color-border: #E4E4E7 !important;
+    --color-text-primary: #18181B !important;
+    --color-text-secondary: #52525B !important;
+    --color-text-muted: #A1A1AA !important;
+    --color-input-bg: #FFFFFF !important;
+    --color-input-border: #E4E4E7 !important;
+  }
+  .dark {
+    --color-bg-base: #FFFFFF !important;
+    --color-surface: #FFFFFF !important;
+    --color-surface-2: #F4F4F5 !important;
+    --color-surface-3: #FAFAFA !important;
+    --color-border: #E4E4E7 !important;
+    --color-text-primary: #18181B !important;
+    --color-text-secondary: #52525B !important;
+    --color-text-muted: #A1A1AA !important;
+    --color-input-bg: #FFFFFF !important;
+    --color-input-border: #E4E4E7 !important;
+  }
+}
+
+/* ── Dark mode: select focus ring ── */
+.dark select:focus {
+  outline: none;
+  border-color: var(--color-input-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-input-focus) 20%, transparent);
+}
+
+/* ── Dark mode: text selection ── */
+.dark ::selection {
+  background-color: rgba(76, 141, 255, 0.3);
+  color: #FFFFFF;
+}
+::selection {
+  background-color: rgba(24, 24, 27, 0.12);
+  color: #18181B;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   UNIVERSAL DARK MODE CASCADE
+   Guarantees 100% theme coverage across all ERP modules and pages.
+   Explicit dark: utilities always take precedence.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Universal Surface Mapping */
+.dark body {
+  background-color: #0F1117;
+  color: #E6E8EE;
+}
+
+.dark .bg-white:not([class*="dark:bg-"]):not(.keep-white):not([data-keep-light]):not([data-keep-light] *) {
+  background-color: #161922;
+}
+
+.dark .bg-zinc-50:not([class*="dark:bg-"]):not(.keep-white):not([data-keep-light]):not([data-keep-light] *) {
+  background-color: #1D212C;
+}
+
+.dark .bg-zinc-100:not([class*="dark:bg-"]):not(.keep-white):not([data-keep-light]):not([data-keep-light] *) {
+  background-color: #222736;
+}
+
+.dark .bg-zinc-200:not([class*="dark:bg-"]):not(.keep-white):not([data-keep-light]):not([data-keep-light] *) {
+  background-color: #2A2F3D;
+}
+
+.dark .bg-gray-50:not([class*="dark:bg-"]),
+.dark .bg-slate-50:not([class*="dark:bg-"]),
+.dark .bg-neutral-50:not([class*="dark:bg-"]) {
+  background-color: #1D212C;
+}
+
+.dark .bg-gray-100:not([class*="dark:bg-"]),
+.dark .bg-slate-100:not([class*="dark:bg-"]),
+.dark .bg-neutral-100:not([class*="dark:bg-"]) {
+  background-color: #222736;
+}
+
+/* Universal Border Mapping */
+.dark .border-zinc-100:not([class*="dark:border-"]),
+.dark .border-zinc-200:not([class*="dark:border-"]),
+.dark .border-zinc-300:not([class*="dark:border-"]),
+.dark .border-gray-200:not([class*="dark:border-"]),
+.dark .border-slate-200:not([class*="dark:border-"]) {
+  border-color: #2A2F3D;
+}
+
+.dark .divide-zinc-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-zinc-200 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-zinc-50 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #2A2F3D;
+}
+
+/* Universal Text Hierarchy Mapping */
+.dark .text-zinc-900:not([class*="dark:text-"]):not([data-keep-light] *),
+.dark .text-zinc-800:not([class*="dark:text-"]):not([data-keep-light] *),
+.dark .text-gray-900:not([class*="dark:text-"]),
+.dark .text-gray-800:not([class*="dark:text-"]),
+.dark .text-slate-900:not([class*="dark:text-"]),
+.dark .text-slate-800:not([class*="dark:text-"]) {
+  color: #E6E8EE;
+}
+
+.dark .text-zinc-700:not([class*="dark:text-"]):not([data-keep-light] *),
+.dark .text-zinc-600:not([class*="dark:text-"]):not([data-keep-light] *),
+.dark .text-gray-700:not([class*="dark:text-"]),
+.dark .text-gray-600:not([class*="dark:text-"]),
+.dark .text-slate-700:not([class*="dark:text-"]),
+.dark .text-slate-600:not([class*="dark:text-"]) {
+  color: #A0A6B5;
+}
+
+.dark .text-zinc-500:not([class*="dark:text-"]):not([data-keep-light] *),
+.dark .text-zinc-400:not([class*="dark:text-"]):not([data-keep-light] *),
+.dark .text-gray-500:not([class*="dark:text-"]),
+.dark .text-gray-400:not([class*="dark:text-"]),
+.dark .text-slate-500:not([class*="dark:text-"]),
+.dark .text-slate-400:not([class*="dark:text-"]) {
+  color: #8B92A4;
+}
+
+/* Universal Hover States */
+.dark .hover\:bg-zinc-50:hover:not([class*="dark:hover:bg-"]) {
+  background-color: #1D212C;
+}
+
+.dark .hover\:bg-zinc-100:hover:not([class*="dark:hover:bg-"]) {
+  background-color: #222736;
+}
+
+.dark .hover\:text-zinc-900:hover:not([class*="dark:hover:text-"]),
+.dark .hover\:text-zinc-800:hover:not([class*="dark:hover:text-"]) {
+  color: #FFFFFF;
+}
+
+.dark .hover\:border-zinc-300:hover:not([class*="dark:hover:border-"]),
+.dark .hover\:border-zinc-400:hover:not([class*="dark:hover:border-"]) {
+  border-color: #3A4154;
+}
+
+/* Universal Form Controls */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([class*="dark:bg-"]):not([data-keep-light] *) {
+  background-color: #1D212C;
+  color: #E6E8EE;
+  border-color: #2A2F3D;
+}
+
+.dark textarea:not([class*="dark:bg-"]):not([data-keep-light] *) {
+  background-color: #1D212C;
+  color: #E6E8EE;
+  border-color: #2A2F3D;
+}
+
+.dark select:not([class*="dark:bg-"]):not([data-keep-light] *) {
+  background-color: #1D212C;
+  color: #E6E8EE;
+  border-color: #2A2F3D;
+}
+
+/* Shadow Rescaling in Dark Mode */
+.dark .shadow-sm,
+.dark .shadow-xs,
+.dark .shadow-2xs {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+}
+
+.dark .shadow-md {
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.5);
+}
+
+.dark .shadow-lg,
+.dark .shadow-xl,
+.dark .shadow-2xl {
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+}

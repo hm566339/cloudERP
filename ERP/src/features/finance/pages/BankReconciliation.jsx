@@ -101,10 +101,10 @@ export default function BankReconciliation() {
       </div>
 
       {/* Control Panel */}
-      <div className="card p-6 bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
+      <div className="card p-6 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-zinc-700">Select Bank Account *</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Select Bank Account *</label>
             <CustomSelect
               options={bankAccountsList.map(a => ({ value: a.id, label: `${a.bankName} - ${a.accountNumber}` }))}
               value={filters.bankAccountId || ''}
@@ -114,10 +114,10 @@ export default function BankReconciliation() {
           </div>
           
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-zinc-700">Bank Statement Balance</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">Bank Statement Balance</label>
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-[#A0A6B5] font-medium">₹</span>
                 <input
                   type="number"
                   step="0.01"
@@ -143,58 +143,58 @@ export default function BankReconciliation() {
 
       {/* Summary Dashboard (Only if account selected) */}
       {!filters.bankAccountId ? (
-        <div className="card p-12 text-center text-zinc-500">
-          <Calculator size={48} className="mx-auto mb-4 text-zinc-300" />
-          <p className="text-lg font-medium text-zinc-700">Select a bank account to begin reconciliation</p>
+        <div className="card p-12 text-center text-zinc-500 dark:text-[#A0A6B5]">
+          <Calculator size={48} className="mx-auto mb-4 text-zinc-300 dark:text-[#6B7184]" />
+          <p className="text-lg font-medium text-zinc-700 dark:text-[#E6E8EE]">Select a bank account to begin reconciliation</p>
           <p className="text-sm mt-1">You can also provide a bank statement balance to calculate differences.</p>
         </div>
       ) : isLoading && !data ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="card h-28 animate-pulse bg-zinc-100"></div>
-          <div className="card h-28 animate-pulse bg-zinc-100"></div>
-          <div className="card h-28 animate-pulse bg-zinc-100"></div>
-          <div className="card h-28 animate-pulse bg-zinc-100"></div>
+          <div className="card h-28 animate-pulse bg-zinc-100 dark:bg-[#1D212C]"></div>
+          <div className="card h-28 animate-pulse bg-zinc-100 dark:bg-[#1D212C]"></div>
+          <div className="card h-28 animate-pulse bg-zinc-100 dark:bg-[#1D212C]"></div>
+          <div className="card h-28 animate-pulse bg-zinc-100 dark:bg-[#1D212C]"></div>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="card p-4 flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-blue-600">
+              <div className="flex items-center gap-2 text-blue-600 dark:text-[#4C8DFF]">
                 <Building2 size={16} />
                 <span className="text-xs font-semibold uppercase tracking-wider">Book Balance</span>
               </div>
-              <p className="text-2xl font-bold text-zinc-900">
+              <p className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE]">
                 {summary.bookBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}
               </p>
             </div>
             
             <div className="card p-4 flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-indigo-600">
+              <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
                 <FileCheck2 size={16} />
                 <span className="text-xs font-semibold uppercase tracking-wider">Statement Balance</span>
               </div>
-              <p className="text-2xl font-bold text-zinc-900">
+              <p className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE]">
                 {summary.bankStatementBalance?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}
               </p>
             </div>
             
-            <div className={`card p-4 flex flex-col gap-2 ${summary.reconciliationDifference === 0 ? 'bg-emerald-50/50' : 'bg-rose-50/50'}`}>
-              <div className={`flex items-center gap-2 ${summary.reconciliationDifference === 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <div className={`card p-4 flex flex-col gap-2 ${summary.reconciliationDifference === 0 ? 'bg-emerald-50/50 dark:bg-emerald-500/10' : 'bg-rose-50/50 dark:bg-rose-500/10'}`}>
+              <div className={`flex items-center gap-2 ${summary.reconciliationDifference === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                 {summary.reconciliationDifference === 0 ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
                 <span className="text-xs font-semibold uppercase tracking-wider">Difference</span>
               </div>
-              <p className={`text-2xl font-bold ${summary.reconciliationDifference === 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+              <p className={`text-2xl font-bold ${summary.reconciliationDifference === 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}`}>
                 {summary.reconciliationDifference?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}
               </p>
             </div>
             
             <div className="card p-4 flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-amber-600">
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                 <Calculator size={16} />
                 <span className="text-xs font-semibold uppercase tracking-wider">Total Outstanding</span>
               </div>
               <div className="flex items-end justify-between">
-                <p className="text-2xl font-bold text-zinc-900">
+                <p className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE]">
                   {summary.totalOutstanding?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}
                 </p>
               </div>
@@ -202,44 +202,44 @@ export default function BankReconciliation() {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="card p-4 flex justify-between items-center bg-emerald-50/50 border-emerald-100">
+            <div className="card p-4 flex justify-between items-center bg-emerald-50/50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/30">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Outstanding Deposits</p>
-                <p className="text-xl font-bold text-emerald-700 mt-1">{summary.outstandingDeposits?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Outstanding Deposits</p>
+                <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">{summary.outstandingDeposits?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}</p>
               </div>
-              <div className="p-3 bg-emerald-100 rounded-full text-emerald-600">
+              <div className="p-3 bg-emerald-100 dark:bg-emerald-500/20 rounded-full text-emerald-600 dark:text-emerald-400">
                 <ArrowDownLeft size={20} />
               </div>
             </div>
-            <div className="card p-4 flex justify-between items-center bg-rose-50/50 border-rose-100">
+            <div className="card p-4 flex justify-between items-center bg-rose-50/50 dark:bg-rose-500/10 border-rose-100 dark:border-rose-500/30">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-rose-600">Outstanding Withdrawals</p>
-                <p className="text-xl font-bold text-rose-700 mt-1">{summary.outstandingWithdrawals?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400">Outstanding Withdrawals</p>
+                <p className="text-xl font-bold text-rose-700 dark:text-rose-300 mt-1">{summary.outstandingWithdrawals?.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) || '₹0.00'}</p>
               </div>
-              <div className="p-3 bg-rose-100 rounded-full text-rose-600">
+              <div className="p-3 bg-rose-100 dark:bg-rose-500/20 rounded-full text-rose-600 dark:text-rose-400">
                 <ArrowUpRight size={20} />
               </div>
             </div>
-            <div className="card p-4 flex justify-between items-center bg-zinc-50/50">
+            <div className="card p-4 flex justify-between items-center bg-zinc-50/50 dark:bg-[#161922]">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600">Transactions State</p>
-                <p className="text-lg font-bold text-zinc-800 mt-1 flex items-center gap-2">
-                  <span className="text-emerald-600" title="Matched">{summary.matchedTransactionCount || 0}</span>
-                  <span className="text-zinc-300">/</span>
-                  <span className="text-amber-600" title="Unmatched">{summary.unmatchedTransactionCount || 0}</span>
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-[#A0A6B5]">Transactions State</p>
+                <p className="text-lg font-bold text-zinc-800 dark:text-[#E6E8EE] mt-1 flex items-center gap-2">
+                  <span className="text-emerald-600 dark:text-emerald-400" title="Matched">{summary.matchedTransactionCount || 0}</span>
+                  <span className="text-zinc-300 dark:text-[#6B7184]">/</span>
+                  <span className="text-amber-600 dark:text-amber-400" title="Unmatched">{summary.unmatchedTransactionCount || 0}</span>
                 </p>
               </div>
-              <div className="p-3 bg-zinc-100 rounded-full text-zinc-500">
+              <div className="p-3 bg-zinc-100 dark:bg-[#222736] rounded-full text-zinc-500 dark:text-[#A0A6B5]">
                 <Activity size={20} />
               </div>
             </div>
           </div>
 
           <div className="card overflow-hidden">
-            <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
-              <h2 className="font-semibold text-zinc-800 flex items-center gap-2">
+            <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922]">
+              <h2 className="font-semibold text-zinc-800 dark:text-[#E6E8EE] flex items-center gap-2">
                 Unmatched Transactions
-                <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                <span className="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full text-xs font-medium">
                   {summary.unmatchedTransactionCount || unmatchedList.length}
                 </span>
               </h2>
@@ -264,7 +264,7 @@ export default function BankReconciliation() {
                   ) : unmatchedList.length === 0 ? (
                     <tr>
                       <td colSpan={7}>
-                        <div className="p-12 text-center text-zinc-500">
+                        <div className="p-12 text-center text-zinc-500 dark:text-[#A0A6B5]">
                           <CheckCircle size={32} className="mx-auto mb-3 text-emerald-400" />
                           All caught up! No unmatched transactions found.
                         </div>
@@ -273,36 +273,36 @@ export default function BankReconciliation() {
                   ) : (
                     unmatchedList.map((record) => {
                       const typeColors = {
-                        DEPOSIT: 'bg-emerald-50 text-emerald-700',
-                        WITHDRAWAL: 'bg-rose-50 text-rose-700',
-                        TRANSFER: 'bg-blue-50 text-blue-700',
-                        PAYMENT: 'bg-amber-50 text-amber-700'
+                        DEPOSIT: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+                        WITHDRAWAL: 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400',
+                        TRANSFER: 'bg-blue-50 dark:bg-[#4C8DFF]/10 text-blue-700 dark:text-[#4C8DFF]',
+                        PAYMENT: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400'
                       };
                       return (
                         <tr key={record.transactionId || record.id}>
                           <td className="whitespace-nowrap">{new Date(record.transactionDate).toLocaleDateString()}</td>
-                          <td className="font-medium text-zinc-900">
+                          <td className="font-medium text-zinc-900 dark:text-[#E6E8EE]">
                             {record.referenceNo || '-'} {record.utrNo ? ` / ${record.utrNo}` : ''}
                           </td>
                           <td className="max-w-[160px] truncate" title={record.narration}>
                             {record.narration || '-'}
                           </td>
                           <td>
-                            <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${typeColors[record.transactionType] || 'bg-zinc-100 text-zinc-700'}`}>
+                            <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${typeColors[record.transactionType] || 'bg-zinc-100 dark:bg-[#222736] text-zinc-700 dark:text-[#E6E8EE]'}`}>
                               {record.transactionType}
                             </span>
                           </td>
-                          <td className="text-right font-medium text-rose-600">
+                          <td className="text-right font-medium text-rose-600 dark:text-rose-400">
                             {record.debitAmount > 0 ? record.debitAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : '-'}
                           </td>
-                          <td className="text-right font-medium text-emerald-600">
+                          <td className="text-right font-medium text-emerald-600 dark:text-emerald-400">
                             {record.creditAmount > 0 ? record.creditAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : '-'}
                           </td>
                           <td>
                             <div className="flex items-center justify-end">
                               <button 
                                 onClick={() => handleReconcile(record)} 
-                                className="btn-secondary text-emerald-600 py-1 px-2 text-xs flex items-center gap-1"
+                                className="btn-secondary text-emerald-600 dark:text-emerald-400 py-1 px-2 text-xs flex items-center gap-1"
                                 disabled={reconcileMutation.isPending}
                               >
                                 <CheckCircle size={14} /> Reconcile
@@ -316,7 +316,7 @@ export default function BankReconciliation() {
                 </tbody>
               </table>
               {!isLoading && unmatchedList.length > 0 && pageInfo && (
-                <div className="p-4 border-t border-zinc-100 bg-white rounded-b-xl">
+                <div className="p-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] rounded-b-xl">
                   <Pagination
                     page={pageInfo.currentPage || page || 0}
                     pageSize={pageInfo.pageSize || pageSize || 10}

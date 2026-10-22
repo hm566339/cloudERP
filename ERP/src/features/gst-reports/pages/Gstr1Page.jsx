@@ -35,7 +35,7 @@ const getStatusBadge = (status) => {
       return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-rose-50 text-rose-700 border-rose-200">{status}</span>;
     case 'DRAFT': 
     case 'REVERSED': 
-      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 text-zinc-600 border-zinc-200">{status}</span>;
+      return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]">{status}</span>;
     case 'SUBMITTED': 
     default: 
       return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200">{status || '-'}</span>;
@@ -45,10 +45,10 @@ const getStatusBadge = (status) => {
 const InvoiceOverview = ({ invoice, selectedCompany }) => {
   const currency = selectedCompany?.baseCurrency || 'INR';
   return (
-    <div className="p-5 flex flex-col bg-white rounded-lg shadow-sm m-4 border border-zinc-100">
+    <div className="p-5 flex flex-col bg-white dark:bg-[#161922] rounded-lg shadow-sm m-4 border border-zinc-100 dark:border-[#2A2F3D]">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-lg font-bold text-zinc-900">{invoice.invoiceNumber || '-'}</h3>
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">{invoice.invoiceNumber || '-'}</h3>
           <p className="text-[8.8px] text-zinc-500 font-medium tracking-wide mt-1">
             Date: <span className="font-semibold text-zinc-700">{invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : '-'}</span> | 
             Type: <span className="font-semibold text-zinc-700">{invoice.invoiceType ? invoice.invoiceType.replace(/_/g, ' ') : '-'}</span> | 
@@ -59,15 +59,15 @@ const InvoiceOverview = ({ invoice, selectedCompany }) => {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
         <div>
           <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Customer</p>
-          <p className="font-bold text-zinc-900 text-sm">{invoice.customerName || invoice.partyName || '-'}</p>
+          <p className="font-bold text-zinc-900 dark:text-[#E6E8EE] text-sm">{invoice.customerName || invoice.partyName || '-'}</p>
         </div>
         <div>
           <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Taxable Value</p>
-          <p className="font-bold text-zinc-900 text-sm">{currency} {formatCurrency(invoice.taxableAmount ?? invoice.taxableValue)}</p>
+          <p className="font-bold text-zinc-900 dark:text-[#E6E8EE] text-sm">{currency} {formatCurrency(invoice.taxableAmount ?? invoice.taxableValue)}</p>
         </div>
         <div>
           <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Total Tax</p>
-          <p className="font-bold text-zinc-900 text-sm">{currency} {formatCurrency((invoice.cgst || 0) + (invoice.sgst || 0) + (invoice.igst || 0) + (invoice.cess || 0))}</p>
+          <p className="font-bold text-zinc-900 dark:text-[#E6E8EE] text-sm">{currency} {formatCurrency((invoice.cgst || 0) + (invoice.sgst || 0) + (invoice.igst || 0) + (invoice.cess || 0))}</p>
         </div>
         <div>
           <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Total Value</p>
@@ -75,7 +75,7 @@ const InvoiceOverview = ({ invoice, selectedCompany }) => {
         </div>
         <div>
           <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Place of Supply</p>
-          <p className="font-bold text-zinc-900 text-sm">{invoice.placeOfSupply || invoice.stateCode || '-'}</p>
+          <p className="font-bold text-zinc-900 dark:text-[#E6E8EE] text-sm">{invoice.placeOfSupply || invoice.stateCode || '-'}</p>
         </div>
       </div>
       
@@ -284,21 +284,21 @@ export default function Gstr1Page() {
   const currency = selectedCompany?.baseCurrency || 'INR';
 
   return (
-    <div className="animate-fade-in pb-12 bg-zinc-50/30 min-h-screen">
+    <div className="animate-fade-in pb-12 bg-zinc-50/30 dark:bg-[#0F1117] min-h-screen">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-40 bg-white border-b border-zinc-200 shadow-sm pt-4 pb-4 mb-6">
+      <div className="sticky top-0 z-40 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] shadow-sm pt-4 pb-4 mb-6">
         <div className="max-w-[1280px] mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-black text-zinc-900 tracking-tight">GSTR-1 Report</h1>
+              <h1 className="text-2xl font-black text-zinc-900 dark:text-[#E6E8EE] tracking-tight">GSTR-1 Report</h1>
               <p className="text-sm font-medium text-zinc-500 mt-1">Monthly outward GST return</p>
             </div>
             <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-              <button onClick={() => window.print()} className="h-9 px-4 bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 rounded-lg text-sm font-bold shadow-sm transition-all focus:ring-2 focus:ring-zinc-200 outline-none flex items-center gap-2">
+              <button onClick={() => window.print()} className="h-9 px-4 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 rounded-lg text-sm font-bold shadow-sm transition-all focus:ring-2 focus:ring-zinc-200 outline-none flex items-center gap-2">
                 <Printer size={16} />
                 Print
               </button>
-              <button onClick={() => handleExport('pdf')} disabled={exportingPdf || isLoading} className="h-9 px-4 bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 rounded-lg text-sm font-bold shadow-sm transition-all focus:ring-2 focus:ring-zinc-200 outline-none flex items-center gap-2">
+              <button onClick={() => handleExport('pdf')} disabled={exportingPdf || isLoading} className="h-9 px-4 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 rounded-lg text-sm font-bold shadow-sm transition-all focus:ring-2 focus:ring-zinc-200 outline-none flex items-center gap-2">
                 {exportingPdf ? <RefreshCw size={16} className="animate-spin" /> : <Download size={16} />}
                 Export PDF
               </button>
@@ -323,8 +323,8 @@ export default function Gstr1Page() {
         {summaryCards.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
             {summaryCards.map((card, idx) => (
-              <div key={idx} className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-center">
-                <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">{card.label}</p>
+              <div key={idx} className="bg-white dark:bg-[#161922] p-5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex flex-col justify-center">
+                <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1.5">{card.label}</p>
                 <p className={`text-xl font-bold ${card.color}`}>
                   {card.isCurrency ? `${currency} ` : ''}{card.isCurrency ? formatCurrency(card.value) : card.value}
                 </p>
@@ -333,21 +333,21 @@ export default function Gstr1Page() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-zinc-200 flex flex-col h-full overflow-hidden">
+        <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] flex flex-col h-full overflow-hidden">
           {/* Filter Bar Section */}
-          <div className="p-4 border-b border-zinc-200 bg-white space-y-3">
+          <div className="p-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] space-y-3">
             <form onSubmit={handleSearch}>
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
                   {/* Return Month */}
                   <div>
-                    <label className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block">
+                    <label className="text-[8.8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                       Return Month
                     </label>
                     <CustomSelect
                       value={filters.month}
                       onChange={(e) => handleFilterChange('month', Number(e.target.value))}
-                      className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all cursor-pointer"
+                      className="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all cursor-pointer"
                     >
                       {MONTHS.map((m, idx) => (
                         <option key={m} value={idx + 1}>{m}</option>
@@ -357,13 +357,13 @@ export default function Gstr1Page() {
 
                   {/* Return Year */}
                   <div>
-                    <label className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block">
+                    <label className="text-[8.8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                       Return Year
                     </label>
                     <CustomSelect
                       value={filters.year}
                       onChange={(e) => handleFilterChange('year', Number(e.target.value))}
-                      className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all cursor-pointer"
+                      className="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all cursor-pointer"
                     >
                       {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 4 + i).map((y) => (
                         <option key={y} value={y}>{y}</option>
@@ -373,7 +373,7 @@ export default function Gstr1Page() {
                   
                   {/* GSTIN */}
                   <div>
-                    <label className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block">
+                    <label className="text-[8.8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                       GSTIN (Optional)
                     </label>
                     <input
@@ -382,7 +382,7 @@ export default function Gstr1Page() {
                       onChange={(e) => handleFilterChange('gstin', e.target.value)}
                       placeholder="e.g. 27AABCU9603R1ZM"
                       maxLength={15}
-                      className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
+                      className="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -401,7 +401,7 @@ export default function Gstr1Page() {
                   <button
                     type="button"
                     onClick={handleClearFilters}
-                    className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95"
+                    className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95"
                     title="Reset All Filters"
                   >
                     <RotateCcw size={14} />
@@ -414,7 +414,7 @@ export default function Gstr1Page() {
                     className={`h-9 px-3 text-[10.4px] font-semibold rounded-lg border transition-all flex items-center gap-1.5 active:scale-95 ${
                       showAdvancedFilters || activeAdvancedFilterCount > 0
                         ? 'bg-zinc-100 border-zinc-300 text-zinc-900 shadow-sm'
-                        : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                        : 'bg-white dark:bg-surface-dark border-zinc-200 dark:border-border-dark text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-hover-dark/40'
                     }`}
                   >
                     <Filter size={14} />
@@ -432,7 +432,7 @@ export default function Gstr1Page() {
               {/* Advanced Filter Panel */}
               {showAdvancedFilters && (
                 <div className="pt-3 border-t border-zinc-100 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="bg-zinc-50/70 p-4 rounded-xl border border-zinc-200/80 space-y-4">
+                  <div className="bg-zinc-50/70 dark:bg-[#1D212C] p-4 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-[9.6px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
                         <Filter size={13} className="text-zinc-500" />
@@ -454,7 +454,7 @@ export default function Gstr1Page() {
                         <CustomSelect
                           value={filters.invoiceType}
                           onChange={(e) => handleFilterChange('invoiceType', e.target.value)}
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none cursor-pointer"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none cursor-pointer"
                         >
                           <option value="">All Types</option>
                           <option value="B2B">B2B (Business to Business)</option>
@@ -470,7 +470,7 @@ export default function Gstr1Page() {
                           onChange={(e) => handleFilterChange('stateCode', e.target.value)}
                           placeholder="e.g. 27"
                           maxLength={2}
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
                         />
                       </div>
                       <div>
@@ -480,7 +480,7 @@ export default function Gstr1Page() {
                           value={filters.gstRate}
                           onChange={(e) => handleFilterChange('gstRate', e.target.value)}
                           placeholder="e.g. 18"
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
                         />
                       </div>
                       <div>
@@ -489,7 +489,7 @@ export default function Gstr1Page() {
                           type="text"
                           value={filters.hsn}
                           onChange={(e) => handleFilterChange('hsn', e.target.value)}
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
                         />
                       </div>
                       <div>
@@ -498,7 +498,7 @@ export default function Gstr1Page() {
                           type="text"
                           value={filters.customerId}
                           onChange={(e) => handleFilterChange('customerId', e.target.value)}
-                          className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
+                          className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
                         />
                       </div>
                     </div>
@@ -509,9 +509,9 @@ export default function Gstr1Page() {
           </div>
 
           {/* Table */}
-          <div className="flex-1 overflow-auto bg-white">
+          <div className="flex-1 overflow-auto bg-white dark:bg-[#161922]">
             <table className="w-full table-fixed text-left text-[10.4px] min-w-[960px]">
-              <thead className="bg-zinc-50/80 sticky top-0 z-10 backdrop-blur-xs border-b border-zinc-200 text-zinc-500 font-medium whitespace-nowrap">
+              <thead className="bg-zinc-50/80 dark:bg-[#1D212C] sticky top-0 z-10 backdrop-blur-xs border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] font-medium whitespace-nowrap">
                 <tr>
                   <th className="p-4 w-10 text-center">#</th>
                   <SortableHeader field="customerName" currentSortBy={filters.sortBy} currentSortOrder={filters.sortDirection} onSort={handleColumnSort} className="p-4 w-[12%]">Party</SortableHeader>
@@ -553,7 +553,7 @@ export default function Gstr1Page() {
                             {((filters.page - 1) * filters.size) + index + 1}
                           </td>
                           <td className="p-4 align-middle truncate whitespace-nowrap">
-                            <span className="font-semibold text-zinc-900 group-hover:text-zinc-600 transition-colors" title={record.customerName || record.partyName}>
+                            <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE] group-hover:text-zinc-600 dark:group-hover:text-blue-400 transition-colors" title={record.customerName || record.partyName}>
                               {record.customerName || record.partyName || '-'}
                             </span>
                           </td>
@@ -570,7 +570,7 @@ export default function Gstr1Page() {
                             {record.invoiceType || '-'}
                           </td>
                           <td className="p-4 align-middle text-right whitespace-nowrap">
-                            <span className="font-medium text-zinc-900">
+                            <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">
                               {formatCurrency(record.taxableAmount ?? record.taxableValue)}
                             </span>
                           </td>
@@ -603,7 +603,7 @@ export default function Gstr1Page() {
                         </tr>
                         {isExpanded && (
                           <tr>
-                            <td colSpan={13} className="p-0 bg-zinc-50/50 border-b border-zinc-200/50">
+                            <td colSpan={13} className="p-0 bg-zinc-50/50 dark:bg-[#1D212C] border-b border-zinc-200/50 dark:border-[#2A2F3D]">
                               <InvoiceOverview invoice={record} selectedCompany={selectedCompany} />
                             </td>
                           </tr>

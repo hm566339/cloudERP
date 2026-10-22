@@ -82,9 +82,9 @@ export default function DateRangeFilter({ value, onChange, label }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="relative flex items-center gap-1.5 bg-zinc-50 border border-zinc-200 rounded-lg pl-3 pr-1 hover:bg-zinc-100/70 transition-colors focus-within:ring-2 focus-within:ring-zinc-900/10 focus-within:border-zinc-400 w-full overflow-hidden">
-        <CalendarDays size={14} className="text-zinc-400 shrink-0" />
-        {label && <span className="text-xs font-medium text-zinc-500 whitespace-nowrap shrink-0">{label}:</span>}
+      <div className="relative flex items-center gap-1.5 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg pl-3 pr-1 hover:bg-zinc-100/70 dark:hover:bg-[#222736] transition-colors focus-within:ring-2 focus-within:ring-[#4C8DFF]/20 focus-within:border-[#4C8DFF] w-full overflow-hidden">
+        <CalendarDays size={14} className="text-zinc-400 dark:text-[#6B7184] shrink-0" />
+        {label && <span className="text-xs font-medium text-zinc-500 dark:text-[#A0A6B5] whitespace-nowrap shrink-0">{label}:</span>}
         <CustomSelect 
           value={mode}
           onChange={handleModeChange}
@@ -95,8 +95,8 @@ export default function DateRangeFilter({ value, onChange, label }) {
             { value: 'month', label: 'This Month' },
             { value: 'custom', label: 'Custom Range...' }
           ]}
-          buttonClassName="w-full bg-transparent border-none text-xs font-semibold text-zinc-800 p-0 py-2 cursor-pointer focus:outline-none flex justify-between items-center"
-          dropdownClassName="bg-white border border-zinc-200 rounded-xl shadow-xl py-1.5 max-h-[200px] overflow-y-auto w-[160px]"
+          buttonClassName="w-full bg-transparent border-none text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE] p-0 py-2 cursor-pointer focus:outline-none flex justify-between items-center"
+          dropdownClassName="bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-xl py-1.5 max-h-[200px] overflow-y-auto w-[160px]"
         />
       </div>
 
@@ -106,14 +106,14 @@ export default function DateRangeFilter({ value, onChange, label }) {
             type="date" 
             value={customStart}
             onChange={(e) => handleCustomChange('start', e.target.value)}
-            className="flex-1 min-w-0 bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-800 focus:outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5 font-medium"
+            className="flex-1 min-w-0 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg px-2.5 py-1.5 text-xs text-zinc-800 dark:text-[#E6E8EE] focus:outline-none focus:border-[#4C8DFF] focus:ring-2 focus:ring-[#4C8DFF]/20 font-medium"
           />
-          <span className="text-zinc-400 text-xs font-medium">to</span>
+          <span className="text-zinc-400 dark:text-[#6B7184] text-xs font-medium">to</span>
           <input 
             type="date" 
             value={customEnd}
             onChange={(e) => handleCustomChange('end', e.target.value)}
-            className="flex-1 min-w-0 bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-xs text-zinc-800 focus:outline-none focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5 font-medium"
+            className="flex-1 min-w-0 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg px-2.5 py-1.5 text-xs text-zinc-800 dark:text-[#E6E8EE] focus:outline-none focus:border-[#4C8DFF] focus:ring-2 focus:ring-[#4C8DFF]/20 font-medium"
           />
         </div>
       )}

@@ -28,17 +28,17 @@ export default function AddressSection({ billingAddress, deliveryAddress }) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden mb-6">
+    <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden mb-6">
       <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Billing Address</span>
-          <p className="text-sm text-zinc-800 whitespace-pre-wrap leading-relaxed bg-zinc-50 p-4 rounded-lg border border-zinc-100 min-h-[64px]">
+          <span className="text-xs font-semibold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-2 block">Billing Address</span>
+          <p className="text-sm text-zinc-800 dark:text-[#E6E8EE] whitespace-pre-wrap leading-relaxed bg-zinc-50 dark:bg-[#1D212C] p-4 rounded-lg border border-zinc-100 dark:border-[#2A2F3D] min-h-[64px]">
             {parseAddress(billingAddress)}
           </p>
         </div>
         <div>
-          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Delivery Address</span>
-          <p className="text-sm text-zinc-800 whitespace-pre-wrap leading-relaxed bg-zinc-50 p-4 rounded-lg border border-zinc-100 min-h-[64px]">
+          <span className="text-xs font-semibold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-2 block">Delivery Address</span>
+          <p className="text-sm text-zinc-800 dark:text-[#E6E8EE] whitespace-pre-wrap leading-relaxed bg-zinc-50 dark:bg-[#1D212C] p-4 rounded-lg border border-zinc-100 dark:border-[#2A2F3D] min-h-[64px]">
             {parseAddress(deliveryAddress)}
           </p>
         </div>

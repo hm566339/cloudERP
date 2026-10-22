@@ -1,4 +1,7 @@
 import apiClient from '../common/client';
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('FEATURE_API');
 
 /**
  * Verified SSO Feature Management APIs
@@ -224,7 +227,7 @@ export const getRoleFeatures = async (roleId) => {
     return response.data?.data || response.data || [];
   } catch (err) {
     if (err?.response?.status === 404 || err?.response?.status === 405) {
-      console.info(`[RoleFeatures] GET /api/sso/role/${roleId}/features not implemented on backend yet. Using local state.`);
+      logger.info(`[RoleFeatures] GET /api/sso/role/${roleId}/features not implemented on backend yet. Using local state.`);
       return [];
     }
     throw err;

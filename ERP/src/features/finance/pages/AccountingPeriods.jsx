@@ -188,7 +188,7 @@ export default function AccountingPeriods() {
       sortable: true,
       align: 'center',
       render: (val, row) => (
-        <span className="font-mono text-xs text-zinc-500 font-semibold">
+        <span className="font-mono text-xs text-zinc-500 dark:text-[#6B7184] font-semibold">
           #{row.periodNumber ?? '-'}
         </span>
       )
@@ -198,7 +198,7 @@ export default function AccountingPeriods() {
       label: 'Period Name',
       sortable: true,
       render: (val, row) => (
-        <span className="font-semibold text-zinc-900">{row.periodName || '-'}</span>
+        <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{row.periodName || '-'}</span>
       )
     },
     {
@@ -206,7 +206,7 @@ export default function AccountingPeriods() {
       label: 'Type',
       sortable: true,
       render: (val, row) => (
-        <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded border bg-zinc-50 text-zinc-700 border-zinc-200">
+        <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded border bg-zinc-50 dark:bg-[#1D212C] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]">
           {row.periodType || '-'}
         </span>
       )
@@ -215,13 +215,13 @@ export default function AccountingPeriods() {
       id: 'startDate',
       label: 'Start Date',
       sortable: true,
-      render: (val, row) => <span className="text-zinc-600 text-xs">{row.startDate || '-'}</span>
+      render: (val, row) => <span className="text-zinc-600 dark:text-[#A0A6B5] text-xs">{row.startDate || '-'}</span>
     },
     {
       id: 'endDate',
       label: 'End Date',
       sortable: true,
-      render: (val, row) => <span className="text-zinc-600 text-xs">{row.endDate || '-'}</span>
+      render: (val, row) => <span className="text-zinc-600 dark:text-[#A0A6B5] text-xs">{row.endDate || '-'}</span>
     },
     {
       id: 'status',
@@ -234,10 +234,10 @@ export default function AccountingPeriods() {
         return (
           <span
             className={`px-2.5 py-0.5 text-xs font-semibold rounded-md border inline-flex items-center gap-1.5 ${isOpen
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50'
                 : isLocked
-                  ? 'bg-red-50 text-red-700 border-red-200'
-                  : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                  ? 'bg-red-50 dark:bg-rose-950/40 text-red-700 dark:text-rose-400 border-red-200 dark:border-rose-800/50'
+                  : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]'
               }`}
           >
             <span
@@ -357,24 +357,24 @@ export default function AccountingPeriods() {
     const isOpen = period.status === 'OPEN';
     const isLocked = period.status === 'LOCKED';
     return (
-      <div className="p-4 bg-white border border-zinc-100 rounded-lg shadow-2xs">
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100">
+      <div className="p-4 bg-white dark:bg-[#161922] border border-zinc-100 dark:border-[#2A2F3D] rounded-lg shadow-2xs">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
           <div>
-            <h3 className="text-base font-bold text-zinc-900">{period.periodName}</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">{period.periodName}</h3>
+            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
               {period.fiscalYearName || period.fiscalYearId || 'N/A'} &mdash; Period #{period.periodNumber}
             </p>
           </div>
           <div className="flex gap-2">
-            <span className="px-2.5 py-0.5 text-xs font-semibold rounded-md border bg-zinc-50 text-zinc-600 border-zinc-200">
+            <span className="px-2.5 py-0.5 text-xs font-semibold rounded-md border bg-zinc-50 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]">
               {period.periodType}
             </span>
             <span
               className={`px-2.5 py-0.5 text-xs font-semibold rounded-md border inline-flex items-center gap-1.5 ${isOpen
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50'
                   : isLocked
-                    ? 'bg-red-50 text-red-700 border-red-200'
-                    : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                    ? 'bg-red-50 dark:bg-rose-950/40 text-red-700 dark:text-rose-400 border-red-200 dark:border-rose-800/50'
+                    : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]'
                 }`}
             >
               <span
@@ -387,28 +387,28 @@ export default function AccountingPeriods() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
           <div>
-            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Start Date</p>
-            <p className="text-sm font-medium text-zinc-900 mt-1">{period.startDate || '-'}</p>
+            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Start Date</p>
+            <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{period.startDate || '-'}</p>
           </div>
           <div>
-            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">End Date</p>
-            <p className="text-sm font-medium text-zinc-900 mt-1">{period.endDate || '-'}</p>
+            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">End Date</p>
+            <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{period.endDate || '-'}</p>
           </div>
           <div>
-            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Total Transactions</p>
-            <p className="text-sm font-medium text-zinc-900 mt-1">{period.totalTransactions || 0}</p>
+            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Total Transactions</p>
+            <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{period.totalTransactions || 0}</p>
           </div>
           <div>
-            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Total Sales</p>
-            <p className="text-sm font-medium text-emerald-600 mt-1">₹{(period.totalSales || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Total Sales</p>
+            <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mt-1">₹{(period.totalSales || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           </div>
           <div>
-            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Total Purchases</p>
-            <p className="text-sm font-medium text-red-600 mt-1">₹{(period.totalPurchases || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Total Purchases</p>
+            <p className="text-sm font-medium text-red-600 dark:text-rose-400 mt-1">₹{(period.totalPurchases || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           </div>
           <div>
-            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Last Transaction</p>
-            <p className="text-sm font-medium text-zinc-900 mt-1">{period.lastTransactionDate || '-'}</p>
+            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Last Transaction</p>
+            <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{period.lastTransactionDate || '-'}</p>
           </div>
         </div>
       </div>
@@ -416,7 +416,7 @@ export default function AccountingPeriods() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Accounting Periods"
         description="Manage accounting periods"
@@ -426,7 +426,7 @@ export default function AccountingPeriods() {
         <RequirePermission module="ACCOUNTING_PERIODS" action="CREATE">
           <button
             onClick={() => setIsPresetModalOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-zinc-700 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all active:scale-95 shadow-2xs"
+            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all active:scale-95 shadow-2xs"
           >
             <Layers size={14} />
             <span>Generate Presets</span>

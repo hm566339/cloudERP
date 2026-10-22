@@ -91,25 +91,25 @@ export default function ModuleRouteFormModal({ isOpen, onClose, initialData = nu
   const isLoading = isProcessing;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-scale-up">
-        <div className="flex justify-between items-center p-6 border-b border-zinc-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 dark:bg-black/70 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-scale-up border border-zinc-200 dark:border-[#2A2F3D]">
+        <div className="flex justify-between items-center p-6 border-b border-zinc-100 dark:border-[#2A2F3D]">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+            <div className="p-2 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-lg">
               <Network size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-zinc-900">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">
                 {isEdit ? 'Edit Module Route' : 'Create Module Route'}
               </h2>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">
                 {isEdit ? 'Update existing API route mapping' : 'Add a new API route mapping'}
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+            className="p-2 text-zinc-400 dark:text-[#A0A6B5] hover:text-zinc-600 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg transition-colors"
           >
             <X size={20} />
           </button>
@@ -117,7 +117,7 @@ export default function ModuleRouteFormModal({ isOpen, onClose, initialData = nu
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
           <div>
-            <label className="block text-xs font-bold text-zinc-700 mb-1.5 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-zinc-700 dark:text-[#E6E8EE] mb-1.5 uppercase tracking-wider">
               Module <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
@@ -136,7 +136,7 @@ export default function ModuleRouteFormModal({ isOpen, onClose, initialData = nu
                   />
                 )}
               />
-              <Layers size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none z-10" />
+              <Layers size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184] pointer-events-none z-10" />
             </div>
             {errors.moduleId && (
               <p className="mt-1.5 text-xs text-rose-500 flex items-center gap-1">
@@ -146,7 +146,7 @@ export default function ModuleRouteFormModal({ isOpen, onClose, initialData = nu
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-zinc-700 mb-1.5 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-zinc-700 dark:text-[#E6E8EE] mb-1.5 uppercase tracking-wider">
               API Pattern <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
@@ -159,7 +159,7 @@ export default function ModuleRouteFormModal({ isOpen, onClose, initialData = nu
                 placeholder="e.g. /api/hr/*"
                 className={`input-field pl-10 ${errors.apiPattern ? 'border-rose-300 focus:ring-rose-200' : ''}`}
               />
-              <Link size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+              <Link size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184] pointer-events-none" />
             </div>
             {errors.apiPattern && (
               <p className="mt-1.5 text-xs text-rose-500 flex items-center gap-1">
@@ -169,7 +169,7 @@ export default function ModuleRouteFormModal({ isOpen, onClose, initialData = nu
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-zinc-700 mb-1.5 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-zinc-700 dark:text-[#E6E8EE] mb-1.5 uppercase tracking-wider">
               Service URL <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
@@ -182,7 +182,7 @@ export default function ModuleRouteFormModal({ isOpen, onClose, initialData = nu
                 placeholder="e.g. http://hr-service:8080"
                 className={`input-field pl-10 ${errors.serviceUrl ? 'border-rose-300 focus:ring-rose-200' : ''}`}
               />
-              <Globe size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+              <Globe size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184] pointer-events-none" />
             </div>
             {errors.serviceUrl && (
               <p className="mt-1.5 text-xs text-rose-500 flex items-center gap-1">
@@ -193,7 +193,7 @@ export default function ModuleRouteFormModal({ isOpen, onClose, initialData = nu
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-zinc-700 mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-zinc-700 dark:text-[#E6E8EE] mb-1.5 uppercase tracking-wider">
                 Route Order
               </label>
               <div className="relative">
@@ -202,24 +202,24 @@ export default function ModuleRouteFormModal({ isOpen, onClose, initialData = nu
                   {...register('routeOrder')}
                   className="input-field pl-10"
                 />
-                <Hash size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                <Hash size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184] pointer-events-none" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-bold text-zinc-700 mb-1.5 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-zinc-700 dark:text-[#E6E8EE] mb-1.5 uppercase tracking-wider">
                 Status
               </label>
               <div className="flex items-center h-[33.6px]">
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" {...register('active')} className="sr-only peer" />
-                  <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1.6px] after:left-[1.6px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-zinc-900"></div>
-                  <span className="ml-3 text-sm font-medium text-zinc-700">Active</span>
+                  <div className="w-11 h-6 bg-zinc-200 dark:bg-[#2A2F3D] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1.6px] after:left-[1.6px] after:bg-white after:border-zinc-300 dark:after:border-zinc-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-zinc-900 dark:peer-checked:bg-primary"></div>
+                  <span className="ml-3 text-sm font-medium text-zinc-700 dark:text-[#E6E8EE]">Active</span>
                 </label>
               </div>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-zinc-100 flex justify-end gap-3">
+          <div className="pt-4 border-t border-zinc-100 dark:border-[#2A2F3D] flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}

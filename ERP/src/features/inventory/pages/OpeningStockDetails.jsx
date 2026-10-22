@@ -252,7 +252,7 @@ export default function OpeningStockDetails() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
+            className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors"
           >
             Cancel
           </button>
@@ -275,7 +275,7 @@ export default function OpeningStockDetails() {
         {/* Left Column: Header Information */}
         <div className="lg:col-span-1 space-y-6">
           <div className="card p-5 space-y-5">
-            <h2 className="text-base font-bold text-zinc-900 border-b border-zinc-100 pb-3 mb-4">Document Details</h2>
+            <h2 className="text-base font-bold text-zinc-900 border-b border-zinc-100 dark:border-[#2A2F3D] pb-3 mb-4">Document Details</h2>
             
             <div>
               <label className="text-[9.6px] font-bold text-zinc-700 mb-1.5 block">
@@ -410,7 +410,7 @@ export default function OpeningStockDetails() {
                   </thead>
                   <tbody>
                     {formData.lines.map((line, index) => (
-                    <tr key={index} className="border-b border-zinc-100 hover:bg-zinc-50/30 transition-colors group">
+                    <tr key={index} className="border-b border-zinc-100 dark:border-[#2A2F3D] hover:bg-zinc-50/30 transition-colors group">
                       <td className="px-3 py-2 text-center text-xs font-medium text-zinc-400">
                           {index + 1}
                         </td>
@@ -419,7 +419,7 @@ export default function OpeningStockDetails() {
                             value={line.productId}
                             onChange={(e) => handleLineChange(index, 'productId', e.target.value)}
                             className={`w-full h-8 px-2 rounded border text-xs outline-none focus:border-primary ${
-                              errors[`line_${index}_productId`] ? 'border-rose-300 bg-rose-50' : 'border-zinc-200 bg-white'
+                              errors[`line_${index}_productId`] ? 'border-rose-300 bg-rose-50' : 'border-zinc-200 dark:border-border-dark bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100'
                             }`}
                           >
                             <option value="">Select Product</option>
@@ -435,7 +435,7 @@ export default function OpeningStockDetails() {
                             value={line.warehouseLocationId}
                             onChange={(e) => handleLineChange(index, 'warehouseLocationId', e.target.value)}
                             className={`w-full h-8 px-2 rounded border text-xs outline-none focus:border-primary ${
-                              errors[`line_${index}_locationId`] ? 'border-rose-300 bg-rose-50' : 'border-zinc-200 bg-white'
+                              errors[`line_${index}_locationId`] ? 'border-rose-300 bg-rose-50' : 'border-zinc-200 dark:border-border-dark bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100'
                             }`}
                           >
                             <option value="">Select Location</option>
@@ -453,7 +453,7 @@ export default function OpeningStockDetails() {
                             value={line.quantity}
                             onChange={(e) => handleLineChange(index, 'quantity', e.target.value)}
                             className={`w-full h-8 px-2 rounded border text-xs outline-none focus:border-primary ${
-                              errors[`line_${index}_quantity`] ? 'border-rose-300 bg-rose-50' : 'border-zinc-200 bg-white'
+                              errors[`line_${index}_quantity`] ? 'border-rose-300 bg-rose-50' : 'border-zinc-200 dark:border-border-dark bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100'
                             }`}
                           />
                         </td>
@@ -464,7 +464,7 @@ export default function OpeningStockDetails() {
                             step="0.01"
                             value={line.unitCost}
                             onChange={(e) => handleLineChange(index, 'unitCost', e.target.value)}
-                            className="w-full h-8 px-2 rounded border border-zinc-200 bg-white text-xs outline-none focus:border-primary"
+                            className="w-full h-8 px-2 rounded border border-zinc-200 dark:border-border-dark bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 text-xs outline-none focus:border-primary"
                           />
                         </td>
                         <td className="px-3 py-2">

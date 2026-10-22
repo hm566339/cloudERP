@@ -46,7 +46,7 @@ export default function InventoryPeriodForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white dark:bg-card-dark">
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
         
         {/* Period Name */}
@@ -60,7 +60,7 @@ export default function InventoryPeriodForm({
             value={formData.periodName}
             onChange={handleChange}
             placeholder="e.g. Q1 2026, March 2026"
-            className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+            className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
               errors.periodName ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
             }`}
             autoFocus
@@ -83,7 +83,7 @@ export default function InventoryPeriodForm({
               name="startDate"
               value={formData.startDate}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.startDate ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -104,7 +104,7 @@ export default function InventoryPeriodForm({
               name="endDate"
               value={formData.endDate}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.endDate ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -152,12 +152,12 @@ export default function InventoryPeriodForm({
 
       </div>
 
-      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto shrink-0">
+      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 mt-auto shrink-0">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

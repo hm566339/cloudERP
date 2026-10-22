@@ -179,7 +179,7 @@ export default function WorkflowActionButtons({
   }
 
   return (
-    <div className={`flex flex-wrap items-center justify-between gap-3 p-3 bg-white border border-zinc-200 rounded-xl shadow-xs ${className}`}>
+    <div className={`flex flex-wrap items-center justify-between gap-3 p-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-xs ${className}`}>
       {/* Status & Alerts */}
       <div className="flex items-center gap-2">
         {uiState?.currentStage && (
@@ -293,7 +293,7 @@ export default function WorkflowActionButtons({
       {activeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-[#2A2F3D] pb-3">
               <h4 className="text-sm font-bold text-zinc-900">
                 Confirm {activeModal.replace(/_/g, ' ')}
               </h4>

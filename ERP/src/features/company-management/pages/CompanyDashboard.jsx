@@ -39,13 +39,13 @@ export default function CompanyDashboard() {
   if (loading && !metrics) {
     return (
       <div className="space-y-6">
-        <div className="h-24 bg-zinc-200/50 rounded-2xl animate-pulse"></div>
+        <div className="h-24 bg-zinc-200/50 dark:bg-[#1D212C] rounded-2xl animate-pulse"></div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-40 bg-zinc-200/50 rounded-2xl animate-pulse"></div>)}
+          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-40 bg-zinc-200/50 dark:bg-[#1D212C] rounded-2xl animate-pulse"></div>)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-80 bg-zinc-200/50 rounded-2xl animate-pulse"></div>
-          <div className="h-80 bg-zinc-200/50 rounded-2xl animate-pulse"></div>
+          <div className="h-80 bg-zinc-200/50 dark:bg-[#1D212C] rounded-2xl animate-pulse"></div>
+          <div className="h-80 bg-zinc-200/50 dark:bg-[#1D212C] rounded-2xl animate-pulse"></div>
         </div>
       </div>
     );
@@ -53,13 +53,13 @@ export default function CompanyDashboard() {
 
   if (error || !metrics) {
     return (
-      <div className="p-12 text-center bg-white rounded-xl shadow-sm border border-rose-200 mt-10">
+      <div className="p-12 text-center bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-rose-200 dark:border-rose-900/50 mt-10">
         <AlertCircle size={48} className="mx-auto text-rose-400 mb-4" />
-        <h2 className="text-xl font-bold text-rose-700">Failed to Load Dashboard</h2>
-        <p className="text-rose-600/80 mt-2 max-w-md mx-auto mb-6">
+        <h2 className="text-xl font-bold text-rose-700 dark:text-rose-400">Failed to Load Dashboard</h2>
+        <p className="text-rose-600/80 dark:text-rose-300/80 mt-2 max-w-md mx-auto mb-6">
           {error || 'An unexpected error occurred while fetching dashboard metrics.'}
         </p>
-        <button onClick={fetchDashboardData} className="btn-primary bg-rose-600 hover:bg-rose-700">
+        <button onClick={fetchDashboardData} className="btn-primary bg-rose-600 hover:bg-rose-700 text-white">
           Try Again
         </button>
       </div>

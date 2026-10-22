@@ -56,10 +56,10 @@ export default function SalesDashboard() {
  <div className="space-y-6 animate-fade-in">
  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
  <div>
- <h1 className="text-2xl font-bold text-zinc-900">
+ <h1 className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE]">
  Sales & CRM Dashboard
  </h1>
- <p className="text-xs text-zinc-500 font-medium">
+ <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium">
  Track potential business leads, manage client accounts, process orders and review sales analytics
  </p>
  </div>
@@ -78,25 +78,25 @@ export default function SalesDashboard() {
  {/* Stats row */}
  {(canViewModule('sales_analytics') || canViewModule('sales') || canViewModule('crm')) && (
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
- <div className="card p-4">
- <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest block">
+ <div className="card dark:bg-[#161922] dark:border-[#2A2F3D] p-4">
+ <span className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-widest block">
  Pipeline Volume
  </span>
- <p className="currency text-xl font-bold text-zinc-900 mt-1"> ₹{leads.reduce((acc, c) => acc + (c.value || 0), 0).toLocaleString()}
+ <p className="currency text-xl font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1"> ₹{leads.reduce((acc, c) => acc + (c.value || 0), 0).toLocaleString()}
  </p>
  </div>
- <div className="card p-4">
- <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest block">
+ <div className="card dark:bg-[#161922] dark:border-[#2A2F3D] p-4">
+ <span className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-widest block">
  Total Won Leads
  </span>
- <p className="currency text-xl font-bold text-zinc-900 mt-1"> ₹{leads.filter((l) => l.stage === 'Won').reduce((acc, c) => acc + (c.value || 0), 0).toLocaleString()}
+ <p className="currency text-xl font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1"> ₹{leads.filter((l) => l.stage === 'Won').reduce((acc, c) => acc + (c.value || 0), 0).toLocaleString()}
  </p>
  </div>
- <div className="card p-4">
- <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest block">
+ <div className="card dark:bg-[#161922] dark:border-[#2A2F3D] p-4">
+ <span className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-widest block">
  Active Accounts
  </span>
- <p className="text-xl font-bold text-zinc-900 mt-1">
+ <p className="text-xl font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">
  14 Accounts
  </p>
  </div>
@@ -109,10 +109,10 @@ export default function SalesDashboard() {
  {['New', 'Qualified', 'Proposal', 'Won'].map((stage) => {
  const items = getLeadsByStage(stage)
  return (
- <div key={stage} className="card bg-zinc-50 p-4 space-y-4">
- <div className="flex justify-between items-center pb-2 border-b border-zinc-200">
- <span className="text-xs font-bold text-zinc-600 uppercase tracking-wider">{stage}</span>
- <span className="text-[8px] font-bold bg-zinc-200 text-zinc-500 px-2 py-0.5 rounded-full">
+ <div key={stage} className="card bg-zinc-50 dark:bg-[#161922] dark:border-[#2A2F3D] p-4 space-y-4">
+ <div className="flex justify-between items-center pb-2 border-b border-zinc-200 dark:border-[#2A2F3D]">
+ <span className="text-xs font-bold text-zinc-600 dark:text-[#E6E8EE] uppercase tracking-wider">{stage}</span>
+ <span className="text-[8px] font-bold bg-zinc-200 dark:bg-[#1D212C] text-zinc-500 dark:text-[#A0A6B5] px-2 py-0.5 rounded-full">
  {items.length}
  </span>
  </div>
@@ -121,21 +121,21 @@ export default function SalesDashboard() {
  {items.map((item) => (
  <div
  key={item.id}
- className="card p-3 space-y-2 group"
+ className="card dark:bg-[#1D212C] dark:border-[#2A2F3D] p-3 space-y-2 group"
  >
  <div>
- <p className="text-xs font-bold text-zinc-900">{item.company}</p>
- <p className="text-[8px] text-zinc-450 mt-0.5">Contact: {item.contact}</p>
+ <p className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE]">{item.company}</p>
+ <p className="text-[8px] text-zinc-450 dark:text-[#A0A6B5] mt-0.5">Contact: {item.contact}</p>
  </div>
 
- <div className="flex justify-between items-center pt-2 border-t border-zinc-50 mt-2">
- <span className="currency text-xs font-bold text-zinc-800"> ₹{item.value?.toLocaleString()}
+ <div className="flex justify-between items-center pt-2 border-t border-zinc-50 dark:border-[#2A2F3D] mt-2">
+ <span className="currency text-xs font-bold text-zinc-800 dark:text-[#E6E8EE]"> ₹{item.value?.toLocaleString()}
  </span>
 
  {stage !== 'Won' && (canEdit() || canApprove()) && (
  <button
  onClick={() => advanceStage(item)}
- className="p-1 hover:bg-zinc-55 rounded text-primary transition-colors"
+ className="p-1 hover:bg-zinc-55 dark:hover:bg-[#222736] rounded text-primary transition-colors"
  title="Advance pipeline stage"
  >
  <ArrowRight size={14} />
@@ -154,17 +154,17 @@ export default function SalesDashboard() {
  {/* Creation Modal */}
  {showAddLead && (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm">
- <div className="card max-w-md w-full p-4 space-y-4 animate-slide-up">
+ <div className="card max-w-md w-full p-4 space-y-4 animate-slide-up bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D]">
  <div className="flex justify-between items-center">
- <h3 className="text-lg font-bold text-zinc-900">
+ <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">
  Create CRM Lead
  </h3>
- <button onClick={() => setShowAddLead(false)} className="text-zinc-400 hover:text-zinc-650">✕</button>
+ <button onClick={() => setShowAddLead(false)} className="text-zinc-400 dark:text-[#6B7184] hover:text-zinc-650 dark:hover:text-[#E6E8EE]">✕</button>
  </div>
 
  <form onSubmit={handleCreateLead} className="space-y-4">
  <div className="space-y-1">
- <label className="text-xs font-bold text-zinc-500 block">Lead Company Name</label>
+ <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Lead Company Name</label>
  <input
  type="text"
  placeholder="e.g. Apex Software Corp"
@@ -176,7 +176,7 @@ export default function SalesDashboard() {
  </div>
 
  <div className="space-y-1">
- <label className="text-xs font-bold text-zinc-500 block">Lead Contact Name</label>
+ <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Lead Contact Name</label>
  <input
  type="text"
  placeholder="Liam Neeson"
@@ -188,7 +188,7 @@ export default function SalesDashboard() {
  </div>
 
  <div className="space-y-1">
- <label className="text-xs font-bold text-zinc-500 block">Estimated Pipeline Value (₹)</label>
+ <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Estimated Pipeline Value (₹)</label>
  <input
  type="number"
  placeholder="15000"

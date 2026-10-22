@@ -270,14 +270,14 @@ export default function BudgetHeaders() {
   // Sub-row drawer renderer
   const renderExpandedRow = (header) => {
     return (
-      <div className="p-4 bg-zinc-50/50 border-t border-zinc-200">
+      <div className="p-4 bg-zinc-50/50 dark:bg-[#1D212C] border-t border-zinc-200 dark:border-[#2A2F3D]">
         <BudgetLinesTable headerId={header.id} />
       </div>
     );
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Budget Headers"
         description="Manage budget definitions and overall allocations"

@@ -238,7 +238,7 @@ export default function UnitOfMeasureManagement() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Units of Measure"
         description="Manage units of measure used across your inventory and products"

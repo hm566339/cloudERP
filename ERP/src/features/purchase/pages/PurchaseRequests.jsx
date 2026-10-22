@@ -63,7 +63,7 @@ const PurchaseRequisitionOverview = ({ pr, renderStatusBadge, navigate, buildPat
   if (isLoading && needsFetch) {
     return (
       <div 
-        className="p-6 bg-white border border-zinc-100 rounded-xl shadow-sm m-4 mb-2 flex items-center justify-center gap-2 text-zinc-500 text-xs cursor-default" 
+        className="p-6 bg-white dark:bg-card-dark border border-zinc-100 dark:border-border-dark rounded-xl shadow-sm m-4 mb-2 flex items-center justify-center gap-2 text-zinc-500 text-xs cursor-default" 
         onClick={(e) => e.stopPropagation()}
       >
         <Loader2 size={16} className="animate-spin text-zinc-600" />
@@ -74,11 +74,11 @@ const PurchaseRequisitionOverview = ({ pr, renderStatusBadge, navigate, buildPat
 
   return (
     <div 
-      className="p-5 bg-white border border-zinc-100 rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2 cursor-default" 
+      className="p-5 bg-white dark:bg-card-dark border border-zinc-100 dark:border-border-dark rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2 cursor-default" 
       onClick={(e) => e.stopPropagation()}
     >
       {/* Top Header */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
           <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded border border-zinc-200">
             {fullPr.requisitionNumber || '—'}
@@ -155,7 +155,7 @@ const PurchaseRequisitionOverview = ({ pr, renderStatusBadge, navigate, buildPat
               items.map((item, idx) => {
                 const qty = item.quantity ?? item.requestedQuantity;
                 return (
-                  <div key={item.id || idx} className="bg-white p-2.5 rounded border border-zinc-200 text-xs">
+                  <div key={item.id || idx} className="bg-white dark:bg-surface-dark p-2.5 rounded border border-zinc-200 dark:border-border-dark text-xs text-zinc-800 dark:text-zinc-200">
                     <div className="font-semibold text-zinc-900">{item.itemName || item.productName || '—'}</div>
                     <div className="text-zinc-500 text-[11px] mt-0.5">
                       Qty: <span className="font-medium text-zinc-800">{qty != null ? Number(qty).toLocaleString() : '—'} {item.unit || ''}</span>
@@ -182,7 +182,7 @@ const PurchaseRequisitionOverview = ({ pr, renderStatusBadge, navigate, buildPat
           </h4>
           <div className="space-y-2 text-xs">
             {fullPr.requesterName && (
-              <div className="bg-white p-2 rounded border border-zinc-200 flex items-center justify-between">
+              <div className="bg-white dark:bg-surface-dark p-2 rounded border border-zinc-200 dark:border-border-dark flex items-center justify-between text-zinc-800 dark:text-zinc-200">
                 <div>
                   <span className="text-zinc-400 text-[10px] block">Created By</span>
                   <span className="font-medium text-zinc-800">{fullPr.requesterName}</span>
@@ -193,7 +193,7 @@ const PurchaseRequisitionOverview = ({ pr, renderStatusBadge, navigate, buildPat
               </div>
             )}
             {fullPr.submittedBy ? (
-              <div className="bg-white p-2 rounded border border-zinc-200 flex items-center justify-between">
+              <div className="bg-white dark:bg-surface-dark p-2 rounded border border-zinc-200 dark:border-border-dark flex items-center justify-between text-zinc-800 dark:text-zinc-200">
                 <div>
                   <span className="text-blue-500 text-[10px] font-semibold block">Submitted By</span>
                   <span className="font-medium text-zinc-800">{fullPr.submittedBy}</span>
@@ -210,7 +210,7 @@ const PurchaseRequisitionOverview = ({ pr, renderStatusBadge, navigate, buildPat
               )
             )}
             {fullPr.approvedBy && (
-              <div className="bg-white p-2 rounded border border-zinc-200 flex items-center justify-between">
+              <div className="bg-white dark:bg-surface-dark p-2 rounded border border-zinc-200 dark:border-border-dark flex items-center justify-between text-zinc-800 dark:text-zinc-200">
                 <div>
                   <span className="text-emerald-600 text-[10px] font-semibold block">Approved By</span>
                   <span className="font-medium text-zinc-800">{fullPr.approvedBy}</span>
@@ -244,7 +244,7 @@ const PurchaseRequisitionOverview = ({ pr, renderStatusBadge, navigate, buildPat
               </div>
             )}
             {!fullPr.submittedBy && !fullPr.approvedBy && !fullPr.rejectedBy && !fullPr.cancelledBy && (
-              <div className="bg-white p-2.5 rounded border border-zinc-200 text-xs text-zinc-500">
+              <div className="bg-white dark:bg-surface-dark p-2.5 rounded border border-zinc-200 dark:border-border-dark text-xs text-zinc-800 dark:text-zinc-200 text-zinc-500">
                 Current status: <span className="font-semibold text-zinc-700">{fullPr.status || 'DRAFT'}</span>
               </div>
             )}
@@ -768,7 +768,7 @@ export default function PurchaseRequests() {
   }), [filters]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 animate-in fade-in">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] animate-in fade-in">
       {/* Top Header */}
       <PageHeader
         title="Purchase Requisitions"
@@ -886,12 +886,12 @@ export default function PurchaseRequests() {
           onChange={(e) => setRejectReason(e.target.value)}
           placeholder="Enter rejection reason..."
           rows={4}
-          className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-[10.4px] text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all resize-none"
+          className="w-full px-3 py-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all resize-none"
         />
         <div className="flex justify-end gap-3 mt-4">
           <button
             onClick={() => { setRejectTarget(null); setRejectReason(''); }}
-            className="px-4 py-2 text-sm font-semibold text-zinc-600 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors"
+            className="px-4 py-2 text-sm font-semibold text-zinc-600 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] text-zinc-600 dark:text-zinc-300 transition-colors"
           >
             Cancel
           </button>

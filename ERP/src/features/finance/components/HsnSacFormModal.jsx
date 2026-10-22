@@ -52,7 +52,7 @@ export default function HsnSacFormModal({ isOpen, onClose, onSubmit }) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Code</label>
+            <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Code</label>
             <input
               type="text"
               name="code"
@@ -63,7 +63,7 @@ export default function HsnSacFormModal({ isOpen, onClose, onSubmit }) {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Type *</label>
+            <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Type *</label>
             <CustomSelect
               name="type"
               value={formData.type}
@@ -80,7 +80,7 @@ export default function HsnSacFormModal({ isOpen, onClose, onSubmit }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Description *</label>
+            <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Description *</label>
             <input
               type="text"
               name="description"
@@ -92,7 +92,7 @@ export default function HsnSacFormModal({ isOpen, onClose, onSubmit }) {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">GST Slab *</label>
+            <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">GST Slab *</label>
             <GstSlabSelect
               name="gstSlabId"
               value={formData.gstSlabId}
@@ -102,7 +102,7 @@ export default function HsnSacFormModal({ isOpen, onClose, onSubmit }) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
+        <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100 dark:border-border-dark">
           <button
             type="button"
             onClick={onClose}

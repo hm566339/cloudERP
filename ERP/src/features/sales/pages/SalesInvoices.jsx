@@ -39,54 +39,54 @@ const SalesInvoiceOverview = ({ inv }) => {
   const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
   const curr = inv.invoiceCurrency || inv.currency || 'INR';
   return (
-    <div className="p-5 bg-white border border-zinc-100 rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2">
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100">
+    <div className="p-5 bg-white dark:bg-[#1D212C] border border-zinc-100 dark:border-[#2A2F3D] rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded border border-zinc-200">
+          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 dark:bg-[#161922] text-zinc-800 dark:text-[#E6E8EE] rounded border border-zinc-200 dark:border-[#2A2F3D]">
             {inv.invoiceNumber || inv.invoiceNo}
           </span>
           <div>
-            <h3 className="text-lg font-bold text-zinc-900">{inv.customerName || inv.customer}</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">Date: {inv.invoiceDate} | Due: {inv.dueDate}</p>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">{inv.customerName || inv.customer}</h3>
+            <p className="text-xs text-zinc-500 dark:text-[#6B7184] mt-0.5">Date: {inv.invoiceDate} | Due: {inv.dueDate}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${inv.status === 'POSTED' || inv.status === 'PAID' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : inv.status === 'DRAFT' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${inv.status === 'POSTED' || inv.status === 'PAID' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : inv.status === 'DRAFT' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-[#F5B544] dark:border-amber-500/20' : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-[#4C8DFF] dark:border-blue-500/20'}`}>
             {inv.status}
           </span>
-          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${inv.paymentStatus === 'PAID' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border ${inv.paymentStatus === 'PAID' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-[#F0616D] dark:border-red-500/20'}`}>
             {inv.paymentStatus || 'UNPAID'}
           </span>
         </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-4 sm:gap-6">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Grand Total</p>
-          <p className="text-sm font-bold text-zinc-900 mt-1">{curr} {fmt(inv.totalAmount ?? inv.grandTotal)}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Grand Total</p>
+          <p className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">{curr} {fmt(inv.totalAmount ?? inv.grandTotal)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Outstanding</p>
-          <p className="text-sm font-bold text-red-600 mt-1">{curr} {fmt(inv.outstandingAmount ?? inv.outstanding)}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Outstanding</p>
+          <p className="text-sm font-bold text-red-600 dark:text-red-400 mt-1">{curr} {fmt(inv.outstandingAmount ?? inv.outstanding)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Payment %</p>
-          <p className="text-sm font-bold text-emerald-600 mt-1">{inv.paymentPercentage ?? 0}%</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Payment %</p>
+          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1">{inv.paymentPercentage ?? 0}%</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Item Count</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{inv.itemCount || 0}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Item Count</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{inv.itemCount || 0}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Days Outstanding</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{inv.daysOutstanding || 0} days</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Days Outstanding</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{inv.daysOutstanding || 0} days</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Aging Bucket</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{inv.agingBucket || 'Current'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Aging Bucket</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{inv.agingBucket || 'Current'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Currency</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{curr}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Currency</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{curr}</p>
         </div>
       </div>
     </div>
@@ -717,7 +717,7 @@ export default function SalesInvoices() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 animate-in fade-in">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] animate-in fade-in">
       <PageHeader
         title="Sales Invoices"
         description="Manage sales invoices"
@@ -737,12 +737,12 @@ export default function SalesInvoices() {
         ]}
       >
         {selectedInvoices.length > 0 && (
-          <div className="flex items-center gap-2 mr-2 pr-4 border-r border-zinc-200">
-            <span className="text-sm font-medium text-zinc-500 mr-2">{selectedInvoices.length} selected</span>
+          <div className="flex items-center gap-2 mr-2 pr-4 border-r border-zinc-200 dark:border-[#2A2F3D]">
+            <span className="text-sm font-medium text-zinc-500 dark:text-[#6B7184] mr-2">{selectedInvoices.length} selected</span>
             <button
               onClick={handleBulkEmail}
               disabled={isProcessingBulk}
-              className="btn-secondary flex items-center gap-1.5 h-9 px-3 text-[10.4px] bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+              className="btn-secondary flex items-center gap-1.5 h-9 px-3 text-[10.4px] bg-white dark:bg-[#1D212C] text-zinc-700 dark:text-[#E6E8EE] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] disabled:opacity-50 transition-colors"
               title="Send via Email"
             >
               {isProcessingBulk ? <RefreshCw size={16} className="animate-spin" /> : <Mail size={16} />}
@@ -751,7 +751,7 @@ export default function SalesInvoices() {
             <button
               onClick={handleBulkDownload}
               disabled={isProcessingBulk}
-              className="btn-secondary flex items-center gap-1.5 h-9 px-3 text-[10.4px] bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+              className="btn-secondary flex items-center gap-1.5 h-9 px-3 text-[10.4px] bg-white dark:bg-[#1D212C] text-zinc-700 dark:text-[#E6E8EE] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] disabled:opacity-50 transition-colors"
               title="Download PDF"
             >
               {isProcessingBulk ? <RefreshCw size={16} className="animate-spin" /> : <Download size={16} />}

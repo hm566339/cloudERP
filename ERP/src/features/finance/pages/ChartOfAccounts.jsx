@@ -214,7 +214,7 @@ export default function ChartOfAccounts() {
       label: 'Code',
       sortable: true,
       render: (val, row) => (
-        <span className="font-mono text-xs bg-zinc-100 px-2 py-1 rounded text-zinc-800 font-bold border border-zinc-200/60">
+        <span className="font-mono text-xs bg-zinc-100 dark:bg-[#1D212C] px-2 py-1 rounded text-zinc-800 dark:text-[#E6E8EE] font-bold border border-zinc-200/60 dark:border-[#2A2F3D]">
           {row.accountCode || '-'}
         </span>
       )
@@ -224,7 +224,7 @@ export default function ChartOfAccounts() {
       label: 'Account Name',
       sortable: true,
       render: (val, row) => (
-        <span className="font-semibold text-zinc-900">{row.accountName || '-'}</span>
+        <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{row.accountName || '-'}</span>
       )
     },
     {
@@ -232,7 +232,7 @@ export default function ChartOfAccounts() {
       label: 'Group Name',
       sortable: true,
       render: (val, row) => (
-        <span className="text-zinc-600 font-medium">{row.groupName || '-'}</span>
+        <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">{row.groupName || '-'}</span>
       )
     },
     {
@@ -240,7 +240,7 @@ export default function ChartOfAccounts() {
       label: 'Parent Account',
       sortable: false,
       render: (val, row) => (
-        <span className="text-zinc-500 text-xs">
+        <span className="text-zinc-500 dark:text-[#A0A6B5] text-xs">
           {row.parentAccountName || row.parentAccountCode || '-'}
         </span>
       )
@@ -250,7 +250,7 @@ export default function ChartOfAccounts() {
       label: 'Type',
       sortable: true,
       render: (val, row) => (
-        <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded border bg-blue-50 text-blue-700 border-blue-200">
+        <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded border bg-blue-50 dark:bg-[#4C8DFF]/10 text-blue-700 dark:text-[#4C8DFF] border-blue-200 dark:border-[#4C8DFF]/30">
           {row.accountType || '-'}
         </span>
       )
@@ -261,7 +261,7 @@ export default function ChartOfAccounts() {
       sortable: true,
       align: 'right',
       render: (val, row) => (
-        <span className="font-mono text-zinc-900 font-semibold">
+        <span className="font-mono text-zinc-900 dark:text-[#E6E8EE] font-semibold">
           ₹{fmt(row.currentBalance ?? row.openingBalance)}
         </span>
       )
@@ -272,7 +272,7 @@ export default function ChartOfAccounts() {
       sortable: true,
       align: 'center',
       render: (val, row) => (
-        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${row.postingAllowed ? 'bg-zinc-100 text-zinc-700' : 'bg-zinc-50 text-zinc-400'}`}>
+        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${row.postingAllowed ? 'bg-zinc-100 dark:bg-[#222736] text-zinc-700 dark:text-[#E6E8EE]' : 'bg-zinc-50 dark:bg-[#161922] text-zinc-400 dark:text-[#6B7184]'}`}>
           {row.postingAllowed ? 'Yes' : 'No'}
         </span>
       )
@@ -351,7 +351,7 @@ export default function ChartOfAccounts() {
       icon: BookMarked,
       onClick: (row) => navigate(buildPath(`/accounts/reports/ledger?accountId=${row.id}`)),
       tooltip: 'View General Ledger',
-      className: 'hover:text-emerald-600 hover:bg-emerald-50'
+      className: 'hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
     },
     {
       key: 'view',
@@ -359,7 +359,7 @@ export default function ChartOfAccounts() {
       icon: Eye,
       onClick: (row) => navigate(buildPath(`/accounts/masters/ledgers/${row.id}`)),
       tooltip: 'View Details',
-      className: 'hover:text-blue-600 hover:bg-blue-50'
+      className: 'hover:text-blue-600 dark:hover:text-[#4C8DFF] hover:bg-blue-50 dark:hover:bg-[#4C8DFF]/10'
     },
     {
       key: 'audit',
@@ -372,7 +372,7 @@ export default function ChartOfAccounts() {
       hidden: !canUpdate,
       onClick: (row) => handleOpenModal(row, 'edit'),
       tooltip: 'Edit',
-      className: 'hover:text-indigo-600 hover:bg-indigo-50'
+      className: 'hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10'
     },
     {
       key: 'delete',
@@ -387,15 +387,15 @@ export default function ChartOfAccounts() {
 
   // Sub-row drawer renderer
   const renderExpandedRow = (acc) => (
-    <div className="p-4 bg-white border border-zinc-100 rounded-lg shadow-2xs">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100">
+    <div className="p-4 bg-white dark:bg-[#161922] border border-zinc-100 dark:border-[#2A2F3D] rounded-lg shadow-2xs">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded border border-zinc-200">
+          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE] rounded border border-zinc-200 dark:border-[#2A2F3D]">
             {acc.accountCode}
           </span>
           <div>
-            <h3 className="text-base font-bold text-zinc-900">{acc.accountName}</h3>
-            <p className="text-xs font-medium text-zinc-500 mt-0.5">{acc.groupName || 'Account Group'}</p>
+            <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">{acc.accountName}</h3>
+            <p className="text-xs font-medium text-zinc-500 dark:text-[#A0A6B5] mt-0.5">{acc.groupName || 'Account Group'}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -405,12 +405,12 @@ export default function ChartOfAccounts() {
               e.stopPropagation();
               navigate(buildPath(`/accounts/reports/ledger?accountId=${acc.id}`));
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 transition-colors shadow-2xs"
           >
             <BookMarked size={14} />
             <span>General Ledger</span>
           </button>
-          <span className="px-2.5 py-0.5 text-xs font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200">
+          <span className="px-2.5 py-0.5 text-xs font-semibold rounded-md border bg-blue-50 dark:bg-[#4C8DFF]/10 text-blue-700 dark:text-[#4C8DFF] border-blue-200 dark:border-[#4C8DFF]/30">
             {acc.accountType}
           </span>
           <DataTableStatusBadge status={acc.isActive} />
@@ -418,35 +418,35 @@ export default function ChartOfAccounts() {
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Parent Account</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{acc.parentAccountName || acc.parentAccountCode || '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Parent Account</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{acc.parentAccountName || acc.parentAccountCode || '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Current Balance</p>
-          <p className="text-sm font-bold text-blue-700 mt-1">₹{fmt(acc.currentBalance ?? acc.openingBalance)}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Current Balance</p>
+          <p className="text-sm font-bold text-blue-700 dark:text-[#4C8DFF] mt-1">₹{fmt(acc.currentBalance ?? acc.openingBalance)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Closing Balance</p>
-          <p className="text-sm font-bold text-blue-700 mt-1">₹{fmt(acc.closingBalance ?? acc.openingBalance)}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Closing Balance</p>
+          <p className="text-sm font-bold text-blue-700 dark:text-[#4C8DFF] mt-1">₹{fmt(acc.closingBalance ?? acc.openingBalance)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Posting Allowed</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{acc.postingAllowed ? 'Yes' : 'No'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Posting Allowed</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{acc.postingAllowed ? 'Yes' : 'No'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Last Txn Date</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{acc.lastTransactionDate || '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Last Txn Date</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{acc.lastTransactionDate || '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Last Reconciled</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{acc.lastReconciliationDate || '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Last Reconciled</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{acc.lastReconciliationDate || '-'}</p>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Chart of Accounts"
         description="Manage your organization's accounts"

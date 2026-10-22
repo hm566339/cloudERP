@@ -45,7 +45,7 @@ export default function BatchesPage() {
   const getStatusBadge = (status) => {
     const s = (status || '').toUpperCase()
     if (s === 'ACTIVE' || s === 'PASSED' || s === 'AVAILABLE') return 'badge-success'
-    if (s === 'EXPIRED' || s === 'REJECTED') return 'badge-danger bg-rose-50 text-rose-700'
+    if (s === 'EXPIRED' || s === 'REJECTED') return 'badge-danger bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400'
     return 'badge-warning'
   }
 
@@ -84,10 +84,10 @@ export default function BatchesPage() {
                 {paginated.length === 0 && (
                   <tr>
                     <td colSpan={6}>
-                      <div className="p-8 text-center border-2 border-dashed border-zinc-200 m-4 rounded-xl">
-                        <PackageOpen className="mx-auto text-zinc-300 mb-3" size={28} />
-                        <p className="text-sm font-medium text-zinc-600">No batches found</p>
-                        <p className="text-xs text-zinc-400 mt-1">No batches recorded for this company in inventory.</p>
+                      <div className="p-8 text-center border-2 border-dashed border-zinc-200 dark:border-border-dark m-4 rounded-xl">
+                        <PackageOpen className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" size={28} />
+                        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">No batches found</p>
+                        <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">No batches recorded for this company in inventory.</p>
                       </div>
                     </td>
                   </tr>
@@ -101,18 +101,18 @@ export default function BatchesPage() {
 
                   return (
                     <tr key={b.id || index}>
-                      <td className="text-center font-medium text-zinc-500 tabular-nums">
+                      <td className="text-center font-medium text-zinc-500 dark:text-zinc-400 tabular-nums">
                         {getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}
                       </td>
                       <td>
                         <div className="flex items-center gap-2">
-                          <PackageOpen size={14} className="text-zinc-400" />
-                          <span className="font-mono text-xs font-semibold text-primary">{batchNo}</span>
+                          <PackageOpen size={14} className="text-zinc-400 dark:text-zinc-500" />
+                          <span className="font-mono text-xs font-semibold text-primary dark:text-blue-400">{batchNo}</span>
                         </div>
                       </td>
-                      <td className="font-medium text-zinc-800">{productLabel}</td>
-                      <td className="text-zinc-500 text-xs">{mfgDate}</td>
-                      <td className="text-zinc-500 text-xs">{expDate}</td>
+                      <td className="font-medium text-zinc-800 dark:text-zinc-200">{productLabel}</td>
+                      <td className="text-zinc-500 dark:text-zinc-400 text-xs">{mfgDate}</td>
+                      <td className="text-zinc-500 dark:text-zinc-400 text-xs">{expDate}</td>
                       <td>
                         <span className={`badge ${getStatusBadge(status)}`}>
                           {status}
@@ -126,7 +126,7 @@ export default function BatchesPage() {
           </div>
         )}
         {!isLoading && (
-          <div className="p-4 border-t border-zinc-100 bg-white rounded-b-xl">
+          <div className="p-4 border-t border-zinc-100 dark:border-border-dark bg-white dark:bg-card-dark rounded-b-xl">
             <Pagination
               {...paginationProps}
               totalPages={totalPages}

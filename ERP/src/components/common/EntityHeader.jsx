@@ -53,7 +53,7 @@ export default function EntityHeader({
 
   return (
     <div
-      className={`bg-white border-b border-zinc-200 shadow-sm pt-4 pb-0 ${stickyClass} ${className}`}
+      className={`bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] shadow-sm pt-4 pb-0 ${stickyClass} ${className}`}
     >
       <div className="max-w-[1280px] mx-auto px-4 md:px-8">
         {/* Top row: identity + actions */}
@@ -63,7 +63,7 @@ export default function EntityHeader({
             {onBack && (
               <button
                 onClick={onBack}
-                className="p-2.5 bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 border border-zinc-200 rounded-lg transition-colors shrink-0"
+                className="p-2.5 bg-zinc-50 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-[#E6E8EE] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg transition-colors shrink-0"
                 title="Go Back"
                 aria-label="Go back"
               >
@@ -74,7 +74,7 @@ export default function EntityHeader({
               {/* Title + badge */}
               <div className="flex items-center gap-3 flex-wrap">
                 {title && (
-                  <h1 className="text-2xl font-black text-zinc-900 tracking-tight truncate">
+                  <h1 className="text-2xl font-black text-zinc-900 dark:text-[#E6E8EE] tracking-tight truncate">
                     {title}
                   </h1>
                 )}
@@ -82,13 +82,13 @@ export default function EntityHeader({
               </div>
               {/* Metadata chips */}
               {metadata.length > 0 && (
-                <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1 text-sm font-medium text-zinc-500">
+                <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1 text-sm font-medium text-zinc-500 dark:text-[#A0A6B5]">
                   {metadata.map((item, i) => {
                     const Icon = item.icon;
                     return (
                       <React.Fragment key={i}>
                         {i > 0 && (
-                          <span className="w-1 h-1 rounded-full bg-zinc-300 shrink-0" />
+                          <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-[#2A2F3D] shrink-0" />
                         )}
                         <span className="flex items-center gap-1.5 whitespace-nowrap">
                           {Icon && <Icon size={13} className="shrink-0" />}
@@ -129,10 +129,10 @@ function ButtonAction({ action }) {
 
   const variantClass =
     variant === 'danger'
-      ? 'bg-white border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 focus:ring-rose-200'
+      ? 'bg-white dark:bg-[#1D212C] border-rose-200 dark:border-[#F0616D]/30 text-rose-600 dark:text-[#F0616D] hover:bg-rose-50 dark:hover:bg-[#F0616D]/15 hover:text-rose-700 focus:ring-rose-200'
       : variant === 'primary'
-      ? 'bg-zinc-900 border-zinc-900 text-white hover:bg-zinc-800 focus:ring-zinc-900'
-      : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 focus:ring-zinc-200';
+      ? 'bg-zinc-900 dark:bg-[#4C8DFF] border-zinc-900 dark:border-[#4C8DFF] text-white hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] focus:ring-zinc-900'
+      : 'bg-white dark:bg-[#1D212C] border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-white focus:ring-zinc-200';
 
   const btn = (
     <button
@@ -186,14 +186,14 @@ function DropdownAction({ action }) {
 
   const variantClass =
     variant === 'primary'
-      ? 'bg-zinc-900 border-zinc-900 text-white hover:bg-zinc-800'
-      : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50';
+      ? 'bg-zinc-900 dark:bg-[#4C8DFF] border-zinc-900 dark:border-[#4C8DFF] text-white hover:bg-zinc-800 dark:hover:bg-[#6AA1FF]'
+      : 'bg-white dark:bg-[#1D212C] border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736]';
 
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`inline-flex items-center gap-2 px-4 py-2 border rounded-xl text-sm font-bold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-zinc-900 ${variantClass}`}
+        className={`inline-flex items-center gap-2 px-4 py-2 border rounded-xl text-sm font-bold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] ${variantClass}`}
         aria-haspopup="true"
         aria-expanded={open}
       >
@@ -206,11 +206,11 @@ function DropdownAction({ action }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-zinc-200 z-50 overflow-hidden animate-fade-in">
+        <div className="absolute right-0 top-full mt-1.5 w-52 bg-white dark:bg-[#1D212C] rounded-xl shadow-xl dark:shadow-2xl border border-zinc-200 dark:border-[#2A2F3D] z-50 overflow-hidden animate-fade-in">
           <div className="p-1.5 space-y-0.5">
             {items.map((item, i) => {
               if (item.type === 'divider') {
-                return <div key={i} className="h-px bg-zinc-100 my-1 mx-2" />;
+                return <div key={i} className="h-px bg-zinc-100 dark:bg-[#2A2F3D] my-1 mx-2" />;
               }
               const ItemIcon = item.icon;
               const content = (
@@ -220,8 +220,8 @@ function DropdownAction({ action }) {
                   disabled={item.disabled}
                   className={`w-full text-left px-3 py-2 text-sm font-medium rounded-lg flex items-center gap-2.5 transition-colors disabled:opacity-40 disabled:pointer-events-none ${
                     item.variant === 'danger'
-                      ? 'text-rose-600 hover:bg-rose-50'
-                      : 'text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900'
+                      ? 'text-rose-600 dark:text-[#F0616D] hover:bg-rose-50 dark:hover:bg-[#F0616D]/15'
+                      : 'text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-white'
                   }`}
                 >
                   {ItemIcon && <ItemIcon size={15} />}

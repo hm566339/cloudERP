@@ -271,7 +271,7 @@ export default function ProfitLoss() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* 1. Page Header */}
       <PageHeader
         title="Profit & Loss Statement"
@@ -310,7 +310,7 @@ export default function ProfitLoss() {
       <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-5 min-h-0">
         {/* Error Alert */}
         {error && (
-          <div className="flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium">
+          <div className="flex items-center gap-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-400 px-4 py-3 rounded-xl text-sm font-medium">
             <AlertCircle size={16} className="shrink-0" />
             {error}
           </div>
@@ -320,28 +320,28 @@ export default function ProfitLoss() {
         <FinancialSummaryCards cards={summaryCards} />
 
         {/* 4. Filter Controls Bar */}
-        <div className="bg-white border border-zinc-200 rounded-xl p-3.5 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+        <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-3.5 shadow-2xs flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <Calendar size={14} className="text-zinc-400" />
-              <span className="text-xs font-semibold text-zinc-700">Period:</span>
+              <Calendar size={14} className="text-zinc-400 dark:text-[#6B7184]" />
+              <span className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE]">Period:</span>
             </div>
             <div>
               <input
                 type="date"
                 value={filters.fromDate}
                 onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                className="h-8 px-2.5 text-xs bg-zinc-50 border border-zinc-200 rounded-lg text-zinc-800 font-medium focus:outline-hidden focus:ring-1 focus:ring-zinc-900"
+                className="h-8 px-2.5 text-xs bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-zinc-800 dark:text-[#E6E8EE] font-medium focus:outline-hidden focus:ring-1 focus:ring-zinc-900 dark:focus:ring-[#4C8DFF]"
                 placeholder="From Date"
               />
             </div>
-            <span className="text-zinc-400 text-xs">to</span>
+            <span className="text-zinc-400 dark:text-[#6B7184] text-xs">to</span>
             <div>
               <input
                 type="date"
                 value={filters.toDate}
                 onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                className="h-8 px-2.5 text-xs bg-zinc-50 border border-zinc-200 rounded-lg text-zinc-800 font-medium focus:outline-hidden focus:ring-1 focus:ring-zinc-900"
+                className="h-8 px-2.5 text-xs bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-zinc-800 dark:text-[#E6E8EE] font-medium focus:outline-hidden focus:ring-1 focus:ring-zinc-900 dark:focus:ring-[#4C8DFF]"
                 placeholder="To Date"
               />
             </div>
@@ -351,7 +351,7 @@ export default function ProfitLoss() {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="h-8 px-3 text-[11px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 shadow-2xs"
+              className="h-8 px-3 text-[11px] font-semibold text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all flex items-center gap-1.5 shadow-2xs"
             >
               <RotateCcw size={12} />
               <span>Reset</span>
@@ -360,7 +360,7 @@ export default function ProfitLoss() {
               type="button"
               onClick={() => fetchReport()}
               disabled={loading}
-              className="h-8 px-3 text-[11px] font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-all flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
+              className="h-8 px-3 text-[11px] font-semibold text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-[#4C8DFF] dark:hover:bg-[#6AA1FF] rounded-lg transition-all flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
             >
               <RotateCcw size={12} className={loading ? 'animate-spin' : ''} />
               <span>{loading ? 'Refreshing...' : 'Refresh'}</span>

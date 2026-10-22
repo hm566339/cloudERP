@@ -453,7 +453,7 @@ export default function RoleList() {
       label: 'Role Name',
       sortable: true,
       render: (val, row) => (
-        <span className="font-semibold text-indigo-950 text-sm">{row.name}</span>
+        <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-sm">{row.name}</span>
       )
     },
     {
@@ -461,7 +461,7 @@ export default function RoleList() {
       label: 'Description',
       sortable: false,
       render: (val, row) => (
-        <span className="text-zinc-500 text-xs">{row.description || 'System Role'}</span>
+        <span className="text-zinc-500 dark:text-[#A0A6B5] text-xs">{row.description || 'System Role'}</span>
       )
     },
     {
@@ -530,7 +530,7 @@ export default function RoleList() {
   ], [isAdmin, handleEditRole, handleToggleStatus, handleDeleteRole]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 relative">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] relative">
       <PageHeader
         title="Role Management"
         description="Design organizational security configurations by allocating system capabilities and overrides"
@@ -633,7 +633,7 @@ export default function RoleList() {
       >
         <form onSubmit={handleAddRoleSubmit} className="space-y-4 p-5">
           <div>
-            <label className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider block mb-1">
+            <label className="text-[10px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider block mb-1">
               Role Name (UPPERCASE_WITH_UNDERSCORES)
             </label>
             <input
@@ -641,10 +641,10 @@ export default function RoleList() {
               placeholder="e.g. SALES_COORDINATOR"
               value={roleName}
               onChange={(e) => setRoleName(e.target.value.toUpperCase())}
-              className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10/20 font-mono transition-all"
+              className="w-full px-3 py-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] outline-none focus:border-zinc-400 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900/10 font-mono transition-all"
               autoFocus
             />
-            <p className="text-[10px] text-zinc-400 mt-1">Allowed: 3-20 characters, A-Z and _ only.</p>
+            <p className="text-[10px] text-zinc-400 dark:text-[#6B7184] mt-1">Allowed: 3-20 characters, A-Z and _ only.</p>
           </div>
           <div className="flex gap-2 pt-2">
             <button
@@ -653,11 +653,11 @@ export default function RoleList() {
                 setShowAddRole(false)
                 setEditRoleId(null)
               }}
-              className="flex-1 py-2 bg-white border border-zinc-200 hover:bg-zinc-100 text-zinc-700 rounded-lg text-xs font-medium transition-all"
+              className="flex-1 py-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-100 dark:hover:bg-[#222736] text-zinc-700 dark:text-[#A0A6B5] rounded-lg text-xs font-medium transition-all"
             >
               Cancel
             </button>
-            <button type="submit" className="flex-1 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold transition-all">
+            <button type="submit" className="flex-1 py-2 bg-zinc-900 dark:bg-primary hover:bg-zinc-800 dark:hover:bg-primary-600 text-white rounded-lg text-xs font-semibold transition-all">
               {editRoleId ? 'Update Role' : 'Create Role'}
             </button>
           </div>
@@ -678,7 +678,7 @@ export default function RoleList() {
         }
         size="4xl"
       >
-        <div className="p-5 flex flex-col h-[70vh] bg-zinc-50/50">
+        <div className="p-5 flex flex-col h-[70vh] bg-zinc-50/50 dark:bg-[#161922]">
           <div className="flex justify-between items-center mb-4 gap-2">
              <div className="flex-1 flex gap-2">
                 <input
@@ -686,12 +686,12 @@ export default function RoleList() {
                   placeholder="Search assigned users..."
                   value={assignedSearchTerm}
                   onChange={(e) => setAssignedSearchTerm(e.target.value)}
-                  className="flex-1 px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all max-w-sm"
+                  className="flex-1 px-3 py-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all max-w-sm placeholder:text-zinc-400 dark:placeholder:text-[#6B7184]"
                 />
                 <CustomSelect
                   value={assignedStatus}
                   onChange={(e) => setAssignedStatus(e.target.value)}
-                  className="px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer min-w-[120px]"
+                  className="px-3 py-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all cursor-pointer min-w-[120px] dark:text-[#E6E8EE]"
                 >
                   <option value="">All Status</option>
                   <option value="ACTIVE">Active</option>
@@ -701,7 +701,7 @@ export default function RoleList() {
              {isAdmin && (
                 <button
                   onClick={() => setShowAssignUser(!showAssignUser)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold transition-all shadow-sm"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-primary hover:bg-zinc-800 dark:hover:bg-primary-600 text-white rounded-lg text-xs font-semibold transition-all shadow-sm"
                 >
                   <Plus size={14} strokeWidth={2} />
                   Assign User
@@ -712,8 +712,8 @@ export default function RoleList() {
           {showAssignUser && (() => {
             const filteredUsers = allUsers.filter(u => !assignedUsers.find(au => au.id === u.id))
             return (
-              <div className="p-4 mb-4 bg-white border border-zinc-200 rounded-xl animate-slide-down flex flex-col gap-2 shadow-sm">
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+              <div className="p-4 mb-4 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl animate-slide-down flex flex-col gap-2 shadow-sm">
+                <label className="text-[10px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1">
                   Select User (Search by Name or ID)
                 </label>
                 <div className="flex items-start gap-3 relative">
@@ -728,24 +728,24 @@ export default function RoleList() {
                       }}
                       onFocus={() => setIsDropdownOpen(true)}
                       placeholder="Type name, emp ID or username..."
-                      className="w-full px-3 py-2 bg-white border border-zinc-200 focus:border-primary focus:ring-1 focus:ring-primary/20 rounded-lg text-xs font-medium outline-none transition-all shadow-sm"
+                      className="w-full px-3 py-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] focus:border-primary focus:ring-1 focus:ring-primary/20 rounded-lg text-xs font-medium outline-none transition-all shadow-sm dark:text-[#E6E8EE] dark:placeholder:text-[#6B7184]"
                     />
                     {isDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-zinc-200 shadow-xl rounded-lg z-50 py-1 divide-y divide-zinc-50">
+                      <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] shadow-xl rounded-lg z-50 py-1 divide-y divide-zinc-50 dark:divide-[#2A2F3D]">
                         {!userSearchQuery ? (
-                          <div className="px-3 py-3 text-xs text-zinc-400 font-medium text-center">Type to search for users...</div>
+                          <div className="px-3 py-3 text-xs text-zinc-400 dark:text-[#6B7184] font-medium text-center">Type to search for users...</div>
                         ) : isSearchingUsers ? (
-                          <div className="px-3 py-3 flex items-center justify-center gap-2 text-xs text-zinc-500 font-medium">
+                          <div className="px-3 py-3 flex items-center justify-center gap-2 text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium">
                             <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                             Searching...
                           </div>
                         ) : filteredUsers.length === 0 ? (
-                          <div className="px-3 py-3 text-xs text-zinc-400 font-medium text-center">No users found matching "{userSearchQuery}"</div>
+                          <div className="px-3 py-3 text-xs text-zinc-400 dark:text-[#6B7184] font-medium text-center">No users found matching "{userSearchQuery}"</div>
                         ) : (
                           filteredUsers.map(user => (
                             <div
                               key={user.id}
-                              className={`px-4 py-2 cursor-pointer hover:bg-zinc-50 transition-colors ${selectedUserId === user.id ? 'bg-primary/5 text-primary font-semibold' : 'text-zinc-700'}`}
+                              className={`px-4 py-2 cursor-pointer hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors ${selectedUserId === user.id ? 'bg-primary/5 text-primary font-semibold' : 'text-zinc-700 dark:text-[#E6E8EE]'}`}
                               onClick={() => {
                                 setSelectedUserId(user.id)
                                 setUserSearchQuery(`${user.fullName || user.username} (${user.empId})`)
@@ -753,7 +753,7 @@ export default function RoleList() {
                               }}
                             >
                               <div className="font-semibold text-xs">{user.fullName || user.username}</div>
-                              <div className="text-[10px] text-zinc-400 font-medium">{user.empId} • {user.email}</div>
+                              <div className="text-[10px] text-zinc-400 dark:text-[#6B7184] font-medium">{user.empId} • {user.email}</div>
                             </div>
                           ))
                         )}
@@ -772,55 +772,55 @@ export default function RoleList() {
             )
           })()}
 
-          <div className="w-full flex-1 overflow-y-auto min-h-0 bg-white border border-zinc-200 rounded-xl shadow-2xs">
+          <div className="w-full flex-1 overflow-y-auto min-h-0 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-2xs">
              {isLoadingRoleDetails ? (
                <div className="flex flex-col gap-0 overflow-hidden">
                  {[...Array(3)].map((_, i) => (
-                   <div key={i} className={`animate-pulse flex items-center gap-4 p-4 ${i !== 2 ? 'border-b border-zinc-100' : ''}`}>
-                     <div className="w-9 h-9 bg-zinc-100 rounded-full shrink-0" />
+                   <div key={i} className={`animate-pulse flex items-center gap-4 p-4 ${i !== 2 ? 'border-b border-zinc-100 dark:border-[#2A2F3D]' : ''}`}>
+                     <div className="w-9 h-9 bg-zinc-100 dark:bg-[#1D212C] rounded-full shrink-0" />
                      <div className="flex-1 space-y-2">
-                       <div className="h-4 bg-zinc-100 rounded w-1/3" />
-                       <div className="h-3 bg-zinc-50 rounded w-1/4" />
+                       <div className="h-4 bg-zinc-100 dark:bg-[#1D212C] rounded w-1/3" />
+                       <div className="h-3 bg-zinc-50 dark:bg-[#1D212C]/60 rounded w-1/4" />
                      </div>
                    </div>
                  ))}
                </div>
              ) : assignedUsers.length > 0 ? (
                <div className="flex flex-col gap-0">
-                 <div className="hidden md:flex items-center px-4 py-2.5 bg-zinc-50/80 border-b border-zinc-200 text-[10px] font-bold text-zinc-500 uppercase tracking-wider sticky top-0 z-10">
+                 <div className="hidden md:flex items-center px-4 py-2.5 bg-zinc-50/80 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-[10px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider sticky top-0 z-10">
                    <div className="w-[180px] shrink-0 pl-2">User</div>
                    <div className="flex-1 px-6">Details</div>
                    <div className="w-28 shrink-0 text-center">Status</div>
                    <div className="w-24 shrink-0 text-center">Actions</div>
                  </div>
                  {assignedUsers.map((user, index) => (
-                   <div key={user.id} className={`hover:bg-zinc-50/60 transition-colors flex flex-col md:flex-row md:items-center ${index !== assignedUsers.length - 1 ? 'border-b border-zinc-100' : ''}`}>
-                     <div className="p-3.5 flex items-center gap-3 md:w-[180px] shrink-0 border-b md:border-b-0 md:border-r border-zinc-100">
-                       <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0">
+                   <div key={user.id} className={`hover:bg-zinc-50/60 dark:hover:bg-[#222736] transition-colors flex flex-col md:flex-row md:items-center ${index !== assignedUsers.length - 1 ? 'border-b border-zinc-100 dark:border-[#2A2F3D]' : ''}`}>
+                     <div className="p-3.5 flex items-center gap-3 md:w-[180px] shrink-0 border-b md:border-b-0 md:border-r border-zinc-100 dark:border-[#2A2F3D]">
+                       <div className="w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0">
                          {user.fullName?.charAt(0)?.toUpperCase() || '?'}
                        </div>
                        <div className="min-w-0">
-                         <p className="font-semibold text-zinc-900 text-xs truncate">{user.fullName || 'N/A'}</p>
-                         <p className="text-[10px] font-mono text-zinc-400 truncate">{user.empId || 'No EmpID'}</p>
+                         <p className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-xs truncate">{user.fullName || 'N/A'}</p>
+                         <p className="text-[10px] font-mono text-zinc-400 dark:text-[#6B7184] truncate">{user.empId || 'No EmpID'}</p>
                        </div>
                      </div>
                      <div className="p-3.5 flex-1 grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
                        <div>
-                         <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mb-0.5">Username</div>
-                         <div className="text-zinc-800 font-medium truncate">{user.username || 'N/A'}</div>
+                         <div className="text-[9px] text-zinc-400 dark:text-[#6B7184] font-bold uppercase tracking-wider mb-0.5">Username</div>
+                         <div className="text-zinc-800 dark:text-[#E6E8EE] font-medium truncate">{user.username || 'N/A'}</div>
                        </div>
                        <div>
-                         <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mb-0.5">Email</div>
-                         <div className="text-zinc-600 truncate">{user.email || 'N/A'}</div>
+                         <div className="text-[9px] text-zinc-400 dark:text-[#6B7184] font-bold uppercase tracking-wider mb-0.5">Email</div>
+                         <div className="text-zinc-600 dark:text-[#A0A6B5] truncate">{user.email || 'N/A'}</div>
                        </div>
                      </div>
-                     <div className="p-3.5 flex items-center justify-between md:justify-end gap-2 border-t md:border-t-0 md:border-l border-zinc-100 md:w-[140px] shrink-0">
+                     <div className="p-3.5 flex items-center justify-between md:justify-end gap-2 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-[#2A2F3D] md:w-[140px] shrink-0">
                        <DataTableStatusBadge status={user.accountStatus} />
                        <div className="flex items-center gap-1">
                          <button
                            type="button"
                            onClick={() => setPermissionModalUser(user)}
-                           className="p-1.5 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                           className="p-1.5 text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-md transition-colors"
                            title="Manage User Feature & Action Permissions"
                          >
                            <Key size={14} />
@@ -828,7 +828,7 @@ export default function RoleList() {
                          {isAdmin && (
                            <button
                              onClick={(e) => handleRemoveUser(e, user)}
-                             className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                             className="p-1.5 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-md transition-colors"
                              title="Remove from role"
                            >
                              <Trash2 size={14} />
@@ -840,9 +840,9 @@ export default function RoleList() {
                  ))}
                </div>
              ) : (
-               <div className="h-full flex flex-col items-center justify-center p-8 text-center text-zinc-500">
-                 <Users size={32} className="text-zinc-300 mb-3" />
-                 <p className="text-sm font-semibold text-zinc-700">No users assigned to this role</p>
+               <div className="h-full flex flex-col items-center justify-center p-8 text-center text-zinc-500 dark:text-[#A0A6B5]">
+                 <Users size={32} className="text-zinc-300 dark:text-[#6B7184] mb-3" />
+                 <p className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE]">No users assigned to this role</p>
                </div>
              )}
           </div>
@@ -881,22 +881,22 @@ export default function RoleList() {
         }
         size="6xl"
       >
-        <div className="p-5 flex flex-col h-[75vh] bg-zinc-50/50">
+        <div className="p-5 flex flex-col h-[75vh] bg-zinc-50/50 dark:bg-[#161922]">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 mb-4">
             <div className="relative flex-1 max-w-sm">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184]" />
               <input
                 type="text"
                 placeholder="Search features by name, code..."
                 value={permissionSearch}
                 onChange={(e) => setPermissionSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10/20"
+                className="w-full pl-8 pr-3 py-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] outline-none focus:border-zinc-400 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900/10 placeholder:text-zinc-400 dark:placeholder:text-[#6B7184]"
               />
             </div>
             <CustomSelect
               value={selectedModuleFilter}
               onChange={(e) => setSelectedModuleFilter(e.target.value)}
-              className="px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10/20 cursor-pointer min-w-[140px]"
+              className="px-3 py-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs outline-none focus:border-zinc-400 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900/10 cursor-pointer min-w-[140px] dark:text-[#E6E8EE]"
             >
               <option value="ALL">All Modules</option>
               {availableModules.map(mod => (
@@ -927,9 +927,9 @@ export default function RoleList() {
             {isLoadingPermissions ? (
               <div className="space-y-3 py-4">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="animate-pulse p-4 border border-zinc-100 rounded-xl bg-white space-y-3">
-                    <div className="h-4 bg-zinc-100 rounded w-1/4" />
-                    <div className="h-10 bg-zinc-50 rounded" />
+                  <div key={i} className="animate-pulse p-4 border border-zinc-100 dark:border-[#2A2F3D] rounded-xl bg-white dark:bg-[#1D212C] space-y-3">
+                    <div className="h-4 bg-zinc-100 dark:bg-[#222736] rounded w-1/4" />
+                    <div className="h-10 bg-zinc-50 dark:bg-[#161922] rounded" />
                   </div>
                 ))}
               </div>
@@ -943,12 +943,12 @@ export default function RoleList() {
                   const allEnabled = enabledPerms === totalPerms && totalPerms > 0
 
                   return (
-                    <div key={moduleName} className="border border-zinc-200 rounded-xl overflow-hidden shadow-2xs bg-white">
-                      <div className="px-4 py-3 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between gap-3 sticky top-0 z-10">
+                    <div key={moduleName} className="border border-zinc-200 dark:border-[#2A2F3D] rounded-xl overflow-hidden shadow-2xs bg-white dark:bg-[#161922]">
+                      <div className="px-4 py-3 bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between gap-3 sticky top-0 z-10">
                         <div className="flex items-center gap-2">
-                          <Layers size={14} className="text-zinc-500" />
-                          <span className="font-bold text-xs text-zinc-800 uppercase tracking-wider">{moduleName}</span>
-                          <span className="text-[10px] font-semibold text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-full">
+                          <Layers size={14} className="text-zinc-500 dark:text-[#A0A6B5]" />
+                          <span className="font-bold text-xs text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">{moduleName}</span>
+                          <span className="text-[10px] font-semibold text-zinc-500 dark:text-[#A0A6B5] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] px-2 py-0.5 rounded-full">
                             {enabledPerms} / {totalPerms} enabled
                           </span>
                         </div>
@@ -956,7 +956,7 @@ export default function RoleList() {
                           <button
                             type="button"
                             onClick={() => handleToggleModuleAll(moduleName, !allEnabled)}
-                            className="text-[11px] font-bold text-zinc-600 hover:text-zinc-900 hover:underline px-2 py-0.5 uppercase tracking-wider"
+                            className="text-[11px] font-bold text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:underline px-2 py-0.5 uppercase tracking-wider"
                           >
                             {allEnabled ? 'Disable All' : 'Enable All'}
                           </button>
@@ -964,27 +964,27 @@ export default function RoleList() {
                       </div>
 
                       <div className="overflow-x-auto">
-                        <div className="flex items-center border-b border-zinc-100 bg-zinc-50/50 px-4 py-2 gap-4 min-w-[500px]">
-                          <div className="flex-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Feature</div>
+                        <div className="flex items-center border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/60 px-4 py-2 gap-4 min-w-[500px]">
+                          <div className="flex-1 text-[10px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">Feature</div>
                           {allActions.map(action => (
-                            <div key={action} className="w-16 text-center text-[10px] font-bold text-zinc-500 uppercase tracking-wider shrink-0">{action}</div>
+                            <div key={action} className="w-16 text-center text-[10px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider shrink-0">{action}</div>
                           ))}
                         </div>
 
-                        <div className="divide-y divide-zinc-100">
+                        <div className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                           {moduleFeatures.map((feat) => (
-                            <div key={feat.featureCode} className="flex items-center px-4 py-3 gap-4 hover:bg-zinc-50/60 transition-colors min-w-[500px]">
+                            <div key={feat.featureCode} className="flex items-center px-4 py-3 gap-4 hover:bg-zinc-50/60 dark:hover:bg-[#222736] transition-colors min-w-[500px]">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-xs font-semibold text-zinc-900">{feat.featureName}</span>
-                                  <span className="text-[10px] font-mono text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded">{feat.featureCode}</span>
+                                  <span className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE]">{feat.featureName}</span>
+                                  <span className="text-[10px] font-mono text-zinc-500 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1D212C] border border-zinc-200/50 dark:border-[#2A2F3D] px-1.5 py-0.5 rounded">{feat.featureCode}</span>
                                 </div>
                               </div>
                               {allActions.map(action => {
                                 const perm = feat.actions[action]
                                 const key = `${feat.featureCode}::${action}`
                                 const isEnabled = rolePermissions.has(key)
-                                if (!perm) return <div key={action} className="w-16 flex justify-center shrink-0"><span className="text-zinc-200 text-[10px]">—</span></div>
+                                if (!perm) return <div key={action} className="w-16 flex justify-center shrink-0"><span className="text-zinc-200 dark:text-[#2A2F3D] text-[10px]">—</span></div>
                                 
                                 return (
                                   <div key={action} className="w-16 flex justify-center shrink-0">
@@ -994,8 +994,8 @@ export default function RoleList() {
                                       aria-checked={isEnabled}
                                       disabled={!isAdmin}
                                       onClick={() => handleTogglePermission(feat.featureCode, action)}
-                                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-zinc-900/20 disabled:cursor-not-allowed disabled:opacity-50 ${
-                                        isEnabled ? 'bg-zinc-900' : 'bg-zinc-200'
+                                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                        isEnabled ? 'bg-zinc-900 dark:bg-primary' : 'bg-zinc-200 dark:bg-[#2A2F3D]'
                                       }`}
                                     >
                                       <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
@@ -1012,9 +1012,9 @@ export default function RoleList() {
                 })}
               </div>
             ) : (
-              <div className="border border-dashed border-zinc-200 rounded-xl p-8 text-center bg-white flex flex-col items-center justify-center">
-                <Shield size={24} className="text-zinc-300 mb-2" />
-                <h3 className="text-xs font-bold text-zinc-700">No permissions matched</h3>
+              <div className="border border-dashed border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-8 text-center bg-white dark:bg-[#161922] flex flex-col items-center justify-center">
+                <Shield size={24} className="text-zinc-300 dark:text-[#6B7184] mb-2" />
+                <h3 className="text-xs font-bold text-zinc-700 dark:text-[#E6E8EE]">No permissions matched</h3>
               </div>
             )}
           </div>

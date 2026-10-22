@@ -110,8 +110,8 @@ export default function CompanyModuleManagement() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Company Modules</h1>
-          <p className="text-sm text-zinc-500 mt-1">Manage which modules are assigned to which companies.</p>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Company Modules</h1>
+          <p className="text-sm text-zinc-500 dark:text-[#A0A6B5] mt-1">Manage which modules are assigned to which companies.</p>
         </div>
         <button
           onClick={handleCreate}
@@ -122,15 +122,15 @@ export default function CompanyModuleManagement() {
         </button>
       </div>
 
-      <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
-        <div className="flex items-center gap-2 text-sm font-medium text-zinc-600">
+      <div className="flex items-center gap-4 bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm">
+        <div className="flex items-center gap-2 text-sm font-medium text-zinc-600 dark:text-[#A0A6B5]">
           <Filter size={16} />
           Status:
         </div>
         <CustomSelect
           value={activeFilter}
           onChange={(e) => setActiveFilter(e.target.value)}
-          className="border border-zinc-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="border border-zinc-200 dark:border-[#2A2F3D] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
           <option value="">All</option>
           <option value="true">Active</option>
@@ -139,7 +139,7 @@ export default function CompanyModuleManagement() {
       </div>
 
       {loading ? (
-        <div className="bg-white rounded-xl border border-zinc-200 p-6">
+        <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] p-6">
           <SkeletonLoader count={5} height={40} />
         </div>
       ) : (

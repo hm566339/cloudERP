@@ -227,18 +227,18 @@ export default function DeliveryInvoiceActionsModal({
         if (e.target === e.currentTarget && !isExecuting) handleSkip();
       }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-200">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-200 dark:border-[#2A2F3D]">
         {/* Header */}
-        <div className="flex items-start justify-between px-6 pt-6 pb-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-white border-b border-zinc-100">
+        <div className="flex items-start justify-between px-6 pt-6 pb-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-white dark:from-emerald-950/40 dark:via-teal-950/30 dark:to-[#161922] border-b border-zinc-100 dark:border-[#2A2F3D]">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200">
-              <CheckCircle2 size={24} className="text-emerald-600" />
+            <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800/50">
+              <CheckCircle2 size={24} className="text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-zinc-900 leading-tight">
+              <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] leading-tight">
                 Delivery Confirmed Successfully
               </h3>
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-1">
                 What would you like to do with the invoice?
               </p>
             </div>
@@ -247,7 +247,7 @@ export default function DeliveryInvoiceActionsModal({
             type="button"
             onClick={handleSkip}
             disabled={isExecuting}
-            className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors disabled:opacity-40"
+            className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:hover:text-zinc-200 dark:hover:bg-[#222736] rounded-lg transition-colors disabled:opacity-40"
             title="Skip / Close"
           >
             <X size={18} />
@@ -256,19 +256,19 @@ export default function DeliveryInvoiceActionsModal({
 
         {/* Metadata Badges */}
         {(effectiveDcNumber || effectiveInvoiceNumber || customerName) && (
-          <div className="px-6 py-2.5 bg-zinc-50 border-b border-zinc-100 flex flex-wrap gap-2 items-center text-[11px] text-zinc-600">
+          <div className="px-6 py-2.5 bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-100 dark:border-[#2A2F3D] flex flex-wrap gap-2 items-center text-[11px] text-zinc-600 dark:text-[#A0A6B5]">
             {effectiveDcNumber && (
-              <span className="inline-flex items-center gap-1 font-mono font-medium text-zinc-700 bg-white px-2 py-0.5 rounded border border-zinc-200">
+              <span className="inline-flex items-center gap-1 font-mono font-medium text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#161922] px-2 py-0.5 rounded border border-zinc-200 dark:border-[#2A2F3D]">
                 <span className="text-zinc-400 text-[9px] uppercase font-sans">DC:</span> {effectiveDcNumber}
               </span>
             )}
             {effectiveInvoiceNumber && (
-              <span className="inline-flex items-center gap-1 font-mono font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+              <span className="inline-flex items-center gap-1 font-mono font-medium text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800/50">
                 <span className="text-indigo-400 text-[9px] uppercase font-sans">Inv:</span> {effectiveInvoiceNumber}
               </span>
             )}
             {customerName && (
-              <span className="truncate max-w-[180px] text-zinc-500 ml-auto" title={customerName}>
+              <span className="truncate max-w-[180px] text-zinc-500 dark:text-[#A0A6B5] ml-auto" title={customerName}>
                 {customerName}
               </span>
             )}
@@ -292,8 +292,8 @@ export default function DeliveryInvoiceActionsModal({
             }}
             className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer select-none ${
               printInvoice
-                ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30 shadow-sm'
-                : 'border-zinc-200 hover:border-zinc-300 bg-white hover:bg-zinc-50/80'
+                ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30 shadow-sm dark:bg-emerald-950/30 dark:border-emerald-500/70'
+                : 'border-zinc-200 hover:border-zinc-300 bg-white hover:bg-zinc-50/80 dark:border-[#2A2F3D] dark:hover:border-zinc-600 dark:bg-[#161922] dark:hover:bg-[#1D212C]'
             }`}
           >
             <div className="relative flex items-center justify-center pointer-events-auto">
@@ -310,18 +310,18 @@ export default function DeliveryInvoiceActionsModal({
                 className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-zinc-300 cursor-pointer pointer-events-auto"
               />
             </div>
-            <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-700 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-[#1D212C] flex items-center justify-center text-zinc-700 dark:text-[#E6E8EE] shrink-0">
               <Printer size={16} />
             </div>
             <div className="flex-1 min-w-0">
               <label
                 htmlFor="checkbox-print-invoice"
                 onClick={(e) => e.preventDefault()}
-                className="text-xs font-semibold text-zinc-900 cursor-pointer block"
+                className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] cursor-pointer block"
               >
                 Print Invoice
               </label>
-              <p className="text-[11px] text-zinc-500">Open system print dialog for physical printout</p>
+              <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">Open system print dialog for physical printout</p>
             </div>
           </div>
 
@@ -340,8 +340,8 @@ export default function DeliveryInvoiceActionsModal({
             }}
             className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer select-none ${
               sendInvoice
-                ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30 shadow-sm'
-                : 'border-zinc-200 hover:border-zinc-300 bg-white hover:bg-zinc-50/80'
+                ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30 shadow-sm dark:bg-emerald-950/30 dark:border-emerald-500/70'
+                : 'border-zinc-200 hover:border-zinc-300 bg-white hover:bg-zinc-50/80 dark:border-[#2A2F3D] dark:hover:border-zinc-600 dark:bg-[#161922] dark:hover:bg-[#1D212C]'
             }`}
           >
             <div className="relative flex items-center justify-center pointer-events-auto">
@@ -358,18 +358,18 @@ export default function DeliveryInvoiceActionsModal({
                 className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-zinc-300 cursor-pointer pointer-events-auto"
               />
             </div>
-            <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-700 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-[#1D212C] flex items-center justify-center text-zinc-700 dark:text-[#E6E8EE] shrink-0">
               <Send size={16} />
             </div>
             <div className="flex-1 min-w-0">
               <label
                 htmlFor="checkbox-send-invoice"
                 onClick={(e) => e.preventDefault()}
-                className="text-xs font-semibold text-zinc-900 cursor-pointer block"
+                className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] cursor-pointer block"
               >
                 Send Invoice
               </label>
-              <p className="text-[11px] text-zinc-500">Email invoice directly to the customer</p>
+              <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">Email invoice directly to the customer</p>
             </div>
           </div>
 
@@ -388,8 +388,8 @@ export default function DeliveryInvoiceActionsModal({
             }}
             className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all cursor-pointer select-none ${
               downloadInvoice
-                ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30 shadow-sm'
-                : 'border-zinc-200 hover:border-zinc-300 bg-white hover:bg-zinc-50/80'
+                ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500/30 shadow-sm dark:bg-emerald-950/30 dark:border-emerald-500/70'
+                : 'border-zinc-200 hover:border-zinc-300 bg-white hover:bg-zinc-50/80 dark:border-[#2A2F3D] dark:hover:border-zinc-600 dark:bg-[#161922] dark:hover:bg-[#1D212C]'
             }`}
           >
             <div className="relative flex items-center justify-center pointer-events-auto">
@@ -406,42 +406,42 @@ export default function DeliveryInvoiceActionsModal({
                 className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-zinc-300 cursor-pointer pointer-events-auto"
               />
             </div>
-            <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-700 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-[#1D212C] flex items-center justify-center text-zinc-700 dark:text-[#E6E8EE] shrink-0">
               <Download size={16} />
             </div>
             <div className="flex-1 min-w-0">
               <label
                 htmlFor="checkbox-download-invoice"
                 onClick={(e) => e.preventDefault()}
-                className="text-xs font-semibold text-zinc-900 cursor-pointer block"
+                className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] cursor-pointer block"
               >
                 Download Invoice
               </label>
-              <p className="text-[11px] text-zinc-500">Save official PDF copy to your device</p>
+              <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">Save official PDF copy to your device</p>
             </div>
           </div>
 
           {!hasAnySelection && !isExecuting && (
-            <p className="text-[11px] text-zinc-400 text-center pt-1">
+            <p className="text-[11px] text-zinc-400 dark:text-[#A0A6B5] text-center pt-1">
               Select one or more options to continue, or click Skip.
             </p>
           )}
 
           {isExecuting && currentStepText && (
-            <div className="flex items-center justify-center gap-2 p-2 bg-emerald-50 border border-emerald-200/60 rounded-lg text-xs font-medium text-emerald-800">
-              <Loader2 size={14} className="animate-spin text-emerald-600" />
+            <div className="flex items-center justify-center gap-2 p-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 rounded-lg text-xs font-medium text-emerald-800 dark:text-emerald-300">
+              <Loader2 size={14} className="animate-spin text-emerald-600 dark:text-emerald-400" />
               <span>{currentStepText}</span>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 bg-zinc-50 border-t border-zinc-100">
+        <div className="flex items-center justify-between px-6 py-4 bg-zinc-50 dark:bg-[#1D212C] border-t border-zinc-100 dark:border-[#2A2F3D]">
           <button
             type="button"
             onClick={handleSkip}
             disabled={isExecuting}
-            className="px-4 py-2 text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100 hover:text-zinc-800 transition-colors disabled:opacity-40"
+            className="px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-100 dark:hover:bg-[#222736] hover:text-zinc-800 dark:hover:text-white transition-colors disabled:opacity-40"
           >
             Skip
           </button>
@@ -449,7 +449,7 @@ export default function DeliveryInvoiceActionsModal({
             type="button"
             onClick={handleContinue}
             disabled={!hasAnySelection || isExecuting}
-            className="px-5 py-2 text-xs font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-xs"
+            className="px-5 py-2 text-xs font-semibold text-white bg-zinc-900 dark:bg-[#4C8DFF] rounded-lg hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-xs"
           >
             {isExecuting ? (
               <>

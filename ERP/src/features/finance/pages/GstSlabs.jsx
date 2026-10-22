@@ -20,53 +20,53 @@ const GstSlabOverview = ({ slab }) => {
   const total = (slab.cgstRate || 0) + (slab.sgstRate || 0) + (slab.igstRate || 0) + (slab.cessRate || 0);
   
   return (
-    <div className="p-5 flex flex-col bg-zinc-50/50 rounded-lg border-t border-zinc-200">
+    <div className="p-5 flex flex-col bg-zinc-50/50 dark:bg-[#1D212C] rounded-lg border-t border-zinc-200 dark:border-[#2A2F3D]">
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">GST Rate</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{total}%</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">GST Rate</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{total}%</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">CGST</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{slab.cgstRate != null ? `${slab.cgstRate}%` : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">CGST</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{slab.cgstRate != null ? `${slab.cgstRate}%` : '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">SGST</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{slab.sgstRate != null ? `${slab.sgstRate}%` : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">SGST</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{slab.sgstRate != null ? `${slab.sgstRate}%` : '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">IGST</p>
-          <p className="text-sm font-medium text-emerald-600 mt-1">{slab.igstRate != null ? `${slab.igstRate}%` : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">IGST</p>
+          <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mt-1">{slab.igstRate != null ? `${slab.igstRate}%` : '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">CESS</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{slab.cessRate != null ? `${slab.cessRate}%` : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">CESS</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{slab.cessRate != null ? `${slab.cessRate}%` : '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Status</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Status</p>
           <div className="mt-1">
             <DataTableStatusBadge status={!slab.deleted} customLabels={{ true: 'ACTIVE', false: 'INACTIVE' }} />
           </div>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Effective From</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{slab.effectiveFrom ? new Date(slab.effectiveFrom).toLocaleDateString() : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Effective From</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{slab.effectiveFrom ? new Date(slab.effectiveFrom).toLocaleDateString() : '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Effective To</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">—</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Effective To</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">—</p>
         </div>
         <div className="col-span-2">
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Description</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{slab.slabName || 'Standard GST slab'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Description</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{slab.slabName || 'Standard GST slab'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Created At</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{slab.createdAt ? new Date(slab.createdAt).toLocaleDateString() : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Created At</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{slab.createdAt ? new Date(slab.createdAt).toLocaleDateString() : '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Updated At</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{slab.updatedAt ? new Date(slab.updatedAt).toLocaleDateString() : '-'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Updated At</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{slab.updatedAt ? new Date(slab.updatedAt).toLocaleDateString() : '-'}</p>
         </div>
       </div>
     </div>
@@ -308,7 +308,7 @@ const GstSlabs = () => {
   ], [navigate, buildPath]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="GST Slabs"
         description="Manage GST tax rates and slab configurations."

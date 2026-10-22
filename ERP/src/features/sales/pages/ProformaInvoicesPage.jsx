@@ -47,16 +47,16 @@ const ProformaInvoiceOverview = ({ pi, isLoading, isError, onRetry }) => {
   };
 
   return (
-    <div className="p-5 bg-white border border-zinc-100 rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2 cursor-default" onClick={(e) => e.stopPropagation()}>
+    <div className="p-5 bg-white dark:bg-[#1D212C] border border-zinc-100 dark:border-[#2A2F3D] rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2 cursor-default" onClick={(e) => e.stopPropagation()}>
       {/* PI Header */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100 flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded border border-zinc-200">
+          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 dark:bg-[#161922] text-zinc-800 dark:text-[#E6E8EE] rounded border border-zinc-200 dark:border-[#2A2F3D]">
             {pi.piNumber}
           </span>
           <div>
-            <h3 className="text-lg font-bold text-zinc-900">{pi.customerName || '—'}</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">Date: {fmtDate(pi.piDate)} | Valid Till: {fmtDate(pi.piValidTill)}</p>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">{pi.customerName || '—'}</h3>
+            <p className="text-xs text-zinc-500 dark:text-[#6B7184] mt-0.5">Date: {fmtDate(pi.piDate)} | Valid Till: {fmtDate(pi.piValidTill)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -72,23 +72,23 @@ const ProformaInvoiceOverview = ({ pi, isLoading, isError, onRetry }) => {
         </div>
       ) : isError ? (
         <div className="flex flex-col items-center justify-center py-10 text-center">
-          <p className="text-sm font-medium text-zinc-600">Unable to load Proforma Invoice details.</p>
-          <button onClick={onRetry} className="mt-3 h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-2">
+          <p className="text-sm font-medium text-zinc-600 dark:text-[#A0A6B5]">Unable to load Proforma Invoice details.</p>
+          <button onClick={onRetry} className="mt-3 h-9 px-3 text-[10.4px] font-semibold text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all flex items-center gap-2">
             <RefreshCw size={14} /> Retry
           </button>
         </div>
       ) : (
         <>
           {/* Source Quotation */}
-          <div className="mb-6 border border-zinc-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-100 flex items-center justify-between gap-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+          <div className="mb-6 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-hidden">
+            <div className="px-4 py-2.5 bg-zinc-50 dark:bg-[#161922] border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between gap-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] flex items-center gap-1.5">
                 <FileText size={13} className="text-blue-500" /> Source Quotation
               </h4>
               {quotationId && (
                 <button
                   onClick={() => navigate(`/accounts/transactions/quotations/${quotationId}`)}
-                  className="text-xs font-semibold text-zinc-900 hover:text-zinc-700 bg-white border border-zinc-200 shadow-sm px-2.5 py-1 rounded-md transition-colors"
+                  className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] hover:text-zinc-700 dark:hover:text-[#A0A6B5] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] shadow-sm px-2.5 py-1 rounded-md transition-colors"
                 >
                   View Quotation
                 </button>
@@ -97,85 +97,85 @@ const ProformaInvoiceOverview = ({ pi, isLoading, isError, onRetry }) => {
             <div className="p-4">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Quotation No.</p>
-                  <p className="font-mono font-semibold text-zinc-900">{quotationNumber || '—'}</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Quotation No.</p>
+                  <p className="font-mono font-semibold text-zinc-900 dark:text-[#E6E8EE]">{quotationNumber || '—'}</p>
                 </div>
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Date</p>
-                  <p className="font-medium text-zinc-900">{fmtDate(quotation.quotationDate)}</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Date</p>
+                  <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{fmtDate(quotation.quotationDate)}</p>
                 </div>
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Status</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Status</p>
                   <PIStatusBadge status={quotation.status || 'ACCEPTED'} />
                 </div>
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Valid Till</p>
-                  <p className="font-medium text-zinc-900">{fmtDate(quotation.validTill)}</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Valid Till</p>
+                  <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{fmtDate(quotation.validTill)}</p>
                 </div>
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Customer</p>
-                  <p className="font-medium text-zinc-900">{quotation.customerName || pi.customerName || '—'}</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Customer</p>
+                  <p className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{quotation.customerName || pi.customerName || '—'}</p>
                 </div>
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Total</p>
-                  <p className="font-bold text-zinc-900">{quotation.currency || curr} {fmt(quotation.totalAmount)}</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Total</p>
+                  <p className="font-bold text-zinc-900 dark:text-[#E6E8EE]">{quotation.currency || curr} {fmt(quotation.totalAmount)}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Customer */}
-          <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border border-zinc-200 rounded-lg overflow-hidden">
+          <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-hidden">
             <div className="p-4">
-              <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Customer</p>
-              <p className="text-sm font-bold text-zinc-900">{pi.customerName || '—'}</p>
+              <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Customer</p>
+              <p className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">{pi.customerName || '—'}</p>
             </div>
-            <div className="p-4 border-t sm:border-t-0 sm:border-l border-zinc-200">
-              <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Customer Code</p>
-              <p className="text-sm font-mono text-zinc-700">{pi.customerCode || '—'}</p>
+            <div className="p-4 border-t sm:border-t-0 sm:border-l border-zinc-200 dark:border-[#2A2F3D]">
+              <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Customer Code</p>
+              <p className="text-sm font-mono text-zinc-700 dark:text-[#A0A6B5]">{pi.customerCode || '—'}</p>
             </div>
-            <div className="p-4 border-t sm:border-t-0 sm:border-l border-zinc-200">
-              <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Currency</p>
-              <p className="text-sm font-medium text-zinc-900">{curr}</p>
+            <div className="p-4 border-t sm:border-t-0 sm:border-l border-zinc-200 dark:border-[#2A2F3D]">
+              <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Currency</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr}</p>
             </div>
           </div>
 
           {/* Items */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500">Items</h4>
-              <span className="text-xs font-semibold text-zinc-500 bg-white px-2.5 py-1 rounded-md border border-zinc-200 shadow-sm">{items.length} items</span>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Items</h4>
+              <span className="text-xs font-semibold text-zinc-500 dark:text-[#A0A6B5] bg-white dark:bg-[#161922] px-2.5 py-1 rounded-md border border-zinc-200 dark:border-[#2A2F3D] shadow-sm">{items.length} items</span>
             </div>
-            <div className="border border-zinc-200 rounded-lg overflow-x-auto min-w-0 custom-scrollbar">
+            <div className="border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-x-auto min-w-0 custom-scrollbar">
               <table className="w-full min-w-[750px] text-left text-sm">
-                <thead className="bg-zinc-50 border-b border-zinc-200">
+                <thead className="bg-zinc-50 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D]">
                   <tr>
-                    <th className="px-4 py-2 font-medium text-zinc-500">Product</th>
-                    <th className="px-4 py-2 font-medium text-zinc-500">Description</th>
-                    <th className="px-4 py-2 font-medium text-zinc-500 text-right">Qty</th>
-                    <th className="px-4 py-2 font-medium text-zinc-500">Unit</th>
-                    <th className="px-4 py-2 font-medium text-zinc-500 text-right">Rate</th>
-                    <th className="px-4 py-2 font-medium text-zinc-500 text-right">Discount</th>
-                    <th className="px-4 py-2 font-medium text-zinc-500 text-right">Tax</th>
-                    <th className="px-4 py-2 font-medium text-zinc-500 text-right">Tax %</th>
-                    <th className="px-4 py-2 font-medium text-zinc-500 text-right">Line Total</th>
+                    <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184]">Product</th>
+                    <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184]">Description</th>
+                    <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Qty</th>
+                    <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184]">Unit</th>
+                    <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Rate</th>
+                    <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Discount</th>
+                    <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Tax</th>
+                    <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Tax %</th>
+                    <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Line Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100">
+                <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                   {items.length > 0 ? items.map((it, i) => (
-                    <tr key={i} className="hover:bg-zinc-50/50">
-                      <td className="px-4 py-2 font-medium text-zinc-900">{it.itemName || it.productName || '—'}</td>
-                      <td className="px-4 py-2 text-zinc-500 truncate max-w-[160px]">{it.description || '—'}</td>
-                      <td className="px-4 py-2 text-right">{it.quantity ?? it.qty ?? 0}</td>
-                      <td className="px-4 py-2">{it.unit || it.uom || '—'}</td>
-                      <td className="px-4 py-2 text-right">{fmt(it.unitPrice ?? it.rate)}</td>
-                      <td className="px-4 py-2 text-right">{fmt(it.discountAmount || 0)}</td>
-                      <td className="px-4 py-2 text-right">{fmt(it.taxAmount || 0)}</td>
-                      <td className="px-4 py-2 text-right">{taxPctOf(it) !== null ? `${taxPctOf(it)}%` : '—'}</td>
-                      <td className="px-4 py-2 text-right font-medium">{fmt(it.totalAmount ?? it.lineTotal)}</td>
+                    <tr key={i} className="hover:bg-zinc-50/50 dark:hover:bg-[#222736]">
+                      <td className="px-4 py-2 font-medium text-zinc-900 dark:text-[#E6E8EE]">{it.itemName || it.productName || '—'}</td>
+                      <td className="px-4 py-2 text-zinc-500 dark:text-[#6B7184] truncate max-w-[160px]">{it.description || '—'}</td>
+                      <td className="px-4 py-2 text-right text-zinc-900 dark:text-[#E6E8EE]">{it.quantity ?? it.qty ?? 0}</td>
+                      <td className="px-4 py-2 text-zinc-700 dark:text-[#A0A6B5]">{it.unit || it.uom || '—'}</td>
+                      <td className="px-4 py-2 text-right text-zinc-900 dark:text-[#E6E8EE]">{fmt(it.unitPrice ?? it.rate)}</td>
+                      <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{fmt(it.discountAmount || 0)}</td>
+                      <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{fmt(it.taxAmount || 0)}</td>
+                      <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{taxPctOf(it) !== null ? `${taxPctOf(it)}%` : '—'}</td>
+                      <td className="px-4 py-2 text-right font-medium text-zinc-900 dark:text-[#E6E8EE]">{fmt(it.totalAmount ?? it.lineTotal)}</td>
                     </tr>
                   )) : (
-                    <tr><td colSpan={9} className="px-4 py-6 text-center text-zinc-400">No items available</td></tr>
+                    <tr><td colSpan={9} className="px-4 py-6 text-center text-zinc-400 dark:text-[#6B7184]">No items available</td></tr>
                   )}
                 </tbody>
               </table>
@@ -185,47 +185,47 @@ const ProformaInvoiceOverview = ({ pi, isLoading, isError, onRetry }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Amount Summary */}
             <div className="mb-6">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Amount Summary</h4>
-              <div className="space-y-2 text-sm bg-zinc-50 p-4 rounded-lg border border-zinc-200">
-                <div className="flex justify-between"><span className="text-zinc-500">Subtotal</span><span className="font-medium">{curr} {fmt(pi.subtotal)}</span></div>
-                <div className="flex justify-between"><span className="text-zinc-500">Discount</span><span className={`font-medium ${pi.discountAmount ? 'text-red-600' : ''}`}>{curr} {fmt(pi.discountAmount || 0)}</span></div>
-                <div className="flex justify-between"><span className="text-zinc-500">Tax Amount</span><span className="font-medium">{curr} {fmt(pi.taxAmount)}</span></div>
-                <div className="flex justify-between"><span className="text-zinc-500">Freight Charges</span><span className="font-medium">{curr} {fmt(pi.freightCharges || 0)}</span></div>
-                <div className="flex justify-between"><span className="text-zinc-500">Other Charges</span><span className="font-medium">{curr} {fmt(pi.otherCharges || 0)}</span></div>
-                <div className="flex justify-between"><span className="text-zinc-500">Round Off</span><span className="font-medium">{curr} {fmt(pi.roundOff || 0)}</span></div>
-                <div className="pt-2 mt-2 border-t border-zinc-200 flex justify-between items-center">
-                  <span className="font-bold text-zinc-900">Grand Total</span>
-                  <span className="font-bold text-lg text-zinc-900">{curr} {fmt(pi.totalAmount)}</span>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-3">Amount Summary</h4>
+              <div className="space-y-2 text-sm bg-zinc-50 dark:bg-[#161922] p-4 rounded-lg border border-zinc-200 dark:border-[#2A2F3D]">
+                <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Subtotal</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(pi.subtotal)}</span></div>
+                <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Discount</span><span className={`font-medium ${pi.discountAmount ? 'text-red-600 dark:text-red-400' : 'text-zinc-900 dark:text-[#E6E8EE]'}`}>{curr} {fmt(pi.discountAmount || 0)}</span></div>
+                <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Tax Amount</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(pi.taxAmount)}</span></div>
+                <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Freight Charges</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(pi.freightCharges || 0)}</span></div>
+                <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Other Charges</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(pi.otherCharges || 0)}</span></div>
+                <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Round Off</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(pi.roundOff || 0)}</span></div>
+                <div className="pt-2 mt-2 border-t border-zinc-200 dark:border-[#2A2F3D] flex justify-between items-center">
+                  <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">Grand Total</span>
+                  <span className="font-bold text-lg text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(pi.totalAmount)}</span>
                 </div>
               </div>
             </div>
 
             {/* Payment Details */}
             <div className="mb-6">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Payment Details</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-3">Payment Details</h4>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between items-center bg-indigo-50 p-3 rounded-lg border border-indigo-100">
-                  <span className="font-semibold text-indigo-900">Advance Required</span>
-                  <span className={`font-bold ${pi.advanceRequired ? 'text-emerald-600' : 'text-zinc-500'}`}>
+                <div className="flex justify-between items-center bg-indigo-50 dark:bg-indigo-950/20 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/30">
+                  <span className="font-semibold text-indigo-900 dark:text-indigo-300">Advance Required</span>
+                  <span className={`font-bold ${pi.advanceRequired ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500 dark:text-[#6B7184]'}`}>
                     {pi.advanceRequired ? 'Yes' : 'No'}
                   </span>
                 </div>
                 {pi.advanceRequired && (
                   <div className="flex justify-between items-center">
-                    <span className="text-zinc-500 font-medium">Advance Amount</span>
-                    <span className="font-bold text-zinc-900">{curr} {fmt(pi.advanceAmount)}</span>
+                    <span className="text-zinc-500 dark:text-[#6B7184] font-medium">Advance Amount</span>
+                    <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(pi.advanceAmount)}</span>
                   </div>
                 )}
                 {!!pi.paymentCondition && (
                   <div className="flex justify-between items-center">
-                    <span className="text-zinc-500 font-medium">Payment Condition</span>
-                    <span className="font-medium text-right text-zinc-900">{pi.paymentCondition}</span>
+                    <span className="text-zinc-500 dark:text-[#6B7184] font-medium">Payment Condition</span>
+                    <span className="font-medium text-right text-zinc-900 dark:text-[#E6E8EE]">{pi.paymentCondition}</span>
                   </div>
                 )}
                 {!!pi.paymentTerms && (
                   <div>
-                    <span className="text-zinc-500 block mb-1">Payment Terms</span>
-                    <p className="text-zinc-800 bg-zinc-50 p-2 rounded border border-zinc-100 text-xs min-h-[32px] whitespace-pre-wrap">{pi.paymentTerms}</p>
+                    <span className="text-zinc-500 dark:text-[#6B7184] block mb-1">Payment Terms</span>
+                    <p className="text-zinc-800 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#161922] p-2 rounded border border-zinc-100 dark:border-[#2A2F3D] text-xs min-h-[32px] whitespace-pre-wrap">{pi.paymentTerms}</p>
                   </div>
                 )}
               </div>
@@ -235,17 +235,17 @@ const ProformaInvoiceOverview = ({ pi, isLoading, isError, onRetry }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
             {/* Address */}
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Address</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-3">Address</h4>
               <div className="space-y-4">
                 <div>
-                  <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Billing Address</span>
-                  <p className="text-sm text-zinc-800 whitespace-pre-wrap leading-relaxed bg-zinc-50 p-3 rounded-lg border border-zinc-100 min-h-[48px]">
+                  <span className="text-xs font-semibold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-2 block">Billing Address</span>
+                  <p className="text-sm text-zinc-800 dark:text-[#E6E8EE] whitespace-pre-wrap leading-relaxed bg-zinc-50 dark:bg-[#161922] p-3 rounded-lg border border-zinc-100 dark:border-[#2A2F3D] min-h-[48px]">
                     {pi.billingAddressSnapshot || 'No billing address provided.'}
                   </p>
                 </div>
                 <div>
-                  <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 block">Delivery Address</span>
-                  <p className="text-sm text-zinc-800 whitespace-pre-wrap leading-relaxed bg-zinc-50 p-3 rounded-lg border border-zinc-100 min-h-[48px]">
+                  <span className="text-xs font-semibold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-2 block">Delivery Address</span>
+                  <p className="text-sm text-zinc-800 dark:text-[#E6E8EE] whitespace-pre-wrap leading-relaxed bg-zinc-50 dark:bg-[#161922] p-3 rounded-lg border border-zinc-100 dark:border-[#2A2F3D] min-h-[48px]">
                     {pi.deliveryAddressSnapshot || 'No delivery address provided.'}
                   </p>
                 </div>
@@ -254,40 +254,40 @@ const ProformaInvoiceOverview = ({ pi, isLoading, isError, onRetry }) => {
 
             {/* Bank Details */}
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Bank Details</h4>
-              <p className="text-sm text-zinc-800 whitespace-pre-wrap leading-relaxed bg-zinc-50 p-3 rounded-lg border border-zinc-100 min-h-[48px]">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-3">Bank Details</h4>
+              <p className="text-sm text-zinc-800 dark:text-[#E6E8EE] whitespace-pre-wrap leading-relaxed bg-zinc-50 dark:bg-[#161922] p-3 rounded-lg border border-zinc-100 dark:border-[#2A2F3D] min-h-[48px]">
                 {pi.bankDetailsSnapshot || 'No bank details provided.'}
               </p>
             </div>
           </div>
 
           {/* Additional Details */}
-          <div className="border border-zinc-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-100">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500">Additional Details</h4>
+          <div className="border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-hidden">
+            <div className="px-4 py-2.5 bg-zinc-50 dark:bg-[#161922] border-b border-zinc-100 dark:border-[#2A2F3D]">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Additional Details</h4>
             </div>
             <div className="p-4 space-y-3 text-sm">
               <div>
-                <span className="text-zinc-500 block mb-1">Notes</span>
-                <p className="text-zinc-800 bg-zinc-50 p-2 rounded border border-zinc-100 text-xs min-h-[32px] whitespace-pre-wrap">{pi.notes || '—'}</p>
+                <span className="text-zinc-500 dark:text-[#6B7184] block mb-1">Notes</span>
+                <p className="text-zinc-800 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#161922] p-2 rounded border border-zinc-100 dark:border-[#2A2F3D] text-xs min-h-[32px] whitespace-pre-wrap">{pi.notes || '—'}</p>
               </div>
               {!!pi.deliveryTerms && (
                 <div>
-                  <span className="text-zinc-500 block mb-1">Delivery Terms</span>
-                  <p className="text-zinc-800 bg-zinc-50 p-2 rounded border border-zinc-100 text-xs min-h-[32px] whitespace-pre-wrap">{pi.deliveryTerms}</p>
+                  <span className="text-zinc-500 dark:text-[#6B7184] block mb-1">Delivery Terms</span>
+                  <p className="text-zinc-800 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#161922] p-2 rounded border border-zinc-100 dark:border-[#2A2F3D] text-xs min-h-[32px] whitespace-pre-wrap">{pi.deliveryTerms}</p>
                 </div>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="flex justify-between">
-                  <span className="text-zinc-500">Created By</span>
-                  <span className="font-medium text-right text-zinc-900">{pi.audit?.created?.by?.username || pi.createdByName || '—'}</span>
+                  <span className="text-zinc-500 dark:text-[#6B7184]">Created By</span>
+                  <span className="font-medium text-right text-zinc-900 dark:text-[#E6E8EE]">{pi.audit?.created?.by?.username || pi.createdByName || '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-500">Updated By</span>
-                  <span className="font-medium text-right text-zinc-900">{pi.audit?.updated?.by?.username || pi.updatedByName || '—'}</span>
+                  <span className="text-zinc-500 dark:text-[#6B7184]">Updated By</span>
+                  <span className="font-medium text-right text-zinc-900 dark:text-[#E6E8EE]">{pi.audit?.updated?.by?.username || pi.updatedByName || '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-zinc-500">Created Date</span>
+                  <span className="text-zinc-500 dark:text-[#6B7184]">Created Date</span>
                   <span className="font-medium text-right text-zinc-900">
                     {pi.audit?.created?.on ? new Date(pi.audit.created.on).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : (pi.createdAt ? new Date(pi.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—')}
                   </span>
@@ -676,7 +676,7 @@ export default function ProformaInvoicesPage() {
   });
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 animate-in fade-in">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] animate-in fade-in">
       {/* ── Page Header ── */}
       <PageHeader title="Proforma Invoices (PI)" description="Manage proforma invoices" icon={Clock}>
         <button

@@ -26,7 +26,7 @@ export default function DataTableEmptyState({
             <button
               type="button"
               onClick={onReset}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 hover:text-zinc-900 transition-all active:scale-95 shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-700 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 hover:text-zinc-900 transition-all active:scale-95 shadow-2xs"
             >
               <RotateCcw size={13} />
               <span>{resetLabel}</span>

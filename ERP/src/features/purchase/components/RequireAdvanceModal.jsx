@@ -46,37 +46,37 @@ const RequireAdvanceModal = ({ isOpen, onClose, purchaseOrder, refetch }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-slide-up relative">
-        <div className="flex items-center justify-between p-4 border-b border-zinc-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 dark:bg-black/70 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-[#161922] rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-slide-up relative border border-transparent dark:border-[#2A2F3D]">
+        <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <DollarSign size={18} />
             </div>
-            <h3 className="text-sm font-bold text-zinc-900">Require Advance Payment</h3>
+            <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">Require Advance Payment</h3>
           </div>
-          <button onClick={onClose} className="p-1 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 rounded-md transition-colors">
+          <button onClick={onClose} className="p-1 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-md transition-colors">
             <X size={16} />
           </button>
         </div>
         
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div className="bg-zinc-50 p-3 rounded-lg border border-zinc-100">
+          <div className="bg-zinc-50 dark:bg-[#1D212C] p-3 rounded-lg border border-zinc-100 dark:border-[#2A2F3D]">
             <div className="flex justify-between items-center text-xs">
-              <span className="text-zinc-500 font-medium">Purchase Order Total</span>
-              <span className="font-bold text-zinc-900 font-mono">
+              <span className="text-zinc-500 dark:text-[#A0A6B5] font-medium">Purchase Order Total</span>
+              <span className="font-bold text-zinc-900 dark:text-[#E6E8EE] font-mono">
                 {purchaseOrder.currency || 'INR'} {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </span>
             </div>
           </div>
           
           <div>
-            <label className="block text-[11px] font-semibold text-zinc-700 mb-1">
+            <label className="block text-[11px] font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1">
               Advance Amount <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-zinc-500 text-xs font-mono">{purchaseOrder.currency || 'INR'}</span>
+                <span className="text-zinc-500 dark:text-[#6B7184] text-xs font-mono">{purchaseOrder.currency || 'INR'}</span>
               </div>
               <input
                 type="number"
@@ -86,7 +86,7 @@ const RequireAdvanceModal = ({ isOpen, onClose, purchaseOrder, refetch }) => {
                 max={totalAmount}
                 value={advanceAmount}
                 onChange={(e) => setAdvanceAmount(e.target.value)}
-                className="w-full pl-12 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                className="w-full pl-12 pr-3 py-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-900 dark:text-[#E6E8EE] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder-zinc-400 dark:placeholder-[#6B7184]"
                 placeholder="Enter advance amount"
               />
             </div>
@@ -97,7 +97,7 @@ const RequireAdvanceModal = ({ isOpen, onClose, purchaseOrder, refetch }) => {
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="px-4 py-2 text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
+              className="px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors"
             >
               Cancel
             </button>

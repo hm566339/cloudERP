@@ -341,9 +341,9 @@ export default function SuperAdminDashboard() {
 
             <Link
               to={buildPath('/super-admin/organizations/provision')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-white text-zinc-900 hover:bg-zinc-100 transition-all shadow-sm active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-white text-zinc-900 hover:bg-zinc-100 dark:bg-[#4C8DFF] dark:text-white dark:hover:bg-[#6AA1FF] transition-all shadow-sm active:scale-95"
             >
-              <Plus size={14} className="text-zinc-900 stroke-[2.5]" />
+              <Plus size={14} className="text-zinc-900 dark:text-white stroke-[2.5]" />
               <span>New Organization</span>
             </Link>
           </div>
@@ -352,11 +352,11 @@ export default function SuperAdminDashboard() {
 
       {/* ── Backend API Warning (if unreachable) ── */}
       {orgApiMissing && (
-        <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 shadow-2xs">
-          <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-600" />
+        <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-xl text-xs text-amber-900 dark:text-amber-200 shadow-2xs">
+          <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
           <div className="space-y-0.5">
             <p className="font-semibold">Notice: Multi-tenant API is operating in fallback mode</p>
-            <p className="text-amber-800">Showing local workspace tenants. Some administrative endpoints are synchronizing.</p>
+            <p className="text-amber-800 dark:text-amber-300">Showing local workspace tenants. Some administrative endpoints are synchronizing.</p>
           </div>
         </div>
       )}
@@ -366,34 +366,34 @@ export default function SuperAdminDashboard() {
         {/* Metric 1: Organizations */}
         <Link
           to={buildPath('/super-admin/organizations')}
-          className="group relative bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all duration-200 flex flex-col justify-between"
+          className="group relative bg-white dark:bg-[#161922] rounded-2xl p-5 border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs hover:shadow-md hover:border-blue-200 dark:hover:border-[#3A4154] transition-all duration-200 flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">
+              <span className="text-[11px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-blue-600 dark:group-hover:text-[#4C8DFF] transition-colors">
                 Organizations
               </span>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/80 flex items-center justify-center group-hover:scale-105 group-hover:bg-zinc-900 group-hover:text-white transition-all shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100/80 dark:border-blue-900/60 flex items-center justify-center group-hover:scale-105 group-hover:bg-zinc-900 dark:group-hover:bg-[#4C8DFF] group-hover:text-white transition-all shadow-2xs">
                 <Building2 size={18} />
               </div>
             </div>
             <div className="flex items-baseline gap-2 mb-1.5">
-              <span className="text-3xl font-extrabold text-zinc-900 tracking-tight">
+              <span className="text-3xl font-extrabold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                 {orgsLoading ? (
-                  <span className="inline-block w-10 h-8 bg-zinc-100 animate-pulse rounded" />
+                  <span className="inline-block w-10 h-8 bg-zinc-100 dark:bg-[#1D212C] animate-pulse rounded" />
                 ) : (
                   totalOrgs
                 )}
               </span>
-              <span className="text-xs font-semibold text-zinc-400">Tenants</span>
+              <span className="text-xs font-semibold text-zinc-400 dark:text-[#6B7184]">Tenants</span>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+          <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between text-xs">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/60">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               {activeOrgs} Active
             </span>
-            <span className="text-[11px] font-medium text-zinc-400 group-hover:text-blue-600 flex items-center gap-0.5 transition-colors">
+            <span className="text-[11px] font-medium text-zinc-400 dark:text-[#6B7184] group-hover:text-blue-600 dark:group-hover:text-[#4C8DFF] flex items-center gap-0.5 transition-colors">
               Manage <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
             </span>
           </div>
@@ -402,101 +402,101 @@ export default function SuperAdminDashboard() {
         {/* Metric 2: Companies */}
         <Link
           to={buildPath('/super-admin/companies')}
-          className="group relative bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-2xs hover:shadow-md hover:border-violet-200 transition-all duration-200 flex flex-col justify-between"
+          className="group relative bg-white dark:bg-[#161922] rounded-2xl p-5 border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs hover:shadow-md hover:border-violet-200 dark:hover:border-[#3A4154] transition-all duration-200 flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider group-hover:text-violet-600 transition-colors">
+              <span className="text-[11px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
                 Workspaces
               </span>
-              <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 border border-violet-100/80 flex items-center justify-center group-hover:scale-105 group-hover:bg-violet-600 group-hover:text-white transition-all shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border border-violet-100/80 dark:border-violet-900/60 flex items-center justify-center group-hover:scale-105 group-hover:bg-violet-600 group-hover:text-white transition-all shadow-2xs">
                 <Briefcase size={18} />
               </div>
             </div>
             <div className="flex items-baseline gap-2 mb-1.5">
-              <span className="text-3xl font-extrabold text-zinc-900 tracking-tight">
+              <span className="text-3xl font-extrabold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                 {companiesLoading ? (
-                  <span className="inline-block w-10 h-8 bg-zinc-100 animate-pulse rounded" />
+                  <span className="inline-block w-10 h-8 bg-zinc-100 dark:bg-[#1D212C] animate-pulse rounded" />
                 ) : (
                   totalCompanies
                 )}
               </span>
-              <span className="text-xs font-semibold text-zinc-400">Companies</span>
+              <span className="text-xs font-semibold text-zinc-400 dark:text-[#6B7184]">Companies</span>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200/60">
+          <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between text-xs">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400 border border-violet-200/60 dark:border-violet-900/60">
               <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
               All Provisioned
             </span>
-            <span className="text-[11px] font-medium text-zinc-400 group-hover:text-violet-600 flex items-center gap-0.5 transition-colors">
+            <span className="text-[11px] font-medium text-zinc-400 dark:text-[#6B7184] group-hover:text-violet-600 dark:group-hover:text-violet-400 flex items-center gap-0.5 transition-colors">
               Browse <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
             </span>
           </div>
         </Link>
 
         {/* Metric 3: Members & Users */}
-        <div className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-2xs flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#161922] rounded-2xl p-5 border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">
                 Total Members
               </span>
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100/80 flex items-center justify-center shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100/80 dark:border-indigo-900/60 flex items-center justify-center shadow-2xs">
                 <Users size={18} />
               </div>
             </div>
             <div className="flex items-baseline gap-2 mb-1.5">
-              <span className="text-3xl font-extrabold text-zinc-900 tracking-tight">
+              <span className="text-3xl font-extrabold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                 {overviewLoading ? (
-                  <span className="inline-block w-10 h-8 bg-zinc-100 animate-pulse rounded" />
+                  <span className="inline-block w-10 h-8 bg-zinc-100 dark:bg-[#1D212C] animate-pulse rounded" />
                 ) : (
                   totalMembers
                 )}
               </span>
-              <span className="text-xs font-semibold text-zinc-400">Users</span>
+              <span className="text-xs font-semibold text-zinc-400 dark:text-[#6B7184]">Users</span>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+          <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between text-xs">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-900/60">
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
               Active Accounts
             </span>
-            <span className="text-[11px] text-zinc-400 font-medium">Platform-wide</span>
+            <span className="text-[11px] text-zinc-400 dark:text-[#6B7184] font-medium">Platform-wide</span>
           </div>
         </div>
 
         {/* Metric 4: Module Deployments */}
         <Link
           to={buildPath('/super-admin/modules')}
-          className="group relative bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-2xs hover:shadow-md hover:border-emerald-200 transition-all duration-200 flex flex-col justify-between"
+          className="group relative bg-white dark:bg-[#161922] rounded-2xl p-5 border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs hover:shadow-md hover:border-emerald-200 dark:hover:border-[#3A4154] transition-all duration-200 flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider group-hover:text-emerald-600 transition-colors">
+              <span className="text-[11px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                 Module Deployments
               </span>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100/80 flex items-center justify-center group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100/80 dark:border-emerald-900/60 flex items-center justify-center group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-2xs">
                 <Layers size={18} />
               </div>
             </div>
             <div className="flex items-baseline gap-2 mb-1.5">
-              <span className="text-3xl font-extrabold text-zinc-900 tracking-tight">
+              <span className="text-3xl font-extrabold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                 {modulesLoading ? (
-                  <span className="inline-block w-10 h-8 bg-zinc-100 animate-pulse rounded" />
+                  <span className="inline-block w-10 h-8 bg-zinc-100 dark:bg-[#1D212C] animate-pulse rounded" />
                 ) : (
                   activeAssignments
                 )}
               </span>
-              <span className="text-xs font-semibold text-zinc-400">Active</span>
+              <span className="text-xs font-semibold text-zinc-400 dark:text-[#6B7184]">Active</span>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+          <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between text-xs">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/60">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               {totalModules} Registered Modules
             </span>
-            <span className="text-[11px] font-medium text-zinc-400 group-hover:text-emerald-600 flex items-center gap-0.5 transition-colors">
+            <span className="text-[11px] font-medium text-zinc-400 dark:text-[#6B7184] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 flex items-center gap-0.5 transition-colors">
               Registry <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
             </span>
           </div>
@@ -510,19 +510,19 @@ export default function SuperAdminDashboard() {
         <div className="lg:col-span-8 space-y-7">
 
           {/* ── 1. Organization Overview Card & Table ── */}
-          <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+          <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
             {/* Header with Title and Search/Filters */}
-            <div className="p-5 border-b border-zinc-100 bg-white space-y-3.5">
+            <div className="p-5 border-b border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] space-y-3.5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-900/60">
                     <Building2 size={16} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-zinc-900 tracking-tight">
+                    <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                       Organization Overview
                     </h3>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">
                       Multi-tenant client organizations and their allocated workspaces
                     </p>
                   </div>
@@ -530,7 +530,7 @@ export default function SuperAdminDashboard() {
 
                 <Link
                   to={buildPath('/super-admin/organizations')}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-900 hover:text-zinc-700 transition-colors group self-start sm:self-auto"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] hover:text-zinc-700 dark:hover:text-[#4C8DFF] transition-colors group self-start sm:self-auto"
                 >
                   View All ({totalOrgs})
                   <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
@@ -540,26 +540,26 @@ export default function SuperAdminDashboard() {
               {/* Real-time search bar & filter tabs */}
               <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-1">
                 <div className="relative w-full sm:flex-1">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184] pointer-events-none" />
                   <input
                     type="text"
                     value={orgSearch}
                     onChange={(e) => setOrgSearch(e.target.value)}
                     placeholder="Search organizations by name or code..."
-                    className="w-full h-9 pl-9 pr-3 text-xs bg-zinc-50/70 hover:bg-zinc-50 focus:bg-white rounded-lg border border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all placeholder:text-zinc-400"
+                    className="w-full h-9 pl-9 pr-3 text-xs bg-zinc-50/70 hover:bg-zinc-50 focus:bg-white dark:bg-[#1D212C] dark:hover:bg-[#1D212C] dark:focus:bg-[#161922] dark:text-[#E6E8EE] rounded-lg border border-zinc-200 dark:border-[#2A2F3D] focus:border-zinc-400 dark:focus:border-[#4C8DFF] focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-[#6B7184]"
                   />
                   {orgSearch && (
                     <button
                       type="button"
                       onClick={() => setOrgSearch('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-zinc-400 hover:text-zinc-700 font-semibold px-1 rounded"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-zinc-400 dark:text-[#6B7184] hover:text-zinc-700 dark:hover:text-[#E6E8EE] font-semibold px-1 rounded"
                     >
                       Clear
                     </button>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 w-full sm:w-auto p-0.5 bg-zinc-100 rounded-lg text-xs font-medium self-stretch sm:self-auto">
+                <div className="flex items-center gap-1 w-full sm:w-auto p-0.5 bg-zinc-100 dark:bg-[#1D212C] rounded-lg text-xs font-medium self-stretch sm:self-auto">
                   {['ALL', 'ACTIVE', 'SUSPENDED'].map((filter) => (
                     <button
                       key={filter}
@@ -567,8 +567,8 @@ export default function SuperAdminDashboard() {
                       onClick={() => setOrgFilter(filter)}
                       className={`flex-1 sm:flex-initial px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${
                         orgFilter === filter
-                          ? 'bg-white text-zinc-900 shadow-2xs'
-                          : 'text-zinc-500 hover:text-zinc-900'
+                          ? 'bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] shadow-2xs'
+                          : 'text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'
                       }`}
                     >
                       {filter === 'ALL' ? 'All' : filter === 'ACTIVE' ? 'Active' : 'Suspended'}
@@ -587,9 +587,9 @@ export default function SuperAdminDashboard() {
               ) : organizations.length > 0 ? (
                 filteredOrganizations.length > 0 ? (
                   <table className="w-full text-left text-xs whitespace-nowrap">
-                    <thead className="bg-zinc-50/80 border-b border-zinc-100 text-zinc-500 font-semibold">
+                    <thead className="bg-zinc-50/80 dark:bg-[#1D212C] border-b border-zinc-100 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] font-semibold">
                       <tr>
-                        <th className="py-3 px-4 w-12 text-center text-[10px] uppercase tracking-wider text-zinc-400">#</th>
+                        <th className="py-3 px-4 w-12 text-center text-[10px] uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">#</th>
                         <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Organization</th>
                         <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Tenant Code</th>
                         <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Status</th>
@@ -598,7 +598,7 @@ export default function SuperAdminDashboard() {
                         <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100">
+                    <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                       {paginatedOrganizations.map((org, index) => {
                         const serialNumber = getSerialNumber({
                           page: orgPage,
@@ -609,62 +609,62 @@ export default function SuperAdminDashboard() {
                         const isSuspended = !org.active || org.status === 'SUSPENDED';
                         const initial = org?.name?.charAt(0)?.toUpperCase() || 'O';
                         const colorThemes = [
-                          'bg-blue-100 text-blue-700 border-blue-200',
-                          'bg-indigo-100 text-indigo-700 border-indigo-200',
-                          'bg-violet-100 text-violet-700 border-violet-200',
-                          'bg-emerald-100 text-emerald-700 border-emerald-200',
-                          'bg-cyan-100 text-cyan-700 border-cyan-200',
+                          'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/60',
+                          'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/60',
+                          'bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-900/60',
+                          'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60',
+                          'bg-cyan-100 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-400 border-cyan-200 dark:border-cyan-900/60',
                         ];
                         const theme = colorThemes[index % colorThemes.length];
 
                         return (
-                          <tr key={org.id || index} className="hover:bg-zinc-50/70 transition-colors">
-                            <td className="py-3.5 px-4 text-center font-medium text-zinc-400">
+                          <tr key={org.id || index} className="hover:bg-zinc-50/70 dark:hover:bg-[#222736]/60 transition-colors">
+                            <td className="py-3.5 px-4 text-center font-medium text-zinc-400 dark:text-[#6B7184]">
                               {serialNumber}
                             </td>
 
                             <td className="py-3.5 px-4">
                               <Link
                                 to={buildPath(`/super-admin/organizations/${org.id}`)}
-                                className="font-semibold text-zinc-900 hover:text-blue-600 transition-colors flex items-center gap-2.5"
+                                className="font-semibold text-zinc-900 dark:text-[#E6E8EE] hover:text-blue-600 dark:hover:text-[#4C8DFF] transition-colors flex items-center gap-2.5"
                               >
                                 <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 border ${theme}`}>
                                   {initial}
                                 </div>
-                                <span className="truncate max-w-[170px] font-semibold text-zinc-900">
+                                <span className="truncate max-w-[170px] font-semibold text-zinc-900 dark:text-[#E6E8EE]">
                                   {org.name}
                                 </span>
                               </Link>
                             </td>
 
                             <td className="py-3.5 px-4">
-                              <span className="font-mono text-[11px] font-semibold text-zinc-700 bg-zinc-100/90 px-2 py-0.5 rounded-md border border-zinc-200/80">
+                              <span className="font-mono text-[11px] font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-zinc-100/90 dark:bg-[#1D212C] px-2 py-0.5 rounded-md border border-zinc-200/80 dark:border-[#2A2F3D]">
                                 {org.code || '—'}
                               </span>
                             </td>
 
                             <td className="py-3.5 px-4">
                               {isSuspended ? (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60">
                                   <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                                   Suspended
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/60">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                   Active
                                 </span>
                               )}
                             </td>
 
-                            <td className="py-3.5 px-4 font-semibold text-zinc-700">
+                            <td className="py-3.5 px-4 font-semibold text-zinc-700 dark:text-[#E6E8EE]">
                               <span className="inline-flex items-center gap-1 text-xs">
-                                <Briefcase size={12} className="text-zinc-400" />
+                                <Briefcase size={12} className="text-zinc-400 dark:text-[#6B7184]" />
                                 {org.companyCount ?? 1}
                               </span>
                             </td>
 
-                            <td className="py-3.5 px-4 text-zinc-500 text-xs">
+                            <td className="py-3.5 px-4 text-zinc-500 dark:text-[#A0A6B5] text-xs">
                               {org.createdAt
                                 ? new Date(org.createdAt).toLocaleDateString('en-US', {
                                     month: 'short',
@@ -677,7 +677,7 @@ export default function SuperAdminDashboard() {
                             <td className="py-3.5 px-4 text-right">
                               <Link
                                 to={buildPath(`/super-admin/organizations/${org.id}`)}
-                                className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-600 hover:text-blue-600 px-2.5 py-1 rounded-md hover:bg-zinc-100 transition-colors"
+                                className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] hover:text-blue-600 dark:hover:text-[#4C8DFF] px-2.5 py-1 rounded-md hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors"
                               >
                                 Manage <ChevronRight size={13} />
                               </Link>
@@ -688,19 +688,19 @@ export default function SuperAdminDashboard() {
                     </tbody>
                   </table>
                 ) : (
-                  <div className="p-8 text-center bg-zinc-50/50">
-                    <Building2 className="mx-auto text-zinc-300 mb-2" size={26} />
-                    <p className="text-xs font-semibold text-zinc-700">No organizations match "{orgSearch}"</p>
-                    <p className="text-[11px] text-zinc-400 mt-1">Try resetting your filters or search keywords.</p>
+                  <div className="p-8 text-center bg-zinc-50/50 dark:bg-[#1D212C]/40">
+                    <Building2 className="mx-auto text-zinc-300 dark:text-[#6B7184] mb-2" size={26} />
+                    <p className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE]">No organizations match "{orgSearch}"</p>
+                    <p className="text-[11px] text-zinc-400 dark:text-[#6B7184] mt-1">Try resetting your filters or search keywords.</p>
                   </div>
                 )
               ) : (
                 <div className="p-10 text-center flex flex-col items-center justify-center">
-                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-3 border border-blue-100">
+                  <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mb-3 border border-blue-100 dark:border-blue-900/60">
                     <Building2 size={22} />
                   </div>
-                  <h4 className="text-sm font-bold text-zinc-900 mb-1">No organizations provisioned yet</h4>
-                  <p className="text-xs text-zinc-500 mb-4 max-w-sm">Create your first client tenant organization to get started.</p>
+                  <h4 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] mb-1">No organizations provisioned yet</h4>
+                  <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mb-4 max-w-sm">Create your first client tenant organization to get started.</p>
                   <Link
                     to={buildPath('/super-admin/organizations/provision')}
                     className="btn-primary text-xs inline-flex items-center gap-1.5 px-3.5 py-2"
@@ -733,26 +733,26 @@ export default function SuperAdminDashboard() {
           </div>
 
           {/* ── 2. Module Assignments Table ── */}
-          <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+          <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
             {/* Header */}
-            <div className="p-5 border-b border-zinc-100 bg-white space-y-3.5">
+            <div className="p-5 border-b border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] space-y-3.5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/40">
                     <Layers size={16} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-zinc-900 tracking-tight">
+                    <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                       Module Deployments & Route Bindings
                     </h3>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">
                       Assigned business modules across company workspaces
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 self-start sm:self-auto">
-                  <span className="text-[11px] font-bold text-zinc-700 bg-zinc-100 px-2.5 py-1 rounded-full border border-zinc-200">
+                  <span className="text-[11px] font-bold text-zinc-700 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1D212C] px-2.5 py-1 rounded-full border border-zinc-200 dark:border-[#2A2F3D]">
                     {companyModulesList.length} Total Allocations
                   </span>
                 </div>
@@ -761,19 +761,19 @@ export default function SuperAdminDashboard() {
               {/* Module search & quick filters */}
               <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-1">
                 <div className="relative w-full sm:flex-1">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184] pointer-events-none" />
                   <input
                     type="text"
                     value={moduleSearch}
                     onChange={(e) => setModuleSearch(e.target.value)}
                     placeholder="Search company or module (e.g. ACCOUNT, INVENTORY)..."
-                    className="w-full h-9 pl-9 pr-3 text-xs bg-zinc-50/70 hover:bg-zinc-50 focus:bg-white rounded-lg border border-zinc-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-zinc-400"
+                    className="w-full h-9 pl-9 pr-3 text-xs bg-zinc-50/70 dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] focus:bg-white dark:focus:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] rounded-lg border border-zinc-200 dark:border-[#2A2F3D] focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-[#6B7184]"
                   />
                   {moduleSearch && (
                     <button
                       type="button"
                       onClick={() => setModuleSearch('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-zinc-400 hover:text-zinc-700 font-semibold px-1 rounded"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-zinc-400 hover:text-zinc-700 dark:hover:text-[#E6E8EE] font-semibold px-1 rounded"
                     >
                       Clear
                     </button>
@@ -787,8 +787,8 @@ export default function SuperAdminDashboard() {
                       onClick={() => setSelectedModuleFilter('ALL')}
                       className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
                         selectedModuleFilter === 'ALL'
-                          ? 'bg-zinc-900 text-white shadow-2xs'
-                          : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                          ? 'bg-zinc-900 text-white dark:bg-[#4C8DFF] dark:text-white shadow-2xs'
+                          : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-200 dark:hover:bg-[#222736]'
                       }`}
                     >
                       All
@@ -800,8 +800,8 @@ export default function SuperAdminDashboard() {
                         onClick={() => setSelectedModuleFilter(mName)}
                         className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition-all whitespace-nowrap ${
                           selectedModuleFilter.toUpperCase() === mName.toUpperCase()
-                            ? 'bg-zinc-900 text-white shadow-2xs'
-                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                            ? 'bg-zinc-900 text-white dark:bg-[#4C8DFF] dark:text-white shadow-2xs'
+                            : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-200 dark:hover:bg-[#222736]'
                         }`}
                       >
                         {mName}
@@ -821,9 +821,9 @@ export default function SuperAdminDashboard() {
               ) : companyModulesList.length > 0 ? (
                 filteredCompanyModules.length > 0 ? (
                   <table className="w-full text-left text-xs whitespace-nowrap">
-                    <thead className="bg-zinc-50/80 border-b border-zinc-100 text-zinc-500 font-semibold">
+                    <thead className="bg-zinc-50/80 dark:bg-[#1D212C] border-b border-zinc-100 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] font-semibold">
                       <tr>
-                        <th className="py-3 px-4 w-12 text-center text-[10px] uppercase tracking-wider text-zinc-400">#</th>
+                        <th className="py-3 px-4 w-12 text-center text-[10px] uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">#</th>
                         <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Target Company</th>
                         <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Module Service</th>
                         <th className="py-3 px-4 text-[10px] uppercase tracking-wider">Service Gateway</th>
@@ -831,7 +831,7 @@ export default function SuperAdminDashboard() {
                         <th className="py-3 px-4 text-right text-[10px] uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100">
+                    <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                       {paginatedCompanyModules.map((cm, idx) => {
                         const serialNumber = getSerialNumber({
                           page: modulePage,
@@ -847,26 +847,26 @@ export default function SuperAdminDashboard() {
                         // Module color accent
                         const getModuleBadge = (name) => {
                           const n = String(name).toUpperCase();
-                          if (n.includes('ACCOUNT')) return 'bg-blue-50 text-blue-700 border-blue-200';
-                          if (n.includes('INVENTORY')) return 'bg-purple-50 text-purple-700 border-purple-200';
-                          if (n.includes('WORKFLOW')) return 'bg-amber-50 text-amber-700 border-amber-200';
-                          if (n.includes('CRM')) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                          if (n.includes('SSO')) return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-                          return 'bg-zinc-100 text-zinc-700 border-zinc-200';
+                          if (n.includes('ACCOUNT')) return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/50';
+                          if (n.includes('INVENTORY')) return 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/50';
+                          if (n.includes('WORKFLOW')) return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/50';
+                          if (n.includes('CRM')) return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50';
+                          if (n.includes('SSO')) return 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/50';
+                          return 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]';
                         };
 
                         return (
-                          <tr key={cm.id || idx} className="hover:bg-zinc-50/70 transition-colors">
-                            <td className="py-3.5 px-4 text-center font-medium text-zinc-400">
+                          <tr key={cm.id || idx} className="hover:bg-zinc-50/70 dark:hover:bg-[#222736] transition-colors">
+                            <td className="py-3.5 px-4 text-center font-medium text-zinc-400 dark:text-[#6B7184]">
                               {serialNumber}
                             </td>
 
-                            <td className="py-3.5 px-4 font-semibold text-zinc-900">
+                            <td className="py-3.5 px-4 font-semibold text-zinc-900 dark:text-[#E6E8EE]">
                               <Link
                                 to={buildPath('/super-admin/companies')}
-                                className="hover:text-blue-600 transition-colors inline-flex items-center gap-2"
+                                className="hover:text-blue-600 dark:hover:text-[#4C8DFF] transition-colors inline-flex items-center gap-2"
                               >
-                                <span className="w-6 h-6 rounded-md bg-zinc-100 text-zinc-700 flex items-center justify-center text-[10px] font-bold border border-zinc-200">
+                                <span className="w-6 h-6 rounded-md bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-[#A0A6B5] flex items-center justify-center text-[10px] font-bold border border-zinc-200 dark:border-[#2A2F3D]">
                                   {companyName.charAt(0).toUpperCase()}
                                 </span>
                                 {companyName}
@@ -885,13 +885,13 @@ export default function SuperAdminDashboard() {
                                   href={host}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="font-mono text-[11px] font-semibold text-blue-600 bg-blue-50/80 px-2 py-0.5 rounded border border-blue-200 hover:bg-blue-100 transition-colors inline-flex items-center gap-1"
+                                  className="font-mono text-[11px] font-semibold text-blue-600 dark:text-[#4C8DFF] bg-blue-50/80 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-950/70 transition-colors inline-flex items-center gap-1"
                                 >
                                   {host}
                                   <ExternalLink size={10} />
                                 </a>
                               ) : (
-                                <span className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-medium text-zinc-500 bg-zinc-50 px-2 py-0.5 rounded border border-zinc-200/70">
+                                <span className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-medium text-zinc-500 dark:text-[#A0A6B5] bg-zinc-50 dark:bg-[#1D212C] px-2 py-0.5 rounded border border-zinc-200/70 dark:border-[#2A2F3D]">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                   Default Platform Gateway
                                 </span>
@@ -912,8 +912,8 @@ export default function SuperAdminDashboard() {
                                 }}
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border cursor-pointer hover:shadow-2xs transition-all ${
                                   isActive
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                    : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40 hover:bg-emerald-100 dark:hover:bg-emerald-950/60'
+                                    : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/40 hover:bg-rose-100 dark:hover:bg-rose-950/60'
                                 }`}
                                 title="Click to toggle module operational status"
                               >
@@ -941,7 +941,7 @@ export default function SuperAdminDashboard() {
                                     }
                                   }
                                 }}
-                                className="p-1.5 rounded-lg hover:bg-rose-50 text-zinc-400 hover:text-rose-600 transition-colors"
+                                className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/50 text-zinc-400 dark:text-[#6B7184] hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
                                 title="Unlink Module"
                               >
                                 <Trash2 size={15} />
@@ -953,16 +953,16 @@ export default function SuperAdminDashboard() {
                     </tbody>
                   </table>
                 ) : (
-                  <div className="p-8 text-center bg-zinc-50/50">
-                    <Layers className="mx-auto text-zinc-300 mb-2" size={26} />
-                    <p className="text-xs font-semibold text-zinc-700">No modules match search criteria</p>
+                  <div className="p-8 text-center bg-zinc-50/50 dark:bg-[#161922]">
+                    <Layers className="mx-auto text-zinc-300 dark:text-[#2A2F3D] mb-2" size={26} />
+                    <p className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE]">No modules match search criteria</p>
                   </div>
                 )
               ) : (
-                <div className="p-8 text-center bg-zinc-50/40">
-                  <Layers className="mx-auto text-zinc-300 mb-2" size={28} />
-                  <p className="text-xs font-semibold text-zinc-700">No modules assigned yet</p>
-                  <p className="text-[11px] text-zinc-400 mt-1">Navigate to Companies to assign runtime modules.</p>
+                <div className="p-8 text-center bg-zinc-50/40 dark:bg-[#161922]">
+                  <Layers className="mx-auto text-zinc-300 dark:text-[#2A2F3D] mb-2" size={28} />
+                  <p className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE]">No modules assigned yet</p>
+                  <p className="text-[11px] text-zinc-400 dark:text-[#6B7184] mt-1">Navigate to Companies to assign runtime modules.</p>
                 </div>
               )}
             </div>
@@ -994,18 +994,18 @@ export default function SuperAdminDashboard() {
         <div className="lg:col-span-4 space-y-6">
 
           {/* 1. Live System Health Card */}
-          <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3.5">
+          <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-[#2A2F3D] pb-3.5">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/40">
                   <Activity size={15} />
                 </div>
-                <h3 className="text-sm font-bold text-zinc-900 tracking-tight">
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                   System Telemetry
                 </h3>
               </div>
 
-              <span className="inline-flex items-center gap-1.5 text-[9.5px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40 uppercase tracking-wider">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Operational
               </span>
@@ -1014,58 +1014,58 @@ export default function SuperAdminDashboard() {
             {/* Health indicators */}
             <div className="space-y-2.5">
               {/* API Gateway */}
-              <div className="border border-zinc-100 rounded-xl p-3 bg-zinc-50/50 hover:bg-zinc-50 transition-colors">
+              <div className="border border-zinc-100 dark:border-[#2A2F3D] rounded-xl p-3 bg-zinc-50/50 dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-white border border-zinc-200/80 text-zinc-600 flex items-center justify-center shadow-2xs">
+                    <div className="w-6 h-6 rounded-md bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] flex items-center justify-center shadow-2xs">
                       <Server size={13} />
                     </div>
-                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">API Gateway</span>
+                    <span className="text-[10px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider">API Gateway</span>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider">
+                  <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Operational
                   </span>
                 </div>
-                <p className="text-[11px] text-zinc-500 pl-8">All proxy routes active & responding</p>
+                <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] pl-8">All proxy routes active & responding</p>
               </div>
 
               {/* Database Cluster */}
-              <div className="border border-zinc-100 rounded-xl p-3 bg-zinc-50/50 hover:bg-zinc-50 transition-colors">
+              <div className="border border-zinc-100 dark:border-[#2A2F3D] rounded-xl p-3 bg-zinc-50/50 dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-white border border-zinc-200/80 text-zinc-600 flex items-center justify-center shadow-2xs">
+                    <div className="w-6 h-6 rounded-md bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] flex items-center justify-center shadow-2xs">
                       <Database size={13} />
                     </div>
-                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Database Clusters</span>
+                    <span className="text-[10px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider">Database Clusters</span>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider">
+                  <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Connected
                   </span>
                 </div>
-                <p className="text-[11px] text-zinc-500 pl-8">Multi-tenant schemas mounted</p>
+                <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] pl-8">Multi-tenant schemas mounted</p>
               </div>
 
               {/* Active Sessions */}
-              <div className="border border-zinc-100 rounded-xl p-3 bg-zinc-50/50 hover:bg-zinc-50 transition-colors">
+              <div className="border border-zinc-100 dark:border-[#2A2F3D] rounded-xl p-3 bg-zinc-50/50 dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-white border border-zinc-200/80 text-zinc-600 flex items-center justify-center shadow-2xs">
+                    <div className="w-6 h-6 rounded-md bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] flex items-center justify-center shadow-2xs">
                       <Radio size={13} />
                     </div>
-                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Active Sessions</span>
+                    <span className="text-[10px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider">Active Sessions</span>
                   </div>
                   {liveStatsLoaded ? (
-                    <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {activeSessions} Live
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-amber-700 uppercase tracking-wider">
+                    <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Standby
                     </span>
                   )}
                 </div>
                 <div className="flex items-center justify-between pl-8">
-                  <p className="text-[11px] text-zinc-500">
+                  <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">
                     {liveStatsLoaded ? 'Real-time authenticated sessions' : 'Click to fetch active tokens'}
                   </p>
                   {!liveStatsLoaded && (
@@ -1073,7 +1073,7 @@ export default function SuperAdminDashboard() {
                       type="button"
                       onClick={handleLoadLiveStats}
                       disabled={liveStatsLoading}
-                      className="text-[10px] font-bold text-zinc-900 hover:text-zinc-700 hover:underline"
+                      className="text-[10px] font-bold text-zinc-900 dark:text-[#4C8DFF] hover:text-zinc-700 dark:hover:text-[#6AA1FF] hover:underline"
                     >
                       {liveStatsLoading ? 'Checking...' : 'Check Now'}
                     </button>
@@ -1082,31 +1082,31 @@ export default function SuperAdminDashboard() {
               </div>
 
               {/* Module Integration Bus */}
-              <div className="border border-zinc-100 rounded-xl p-3 bg-zinc-50/50 hover:bg-zinc-50 transition-colors">
+              <div className="border border-zinc-100 dark:border-[#2A2F3D] rounded-xl p-3 bg-zinc-50/50 dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-white border border-zinc-200/80 text-zinc-600 flex items-center justify-center shadow-2xs">
+                    <div className="w-6 h-6 rounded-md bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] flex items-center justify-center shadow-2xs">
                       <Cpu size={13} />
                     </div>
-                    <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Module Pipeline</span>
+                    <span className="text-[10px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider">Module Pipeline</span>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider">
+                  <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {activeAssignments} Connected
                   </span>
                 </div>
-                <p className="text-[11px] text-zinc-500 pl-8">Runtime modules synchronizing</p>
+                <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] pl-8">Runtime modules synchronizing</p>
               </div>
             </div>
           </div>
 
           {/* 2. Platform Quick Actions */}
-          <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-5 space-y-3.5">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+          <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-5 space-y-3.5">
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-[#2A2F3D] pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-100">
+                <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center border border-amber-100 dark:border-amber-800/40">
                   <Zap size={15} />
                 </div>
-                <h3 className="text-sm font-bold text-zinc-900 tracking-tight">
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                   Quick Actions
                 </h3>
               </div>
@@ -1118,32 +1118,32 @@ export default function SuperAdminDashboard() {
                   label: 'Provision New Organization',
                   path: '/super-admin/organizations/provision',
                   icon: Plus,
-                  color: 'bg-blue-50 text-blue-600 border-blue-100',
+                  color: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800/40',
                   badge: 'New',
                 },
                 {
                   label: 'All Organizations',
                   path: '/super-admin/organizations',
                   icon: Building2,
-                  color: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                  color: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/40',
                 },
                 {
                   label: 'Manage Companies & Workspaces',
                   path: '/super-admin/companies',
                   icon: Briefcase,
-                  color: 'bg-violet-50 text-violet-600 border-violet-100',
+                  color: 'bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border-violet-100 dark:border-violet-800/40',
                 },
                 {
                   label: 'Module Registry',
                   path: '/super-admin/modules',
                   icon: Layers,
-                  color: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                  color: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40',
                 },
                 {
                   label: 'Module Route Mappings',
                   path: '/super-admin/module-routes',
                   icon: Network,
-                  color: 'bg-sky-50 text-sky-600 border-sky-100',
+                  color: 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border-sky-100 dark:border-sky-800/40',
                 },
               ].map((act) => {
                 const Icon = act.icon;
@@ -1151,23 +1151,23 @@ export default function SuperAdminDashboard() {
                   <Link
                     key={act.path}
                     to={buildPath(act.path)}
-                    className="flex items-center justify-between h-12 px-3 rounded-xl border border-transparent hover:border-zinc-200/80 hover:bg-zinc-50 transition-all duration-150 group"
+                    className="flex items-center justify-between h-12 px-3 rounded-xl border border-transparent hover:border-zinc-200/80 dark:hover:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#1D212C] transition-all duration-150 group"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${act.color} group-hover:scale-105 transition-transform shadow-2xs`}>
                         <Icon size={15} />
                       </div>
-                      <span className="text-xs font-semibold text-zinc-700 group-hover:text-zinc-900 transition-colors">
+                      <span className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
                         {act.label}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {act.badge && (
-                        <span className="text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded-md uppercase">
+                        <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 px-1.5 py-0.2 rounded-md uppercase">
                           {act.badge}
                         </span>
                       )}
-                      <ChevronRight size={14} className="text-zinc-400 group-hover:text-zinc-700 group-hover:translate-x-0.5 transition-all" />
+                      <ChevronRight size={14} className="text-zinc-400 dark:text-[#6B7184] group-hover:text-zinc-700 dark:group-hover:text-[#E6E8EE] group-hover:translate-x-0.5 transition-all" />
                     </div>
                   </Link>
                 );
@@ -1176,24 +1176,24 @@ export default function SuperAdminDashboard() {
           </div>
 
           {/* 3. Platform Architecture Snapshot Card */}
-          <div className="rounded-2xl border border-zinc-200/80 bg-gradient-to-br from-zinc-50 to-zinc-100/60 p-5 space-y-3">
-            <div className="flex items-center gap-2 text-zinc-800">
-              <Globe size={15} className="text-blue-600" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700">Platform Deployment</h4>
+          <div className="rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] bg-gradient-to-br from-zinc-50 to-zinc-100/60 dark:from-[#161922] dark:to-[#1D212C] p-5 space-y-3">
+            <div className="flex items-center gap-2 text-zinc-800 dark:text-[#E6E8EE]">
+              <Globe size={15} className="text-blue-600 dark:text-[#4C8DFF]" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE]">Platform Deployment</h4>
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="bg-white p-2.5 rounded-xl border border-zinc-200/60">
-                <span className="text-[10px] text-zinc-400 block font-semibold">TENANTS</span>
-                <span className="font-bold text-zinc-800 text-sm">{totalOrgs} Multi-tenant</span>
+              <div className="bg-white dark:bg-[#1D212C] p-2.5 rounded-xl border border-zinc-200/60 dark:border-[#2A2F3D]">
+                <span className="text-[10px] text-zinc-400 dark:text-[#6B7184] block font-semibold">TENANTS</span>
+                <span className="font-bold text-zinc-800 dark:text-[#E6E8EE] text-sm">{totalOrgs} Multi-tenant</span>
               </div>
-              <div className="bg-white p-2.5 rounded-xl border border-zinc-200/60">
-                <span className="text-[10px] text-zinc-400 block font-semibold">WORKSPACES</span>
-                <span className="font-bold text-zinc-800 text-sm">{totalCompanies} Active</span>
+              <div className="bg-white dark:bg-[#1D212C] p-2.5 rounded-xl border border-zinc-200/60 dark:border-[#2A2F3D]">
+                <span className="text-[10px] text-zinc-400 dark:text-[#6B7184] block font-semibold">WORKSPACES</span>
+                <span className="font-bold text-zinc-800 dark:text-[#E6E8EE] text-sm">{totalCompanies} Active</span>
               </div>
             </div>
-            <div className="pt-1 flex items-center justify-between text-[11px] text-zinc-500">
+            <div className="pt-1 flex items-center justify-between text-[11px] text-zinc-500 dark:text-[#A0A6B5]">
               <span>Environment: Production Mode</span>
-              <span className="font-mono text-zinc-400">v2.4.0-cloud</span>
+              <span className="font-mono text-zinc-400 dark:text-[#6B7184]">v2.4.0-cloud</span>
             </div>
           </div>
 

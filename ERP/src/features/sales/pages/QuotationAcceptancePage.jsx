@@ -49,8 +49,8 @@ export default function QuotationAcceptancePage() {
         return <Loader2 className="w-16 h-16 text-primary-500 mb-6 mx-auto animate-spin" />;
       default:
         return (
-          <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mb-6 mx-auto border border-primary-100">
-            <FileText className="w-8 h-8 text-primary-600" />
+          <div className="w-16 h-16 bg-primary-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 mx-auto border border-primary-100 dark:border-blue-500/20">
+            <FileText className="w-8 h-8 text-primary-600 dark:text-[#4C8DFF]" />
           </div>
         );
     }
@@ -62,9 +62,9 @@ export default function QuotationAcceptancePage() {
         return (
           <div className="text-center">
             {renderIcon()}
-            <h2 className="text-2xl font-bold text-zinc-900 mb-2">Thank You!</h2>
-            <p className="text-zinc-600 mb-6">{message}</p>
-            <p className="text-sm text-zinc-500">You may now close this window.</p>
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] mb-2">Thank You!</h2>
+            <p className="text-zinc-600 dark:text-[#A0A6B5] mb-6">{message}</p>
+            <p className="text-sm text-zinc-500 dark:text-[#6B7184]">You may now close this window.</p>
           </div>
         );
       
@@ -74,11 +74,11 @@ export default function QuotationAcceptancePage() {
         return (
           <div className="text-center">
             {renderIcon()}
-            <h2 className="text-2xl font-bold text-zinc-900 mb-2">
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] mb-2">
               {status === 'already_accepted' ? 'Already Accepted' : 'Request Failed'}
             </h2>
-            <p className="text-zinc-600 mb-6">{message}</p>
-            <p className="text-sm text-zinc-500">If you believe this is an error, please contact support.</p>
+            <p className="text-zinc-600 dark:text-[#A0A6B5] mb-6">{message}</p>
+            <p className="text-sm text-zinc-500 dark:text-[#6B7184]">If you believe this is an error, please contact support.</p>
           </div>
         );
 
@@ -86,14 +86,14 @@ export default function QuotationAcceptancePage() {
         return (
           <div className="text-center">
             {renderIcon()}
-            <h2 className="text-2xl font-bold text-zinc-900 mb-2">Accept Quotation</h2>
-            <p className="text-zinc-600 mb-8">
+            <h2 className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] mb-2">Accept Quotation</h2>
+            <p className="text-zinc-600 dark:text-[#A0A6B5] mb-8">
               Please confirm your acceptance of this quotation to proceed.
             </p>
             <button
               onClick={handleAccept}
               disabled={isLoading}
-              className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-medium text-[12px] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full h-12 bg-zinc-900 dark:bg-[#4C8DFF] hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] text-white rounded-xl font-medium text-[12px] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -110,7 +110,7 @@ export default function QuotationAcceptancePage() {
   };
 
   return (
-    <div className="w-full max-w-[352px] animate-fade-in-up bg-white rounded-2xl p-8 lg:p-10 shadow-xl border border-zinc-100">
+    <div className="w-full max-w-[352px] animate-fade-in-up bg-white dark:bg-[#1D212C] rounded-2xl p-8 lg:p-10 shadow-xl border border-zinc-100 dark:border-[#2A2F3D]">
       {renderContent()}
     </div>
   );

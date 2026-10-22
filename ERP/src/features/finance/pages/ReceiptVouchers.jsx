@@ -33,46 +33,46 @@ const formatStatusLabel = (status) => String(status || '')
 const ReceiptOverview = ({ receipt }) => {
   if (!receipt) return null;
   return (
-    <div className="p-5 flex flex-col bg-white rounded-lg shadow-sm m-4 border border-zinc-100">
+    <div className="p-5 flex flex-col bg-white dark:bg-[#161922] rounded-lg shadow-sm m-4 border border-zinc-100 dark:border-[#2A2F3D]">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-lg font-bold text-zinc-900">{receipt.customerName || '-'}</h3>
-          <p className="text-[8.8px] text-zinc-500 font-medium uppercase tracking-wide mt-1">
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">{receipt.customerName || '-'}</h3>
+          <p className="text-[8.8px] text-zinc-500 dark:text-[#A0A6B5] font-medium uppercase tracking-wide mt-1">
             Date: {receipt.receiptDate ? new Date(receipt.receiptDate).toLocaleDateString() : '-'} | Mode: {receipt.paymentMode || '-'} | Ref: {receipt.referenceNo || '-'} | Curr: {receipt.currency || 'INR'}
           </p>
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Receipt Amount</p>
-          <p className="font-bold text-zinc-900 text-sm">{receipt.currency || 'INR'} {receipt.receiptAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase mb-0.5">Receipt Amount</p>
+          <p className="font-bold text-zinc-900 dark:text-[#E6E8EE] text-sm">{receipt.currency || 'INR'} {receipt.receiptAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Allocated Amount</p>
-          <p className="font-bold text-blue-600 text-sm">{receipt.currency || 'INR'} {receipt.totalAllocatedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase mb-0.5">Allocated Amount</p>
+          <p className="font-bold text-blue-600 dark:text-[#4C8DFF] text-sm">{receipt.currency || 'INR'} {receipt.totalAllocatedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Remaining Amount</p>
-          <p className="font-bold text-emerald-600 text-sm">{receipt.currency || 'INR'} {receipt.remainingBalance?.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase mb-0.5">Remaining Amount</p>
+          <p className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">{receipt.currency || 'INR'} {receipt.remainingBalance?.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Applied Invoices</p>
-          <p className="font-bold text-zinc-700 text-sm">{receipt.allocations?.length || 0}</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase mb-0.5">Applied Invoices</p>
+          <p className="font-bold text-zinc-700 dark:text-[#E6E8EE] text-sm">{receipt.allocations?.length || 0}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Status</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase mb-0.5">Status</p>
           <div><DataTableStatusBadge status={receipt.receiptStatus || 'DRAFT'} label={formatStatusLabel(receipt.receiptStatus || 'DRAFT')} showIcon={false} /></div>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Posting Status</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase mb-0.5">Posting Status</p>
           <div><DataTableStatusBadge status={receipt.glPostingStatus || 'DRAFT'} label={formatStatusLabel(receipt.glPostingStatus || 'DRAFT')} showIcon={false} /></div>
         </div>
       </div>
       
       {receipt.allocations && receipt.allocations.length > 0 && (
-        <div className="mt-4 border border-zinc-200 rounded-lg overflow-hidden">
+        <div className="mt-4 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-hidden">
            <table className="w-full text-left text-xs whitespace-nowrap">
-             <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-medium uppercase tracking-wider text-[8px]">
+             <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] font-medium uppercase tracking-wider text-[8px]">
                <tr>
                  <th className="px-4 py-2">Invoice No</th>
                  <th className="px-4 py-2">Invoice Date</th>
@@ -82,15 +82,15 @@ const ReceiptOverview = ({ receipt }) => {
                  <th className="px-4 py-2 text-right">Outstanding After</th>
                </tr>
              </thead>
-             <tbody className="divide-y divide-zinc-100">
+             <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                {receipt.allocations.map((alloc, idx) => (
-                 <tr key={idx} className="hover:bg-zinc-50/50">
-                   <td className="px-4 py-2 font-medium text-zinc-900">{alloc.invoiceNumber || '-'}</td>
-                   <td className="px-4 py-2 text-zinc-600">{alloc.invoiceDate ? new Date(alloc.invoiceDate).toLocaleDateString() : '-'}</td>
+                 <tr key={idx} className="hover:bg-zinc-50/50 dark:hover:bg-[#222736]">
+                   <td className="px-4 py-2 font-medium text-zinc-900 dark:text-[#E6E8EE]">{alloc.invoiceNumber || '-'}</td>
+                   <td className="px-4 py-2 text-zinc-600 dark:text-[#A0A6B5]">{alloc.invoiceDate ? new Date(alloc.invoiceDate).toLocaleDateString() : '-'}</td>
                    <td className="px-4 py-2 text-right font-medium">{receipt.currency || 'INR'} {alloc.invoiceAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</td>
-                   <td className="px-4 py-2 text-right text-blue-600 font-medium">{receipt.currency || 'INR'} {alloc.allocatedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</td>
-                   <td className="px-4 py-2 text-right text-zinc-600">{receipt.currency || 'INR'} {alloc.outstandingBefore?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</td>
-                   <td className="px-4 py-2 text-right text-emerald-600 font-medium">{receipt.currency || 'INR'} {alloc.outstandingAfter?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</td>
+                   <td className="px-4 py-2 text-right text-blue-600 dark:text-[#4C8DFF] font-medium">{receipt.currency || 'INR'} {alloc.allocatedAmount?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</td>
+                   <td className="px-4 py-2 text-right text-zinc-600 dark:text-[#A0A6B5]">{receipt.currency || 'INR'} {alloc.outstandingBefore?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</td>
+                   <td className="px-4 py-2 text-right text-emerald-600 dark:text-emerald-400 font-medium">{receipt.currency || 'INR'} {alloc.outstandingAfter?.toLocaleString(undefined, {minimumFractionDigits: 2}) || '0.00'}</td>
                  </tr>
                ))}
              </tbody>
@@ -504,7 +504,7 @@ export default function ReceiptVouchers() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 animate-in fade-in">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] animate-in fade-in">
       <PageHeader
         title="Receipt Vouchers"
         description="Manage incoming payments and allocations"

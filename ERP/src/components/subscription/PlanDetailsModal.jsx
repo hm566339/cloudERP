@@ -33,18 +33,18 @@ export default function PlanDetailsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-xs animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl border border-zinc-200 w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl shadow-2xl border border-zinc-200 dark:border-[#2A2F3D] w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/70">
+        <div className="px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/70 dark:bg-[#1D212C]/60">
           <div className="flex items-center gap-2.5">
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${iconStyle}`}>
               <Icon size={16} />
             </div>
             <div>
-              <h3 className="text-base font-bold font-display text-zinc-900">
+              <h3 className="text-base font-bold font-display text-zinc-900 dark:text-[#E6E8EE]">
                 {plan.name}
               </h3>
-              <span className="font-mono text-[11px] font-semibold text-zinc-400 uppercase">
+              <span className="font-mono text-[11px] font-semibold text-zinc-400 dark:text-[#6B7184] uppercase">
                 {plan.code}
               </span>
             </div>
@@ -52,36 +52,36 @@ export default function PlanDetailsModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-600 rounded-lg p-1.5 hover:bg-zinc-100 transition-colors"
+            className="text-zinc-400 hover:text-zinc-600 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] rounded-lg p-1.5 hover:bg-zinc-100 dark:hover:bg-[#1D212C] transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-5 text-xs text-zinc-700">
+        <div className="p-6 overflow-y-auto space-y-5 text-xs text-zinc-700 dark:text-[#A0A6B5]">
           <div>
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+            <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block mb-1">
               Description
             </span>
-            <p className="text-zinc-700 leading-relaxed bg-zinc-50 p-3 rounded-xl border border-zinc-100">
+            <p className="text-zinc-700 dark:text-[#A0A6B5] leading-relaxed bg-zinc-50 dark:bg-[#1D212C]/60 p-3 rounded-xl border border-zinc-100 dark:border-[#2A2F3D]">
               {plan.description || 'No detailed description provided.'}
             </p>
           </div>
 
           {/* Key Specs Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">Duration</span>
-              <span className="text-sm font-bold text-zinc-900">{plan.durationDays || 30} Days</span>
+            <div className="p-3 bg-zinc-50 dark:bg-[#1D212C]/60 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] space-y-0.5">
+              <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase block">Duration</span>
+              <span className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">{plan.durationDays || 30} Days</span>
             </div>
-            <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">Price</span>
-              <span className="text-sm font-bold text-zinc-900 font-mono">{formatPlanPrice(plan)}</span>
+            <div className="p-3 bg-zinc-50 dark:bg-[#1D212C]/60 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] space-y-0.5">
+              <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase block">Price</span>
+              <span className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] font-mono">{formatPlanPrice(plan)}</span>
             </div>
-            <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">Status</span>
-              <span className={`inline-flex items-center gap-1 font-bold ${plan.active ? 'text-emerald-700' : 'text-zinc-500'}`}>
+            <div className="p-3 bg-zinc-50 dark:bg-[#1D212C]/60 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] space-y-0.5">
+              <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase block">Status</span>
+              <span className={`inline-flex items-center gap-1 font-bold ${plan.active ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-500 dark:text-[#6B7184]'}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${plan.active ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
                 <span>{plan.active ? 'Active' : 'Inactive'}</span>
               </span>
@@ -89,21 +89,21 @@ export default function PlanDetailsModal({
           </div>
 
           {/* Rules & Limits Breakdown */}
-          <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-200/80 space-y-3">
-            <div className="text-[11px] font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
-              <Building2 size={13} className="text-zinc-700" />
+          <div className="p-4 bg-zinc-50 dark:bg-[#1D212C]/60 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] space-y-3">
+            <div className="text-[11px] font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider flex items-center gap-1.5">
+              <Building2 size={13} className="text-zinc-700 dark:text-[#A0A6B5]" />
               <span>Enforced Limits</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-[10.5px] font-semibold text-zinc-500 block">Companies Quota</span>
-                <span className="text-sm font-black text-zinc-900">
+                <span className="text-[10.5px] font-semibold text-zinc-500 dark:text-[#6B7184] block">Companies Quota</span>
+                <span className="text-sm font-black text-zinc-900 dark:text-[#E6E8EE]">
                   {formatPlanLimit(plan.maxCompanies, 'companies')}
                 </span>
               </div>
               <div>
-                <span className="text-[10.5px] font-semibold text-zinc-500 block">Users / Company Quota</span>
-                <span className="text-sm font-black text-zinc-900">
+                <span className="text-[10.5px] font-semibold text-zinc-500 dark:text-[#6B7184] block">Users / Company Quota</span>
+                <span className="text-sm font-black text-zinc-900 dark:text-[#E6E8EE]">
                   {formatPlanLimit(plan.maxUsersPerCompany, 'users')}
                 </span>
               </div>
@@ -112,16 +112,16 @@ export default function PlanDetailsModal({
 
           {/* Modules List */}
           <div className="space-y-2">
-            <span className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider block">
+            <span className="text-[10.5px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider block">
               Entitled Modules ({activeModules.length})
             </span>
             <div className="grid grid-cols-2 gap-2">
               {activeModules.map((m, idx) => (
                 <div
                   key={m.id || idx}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 border border-zinc-200 text-xs font-semibold text-zinc-800"
+                  className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE]"
                 >
-                  <Check size={12} className="text-zinc-700 stroke-[3]" />
+                  <Check size={12} className="text-zinc-700 dark:text-emerald-400 stroke-[3]" />
                   <span className="truncate">{m.moduleName || 'Module'}</span>
                 </div>
               ))}
@@ -130,7 +130,7 @@ export default function PlanDetailsModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-100 bg-zinc-50/50 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/60 flex items-center justify-between">
           <div>
             {canManageCatalog ? (
               <button
@@ -139,7 +139,7 @@ export default function PlanDetailsModal({
                   onClose();
                   onEdit(plan);
                 }}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-700 hover:text-zinc-900"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-700 dark:text-[#E6E8EE] hover:text-zinc-900 dark:hover:text-white"
               >
                 <Edit2 size={13} />
                 <span>Edit This Plan</span>
@@ -151,7 +151,7 @@ export default function PlanDetailsModal({
                   onClose();
                   onSubscribe(plan);
                 }}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-700 hover:text-zinc-900"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-700 dark:text-[#E6E8EE] hover:text-zinc-900 dark:hover:text-white"
               >
                 <CreditCard size={13} />
                 <span>Subscribe to This Plan</span>
@@ -161,7 +161,7 @@ export default function PlanDetailsModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-colors"
+            className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-[#4C8DFF] dark:hover:bg-[#3B7AE8] rounded-xl text-xs font-bold transition-colors"
           >
             Close
           </button>

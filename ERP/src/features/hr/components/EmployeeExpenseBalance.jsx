@@ -75,7 +75,7 @@ export default function EmployeeExpenseBalance({ employeeId }) {
 
   return (
     <div className="card p-5 space-y-6">
-      <div className="flex items-center gap-2 border-b border-zinc-100 pb-3">
+      <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-[#2A2F3D] pb-3">
         <PieChart size={18} className="text-indigo-600" />
         <h3 className="text-sm font-bold text-zinc-800">Employee Expense Balance</h3>
       </div>
@@ -117,8 +117,8 @@ export default function EmployeeExpenseBalance({ employeeId }) {
           <h4 className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Expense Request Breakdown</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {requests.map((req, idx) => (
-              <div key={req.id || idx} className="p-3.5 rounded-xl border border-zinc-200 bg-white shadow-sm text-xs space-y-2">
-                <div className="flex justify-between items-start border-b border-zinc-100 pb-2 mb-2">
+              <div key={req.id || idx} className="p-3.5 rounded-xl border border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark shadow-sm text-xs space-y-2">
+                <div className="flex justify-between items-start border-b border-zinc-100 dark:border-[#2A2F3D] pb-2 mb-2">
                   <span className="font-extrabold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded text-[10px]">
                     {req.id || req.requestNumber || req.expenseRequestNo || `REQ-${idx + 1}`}
                   </span>

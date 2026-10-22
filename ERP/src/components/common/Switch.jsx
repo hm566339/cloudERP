@@ -69,12 +69,12 @@ const Switch = React.forwardRef(function Switch(
         <div
           className={`${
             trackSizes[size] || trackSizes.md
-          } bg-zinc-200 peer-checked:bg-zinc-900 rounded-full transition-colors duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-900/15 flex items-center`}
+          } bg-zinc-200 dark:bg-[#2A2F3D] peer-checked:bg-zinc-900 dark:peer-checked:bg-[#4C8DFF] rounded-full transition-colors duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-zinc-900/15 dark:peer-focus-visible:ring-[#4C8DFF]/30 flex items-center`}
         >
           <div
             className={`${
               thumbSizes[size] || thumbSizes.md
-            } bg-white rounded-full transition-transform duration-200 shadow-xs`}
+            } bg-white dark:bg-[#E6E8EE] rounded-full transition-transform duration-200 shadow-xs`}
           />
         </div>
       </div>
@@ -82,12 +82,12 @@ const Switch = React.forwardRef(function Switch(
       {(label || description) && (
         <div className="flex flex-col">
           {label && (
-            <span className="text-xs font-medium text-zinc-900 leading-tight">
+            <span className="text-xs font-medium text-zinc-900 dark:text-[#E6E8EE] leading-tight">
               {label}
             </span>
           )}
           {description && (
-            <span className="text-[11px] text-zinc-500 mt-0.5 leading-snug">
+            <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] mt-0.5 leading-snug">
               {description}
             </span>
           )}

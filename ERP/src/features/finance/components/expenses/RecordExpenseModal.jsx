@@ -380,24 +380,24 @@ export default function RecordExpenseModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-zinc-950/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-      <div className="bg-white rounded-xl shadow-2xl border border-zinc-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-[#161922] rounded-xl shadow-2xl border border-zinc-200 dark:border-[#2A2F3D] w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-zinc-50/50 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center">
               <Receipt size={16} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-zinc-900">
+              <h2 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">
                 {initialData ? 'Edit Expense Claim' : 'Record Expense Claim'}
               </h2>
-              <p className="text-xs text-zinc-500">Record company/employee expense with itemized lines</p>
+              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">Record company/employee expense with itemized lines</p>
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-lg hover:bg-zinc-100 transition-colors disabled:opacity-50"
+            className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-[#E6E8EE] rounded-lg hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors disabled:opacity-50"
           >
             <X size={18} />
           </button>
@@ -406,7 +406,7 @@ export default function RecordExpenseModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1 min-h-0">
           {/* User error warning if /auth/me failed */}
           {userError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center justify-between">
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertCircle size={16} className="text-rose-500 shrink-0" />
                 <span>{userError}</span>
@@ -414,7 +414,7 @@ export default function RecordExpenseModal({
               <button
                 type="button"
                 onClick={fetchCurrentUser}
-                className="text-xs font-semibold text-rose-800 underline hover:no-underline ml-2 flex items-center gap-1"
+                className="text-xs font-semibold text-rose-800 dark:text-rose-300 underline hover:no-underline ml-2 flex items-center gap-1"
               >
                 <RefreshCw size={12} /> Retry
               </button>
@@ -424,7 +424,7 @@ export default function RecordExpenseModal({
           {/* Form Fields: Only user-input fields (Claim Date & Expense Request) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block">
+              <label className="text-[8.8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                 Claim Date <span className="text-rose-500">*</span>
               </label>
               <input
@@ -439,12 +439,12 @@ export default function RecordExpenseModal({
                     items: prev.items.map((it) => (it.expenseDate ? it : { ...it, expenseDate: newDate })),
                   }));
                 }}
-                className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 focus:border-zinc-400 outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-zinc-500 outline-none"
               />
             </div>
 
             <div>
-              <label className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block">
+              <label className="text-[8.8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                 Expense Request (Optional)
               </label>
               <CustomSelect
@@ -467,7 +467,7 @@ export default function RecordExpenseModal({
                   }
                 }}
                 disabled={isLoadingRequests || !formData.employeeId}
-                className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 focus:border-zinc-400 outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-zinc-500 outline-none"
               >
                 <option value="">-- Select Expense Request (Optional) --</option>
                 {approvedRequests.map((req) => {
@@ -484,64 +484,64 @@ export default function RecordExpenseModal({
 
           {/* Consolidated Employee Expense Balance Card */}
           {employeeBalance && (
-            <div className="p-4 rounded-xl border border-zinc-200 bg-gradient-to-br from-zinc-50/90 to-white shadow-sm space-y-3">
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
+            <div className="p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-gradient-to-br from-zinc-50/90 to-white dark:from-[#1D212C] dark:to-[#161922] shadow-sm space-y-3">
+              <div className="flex items-center justify-between border-b border-zinc-100 dark:border-[#2A2F3D] pb-2.5">
                 <div>
-                  <h4 className="font-bold text-sm text-zinc-900">
+                  <h4 className="font-bold text-sm text-zinc-900 dark:text-[#E6E8EE]">
                     {employeeBalance.employeeName || formData.employeeName}
                   </h4>
-                  <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">
                     {employeeBalance.role || employeeBalance.employeeRole || formData.employeeRole || 'EMPLOYEE'}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                   Consolidated Employee Balance
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3 py-1">
-                <div className="bg-white p-2.5 rounded-lg border border-zinc-100">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">
+                <div className="bg-white dark:bg-[#1D212C] p-2.5 rounded-lg border border-zinc-100 dark:border-[#2A2F3D]">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 dark:text-[#A0A6B5] block tracking-wider">
                     Total Approved
                   </span>
-                  <span className="font-bold text-base text-zinc-900">
+                  <span className="font-bold text-base text-zinc-900 dark:text-[#E6E8EE]">
                     ₹{Number(employeeBalance.totalApprovedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                <div className="bg-white p-2.5 rounded-lg border border-zinc-100">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">
+                <div className="bg-white dark:bg-[#1D212C] p-2.5 rounded-lg border border-zinc-100 dark:border-[#2A2F3D]">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 dark:text-[#A0A6B5] block tracking-wider">
                     Used
                   </span>
-                  <span className="font-bold text-base text-amber-600">
+                  <span className="font-bold text-base text-amber-600 dark:text-amber-400">
                     ₹{Number(employeeBalance.totalUsedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                <div className="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-200/60">
-                  <span className="text-[10px] uppercase font-bold text-emerald-600 block tracking-wider">
+                <div className="bg-emerald-50/50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-200/60 dark:border-emerald-800/40">
+                  <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block tracking-wider">
                     Available
                   </span>
-                  <span className="font-bold text-base text-emerald-700">
+                  <span className="font-bold text-base text-emerald-700 dark:text-emerald-300">
                     ₹{Number(employeeBalance.totalRemainingAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
 
               {employeeBalance.requests && employeeBalance.requests.length > 0 && (
-                <div className="pt-2 border-t border-zinc-100">
-                  <div className="text-[11px] font-bold text-zinc-600 uppercase tracking-wider mb-1.5">
+                <div className="pt-2 border-t border-zinc-100 dark:border-[#2A2F3D]">
+                  <div className="text-[11px] font-bold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider mb-1.5">
                     Expense Details
                   </div>
-                  <ul className="space-y-1 text-xs text-zinc-700">
+                  <ul className="space-y-1 text-xs text-zinc-700 dark:text-zinc-300">
                     {employeeBalance.requests.map((r, idx) => (
                       <li key={r.expenseRequestId || r.id || idx} className="flex items-center justify-between py-0.5">
                         <span className="flex items-center gap-2">
-                          <span className="text-zinc-400">•</span>
-                          <span className="font-medium text-zinc-800">{r.categoryName || 'Expense'}</span>
-                          <span className="text-zinc-400">—</span>
-                          <span className="text-zinc-600">{r.description || r.purposeDescription || 'No description'}</span>
+                          <span className="text-zinc-400 dark:text-[#6B7184]">•</span>
+                          <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{r.categoryName || 'Expense'}</span>
+                          <span className="text-zinc-400 dark:text-[#6B7184]">—</span>
+                          <span className="text-zinc-600 dark:text-[#A0A6B5]">{r.description || r.purposeDescription || 'No description'}</span>
                         </span>
-                        <span className="font-semibold text-zinc-700 text-[11px]">
+                        <span className="font-semibold text-zinc-700 dark:text-zinc-300 text-[11px]">
                           ₹{Number(r.remainingAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </span>
                       </li>
@@ -561,49 +561,51 @@ export default function RecordExpenseModal({
 
             return (
               <div className={`p-3.5 rounded-xl border text-xs transition-all ${
-                isExceeded ? 'bg-rose-50/70 border-rose-200' : 'bg-zinc-50/80 border-zinc-200'
+                isExceeded
+                  ? 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/40'
+                  : 'bg-zinc-50/80 dark:bg-[#1D212C] border-zinc-200 dark:border-[#2A2F3D]'
               }`}>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="font-semibold text-zinc-900 flex items-center gap-2">
+                  <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-2">
                     <span>{selectedRequestObj.requestNumber}</span>
-                    <span className="text-zinc-400 font-normal">—</span>
-                    <span className="text-zinc-600 truncate max-w-[280px]">
+                    <span className="text-zinc-400 dark:text-[#6B7184] font-normal">—</span>
+                    <span className="text-zinc-600 dark:text-[#A0A6B5] truncate max-w-[280px]">
                       {selectedRequestObj.purposeDescription || selectedRequestObj.purpose || 'Expense Request'}
                     </span>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50">
                     APPROVED
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-3 pt-2 border-t border-zinc-200/70">
+                <div className="grid grid-cols-3 gap-3 pt-2 border-t border-zinc-200/70 dark:border-[#2A2F3D]">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 dark:text-[#A0A6B5] block tracking-wider">
                       Request Amount
                     </span>
-                    <span className="font-bold text-sm text-zinc-800">
+                    <span className="font-bold text-sm text-zinc-800 dark:text-[#E6E8EE]">
                       ₹{reqAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 dark:text-[#A0A6B5] block tracking-wider">
                       Already Used
                     </span>
-                    <span className="font-bold text-sm text-amber-600">
+                    <span className="font-bold text-sm text-amber-600 dark:text-amber-400">
                       ₹{usedAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-zinc-400 block tracking-wider">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 dark:text-[#A0A6B5] block tracking-wider">
                       Remaining Amount
                     </span>
-                    <span className={`font-bold text-sm ${isExceeded ? 'text-rose-600' : 'text-emerald-600'}`}>
+                    <span className={`font-bold text-sm ${isExceeded ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                       ₹{remAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
                 {isExceeded && (
-                  <div className="mt-2.5 pt-2 border-t border-rose-200 text-rose-700 text-xs flex items-center gap-1.5 font-medium">
-                    <AlertCircle size={14} className="shrink-0 text-rose-600" />
+                  <div className="mt-2.5 pt-2 border-t border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-1.5 font-medium">
+                    <AlertCircle size={14} className="shrink-0 text-rose-600 dark:text-rose-400" />
                     <span>Total claim amount (₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}) exceeds remaining approved amount (₹{remAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}).</span>
                   </div>
                 )}
@@ -612,15 +614,15 @@ export default function RecordExpenseModal({
           })()}
 
           {attachmentError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs flex items-center justify-between">
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-300 rounded-lg text-xs flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <AlertCircle size={14} className="text-rose-600 shrink-0" />
+                <AlertCircle size={14} className="text-rose-600 dark:text-rose-400 shrink-0" />
                 <span>{attachmentError}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setAttachmentError(null)}
-                className="text-rose-400 hover:text-rose-600"
+                className="text-rose-400 hover:text-rose-600 dark:hover:text-rose-300"
               >
                 <X size={13} />
               </button>
@@ -630,22 +632,22 @@ export default function RecordExpenseModal({
           {/* Multi-Line Items Table */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-[8.8px] font-bold text-zinc-700 uppercase tracking-wider">
+              <label className="text-[8.8px] font-bold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider">
                 Expense Line Items <span className="text-rose-500">*</span>
               </label>
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="flex items-center gap-1 text-xs font-bold text-zinc-900 hover:text-zinc-700 bg-zinc-100 hover:bg-zinc-200 px-2.5 py-1 rounded-md transition-colors"
+                className="flex items-center gap-1 text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] hover:text-zinc-700 dark:hover:text-white bg-zinc-100 dark:bg-[#1D212C] hover:bg-zinc-200 dark:hover:bg-[#222736] px-2.5 py-1 rounded-md transition-colors border border-transparent dark:border-[#2A2F3D]"
               >
                 <Plus size={13} /> Add Item
               </button>
             </div>
 
-            <div className="border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="border border-zinc-200 dark:border-[#2A2F3D] rounded-xl overflow-hidden shadow-sm">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-zinc-100/75 border-b border-zinc-200 text-zinc-600 font-bold uppercase text-[8px] tracking-wider">
+                  <tr className="bg-zinc-100/75 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] font-bold uppercase text-[8px] tracking-wider">
                     <th className="p-2.5 w-32 pl-3">Expense Date</th>
                     <th className="p-2.5 w-40">Expense Category</th>
                     <th className="p-2.5">Description</th>
@@ -655,9 +657,9 @@ export default function RecordExpenseModal({
                     <th className="p-2.5 w-10 text-center"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 bg-white font-medium">
+                <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] bg-white dark:bg-[#161922] font-medium">
                   {formData.items.map((item, index) => (
-                    <tr key={item.id} className="hover:bg-zinc-50/60 transition-colors">
+                    <tr key={item.id} className="hover:bg-zinc-50/60 dark:hover:bg-[#1D212C] transition-colors">
                       {/* Expense Date */}
                       <td className="p-2 pl-3">
                         <input
@@ -665,7 +667,7 @@ export default function RecordExpenseModal({
                           required
                           value={item.expenseDate || formData.claimDate}
                           onChange={(e) => handleItemChange(index, 'expenseDate', e.target.value)}
-                          className="w-full h-8 px-2 bg-transparent border border-transparent hover:border-zinc-200 focus:border-zinc-400 focus:bg-white rounded text-xs outline-none"
+                          className="w-full h-8 px-2 bg-transparent border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D] focus:border-zinc-400 dark:focus:border-zinc-600 focus:bg-white dark:focus:bg-[#1D212C] rounded text-xs outline-none text-zinc-900 dark:text-[#E6E8EE]"
                         />
                       </td>
 
@@ -674,7 +676,7 @@ export default function RecordExpenseModal({
                         <CustomSelect
                           value={item.expenseCategoryId || ''}
                           onChange={(e) => handleItemChange(index, 'expenseCategoryId', e.target.value)}
-                          className="w-full h-8 px-2 bg-transparent border border-transparent hover:border-zinc-200 focus:border-zinc-400 focus:bg-white rounded text-xs outline-none"
+                          className="w-full h-8 px-2 bg-transparent border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D] focus:border-zinc-400 dark:focus:border-zinc-600 focus:bg-white dark:focus:bg-[#1D212C] rounded text-xs outline-none text-zinc-900 dark:text-[#E6E8EE]"
                         >
                           <option value="" disabled>Select...</option>
                           {categoriesList.map((c) => (
@@ -693,7 +695,7 @@ export default function RecordExpenseModal({
                           placeholder="e.g. Taxi Fare"
                           value={item.description}
                           onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                          className="w-full h-8 px-2 bg-transparent border border-transparent hover:border-zinc-200 focus:border-zinc-400 focus:bg-white rounded text-xs outline-none"
+                          className="w-full h-8 px-2 bg-transparent border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D] focus:border-zinc-400 dark:focus:border-zinc-600 focus:bg-white dark:focus:bg-[#1D212C] rounded text-xs outline-none text-zinc-900 dark:text-[#E6E8EE]"
                         />
                       </td>
 
@@ -702,7 +704,7 @@ export default function RecordExpenseModal({
                         <CustomSelect
                           value={item.paymentType || 'CASH'}
                           onChange={(e) => handleItemChange(index, 'paymentType', e.target.value)}
-                          className="w-full h-8 px-2 bg-transparent border border-transparent hover:border-zinc-200 focus:border-zinc-400 focus:bg-white rounded text-xs outline-none uppercase font-semibold text-[10px]"
+                          className="w-full h-8 px-2 bg-transparent border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D] focus:border-zinc-400 dark:focus:border-zinc-600 focus:bg-white dark:focus:bg-[#1D212C] rounded text-xs outline-none uppercase font-semibold text-[10px] text-zinc-900 dark:text-[#E6E8EE]"
                         >
                           <option value="CASH">CASH</option>
                           <option value="BANK">BANK</option>
@@ -720,34 +722,34 @@ export default function RecordExpenseModal({
                           required
                           value={item.amount}
                           onChange={(e) => handleItemChange(index, 'amount', e.target.value)}
-                          className="w-full h-8 text-right bg-transparent border border-transparent hover:border-zinc-200 focus:border-zinc-400 focus:bg-white rounded text-xs outline-none font-medium text-zinc-900"
+                          className="w-full h-8 text-right bg-transparent border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D] focus:border-zinc-400 dark:focus:border-zinc-600 focus:bg-white dark:focus:bg-[#1D212C] rounded text-xs outline-none font-medium text-zinc-900 dark:text-[#E6E8EE]"
                         />
                       </td>
 
                       {/* Bill Attachment Upload & Preview */}
                       <td className="p-2 w-48">
                         {uploadingItemIndex === index ? (
-                          <div className="flex items-center gap-1.5 text-xs text-zinc-500 py-1">
-                            <Loader2 size={13} className="animate-spin text-zinc-700" />
+                          <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-[#A0A6B5] py-1">
+                            <Loader2 size={13} className="animate-spin text-zinc-700 dark:text-zinc-300" />
                             <span>Uploading...</span>
                           </div>
                         ) : item.billAttachmentUrl ? (
-                          <div className="flex items-center gap-1.5 p-1 px-2 rounded-lg bg-emerald-50/70 border border-emerald-200/80 text-xs">
+                          <div className="flex items-center gap-1.5 p-1 px-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 text-xs">
                             {item.billAttachmentUrl.toLowerCase().endsWith('.pdf') || item.attachmentFileName?.toLowerCase().endsWith('.pdf') ? (
                               <FileText size={14} className="text-rose-500 shrink-0" />
                             ) : (
                               <img
                                 src={item.billAttachmentUrl}
                                 alt="Receipt"
-                                className="w-5 h-5 object-cover rounded shrink-0 border border-zinc-200"
+                                className="w-5 h-5 object-cover rounded shrink-0 border border-zinc-200 dark:border-[#2A2F3D]"
                                 onError={(e) => { e.target.style.display = 'none'; }}
                               />
                             )}
                             <div className="flex flex-col min-w-0 flex-1">
-                              <span className="truncate max-w-[90px] text-[11px] font-medium text-zinc-800" title={item.attachmentFileName || 'Attachment'}>
+                              <span className="truncate max-w-[90px] text-[11px] font-medium text-zinc-800 dark:text-[#E6E8EE]" title={item.attachmentFileName || 'Attachment'}>
                                 {item.attachmentFileName || item.billAttachmentUrl.split('/').pop()}
                               </span>
-                              <span className="text-[9px] text-emerald-700 font-semibold flex items-center gap-0.5">
+                              <span className="text-[9px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
                                 <Check size={10} /> Uploaded
                               </span>
                             </div>
@@ -756,7 +758,7 @@ export default function RecordExpenseModal({
                               target="_blank"
                               rel="noreferrer"
                               title="View file"
-                              className="p-1 hover:bg-emerald-100 rounded text-emerald-800 transition-colors"
+                              className="p-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded text-emerald-800 dark:text-emerald-300 transition-colors"
                             >
                               <Eye size={12} />
                             </a>
@@ -772,14 +774,14 @@ export default function RecordExpenseModal({
                                 setFormData((prev) => ({ ...prev, items: updated }));
                               }}
                               title="Remove attachment"
-                              className="p-1 hover:bg-emerald-100 rounded text-zinc-400 hover:text-rose-600 transition-colors"
+                              className="p-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded text-zinc-400 hover:text-rose-600 transition-colors"
                             >
                               <X size={12} />
                             </button>
                           </div>
                         ) : (
-                          <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-dashed border-zinc-300 hover:border-zinc-500 bg-zinc-50/50 hover:bg-zinc-100/70 text-[11px] font-medium text-zinc-700 transition-colors">
-                            <Upload size={12} className="text-zinc-500" />
+                          <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-dashed border-zinc-300 dark:border-[#2A2F3D] hover:border-zinc-500 dark:hover:border-zinc-400 bg-zinc-50/50 dark:bg-[#1D212C] hover:bg-zinc-100/70 dark:hover:bg-[#222736] text-[11px] font-medium text-zinc-700 dark:text-[#E6E8EE] transition-colors">
+                            <Upload size={12} className="text-zinc-500 dark:text-[#A0A6B5]" />
                             <span>Upload Bill</span>
                             <input
                               type="file"
@@ -803,7 +805,7 @@ export default function RecordExpenseModal({
                           type="button"
                           disabled={formData.items.length <= 1}
                           onClick={() => handleRemoveItem(index)}
-                          className="p-1 text-zinc-300 hover:text-rose-500 disabled:opacity-20 transition-colors"
+                          className="p-1 text-zinc-300 dark:text-zinc-600 hover:text-rose-500 disabled:opacity-20 transition-colors"
                         >
                           <Trash2 size={13} />
                         </button>
@@ -812,11 +814,11 @@ export default function RecordExpenseModal({
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="bg-zinc-50 border-t border-zinc-200">
-                    <td colSpan={4} className="p-3 text-right font-bold text-xs text-zinc-600 uppercase tracking-wider">
+                  <tr className="bg-zinc-50 dark:bg-[#1D212C] border-t border-zinc-200 dark:border-[#2A2F3D]">
+                    <td colSpan={4} className="p-3 text-right font-bold text-xs text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider">
                       Total Claim Amount:
                     </td>
-                    <td className="p-3 text-right font-extrabold text-sm text-zinc-900 pr-3">
+                    <td className="p-3 text-right font-extrabold text-sm text-zinc-900 dark:text-[#E6E8EE] pr-3">
                       ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                     <td colSpan={2}></td>
@@ -827,19 +829,19 @@ export default function RecordExpenseModal({
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end pt-4 border-t border-zinc-100 gap-2.5">
+          <div className="flex items-center justify-end pt-4 border-t border-zinc-100 dark:border-[#2A2F3D] gap-2.5">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="h-9 px-4 text-xs font-semibold text-zinc-600 hover:text-zinc-800 hover:bg-zinc-100 rounded-lg transition-colors disabled:opacity-50"
+              className="h-9 px-4 text-xs font-semibold text-zinc-600 dark:text-[#E6E8EE] hover:text-zinc-800 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || totalAmount <= 0 || !formData.employeeId || isLoadingUser || !!userError || (selectedRequestObj && totalAmount > Number(selectedRequestObj.remainingAmount ?? ((selectedRequestObj.approvedAmount ?? selectedRequestObj.requestedAmount ?? 0) - (selectedRequestObj.usedAmount ?? 0))))}
-              className="h-9 px-5 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg shadow-sm transition-colors active:scale-98 disabled:opacity-50 flex items-center gap-2"
+              className="h-9 px-5 text-xs font-semibold text-white bg-zinc-900 dark:bg-[#4C8DFF] hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] rounded-lg shadow-sm transition-colors active:scale-98 disabled:opacity-50 flex items-center gap-2"
             >
               {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : null}
               {isSubmitting ? 'Saving...' : 'Save Draft Expense'}

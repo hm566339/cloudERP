@@ -124,7 +124,7 @@ export default function DeliveryAddressField({
 
   return (
     <div>
-      <label className="block mb-1 text-[8.5px] font-semibold text-zinc-700">Delivery Address</label>
+      <label className="block mb-1 text-[8.5px] font-semibold text-zinc-700 dark:text-[#A0A6B5]">Delivery Address</label>
       {mode === 'existing' ? (
         <CustomSelect
           value={value || ''}
@@ -135,10 +135,10 @@ export default function DeliveryAddressField({
           isLoading={addressesLoading}
           disabled={disabled || !customerId}
           className="w-full"
-          buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 disabled:bg-zinc-50 disabled:text-zinc-400"
+          buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white dark:bg-[#1D212C] dark:border-[#2A2F3D] text-[10px] text-zinc-800 dark:text-[#E6E8EE] flex items-center justify-between outline-none focus:border-zinc-400 dark:focus:border-[#4C8DFF] focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 disabled:bg-zinc-50 dark:disabled:bg-[#161922] disabled:text-zinc-400 dark:disabled:text-[#6B7184]"
         />
       ) : (
-        <div className="space-y-1.5 rounded-md border border-zinc-200 bg-zinc-50 p-2">
+        <div className="space-y-1.5 rounded-md border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C] p-2">
           {[
             ['addressLine1', 'Address Line 1', true],
             ['addressLine2', 'Address Line 2', false],
@@ -163,9 +163,9 @@ export default function DeliveryAddressField({
             searchable
             disabled={disabled}
             className="w-full"
-            buttonClassName="w-full h-7 px-2 border border-zinc-200 rounded-md bg-white text-[8.8px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 disabled:bg-zinc-50 disabled:text-zinc-400"
+            buttonClassName="w-full h-7 px-2 border border-zinc-200 dark:border-[#2A2F3D] rounded-md bg-white dark:bg-[#1D212C] text-[8.8px] text-zinc-800 dark:text-[#E6E8EE] flex items-center justify-between outline-none focus:border-zinc-400 dark:focus:border-[#4C8DFF] focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 disabled:bg-zinc-50 dark:disabled:bg-[#161922] disabled:text-zinc-400 dark:disabled:text-[#6B7184]"
           />
-          <label className="flex items-center gap-1.5 text-[8px] text-zinc-600">
+          <label className="flex items-center gap-1.5 text-[8px] text-zinc-600 dark:text-[#A0A6B5]">
             <input
               type="checkbox"
               checked={Boolean(formValues?.saveNewDeliveryAddress)}
@@ -174,13 +174,13 @@ export default function DeliveryAddressField({
             />
             Save this address for this customer
           </label>
-          <button type="button" onClick={useSavedAddress} disabled={disabled} className="text-[8px] font-semibold text-zinc-600 hover:text-zinc-900 disabled:text-zinc-400">
+          <button type="button" onClick={useSavedAddress} disabled={disabled} className="text-[8px] font-semibold text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] disabled:text-zinc-400 dark:disabled:text-[#6B7184]">
             Use a saved address
           </button>
         </div>
       )}
-      {mode === 'existing' && !addressesLoading && !addressesError && addresses.length === 0 && customerId && <p className="mt-1 text-[8px] text-zinc-400">No delivery addresses available</p>}
-      {errors?.deliveryAddressId && <p className="mt-1 text-[8px] text-red-600">{errors.deliveryAddressId}</p>}
+      {mode === 'existing' && !addressesLoading && !addressesError && addresses.length === 0 && customerId && <p className="mt-1 text-[8px] text-zinc-400 dark:text-[#A0A6B5]">No delivery addresses available</p>}
+      {errors?.deliveryAddressId && <p className="mt-1 text-[8px] text-red-600 dark:text-[#F0616D]">{errors.deliveryAddressId}</p>}
     </div>
   );
 }

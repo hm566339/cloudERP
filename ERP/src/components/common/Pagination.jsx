@@ -51,23 +51,23 @@ function Pagination({
   if (actualTotalElements === 0) return null;
 
   return (
-    <div className="w-full px-4 py-3 sm:px-6 sm:py-4 border-t border-zinc-200/80 bg-white">
+    <div className="w-full px-4 py-3 sm:px-6 sm:py-4 border-t border-zinc-200/80 dark:border-[#2A2F3D] bg-white dark:bg-[#161922]">
       {/* Mobile view (< sm) */}
       <div className="flex sm:hidden items-center justify-between gap-2">
-        <p className="text-xs text-zinc-500 truncate">
-          <span className="font-semibold text-zinc-800">{from}–{to}</span> of{' '}
-          <span className="font-semibold text-zinc-800">{actualTotalElements.toLocaleString()}</span>
+        <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] truncate">
+          <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{from}–{to}</span> of{' '}
+          <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{actualTotalElements.toLocaleString()}</span>
         </p>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-xs text-zinc-500 mr-1">
+          <span className="text-xs text-zinc-500 dark:text-[#A0A6B5] mr-1">
             {displayPage}/{safeTotalPages}
           </span>
           <button
             onClick={() => canPrev && onPageChange(actualPage - 1)}
             disabled={!canPrev}
             aria-label="Previous page"
-            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           >
             <ChevronLeft size={14} />
           </button>
@@ -75,7 +75,7 @@ function Pagination({
             onClick={() => canNext && onPageChange(actualPage + 1)}
             disabled={!canNext}
             aria-label="Next page"
-            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           >
             <ChevronRight size={14} />
           </button>
@@ -86,22 +86,22 @@ function Pagination({
       <div className="hidden sm:flex flex-wrap gap-4 items-center justify-between">
         {/* Left: summary */}
         <div className="flex items-center justify-center md:justify-start">
-          <p className="text-sm text-zinc-500 whitespace-nowrap">
+          <p className="text-sm text-zinc-500 dark:text-[#A0A6B5] whitespace-nowrap">
             Showing{' '}
-            <span className="font-semibold text-zinc-800">{from}–{to}</span> of{' '}
-            <span className="font-semibold text-zinc-800">{actualTotalElements.toLocaleString()}</span> {itemName}
+            <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{from}–{to}</span> of{' '}
+            <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{actualTotalElements.toLocaleString()}</span> {itemName}
           </p>
         </div>
 
         {/* Middle: rows per page */}
         {onPageSizeChange && (
           <div className="flex items-center justify-center gap-2">
-            <label className="text-sm text-zinc-500 whitespace-nowrap">Rows per page:</label>
+            <label className="text-sm text-zinc-500 dark:text-[#A0A6B5] whitespace-nowrap">Rows per page:</label>
             <CustomSelect
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
               searchable={false}
-              className="bg-transparent text-sm font-semibold text-zinc-700 focus:outline-none appearance-none cursor-pointer pr-4 hover:text-zinc-900 transition-colors"
+              className="bg-transparent text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE] focus:outline-none appearance-none cursor-pointer pr-4 hover:text-zinc-900 dark:hover:text-white transition-colors"
               style={{ background: 'url(\'data:image/svg+xml;utf8,<svg fill="none" height="24" stroke="%2371717a" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"/></svg>\') no-repeat right center / 14px 14px' }}
             >
               <option value={10}>10</option>
@@ -118,14 +118,14 @@ function Pagination({
             onClick={() => canPrev && onPageChange(actualPage - 1)}
             disabled={!canPrev}
             aria-label="Previous page"
-            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
           >
             <ChevronLeft size={15} />
           </button>
 
           {getPageNumbers().map((p, idx) =>
             p === '...' ? (
-              <span key={`dots-${idx}`} className="h-8 min-w-8 px-1 flex items-center justify-center text-zinc-400 text-sm">
+              <span key={`dots-${idx}`} className="h-8 min-w-8 px-1 flex items-center justify-center text-zinc-400 dark:text-[#6B7184] text-sm">
                 …
               </span>
             ) : (
@@ -134,8 +134,8 @@ function Pagination({
                 onClick={() => p !== displayPage && onPageChange(p - 1)}
                 className={`h-8 min-w-8 px-1 flex items-center justify-center rounded-lg text-sm font-semibold transition-all duration-150 ${
                   p === displayPage
-                    ? 'bg-zinc-900 text-white border border-zinc-900 shadow-xs'
-                    : 'border border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300'
+                    ? 'bg-zinc-900 dark:bg-[#4C8DFF] text-white border border-zinc-900 dark:border-[#4C8DFF] shadow-xs'
+                    : 'border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154] dark:hover:text-[#E6E8EE]'
                 }`}
               >
                 {p}
@@ -147,7 +147,7 @@ function Pagination({
             onClick={() => canNext && onPageChange(actualPage + 1)}
             disabled={!canNext}
             aria-label="Next page"
-            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+            className="h-8 px-2 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
           >
             <ChevronRight size={15} />
           </button>

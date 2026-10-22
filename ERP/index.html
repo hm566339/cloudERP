@@ -13,6 +13,30 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
+  <!-- FOUC prevention: apply dark class before first paint -->
+  <script>
+    (function () {
+      try {
+        var mode = localStorage.getItem('theme_mode');
+        // Legacy fallback for old boolean key
+        if (!mode) {
+          var legacy = localStorage.getItem('theme_dark');
+          if (legacy === 'true') mode = 'dark';
+          else if (legacy === 'false') mode = 'light';
+          else mode = 'system';
+        }
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = mode === 'dark' || (mode === 'system' && prefersDark);
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.style.colorScheme = 'light';
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 
 <body>

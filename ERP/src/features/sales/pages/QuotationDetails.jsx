@@ -174,26 +174,26 @@ export default function QuotationDetails() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-6 bg-white border-b border-zinc-200 shadow-sm">
+      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 sm:p-6 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] shadow-sm">
         <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 text-zinc-400 hover:text-zinc-900 rounded-full hover:bg-zinc-100 transition-colors shrink-0"
+            className="p-2 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-900 dark:hover:text-[#E6E8EE] rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors shrink-0"
           >
             <ArrowLeft size={20} />
           </button>
           <div className="min-w-0">
             <div className="flex items-center flex-wrap gap-2 sm:gap-3">
-              <h1 className="text-lg sm:text-2xl font-bold text-zinc-900 tracking-tight font-mono break-all">
+              <h1 className="text-lg sm:text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight font-mono break-all">
                 {quotation.quotationNumber}
               </h1>
               <StatusBadge status={quotation.status} />
-              <span className="text-xs sm:text-sm font-medium text-zinc-600 truncate max-w-[200px] sm:max-w-none">
+              <span className="text-xs sm:text-sm font-medium text-zinc-600 dark:text-[#A0A6B5] truncate max-w-[200px] sm:max-w-none">
                 {cust.customerName || cust.companyName}
               </span>
-              <span className="text-xs sm:text-sm text-zinc-400">
+              <span className="text-xs sm:text-sm text-zinc-400 dark:text-[#6B7184]">
                 ({quotation.quotationDate} &mdash; Valid Until: {quotation.validUntil})
               </span>
             </div>
@@ -234,27 +234,27 @@ export default function QuotationDetails() {
             </button>
             {showMoreActions && (
               <div
-                className="absolute right-0 mt-2 w-56 bg-white border border-zinc-200 rounded-xl shadow-lg z-30 py-1.5 text-xs animate-in fade-in slide-in-from-top-2"
+                className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-lg z-30 py-1.5 text-xs animate-in fade-in slide-in-from-top-2"
                 onClick={() => setShowMoreActions(false)}
               >
-                <button onClick={() => window.print()} className="w-full text-left px-4 py-2 hover:bg-zinc-50 flex items-center gap-2 text-zinc-700 font-medium">
-                  <Printer size={14} className="text-zinc-400" /> Print Quotation
+                <button onClick={() => window.print()} className="w-full text-left px-4 py-2 hover:bg-zinc-50 dark:hover:bg-[#222736] flex items-center gap-2 text-zinc-700 dark:text-[#E6E8EE] font-medium">
+                  <Printer size={14} className="text-zinc-400 dark:text-[#6B7184]" /> Print Quotation
                 </button>
-                <button onClick={handleDownloadPdf} disabled={isDownloadingPdf} className="w-full text-left px-4 py-2 hover:bg-zinc-50 flex items-center gap-2 text-zinc-700 font-medium">
-                  <Download size={14} className="text-zinc-400" /> Download PDF
+                <button onClick={handleDownloadPdf} disabled={isDownloadingPdf} className="w-full text-left px-4 py-2 hover:bg-zinc-50 dark:hover:bg-[#222736] flex items-center gap-2 text-zinc-700 dark:text-[#E6E8EE] font-medium">
+                  <Download size={14} className="text-zinc-400 dark:text-[#6B7184]" /> Download PDF
                 </button>
                 {quotation.status === 'DRAFT' && canEdit() && (
-                  <button onClick={handleSend} disabled={isUpdating} className="w-full text-left px-4 py-2 hover:bg-zinc-50 flex items-center gap-2 text-zinc-700 font-medium">
-                    <Mail size={14} className="text-zinc-400" /> Email & Send
+                  <button onClick={handleSend} disabled={isUpdating} className="w-full text-left px-4 py-2 hover:bg-zinc-50 dark:hover:bg-[#222736] flex items-center gap-2 text-zinc-700 dark:text-[#E6E8EE] font-medium">
+                    <Mail size={14} className="text-zinc-400 dark:text-[#6B7184]" /> Email & Send
                   </button>
                 )}
                 {quotation.status === 'SENT' && canApprove() && (
-                  <button onClick={handleReject} disabled={isUpdating} className="w-full text-left px-4 py-2 hover:bg-rose-50 flex items-center gap-2 text-rose-600 font-medium">
+                  <button onClick={handleReject} disabled={isUpdating} className="w-full text-left px-4 py-2 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-2 text-rose-600 dark:text-rose-400 font-medium">
                     <XCircle size={14} className="text-rose-400" /> Reject Quotation
                   </button>
                 )}
                 {quotation.status !== 'CANCELLED' && quotation.status !== 'ACCEPTED' && (
-                  <button onClick={handleCancel} disabled={isUpdating} className="w-full text-left px-4 py-2 hover:bg-rose-50 flex items-center gap-2 text-rose-600 font-semibold border-t border-zinc-100">
+                  <button onClick={handleCancel} disabled={isUpdating} className="w-full text-left px-4 py-2 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-2 text-rose-600 dark:text-rose-400 font-semibold border-t border-zinc-100 dark:border-[#2A2F3D]">
                     <XCircle size={14} className="text-rose-500" /> Cancel Quotation
                   </button>
                 )}
@@ -276,41 +276,41 @@ export default function QuotationDetails() {
       </div>
 
       {/* Top KPI Cards */}
-      <div className="p-4 sm:p-6 bg-white border-b border-zinc-200">
+      <div className="p-4 sm:p-6 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D]">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Grand Total</p>
-            <p className="text-sm sm:text-base font-black text-zinc-900">{curr} {fmt(totalAmount)}</p>
+          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C] flex flex-col">
+            <p className="text-[10px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">Grand Total</p>
+            <p className="text-sm sm:text-base font-black text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(totalAmount)}</p>
           </div>
-          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Taxable Amount</p>
-            <p className="text-sm sm:text-base font-black text-zinc-900">{curr} {fmt(taxableAmount)}</p>
+          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C] flex flex-col">
+            <p className="text-[10px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">Taxable Amount</p>
+            <p className="text-sm sm:text-base font-black text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(taxableAmount)}</p>
           </div>
-          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Total Tax</p>
-            <p className="text-sm sm:text-base font-black text-zinc-900">{curr} {fmt(totalTax)}</p>
+          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C] flex flex-col">
+            <p className="text-[10px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">Total Tax</p>
+            <p className="text-sm sm:text-base font-black text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(totalTax)}</p>
           </div>
-          <div className="p-3 sm:p-3.5 rounded-xl border border-amber-100 bg-amber-50/30 flex flex-col">
-            <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-1">Validity</p>
-            <p className="text-sm sm:text-base font-black text-amber-700">{validityDays} Days</p>
+          <div className="p-3 sm:p-3.5 rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-950/20 flex flex-col">
+            <p className="text-[10px] font-bold text-amber-600 dark:text-[#F5B544] uppercase tracking-wider mb-1">Validity</p>
+            <p className="text-sm sm:text-base font-black text-amber-700 dark:text-[#F5B544]">{validityDays} Days</p>
           </div>
-          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 bg-zinc-50/50 flex flex-col">
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Item Count</p>
-            <p className="text-sm sm:text-base font-black text-zinc-900">{stats.itemCount || lineItems.length}</p>
+          <div className="p-3 sm:p-3.5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C] flex flex-col">
+            <p className="text-[10px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">Item Count</p>
+            <p className="text-sm sm:text-base font-black text-zinc-900 dark:text-[#E6E8EE]">{stats.itemCount || lineItems.length}</p>
           </div>
-          <div className="p-3 sm:p-3.5 rounded-xl border border-emerald-100 bg-emerald-50/30 flex flex-col">
-            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Conversion %</p>
-            <p className="text-sm sm:text-base font-black text-emerald-700">{quotation.status === 'ACCEPTED' ? '100%' : '0%'}</p>
+          <div className="p-3 sm:p-3.5 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-950/20 flex flex-col">
+            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Conversion %</p>
+            <p className="text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-400">{quotation.status === 'ACCEPTED' ? '100%' : '0%'}</p>
           </div>
         </div>
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left Sidebar */}
-        <div className="w-full lg:w-80 flex-shrink-0 border-r border-zinc-200 bg-white overflow-y-auto hidden lg:block">
+        <div className="w-full lg:w-80 flex-shrink-0 border-r border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] overflow-y-auto hidden lg:block">
           <div className="p-6 space-y-8">
             <div>
-              <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100">Quotation Summary</h3>
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Quotation Summary</h3>
               <dl className="space-y-4">
                 {[
                   ['Quotation No', quotation.quotationNumber],
@@ -321,21 +321,21 @@ export default function QuotationDetails() {
                   ['Reference Number', quotation.referenceNumber],
                 ].map(([label, val]) => (
                   <div key={label}>
-                    <dt className="text-xs font-semibold text-zinc-500 uppercase">{label}</dt>
-                    <dd className="mt-1 text-sm font-medium text-zinc-900">{val || '-'}</dd>
+                    <dt className="text-xs font-semibold text-zinc-500 dark:text-[#6B7184] uppercase">{label}</dt>
+                    <dd className="mt-1 text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{val || '-'}</dd>
                   </div>
                 ))}
               </dl>
             </div>
 
             <div>
-              <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100">Quick Actions</h3>
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Quick Actions</h3>
               <div className="space-y-2">
                 {[
-                  { icon: <Printer size={16} className="text-zinc-400" />, label: 'Print Quotation', onClick: () => window.print() },
-                  { icon: <Download size={16} className="text-zinc-400" />, label: 'Download PDF', onClick: () => window.print() },
+                  { icon: <Printer size={16} className="text-zinc-400 dark:text-[#6B7184]" />, label: 'Print Quotation', onClick: () => window.print() },
+                  { icon: <Download size={16} className="text-zinc-400 dark:text-[#6B7184]" />, label: 'Download PDF', onClick: () => window.print() },
                 ].map(({ icon, label, onClick }) => (
-                  <button key={label} onClick={onClick} className="w-full flex items-center justify-between p-2.5 text-sm font-medium text-zinc-700 bg-zinc-50 hover:bg-zinc-100 rounded-lg border border-zinc-200 transition-colors">
+                  <button key={label} onClick={onClick} className="w-full flex items-center justify-between p-2.5 text-sm font-medium text-zinc-700 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#1D212C] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg border border-zinc-200 dark:border-[#2A2F3D] transition-colors">
                     <span className="flex items-center gap-2">{icon}{label}</span>
                   </button>
                 ))}
@@ -345,47 +345,47 @@ export default function QuotationDetails() {
         </div>
 
         {/* Main Content Tabs */}
-        <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/50">
+        <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/50 dark:bg-[#0F1117]">
           {/* Mobile Summary & Details (< lg) */}
-          <div className="lg:hidden p-3 bg-white border-b border-zinc-200">
+          <div className="lg:hidden p-3 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D]">
             <details className="group">
-              <summary className="flex items-center justify-between cursor-pointer list-none text-xs font-bold text-zinc-800 uppercase tracking-wider">
+              <summary className="flex items-center justify-between cursor-pointer list-none text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">
                 <span>Quotation Summary & Details</span>
-                <span className="text-zinc-400 group-open:rotate-180 transition-transform text-sm">▾</span>
+                <span className="text-zinc-400 dark:text-[#6B7184] group-open:rotate-180 transition-transform text-sm">▾</span>
               </summary>
-              <div className="mt-3 pt-3 border-t border-zinc-100 grid grid-cols-2 gap-3 text-xs">
+              <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D] grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="text-[9px] font-semibold text-zinc-500 uppercase block">Quotation No</span>
-                  <span className="font-medium text-zinc-900">{quotation.quotationNumber || '-'}</span>
+                  <span className="text-[9px] font-semibold text-zinc-500 dark:text-[#6B7184] uppercase block">Quotation No</span>
+                  <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{quotation.quotationNumber || '-'}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] font-semibold text-zinc-500 uppercase block">Customer</span>
-                  <span className="font-medium text-zinc-900">{cust.customerName || cust.companyName || '-'}</span>
+                  <span className="text-[9px] font-semibold text-zinc-500 dark:text-[#6B7184] uppercase block">Customer</span>
+                  <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{cust.customerName || cust.companyName || '-'}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] font-semibold text-zinc-500 uppercase block">Currency</span>
-                  <span className="font-medium text-zinc-900">{curr}</span>
+                  <span className="text-[9px] font-semibold text-zinc-500 dark:text-[#6B7184] uppercase block">Currency</span>
+                  <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr}</span>
                 </div>
                 <div>
-                  <span className="text-[9px] font-semibold text-zinc-500 uppercase block">Reference No</span>
-                  <span className="font-medium text-zinc-900">{quotation.referenceNumber || '-'}</span>
+                  <span className="text-[9px] font-semibold text-zinc-500 dark:text-[#6B7184] uppercase block">Reference No</span>
+                  <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{quotation.referenceNumber || '-'}</span>
                 </div>
               </div>
             </details>
           </div>
 
-          <div className="sticky top-0 z-10 bg-zinc-50/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 shadow-sm overflow-x-auto no-scrollbar">
+          <div className="sticky top-0 z-10 bg-zinc-50/80 dark:bg-[#161922]/80 backdrop-blur-sm p-1.5 border-b border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-x-auto no-scrollbar">
             <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 min-w-max">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold rounded-md transition-all shrink-0 whitespace-nowrap ${activeTab === tab.id
-                    ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/50'
-                    : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100/50'
+                    ? 'bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] shadow-sm border border-zinc-200/50 dark:border-[#2A2F3D]'
+                    : 'text-zinc-500 dark:text-[#6B7184] hover:text-zinc-700 dark:hover:text-[#E6E8EE] hover:bg-zinc-100/50 dark:hover:bg-[#222736]'
                     }`}
                 >
-                  <span className={activeTab === tab.id ? "text-zinc-900" : "text-zinc-400"}>
+                  <span className={activeTab === tab.id ? "text-zinc-900 dark:text-[#4C8DFF]" : "text-zinc-400 dark:text-[#6B7184]"}>
                     {tab.icon}
                   </span>
                   {tab.label}
@@ -399,9 +399,9 @@ export default function QuotationDetails() {
             {/* OVERVIEW TAB */}
             {activeTab === 'overview' && (
               <div className="space-y-6 max-w-4xl animate-in fade-in slide-in-from-bottom-2">
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                    <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Quotation Information</h3>
+                <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
+                  <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
+                    <h3 className="text-[10.4px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Quotation Information</h3>
                   </div>
                   <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {[
@@ -415,16 +415,16 @@ export default function QuotationDetails() {
                       ['Reference Number', quotation.referenceNumber],
                     ].map(([label, val]) => (
                       <div key={label} className="flex flex-col gap-1">
-                        <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">{label}</p>
-                        <p className="text-sm font-medium text-zinc-900">{val || '-'}</p>
+                        <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">{label}</p>
+                        <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{val || '-'}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                    <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Company Information</h3>
+                <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
+                  <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
+                    <h3 className="text-[10.4px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Company Information</h3>
                   </div>
                   <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {[
@@ -437,16 +437,16 @@ export default function QuotationDetails() {
                       ['Company Type', c.companyType],
                     ].map(([label, val]) => (
                       <div key={label} className="flex flex-col gap-1">
-                        <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">{label}</p>
-                        <p className="text-sm font-medium text-zinc-900">{val || '-'}</p>
+                        <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">{label}</p>
+                        <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{val || '-'}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                    <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Customer Information</h3>
+                <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
+                  <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
+                    <h3 className="text-[10.4px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Customer Information</h3>
                   </div>
                   <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {[
@@ -460,49 +460,49 @@ export default function QuotationDetails() {
                       ['Billing Address', cust.billingAddress || cust.addressLine1],
                     ].map(([label, val]) => (
                       <div key={label} className="flex flex-col gap-1">
-                        <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">{label}</p>
-                        <p className="text-sm font-medium text-zinc-900">{val || '-'}</p>
+                        <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">{label}</p>
+                        <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{val || '-'}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {(terms.paymentTerms || terms.deliveryTerms || terms.warrantyTerms || terms.termsAndConditions || terms.notes) && (
-                  <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-                    <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50 flex items-center justify-between">
-                      <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-2">
-                        <FileText size={16} className="text-blue-600" /> Terms & Conditions
+                  <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
+                    <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C] flex items-center justify-between">
+                      <h3 className="text-[10.4px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider flex items-center gap-2">
+                        <FileText size={16} className="text-blue-600 dark:text-[#4C8DFF]" /> Terms & Conditions
                       </h3>
                     </div>
                     <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
                       {terms.paymentTerms && (
                         <div className="flex flex-col gap-1">
-                          <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">Payment Terms</p>
-                          <p className="text-sm font-medium text-zinc-900 whitespace-pre-wrap">{renderOptionalText(terms.paymentTerms)}</p>
+                          <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Payment Terms</p>
+                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(terms.paymentTerms)}</p>
                         </div>
                       )}
                       {terms.deliveryTerms && (
                         <div className="flex flex-col gap-1">
-                          <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">Delivery Terms</p>
-                          <p className="text-sm font-medium text-zinc-900 whitespace-pre-wrap">{renderOptionalText(terms.deliveryTerms)}</p>
+                          <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Delivery Terms</p>
+                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(terms.deliveryTerms)}</p>
                         </div>
                       )}
                       {terms.warrantyTerms && (
                         <div className="flex flex-col gap-1">
-                          <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">Warranty Terms</p>
-                          <p className="text-sm font-medium text-zinc-900 whitespace-pre-wrap">{renderOptionalText(terms.warrantyTerms)}</p>
+                          <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Warranty Terms</p>
+                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(terms.warrantyTerms)}</p>
                         </div>
                       )}
                       {terms.termsAndConditions && (
                         <div className="flex flex-col gap-1 md:col-span-2">
-                          <p className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider">Other Terms</p>
-                          <p className="text-sm font-medium text-zinc-900 whitespace-pre-wrap">{renderOptionalText(terms.termsAndConditions)}</p>
+                          <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Other Terms</p>
+                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(terms.termsAndConditions)}</p>
                         </div>
                       )}
                       {terms.notes && (
-                        <div className="flex flex-col gap-1 md:col-span-2 bg-amber-50 p-4 rounded-lg">
-                          <p className="text-[8.8px] font-bold text-amber-700 uppercase tracking-wider">Notes</p>
-                          <p className="text-sm font-medium text-amber-900 whitespace-pre-wrap">{renderOptionalText(terms.notes)}</p>
+                        <div className="flex flex-col gap-1 md:col-span-2 bg-amber-50 dark:bg-amber-950/20 p-4 rounded-lg border border-transparent dark:border-amber-900/30">
+                          <p className="text-[8.8px] font-bold text-amber-700 dark:text-[#F5B544] uppercase tracking-wider">Notes</p>
+                          <p className="text-sm font-medium text-amber-900 dark:text-[#F5B544] whitespace-pre-wrap">{renderOptionalText(terms.notes)}</p>
                         </div>
                       )}
                     </div>
@@ -513,17 +513,17 @@ export default function QuotationDetails() {
 
             {/* LINE ITEMS TAB */}
             {activeTab === 'items' && (
-              <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden animate-in fade-in">
+              <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden animate-in fade-in">
                 {isEmpty(lineItems) ? (
-                  <div className="p-10 flex flex-col items-center justify-center text-zinc-400">
-                     <ShoppingCart size={48} className="mb-4 text-zinc-300" />
-                     <h3 className="text-lg font-bold text-zinc-900 mb-1">No Line Items</h3>
-                     <p className="text-sm text-zinc-500">There are no line items recorded for this quotation.</p>
+                  <div className="p-10 flex flex-col items-center justify-center text-zinc-400 dark:text-[#6B7184]">
+                     <ShoppingCart size={48} className="mb-4 text-zinc-300 dark:text-[#2A2F3D]" />
+                     <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mb-1">No Line Items</h3>
+                     <p className="text-sm text-zinc-500 dark:text-[#6B7184]">There are no line items recorded for this quotation.</p>
                   </div>
                 ) : (
-                  <div className="w-full overflow-x-auto min-w-0 custom-scrollbar rounded-lg border border-zinc-200">
+                  <div className="w-full overflow-x-auto min-w-0 custom-scrollbar rounded-lg border border-zinc-200 dark:border-[#2A2F3D]">
                     <table className="w-full min-w-[680px] text-left text-sm" aria-label="Quotation Items Table">
-                      <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-semibold uppercase tracking-wider text-xs sticky top-0 z-10">
+                      <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] font-semibold uppercase tracking-wider text-xs sticky top-0 z-10">
                         <tr>
                           <th scope="col" className="p-4 w-10 text-center"></th>
                           <th scope="col" className="p-4 w-1/3">Item Name</th>
@@ -536,7 +536,7 @@ export default function QuotationDetails() {
                           <th scope="col" className="p-4 text-right hidden sm:table-cell">Disc %</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-zinc-100 bg-white">
+                      <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] bg-white dark:bg-[#161922]">
                         {lineItems.map((item, idx) => {
                           const isExpanded = !!expandedRows[idx];
 
@@ -544,58 +544,58 @@ export default function QuotationDetails() {
                             <React.Fragment key={idx}>
                               <tr
                                 onClick={() => toggleRow(idx)}
-                                className={`hover:bg-zinc-50/80 cursor-pointer transition-colors group ${isExpanded ? 'bg-zinc-50' : ''}`}
+                                className={`hover:bg-zinc-50/80 dark:hover:bg-[#222736] cursor-pointer transition-colors group ${isExpanded ? 'bg-zinc-50 dark:bg-[#1D212C]' : ''}`}
                               >
-                                <td className="p-4 text-zinc-400 group-hover:text-zinc-600 transition-colors">
+                                <td className="p-4 text-zinc-400 dark:text-[#6B7184] group-hover:text-zinc-600 dark:group-hover:text-[#E6E8EE] transition-colors">
                                   {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                                 </td>
                                 <td className="p-4">
-                                  <p className="font-medium text-zinc-900 truncate max-w-[120px] sm:max-w-[200px]" title={item.itemName || item.name}>
+                                  <p className="font-medium text-zinc-900 dark:text-[#E6E8EE] truncate max-w-[120px] sm:max-w-[200px]" title={item.itemName || item.name}>
                                     {item.itemName || item.name || '-'}
                                   </p>
                                 </td>
-                                <td className="p-4 hidden sm:table-cell font-mono text-xs font-semibold text-zinc-700">
+                                <td className="p-4 hidden sm:table-cell font-mono text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5]">
                                   {item.itemCode || item.code || '-'}
                                 </td>
-                                <td className="p-4 hidden lg:table-cell text-zinc-500 font-mono text-xs">{item.hsnSacCode || item.hsnSac || '-'}</td>
-                                <td className="p-4 hidden lg:table-cell text-zinc-600">{item.gstSlab || `${item.gstRate || 0}%`}</td>
-                                <td className="p-4 text-right font-bold text-zinc-900">{item.quantity}</td>
-                                <td className="p-4 hidden sm:table-cell text-zinc-500">{item.unit || 'PCS'}</td>
-                                <td className="p-4 text-right font-mono">₹{fmt(item.unitPrice || item.price)}</td>
-                                <td className="p-4 text-right hidden sm:table-cell text-zinc-500">
+                                <td className="p-4 hidden lg:table-cell text-zinc-500 dark:text-[#6B7184] font-mono text-xs">{item.hsnSacCode || item.hsnSac || '-'}</td>
+                                <td className="p-4 hidden lg:table-cell text-zinc-600 dark:text-[#A0A6B5]">{item.gstSlab || `${item.gstRate || 0}%`}</td>
+                                <td className="p-4 text-right font-bold text-zinc-900 dark:text-[#E6E8EE]">{item.quantity}</td>
+                                <td className="p-4 hidden sm:table-cell text-zinc-500 dark:text-[#6B7184]">{item.unit || 'PCS'}</td>
+                                <td className="p-4 text-right font-mono text-zinc-800 dark:text-[#E6E8EE]">₹{fmt(item.unitPrice || item.price)}</td>
+                                <td className="p-4 text-right hidden sm:table-cell text-zinc-500 dark:text-[#6B7184]">
                                   {item.discountPercentage || item.discount || 0}%
                                 </td>
                               </tr>
 
                               {/* Expanded Inline Details */}
                               {isExpanded && (
-                                <tr className="bg-zinc-50/50">
-                                  <td colSpan={9} className="p-0 border-t border-zinc-100">
+                                <tr className="bg-zinc-50/50 dark:bg-[#1D212C]/60">
+                                  <td colSpan={9} className="p-0 border-t border-zinc-100 dark:border-[#2A2F3D]">
                                     <div className="p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-top-2 duration-200">
                                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                         <div className="space-y-6">
                                           <div className="space-y-3">
-                                            <h4 className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-200 pb-2">Item Details</h4>
+                                            <h4 className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-widest border-b border-zinc-200 dark:border-[#2A2F3D] pb-2">Item Details</h4>
                                             <dl className="grid grid-cols-2 gap-y-3 gap-x-4">
                                               <div className="col-span-2">
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Item Name</dt>
-                                                <dd className="text-sm font-medium text-zinc-900">{item.itemName || item.name || '-'}</dd>
+                                                <dt className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">Item Name</dt>
+                                                <dd className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{item.itemName || item.name || '-'}</dd>
                                               </div>
                                               <div>
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Item Code</dt>
-                                                <dd className="text-sm font-mono font-medium text-zinc-900">{item.itemCode || item.code || 'N/A'}</dd>
+                                                <dt className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">Item Code</dt>
+                                                <dd className="text-sm font-mono font-medium text-zinc-900 dark:text-[#E6E8EE]">{item.itemCode || item.code || 'N/A'}</dd>
                                               </div>
                                               <div>
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">HSN/SAC</dt>
-                                                <dd className="text-sm font-mono text-zinc-700">{item.hsnSacCode || item.hsnSac || 'N/A'}</dd>
+                                                <dt className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">HSN/SAC</dt>
+                                                <dd className="text-sm font-mono text-zinc-700 dark:text-[#A0A6B5]">{item.hsnSacCode || item.hsnSac || 'N/A'}</dd>
                                               </div>
                                               <div className="col-span-2">
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Description</dt>
-                                                <dd className="text-sm text-zinc-700">{item.description || item.hsnSacDescription || 'N/A'}</dd>
+                                                <dt className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">Description</dt>
+                                                <dd className="text-sm text-zinc-700 dark:text-[#A0A6B5]">{item.description || item.hsnSacDescription || 'N/A'}</dd>
                                               </div>
                                               <div>
-                                                <dt className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1">GST Slab</dt>
-                                                <dd className="text-sm font-medium text-zinc-900">{item.gstSlab || `${item.gstRate || 0}%`}</dd>
+                                                <dt className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">GST Slab</dt>
+                                                <dd className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{item.gstSlab || `${item.gstRate || 0}%`}</dd>
                                               </div>
                                             </dl>
                                           </div>
@@ -603,48 +603,48 @@ export default function QuotationDetails() {
 
                                         <div className="space-y-6">
                                           <div className="space-y-3">
-                                            <h4 className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-200 pb-2">Pricing & Tax</h4>
-                                            <div className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                                            <h4 className="text-[8px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-widest border-b border-zinc-200 dark:border-[#2A2F3D] pb-2">Pricing & Tax</h4>
+                                            <div className="bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg p-4 shadow-sm">
                                               <dl className="space-y-2">
                                                 <div className="flex justify-between items-center text-sm">
-                                                  <dt className="text-zinc-500">Unit Price</dt>
-                                                  <dd className="font-medium text-zinc-900">₹{fmt(item.unitPrice)}</dd>
+                                                  <dt className="text-zinc-500 dark:text-[#6B7184]">Unit Price</dt>
+                                                  <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(item.unitPrice)}</dd>
                                                 </div>
                                                 <div className="flex justify-between items-center text-sm">
-                                                  <dt className="text-zinc-500">Quantity</dt>
-                                                  <dd className="font-medium text-zinc-900">{item.quantity} {item.unit}</dd>
+                                                  <dt className="text-zinc-500 dark:text-[#6B7184]">Quantity</dt>
+                                                  <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{item.quantity} {item.unit}</dd>
                                                 </div>
                                                 {item.discountAmount > 0 && (
-                                                  <div className="flex justify-between items-center text-sm text-emerald-600">
+                                                  <div className="flex justify-between items-center text-sm text-emerald-600 dark:text-emerald-400">
                                                     <dt>Discount ({item.discountPercentage}%)</dt>
                                                     <dd className="font-medium">-₹{fmt(item.discountAmount)}</dd>
                                                   </div>
                                                 )}
-                                                <div className="flex justify-between items-center text-sm font-medium border-t border-zinc-100 pt-2 mt-2">
-                                                  <dt className="text-zinc-700">Taxable Amount</dt>
-                                                  <dd className="text-zinc-900">₹{fmt(item.taxableAmount)}</dd>
+                                                <div className="flex justify-between items-center text-sm font-medium border-t border-zinc-100 dark:border-[#2A2F3D] pt-2 mt-2">
+                                                  <dt className="text-zinc-700 dark:text-[#A0A6B5]">Taxable Amount</dt>
+                                                  <dd className="text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(item.taxableAmount)}</dd>
                                                 </div>
                                                 {item.cgst > 0 && (
                                                   <div className="flex justify-between items-center text-sm">
-                                                    <dt className="text-zinc-500">CGST</dt>
-                                                    <dd className="font-medium text-zinc-600">₹{fmt(item.cgst)}</dd>
+                                                    <dt className="text-zinc-500 dark:text-[#6B7184]">CGST</dt>
+                                                    <dd className="font-medium text-zinc-600 dark:text-[#A0A6B5]">₹{fmt(item.cgst)}</dd>
                                                   </div>
                                                 )}
                                                 {item.sgst > 0 && (
                                                   <div className="flex justify-between items-center text-sm">
-                                                    <dt className="text-zinc-500">SGST</dt>
-                                                    <dd className="font-medium text-zinc-600">₹{fmt(item.sgst)}</dd>
+                                                    <dt className="text-zinc-500 dark:text-[#6B7184]">SGST</dt>
+                                                    <dd className="font-medium text-zinc-600 dark:text-[#A0A6B5]">₹{fmt(item.sgst)}</dd>
                                                   </div>
                                                 )}
                                                 {item.igst > 0 && (
                                                   <div className="flex justify-between items-center text-sm">
-                                                    <dt className="text-zinc-500">IGST</dt>
-                                                    <dd className="font-medium text-zinc-600">₹{fmt(item.igst)}</dd>
+                                                    <dt className="text-zinc-500 dark:text-[#6B7184]">IGST</dt>
+                                                    <dd className="font-medium text-zinc-600 dark:text-[#A0A6B5]">₹{fmt(item.igst)}</dd>
                                                   </div>
                                                 )}
-                                                <div className="flex justify-between items-center text-base font-bold border-t-2 border-zinc-900 pt-2 mt-2">
-                                                  <dt className="text-zinc-900">Total Amount</dt>
-                                                  <dd className="text-zinc-900">₹{fmt(item.totalAmount)}</dd>
+                                                <div className="flex justify-between items-center text-base font-bold border-t-2 border-zinc-900 dark:border-[#2A2F3D] pt-2 mt-2">
+                                                  <dt className="text-zinc-900 dark:text-[#E6E8EE]">Total Amount</dt>
+                                                  <dd className="text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(item.totalAmount)}</dd>
                                                 </div>
                                               </dl>
                                             </div>
@@ -667,51 +667,51 @@ export default function QuotationDetails() {
 
             {/* TAX SUMMARY TAB */}
             {activeTab === 'tax' && (
-              <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden animate-in fade-in">
-                <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Tax Summary</h3>
+              <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden animate-in fade-in">
+                <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
+                  <h3 className="text-[10.4px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Tax Summary</h3>
                 </div>
                 <div className="p-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-zinc-50 rounded-lg p-4 border border-zinc-100">
-                      <p className="text-xs font-bold text-zinc-500 uppercase">Taxable Amount</p>
-                      <p className="text-lg font-bold text-zinc-900 mt-1">₹{fmt(taxSummary.taxableAmount)}</p>
+                    <div className="bg-zinc-50 dark:bg-[#1D212C] rounded-lg p-4 border border-zinc-100 dark:border-[#2A2F3D]">
+                      <p className="text-xs font-bold text-zinc-500 dark:text-[#6B7184] uppercase">Taxable Amount</p>
+                      <p className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">₹{fmt(taxSummary.taxableAmount)}</p>
                     </div>
-                    <div className="bg-zinc-50 rounded-lg p-4 border border-zinc-100">
-                      <p className="text-xs font-bold text-zinc-500 uppercase">CGST / SGST</p>
-                      <p className="text-lg font-bold text-zinc-900 mt-1">₹{fmt(taxSummary.cgst)} / ₹{fmt(taxSummary.sgst)}</p>
+                    <div className="bg-zinc-50 dark:bg-[#1D212C] rounded-lg p-4 border border-zinc-100 dark:border-[#2A2F3D]">
+                      <p className="text-xs font-bold text-zinc-500 dark:text-[#6B7184] uppercase">CGST / SGST</p>
+                      <p className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">₹{fmt(taxSummary.cgst)} / ₹{fmt(taxSummary.sgst)}</p>
                     </div>
-                    <div className="bg-zinc-50 rounded-lg p-4 border border-zinc-100">
-                      <p className="text-xs font-bold text-zinc-500 uppercase">IGST</p>
-                      <p className="text-lg font-bold text-zinc-900 mt-1">₹{fmt(taxSummary.igst)}</p>
+                    <div className="bg-zinc-50 dark:bg-[#1D212C] rounded-lg p-4 border border-zinc-100 dark:border-[#2A2F3D]">
+                      <p className="text-xs font-bold text-zinc-500 dark:text-[#6B7184] uppercase">IGST</p>
+                      <p className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">₹{fmt(taxSummary.igst)}</p>
                     </div>
-                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                      <p className="text-xs font-bold text-blue-600 uppercase">Total Tax</p>
-                      <p className="text-lg font-bold text-blue-900 mt-1">₹{fmt(taxSummary.totalTax)}</p>
+                    <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-100 dark:border-blue-900/30">
+                      <p className="text-xs font-bold text-blue-600 dark:text-[#4C8DFF] uppercase">Total Tax</p>
+                      <p className="text-lg font-bold text-blue-900 dark:text-[#4C8DFF] mt-1">₹{fmt(taxSummary.totalTax)}</p>
                     </div>
                   </div>
                   
-                  <h4 className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-3">Amount Summary</h4>
-                  <div className="max-w-sm space-y-2 border border-zinc-200 rounded-lg p-4">
+                  <h4 className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-3">Amount Summary</h4>
+                  <div className="max-w-sm space-y-2 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg p-4 bg-white dark:bg-[#1D212C]">
                      <div className="flex justify-between text-sm">
-                       <span className="text-zinc-500">Subtotal</span>
-                       <span className="font-medium text-zinc-900">₹{fmt(amtSummary.subtotal)}</span>
+                       <span className="text-zinc-500 dark:text-[#6B7184]">Subtotal</span>
+                       <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(amtSummary.subtotal)}</span>
                      </div>
-                     <div className="flex justify-between text-sm text-emerald-600">
+                     <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
                        <span>Discount</span>
                        <span className="font-medium">-₹{fmt(amtSummary.discountAmount)}</span>
                      </div>
                      <div className="flex justify-between text-sm">
-                       <span className="text-zinc-500">Tax</span>
-                       <span className="font-medium text-zinc-900">₹{fmt(taxSummary.totalTax)}</span>
+                       <span className="text-zinc-500 dark:text-[#6B7184]">Tax</span>
+                       <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(taxSummary.totalTax)}</span>
                      </div>
                      <div className="flex justify-between text-sm">
-                       <span className="text-zinc-500">Round Off</span>
-                       <span className="font-medium text-zinc-900">₹{fmt(amtSummary.roundOff)}</span>
+                       <span className="text-zinc-500 dark:text-[#6B7184]">Round Off</span>
+                       <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(amtSummary.roundOff)}</span>
                      </div>
-                     <div className="flex justify-between text-base font-bold pt-2 border-t border-zinc-200">
-                       <span className="text-zinc-900">Total Amount</span>
-                       <span className="text-zinc-900">₹{fmt(amtSummary.totalAmount)}</span>
+                     <div className="flex justify-between text-base font-bold pt-2 border-t border-zinc-200 dark:border-[#2A2F3D]">
+                       <span className="text-zinc-900 dark:text-[#E6E8EE]">Total Amount</span>
+                       <span className="text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(amtSummary.totalAmount)}</span>
                      </div>
                   </div>
                 </div>
@@ -720,20 +720,20 @@ export default function QuotationDetails() {
 
             {/* APPROVAL WORKFLOW TAB */}
             {activeTab === 'approval' && (
-              <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden animate-in fade-in max-w-2xl">
-                 <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <h3 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider">Approval Status</h3>
+              <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden animate-in fade-in max-w-2xl">
+                 <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
+                  <h3 className="text-[10.4px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider">Approval Status</h3>
                 </div>
                 <div className="p-6">
                    <dl className="space-y-4">
                      <div>
-                       <dt className="text-xs font-semibold text-zinc-500 uppercase">Status</dt>
+                       <dt className="text-xs font-semibold text-zinc-500 dark:text-[#6B7184] uppercase">Status</dt>
                        <dd className="mt-1"><StatusBadge status={approval.approvalStatus || quotation.status} /></dd>
                      </div>
                      {approval.approvedAt && (
                        <div>
-                         <dt className="text-xs font-semibold text-zinc-500 uppercase">Approved At</dt>
-                         <dd className="mt-1 text-sm font-medium text-zinc-900">{new Date(approval.approvedAt).toLocaleString()}</dd>
+                         <dt className="text-xs font-semibold text-zinc-500 dark:text-[#6B7184] uppercase">Approved At</dt>
+                         <dd className="mt-1 text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{new Date(approval.approvedAt).toLocaleString()}</dd>
                        </div>
                      )}
                    </dl>

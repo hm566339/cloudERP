@@ -58,12 +58,12 @@ export default function StockMovementForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white dark:bg-card-dark">
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
         
         {/* General Details */}
         <div className="space-y-4">
-          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 pb-2">General Details</h3>
+          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">General Details</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-[9.6px] font-bold text-zinc-700 mb-1.5 block">
@@ -75,7 +75,7 @@ export default function StockMovementForm({
                 value={formData.movementNo}
                 onChange={handleChange}
                 disabled={!!initialData}
-                className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                   errors.movementNo ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
                 } disabled:bg-zinc-50 disabled:text-zinc-500`}
                 autoFocus={!initialData}
@@ -96,7 +96,7 @@ export default function StockMovementForm({
                 name="movementDate"
                 value={formData.movementDate}
                 onChange={handleChange}
-                className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                   errors.movementDate ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
                 }`}
               />
@@ -115,7 +115,7 @@ export default function StockMovementForm({
                 name="movementType"
                 value={formData.movementType}
                 onChange={handleChange}
-                className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                   errors.movementType ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
                 }`}
               >
@@ -132,7 +132,7 @@ export default function StockMovementForm({
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               >
                 <option value="DRAFT">Draft</option>
                 <option value="POSTED">Posted</option>
@@ -144,7 +144,7 @@ export default function StockMovementForm({
 
         {/* References */}
         <div className="space-y-4">
-          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 pb-2">Reference Info</h3>
+          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">Reference Info</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-zinc-50/50 p-4 rounded-lg border border-zinc-100">
             <div>
               <label className="text-[9.6px] font-bold text-zinc-700 mb-1.5 block">Reference Type</label>
@@ -152,7 +152,7 @@ export default function StockMovementForm({
                 name="referenceType"
                 value={formData.referenceType}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               >
                 <option value="MANUAL">Manual</option>
                 <option value="PURCHASE_ORDER">Purchase Order</option>
@@ -169,7 +169,7 @@ export default function StockMovementForm({
                 value={formData.referenceNumber}
                 onChange={handleChange}
                 placeholder="e.g. PO-10294"
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -180,7 +180,7 @@ export default function StockMovementForm({
                 name="referenceId"
                 value={formData.referenceId}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
           </div>
@@ -188,7 +188,7 @@ export default function StockMovementForm({
 
         {/* Totals & Remarks */}
         <div className="space-y-4">
-          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 pb-2">Totals & Remarks</h3>
+          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">Totals & Remarks</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             <div>
@@ -198,7 +198,7 @@ export default function StockMovementForm({
                 name="totalQuantity"
                 value={formData.totalQuantity}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -209,7 +209,7 @@ export default function StockMovementForm({
                 name="totalValue"
                 value={formData.totalValue}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -220,7 +220,7 @@ export default function StockMovementForm({
                 value={formData.remarks}
                 onChange={handleChange}
                 rows={2}
-                className="w-full p-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+                className="w-full p-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
               />
             </div>
             
@@ -229,12 +229,12 @@ export default function StockMovementForm({
 
       </div>
 
-      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto shrink-0">
+      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 mt-auto shrink-0">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

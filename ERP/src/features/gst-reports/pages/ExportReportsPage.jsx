@@ -83,13 +83,13 @@ export default function ExportReportsPage() {
 
 
   return (
-    <div className="animate-fade-in pb-12 bg-zinc-50/30 min-h-screen">
+    <div className="animate-fade-in pb-12 bg-zinc-50/30 dark:bg-[#0F1117] min-h-screen">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-40 bg-white border-b border-zinc-200 shadow-sm pt-4 pb-4 mb-6">
+      <div className="sticky top-0 z-40 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] shadow-sm pt-4 pb-4 mb-6">
         <div className="max-w-[1280px] mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Export Reports</h1>
+              <h1 className="text-2xl font-black text-zinc-900 dark:text-[#E6E8EE] dark:text-[#E6E8EE] tracking-tight">Export Reports</h1>
               <p className="text-sm font-medium text-zinc-500 mt-1">Download GST filing data for a selected return period.</p>
             </div>
           </div>
@@ -104,14 +104,14 @@ export default function ExportReportsPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-5">
+        <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end max-w-2xl">
             <div className="space-y-1.5">
               <label className="block text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Return Month</label>
               <CustomSelect
                 value={month}
                 onChange={(e) => setMonth(Number(e.target.value))}
-                className="w-full h-10 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all cursor-pointer"
+                className="w-full h-10 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all cursor-pointer"
               >
                 {MONTHS.map((m, idx) => (
                   <option key={m} value={idx + 1}>{m}</option>
@@ -123,7 +123,7 @@ export default function ExportReportsPage() {
               <CustomSelect
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
-                className="w-full h-10 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all cursor-pointer"
+                className="w-full h-10 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all cursor-pointer"
               >
                 {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 4 + i).map((y) => (
                   <option key={y} value={y}>{y}</option>
@@ -137,10 +137,10 @@ export default function ExportReportsPage() {
           {gstExportOptions.map((option) => (
             <div
               key={option.id}
-              className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 flex flex-col justify-between gap-5 hover:shadow-md transition-all hover:-translate-y-0.5 group"
+              className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-6 flex flex-col justify-between gap-5 hover:shadow-md transition-all hover:-translate-y-0.5 group"
             >
               <div>
-                <h3 className="text-base font-bold text-zinc-900 group-hover:text-blue-600 transition-colors">{option.label}</h3>
+                <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] group-hover:text-blue-600 transition-colors">{option.label}</h3>
                 <p className="text-[10.4px] text-zinc-500 mt-2 leading-relaxed">{option.description}</p>
                 <div className="mt-4 px-2.5 py-1.5 bg-zinc-50 rounded text-[8px] font-mono text-zinc-400 break-all border border-zinc-100">
                   POST /api/reports/gst/export/{option.type}

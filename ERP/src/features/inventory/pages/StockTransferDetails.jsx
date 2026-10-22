@@ -183,7 +183,7 @@ export default function StockTransferDetails() {
           >
             <ArrowLeft size={20} />
           </button>
-          <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-center shadow-sm">
             <ArrowLeftRight size={20} className="text-zinc-600" />
           </div>
           <div>
@@ -251,8 +251,8 @@ export default function StockTransferDetails() {
       <div className="space-y-6">
         
         {/* Header Form */}
-        <div className="card p-6 bg-white shadow-sm border border-zinc-200/80">
-          <h2 className="text-[10.4px] font-bold text-zinc-800 mb-4 uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-2">
+        <div className="card p-6 bg-white dark:bg-card-dark shadow-sm border border-zinc-200/80 dark:border-border-dark">
+          <h2 className="text-[10.4px] font-bold text-zinc-800 mb-4 uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">
             Transfer Details
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -292,7 +292,7 @@ export default function StockTransferDetails() {
                 value={header.status}
                 onChange={handleHeaderChange}
                 disabled={isReadOnly && header.status !== 'DRAFT'} // Allowed to change status to trigger workflows if needed, depending on biz logic. Locking for now if not DRAFT.
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-50 disabled:opacity-70"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-50 disabled:opacity-70"
               >
                 <option value="DRAFT">Draft</option>
                 <option value="APPROVED">Approved</option>
@@ -352,7 +352,7 @@ export default function StockTransferDetails() {
         </div>
 
         {/* Lines Table */}
-        <div className="card bg-white shadow-sm border border-zinc-200/80 overflow-hidden flex flex-col min-h-[320px]">
+        <div className="card bg-white dark:bg-card-dark shadow-sm border border-zinc-200/80 dark:border-border-dark overflow-hidden flex flex-col min-h-[320px]">
           <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50/50">
             <h2 className="text-[10.4px] font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-2">
               Transfer Items
@@ -405,7 +405,7 @@ export default function StockTransferDetails() {
                           value={line.productId}
                           onChange={(e) => handleLineChange(index, 'productId', e.target.value)}
                           disabled={isReadOnly}
-                          className={`w-full h-8 px-2 rounded border text-[10.4px] bg-white transition-all outline-none focus:ring-1 focus:ring-primary disabled:bg-transparent disabled:border-transparent ${
+                          className={`w-full h-8 px-2 rounded border text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 dark:border-border-dark transition-all outline-none focus:ring-1 focus:ring-primary disabled:bg-transparent disabled:border-transparent ${
                             errors[`line_${index}_productId`] ? 'border-rose-300' : 'border-zinc-200'
                           }`}
                           placeholder="UUID"
@@ -417,7 +417,7 @@ export default function StockTransferDetails() {
                           value={line.uomId}
                           onChange={(e) => handleLineChange(index, 'uomId', e.target.value)}
                           disabled={isReadOnly}
-                          className={`w-full h-8 px-2 rounded border text-[10.4px] bg-white transition-all outline-none focus:ring-1 focus:ring-primary disabled:bg-transparent disabled:border-transparent ${
+                          className={`w-full h-8 px-2 rounded border text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 dark:border-border-dark transition-all outline-none focus:ring-1 focus:ring-primary disabled:bg-transparent disabled:border-transparent ${
                             errors[`line_${index}_uomId`] ? 'border-rose-300' : 'border-zinc-200'
                           }`}
                           placeholder="UUID"
@@ -429,7 +429,7 @@ export default function StockTransferDetails() {
                           value={line.quantity}
                           onChange={(e) => handleLineChange(index, 'quantity', e.target.value)}
                           disabled={isReadOnly}
-                          className={`w-full h-8 px-2 rounded border text-[10.4px] bg-white transition-all outline-none focus:ring-1 focus:ring-primary text-right disabled:bg-transparent disabled:border-transparent ${
+                          className={`w-full h-8 px-2 rounded border text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 dark:border-border-dark transition-all outline-none focus:ring-1 focus:ring-primary text-right disabled:bg-transparent disabled:border-transparent ${
                             errors[`line_${index}_quantity`] ? 'border-rose-300' : 'border-zinc-200'
                           }`}
                         />
@@ -440,7 +440,7 @@ export default function StockTransferDetails() {
                           value={line.unitCost}
                           onChange={(e) => handleLineChange(index, 'unitCost', e.target.value)}
                           disabled={isReadOnly}
-                          className="w-full h-8 px-2 rounded border border-zinc-200 text-[10.4px] bg-white transition-all outline-none focus:border-primary focus:ring-1 focus:ring-primary text-right disabled:bg-transparent disabled:border-transparent"
+                          className="w-full h-8 px-2 rounded border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:border-primary focus:ring-1 focus:ring-primary text-right disabled:bg-transparent disabled:border-transparent"
                         />
                       </td>
                       <td className="py-2 px-4">
@@ -449,7 +449,7 @@ export default function StockTransferDetails() {
                           value={line.sourceLocationId}
                           onChange={(e) => handleLineChange(index, 'sourceLocationId', e.target.value)}
                           disabled={isReadOnly}
-                          className="w-full h-8 px-2 rounded border border-zinc-200 text-[10.4px] bg-white transition-all outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-transparent disabled:border-transparent"
+                          className="w-full h-8 px-2 rounded border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-transparent disabled:border-transparent"
                           placeholder="UUID"
                         />
                       </td>
@@ -459,7 +459,7 @@ export default function StockTransferDetails() {
                           value={line.destinationLocationId}
                           onChange={(e) => handleLineChange(index, 'destinationLocationId', e.target.value)}
                           disabled={isReadOnly}
-                          className="w-full h-8 px-2 rounded border border-zinc-200 text-[10.4px] bg-white transition-all outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-transparent disabled:border-transparent"
+                          className="w-full h-8 px-2 rounded border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:bg-transparent disabled:border-transparent"
                           placeholder="UUID"
                         />
                       </td>

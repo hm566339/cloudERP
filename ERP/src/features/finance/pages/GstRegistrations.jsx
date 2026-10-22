@@ -23,50 +23,50 @@ const TYPE_OPTIONS = [
 
 const getTypeBadge = (type) => {
   switch (type) {
-    case 'REGULAR': return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200">Regular</span>;
-    case 'COMPOSITION': return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-purple-50 text-purple-700 border-purple-200">Composition</span>;
-    case 'UNREGISTERED': return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200">Unregistered</span>;
-    default: return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200">{type}</span>;
+    case 'REGULAR': return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-[#4C8DFF] dark:border-blue-500/20">Regular</span>;
+    case 'COMPOSITION': return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20">Composition</span>;
+    case 'UNREGISTERED': return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]">Unregistered</span>;
+    default: return <span className="px-2.5 py-1 text-[8.8px] font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]">{type}</span>;
   }
 };
 
 const RegistrationOverview = ({ data }) => {
   return (
-    <div className="p-5 flex flex-col bg-zinc-50/50 rounded-lg border-t border-zinc-200">
+    <div className="p-5 flex flex-col bg-zinc-50/50 dark:bg-[#1D212C] rounded-lg border-t border-zinc-200 dark:border-[#2A2F3D]">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-lg font-bold text-zinc-900">{data.legalName || '-'}</h3>
-          <p className="text-[8.8px] text-zinc-500 font-medium tracking-wide mt-1">
-            GSTIN: <span className="font-semibold text-zinc-700">{data.gstin || '-'}</span> | 
-            PAN: <span className="font-semibold text-zinc-700">{data.pan || '-'}</span>
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">{data.legalName || '-'}</h3>
+          <p className="text-[8.8px] text-zinc-500 dark:text-[#6B7184] font-medium tracking-wide mt-1">
+            GSTIN: <span className="font-semibold text-zinc-700 dark:text-[#A0A6B5]">{data.gstin || '-'}</span> | 
+            PAN: <span className="font-semibold text-zinc-700 dark:text-[#A0A6B5]">{data.pan || '-'}</span>
           </p>
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Trade Name</p>
-          <p className="font-bold text-zinc-900 text-sm">{data.tradeName || '-'}</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase mb-0.5">Trade Name</p>
+          <p className="font-bold text-zinc-900 dark:text-[#E6E8EE] text-sm">{data.tradeName || '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Type</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase mb-0.5">Type</p>
           <div>{getTypeBadge(data.registrationType)}</div>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Company</p>
-          <p className="font-bold text-zinc-900 text-sm">{data.company?.name || '-'}</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase mb-0.5">Company</p>
+          <p className="font-bold text-zinc-900 dark:text-[#E6E8EE] text-sm">{data.company?.name || '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Branch</p>
-          <p className="font-bold text-zinc-900 text-sm">{data.branch?.name || '-'}</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase mb-0.5">Branch</p>
+          <p className="font-bold text-zinc-900 dark:text-[#E6E8EE] text-sm">{data.branch?.name || '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Registered Date</p>
-          <p className="font-bold text-zinc-900 text-sm">{data.registeredDate || '-'}</p>
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase mb-0.5">Registered Date</p>
+          <p className="font-bold text-zinc-900 dark:text-[#E6E8EE] text-sm">{data.registeredDate || '-'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold text-zinc-500 uppercase mb-0.5">Default</p>
-          <p className="font-bold text-zinc-900 text-sm">
-            {data.default ? <span className="flex items-center gap-1 text-amber-600 font-semibold"><span className="text-sm">⭐</span> Default</span> : '-'}
+          <p className="text-[8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase mb-0.5">Default</p>
+          <p className="font-bold text-zinc-900 dark:text-[#E6E8EE] text-sm">
+            {data.default ? <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold"><span className="text-sm">⭐</span> Default</span> : '-'}
           </p>
         </div>
       </div>
@@ -262,7 +262,7 @@ export default function GstRegistrations() {
   ], [navigate, buildPath]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="GST Registrations"
         description="Manage GST registrations for your company and branches."

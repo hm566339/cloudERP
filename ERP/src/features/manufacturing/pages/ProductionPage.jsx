@@ -112,13 +112,13 @@ export default function ProductionPage() {
       case 'COMPLETED': return 'badge-success'
       case 'RELEASED':
       case 'IN_PROGRESS':
-      case 'IN PROGRESS': return 'badge-primary bg-primary/10 text-primary'
-      case 'APPROVED': return 'badge-info bg-emerald-50 text-emerald-700'
+      case 'IN PROGRESS': return 'badge-primary bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-400'
+      case 'APPROVED': return 'badge-info bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
       case 'SUBMITTED':
       case 'PENDING_APPROVAL':
       case 'PAUSED': return 'badge-warning'
       case 'CANCELLED':
-      case 'REJECTED': return 'badge-danger bg-rose-50 text-rose-700'
+      case 'REJECTED': return 'badge-danger bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400'
       default: return 'badge-draft'
     }
   }
@@ -162,10 +162,10 @@ export default function ProductionPage() {
                 {paginated.length === 0 && (
                   <tr>
                     <td colSpan="7">
-                      <div className="p-8 text-center border-2 border-dashed border-zinc-200 m-4 rounded-xl">
-                        <Play className="mx-auto text-zinc-300 mb-3" size={28} />
-                        <p className="text-sm font-medium text-zinc-600">No production orders found</p>
-                        <p className="text-xs text-zinc-400 mt-1">Adjust your filters or create a new order.</p>
+                      <div className="p-8 text-center border-2 border-dashed border-zinc-200 dark:border-border-dark m-4 rounded-xl">
+                        <Play className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" size={28} />
+                        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">No production orders found</p>
+                        <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Adjust your filters or create a new order.</p>
                       </div>
                     </td>
                   </tr>
@@ -181,24 +181,24 @@ export default function ProductionPage() {
 
                   return (
                     <tr key={o.id}>
-                      <td><span className="font-mono text-xs font-semibold text-primary">{displayId}</span></td>
-                      <td className="font-medium text-zinc-800">{displayProduct}</td>
-                      <td className="text-zinc-500 text-xs">{displayStart}</td>
-                      <td className="text-zinc-500 text-xs">{displayEnd}</td>
+                      <td><span className="font-mono text-xs font-semibold text-primary dark:text-blue-400">{displayId}</span></td>
+                      <td className="font-medium text-zinc-800 dark:text-zinc-200">{displayProduct}</td>
+                      <td className="text-zinc-500 dark:text-zinc-400 text-xs">{displayStart}</td>
+                      <td className="text-zinc-500 dark:text-zinc-400 text-xs">{displayEnd}</td>
                       <td>
                         <div className="flex flex-col gap-1 w-full max-w-[110px]">
-                          <div className="flex justify-between text-[10px] font-medium text-zinc-600">
+                          <div className="flex justify-between text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
                             <span>{produced} / {planned}</span>
                             <span>{progress}%</span>
                           </div>
-                          <div className="w-full bg-zinc-100 rounded-full h-1.5">
+                          <div className="w-full bg-zinc-100 dark:bg-surface-dark rounded-full h-1.5">
                             <div className={`h-1.5 rounded-full ${progress === 100 ? 'bg-emerald-500' : 'bg-primary'}`} style={{ width: `${progress}%` }}></div>
                           </div>
                         </div>
                       </td>
                       <td><span className={`badge ${getStatusBadge(o.status)}`}>{o.status}</span></td>
                       <td className="text-right">
-                        <div className="flex justify-end items-center gap-1.5 text-zinc-400">
+                        <div className="flex justify-end items-center gap-1.5 text-zinc-400 dark:text-zinc-500">
                           {o.status === 'DRAFT' && (
                             <button onClick={() => handleSubmitForApproval(o.id)} className="btn-secondary text-xs py-1 px-2 text-primary hover:text-primary flex items-center gap-1" title="Submit for Approval">
                               <Send size={12} /> Submit
@@ -210,11 +210,11 @@ export default function ProductionPage() {
                             </button>
                           )}
                           {(o.status === 'RELEASED' || o.status === 'IN_PROGRESS' || o.status === 'In Progress') && (
-                            <button onClick={() => handleUpdateStatus(o.id, 'COMPLETED')} className="hover:text-zinc-900 p-1" title="Complete Order">
+                            <button onClick={() => handleUpdateStatus(o.id, 'COMPLETED')} className="hover:text-zinc-900 dark:hover:text-zinc-100 p-1" title="Complete Order">
                               <Square size={15} />
                             </button>
                           )}
-                          <button onClick={() => setViewingOrder(o)} className="text-xs text-primary hover:underline font-medium ml-1">
+                          <button onClick={() => setViewingOrder(o)} className="text-xs text-primary dark:text-blue-400 hover:underline font-medium ml-1">
                             View
                           </button>
                         </div>
@@ -227,7 +227,7 @@ export default function ProductionPage() {
           </div>
         )}
         {!isLoading && (
-          <div className="p-4 border-t border-zinc-100 bg-white rounded-b-xl">
+          <div className="p-4 border-t border-zinc-100 dark:border-border-dark bg-white dark:bg-card-dark rounded-b-xl">
             <Pagination
               {...paginationProps}
               totalPages={totalPages}

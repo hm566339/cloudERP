@@ -124,7 +124,7 @@ export default function QuotationComparison() {
   const rfqError = rfqQuery.error || (rfqId && !rfqQuery.data && !rfqQuery.isLoading);
   if (rfqError || !rfq) {
     return (
-      <div className="flex flex-col h-full bg-zinc-50/50">
+      <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
         <PurchaseNavigation />
         <ErrorState
           title="RFQ Not Found"
@@ -136,9 +136,9 @@ export default function QuotationComparison() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PurchaseNavigation />
-      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white border-b border-zinc-200 shadow-sm">
+      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark shadow-sm">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(buildPath(`/accounts/transactions/supplier-quotations`))}
@@ -167,30 +167,30 @@ export default function QuotationComparison() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6">
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
-            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100">RFQ Information</h3>
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-6">
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">RFQ Information</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">RFQ Number</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">RFQ Number</p>
                 <p className="text-sm font-mono font-bold text-zinc-900 mt-1">{rfq.rfqNumber || '-'}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">RFQ Date</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">RFQ Date</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{rfq.issueDate ? new Date(rfq.issueDate).toLocaleDateString() : '-'}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Quotation Deadline</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Quotation Deadline</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{rfq.quotationDeadline ? new Date(rfq.quotationDeadline).toLocaleDateString() : '-'}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Expected Delivery</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Expected Delivery</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{rfq.expectedDeliveryDate ? new Date(rfq.expectedDeliveryDate).toLocaleDateString() : '-'}</p>
               </div>
             </div>
           </div>
 
           {error || (quotations.length === 0) ? (
-            <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-12 text-center">
+            <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-12 text-center">
               <Scale className="mx-auto mb-3 text-zinc-300" size={32} />
               <p className="text-sm font-medium text-zinc-700">No supplier quotations are available for this RFQ.</p>
               <p className="text-xs text-zinc-400 mt-1">
@@ -199,7 +199,7 @@ export default function QuotationComparison() {
             </div>
           ) : (
             <>
-              <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
                 <div className="p-6 pb-4 flex items-center justify-between">
                   <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Item Price Comparison</h3>
                   <span className="text-[10px] text-zinc-500">{quotations.length} quotation(s)</span>
@@ -230,7 +230,7 @@ export default function QuotationComparison() {
                       <tbody className="divide-y divide-zinc-100">
                         {rfqItems.map((rfqItem, idx) => (
                           <tr key={rfqItem.itemId || idx} className="hover:bg-zinc-50/80 transition-colors">
-                            <td className="px-4 py-3 font-semibold text-zinc-900 text-xs sticky left-0 bg-white shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.03)]">
+                            <td className="px-4 py-3 font-semibold text-zinc-900 text-xs sticky left-0 bg-white dark:bg-card-dark shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.03)]">
                               {rfqItem.itemName || `Item ${idx + 1}`}
                               {rfqItem.description && <span className="block text-[10px] text-zinc-400 font-normal truncate max-w-[180px]">{rfqItem.description}</span>}
                             </td>
@@ -254,7 +254,7 @@ export default function QuotationComparison() {
                           ))}
                         </tr>
                         <tr>
-                          <td className="px-4 py-3 text-[10.4px] font-bold text-zinc-700 sticky left-0 bg-white z-10">Tax</td>
+                          <td className="px-4 py-3 text-[10.4px] font-bold text-zinc-700 sticky left-0 bg-white dark:bg-card-dark z-10">Tax</td>
                           {quotations.map((q, qi) => (
                             <td key={q.id} className={`px-4 py-3 text-right text-xs font-medium text-zinc-800 ${qi === 0 ? 'border-l border-zinc-200' : 'border-l border-zinc-100'}`}>
                               {fmt(q.taxAmount)}
@@ -270,7 +270,7 @@ export default function QuotationComparison() {
                           ))}
                         </tr>
                         <tr>
-                          <td className="px-4 py-3 text-[10.4px] font-bold text-zinc-700 sticky left-0 bg-white z-10">Discount</td>
+                          <td className="px-4 py-3 text-[10.4px] font-bold text-zinc-700 sticky left-0 bg-white dark:bg-card-dark z-10">Discount</td>
                           {quotations.map((q, qi) => (
                             <td key={q.id} className={`px-4 py-3 text-right text-xs font-medium text-rose-600 ${qi === 0 ? 'border-l border-zinc-200' : 'border-l border-zinc-100'}`}>
                               {q.discount ? `-${fmt(q.discount)}` : '-'}
@@ -291,7 +291,7 @@ export default function QuotationComparison() {
                 )}
               </div>
 
-              <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
                 <div className="p-6 pb-4">
                   <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Supplier Quotations</h3>
                 </div>

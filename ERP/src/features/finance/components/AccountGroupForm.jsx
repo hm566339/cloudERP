@@ -183,7 +183,7 @@ export default function AccountGroupForm({ initialData, onSubmit, onSuccess, onC
     <>
       <form id="account-group-form" onSubmit={handleSubmit} className="flex flex-col gap-y-4">
         {errors.form && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs font-medium text-red-700">
+          <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-lg text-xs font-medium text-red-700 dark:text-red-400">
             {errors.form}
           </div>
         )}
@@ -205,14 +205,14 @@ export default function AccountGroupForm({ initialData, onSubmit, onSuccess, onC
                     setInitialCategoryData(searchTerm ? { categoryName: searchTerm } : null);
                     setIsCategoryFormOpen(true);
                   }}
-                  className="w-full text-left px-3 py-2 text-[10.4px] text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 transition-colors flex items-center gap-2"
+                  className="w-full text-left px-3 py-2 text-[10.4px] text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center gap-2"
                 >
                   <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
                     <Plus size={14} className="text-primary" />
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="font-semibold truncate">Create {searchTerm ? `"${searchTerm}"` : 'New Category'}</span>
-                    <span className="text-[8.8px] text-zinc-500">Add as new category</span>
+                    <span className="text-[8.8px] text-zinc-500 dark:text-zinc-400">Add as new category</span>
                   </div>
                 </button>
               );
@@ -239,14 +239,14 @@ export default function AccountGroupForm({ initialData, onSubmit, onSuccess, onC
                     setInitialParentGroupData(searchTerm ? { name: searchTerm } : null);
                     setIsParentGroupFormOpen(true);
                   }}
-                  className="w-full text-left px-3 py-2 text-[10.4px] text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 transition-colors flex items-center gap-2"
+                  className="w-full text-left px-3 py-2 text-[10.4px] text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center gap-2"
                 >
                   <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
                     <Plus size={14} className="text-primary" />
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="font-semibold truncate">Create {searchTerm ? `"${searchTerm}"` : 'New Parent Group'}</span>
-                    <span className="text-[8.8px] text-zinc-500">Add as new parent group</span>
+                    <span className="text-[8.8px] text-zinc-500 dark:text-zinc-400">Add as new parent group</span>
                   </div>
                 </button>
               );
@@ -256,14 +256,14 @@ export default function AccountGroupForm({ initialData, onSubmit, onSuccess, onC
 
         {/* Group Code */}
         <div className="space-y-1 w-full">
-          <label className="text-[10.4px] font-semibold text-zinc-700">Group Code</label>
+          <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Group Code</label>
           <input
             type="text"
             name="code"
             value={formData.code}
             onChange={handleChange}
-            className={`w-full h-9 px-3 bg-white border rounded-lg text-[10.4px] font-medium text-zinc-800 outline-none transition-colors ${
-              errors.code ? 'border-red-500 focus:border-red-500' : 'border-zinc-200 focus:border-zinc-400'
+            className={`w-full h-9 px-3 bg-white dark:bg-[#161922] border rounded-lg text-[10.4px] font-medium text-zinc-800 dark:text-[#E6E8EE] outline-none transition-colors ${
+              errors.code ? 'border-red-500 focus:border-red-500' : 'border-zinc-200 dark:border-[#2A2F3D] focus:border-zinc-400 dark:focus:border-zinc-500'
             }`}
             placeholder="e.g. 1000"
           />
@@ -272,14 +272,14 @@ export default function AccountGroupForm({ initialData, onSubmit, onSuccess, onC
         
         {/* Group Name */}
         <div className="space-y-1 w-full">
-          <label className="text-[10.4px] font-semibold text-zinc-700">Group Name <span className="text-red-500">*</span></label>
+          <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Group Name <span className="text-red-500">*</span></label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className={`w-full h-9 px-3 bg-white border rounded-lg text-[10.4px] font-medium text-zinc-800 outline-none transition-colors ${
-              errors.name ? 'border-red-500 focus:border-red-500' : 'border-zinc-200 focus:border-zinc-400'
+            className={`w-full h-9 px-3 bg-white dark:bg-[#161922] border rounded-lg text-[10.4px] font-medium text-zinc-800 dark:text-[#E6E8EE] outline-none transition-colors ${
+              errors.name ? 'border-red-500 focus:border-red-500' : 'border-zinc-200 dark:border-[#2A2F3D] focus:border-zinc-400 dark:focus:border-zinc-500'
             }`}
             placeholder="e.g. Current Assets"
           />
@@ -287,16 +287,13 @@ export default function AccountGroupForm({ initialData, onSubmit, onSuccess, onC
         </div>
       </form>
 
-      {/* Footer - Fake sticky by absolute positioning since parent has relative if we did, or just simple mt */}
-      {/* Wait, the parent wrapper in AccountGroups.jsx doesn't have a sticky footer div inside the modal! */}
-      {/* I should add the sticky footer wrapper here, pulling it outside the form visually using negative margins or fixed position, but we can't because of overflow-auto. */}
-      {/* Actually, it's fine. We just make the container relative and pin it. No, we can just put it at the end of the form. */}
-      <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-zinc-200">
+      {/* Footer */}
+      <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-zinc-200 dark:border-[#2A2F3D]">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-5 py-2 text-[10.4px] font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/50 bg-white border border-zinc-300 rounded-md transition-all active:scale-95 disabled:opacity-50"
+          className="px-5 py-2 text-[10.4px] font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/50 dark:hover:bg-[#222736] bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-md transition-all active:scale-95 disabled:opacity-50"
         >
           Cancel
         </button>
@@ -304,7 +301,7 @@ export default function AccountGroupForm({ initialData, onSubmit, onSuccess, onC
           type="submit"
           form="account-group-form"
           disabled={isLoading}
-          className="flex items-center justify-center gap-2 px-5 py-2 text-[10.4px] font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-md transition-all active:scale-95 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-5 py-2 text-[10.4px] font-bold text-white bg-zinc-900 dark:bg-[#4C8DFF] hover:bg-zinc-800 dark:hover:bg-[#3A78E6] rounded-md transition-all active:scale-95 disabled:opacity-50"
         >
           {isLoading && <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />}
           {isEditing ? 'Update Group' : 'Create Group'}
@@ -312,18 +309,18 @@ export default function AccountGroupForm({ initialData, onSubmit, onSuccess, onC
       </div>
       {isCategoryFormOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-lg max-h-[90vh] rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200">
-            <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
-              <h2 className="text-base font-bold text-zinc-900 tracking-tight">Create Account Category</h2>
+          <div className="bg-white dark:bg-[#161922] w-full max-w-lg max-h-[90vh] rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200 dark:border-[#2A2F3D]">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C]/80 shrink-0">
+              <h2 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Create Account Category</h2>
               <button 
                 type="button" 
                 onClick={() => setIsCategoryFormOpen(false)} 
-                className="p-1 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors active:scale-95"
+                className="p-1 text-zinc-400 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200 dark:hover:bg-[#222736] rounded-md transition-colors active:scale-95"
               >
                 <X size={18} strokeWidth={2.5} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar bg-white">
+            <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar bg-white dark:bg-[#161922]">
               <AccountCategoryForm
                 initialData={initialCategoryData}
                 onSubmit={handleCreateCategorySubmit}
@@ -351,16 +348,16 @@ export function AccountGroupFormModal({ initialData, onSubmit, onSuccess, onCanc
   // If we ever need to use it in a modal wrapper, it can be here
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-lg max-h-[90vh] rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200">
-        <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
-          <h2 className="text-base font-bold text-zinc-900 tracking-tight">
+      <div className="bg-white dark:bg-[#161922] w-full max-w-lg max-h-[90vh] rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200 dark:border-[#2A2F3D]">
+        <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C]/80 shrink-0">
+          <h2 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
             {initialData ? 'Edit Account Group' : 'Create Account Group'}
           </h2>
-          <button type="button" onClick={onCancel} className="p-1 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors active:scale-95">
+          <button type="button" onClick={onCancel} className="p-1 text-zinc-400 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200 dark:hover:bg-[#222736] rounded-md transition-colors active:scale-95">
             <X size={18} strokeWidth={2.5} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar bg-white">
+        <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar bg-white dark:bg-[#161922]">
           <AccountGroupForm initialData={initialData} onSubmit={onSubmit} onSuccess={onSuccess} onCancel={onCancel} isLoading={isLoading} />
         </div>
       </div>

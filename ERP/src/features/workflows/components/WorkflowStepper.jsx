@@ -19,8 +19,8 @@ export default function WorkflowStepper({
   const isWorkflowRejected = status === 'REJECTED';
 
   return (
-    <div className="bg-white rounded-xl border border-zinc-200 p-4 sm:p-6 shadow-sm mb-6">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100">
+    <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] p-4 sm:p-6 shadow-sm mb-6">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div>
           <h3 className="text-sm font-bold text-zinc-900 tracking-tight">Workflow Approval Stages</h3>
           <p className="text-xs text-zinc-500 mt-0.5">

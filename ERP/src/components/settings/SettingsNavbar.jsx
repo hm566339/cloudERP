@@ -153,26 +153,26 @@ export function SettingsNavbar({
   return (
     <nav
       aria-label="Settings Navigation"
-      className={`w-full bg-white border border-zinc-200/80 rounded-2xl shadow-xs transition-all overflow-hidden ${className}`}
+      className={`w-full bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-2xl shadow-xs transition-all overflow-hidden ${className}`}
     >
       {/* ── Top Bar: Group Switcher & Module Count ── */}
       {showGroupSwitcher && (
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 border-b border-zinc-100 bg-zinc-50/50">
-          <div className="flex items-center gap-1.5 p-1 bg-zinc-200/60 rounded-xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/50">
+          <div className="flex items-center gap-1.5 p-1 bg-zinc-200/60 dark:bg-[#161922] rounded-xl">
             <button
               type="button"
               onClick={() => setSelectedGroup('general')}
               className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 selectedGroup === 'general'
-                  ? 'bg-white text-zinc-900 shadow-2xs'
-                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50'
+                  ? 'bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] shadow-2xs'
+                  : 'text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#222736]'
               }`}
             >
-              <Sliders size={13} className={selectedGroup === 'general' ? 'text-zinc-900' : 'text-zinc-500'} />
+              <Sliders size={13} className={selectedGroup === 'general' ? 'text-zinc-900 dark:text-[#E6E8EE]' : 'text-zinc-500 dark:text-[#A0A6B5]'} />
               <span>General Settings</span>
               <span
                 className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  selectedGroup === 'general' ? 'bg-zinc-100 text-zinc-800' : 'bg-zinc-200 text-zinc-600'
+                  selectedGroup === 'general' ? 'bg-zinc-100 dark:bg-[#161922] text-zinc-800 dark:text-[#E6E8EE]' : 'bg-zinc-200 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5]'
                 }`}
               >
                 {generalItems.length}
@@ -184,15 +184,15 @@ export function SettingsNavbar({
               onClick={() => setSelectedGroup('module')}
               className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 selectedGroup === 'module'
-                  ? 'bg-white text-zinc-900 shadow-2xs'
-                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50'
+                  ? 'bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] shadow-2xs'
+                  : 'text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#222736]'
               }`}
             >
-              <Layers size={13} className={selectedGroup === 'module' ? 'text-zinc-900' : 'text-zinc-500'} />
+              <Layers size={13} className={selectedGroup === 'module' ? 'text-zinc-900 dark:text-[#E6E8EE]' : 'text-zinc-500 dark:text-[#A0A6B5]'} />
               <span>Module Settings</span>
               <span
                 className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  selectedGroup === 'module' ? 'bg-zinc-100 text-zinc-800' : 'bg-zinc-200 text-zinc-600'
+                  selectedGroup === 'module' ? 'bg-zinc-100 dark:bg-[#161922] text-zinc-800 dark:text-[#E6E8EE]' : 'bg-zinc-200 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5]'
                 }`}
               >
                 {moduleItems.length}
@@ -204,8 +204,8 @@ export function SettingsNavbar({
               onClick={() => setSelectedGroup('all')}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
                 selectedGroup === 'all'
-                  ? 'bg-white text-zinc-900 shadow-2xs font-semibold'
-                  : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/50'
+                  ? 'bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] shadow-2xs font-semibold'
+                  : 'text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#222736]'
               }`}
             >
               <span>All</span>
@@ -213,9 +213,9 @@ export function SettingsNavbar({
           </div>
 
           {/* Active section summary indicator */}
-          <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-500">
+          <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-500 dark:text-[#A0A6B5]">
             <span className="font-medium">Active:</span>
-            <span className="font-semibold text-zinc-900 bg-white px-2.5 py-0.5 rounded-md border border-zinc-200 shadow-2xs">
+            <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] px-2.5 py-0.5 rounded-md border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
               {activeItem?.label || 'General Settings'}
             </span>
           </div>
@@ -223,16 +223,16 @@ export function SettingsNavbar({
       )}
 
       {/* ── Sub Navigation Tabs with Horizontal Scroll ── */}
-      <div className="relative flex items-center px-2 py-2">
+      <div className="flex items-center px-2 py-2 gap-1.5">
         {/* Scroll Left Button */}
         {canScrollLeft && (
           <button
             type="button"
             onClick={() => scroll('left')}
             aria-label="Scroll settings tabs left"
-            className="absolute left-2 z-10 p-1.5 rounded-lg bg-white/95 border border-zinc-200 shadow-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all cursor-pointer"
+            className="shrink-0 p-1.5 rounded-lg bg-white dark:bg-[#1D212C] border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all cursor-pointer"
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={15} />
           </button>
         )}
 
@@ -243,7 +243,7 @@ export function SettingsNavbar({
           tabIndex={0}
           role="tablist"
           aria-orientation="horizontal"
-          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1 w-full"
+          className="flex-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1 min-w-0"
         >
           {displayedItems.map((item, index) => {
             const Icon = item.icon;
@@ -263,17 +263,17 @@ export function SettingsNavbar({
                 title={item.description}
                 onKeyDown={(e) => handleKeyDown(e, item.fullPath, index, displayedItems)}
                 onClick={() => onTabChange && onTabChange(item.id)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 shrink-0 ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-[#4C8DFF] shrink-0 ${
                   isItemActive
-                    ? 'bg-zinc-900 text-white shadow-xs border border-zinc-900'
-                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/80 border border-transparent'
+                    ? 'bg-zinc-900 text-white dark:bg-[#4C8DFF] dark:text-white shadow-xs border border-zinc-900 dark:border-[#4C8DFF]'
+                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/80 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:hover:bg-[#222736] border border-transparent'
                 }`}
               >
                 {Icon && (
                   <Icon
                     size={15}
                     className={`shrink-0 transition-colors ${
-                      isItemActive ? 'text-white' : 'text-zinc-500'
+                      isItemActive ? 'text-white' : 'text-zinc-500 dark:text-[#A0A6B5]'
                     }`}
                   />
                 )}
@@ -281,7 +281,7 @@ export function SettingsNavbar({
                 {item.category === 'module' && (
                   <span
                     className={`text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-mono ${
-                      isItemActive ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-100 text-zinc-500'
+                      isItemActive ? 'bg-zinc-800 text-zinc-300 dark:bg-white/20 dark:text-white' : 'bg-zinc-100 text-zinc-500 dark:bg-[#1D212C] dark:text-[#A0A6B5]'
                     }`}
                   >
                     Module
@@ -298,9 +298,9 @@ export function SettingsNavbar({
             type="button"
             onClick={() => scroll('right')}
             aria-label="Scroll settings tabs right"
-            className="absolute right-2 z-10 p-1.5 rounded-lg bg-white/95 border border-zinc-200 shadow-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all cursor-pointer"
+            className="shrink-0 p-1.5 rounded-lg bg-white dark:bg-[#1D212C] border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all cursor-pointer"
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={15} />
           </button>
         )}
       </div>

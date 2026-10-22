@@ -190,7 +190,7 @@ export default function PermissionList() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 relative">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] relative">
       <PageHeader
         title="User Permissions"
         description="Manage permission definitions and action-level access controls."

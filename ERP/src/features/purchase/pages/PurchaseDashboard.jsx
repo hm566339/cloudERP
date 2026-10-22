@@ -64,10 +64,10 @@ export default function PurchaseDashboard() {
  <div className="space-y-6 animate-fade-in">
  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
  <div>
- <h1 className="text-2xl font-bold text-zinc-900">
+ <h1 className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE]">
  Purchase & Procurement
  </h1>
- <p className="text-xs text-zinc-500 font-medium">
+ <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium">
  Manage supply vendors, handle purchase request workflows, track quotations and process supplier bills
  </p>
  </div>
@@ -86,15 +86,15 @@ export default function PurchaseDashboard() {
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
  {/* Vendor directory */}
  {(canViewModule('pur_vendors') || canViewModule('purchases') || canViewModule('vendors')) && (
- <div className="card p-4 lg:col-span-2 space-y-4">
- <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+ <div className="card dark:bg-[#161922] dark:border-[#2A2F3D] p-4 lg:col-span-2 space-y-4">
+ <h3 className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">
  Registered Vendor Directory
  </h3>
 
  <div className="overflow-x-auto">
  <table className="w-full text-left border-collapse text-sm">
  <thead>
- <tr className="text-[8px] font-bold uppercase tracking-wider text-zinc-400 border-b border-zinc-200 pb-3">
+ <tr className="text-[8px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] border-b border-zinc-200 dark:border-[#2A2F3D] pb-3">
                 <th className="w-12 text-center">S.No.</th>
  <th className="pb-3 pr-4">Vendor Name</th>
  <th className="pb-3 px-4">Contact</th>
@@ -102,22 +102,22 @@ export default function PurchaseDashboard() {
  <th className="pb-3 px-4 text-center">Status</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-zinc-100 text-zinc-700 staggered-list">
+ <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] staggered-list">
  {vendors.map((v, index) => (
- <tr key={v.id} className="hover:bg-zinc-50/50">
-                    <td className="text-center font-medium text-zinc-500">{index + 1}</td>
- <td className="py-4 font-semibold text-zinc-900 flex items-center gap-2">
- <Store size={14} className="text-zinc-400" />
+ <tr key={v.id} className="hover:bg-zinc-50/50 dark:hover:bg-[#222736]">
+                    <td className="text-center font-medium text-zinc-500 dark:text-[#A0A6B5]">{index + 1}</td>
+ <td className="py-4 font-semibold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-2">
+ <Store size={14} className="text-zinc-400 dark:text-[#6B7184]" />
  {v.name}
  </td>
- <td className="py-4 px-4 text-zinc-500 font-medium">
+ <td className="py-4 px-4 text-zinc-500 dark:text-[#A0A6B5] font-medium">
  {v.contact}
  </td>
- <td className="py-4 px-4 text-xs font-mono">
+ <td className="py-4 px-4 text-xs font-mono text-zinc-700 dark:text-[#E6E8EE]">
  {v.category}
  </td>
  <td className="py-4 px-4 text-center">
- <span className={`badge font-bold text-[8px] ${v.active ? 'badge-success ' : 'bg-zinc-100 text-zinc-500'}`}>
+ <span className={`badge font-bold text-[8px] ${v.active ? 'badge-success ' : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-500 dark:text-[#A0A6B5]'}`}>
  {v.active ? 'Active Supplier' : 'Suspended'}
  </span>
  </td>
@@ -131,8 +131,8 @@ export default function PurchaseDashboard() {
 
  {/* Purchase Request Approval Panel */}
  {(canViewModule('pur_approve') || canViewModule('purchases') || canViewModule('pur_requests')) && (
- <div className="card p-4 space-y-4 lg:col-span-1">
- <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+ <div className="card dark:bg-[#161922] dark:border-[#2A2F3D] p-4 space-y-4 lg:col-span-1">
+ <h3 className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">
  Requisition Approvals Workflow
  </h3>
 
@@ -142,13 +142,13 @@ export default function PurchaseDashboard() {
  return (
  <div
  key={req.id}
- className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3"
+ className="p-4 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-2xl space-y-3"
  >
  <div className="flex justify-between items-start">
  <div>
  <span className="font-mono text-xs font-bold text-primary">{req.id}</span>
- <p className="text-xs font-bold text-zinc-800 mt-0.5">{req.item}</p>
- <p className="text-[8px] text-zinc-500">Created by: {req.creator}</p>
+ <p className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] mt-0.5">{req.item}</p>
+ <p className="text-[8px] text-zinc-500 dark:text-[#A0A6B5]">Created by: {req.creator}</p>
  </div>
  <span className={`badge text-[7.2px] font-bold capitalize ${
  req.status === 'approved' ? 'badge-success ' : req.status === 'rejected' ? 'badge-danger' : 'badge-warning '
@@ -157,8 +157,8 @@ export default function PurchaseDashboard() {
  </span>
  </div>
 
- <div className="flex justify-between items-center pt-2 border-t border-zinc-100">
- <span className="text-xs font-bold text-zinc-700">
+ <div className="flex justify-between items-center pt-2 border-t border-zinc-100 dark:border-[#2A2F3D]">
+ <span className="text-xs font-bold text-zinc-700 dark:text-[#E6E8EE]">
  Value: ${req.total.toLocaleString()}
  </span>
 
@@ -166,14 +166,14 @@ export default function PurchaseDashboard() {
  <div className="flex gap-2">
  <button
  onClick={() => handleRequestApproval(req.id, true)}
- className="p-1 hover:bg-emerald-50 text-emerald-600 rounded transition-colors"
+ className="p-1 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded transition-colors"
  title="Approve purchase request"
  >
  <CheckCircle size={16} />
  </button>
  <button
  onClick={() => handleRequestApproval(req.id, false)}
- className="p-1 hover:bg-rose-50 text-rose-600 rounded transition-colors"
+ className="p-1 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded transition-colors"
  title="Reject purchase request"
  >
  <XCircle size={16} />
@@ -192,17 +192,17 @@ export default function PurchaseDashboard() {
  {/* Register Vendor Modal */}
  {showAddVendor && (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm">
- <div className="card max-w-md w-full p-4 space-y-4 animate-slide-up">
+ <div className="card max-w-md w-full p-4 space-y-4 animate-slide-up bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D]">
  <div className="flex justify-between items-center">
- <h3 className="text-lg font-bold text-zinc-900">
+ <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">
  Register Supplier Vendor
  </h3>
- <button onClick={() => setShowAddVendor(false)} className="text-zinc-400 hover:text-zinc-650">✕</button>
+ <button onClick={() => setShowAddVendor(false)} className="text-zinc-400 dark:text-[#6B7184] hover:text-zinc-650 dark:hover:text-[#E6E8EE]">✕</button>
  </div>
 
  <form onSubmit={handleCreateVendor} className="space-y-4">
  <div className="space-y-1">
- <label className="text-xs font-bold text-zinc-500 block">Vendor Company Name</label>
+ <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Vendor Company Name</label>
  <input
  type="text"
  placeholder="e.g. Apex Logistical supplies"
@@ -214,7 +214,7 @@ export default function PurchaseDashboard() {
  </div>
 
  <div className="space-y-1">
- <label className="text-xs font-bold text-zinc-500 block">Contact Representative</label>
+ <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Contact Representative</label>
  <input
  type="text"
  placeholder="Meredith Grey"
@@ -226,7 +226,7 @@ export default function PurchaseDashboard() {
  </div>
 
  <div className="space-y-1">
- <label className="text-xs font-bold text-zinc-500 block">Supply category</label>
+ <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">Supply category</label>
  <CustomSelect
  value={category}
  onChange={(e) => setCategory(e.target.value)}

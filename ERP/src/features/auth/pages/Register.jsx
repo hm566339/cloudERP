@@ -71,7 +71,7 @@ export default function Register() {
   }
 
   return (
-    <div className="bg-white/95 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] p-8 sm:p-12 w-full max-w-lg mx-auto animate-fade-in-up relative overflow-hidden my-8">
+    <div className="bg-white/95 dark:bg-card-dark/95 backdrop-blur-2xl border border-white/80 dark:border-border-dark shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] p-8 sm:p-12 w-full max-w-lg mx-auto animate-fade-in-up relative overflow-hidden my-8">
       
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
@@ -97,7 +97,7 @@ export default function Register() {
               type="text"
               {...register('fullName')}
               placeholder="John Doe"
-              className={`w-full pl-11 pr-4 py-3 bg-white/50 hover:bg-white border ${errors.fullName ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+              className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-surface-dark/70 hover:bg-white dark:hover:bg-surface-dark text-zinc-800 dark:text-zinc-100 border ${errors.fullName ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
             />
           </div>
           {errors.fullName && <p className="text-[9.6px] text-rose-500 font-medium mt-1 animate-fade-in">{errors.fullName.message}</p>}
@@ -114,7 +114,7 @@ export default function Register() {
               type="text"
               {...register('username')}
               placeholder="johndoe"
-              className={`w-full pl-11 pr-4 py-3 bg-white/50 hover:bg-white border ${errors.username ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+              className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-surface-dark/70 hover:bg-white dark:hover:bg-surface-dark text-zinc-800 dark:text-zinc-100 border ${errors.username ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
             />
           </div>
           {errors.username && <p className="text-[9.6px] text-rose-500 font-medium mt-1 animate-fade-in">{errors.username.message}</p>}
@@ -131,7 +131,7 @@ export default function Register() {
               type="email"
               {...register('email')}
               placeholder="user@example.com"
-              className={`w-full pl-11 pr-4 py-3 bg-white/50 hover:bg-white border ${errors.email ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+              className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-surface-dark/70 hover:bg-white dark:hover:bg-surface-dark text-zinc-800 dark:text-zinc-100 border ${errors.email ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
             />
           </div>
           {errors.email && <p className="text-[9.6px] text-rose-500 font-medium mt-1 animate-fade-in">{errors.email.message}</p>}
@@ -149,7 +149,7 @@ export default function Register() {
                 type="text"
                 {...register('empId')}
                 placeholder="EMP-01"
-                className={`w-full pl-11 pr-4 py-3 bg-white/50 hover:bg-white border ${errors.empId ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+                className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-surface-dark/70 hover:bg-white dark:hover:bg-surface-dark text-zinc-800 dark:text-zinc-100 border ${errors.empId ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
               />
             </div>
             {errors.empId && <p className="text-[9.6px] text-rose-500 font-medium mt-1 animate-fade-in">{errors.empId.message}</p>}
@@ -165,7 +165,7 @@ export default function Register() {
                 type="text"
                 {...register('companyCode')}
                 placeholder="COMP1"
-                className={`w-full pl-11 pr-4 py-3 bg-white/50 hover:bg-white border ${errors.companyCode ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+                className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-surface-dark/70 hover:bg-white dark:hover:bg-surface-dark text-zinc-800 dark:text-zinc-100 border ${errors.companyCode ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
               />
             </div>
             {errors.companyCode && <p className="text-[9.6px] text-rose-500 font-medium mt-1 animate-fade-in">{errors.companyCode.message}</p>}
@@ -184,7 +184,7 @@ export default function Register() {
                 type="text"
                 {...register('role')}
                 placeholder="employee"
-                className={`w-full pl-11 pr-4 py-3 bg-white/50 hover:bg-white border ${errors.role ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+                className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-surface-dark/70 hover:bg-white dark:hover:bg-surface-dark text-zinc-800 dark:text-zinc-100 border ${errors.role ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
               />
             </div>
             {errors.role && <p className="text-[9.6px] text-rose-500 font-medium mt-1 animate-fade-in">{errors.role.message}</p>}
@@ -200,7 +200,7 @@ export default function Register() {
                 type="text"
                 {...register('module')}
                 placeholder="Finance"
-                className={`w-full pl-11 pr-4 py-3 bg-white/50 hover:bg-white border border-zinc-200/80 focus:border-primary focus:ring-primary/20 rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+                className={`w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-surface-dark/70 hover:bg-white dark:hover:bg-surface-dark text-zinc-800 dark:text-zinc-100 dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D]/80 focus:border-primary focus:ring-primary/20 rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
               />
             </div>
           </div>
@@ -217,7 +217,7 @@ export default function Register() {
               type={showPassword ? 'text' : 'password'}
               {...register('password')}
               placeholder="••••••••"
-              className={`w-full pl-11 pr-11 py-3 bg-white/50 hover:bg-white border ${errors.password ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
+              className={`w-full pl-11 pr-11 py-3 bg-white/50 dark:bg-surface-dark/70 hover:bg-white dark:hover:bg-surface-dark text-zinc-800 dark:text-zinc-100 border ${errors.password ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-500/20' : 'border-zinc-200/80 focus:border-primary focus:ring-primary/20'} rounded-xl text-[11.2px] font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-[3.2px] transition-all shadow-sm backdrop-blur-md`}
             />
             <button
               type="button"

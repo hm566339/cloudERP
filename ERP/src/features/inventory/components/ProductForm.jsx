@@ -234,9 +234,9 @@ export default function ProductForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white min-h-0">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white dark:bg-card-dark min-h-0">
       {/* Tabs */}
-      <div className="flex px-5 border-b border-zinc-200 bg-white shrink-0 gap-6 z-10 sticky top-0">
+      <div className="flex px-5 border-b border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark shrink-0 gap-6 z-10 sticky top-0">
         <button
           type="button"
           onClick={() => setActiveTab('basic')}
@@ -285,7 +285,7 @@ export default function ProductForm({
                 value={formData.productName}
                 onChange={handleChange}
                 maxLength={200}
-                className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                   errors.productName ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
                 }`}
                 autoFocus
@@ -307,7 +307,7 @@ export default function ProductForm({
                 value={formData.sku}
                 onChange={handleChange}
                 maxLength={50}
-                className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                   errors.sku ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
                 }`}
               />
@@ -324,7 +324,7 @@ export default function ProductForm({
                 name="productType"
                 value={formData.productType}
                 onChange={handleChange}
-                className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-md text-[10.4px] transition-all hover:border-zinc-300"
+                className="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] transition-all hover:border-zinc-300"
               >
                 <option value="GOODS">Goods</option>
                 <option value="SERVICE">Service</option>
@@ -341,7 +341,7 @@ export default function ProductForm({
                 value={formData.categoryId}
                 onChange={handleChange}
                 error={!!errors.categoryId}
-                className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-md text-[10.4px] transition-all hover:border-zinc-300"
+                className="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] transition-all hover:border-zinc-300"
                 required
               >
                 <option value="">Select Category</option>
@@ -367,7 +367,7 @@ export default function ProductForm({
                 value={formData.baseUomId}
                 onChange={handleChange}
                 error={!!errors.baseUomId}
-                className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-md text-[10.4px] transition-all hover:border-zinc-300"
+                className="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] transition-all hover:border-zinc-300"
                 required
               >
                 <option value="">Select UOM</option>
@@ -391,7 +391,7 @@ export default function ProductForm({
                 name="barcode"
                 value={formData.barcode}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -402,7 +402,7 @@ export default function ProductForm({
                 name="alternateBarcode"
                 value={formData.alternateBarcode}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -413,7 +413,7 @@ export default function ProductForm({
                 value={formData.description}
                 onChange={handleChange}
                 rows={3}
-                className="w-full px-3 py-2 rounded-md border border-zinc-200 text-[10.4px] bg-white transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+                className="w-full px-3 py-2 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
               />
             </div>
 
@@ -465,7 +465,7 @@ export default function ProductForm({
                     hsnSacName: selectedHsnSac?.description || ''
                   }));
                 }}
-                buttonClassName="w-full h-9 bg-white border border-zinc-200 rounded-md text-[10.4px] hover:border-zinc-300 flex items-center justify-between"
+                buttonClassName="w-full h-9 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] hover:border-zinc-300 flex items-center justify-between"
                 placeholder="Select HSN/SAC"
               />
             </div>
@@ -514,7 +514,7 @@ export default function ProductForm({
                 name="standardCost"
                 value={formData.standardCost}
                 onChange={handleChange}
-                className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                   errors.standardCost ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
                 }`}
               />
@@ -534,7 +534,7 @@ export default function ProductForm({
                 name="sellingPrice"
                 value={formData.sellingPrice || 0}
                 onChange={handleChange}
-                className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                   errors.sellingPrice ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
                 }`}
               />
@@ -610,12 +610,12 @@ export default function ProductForm({
 
       </div>
 
-      <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-200 bg-white mt-auto shrink-0 z-20">
+      <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark mt-auto shrink-0 z-20">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50 focus:outline-none outline-none"
+          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50 focus:outline-none outline-none"
         >
           Cancel
         </button>

@@ -36,27 +36,27 @@ const Select = React.forwardRef(function Select(
       <select
         ref={ref}
         disabled={disabled}
-        className={`w-full appearance-none bg-white rounded-lg border font-medium text-zinc-900 transition-all duration-150 outline-none cursor-pointer disabled:bg-zinc-50 disabled:text-zinc-400 disabled:cursor-not-allowed ${
+        className={`w-full appearance-none bg-white dark:bg-[#1D212C] rounded-lg border font-medium text-zinc-900 dark:text-[#E6E8EE] transition-all duration-150 outline-none cursor-pointer disabled:bg-zinc-50 dark:disabled:bg-[#161922] disabled:text-zinc-400 dark:disabled:text-[#6B7184] disabled:cursor-not-allowed ${
           error
-            ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/10'
-            : 'border-zinc-200 hover:border-zinc-300 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/5'
+            ? 'border-rose-400 dark:border-[#F0616D] focus:border-rose-500 dark:focus:border-[#F0616D] focus:ring-2 focus:ring-rose-500/10 dark:focus:ring-[#F0616D]/20'
+            : 'border-zinc-200 dark:border-[#2A2F3D] hover:border-zinc-300 dark:hover:border-[#3A4154] focus:border-zinc-400 dark:focus:border-[#4C8DFF] focus:ring-2 focus:ring-zinc-900/5 dark:focus:ring-[#4C8DFF]/20'
         } ${sizeClasses[size] || sizeClasses.md} ${className}`}
         {...props}
       >
         {placeholder && (
-          <option value="" disabled>
+          <option value="" disabled className="dark:bg-[#1D212C] dark:text-[#6B7184]">
             {placeholder}
           </option>
         )}
         {options
           ? options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
+              <option key={opt.value} value={opt.value} className="dark:bg-[#1D212C] dark:text-[#E6E8EE]">
                 {opt.label}
               </option>
             ))
           : children}
       </select>
-      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400 flex items-center">
+      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400 dark:text-[#A0A6B5] flex items-center">
         <ChevronDown size={14} />
       </div>
     </div>

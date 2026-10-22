@@ -355,52 +355,52 @@ export default function StockTracking() {
   const renderExpandedRow = (stock) => (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Product Name</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Product Name</span>
         <p className="text-sm font-semibold text-zinc-900">{stock.productName || stock.productId || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Warehouse</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Warehouse</span>
         <p className="text-sm font-semibold text-zinc-900">{stock.warehouseName || stock.warehouseId || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Location</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Location</span>
         <p className="text-sm font-medium text-zinc-700">{stock.locationName || stock.locationId || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Available Qty</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Available Qty</span>
         <p className="text-sm font-bold text-emerald-700 font-mono">{stock.availableQuantity?.toLocaleString() ?? 0}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Reserved Qty</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Reserved Qty</span>
         <p className="text-sm font-medium text-zinc-700 font-mono">{stock.reservedQuantity?.toLocaleString() ?? 0}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Total Qty</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Total Qty</span>
         <p className="text-sm font-medium text-zinc-900 font-mono">{stock.quantity?.toLocaleString() ?? 0}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Avg Cost</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Avg Cost</span>
         <p className="text-sm font-medium text-zinc-700 font-mono">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(stock.averageCost || 0)}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Stock Value</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Stock Value</span>
         <p className="text-sm font-bold text-zinc-900 font-mono">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(stock.stockValue || 0)}</p>
       </div>
       {stock.batchNo && (
         <div className="space-y-1">
-          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Batch No</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Batch No</span>
           <p className="text-sm font-medium text-zinc-700 font-mono">{stock.batchNo}</p>
         </div>
       )}
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Last Movement</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Last Movement</span>
         <p className="text-sm font-medium text-zinc-700">{stock.lastMovementAt ? new Date(stock.lastMovementAt).toLocaleString() : '-'}</p>
       </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Current Stock"
         description="Manage products, warehouse locations, quantities, costs, and stock values"

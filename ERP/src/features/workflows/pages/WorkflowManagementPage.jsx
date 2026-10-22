@@ -658,17 +658,17 @@ export default function WorkflowManagementPage() {
   return (
     <div className="animate-fade-in flex flex-col h-full min-h-0 p-3 sm:p-5 lg:p-6 overflow-hidden">
       {/* ── Top Header and Title ── */}
-      <div className="flex-none flex flex-col gap-3 pb-3 border-b border-zinc-200/80 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex-none flex flex-col gap-3 pb-3 border-b border-zinc-200/80 dark:border-[#2A2F3D] lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <nav className="mb-1 flex items-center gap-1.5 text-[11px] text-zinc-500 font-medium">
+          <nav className="mb-1 flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-[#A0A6B5] font-medium">
             <span>Administration</span>
-            <span className="text-zinc-300">/</span>
-            <span className="text-zinc-800 font-semibold">Workflow &amp; Approvals</span>
+            <span className="text-zinc-300 dark:text-zinc-600">/</span>
+            <span className="text-zinc-800 dark:text-[#E6E8EE] font-semibold">Workflow &amp; Approvals</span>
           </nav>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 leading-none">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-[#E6E8EE] leading-none">
             Workflow &amp; Approvals
           </h1>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-zinc-500 dark:text-[#A0A6B5]">
             Configure transaction approvals and automation for each company.
           </p>
         </div>
@@ -681,7 +681,7 @@ export default function WorkflowManagementPage() {
             onChange={selectCompany}
           />
           <button
-            className="btn-icon h-8 w-8 rounded-lg border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 shadow-sm transition-colors"
+            className="btn-icon h-8 w-8 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-zinc-500 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#1D212C] hover:text-zinc-800 dark:hover:text-[#E6E8EE] shadow-sm transition-colors"
             title="Notifications"
             type="button"
           >
@@ -689,17 +689,17 @@ export default function WorkflowManagementPage() {
           </button>
           <button
             type="button"
-            className="btn-secondary h-8 px-3 text-xs inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 font-medium transition-all shadow-sm"
+            className="btn-secondary h-8 px-3 text-xs inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] hover:bg-zinc-50 dark:hover:bg-[#1D212C] text-zinc-700 dark:text-[#E6E8EE] font-medium transition-all shadow-sm"
             onClick={() => dispatch(addAlert({ type: 'info', message: `Signed in as ${currentUser?.name || currentUser?.email || 'administrator'}.` }))}
             title="Profile"
           >
-            <User size={13} className="text-zinc-500" />
+            <User size={13} className="text-zinc-500 dark:text-[#A0A6B5]" />
             <span>Profile</span>
           </button>
           {canCreate && (
             <button
               type="button"
-              className="btn-primary h-8 px-3.5 text-xs inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white font-semibold transition-all shadow-sm active:scale-[0.98]"
+              className="btn-primary h-8 px-3.5 text-xs inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-700 text-white font-semibold transition-all shadow-sm active:scale-[0.98]"
               disabled={isSaving || isDeleting || definitionsStatus !== 'ready'}
               onClick={create}
             >
@@ -711,20 +711,20 @@ export default function WorkflowManagementPage() {
       </div>
 
       {/* ── Configuration Scope Notice ── */}
-      <div className="flex-none my-2.5 flex items-center gap-2.5 rounded-lg border border-blue-100 bg-blue-50/70 px-3.5 py-1.5 text-xs text-blue-900 shadow-sm">
+      <div className="flex-none my-2.5 flex items-center gap-2.5 rounded-lg border border-blue-100 dark:border-blue-500/20 bg-blue-50/70 dark:bg-blue-950/30 px-3.5 py-1.5 text-xs text-blue-900 dark:text-blue-300 shadow-sm">
         <Building2Icon />
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-blue-700">Configuration scope:</span>
-          <strong className="font-semibold text-blue-950">{selectedCompany?.name || 'Selected company'}</strong>
-          <span className="text-blue-500 font-mono text-[11px]">({companyId})</span>
+          <span className="text-blue-700 dark:text-blue-400">Configuration scope:</span>
+          <strong className="font-semibold text-blue-950 dark:text-blue-200">{selectedCompany?.name || 'Selected company'}</strong>
+          <span className="text-blue-500 dark:text-blue-400/80 font-mono text-[11px]">({companyId})</span>
         </div>
-        <span className="ml-auto hidden text-[11px] font-medium text-blue-600 sm:block">
+        <span className="ml-auto hidden text-[11px] font-medium text-blue-600 dark:text-blue-400 sm:block">
           Changes apply only to this company
         </span>
       </div>
 
       {/* ── Module Tabs Bar ── */}
-      <div className="flex-none flex items-center gap-1 overflow-x-auto border-b border-zinc-200 mb-3 no-scrollbar">
+      <div className="flex-none flex items-center gap-1 overflow-x-auto border-b border-zinc-200 dark:border-[#2A2F3D] mb-3 no-scrollbar">
         {MODULES.map((item) => (
           <button
             type="button"
@@ -732,8 +732,8 @@ export default function WorkflowManagementPage() {
             onClick={() => setModule(item)}
             className={`whitespace-nowrap border-b-2 px-3 py-2 text-xs font-semibold transition-all ${
               module === item
-                ? 'border-zinc-900 text-zinc-900'
-                : 'border-transparent text-zinc-500 hover:text-zinc-800 hover:border-zinc-300'
+                ? 'border-zinc-900 dark:border-white text-zinc-900 dark:text-white'
+                : 'border-transparent text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-800 dark:hover:text-[#E6E8EE] hover:border-zinc-300 dark:hover:border-zinc-700'
             }`}
           >
             {item}
@@ -744,12 +744,12 @@ export default function WorkflowManagementPage() {
       {/* ── Main Content Responsive 3-Column Studio ── */}
       <div className="flex-1 min-h-0 grid grid-cols-[250px_minmax(340px,1fr)_340px] xl:grid-cols-[270px_minmax(380px,1fr)_370px] grid-rows-1 gap-3.5 sm:gap-4 overflow-x-auto overflow-y-hidden">
         {/* ── Left Column: Workflow List ── */}
-        <section className="card flex flex-col min-h-0 min-w-0 h-full overflow-hidden bg-white border border-zinc-200 rounded-xl shadow-sm">
-          <div className="flex-none border-b border-zinc-100 p-3 bg-zinc-50/40">
+        <section className="card flex flex-col min-h-0 min-w-0 h-full overflow-hidden bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm">
+          <div className="flex-none border-b border-zinc-100 dark:border-[#2A2F3D] p-3 bg-zinc-50/40 dark:bg-[#1D212C]/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-700">Workflows</h2>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-200/70 text-zinc-700">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE]">Workflows</h2>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-200/70 dark:bg-[#222736] text-zinc-700 dark:text-[#A0A6B5]">
                   {visibleWorkflows.length}
                 </span>
               </div>
@@ -816,24 +816,24 @@ export default function WorkflowManagementPage() {
                       onClick={() => { setSelectedId(item.id); setErrors({}); }}
                       className={`w-full rounded-lg border p-3 text-left transition-all ${
                         isSelected
-                          ? 'border-zinc-900 bg-zinc-900/[0.04] shadow-sm ring-1 ring-zinc-900/10'
-                          : 'border-zinc-100 bg-white hover:border-zinc-300 hover:bg-zinc-50/70'
+                          ? 'border-zinc-900 dark:border-primary/60 bg-zinc-900/[0.04] dark:bg-primary/10 shadow-sm ring-1 ring-zinc-900/10 dark:ring-primary/20'
+                          : 'border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] hover:border-zinc-300 dark:hover:border-zinc-600 hover:bg-zinc-50/70 dark:hover:bg-[#1D212C]'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className={`text-xs font-semibold truncate ${isSelected ? 'text-zinc-950 font-bold' : 'text-zinc-800'}`}>
+                        <span className={`text-xs font-semibold truncate ${isSelected ? 'text-zinc-950 dark:text-[#E6E8EE] font-bold' : 'text-zinc-800 dark:text-[#D1D5DB]'}`}>
                           {item.name}
                         </span>
                         <StatusBadge active={item.active} />
                       </div>
-                      <p className="mt-1 line-clamp-2 text-[11px] text-zinc-500 leading-relaxed">
+                      <p className="mt-1 line-clamp-2 text-[11px] text-zinc-500 dark:text-[#A0A6B5] leading-relaxed">
                         {item.description || 'No description provided.'}
                       </p>
                     </button>
                   );
                 })}
                 {!visibleWorkflows.length && !(draftWorkflow && draftWorkflow.module === module) && (
-                  <div className="py-8 text-center text-xs text-zinc-400">
+                  <div className="py-8 text-center text-xs text-zinc-400 dark:text-zinc-500">
                     No workflows in {module}.
                   </div>
                 )}
@@ -843,16 +843,16 @@ export default function WorkflowManagementPage() {
         </section>
 
         {/* ── Center Column: Workflow Editor & Diagram ── */}
-        <section className="card flex flex-col min-h-0 min-w-0 h-full overflow-hidden bg-white border border-zinc-200 rounded-xl shadow-sm">
-          <div className="flex-none border-b border-zinc-100 p-4 bg-zinc-50/40">
+        <section className="card flex flex-col min-h-0 min-w-0 h-full overflow-hidden bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm">
+          <div className="flex-none border-b border-zinc-100 dark:border-[#2A2F3D] p-4 bg-zinc-50/40 dark:bg-[#1D212C]/50">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2.5">
-                  <h2 className="text-sm sm:text-base font-bold text-zinc-900 truncate">
+                  <h2 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-[#E6E8EE] truncate">
                     {selected?.name || 'No workflow selected'}
                   </h2>
                   {isEditingDraft ? (
-                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase border border-amber-300 bg-amber-50 text-amber-800 shadow-sm">
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase border border-amber-300 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 shadow-sm">
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
                       UNSAVED
                     </span>
@@ -860,7 +860,7 @@ export default function WorkflowManagementPage() {
                     selected && <StatusBadge active={selected.active} />
                   )}
                 </div>
-                <p className="mt-1 text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                <p className="mt-1 text-xs text-zinc-500 dark:text-[#A0A6B5] line-clamp-2 leading-relaxed">
                   {selected?.description || 'Create a workflow to begin configuring approvals.'}
                 </p>
               </div>
@@ -871,7 +871,7 @@ export default function WorkflowManagementPage() {
                     title="Duplicate workflow"
                     disabled={!canCreate || isSaving || isDeleting}
                     onClick={duplicateWorkflow}
-                    className="p-1.5 rounded-lg border border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 hover:border-zinc-300 transition-colors disabled:opacity-40"
+                    className="p-1.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-500 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-800 dark:hover:text-[#E6E8EE] hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors disabled:opacity-40"
                   >
                     <Copy size={14} />
                   </button>
@@ -880,7 +880,7 @@ export default function WorkflowManagementPage() {
                     title="Delete workflow"
                     disabled={!canDelete || isSaving || isDeleting}
                     onClick={deleteWorkflow}
-                    className="p-1.5 rounded-lg border border-zinc-200 bg-white text-zinc-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors disabled:opacity-40"
+                    className="p-1.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-500 dark:text-[#A0A6B5] hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800 transition-colors disabled:opacity-40"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -888,7 +888,7 @@ export default function WorkflowManagementPage() {
               )}
             </div>
 
-            <div className="mt-3.5 flex items-center gap-1 overflow-x-auto border-t border-zinc-100 pt-2.5 no-scrollbar">
+            <div className="mt-3.5 flex items-center gap-1 overflow-x-auto border-t border-zinc-100 dark:border-[#2A2F3D] pt-2.5 no-scrollbar">
               {[
                 ['diagram', 'Workflow diagram', GitBranch],
                 ['rules', 'Approval rules', ShieldCheck],
@@ -901,8 +901,8 @@ export default function WorkflowManagementPage() {
                   onClick={() => setActiveTab(id)}
                   className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
                     activeTab === id
-                      ? 'bg-zinc-900 text-white font-semibold shadow-sm'
-                      : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                      ? 'bg-zinc-900 dark:bg-primary text-white font-semibold shadow-sm'
+                      : 'text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#1D212C] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'
                   }`}
                 >
                   <Icon size={13} />
@@ -940,19 +940,19 @@ export default function WorkflowManagementPage() {
                     <InfoRow icon={Users} label="Default Approver" value={resolveRoleName(selected.approverRole, roles) || 'Not configured'} />
                     <InfoRow icon={Clock3} label="Active approval steps" value={`${(selected.steps || []).filter((step) => step.active !== false).length} step(s)`} />
 
-                    <div className="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-sm space-y-2">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-700">Configured Step Rules</h3>
-                      <div className="divide-y divide-zinc-100">
+                    <div className="rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] p-3.5 shadow-sm space-y-2">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE]">Configured Step Rules</h3>
+                      <div className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                         {(selected.steps || []).map((step, idx) => (
                           <div key={step.id || idx} className="py-2.5 flex items-center justify-between text-xs flex-wrap gap-2">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-zinc-500">#{idx + 1}</span>
-                              <span className="font-semibold text-zinc-900">{step.title || step.stageName}</span>
-                              <span className="capitalize text-[10px] px-1.5 py-0.5 rounded border border-zinc-200 bg-zinc-50 font-medium text-zinc-600">
+                              <span className="font-bold text-zinc-500 dark:text-[#A0A6B5]">#{idx + 1}</span>
+                              <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{step.title || step.stageName}</span>
+                              <span className="capitalize text-[10px] px-1.5 py-0.5 rounded border border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C] font-medium text-zinc-600 dark:text-[#A0A6B5]">
                                 {step.type || 'approval'}
                               </span>
                             </div>
-                            <div className="text-zinc-500 text-[11px] font-mono">
+                            <div className="text-zinc-500 dark:text-[#A0A6B5] text-[11px] font-mono">
                               {step.type === 'condition'
                                 ? `Condition: ${step.ruleExpression || 'None'}`
                                 : step.type === 'notification'
@@ -963,30 +963,30 @@ export default function WorkflowManagementPage() {
                         ))}
                       </div>
                     </div>
-                    {errors.steps && <p className="rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200">{errors.steps}</p>}
+                    {errors.steps && <p className="rounded-lg bg-red-50 dark:bg-red-950/40 p-3 text-xs text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900/50">{errors.steps}</p>}
                   </div>
                 )}
                 {selected && activeTab === 'email' && (
                   <div className="space-y-4">
-                    <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+                    <div className="rounded-xl border border-blue-100 dark:border-blue-500/20 bg-blue-50/50 dark:bg-blue-950/30 p-4">
                       <div className="flex items-start gap-3">
-                        <Mail size={18} className="mt-0.5 text-blue-600 shrink-0" />
+                        <Mail size={18} className="mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
                         <div>
-                          <p className="text-sm font-semibold text-zinc-800">Email notification policy</p>
-                          <p className="mt-1 text-xs text-zinc-500">Notifications are sent to the initiator and assigned approvers when a workflow step changes or requires action.</p>
+                          <p className="text-sm font-semibold text-zinc-800 dark:text-[#E6E8EE]">Email notification policy</p>
+                          <p className="mt-1 text-xs text-zinc-500 dark:text-[#A0A6B5]">Notifications are sent to the initiator and assigned approvers when a workflow step changes or requires action.</p>
                         </div>
                       </div>
                     </div>
                     <InfoRow icon={Bell} label="Email notifications status" value={selected.emailNotifications ? 'Enabled' : 'Disabled'} />
-                    <div className="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-sm space-y-2">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-700">Notification Channels &amp; Steps</h3>
+                    <div className="rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] p-3.5 shadow-sm space-y-2">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE]">Notification Channels &amp; Steps</h3>
                       {(selected.steps || []).filter((s) => s.type === 'notification' || s.notificationChannel).length === 0 ? (
-                        <p className="text-xs text-zinc-400">No dedicated notification steps configured.</p>
+                        <p className="text-xs text-zinc-400 dark:text-zinc-500">No dedicated notification steps configured.</p>
                       ) : (
                         (selected.steps || []).filter((s) => s.type === 'notification' || s.notificationChannel).map((s, idx) => (
                           <div key={s.id || idx} className="py-1.5 flex items-center justify-between text-xs">
-                            <span className="font-semibold text-zinc-800">{s.title || s.stageName}</span>
-                            <span className="text-[11px] text-zinc-500 font-mono">{s.notificationChannel || 'IN_APP'}</span>
+                            <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{s.title || s.stageName}</span>
+                            <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] font-mono">{s.notificationChannel || 'IN_APP'}</span>
                           </div>
                         ))
                       )}
@@ -1008,14 +1008,14 @@ export default function WorkflowManagementPage() {
         </section>
 
         {/* ── Right Column: Configuration Panel ── */}
-        <section className="card flex flex-col min-h-0 min-w-0 h-full overflow-hidden bg-white border border-zinc-200 rounded-xl shadow-sm">
-          <div className="flex-none border-b border-zinc-100 p-4 bg-zinc-50/40">
+        <section className="card flex flex-col min-h-0 min-w-0 h-full overflow-hidden bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm">
+          <div className="flex-none border-b border-zinc-100 dark:border-[#2A2F3D] p-4 bg-zinc-50/40 dark:bg-[#1D212C]/50">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-700">Configuration</h2>
-                <p className="text-[11px] text-zinc-400">Company-specific settings</p>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE]">Configuration</h2>
+                <p className="text-[11px] text-zinc-400 dark:text-[#A0A6B5]">Company-specific settings</p>
               </div>
-              <HelpCircle size={15} className="text-zinc-400" />
+              <HelpCircle size={15} className="text-zinc-400 dark:text-[#A0A6B5]" />
             </div>
           </div>
 
@@ -1046,10 +1046,10 @@ export default function WorkflowManagementPage() {
           </div>
 
           {selected && definitionsStatus === 'ready' && (
-            <div className="flex-none border-t border-zinc-100 p-3.5 bg-zinc-50/60 flex items-center justify-end gap-2">
+            <div className="flex-none border-t border-zinc-100 dark:border-[#2A2F3D] p-3.5 bg-zinc-50/60 dark:bg-[#1D212C] flex items-center justify-end gap-2">
               <button
                 type="button"
-                className="btn-secondary h-8 px-3 text-xs inline-flex items-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 font-medium transition-all shadow-sm"
+                className="btn-secondary h-8 px-3 text-xs inline-flex items-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] hover:bg-zinc-50 dark:hover:bg-[#222736] text-zinc-700 dark:text-[#E6E8EE] font-medium transition-all shadow-sm"
                 disabled={isSaving}
                 onClick={cancel}
               >
@@ -1057,7 +1057,7 @@ export default function WorkflowManagementPage() {
               </button>
               <button
                 type="button"
-                className="btn-primary h-8 px-3.5 text-xs inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white font-semibold transition-all shadow-sm active:scale-[0.98]"
+                className="btn-primary h-8 px-3.5 text-xs inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 dark:bg-primary hover:bg-zinc-800 dark:hover:bg-primary-600 text-white font-semibold transition-all shadow-sm active:scale-[0.98]"
                 disabled={!canEdit || isSaving}
                 onClick={save}
               >
@@ -1089,12 +1089,12 @@ export default function WorkflowManagementPage() {
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
-      <span className="flex items-center gap-2 text-xs font-semibold text-zinc-600">
-        <Icon size={14} className="text-zinc-700" />
+    <div className="flex items-center justify-between rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] p-3 shadow-sm">
+      <span className="flex items-center gap-2 text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5]">
+        <Icon size={14} className="text-zinc-700 dark:text-[#E6E8EE]" />
         {label}
       </span>
-      <span className="text-xs font-bold text-zinc-900">{value}</span>
+      <span className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE]">{value}</span>
     </div>
   );
 }

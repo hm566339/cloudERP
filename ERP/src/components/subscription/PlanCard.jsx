@@ -42,10 +42,10 @@ export default function PlanCard({
 
   return (
     <div
-      className={`bg-white rounded-2xl border p-6 flex flex-col justify-between transition-all duration-200 hover:shadow-md ${
+      className={`bg-white dark:bg-[#161922] rounded-2xl border p-6 flex flex-col justify-between transition-all duration-200 hover:shadow-md ${
         isCurrent
-          ? 'border-emerald-300 ring-2 ring-emerald-500/15 shadow-xs'
-          : 'border-zinc-200/80 shadow-2xs hover:border-zinc-300'
+          ? 'border-emerald-300 dark:border-emerald-500/50 ring-2 ring-emerald-500/15 shadow-xs'
+          : 'border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs hover:border-zinc-300 dark:hover:border-zinc-600'
       }`}
     >
       <div className="space-y-4">
@@ -57,34 +57,34 @@ export default function PlanCard({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base sm:text-lg font-bold text-zinc-900 tracking-tight truncate">
+                <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
                   {plan.name}
                 </h3>
                 {isCurrent && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-                    <Check size={11} className="text-emerald-600 stroke-[3]" />
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 shadow-2xs">
+                    <Check size={11} className="text-emerald-600 dark:text-emerald-400 stroke-[3]" />
                     <span>Current Plan</span>
                   </span>
                 )}
                 {isFreeTrial && !isCurrent && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-                    <Sparkles size={11} className="text-emerald-600" />
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 shadow-2xs">
+                    <Sparkles size={11} className="text-emerald-600 dark:text-emerald-400" />
                     <span>Free Trial</span>
                   </span>
                 )}
                 <span
                   className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                     plan.active
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : 'bg-zinc-100 text-zinc-500 border border-zinc-200'
+                      ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700'
                   }`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full ${plan.active ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${plan.active ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-500'}`} />
                   <span>{plan.active ? 'Active' : 'Inactive'}</span>
                 </span>
               </div>
 
-              <div className="font-mono text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mt-1">
+              <div className="font-mono text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mt-1">
                 {plan.code}
               </div>
             </div>
@@ -92,33 +92,33 @@ export default function PlanCard({
 
           {/* Right: Price & Duration */}
           <div className="text-right shrink-0">
-            <div className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
+            <div className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
               {priceDisplay}
             </div>
-            <div className="text-xs font-semibold text-zinc-400 flex items-center justify-end gap-1 mt-0.5">
-              <Clock size={12} className="text-zinc-400" />
+            <div className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 flex items-center justify-end gap-1 mt-0.5">
+              <Clock size={12} className="text-zinc-400 dark:text-zinc-500" />
               <span>{plan.durationDays || 30} Days</span>
             </div>
           </div>
         </div>
 
         {/* Description */}
-        <p className="text-xs sm:text-sm text-zinc-600 leading-relaxed font-normal min-h-[36px]">
+        <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal min-h-[36px]">
           {plan.description || 'Configured SaaS subscription plan with quota limits and modular access.'}
         </p>
 
         {/* ── PLAN RULES & LIMITS HIGHLIGHT BAR ── */}
-        <div className="bg-zinc-50/80 rounded-xl p-3 border border-zinc-200/60 grid grid-cols-2 gap-3 text-xs">
+        <div className="bg-zinc-50/80 dark:bg-[#1D212C] rounded-xl p-3 border border-zinc-200/60 dark:border-[#2A2F3D] grid grid-cols-2 gap-3 text-xs">
           {/* Max Companies Quota */}
           <div className="space-y-0.5">
-            <div className="flex items-center gap-1 text-[10.5px] font-bold text-zinc-500 uppercase tracking-wider">
-              <Building2 size={12} className="text-zinc-700" />
+            <div className="flex items-center gap-1 text-[10.5px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+              <Building2 size={12} className="text-zinc-700 dark:text-zinc-300" />
               <span>Companies Limit</span>
             </div>
-            <div className="text-sm font-extrabold text-zinc-900">
+            <div className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100">
               {formatPlanLimit(plan.maxCompanies, 'companies')}
             </div>
-            <p className="text-[10px] text-zinc-400">
+            <p className="text-[10px] text-zinc-400 dark:text-zinc-500">
               {plan.maxCompanies === null || plan.maxCompanies === undefined
                 ? 'No limit configured'
                 : 'Active organizations'}
@@ -127,14 +127,14 @@ export default function PlanCard({
 
           {/* Max Users / Company Quota */}
           <div className="space-y-0.5">
-            <div className="flex items-center gap-1 text-[10.5px] font-bold text-zinc-500 uppercase tracking-wider">
-              <Users size={12} className="text-zinc-700" />
+            <div className="flex items-center gap-1 text-[10.5px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+              <Users size={12} className="text-zinc-700 dark:text-zinc-300" />
               <span>Users / Company</span>
             </div>
-            <div className="text-sm font-extrabold text-zinc-900">
+            <div className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100">
               {formatPlanLimit(plan.maxUsersPerCompany, 'users')}
             </div>
-            <p className="text-[10px] text-zinc-400">
+            <p className="text-[10px] text-zinc-400 dark:text-zinc-500">
               {plan.maxUsersPerCompany === null || plan.maxUsersPerCompany === undefined
                 ? 'No limit configured'
                 : 'Per legal company'}
@@ -144,9 +144,9 @@ export default function PlanCard({
 
         {/* ── Modules Entitlement Section ── */}
         <div className="space-y-2 pt-1">
-          <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+          <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             <span className="flex items-center gap-1.5">
-              <Layers size={13} className="text-zinc-700" />
+              <Layers size={13} className="text-zinc-700 dark:text-zinc-300" />
               <span>INCLUDED MODULES ({activeModulesList.length})</span>
             </span>
           </div>
@@ -156,29 +156,29 @@ export default function PlanCard({
               activeModulesList.map((m, idx) => (
                 <span
                   key={m.moduleId || m.id || idx}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-zinc-100/90 border border-zinc-200/80 text-zinc-800 shadow-2xs"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-zinc-100/90 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 shadow-2xs"
                 >
-                  <Check size={11} className="text-zinc-700 stroke-[2.5]" />
+                  <Check size={11} className="text-zinc-700 dark:text-zinc-300 stroke-[2.5]" />
                   <span>{m.moduleName || m.name || 'Module'}</span>
                 </span>
               ))
             ) : (
-              <span className="text-xs text-zinc-400 italic">No modules assigned</span>
+              <span className="text-xs text-zinc-400 dark:text-zinc-500 italic">No modules assigned</span>
             )}
           </div>
         </div>
       </div>
 
       {/* Actions Footer */}
-      <div className="flex items-center justify-between border-t border-zinc-100 pt-4 mt-6">
+      <div className="flex items-center justify-between border-t border-zinc-100 dark:border-[#2A2F3D] pt-4 mt-6">
         {canManageCatalog ? (
           <button
             type="button"
             onClick={() => onToggleStatus(plan)}
             className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-colors ${
               plan.active
-                ? 'text-zinc-600 border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900'
-                : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100'
+                ? 'text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#1D212C] hover:text-zinc-900 dark:hover:text-zinc-100'
+                : 'text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25'
             }`}
           >
             {plan.active ? 'Deactivate' : 'Activate Plan'}
@@ -191,7 +191,7 @@ export default function PlanCard({
           <button
             type="button"
             onClick={() => onOpenDetails(plan)}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-600 hover:text-zinc-900 border border-zinc-200 hover:bg-zinc-50 px-3 py-1.5 rounded-xl transition-colors shadow-2xs"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#1D212C] px-3 py-1.5 rounded-xl transition-colors shadow-2xs"
           >
             <Eye size={13} />
             <span>Details</span>
@@ -201,7 +201,7 @@ export default function PlanCard({
             <button
               type="button"
               onClick={() => onOpenEdit(plan)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-800 bg-zinc-100 hover:bg-zinc-200/80 border border-zinc-200/80 px-3.5 py-1.5 rounded-xl transition-colors shadow-2xs active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200/80 dark:hover:bg-zinc-700 border border-zinc-200/80 dark:border-zinc-700 px-3.5 py-1.5 rounded-xl transition-colors shadow-2xs active:scale-95"
             >
               <Edit2 size={13} />
               <span>Edit</span>
@@ -212,7 +212,7 @@ export default function PlanCard({
             <button
               type="button"
               onClick={() => onDelete(plan)}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200/80 px-3 py-1.5 rounded-xl transition-colors shadow-2xs active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/15 border border-rose-200/80 dark:border-rose-500/30 px-3 py-1.5 rounded-xl transition-colors shadow-2xs active:scale-95"
               title="Deactivate and remove plan from catalog"
             >
               <Trash2 size={13} />
@@ -223,15 +223,15 @@ export default function PlanCard({
           {/* Upgrade / Choose Plan Button for Owner / Subscriber */}
           {canUpgradeSubscription && !canManageCatalog && (
             isCurrent ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-3.5 py-1.5 rounded-xl shadow-2xs cursor-default">
-                <CheckCircle2 size={13} className="text-emerald-600" />
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200/80 dark:border-emerald-500/30 px-3.5 py-1.5 rounded-xl shadow-2xs cursor-default">
+                <CheckCircle2 size={13} className="text-emerald-600 dark:text-emerald-400" />
                 <span>Current Plan</span>
               </span>
             ) : (
               <button
                 type="button"
                 onClick={() => onCheckout(plan)}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-900 px-3.5 py-1.5 rounded-xl transition-all shadow-2xs active:scale-95 hover:shadow-xs"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 border border-zinc-900 dark:border-blue-600 px-3.5 py-1.5 rounded-xl transition-all shadow-2xs active:scale-95 hover:shadow-xs"
               >
                 <CreditCard size={13} />
                 <span>{plan.isTrial ? 'Choose Trial' : 'Upgrade Plan'}</span>

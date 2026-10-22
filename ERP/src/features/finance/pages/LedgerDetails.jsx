@@ -232,7 +232,7 @@ export default function LedgerDetails() {
   ];
 
   return (
-    <div className="animate-fade-in pb-12 bg-zinc-50/30 min-h-screen">
+    <div className="animate-fade-in pb-12 bg-zinc-50/30 dark:bg-[#0F1117] min-h-screen">
       <EntityHeader
         onBack={() => navigate(buildPath('/accounts/masters/chart-of-accounts'))}
         title={account.accountName}
@@ -248,7 +248,7 @@ export default function LedgerDetails() {
           
           {/* LEFT SIDEBAR (30%) */}
           <div className="w-full lg:w-[30%] space-y-5">
-            <InfoCard title="Account Details" icon={BookOpen} iconBg="bg-blue-50" iconColor="text-blue-600">
+            <InfoCard title="Account Details" icon={BookOpen} iconBg="bg-blue-50 dark:bg-blue-950/40" iconColor="text-blue-600 dark:text-blue-400">
               <div className="space-y-4">
                 <InfoField label="Account Code" value={account.accountCode} mono />
                 <InfoField label="Account Name" value={account.accountName} />
@@ -256,7 +256,7 @@ export default function LedgerDetails() {
               </div>
             </InfoCard>
 
-            <InfoCard title="Group Information" icon={Layers} iconBg="bg-emerald-50" iconColor="text-emerald-600">
+            <InfoCard title="Group Information" icon={Layers} iconBg="bg-emerald-50 dark:bg-emerald-950/40" iconColor="text-emerald-600 dark:text-emerald-400">
               <div className="space-y-4">
                 <InfoField label="Group Name" value={group.groupName || account.groupName} />
                 <InfoField label="Group Code" value={group.groupCode || account.groupCode} mono />
@@ -265,7 +265,7 @@ export default function LedgerDetails() {
               </div>
             </InfoCard>
 
-            <InfoCard title="Parent Account" icon={Network} iconBg="bg-purple-50" iconColor="text-purple-600">
+            <InfoCard title="Parent Account" icon={Network} iconBg="bg-purple-50 dark:bg-purple-950/40" iconColor="text-purple-600 dark:text-purple-400">
               <div className="space-y-4">
                 <InfoField label="Parent Code" value={account.parentAccountCode} mono />
                 <InfoField label="Parent Name" value={account.parentAccountName} />
@@ -277,7 +277,7 @@ export default function LedgerDetails() {
 
           {/* RIGHT TABS AREA (70%) */}
           <div className="w-full lg:w-[70%]">
-            <div className="bg-zinc-100/50 p-1.5 rounded-lg border border-zinc-200/50 overflow-x-auto mb-6">
+            <div className="bg-zinc-100/50 dark:bg-[#1D212C] p-1.5 rounded-lg border border-zinc-200/50 dark:border-[#2A2F3D] overflow-x-auto mb-6">
               <div className="flex items-center min-w-max gap-1">
                 {TABS.map((tab) => (
                   <button
@@ -285,11 +285,11 @@ export default function LedgerDetails() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center justify-center gap-2 px-2 py-2 text-xs xl:text-sm font-semibold rounded-md transition-all outline-none ${
                       activeTab === tab.id 
-                        ? 'bg-white text-zinc-900 shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-zinc-200/60' 
-                        : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100/80 border border-transparent'
+                        ? 'bg-white dark:bg-[#161922] text-zinc-900 dark:text-zinc-100 shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-zinc-200/60 dark:border-[#2A2F3D]' 
+                        : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100/80 dark:hover:bg-[#222736] border border-transparent'
                     }`}
                   >
-                    <tab.icon size={14} strokeWidth={activeTab === tab.id ? 2.5 : 2} className={activeTab === tab.id ? "text-zinc-900" : "text-zinc-400"} />
+                    <tab.icon size={14} strokeWidth={activeTab === tab.id ? 2.5 : 2} className={activeTab === tab.id ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-400"} />
                     <span className="truncate">{tab.label}</span>
                   </button>
                 ))}
@@ -301,38 +301,38 @@ export default function LedgerDetails() {
               {activeTab === 'overview' && (
                 <div className="animate-fade-in space-y-6">
                   {/* Visual Representation (Balance vs Debit vs Credit) */}
-                  <div className="bg-white p-6 rounded-md border border-zinc-200 shadow-sm">
-                    <h3 className="text-sm font-bold text-zinc-800 mb-6 flex items-center gap-2">
-                      <Activity size={16} className="text-zinc-500" /> Account Utilization
+                  <div className="bg-white dark:bg-[#161922] p-6 rounded-md border border-zinc-200 dark:border-[#2A2F3D] shadow-sm">
+                    <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-100 mb-6 flex items-center gap-2">
+                      <Activity size={16} className="text-zinc-500 dark:text-zinc-400" /> Account Utilization
                     </h3>
                     
                     <div className="relative pt-2">
                       <div className="flex mb-2 items-center justify-between">
                         <div>
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-md text-emerald-600 bg-emerald-100">
+                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-md text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/40">
                             Total Credit: ₹{fmt(bs.totalCredit ?? account.totalCredit)}
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-md text-rose-600 bg-rose-100">
+                          <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-md text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/40">
                             Total Debit: ₹{fmt(bs.totalDebit ?? account.totalDebit)}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 pt-6 border-t border-zinc-100">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8 pt-6 border-t border-zinc-100 dark:border-[#2A2F3D]">
                        <div>
-                         <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400">Current Balance</p>
-                         <p className="text-lg font-black text-blue-600 mt-1">₹{fmt(bs.currentBalance ?? account.currentBalance ?? account.openingBalance)}</p>
+                         <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Current Balance</p>
+                         <p className="text-lg font-black text-blue-600 dark:text-blue-400 mt-1">₹{fmt(bs.currentBalance ?? account.currentBalance ?? account.openingBalance)}</p>
                        </div>
                        <div>
-                         <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400">Opening Balance</p>
-                         <p className="text-lg font-black text-zinc-900 mt-1">₹{fmt(bs.openingBalance ?? account.openingBalance)}</p>
+                         <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Opening Balance</p>
+                         <p className="text-lg font-black text-zinc-900 dark:text-zinc-100 mt-1">₹{fmt(bs.openingBalance ?? account.openingBalance)}</p>
                        </div>
                        <div>
-                         <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400">Closing Balance</p>
-                         <p className="text-lg font-black text-zinc-900 mt-1">₹{fmt(bs.closingBalance ?? account.closingBalance ?? account.openingBalance)}</p>
+                         <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Closing Balance</p>
+                         <p className="text-lg font-black text-zinc-900 dark:text-zinc-100 mt-1">₹{fmt(bs.closingBalance ?? account.closingBalance ?? account.openingBalance)}</p>
                        </div>
                     </div>
                   </div>
@@ -344,14 +344,14 @@ export default function LedgerDetails() {
                 <div className="animate-fade-in space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {[
-                      { label: 'Opening Balance', val: bs.openingBalance ?? account.openingBalance, color: 'text-blue-700', border: 'border-blue-200' },
-                      { label: 'Total Debit', val: bs.totalDebit ?? account.totalDebit, color: 'text-rose-700', border: 'border-rose-200' },
-                      { label: 'Total Credit', val: bs.totalCredit ?? account.totalCredit, color: 'text-emerald-700', border: 'border-emerald-200' },
-                      { label: 'Current Balance', val: bs.currentBalance ?? account.currentBalance ?? account.openingBalance, color: 'text-blue-700', border: 'border-blue-200' },
-                      { label: 'Closing Balance', val: bs.closingBalance ?? account.closingBalance ?? account.openingBalance, color: 'text-blue-700', border: 'border-blue-200' },
+                      { label: 'Opening Balance', val: bs.openingBalance ?? account.openingBalance, color: 'text-blue-700 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-900/40' },
+                      { label: 'Total Debit', val: bs.totalDebit ?? account.totalDebit, color: 'text-rose-700 dark:text-rose-400', border: 'border-rose-200 dark:border-rose-900/40' },
+                      { label: 'Total Credit', val: bs.totalCredit ?? account.totalCredit, color: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-900/40' },
+                      { label: 'Current Balance', val: bs.currentBalance ?? account.currentBalance ?? account.openingBalance, color: 'text-blue-700 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-900/40' },
+                      { label: 'Closing Balance', val: bs.closingBalance ?? account.closingBalance ?? account.openingBalance, color: 'text-blue-700 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-900/40' },
                     ].map(({ label, val, color, border }) => (
-                      <div key={label} className={`p-6 rounded-md border ${border} bg-white shadow-sm flex flex-col`}>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-2">{label}</p>
+                      <div key={label} className={`p-6 rounded-md border ${border} bg-white dark:bg-[#161922] shadow-sm flex flex-col`}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">{label}</p>
                         <p className={`text-2xl font-black ${color}`}>₹{fmt(val)}</p>
                       </div>
                     ))}
@@ -361,17 +361,17 @@ export default function LedgerDetails() {
 
               {/* LEDGER TRANSACTIONS TAB */}
               {activeTab === 'ledger' && (
-                <div className="animate-fade-in bg-white rounded-md border border-zinc-200 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
-                    <h3 className="text-sm font-bold text-zinc-800">Ledger Transactions</h3>
-                    <span className="text-xs font-bold bg-zinc-200 text-zinc-700 px-2.5 py-1 rounded-md">{ledgerTransactions.length} Total</span>
+                <div className="animate-fade-in bg-white dark:bg-[#161922] rounded-md border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50 dark:bg-[#1D212C]">
+                    <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-100">Ledger Transactions</h3>
+                    <span className="text-xs font-bold bg-zinc-200 dark:bg-[#222736] text-zinc-700 dark:text-zinc-300 px-2.5 py-1 rounded-md">{ledgerTransactions.length} Total</span>
                   </div>
                   {isEmpty(ledgerTransactions) ? (
                     <EmptyState icon={BookOpen} title="No Ledger Transactions" description="There are no ledger transactions recorded for this account." />
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-white border-b border-zinc-200 text-[8.8px] uppercase tracking-wider text-zinc-500 font-bold">
+                        <thead className="bg-white dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-[8.8px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-bold">
                           <tr>
                             <th className="px-6 py-4">Date</th>
                             <th className="px-6 py-4">Voucher No</th>
@@ -383,17 +383,17 @@ export default function LedgerDetails() {
                             <th className="px-6 py-4 text-right">Balance</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-zinc-100">
+                        <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                           {paginate(ledgerTransactions).map((tx, idx) => (
-                            <tr key={idx} className="hover:bg-zinc-50 transition-colors">
-                              <td className="px-6 py-4 font-medium text-zinc-600">{tx.transactionDate || tx.date}</td>
-                              <td className="px-6 py-4 font-mono font-bold text-blue-600">{tx.voucherNumber}</td>
-                              <td className="px-6 py-4 text-zinc-600 font-medium">{tx.voucherType}</td>
-                              <td className="px-6 py-4 text-zinc-900 font-medium">{tx.partyName || '-'}</td>
-                              <td className="px-6 py-4 font-mono text-xs text-zinc-500">{tx.referenceNumber || '-'}</td>
-                              <td className="px-6 py-4 text-right text-rose-600 font-bold">₹{fmt(tx.debit)}</td>
-                              <td className="px-6 py-4 text-right text-emerald-600 font-bold">₹{fmt(tx.credit)}</td>
-                              <td className="px-6 py-4 text-right font-black text-zinc-900">₹{fmt(tx.runningBalance)}</td>
+                            <tr key={idx} className="hover:bg-zinc-50 dark:hover:bg-[#222736]/50 transition-colors">
+                              <td className="px-6 py-4 font-medium text-zinc-600 dark:text-zinc-300">{tx.transactionDate || tx.date}</td>
+                              <td className="px-6 py-4 font-mono font-bold text-blue-600 dark:text-blue-400">{tx.voucherNumber}</td>
+                              <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400 font-medium">{tx.voucherType}</td>
+                              <td className="px-6 py-4 text-zinc-900 dark:text-zinc-100 font-medium">{tx.partyName || '-'}</td>
+                              <td className="px-6 py-4 font-mono text-xs text-zinc-500 dark:text-zinc-400">{tx.referenceNumber || '-'}</td>
+                              <td className="px-6 py-4 text-right text-rose-600 dark:text-rose-400 font-bold">₹{fmt(tx.debit)}</td>
+                              <td className="px-6 py-4 text-right text-emerald-600 dark:text-emerald-400 font-bold">₹{fmt(tx.credit)}</td>
+                              <td className="px-6 py-4 text-right font-black text-zinc-900 dark:text-zinc-100">₹{fmt(tx.runningBalance)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -414,17 +414,17 @@ export default function LedgerDetails() {
 
               {/* JOURNAL ENTRIES TAB */}
               {activeTab === 'journals' && (
-                <div className="animate-fade-in bg-white rounded-md border border-zinc-200 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
-                    <h3 className="text-sm font-bold text-zinc-800">Journal Entries</h3>
-                    <span className="text-xs font-bold bg-zinc-200 text-zinc-700 px-2.5 py-1 rounded-md">{journalEntries.length} Total</span>
+                <div className="animate-fade-in bg-white dark:bg-[#161922] rounded-md border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50 dark:bg-[#1D212C]">
+                    <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-100">Journal Entries</h3>
+                    <span className="text-xs font-bold bg-zinc-200 dark:bg-[#222736] text-zinc-700 dark:text-zinc-300 px-2.5 py-1 rounded-md">{journalEntries.length} Total</span>
                   </div>
                   {isEmpty(journalEntries) ? (
                     <EmptyState icon={FileText} title="No Journal Entries" description="There are no journal entries recorded for this account." />
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-white border-b border-zinc-200 text-[8.8px] uppercase tracking-wider text-zinc-500 font-bold">
+                        <thead className="bg-white dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-[8.8px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-bold">
                           <tr>
                             <th className="px-6 py-4">Voucher No</th>
                             <th className="px-6 py-4">Voucher Type</th>
@@ -434,15 +434,15 @@ export default function LedgerDetails() {
                             <th className="px-6 py-4">Narration</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-zinc-100">
+                        <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                           {paginate(journalEntries).map((je, idx) => (
-                            <tr key={idx} className="hover:bg-zinc-50 transition-colors">
-                              <td className="px-6 py-4 font-mono font-bold text-blue-600">{je.voucherNumber}</td>
-                              <td className="px-6 py-4 text-zinc-600 font-medium">{je.voucherType}</td>
-                              <td className="px-6 py-4 text-zinc-600 font-medium">{je.transactionDate}</td>
-                              <td className="px-6 py-4 text-right text-rose-600 font-bold">₹{fmt(je.debitAmount)}</td>
-                              <td className="px-6 py-4 text-right text-emerald-600 font-bold">₹{fmt(je.creditAmount)}</td>
-                              <td className="px-6 py-4 text-zinc-600 font-medium truncate max-w-xs" title={je.narration}>{je.narration || '-'}</td>
+                            <tr key={idx} className="hover:bg-zinc-50 dark:hover:bg-[#222736]/50 transition-colors">
+                              <td className="px-6 py-4 font-mono font-bold text-blue-600 dark:text-blue-400">{je.voucherNumber}</td>
+                              <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400 font-medium">{je.voucherType}</td>
+                              <td className="px-6 py-4 text-zinc-600 dark:text-zinc-300 font-medium">{je.transactionDate}</td>
+                              <td className="px-6 py-4 text-right text-rose-600 dark:text-rose-400 font-bold">₹{fmt(je.debitAmount)}</td>
+                              <td className="px-6 py-4 text-right text-emerald-600 dark:text-emerald-400 font-bold">₹{fmt(je.creditAmount)}</td>
+                              <td className="px-6 py-4 text-zinc-600 dark:text-zinc-300 font-medium truncate max-w-xs" title={je.narration}>{je.narration || '-'}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -463,27 +463,27 @@ export default function LedgerDetails() {
 
               {/* CHILD ACCOUNTS TAB */}
               {activeTab === 'children' && (
-                <div className="animate-fade-in bg-white rounded-md border border-zinc-200 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
-                    <h3 className="text-sm font-bold text-zinc-800">Child Accounts</h3>
+                <div className="animate-fade-in bg-white dark:bg-[#161922] rounded-md border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50 dark:bg-[#1D212C]">
+                    <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-100">Child Accounts</h3>
                   </div>
                   {isEmpty(childAccounts) ? (
                     <EmptyState icon={GitCommit} title="No Child Accounts" description="There are no child accounts under this account." />
                   ) : (
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                       {paginate(childAccounts).map((child, idx) => (
-                        <div key={idx} className="border border-zinc-200 rounded-md p-5 bg-zinc-50/50">
-                          <h4 className="font-bold text-zinc-900 mb-1 flex items-center gap-2">
+                        <div key={idx} className="border border-zinc-200 dark:border-[#2A2F3D] rounded-md p-5 bg-zinc-50/50 dark:bg-[#1D212C]">
+                          <h4 className="font-bold text-zinc-900 dark:text-zinc-100 mb-1 flex items-center gap-2">
                             {child.accountName} 
-                            <span className="font-mono text-[10px] bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200 text-zinc-600">{child.accountCode}</span>
+                            <span className="font-mono text-[10px] bg-zinc-100 dark:bg-[#222736] px-1.5 py-0.5 rounded border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-zinc-300">{child.accountCode}</span>
                           </h4>
                           <div className="flex justify-between items-end mt-4">
-                            <span className="text-lg font-black text-blue-700">₹{fmt(child.currentBalance)}</span>
+                            <span className="text-lg font-black text-blue-700 dark:text-blue-400">₹{fmt(child.currentBalance)}</span>
                             <button
                               onClick={() => navigate(buildPath(`/accounts/masters/chart-of-accounts/${child.id}`))}
-                              className="text-blue-600 font-semibold hover:text-blue-800 text-xs flex items-center gap-1"
+                              className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-800 dark:hover:text-blue-300 text-xs flex items-center gap-1"
                             >
-                              View Account <ArrowRightLeft size={12} />
+                              View Account <ArrowLeft size={12} className="rotate-180" />
                             </button>
                           </div>
                         </div>
@@ -497,37 +497,37 @@ export default function LedgerDetails() {
               {activeTab === 'documents' && (
                 <div className="animate-fade-in space-y-6 max-w-4xl">
                   {['salesInvoices', 'purchaseBills', 'receipts', 'payments', 'creditNotes', 'debitNotes', 'journalVouchers'].every(k => isEmpty(relatedDocs[k])) ? (
-                    <div className="bg-white rounded-md border border-zinc-200 shadow-sm">
+                    <div className="bg-white dark:bg-[#161922] rounded-md border border-zinc-200 dark:border-[#2A2F3D] shadow-sm">
                       <EmptyState icon={FileCheck} title="No Related Documents" description="There are no related documents linked to this account." />
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {[
-                        { key: 'salesInvoices', label: 'Sales Invoices', icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
-                        { key: 'purchaseBills', label: 'Purchase Bills', icon: Package, color: 'text-purple-600', bg: 'bg-purple-50' },
-                        { key: 'receipts', label: 'Receipt Vouchers', icon: CreditCard, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                        { key: 'payments', label: 'Payment Vouchers', icon: CreditCard, color: 'text-rose-600', bg: 'bg-rose-50' },
-                        { key: 'creditNotes', label: 'Credit Notes', icon: FileText, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                        { key: 'debitNotes', label: 'Debit Notes', icon: FileText, color: 'text-rose-600', bg: 'bg-rose-50' },
-                        { key: 'journalVouchers', label: 'Journal Vouchers', icon: BookOpen, color: 'text-zinc-600', bg: 'bg-zinc-100' },
+                        { key: 'salesInvoices', label: 'Sales Invoices', icon: ShoppingCart, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+                        { key: 'purchaseBills', label: 'Purchase Bills', icon: Package, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-950/40' },
+                        { key: 'receipts', label: 'Receipt Vouchers', icon: CreditCard, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+                        { key: 'payments', label: 'Payment Vouchers', icon: CreditCard, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40' },
+                        { key: 'creditNotes', label: 'Credit Notes', icon: FileText, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+                        { key: 'debitNotes', label: 'Debit Notes', icon: FileText, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/40' },
+                        { key: 'journalVouchers', label: 'Journal Vouchers', icon: BookOpen, color: 'text-zinc-600 dark:text-zinc-300', bg: 'bg-zinc-100 dark:bg-[#222736]' },
                       ].map(({ key, label, icon: Icon, color, bg }) => {
                         const docs = relatedDocs[key] || [];
                         if (docs.length === 0) return null;
                         
                         return (
-                          <div key={key} className="bg-white rounded-md shadow-sm border border-zinc-200 overflow-hidden">
-                            <div className="px-4 py-3 bg-zinc-50 border-b border-zinc-100 flex items-center justify-between">
-                              <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-800">
+                          <div key={key} className="bg-white dark:bg-[#161922] rounded-md shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
+                            <div className="px-4 py-3 bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between">
+                              <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-100">
                                 <span className={`p-1.5 rounded-md ${bg} ${color}`}><Icon size={14} /></span> {label}
                               </span>
-                              <span className="text-xs font-bold text-zinc-500 bg-white px-2 py-0.5 rounded-md border border-zinc-200">{docs.length}</span>
+                              <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 bg-white dark:bg-[#161922] px-2 py-0.5 rounded-md border border-zinc-200 dark:border-[#2A2F3D]">{docs.length}</span>
                             </div>
                             <div className="p-4">
-                              <ul className="divide-y divide-zinc-100">
+                              <ul className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                                 {docs.slice(0, 5).map((d, idx) => (
                                   <li key={idx} className="py-2.5 flex items-center justify-between text-sm">
-                                    <span className="font-mono font-medium text-zinc-900">{d.documentNumber || d.voucherNumber}</span>
-                                    <span className="font-bold text-zinc-700">₹{fmt(d.amount)}</span>
+                                    <span className="font-mono font-medium text-zinc-900 dark:text-zinc-100">{d.documentNumber || d.voucherNumber}</span>
+                                    <span className="font-bold text-zinc-700 dark:text-zinc-300">₹{fmt(d.amount)}</span>
                                   </li>
                                 ))}
                               </ul>
@@ -545,14 +545,14 @@ export default function LedgerDetails() {
                 <div className="animate-fade-in space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {[
-                      { label: 'Current Month Debit', val: fs.currentMonthDebit ?? account.currentMonthDebit, color: 'text-rose-700', border: 'border-rose-200' },
-                      { label: 'Current Month Credit', val: fs.currentMonthCredit ?? account.currentMonthCredit, color: 'text-emerald-700', border: 'border-emerald-200' },
-                      { label: 'Financial Year Debit', val: fs.financialYearDebit ?? account.financialYearDebit, color: 'text-rose-700', border: 'border-rose-200' },
-                      { label: 'Financial Year Credit', val: fs.financialYearCredit ?? account.financialYearCredit, color: 'text-emerald-700', border: 'border-emerald-200' },
-                      { label: 'Net Movement', val: fs.netMovement ?? account.netMovement, color: 'text-blue-700', border: 'border-blue-200' },
+                      { label: 'Current Month Debit', val: fs.currentMonthDebit ?? account.currentMonthDebit, color: 'text-rose-700 dark:text-rose-400', border: 'border-rose-200 dark:border-rose-900/40' },
+                      { label: 'Current Month Credit', val: fs.currentMonthCredit ?? account.currentMonthCredit, color: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-900/40' },
+                      { label: 'Financial Year Debit', val: fs.financialYearDebit ?? account.financialYearDebit, color: 'text-rose-700 dark:text-rose-400', border: 'border-rose-200 dark:border-rose-900/40' },
+                      { label: 'Financial Year Credit', val: fs.financialYearCredit ?? account.financialYearCredit, color: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-900/40' },
+                      { label: 'Net Movement', val: fs.netMovement ?? account.netMovement, color: 'text-blue-700 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-900/40' },
                     ].map(({ label, val, color, border }) => (
-                      <div key={label} className={`p-6 rounded-md border ${border} bg-white shadow-sm flex flex-col`}>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-2">{label}</p>
+                      <div key={label} className={`p-6 rounded-md border ${border} bg-white dark:bg-[#161922] shadow-sm flex flex-col`}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">{label}</p>
                         <p className={`text-2xl font-black ${color}`}>₹{fmt(val)}</p>
                       </div>
                     ))}
@@ -562,33 +562,33 @@ export default function LedgerDetails() {
 
               {/* RECONCILIATION TAB */}
               {activeTab === 'reconciliation' && (
-                <div className="bg-white rounded-md shadow-sm border border-zinc-200 overflow-hidden animate-in fade-in max-w-3xl">
-                  <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50 flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-zinc-800 uppercase tracking-wider">Reconciliation Status</h3>
+                <div className="bg-white dark:bg-[#161922] rounded-md shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden animate-in fade-in max-w-3xl">
+                  <div className="px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C] flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-100 uppercase tracking-wider">Reconciliation Status</h3>
                   </div>
                   <div className="p-6">
                     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                       <div className="flex flex-col gap-2">
-                        <dt className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Reconciled Status</dt>
+                        <dt className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Reconciled Status</dt>
                         <dd>
                           {rec.isReconciled || rec.reconciledStatus === 'RECONCILED' ? (
-                            <span className="px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1.5">
+                            <span className="px-3 py-1.5 text-xs font-bold rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 inline-flex items-center gap-1.5">
                               <CheckCircle size={14} /> Reconciled
                             </span>
                           ) : (
-                            <span className="px-3 py-1.5 text-xs font-bold rounded-md bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1.5">
+                            <span className="px-3 py-1.5 text-xs font-bold rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60 inline-flex items-center gap-1.5">
                               <AlertCircle size={14} /> Pending Reconciliation
                             </span>
                           )}
                         </dd>
                       </div>
                       <div className="flex flex-col gap-2">
-                        <dt className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Last Reconciliation Date</dt>
-                        <dd className="text-sm font-medium text-zinc-900">{rec.lastReconciliationDate || account.lastReconciliationDate || '-'}</dd>
+                        <dt className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Last Reconciliation Date</dt>
+                        <dd className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{rec.lastReconciliationDate || account.lastReconciliationDate || '-'}</dd>
                       </div>
                       <div className="flex flex-col gap-2 sm:col-span-2">
-                        <dt className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Outstanding Entries</dt>
-                        <dd className="text-sm font-semibold text-zinc-800">{rec.outstandingEntries || 0} entries pending</dd>
+                        <dt className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Outstanding Entries</dt>
+                        <dd className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{rec.outstandingEntries || 0} entries pending</dd>
                       </div>
                     </dl>
                   </div>
@@ -597,32 +597,32 @@ export default function LedgerDetails() {
 
               {/* HIERARCHY TAB */}
               {activeTab === 'hierarchy' && (
-                <div className="bg-white rounded-md shadow-sm border border-zinc-200 p-8 animate-in fade-in max-w-2xl">
-                  <h3 className="text-sm font-bold text-zinc-800 uppercase tracking-wider mb-8 pb-4 border-b border-zinc-100 text-center">Account Hierarchy</h3>
+                <div className="bg-white dark:bg-[#161922] rounded-md shadow-sm border border-zinc-200 dark:border-[#2A2F3D] p-8 animate-in fade-in max-w-2xl">
+                  <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-100 uppercase tracking-wider mb-8 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D] text-center">Account Hierarchy</h3>
                   <div className="flex flex-col items-center space-y-4 font-medium text-sm">
-                    <div className="p-3 px-6 bg-purple-50 text-purple-800 rounded-md border border-purple-200 text-center font-bold shadow-sm">
+                    <div className="p-3 px-6 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 rounded-md border border-purple-200 dark:border-purple-800/60 text-center font-bold shadow-sm">
                       Category: {group.categoryName || account.categoryName || 'Chart of Accounts'}
                     </div>
-                    <div className="w-0.5 h-6 bg-zinc-300" />
-                    <div className="p-3 px-6 bg-blue-50 text-blue-800 rounded-md border border-blue-200 text-center font-bold shadow-sm">
+                    <div className="w-0.5 h-6 bg-zinc-300 dark:bg-zinc-700" />
+                    <div className="p-3 px-6 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 rounded-md border border-blue-200 dark:border-blue-800/60 text-center font-bold shadow-sm">
                       Group: {group.groupName || account.groupName || 'Account Group'}
                     </div>
                     {(account.parentAccountName || account.parentAccountCode) && (
                       <>
-                        <div className="w-0.5 h-6 bg-zinc-300" />
-                        <div className="p-3 px-6 bg-zinc-50 text-zinc-800 rounded-md border border-zinc-200 text-center font-semibold shadow-sm">
+                        <div className="w-0.5 h-6 bg-zinc-300 dark:bg-zinc-700" />
+                        <div className="p-3 px-6 bg-zinc-50 dark:bg-[#1D212C] text-zinc-800 dark:text-zinc-200 rounded-md border border-zinc-200 dark:border-[#2A2F3D] text-center font-semibold shadow-sm">
                           Parent: {account.parentAccountName || account.parentAccountCode}
                         </div>
                       </>
                     )}
-                    <div className="w-0.5 h-6 bg-zinc-300" />
-                    <div className="p-4 px-8 bg-zinc-900 text-white rounded-md shadow-md text-center font-bold flex items-center gap-2">
+                    <div className="w-0.5 h-6 bg-zinc-300 dark:bg-zinc-700" />
+                    <div className="p-4 px-8 bg-zinc-900 dark:bg-blue-600 text-white rounded-md shadow-md text-center font-bold flex items-center gap-2">
                       <BookOpen size={18} /> Current Account: {account.accountName} ({account.accountCode})
                     </div>
                     {!isEmpty(childAccounts) && (
                       <>
-                        <div className="w-0.5 h-6 bg-zinc-300" />
-                        <div className="p-3 px-6 bg-emerald-50 text-emerald-800 rounded-md border border-emerald-200 text-center font-semibold shadow-sm">
+                        <div className="w-0.5 h-6 bg-zinc-300 dark:bg-zinc-700" />
+                        <div className="p-3 px-6 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-md border border-emerald-200 dark:border-emerald-800/60 text-center font-semibold shadow-sm">
                           Child Accounts ({childAccounts.length})
                         </div>
                       </>
@@ -633,35 +633,35 @@ export default function LedgerDetails() {
 
               {/* AUDIT LOG TAB */}
               {activeTab === 'audit' && (
-                <div className="bg-white rounded-md shadow-sm border border-zinc-200 overflow-hidden animate-in fade-in">
-                  <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50">
-                    <h3 className="text-sm font-bold text-zinc-800 uppercase tracking-wider">Audit Trail</h3>
+                <div className="bg-white dark:bg-[#161922] rounded-md shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden animate-in fade-in">
+                  <div className="px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]">
+                    <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-100 uppercase tracking-wider">Audit Trail</h3>
                   </div>
                   <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                       <div className="border border-zinc-200 rounded-md p-5 bg-zinc-50/50">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-2"><ArrowRightLeft size={14} /> Created Record</p>
+                       <div className="border border-zinc-200 dark:border-[#2A2F3D] rounded-md p-5 bg-zinc-50/50 dark:bg-[#1D212C]">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-4 flex items-center gap-2"><ArrowLeft size={14} className="rotate-180" /> Created Record</p>
                           <div className="space-y-4">
                              <div>
-                               <p className="text-xs text-zinc-500 font-semibold mb-1">Created By</p>
-                               <p className="text-sm font-mono font-bold text-zinc-900 bg-white inline-block px-2 py-1 rounded-md border border-zinc-200">{audit.createdBy || account.createdBy || 'System'}</p>
+                               <p className="text-xs text-zinc-500 dark:text-zinc-400 font-semibold mb-1">Created By</p>
+                               <p className="text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100 bg-white dark:bg-[#161922] inline-block px-2 py-1 rounded-md border border-zinc-200 dark:border-[#2A2F3D]">{audit.createdBy || account.createdBy || 'System'}</p>
                              </div>
                              <div>
-                               <p className="text-xs text-zinc-500 font-semibold mb-1">Created At</p>
-                               <p className="text-sm font-bold text-zinc-900">{audit.createdAt || account.createdAt ? new Date(audit.createdAt || account.createdAt).toLocaleString() : '-'}</p>
+                               <p className="text-xs text-zinc-500 dark:text-zinc-400 font-semibold mb-1">Created At</p>
+                               <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{audit.createdAt || account.createdAt ? new Date(audit.createdAt || account.createdAt).toLocaleString() : '-'}</p>
                              </div>
                           </div>
                        </div>
-                       <div className="border border-zinc-200 rounded-md p-5 bg-zinc-50/50">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-2"><Edit2 size={14} /> Last Updated</p>
+                       <div className="border border-zinc-200 dark:border-[#2A2F3D] rounded-md p-5 bg-zinc-50/50 dark:bg-[#1D212C]">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-4 flex items-center gap-2"><Edit2 size={14} /> Last Updated</p>
                           <div className="space-y-4">
                              <div>
-                               <p className="text-xs text-zinc-500 font-semibold mb-1">Updated By</p>
-                               <p className="text-sm font-mono font-bold text-zinc-900 bg-white inline-block px-2 py-1 rounded-md border border-zinc-200">{audit.updatedBy || account.updatedBy || 'System'}</p>
+                               <p className="text-xs text-zinc-500 dark:text-zinc-400 font-semibold mb-1">Updated By</p>
+                               <p className="text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100 bg-white dark:bg-[#161922] inline-block px-2 py-1 rounded-md border border-zinc-200 dark:border-[#2A2F3D]">{audit.updatedBy || account.updatedBy || 'System'}</p>
                              </div>
                              <div>
-                               <p className="text-xs text-zinc-500 font-semibold mb-1">Updated At</p>
-                               <p className="text-sm font-bold text-zinc-900">{audit.updatedAt || account.updatedAt ? new Date(audit.updatedAt || account.updatedAt).toLocaleString() : '-'}</p>
+                               <p className="text-xs text-zinc-500 dark:text-zinc-400 font-semibold mb-1">Updated At</p>
+                               <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{audit.updatedAt || account.updatedAt ? new Date(audit.updatedAt || account.updatedAt).toLocaleString() : '-'}</p>
                              </div>
                           </div>
                        </div>
@@ -684,50 +684,50 @@ export default function LedgerDetails() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-700">Account Code <span className="text-rose-500">*</span></label>
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Account Code <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
                   name="accountCode"
                   value={formData.accountCode}
                   onChange={(e) => setFormData(prev => ({ ...prev, accountCode: e.target.value }))}
-                  className="w-full h-10 px-3 bg-white border border-zinc-200 rounded-md text-sm font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 transition-colors"
+                  className="w-full h-10 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-sm font-medium text-zinc-800 dark:text-zinc-100 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 transition-colors"
                   required
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-700">Account Type <span className="text-rose-500">*</span></label>
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Account Type <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
                   name="accountType"
                   value={formData.accountType}
                   onChange={(e) => setFormData(prev => ({ ...prev, accountType: e.target.value }))}
-                  className="w-full h-10 px-3 bg-white border border-zinc-200 rounded-md text-sm font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 transition-colors"
+                  className="w-full h-10 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-sm font-medium text-zinc-800 dark:text-zinc-100 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 transition-colors"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">Account Name <span className="text-rose-500">*</span></label>
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Account Name <span className="text-rose-500">*</span></label>
               <input
                 type="text"
                 name="accountName"
                 value={formData.accountName}
                 onChange={(e) => setFormData(prev => ({ ...prev, accountName: e.target.value }))}
-                className="w-full h-10 px-3 bg-white border border-zinc-200 rounded-md text-sm font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 transition-colors"
+                className="w-full h-10 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-sm font-medium text-zinc-800 dark:text-zinc-100 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 transition-colors"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-700">Opening Balance</label>
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Opening Balance</label>
               <input
                 type="number"
                 step="0.01"
                 name="openingBalance"
                 value={formData.openingBalance}
                 onChange={(e) => setFormData(prev => ({ ...prev, openingBalance: parseFloat(e.target.value) || 0 }))}
-                className="w-full h-10 px-3 bg-white border border-zinc-200 rounded-md text-sm font-medium text-zinc-800 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 transition-colors"
+                className="w-full h-10 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-sm font-medium text-zinc-800 dark:text-zinc-100 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 transition-colors"
               />
             </div>
 
@@ -740,7 +740,7 @@ export default function LedgerDetails() {
                   onChange={(e) => setFormData(prev => ({ ...prev, postingAllowed: e.target.checked }))}
                   className="w-4 h-4 text-zinc-900 rounded-md border-zinc-300 focus:ring-zinc-900"
                 />
-                <span className="text-sm font-semibold text-zinc-700">Posting Allowed</span>
+                <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Posting Allowed</span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer">
@@ -751,23 +751,23 @@ export default function LedgerDetails() {
                   onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
                   className="w-4 h-4 text-zinc-900 rounded-md border-zinc-300 focus:ring-zinc-900"
                 />
-                <span className="text-sm font-semibold text-zinc-700">Active</span>
+                <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Active</span>
               </label>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
+          <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100 dark:border-[#2A2F3D]">
             <button
               type="button"
               onClick={() => setIsEditModalOpen(false)}
-              className="px-5 py-2 text-sm font-semibold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 bg-white border border-zinc-200 rounded-md transition-all active:scale-95 disabled:opacity-50"
+              className="px-5 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-[#222736] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md transition-all active:scale-95 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={updateMutation.isLoading}
-              className="flex items-center justify-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-md transition-all active:scale-95 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-700 rounded-md transition-all active:scale-95 disabled:opacity-50"
             >
               {updateMutation.isLoading && (
                 <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />

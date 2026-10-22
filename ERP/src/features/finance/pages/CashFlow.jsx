@@ -72,12 +72,12 @@ const formatDate = (dateStr) => {
 };
 
 const getStatusBadge = (status) => {
-  if (!status) return <span className="px-2.5 py-0.5 text-[8.5px] font-bold uppercase rounded-md border bg-zinc-50 text-zinc-600 border-zinc-200">POSTED</span>;
+  if (!status) return <span className="px-2.5 py-0.5 text-[8.5px] font-bold uppercase rounded-md border bg-zinc-50 dark:bg-[#1D212C] text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-[#2A2F3D]">POSTED</span>;
   const s = status.toString().toUpperCase();
-  if (s === 'POSTED' || s === 'APPROVED' || s === 'PAID') return <span className="px-2.5 py-0.5 text-[8.5px] font-bold uppercase rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200">{status}</span>;
-  if (s === 'DRAFT' || s === 'PENDING') return <span className="px-2.5 py-0.5 text-[8.5px] font-bold uppercase rounded-md border bg-amber-50 text-amber-700 border-amber-200">{status}</span>;
-  if (s === 'CANCELLED' || s === 'REJECTED') return <span className="px-2.5 py-0.5 text-[8.5px] font-bold uppercase rounded-md border bg-rose-50 text-rose-700 border-rose-200">{status}</span>;
-  return <span className="px-2.5 py-0.5 text-[8.5px] font-bold uppercase rounded-md border bg-blue-50 text-blue-700 border-blue-200">{status}</span>;
+  if (s === 'POSTED' || s === 'APPROVED' || s === 'PAID') return <span className="px-2.5 py-0.5 text-[8.5px] font-bold uppercase rounded-md border bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50">{status}</span>;
+  if (s === 'DRAFT' || s === 'PENDING') return <span className="px-2.5 py-0.5 text-[8.5px] font-bold uppercase rounded-md border bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/50">{status}</span>;
+  if (s === 'CANCELLED' || s === 'REJECTED') return <span className="px-2.5 py-0.5 text-[8.5px] font-bold uppercase rounded-md border bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50">{status}</span>;
+  return <span className="px-2.5 py-0.5 text-[8.5px] font-bold uppercase rounded-md border bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/50">{status}</span>;
 };
 
 /**
@@ -85,49 +85,49 @@ const getStatusBadge = (status) => {
  */
 const CashFlowRowDetails = ({ row, currency }) => {
   return (
-    <div className="p-4 bg-zinc-50/70 border-y border-zinc-200 animate-in fade-in duration-200" onClick={(e) => e.stopPropagation()}>
-      <div className="bg-white rounded-xl border border-zinc-200 p-4 shadow-2xs space-y-3">
-        <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+    <div className="p-4 bg-zinc-50/70 dark:bg-[#0F1117]/70 border-y border-zinc-200 dark:border-[#2A2F3D] animate-in fade-in duration-200" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] p-4 shadow-2xs space-y-3">
+        <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
           <div className="flex items-center gap-2">
-            <Wallet size={16} className="text-zinc-600" />
-            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+            <Wallet size={16} className="text-zinc-600 dark:text-zinc-400" />
+            <h4 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">
               Cash Flow Line Detail: {row.accountName}
             </h4>
           </div>
-          <span className="text-[10px] text-zinc-400 font-mono">
+          <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">
             {row.accountCode || '—'}
           </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
           <div>
-            <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Category</span>
-            <span className="font-semibold text-zinc-800">{row.cashFlowCategory || '—'}</span>
+            <span className="text-zinc-400 dark:text-zinc-500 block text-[9px] uppercase font-semibold">Category</span>
+            <span className="font-semibold text-zinc-800 dark:text-zinc-200">{row.cashFlowCategory || '—'}</span>
           </div>
           <div>
-            <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Status</span>
+            <span className="text-zinc-400 dark:text-zinc-500 block text-[9px] uppercase font-semibold">Status</span>
             <div className="mt-0.5">{getStatusBadge(row.status)}</div>
           </div>
           <div>
-            <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Reference</span>
-            <span className="font-mono text-zinc-700">{row.reference || '—'}</span>
+            <span className="text-zinc-400 dark:text-zinc-500 block text-[9px] uppercase font-semibold">Reference</span>
+            <span className="font-mono text-zinc-700 dark:text-zinc-300">{row.reference || '—'}</span>
           </div>
           <div>
-            <span className="text-zinc-400 block text-[9px] uppercase font-semibold">Net Cash Flow</span>
-            <span className={`font-bold ${Number(row.netCash) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <span className="text-zinc-400 dark:text-zinc-500 block text-[9px] uppercase font-semibold">Net Cash Flow</span>
+            <span className={`font-bold ${Number(row.netCash) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               {formatMoney(row.netCash, currency)}
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-zinc-100 text-xs">
-          <div className="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-100 flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-emerald-800">Cash Inflow</span>
-            <span className="font-bold text-emerald-700">{formatMoney(row.cashIn, currency)}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-zinc-100 dark:border-[#2A2F3D] text-xs">
+          <div className="bg-emerald-50/50 dark:bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/40 flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold text-emerald-800 dark:text-emerald-300">Cash Inflow</span>
+            <span className="font-bold text-emerald-700 dark:text-emerald-400">{formatMoney(row.cashIn, currency)}</span>
           </div>
-          <div className="bg-rose-50/50 p-2.5 rounded-lg border border-rose-100 flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-rose-800">Cash Outflow</span>
-            <span className="font-bold text-rose-700">{formatMoney(row.cashOut, currency)}</span>
+          <div className="bg-rose-50/50 dark:bg-rose-950/30 p-2.5 rounded-lg border border-rose-100 dark:border-rose-900/40 flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold text-rose-800 dark:text-rose-300">Cash Outflow</span>
+            <span className="font-bold text-rose-700 dark:text-rose-400">{formatMoney(row.cashOut, currency)}</span>
           </div>
         </div>
       </div>
@@ -427,7 +427,7 @@ export default function CashFlow() {
       sortable: true,
       className: 'w-48 whitespace-nowrap',
       render: (val) => (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-700 border border-zinc-200">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-[#2A2F3D]">
           {val || 'General'}
         </span>
       )
@@ -436,7 +436,7 @@ export default function CashFlow() {
       key: 'accountCode',
       label: 'ACCOUNT CODE',
       sortable: true,
-      className: 'w-32 whitespace-nowrap font-mono font-medium text-zinc-700',
+      className: 'w-32 whitespace-nowrap font-mono font-medium text-zinc-700 dark:text-zinc-300',
       render: (val) => val || '—'
     },
     {
@@ -445,7 +445,7 @@ export default function CashFlow() {
       sortable: true,
       className: 'min-w-[200px]',
       render: (val) => (
-        <span className="font-semibold text-zinc-900">{val || '—'}</span>
+        <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{val || '—'}</span>
       )
     },
     {
@@ -456,9 +456,9 @@ export default function CashFlow() {
       render: (val) => {
         const amt = Number(val || 0);
         return amt > 0 ? (
-          <span className="font-bold text-emerald-600">{formatMoney(amt, baseCurrency)}</span>
+          <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatMoney(amt, baseCurrency)}</span>
         ) : (
-          <span className="text-zinc-400 font-medium">—</span>
+          <span className="text-zinc-400 dark:text-zinc-500 font-medium">—</span>
         );
       }
     },
@@ -470,9 +470,9 @@ export default function CashFlow() {
       render: (val) => {
         const amt = Number(val || 0);
         return amt > 0 ? (
-          <span className="font-bold text-rose-600">{formatMoney(amt, baseCurrency)}</span>
+          <span className="font-bold text-rose-600 dark:text-rose-400">{formatMoney(amt, baseCurrency)}</span>
         ) : (
-          <span className="text-zinc-400 font-medium">—</span>
+          <span className="text-zinc-400 dark:text-zinc-500 font-medium">—</span>
         );
       }
     },
@@ -485,7 +485,7 @@ export default function CashFlow() {
         const amt = Number(val || 0);
         const isPos = amt >= 0;
         return (
-          <span className={`font-bold tabular-nums ${isPos ? 'text-zinc-900' : 'text-rose-600'}`}>
+          <span className={`font-bold tabular-nums ${isPos ? 'text-zinc-900 dark:text-[#E6E8EE]' : 'text-rose-600 dark:text-rose-400'}`}>
             {formatMoney(amt, baseCurrency)}
           </span>
         );
@@ -502,7 +502,7 @@ export default function CashFlow() {
       key: 'reference',
       label: 'REFERENCE',
       sortable: false,
-      className: 'w-36 font-mono text-zinc-600 truncate',
+      className: 'w-36 font-mono text-zinc-600 dark:text-zinc-400 truncate',
       render: (val) => val || '—'
     }
   ];
@@ -611,7 +611,7 @@ export default function CashFlow() {
   const totalPages = reportData?.pagination?.totalPages || Math.max(1, Math.ceil(totalElements / (filters.pageSize || 50)));
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* 1. Page Header */}
       <PageHeader
         title="Cash Flow Statement"
@@ -656,46 +656,46 @@ export default function CashFlow() {
       <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-5 min-h-0">
         {/* Error Alert */}
         {error && (
-          <div className="flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium">
+          <div className="flex items-center gap-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 px-4 py-3 rounded-xl text-sm font-medium">
             <AlertCircle size={16} className="shrink-0" />
             {error}
           </div>
         )}
 
         {/* 3. Company Information Card */}
-        <div className="bg-white rounded-xl border border-zinc-200 p-4 shadow-2xs">
-          <div className="flex items-center gap-2 pb-2 mb-3 border-b border-zinc-100">
-            <Building2 size={16} className="text-zinc-600" />
-            <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+        <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] p-4 shadow-2xs">
+          <div className="flex items-center gap-2 pb-2 mb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
+            <Building2 size={16} className="text-zinc-600 dark:text-zinc-400" />
+            <h3 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">
               Reporting Entity &amp; Audit Metadata
             </h3>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-xs">
             <div>
-              <span className="text-zinc-400 block text-[9.5px] uppercase font-semibold">Company Name</span>
-              <span className="font-semibold text-zinc-900 truncate block" title={summary.companyName || selectedCompany?.name}>
+              <span className="text-zinc-400 dark:text-zinc-500 block text-[9.5px] uppercase font-semibold">Company Name</span>
+              <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate block" title={summary.companyName || selectedCompany?.name}>
                 {summary.companyName || selectedCompany?.name || '—'}
               </span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9.5px] uppercase font-semibold">Base Currency</span>
-              <span className="font-semibold text-zinc-800">{baseCurrency}</span>
+              <span className="text-zinc-400 dark:text-zinc-500 block text-[9.5px] uppercase font-semibold">Base Currency</span>
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">{baseCurrency}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9.5px] uppercase font-semibold">Start Date</span>
-              <span className="font-semibold text-zinc-800">{formatDate(summary.startDate || filters.fromDate)}</span>
+              <span className="text-zinc-400 dark:text-zinc-500 block text-[9.5px] uppercase font-semibold">Start Date</span>
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">{formatDate(summary.startDate || filters.fromDate)}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9.5px] uppercase font-semibold">End Date</span>
-              <span className="font-semibold text-zinc-800">{formatDate(summary.endDate || filters.toDate)}</span>
+              <span className="text-zinc-400 dark:text-zinc-500 block text-[9.5px] uppercase font-semibold">End Date</span>
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200">{formatDate(summary.endDate || filters.toDate)}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9.5px] uppercase font-semibold">Generated At</span>
-              <span className="font-medium text-zinc-700">{summary.reportGeneratedAt ? formatDate(summary.reportGeneratedAt) : '—'}</span>
+              <span className="text-zinc-400 dark:text-zinc-500 block text-[9.5px] uppercase font-semibold">Generated At</span>
+              <span className="font-medium text-zinc-700 dark:text-zinc-300">{summary.reportGeneratedAt ? formatDate(summary.reportGeneratedAt) : '—'}</span>
             </div>
             <div>
-              <span className="text-zinc-400 block text-[9.5px] uppercase font-semibold">Generated By</span>
-              <span className="font-medium text-zinc-700">{summary.generatedBy || 'System'}</span>
+              <span className="text-zinc-400 dark:text-zinc-500 block text-[9.5px] uppercase font-semibold">Generated By</span>
+              <span className="font-medium text-zinc-700 dark:text-zinc-300">{summary.generatedBy || 'System'}</span>
             </div>
           </div>
         </div>
@@ -703,120 +703,120 @@ export default function CashFlow() {
         {/* 4. Main Financial Summary Cards (Row 1) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* Card 1: Opening Cash Balance */}
-          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-2xs">
-            <span className="text-[9.5px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
+          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
+            <span className="text-[9.5px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block mb-1">
               Opening Cash Balance
             </span>
-            <span className="text-xl sm:text-2xl font-bold text-blue-600 tabular-nums block">
+            <span className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-[#4C8DFF] tabular-nums block">
               {formatMoney(openingCash, baseCurrency)}
             </span>
-            <span className="text-[10px] text-zinc-400 mt-1 block">Balance at start of period</span>
+            <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 block">Balance at start of period</span>
           </div>
 
           {/* Card 2: Cash Inflow */}
-          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-2xs">
-            <span className="text-[9.5px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
+          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
+            <span className="text-[9.5px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block mb-1">
               Cash Inflow
             </span>
-            <span className="text-xl sm:text-2xl font-bold text-emerald-600 tabular-nums block">
+            <span className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums block">
               {formatMoney(totalInflow, baseCurrency)}
             </span>
-            <span className="text-[10px] text-zinc-400 mt-1 block">Total inflows across activities</span>
+            <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 block">Total inflows across activities</span>
           </div>
 
           {/* Card 3: Cash Outflow */}
-          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-2xs">
-            <span className="text-[9.5px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
+          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
+            <span className="text-[9.5px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block mb-1">
               Cash Outflow
             </span>
-            <span className="text-xl sm:text-2xl font-bold text-rose-600 tabular-nums block">
+            <span className="text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400 tabular-nums block">
               {formatMoney(totalOutflow, baseCurrency)}
             </span>
-            <span className="text-[10px] text-zinc-400 mt-1 block">Total disbursements and payments</span>
+            <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 block">Total disbursements and payments</span>
           </div>
 
           {/* Card 4: Closing Cash Balance */}
-          <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-2xs">
-            <span className="text-[9.5px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
+          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
+            <span className="text-[9.5px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block mb-1">
               Closing Cash Balance
             </span>
-            <span className="text-xl sm:text-2xl font-bold text-blue-600 tabular-nums block">
+            <span className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-[#4C8DFF] tabular-nums block">
               {formatMoney(closingCash, baseCurrency)}
             </span>
-            <span className="text-[10px] text-zinc-400 mt-1 block">Net liquid funds at end of period</span>
+            <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 block">Net liquid funds at end of period</span>
           </div>
         </div>
 
         {/* 5. Secondary Summary Cards (Row 2) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
-          <div className="bg-white p-3 rounded-xl border border-zinc-200 shadow-2xs min-w-0">
-            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block truncate" title="Net Operating Cash Flow">
+          <div className="bg-white dark:bg-[#161922] p-3 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs min-w-0">
+            <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block truncate" title="Net Operating Cash Flow">
               Net Operating
             </span>
-            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(netOperating) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(netOperating) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               {formatMoney(netOperating, baseCurrency)}
             </span>
           </div>
 
-          <div className="bg-white p-3 rounded-xl border border-zinc-200 shadow-2xs min-w-0">
-            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block truncate" title="Net Investing Cash Flow">
+          <div className="bg-white dark:bg-[#161922] p-3 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs min-w-0">
+            <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block truncate" title="Net Investing Cash Flow">
               Net Investing
             </span>
-            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(netInvesting) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(netInvesting) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               {formatMoney(netInvesting, baseCurrency)}
             </span>
           </div>
 
-          <div className="bg-white p-3 rounded-xl border border-zinc-200 shadow-2xs min-w-0">
-            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block truncate" title="Net Financing Cash Flow">
+          <div className="bg-white dark:bg-[#161922] p-3 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs min-w-0">
+            <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block truncate" title="Net Financing Cash Flow">
               Net Financing
             </span>
-            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(netFinancing) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(netFinancing) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               {formatMoney(netFinancing, baseCurrency)}
             </span>
           </div>
 
-          <div className="bg-white p-3 rounded-xl border border-zinc-200 shadow-2xs min-w-0">
-            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block truncate" title="Net Cash Flow">
+          <div className="bg-white dark:bg-[#161922] p-3 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs min-w-0">
+            <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block truncate" title="Net Cash Flow">
               Net Cash Flow
             </span>
-            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(netCash) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(netCash) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               {formatMoney(netCash, baseCurrency)}
             </span>
           </div>
 
-          <div className="bg-white p-3 rounded-xl border border-zinc-200 shadow-2xs min-w-0">
-            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block truncate" title="Total Transactions">
+          <div className="bg-white dark:bg-[#161922] p-3 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs min-w-0">
+            <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block truncate" title="Total Transactions">
               Transactions
             </span>
-            <span className="text-xs sm:text-sm font-bold text-zinc-900 truncate block tabular-nums mt-0.5">
+            <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] truncate block tabular-nums mt-0.5">
               {totalTxCount}
             </span>
           </div>
 
-          <div className="bg-white p-3 rounded-xl border border-zinc-200 shadow-2xs min-w-0">
-            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block truncate" title="Previous Net Cash Flow">
+          <div className="bg-white dark:bg-[#161922] p-3 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs min-w-0">
+            <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block truncate" title="Previous Net Cash Flow">
               Prev Net Cash
             </span>
-            <span className="text-xs sm:text-sm font-bold text-zinc-700 truncate block tabular-nums mt-0.5">
+            <span className="text-xs sm:text-sm font-bold text-zinc-700 dark:text-zinc-300 truncate block tabular-nums mt-0.5">
               {formatMoney(prevNetCash, baseCurrency)}
             </span>
           </div>
 
-          <div className="bg-white p-3 rounded-xl border border-zinc-200 shadow-2xs min-w-0">
-            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block truncate" title="Variance Amount">
+          <div className="bg-white dark:bg-[#161922] p-3 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs min-w-0">
+            <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block truncate" title="Variance Amount">
               Variance Amt
             </span>
-            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(varianceAmt) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(varianceAmt) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               {formatMoney(varianceAmt, baseCurrency)}
             </span>
           </div>
 
-          <div className="bg-white p-3 rounded-xl border border-zinc-200 shadow-2xs min-w-0">
-            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block truncate" title="Variance Percentage">
+          <div className="bg-white dark:bg-[#161922] p-3 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs min-w-0">
+            <span className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider block truncate" title="Variance Percentage">
               Variance %
             </span>
-            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(variancePct) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <span className={`text-xs sm:text-sm font-bold truncate block tabular-nums mt-0.5 ${Number(variancePct) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               {Number(variancePct) >= 0 ? `+${Number(variancePct).toFixed(1)}%` : `${Number(variancePct).toFixed(1)}%`}
             </span>
           </div>
@@ -824,34 +824,34 @@ export default function CashFlow() {
 
         {/* 6. Bank Accounts Section (if present) */}
         {bankAccounts.length > 0 && (
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-2xs overflow-hidden">
-            <div className="p-3.5 bg-zinc-50 border-b border-zinc-200 flex items-center gap-2">
-              <Landmark size={16} className="text-zinc-600" />
-              <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+            <div className="p-3.5 bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center gap-2">
+              <Landmark size={16} className="text-zinc-600 dark:text-zinc-400" />
+              <h4 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">
                 Bank &amp; Cash Accounts Summary
               </h4>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
-                <thead className="bg-zinc-50/60 border-b border-zinc-200 text-zinc-500 font-bold uppercase text-[9.5px] tracking-wider">
+                <thead className="bg-zinc-50/60 dark:bg-[#1D212C]/60 border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[9.5px] tracking-wider">
                   <tr>
                     <th className="px-4 py-2.5">Account Name</th>
                     <th className="px-4 py-2.5">Code</th>
                     <th className="px-4 py-2.5 text-right">Opening Balance</th>
-                    <th className="px-4 py-2.5 text-right text-emerald-700">Total Receipts</th>
-                    <th className="px-4 py-2.5 text-right text-rose-700">Total Payments</th>
+                    <th className="px-4 py-2.5 text-right text-emerald-700 dark:text-emerald-400">Total Receipts</th>
+                    <th className="px-4 py-2.5 text-right text-rose-700 dark:text-rose-400">Total Payments</th>
                     <th className="px-4 py-2.5 text-right">Closing Balance</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 font-medium">
+                <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] font-medium">
                   {bankAccounts.map((b, idx) => (
-                    <tr key={b.id || b.accountCode || idx} className="hover:bg-zinc-50/70">
-                      <td className="px-4 py-2.5 font-semibold text-zinc-900">{b.accountName || b.name || '—'}</td>
-                      <td className="px-4 py-2.5 font-mono text-zinc-600">{b.accountCode || b.code || '—'}</td>
-                      <td className="px-4 py-2.5 text-right font-medium text-zinc-700">{formatMoney(b.openingBalance, baseCurrency)}</td>
-                      <td className="px-4 py-2.5 text-right font-bold text-emerald-600">{formatMoney(b.totalReceipts ?? b.totalCashIn, baseCurrency)}</td>
-                      <td className="px-4 py-2.5 text-right font-bold text-rose-600">{formatMoney(b.totalPayments ?? b.totalCashOut, baseCurrency)}</td>
-                      <td className="px-4 py-2.5 text-right font-bold text-zinc-900">{formatMoney(b.closingBalance, baseCurrency)}</td>
+                    <tr key={b.id || b.accountCode || idx} className="hover:bg-zinc-50/70 dark:hover:bg-[#222736]/50">
+                      <td className="px-4 py-2.5 font-semibold text-zinc-900 dark:text-[#E6E8EE]">{b.accountName || b.name || '—'}</td>
+                      <td className="px-4 py-2.5 font-mono text-zinc-600 dark:text-zinc-400">{b.accountCode || b.code || '—'}</td>
+                      <td className="px-4 py-2.5 text-right font-medium text-zinc-700 dark:text-zinc-300">{formatMoney(b.openingBalance, baseCurrency)}</td>
+                      <td className="px-4 py-2.5 text-right font-bold text-emerald-600 dark:text-emerald-400">{formatMoney(b.totalReceipts ?? b.totalCashIn, baseCurrency)}</td>
+                      <td className="px-4 py-2.5 text-right font-bold text-rose-600 dark:text-rose-400">{formatMoney(b.totalPayments ?? b.totalCashOut, baseCurrency)}</td>
+                      <td className="px-4 py-2.5 text-right font-bold text-zinc-900 dark:text-[#E6E8EE]">{formatMoney(b.closingBalance, baseCurrency)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -901,7 +901,7 @@ export default function CashFlow() {
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs"
+                className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs"
                 title="Print Report"
               >
                 <Printer size={14} />

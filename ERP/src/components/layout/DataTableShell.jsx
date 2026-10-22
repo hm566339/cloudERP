@@ -23,12 +23,12 @@ export default function DataTableShell({
           {toolbar}
         </div>
       )}
-      <div className="w-full bg-white border border-zinc-200 rounded-lg overflow-hidden shadow-none">
+      <div className="w-full bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-hidden shadow-none">
         <div className="overflow-x-auto w-full custom-scrollbar">
           {children}
         </div>
         {pagination && (
-          <div className="border-t border-zinc-200 bg-zinc-50/50 px-4 py-3">
+          <div className="border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/60 px-4 py-3">
             {pagination}
           </div>
         )}

@@ -36,20 +36,20 @@ function PageHeader({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3 bg-white ${border ? 'border-b border-zinc-200' : ''
+      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3 bg-white dark:bg-[#161922] ${border ? 'border-b border-zinc-200 dark:border-[#2A2F3D]' : ''
         } ${className}`}
     >
       {/* Left side: Title + optional icon + optional description */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2.5">
           {Icon && (
-            <span className="text-zinc-800 shrink-0 flex items-center justify-center">
-              {React.isValidElement(Icon) ? Icon : <Icon size={20} className="text-zinc-800" />}
+            <span className="text-zinc-800 dark:text-[#E6E8EE] shrink-0 flex items-center justify-center">
+              {React.isValidElement(Icon) ? Icon : <Icon size={20} className="text-zinc-800 dark:text-[#E6E8EE]" />}
             </span>
           )}
           {title && (
             <h1
-              className={`text-lg sm:text-xl font-bold text-zinc-900 tracking-tight truncate ${titleClassName}`}
+              className={`text-lg sm:text-xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight truncate ${titleClassName}`}
             >
               {title}
             </h1>
@@ -57,7 +57,7 @@ function PageHeader({
         </div>
         {description && (
           <p
-            className={`text-xs sm:text-sm text-zinc-500 mt-0.5 leading-snug line-clamp-2 ${descriptionClassName}`}
+            className={`text-xs sm:text-sm text-zinc-500 dark:text-[#A0A6B5] mt-0.5 leading-snug line-clamp-2 ${descriptionClassName}`}
           >
             {description}
           </p>
@@ -91,7 +91,7 @@ function PageHeader({
 
             const baseStyle =
               variant === 'secondary'
-                ? 'btn-secondary text-xs h-8 px-3.5 bg-white border border-zinc-200 text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50'
+                ? 'btn-secondary text-xs h-8 px-3.5 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-[#222736]'
                 : variant === 'danger'
                   ? 'btn-danger text-xs h-8 px-3.5'
                   : 'btn-primary text-xs h-8 px-3.5';

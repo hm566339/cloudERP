@@ -49,7 +49,7 @@ export default function ApprovalsPage() {
  </div>
 
  <div className="erp-table-container">
- <div className="p-4 border-b border-zinc-100 flex gap-3 items-center">
+ <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex gap-3 items-center">
  <div className="relative flex-1 min-w-[160px]">
  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
  <input

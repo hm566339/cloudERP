@@ -287,7 +287,7 @@ export default function CompanySelect() {
   }
 
   return (
-    <div className="min-h-screen w-full flex font-sans bg-white selection:bg-primary-500/30 overflow-hidden">
+    <div className="min-h-screen w-full flex font-sans bg-white dark:bg-[#0F1117] selection:bg-primary-500/30 overflow-hidden">
 
       {/* ── LEFT PANEL (Branding/Visual) ── */}
       <div className="hidden lg:flex lg:w-5/12 xl:w-1/2 relative bg-zinc-950 flex-col justify-between p-12 overflow-hidden">
@@ -346,7 +346,7 @@ export default function CompanySelect() {
       </div>
 
       {/* ── RIGHT PANEL (Selection Interface) ── */}
-      <div className="w-full lg:w-7/12 xl:w-1/2 flex flex-col relative overflow-y-auto bg-white">
+      <div className="w-full lg:w-7/12 xl:w-1/2 flex flex-col relative overflow-y-auto bg-white dark:bg-[#0F1117]">
 
         {/* Top Bar for Mobile & Logout */}
         <div className="flex items-center justify-between p-6 lg:p-8 shrink-0">
@@ -358,7 +358,7 @@ export default function CompanySelect() {
             {currentUser && (
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-[11.2px] font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all duration-300"
+                className="flex items-center gap-2 px-4 py-2 text-[11.2px] font-bold text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1D212C] rounded-xl transition-all duration-300"
               >
                 <LogOut size={16} />
                 Log Out
@@ -371,17 +371,17 @@ export default function CompanySelect() {
         <div className="flex-1 flex flex-col justify-center max-w-lg w-full mx-auto px-6 py-8 sm:px-12 sm:py-12 animate-fade-in-up">
 
           <div className="space-y-2 mb-10">
-            <h2 className="text-3xl sm:text-4xl font-display font-black tracking-tight text-zinc-900">
+            <h2 className="text-3xl sm:text-4xl font-display font-black tracking-tight text-zinc-900 dark:text-[#E6E8EE]">
               Select Workspace
             </h2>
-            <p className="text-[12px] sm:text-base text-zinc-500 font-medium">
+            <p className="text-[12px] sm:text-base text-zinc-500 dark:text-[#A0A6B5] font-medium">
               {currentUser ? `Welcome back, ${currentUser.name}. Choose an enterprise to continue.` : 'Choose an enterprise workspace to log in.'}
             </p>
           </div>
 
           <div className="relative min-h-[280px] flex flex-col">
             <div className="relative group mb-6">
-              <span className="absolute inset-y-0 left-0 pl-5 flex items-center text-zinc-400 group-focus-within:text-primary-600 transition-colors pointer-events-none z-10">
+              <span className="absolute inset-y-0 left-0 pl-5 flex items-center text-zinc-400 dark:text-[#6B7184] group-focus-within:text-primary-600 dark:group-focus-within:text-[#4C8DFF] transition-colors pointer-events-none z-10">
                 <Search size={20} />
               </span>
               <input
@@ -389,7 +389,7 @@ export default function CompanySelect() {
                 placeholder="Search workspaces by name or code..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-14 pr-4 py-4 bg-zinc-50/80 hover:bg-zinc-50 border border-zinc-200 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 rounded-2xl text-[12px] font-semibold text-zinc-900 placeholder:text-zinc-400 transition-all duration-300 outline-none shadow-sm"
+                className="w-full pl-14 pr-4 py-4 bg-zinc-50/80 dark:bg-[#161922] hover:bg-zinc-50 dark:hover:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] focus:bg-white dark:focus:bg-[#1D212C] focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 rounded-2xl text-[12px] font-semibold text-zinc-900 dark:text-[#E6E8EE] placeholder:text-zinc-400 dark:placeholder-[#6B7184] transition-all duration-300 outline-none shadow-sm"
               />
             </div>
 
@@ -397,7 +397,7 @@ export default function CompanySelect() {
               {isLoading || isSelecting ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-3">
                   <div className="w-8 h-8 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin"></div>
-                  {isSelecting && <p className="text-xs text-zinc-500 font-medium">Signing you in…</p>}
+                  {isSelecting && <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium">Signing you in…</p>}
                 </div>
               ) : filteredCompanies.length > 0 ? (
                 filteredCompanies.map((company) => (
@@ -405,34 +405,34 @@ export default function CompanySelect() {
                     key={company.id}
                     onClick={() => handleSelect(company)}
                     disabled={isSelecting}
-                    className="w-full flex items-center justify-between p-4 bg-white border border-zinc-200/80 rounded-2xl hover:border-primary-500/40 hover:shadow-[0_8px_20px_rgb(0,0,0,0.06)] transition-all duration-300 group active:scale-[0.98] text-left relative overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-between p-4 bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-2xl hover:border-primary-500/40 dark:hover:border-[#4C8DFF]/40 hover:shadow-[0_8px_20px_rgb(0,0,0,0.06)] transition-all duration-300 group active:scale-[0.98] text-left relative overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed dark:hover:bg-[#1D212C]"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-primary-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                     <div className="flex items-center gap-4 relative z-10">
-                      <div className="w-12 h-12 bg-primary-50 text-primary-600 rounded-xl flex items-center justify-center font-bold shrink-0 text-lg border border-primary-100/50 group-hover:bg-primary-100/50 transition-colors">
+                      <div className="w-12 h-12 bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 rounded-xl flex items-center justify-center font-bold shrink-0 text-lg border border-primary-100/50 dark:border-primary-800/40 group-hover:bg-primary-100/50 dark:group-hover:bg-primary-900/40 transition-colors">
                         {company?.name?.charAt(0)?.toUpperCase() || '?'}
                       </div>
                       <div className="truncate">
-                        <p className="text-[12.8px] font-bold text-zinc-900 group-hover:text-primary-600 transition-colors truncate">
+                        <p className="text-[12.8px] font-bold text-zinc-900 dark:text-[#E6E8EE] group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
                           {company.name}
                         </p>
-                        <p className="text-[10.4px] font-semibold text-zinc-500 uppercase tracking-wider truncate mt-0.5">
+                        <p className="text-[10.4px] font-semibold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider truncate mt-0.5">
                           Code: {company.code || company.id}
                         </p>
                       </div>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-zinc-50 group-hover:bg-primary-50 flex items-center justify-center transition-colors">
-                      <ChevronRight size={18} className="text-zinc-400 group-hover:text-primary-600 transition-colors" />
+                    <div className="w-8 h-8 rounded-full bg-zinc-50 dark:bg-[#1D212C] group-hover:bg-primary-50 dark:group-hover:bg-primary-950/40 flex items-center justify-center transition-colors">
+                      <ChevronRight size={18} className="text-zinc-400 dark:text-[#6B7184] group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" />
                     </div>
                   </button>
                 ))
               ) : (
-                <div className="text-center py-16 px-4 flex flex-col items-center justify-center bg-zinc-50/50 rounded-3xl border border-zinc-200/80 border-dashed">
-                  <div className="w-14 h-14 bg-white rounded-2xl shadow-sm border border-zinc-200 flex items-center justify-center mb-5 text-zinc-400">
+                <div className="text-center py-16 px-4 flex flex-col items-center justify-center bg-zinc-50/50 dark:bg-[#161922]/50 rounded-3xl border border-zinc-200/80 dark:border-[#2A2F3D] border-dashed">
+                  <div className="w-14 h-14 bg-white dark:bg-[#1D212C] rounded-2xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-center mb-5 text-zinc-400 dark:text-[#6B7184]">
                     <Search size={26} />
                   </div>
-                  <h3 className="text-[12.8px] font-bold text-zinc-900 mb-1.5">No Workspaces Found</h3>
-                  <p className="text-zinc-500 text-[11.2px] font-medium max-w-[160px]">
+                  <h3 className="text-[12.8px] font-bold text-zinc-900 dark:text-[#E6E8EE] mb-1.5">No Workspaces Found</h3>
+                  <p className="text-zinc-500 dark:text-[#A0A6B5] text-[11.2px] font-medium max-w-[160px]">
                     Try adjusting your search criteria
                   </p>
                 </div>
@@ -441,10 +441,10 @@ export default function CompanySelect() {
 
             {/* Super Admin Console Link */}
             {isSuperAdmin && (
-              <div className="mt-8 pt-6 border-t border-zinc-100">
+              <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-[#2A2F3D]">
                 <button
                   onClick={() => navigate(buildPath('/super-admin/dashboard'))}
-                  className="w-full flex justify-center items-center gap-2.5 px-4 py-4 bg-zinc-950 hover:bg-zinc-900 text-white text-[12px] font-bold rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-lg shadow-zinc-900/20"
+                  className="w-full flex justify-center items-center gap-2.5 px-4 py-4 bg-zinc-950 hover:bg-zinc-900 dark:bg-[#4C8DFF] dark:hover:bg-[#6AA1FF] text-white text-[12px] font-bold rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-lg shadow-zinc-900/20 dark:shadow-none"
                 >
                   <ShieldCheck size={18} />
                   <span>Global Super Admin Console</span>

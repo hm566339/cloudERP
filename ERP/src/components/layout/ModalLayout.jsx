@@ -22,19 +22,19 @@ export default function ModalLayout({
 }) {
   return (
     <div
-      className={`w-full ${maxWidth} bg-white border border-zinc-200 rounded-xl shadow-xl overflow-hidden flex flex-col ${className}`}
+      className={`w-full ${maxWidth} bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-xl overflow-hidden flex flex-col ${className}`}
       {...props}
     >
       {/* Header */}
-      <div className="px-6 py-4 border-b border-zinc-200 flex items-center justify-between gap-4">
+      <div className="px-6 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between gap-4">
         <div>
           {title && (
-            <h3 className="text-base font-semibold text-zinc-900 tracking-tight">
+            <h3 className="text-base font-semibold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
               {title}
             </h3>
           )}
           {subtitle && (
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
               {subtitle}
             </p>
           )}
@@ -44,7 +44,7 @@ export default function ModalLayout({
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-md transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 dark:text-[#6B7184] dark:hover:text-[#E6E8EE] dark:hover:bg-[#222736] rounded-md transition-colors"
           >
             <X size={18} />
           </button>
@@ -58,7 +58,7 @@ export default function ModalLayout({
 
       {/* Footer */}
       {footer && (
-        <div className="px-6 py-4 border-t border-zinc-200 bg-zinc-50/50 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922]/80 flex items-center justify-end gap-3">
           {footer}
         </div>
       )}

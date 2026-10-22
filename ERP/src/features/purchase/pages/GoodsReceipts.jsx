@@ -69,8 +69,8 @@ const GoodsReceiptOverview = ({ grn, warehouseMap, navigate, location, buildPath
     <div className="bg-zinc-50/70 p-6 rounded-xl border border-zinc-200/80">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Receipt Information */}
-        <div className="space-y-3 bg-white p-4 rounded-xl border border-zinc-200/70 shadow-xs">
-          <h4 className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-100 pb-2">
+        <div className="space-y-3 bg-white dark:bg-card-dark p-4 rounded-xl border border-zinc-200/70 dark:border-border-dark shadow-xs">
+          <h4 className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">
             <Truck size={14} className="text-zinc-500" />
             Receipt Details
           </h4>
@@ -109,8 +109,8 @@ const GoodsReceiptOverview = ({ grn, warehouseMap, navigate, location, buildPath
         </div>
 
         {/* Logistics & Vendor */}
-        <div className="space-y-3 bg-white p-4 rounded-xl border border-zinc-200/70 shadow-xs">
-          <h4 className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-100 pb-2">
+        <div className="space-y-3 bg-white dark:bg-card-dark p-4 rounded-xl border border-zinc-200/70 dark:border-border-dark shadow-xs">
+          <h4 className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">
             <FileText size={14} className="text-zinc-500" />
             Logistics & Vendor
           </h4>
@@ -139,9 +139,9 @@ const GoodsReceiptOverview = ({ grn, warehouseMap, navigate, location, buildPath
         </div>
 
         {/* Items Summary & Quick Actions */}
-        <div className="space-y-3 bg-white p-4 rounded-xl border border-zinc-200/70 shadow-xs flex flex-col justify-between">
+        <div className="space-y-3 bg-white dark:bg-card-dark p-4 rounded-xl border border-zinc-200/70 dark:border-border-dark shadow-xs flex flex-col justify-between">
           <div>
-            <h4 className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-100 pb-2">
+            <h4 className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">
               <Package size={14} className="text-zinc-500" />
               Received Items ({itemCount})
             </h4>
@@ -671,7 +671,7 @@ export default function GoodsReceiptsPage() {
       {/* VIEW DETAILS MODAL */}
       {selectedGrn && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full p-5 space-y-4 max-h-[85vh] flex flex-col">
+          <div className="bg-white dark:bg-card-dark rounded-xl shadow-2xl max-w-3xl w-full p-5 space-y-4 max-h-[85vh] flex flex-col border border-zinc-200 dark:border-border-dark">
             <div className="flex justify-between items-center border-b border-zinc-200 pb-3">
               <div>
                 <h2 className="text-base font-bold text-zinc-900 flex items-center gap-2">
@@ -811,7 +811,7 @@ export default function GoodsReceiptsPage() {
       {/* REVERSAL MODAL */}
       {isReverseModalOpen && grnToReverse && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-5 space-y-4">
+          <div className="bg-white dark:bg-card-dark rounded-xl shadow-2xl max-w-md w-full p-5 space-y-4 border border-zinc-200 dark:border-border-dark">
             <div className="flex items-center gap-2 text-amber-600">
               <AlertCircle size={22} />
               <h3 className="font-bold text-base text-zinc-900">Reverse Goods Receipt</h3>
@@ -822,7 +822,7 @@ export default function GoodsReceiptsPage() {
             <div>
               <label className="text-xs font-bold text-zinc-700 block mb-1">Reason for Reversal *</label>
               <textarea
-                className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-800 placeholder-zinc-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all resize-none h-20"
+                className="w-full px-3 py-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-xs text-zinc-800 placeholder-zinc-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all resize-none h-20"
                 value={reversalReason}
                 onChange={(e) => setReversalReason(e.target.value)}
                 placeholder="e.g. Wrong delivery batch, quality inspection rejection, damaged in transit..."

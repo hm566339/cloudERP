@@ -44,6 +44,7 @@ import PlanTable from '../../components/subscription/PlanTable';
 import PlanDetailsModal from '../../components/subscription/PlanDetailsModal';
 import PlanFormModal from '../../components/subscription/PlanFormModal';
 import SubscriptionCheckoutModal from '../../components/subscription/SubscriptionCheckoutModal';
+import SettingsNavbar from '../../components/settings/SettingsNavbar';
 
 export { isCurrentPlan };
 
@@ -280,17 +281,22 @@ export default function SubscriptionPlansSettings() {
   return (
     <div className="flex-1 bg-zinc-50/50 min-h-screen">
       <div className="w-full p-4 sm:p-6 space-y-6 animate-fade-in">
+        {/* Settings Navigation Bar */}
+        <div className="shrink-0">
+          <SettingsNavbar activeTab="subscription_billing" />
+        </div>
+
         {/* Page Header */}
-        <div className="bg-white rounded-2xl border border-zinc-200/80 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
-              <CreditCard size={14} className="text-zinc-700" />
+            <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
+              <CreditCard size={14} className="text-zinc-700 dark:text-zinc-300" />
               <span>Subscription & Licensing Architecture</span>
             </div>
-            <h1 className="text-2xl font-bold font-display text-zinc-900 tracking-tight">
+            <h1 className="text-2xl font-bold font-display text-zinc-900 dark:text-zinc-100 tracking-tight">
               Subscription Plans & Entitlement Rules
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-500 mt-1">
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
               {canManageCatalog
                 ? 'Configure SaaS subscription tiers, active duration, company and user quotas, and modular access rights.'
                 : 'Review available subscription tiers, manage your organization plan, and upgrade capacity for your company.'}
@@ -305,7 +311,7 @@ export default function SubscriptionPlansSettings() {
                 fetchData();
               }}
               disabled={isLoading || isSubLoading}
-              className="inline-flex items-center gap-1.5 px-3 py-2 border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 rounded-xl text-xs font-semibold shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] text-zinc-700 dark:text-zinc-300 rounded-xl text-xs font-semibold shadow-2xs transition-colors"
               title="Refresh plans and active subscription"
             >
               <RefreshCw size={13} className={isLoading || isSubLoading ? 'animate-spin' : ''} />
@@ -316,7 +322,7 @@ export default function SubscriptionPlansSettings() {
               <button
                 type="button"
                 onClick={handleOpenCreateModal}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow transition-all shrink-0 active:scale-95"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow transition-all shrink-0 active:scale-95"
               >
                 <Plus size={15} />
                 <span>Create Plan</span>
@@ -326,43 +332,43 @@ export default function SubscriptionPlansSettings() {
         </div>
 
         {/* Active Company Subscription Overview Banner */}
-        <div className="bg-white rounded-2xl border border-zinc-200/80 p-5 sm:p-6 shadow-2xs space-y-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-zinc-100">
+        <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] p-5 sm:p-6 shadow-2xs space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
             <div className="flex items-start sm:items-center gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-zinc-100 border border-zinc-200/80 flex items-center justify-center text-zinc-800 shrink-0 shadow-2xs">
+              <div className="w-11 h-11 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 shrink-0 shadow-2xs">
                 <Building2 size={22} />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
+                  <span className="text-[10.5px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
                     Company Active Subscription
                   </span>
-                  <span className="text-zinc-300">•</span>
-                  <span className="font-mono text-xs font-bold text-zinc-700">
+                  <span className="text-zinc-300 dark:text-zinc-600">•</span>
+                  <span className="font-mono text-xs font-bold text-zinc-700 dark:text-zinc-300">
                     {currentCompany?.code || organization?.code || 'COMPANY'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2.5 mt-0.5 flex-wrap">
-                  <h2 className="text-lg sm:text-xl font-bold font-display text-zinc-900 tracking-tight">
+                  <h2 className="text-lg sm:text-xl font-bold font-display text-zinc-900 dark:text-zinc-100 tracking-tight">
                     {activePlanName}
                   </h2>
                   {isTrial ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-                      <Sparkles size={11} className="text-emerald-600" />
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 shadow-2xs">
+                      <Sparkles size={11} className="text-emerald-600 dark:text-emerald-400" />
                       <span>Free Trial {daysRemaining !== null && daysRemaining !== undefined ? `(${daysRemaining}d left)` : ''}</span>
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-                      <CheckCircle2 size={11} className="text-emerald-600" />
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 shadow-2xs">
+                      <CheckCircle2 size={11} className="text-emerald-600 dark:text-emerald-400" />
                       <span>{subStatus || 'Active'}</span>
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-zinc-500 mt-0.5">
-                  Organization: <strong className="text-zinc-800">{orgName}</strong>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Organization: <strong className="text-zinc-800 dark:text-zinc-200">{orgName}</strong>
                   {currentCompany?.name && (
                     <>
-                      {' '}&bull; Legal Entity: <strong className="text-zinc-800">{companyName}</strong>
+                      {' '}&bull; Legal Entity: <strong className="text-zinc-800 dark:text-zinc-200">{companyName}</strong>
                     </>
                   )}
                 </p>
@@ -371,8 +377,8 @@ export default function SubscriptionPlansSettings() {
 
             <div className="flex items-center gap-2 shrink-0">
               {canUpgradeSubscription && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800">
-                  <ShieldCheck size={14} className="text-emerald-600" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                  <ShieldCheck size={14} className="text-emerald-600 dark:text-emerald-400" />
                   <span>Owner Subscription Authority</span>
                 </span>
               )}
@@ -381,68 +387,68 @@ export default function SubscriptionPlansSettings() {
 
           {/* Allocation & Quota Strip */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-zinc-50/80 p-3 rounded-xl border border-zinc-100 space-y-0.5">
-              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
-                <Lock size={12} className={effectiveAccessMode === 'FULL' ? 'text-emerald-600' : 'text-amber-600'} />
+            <div className="bg-zinc-50/80 dark:bg-[#1D212C] p-3 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] space-y-0.5">
+              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                <Lock size={12} className={effectiveAccessMode === 'FULL' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'} />
                 <span>Access Mode</span>
               </div>
-              <div className="text-sm font-black text-zinc-900">{effectiveAccessMode}</div>
-              <p className="text-[10px] text-zinc-400">All features operational</p>
+              <div className="text-sm font-black text-zinc-900 dark:text-zinc-100">{effectiveAccessMode}</div>
+              <p className="text-[10px] text-zinc-400 dark:text-zinc-500">All features operational</p>
             </div>
 
-            <div className="bg-zinc-50/80 p-3 rounded-xl border border-zinc-100 space-y-0.5">
-              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
-                <Clock size={12} className="text-zinc-700" />
+            <div className="bg-zinc-50/80 dark:bg-[#1D212C] p-3 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] space-y-0.5">
+              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                <Clock size={12} className="text-zinc-700 dark:text-zinc-300" />
                 <span>Validity / Cycle</span>
               </div>
-              <div className="text-sm font-black text-zinc-900">
+              <div className="text-sm font-black text-zinc-900 dark:text-zinc-100">
                 {daysRemaining !== null && daysRemaining !== undefined ? `${daysRemaining} Days Left` : '30-Day Billing Cycle'}
               </div>
-              <p className="text-[10px] text-zinc-400">
+              <p className="text-[10px] text-zinc-400 dark:text-zinc-500">
                 {effectiveActiveSub?.validUntil ? `Valid until ${new Date(effectiveActiveSub.validUntil).toLocaleDateString()}` : 'Standard active period'}
               </p>
             </div>
 
-            <div className="bg-zinc-50/80 p-3 rounded-xl border border-zinc-100 space-y-0.5">
-              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
-                <Building2 size={12} className="text-zinc-700" />
+            <div className="bg-zinc-50/80 dark:bg-[#1D212C] p-3 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] space-y-0.5">
+              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                <Building2 size={12} className="text-zinc-700 dark:text-zinc-300" />
                 <span>Companies Quota</span>
               </div>
-              <div className="text-sm font-black text-zinc-900">
+              <div className="text-sm font-black text-zinc-900 dark:text-zinc-100">
                 {companiesCount} / {formatPlanLimit(maxCompaniesQuota, 'companies')}
               </div>
-              <p className="text-[10px] text-zinc-400">Active legal companies</p>
+              <p className="text-[10px] text-zinc-400 dark:text-zinc-500">Active legal companies</p>
             </div>
 
-            <div className="bg-zinc-50/80 p-3 rounded-xl border border-zinc-100 space-y-0.5">
-              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 uppercase tracking-wider">
-                <Users size={12} className="text-zinc-700" />
+            <div className="bg-zinc-50/80 dark:bg-[#1D212C] p-3 rounded-xl border border-zinc-100 dark:border-[#2A2F3D] space-y-0.5">
+              <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                <Users size={12} className="text-zinc-700 dark:text-zinc-300" />
                 <span>Users / Company</span>
               </div>
-              <div className="text-sm font-black text-zinc-900">
+              <div className="text-sm font-black text-zinc-900 dark:text-zinc-100">
                 {formatPlanLimit(maxUsersQuota, 'users')}
               </div>
-              <p className="text-[10px] text-zinc-400">Seats per company workspace</p>
+              <p className="text-[10px] text-zinc-400 dark:text-zinc-500">Seats per company workspace</p>
             </div>
           </div>
         </div>
 
         {/* Filters & View Switcher */}
-        <div className="bg-white rounded-2xl border border-zinc-200/80 p-4 shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] p-4 shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
             <input
               type="text"
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
               placeholder="Search plans by name, code or description..."
-              className="w-full pl-9 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 focus:bg-white transition-all shadow-2xs"
+              className="w-full pl-9 pr-3 py-2 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-xs text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-blue-500/20 focus:border-zinc-900 dark:focus:border-blue-500 focus:bg-white dark:focus:bg-[#1D212C] transition-all shadow-2xs"
             />
             {searchFilter && (
               <button
                 type="button"
                 onClick={() => setSearchFilter('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5 rounded"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 p-0.5 rounded"
               >
                 <X size={12} />
               </button>
@@ -450,14 +456,14 @@ export default function SubscriptionPlansSettings() {
           </div>
 
           <div className="flex items-center justify-between sm:justify-end gap-3">
-            <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl text-xs font-semibold text-zinc-600">
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400">
               <button
                 type="button"
                 onClick={() => setStatusFilter('ALL')}
                 className={`px-3 py-1 rounded-lg transition-all ${
                   statusFilter === 'ALL'
-                    ? 'bg-white text-zinc-900 font-bold shadow-2xs'
-                    : 'text-zinc-500 hover:text-zinc-900'
+                    ? 'bg-white dark:bg-[#161922] text-zinc-900 dark:text-zinc-100 font-bold shadow-2xs'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                 }`}
               >
                 All ({plans.length})
@@ -467,8 +473,8 @@ export default function SubscriptionPlansSettings() {
                 onClick={() => setStatusFilter('ACTIVE')}
                 className={`px-3 py-1 rounded-lg transition-all ${
                   statusFilter === 'ACTIVE'
-                    ? 'bg-white text-emerald-700 font-bold shadow-2xs'
-                    : 'text-zinc-500 hover:text-zinc-900'
+                    ? 'bg-white dark:bg-[#161922] text-emerald-700 dark:text-emerald-400 font-bold shadow-2xs'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                 }`}
               >
                 Active
@@ -478,22 +484,22 @@ export default function SubscriptionPlansSettings() {
                 onClick={() => setStatusFilter('INACTIVE')}
                 className={`px-3 py-1 rounded-lg transition-all ${
                   statusFilter === 'INACTIVE'
-                    ? 'bg-white text-zinc-800 font-bold shadow-2xs'
-                    : 'text-zinc-500 hover:text-zinc-900'
+                    ? 'bg-white dark:bg-[#161922] text-zinc-800 dark:text-zinc-200 font-bold shadow-2xs'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                 }`}
               >
                 Inactive
               </button>
             </div>
 
-            <div className="flex items-center border border-zinc-200 rounded-xl p-0.5 bg-zinc-50">
+            <div className="flex items-center border border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-0.5 bg-zinc-50 dark:bg-zinc-800">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded-lg transition-all ${
                   viewMode === 'grid'
-                    ? 'bg-white text-zinc-900 font-bold shadow-2xs'
-                    : 'text-zinc-400 hover:text-zinc-700'
+                    ? 'bg-white dark:bg-[#161922] text-zinc-900 dark:text-zinc-100 font-bold shadow-2xs'
+                    : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                 }`}
                 title="Grid Card View"
               >
@@ -504,8 +510,8 @@ export default function SubscriptionPlansSettings() {
                 onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded-lg transition-all ${
                   viewMode === 'table'
-                    ? 'bg-white text-zinc-900 font-bold shadow-2xs'
-                    : 'text-zinc-400 hover:text-zinc-700'
+                    ? 'bg-white dark:bg-[#161922] text-zinc-900 dark:text-zinc-100 font-bold shadow-2xs'
+                    : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                 }`}
                 title="Table View"
               >
@@ -517,11 +523,11 @@ export default function SubscriptionPlansSettings() {
 
         {/* Error Banner */}
         {errorMessage && (
-          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 flex items-start gap-3 shadow-2xs">
-            <AlertTriangle size={18} className="text-rose-600 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 text-rose-900 dark:text-rose-200 flex items-start gap-3 shadow-2xs">
+            <AlertTriangle size={18} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
             <div className="flex-1 text-xs">
-              <h4 className="font-bold text-rose-900">Failed to communicate with plan service</h4>
-              <p className="mt-0.5 text-rose-800">{errorMessage}</p>
+              <h4 className="font-bold text-rose-900 dark:text-rose-200">Failed to communicate with plan service</h4>
+              <p className="mt-0.5 text-rose-800 dark:text-rose-300">{errorMessage}</p>
             </div>
             <button
               type="button"
@@ -537,34 +543,34 @@ export default function SubscriptionPlansSettings() {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-2xs space-y-4 animate-pulse">
+              <div key={i} className="bg-white dark:bg-[#161922] rounded-2xl p-6 border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs space-y-4 animate-pulse">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-zinc-200 rounded-xl" />
+                    <div className="w-10 h-10 bg-zinc-200 dark:bg-zinc-700 rounded-xl" />
                     <div>
-                      <div className="h-5 bg-zinc-200 rounded w-36 mb-2" />
-                      <div className="h-3 bg-zinc-100 rounded w-24" />
+                      <div className="h-5 bg-zinc-200 dark:bg-zinc-700 rounded w-36 mb-2" />
+                      <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded w-24" />
                     </div>
                   </div>
-                  <div className="h-6 bg-zinc-200 rounded-full w-20" />
+                  <div className="h-6 bg-zinc-200 dark:bg-zinc-700 rounded-full w-20" />
                 </div>
-                <div className="h-4 bg-zinc-100 rounded w-full" />
-                <div className="grid grid-cols-2 gap-3 py-3 border-y border-zinc-100">
-                  <div className="h-8 bg-zinc-100 rounded" />
-                  <div className="h-8 bg-zinc-100 rounded" />
+                <div className="h-4 bg-zinc-100 dark:bg-zinc-800 rounded w-full" />
+                <div className="grid grid-cols-2 gap-3 py-3 border-y border-zinc-100 dark:border-[#2A2F3D]">
+                  <div className="h-8 bg-zinc-100 dark:bg-zinc-800 rounded" />
+                  <div className="h-8 bg-zinc-100 dark:bg-zinc-800 rounded" />
                 </div>
-                <div className="h-10 bg-zinc-100 rounded" />
+                <div className="h-10 bg-zinc-100 dark:bg-zinc-800 rounded" />
               </div>
             ))}
           </div>
         ) : filteredPlans.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-zinc-200 p-12 text-center space-y-4 shadow-2xs">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 mx-auto flex items-center justify-center">
+          <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200 dark:border-[#2A2F3D] p-12 text-center space-y-4 shadow-2xs">
+            <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 mx-auto flex items-center justify-center">
               <Layers size={24} />
             </div>
             <div className="max-w-md mx-auto space-y-1">
-              <h3 className="text-base font-bold text-zinc-900">No subscription plans found</h3>
-              <p className="text-xs text-zinc-500">
+              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">No subscription plans found</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 {searchFilter
                   ? `No subscription plans matching "${searchFilter}". Try adjusting your filters.`
                   : 'Get started by creating your first subscription plan with customized company and user quotas.'}
@@ -574,7 +580,7 @@ export default function SubscriptionPlansSettings() {
               <button
                 type="button"
                 onClick={handleOpenCreateModal}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-blue-600 hover:bg-zinc-800 dark:hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
               >
                 <Plus size={15} />
                 <span>Create First Plan</span>

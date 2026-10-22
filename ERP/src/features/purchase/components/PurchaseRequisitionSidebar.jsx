@@ -12,16 +12,16 @@ export default function PurchaseRequisitionSidebar({
   isMeLoading,
   requesterError,
 }) {
-  const sidebarCard = 'flex-none border border-zinc-200 rounded-lg p-2.5 bg-white shadow-2xs space-y-1.5';
-  const cardHead = 'flex items-center justify-between pb-1 border-b border-zinc-100';
-  const cardTitle = 'text-[8px] font-bold text-zinc-800 uppercase tracking-wider';
-  const label = 'text-[8px] font-semibold text-zinc-700 block mb-1';
+  const sidebarCard = 'flex-none border border-zinc-200 dark:border-[#2A2F3D] rounded-lg p-2.5 bg-white dark:bg-[#161922] shadow-2xs space-y-1.5';
+  const cardHead = 'flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]';
+  const cardTitle = 'text-[8px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider';
+  const label = 'text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] block mb-1';
   const field = (hasErr = false) =>
-    `input-field w-full h-8 text-[8.8px] text-zinc-700 bg-white ${hasErr ? 'border-rose-300' : ''}`;
-  const errText = 'text-[7.2px] text-rose-600 mt-0.5 font-medium';
+    `input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] dark:border-[#2A2F3D] ${hasErr ? 'border-rose-300' : ''}`;
+  const errText = 'text-[7.2px] text-rose-600 dark:text-rose-400 mt-0.5 font-medium';
 
   return (
-    <div className="w-full lg:w-[300px] xl:w-[320px] flex-none p-2.5 sm:p-3 bg-zinc-50/40 overflow-y-auto overflow-x-hidden sm:grid sm:grid-cols-2 lg:flex lg:flex-col gap-2.5 sm:gap-3">
+    <div className="w-full lg:w-[300px] xl:w-[320px] flex-none p-2.5 sm:p-3 bg-zinc-50/40 dark:bg-[#0F1117] overflow-y-auto overflow-x-hidden sm:grid sm:grid-cols-2 lg:flex lg:flex-col gap-2.5 sm:gap-3">
       {/* 1. REQUISITION INFORMATION */}
       <div className={sidebarCard}>
         <div className={cardHead}>
@@ -37,10 +37,10 @@ export default function PurchaseRequisitionSidebar({
                 readOnly
                 disabled
                 placeholder={isMeLoading ? 'Loading user...' : 'Requester'}
-                className={`${field(errors.requesterId)} cursor-not-allowed bg-zinc-50 text-zinc-500`}
+                className={`${field(errors.requesterId)} cursor-not-allowed bg-zinc-50 dark:bg-[#161922] text-zinc-500 dark:text-[#6B7184]`}
               />
               {isMeLoading && (
-                <RefreshCw size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 animate-spin" />
+                <RefreshCw size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184] animate-spin" />
               )}
             </div>
             {requesterError && (
@@ -152,12 +152,12 @@ export default function PurchaseRequisitionSidebar({
         </div>
         <div className="space-y-2">
           <div className="flex justify-between items-center text-[9.6px]">
-            <span className="text-zinc-600 font-medium">Total Items</span>
-            <span className="font-semibold text-zinc-800">{items.length}</span>
+            <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Total Items</span>
+            <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">{items.length}</span>
           </div>
           <div className="flex justify-between items-center text-[9.6px]">
-            <span className="text-zinc-600 font-medium">Pending Approval</span>
-            <span className="font-semibold text-zinc-800">0</span>
+            <span className="text-zinc-600 dark:text-[#A0A6B5] font-medium">Pending Approval</span>
+            <span className="font-semibold text-zinc-800 dark:text-[#E6E8EE]">0</span>
           </div>
         </div>
       </div>

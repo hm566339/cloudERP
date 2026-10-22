@@ -64,7 +64,7 @@ export default function WarehouseFormModal({ isOpen, onClose, onSubmit, initialD
 
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200">
+      <div className="bg-white dark:bg-card-dark w-full max-w-4xl max-h-[90vh] rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200 dark:border-border-dark">
         
         {/* Header - Sticky */}
         <div className="flex justify-between items-center px-5 py-3 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
@@ -82,19 +82,19 @@ export default function WarehouseFormModal({ isOpen, onClose, onSubmit, initialD
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 bg-white">
+        <div className="flex-1 overflow-y-auto px-6 py-4 bg-white dark:bg-card-dark">
           <form id="warehouse-form" onSubmit={handleSubmit} className="space-y-5">
             
             {/* Basic Information */}
             <div>
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider mb-2.5 pb-2 border-b border-zinc-100">Basic Information</h3>
+              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider mb-2.5 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-3">
                 <div className="space-y-1">
                   <label className="text-[9.6px] font-semibold text-zinc-700">Warehouse Name <span className="text-red-500">*</span></label>
                   <input 
                     type="text" 
                     name="warehouseName"
-                    className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400"
+                    className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400"
                     value={formData.warehouseName}
                     onChange={handleChange}
                     placeholder="e.g. Central Hub"
@@ -105,7 +105,7 @@ export default function WarehouseFormModal({ isOpen, onClose, onSubmit, initialD
                   <label className="text-[9.6px] font-semibold text-zinc-700">Warehouse Type <span className="text-red-500">*</span></label>
                   <select 
                     name="warehouseType"
-                    className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all"
+                    className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 focus:ring-0 outline-none transition-all"
                     value={formData.warehouseType}
                     onChange={handleChange}
                     required
@@ -119,7 +119,7 @@ export default function WarehouseFormModal({ isOpen, onClose, onSubmit, initialD
                   <label className="text-[9.6px] font-semibold text-zinc-700">Status</label>
                   <select 
                     name="status"
-                    className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all"
+                    className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 focus:ring-0 outline-none transition-all"
                     value={formData.status}
                     onChange={handleChange}
                   >
@@ -132,14 +132,14 @@ export default function WarehouseFormModal({ isOpen, onClose, onSubmit, initialD
 
             {/* Location Details */}
             <div>
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider mb-2.5 pb-2 border-b border-zinc-100">Location Details</h3>
+              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider mb-2.5 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Location Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-3">
                 <div className="space-y-1 md:col-span-2">
                   <label className="text-[9.6px] font-semibold text-zinc-700">Address Line 1 <span className="text-red-500">*</span></label>
                   <input 
                     type="text" 
                     name="addressLine1"
-                    className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400"
+                    className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400"
                     value={formData.addressLine1}
                     onChange={handleChange}
                     placeholder="Street address, P.O. box, etc."
@@ -151,7 +151,7 @@ export default function WarehouseFormModal({ isOpen, onClose, onSubmit, initialD
                   <input 
                     type="text" 
                     name="addressLine2"
-                    className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400"
+                    className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400"
                     value={formData.addressLine2}
                     onChange={handleChange}
                     placeholder="Apartment, suite, unit, building, floor, etc."
@@ -162,7 +162,7 @@ export default function WarehouseFormModal({ isOpen, onClose, onSubmit, initialD
                   <input 
                     type="text" 
                     name="city"
-                    className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all"
+                    className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 focus:ring-0 outline-none transition-all"
                     value={formData.city}
                     onChange={handleChange}
                     required
@@ -173,7 +173,7 @@ export default function WarehouseFormModal({ isOpen, onClose, onSubmit, initialD
                   <input 
                     type="text" 
                     name="state"
-                    className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all"
+                    className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 focus:ring-0 outline-none transition-all"
                     value={formData.state}
                     onChange={handleChange}
                     required
@@ -184,7 +184,7 @@ export default function WarehouseFormModal({ isOpen, onClose, onSubmit, initialD
                   <input 
                     type="text" 
                     name="country"
-                    className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all"
+                    className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 focus:ring-0 outline-none transition-all"
                     value={formData.country}
                     onChange={handleChange}
                     required
@@ -195,7 +195,7 @@ export default function WarehouseFormModal({ isOpen, onClose, onSubmit, initialD
                   <input 
                     type="text" 
                     name="pinCode"
-                    className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all"
+                    className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 focus:ring-0 outline-none transition-all"
                     value={formData.pinCode}
                     onChange={handleChange}
                     required

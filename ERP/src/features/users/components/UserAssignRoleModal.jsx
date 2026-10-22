@@ -60,19 +60,19 @@ export default function UserAssignRoleModal({ isOpen, onClose, user, availableRo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4">
-      <div className="card max-w-sm w-full p-6 space-y-6 animate-slide-up">
+      <div className="card max-w-sm w-full p-6 space-y-6 animate-slide-up bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] shadow-xl dark:shadow-2xl">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-bold text-zinc-900">
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">
               Assign User Role
             </h3>
-            <p className="text-sm text-zinc-500 mt-1">
+            <p className="text-sm text-zinc-500 dark:text-[#A0A6B5] mt-1">
               Change role for {user.fullName || user.name}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-650"
+            className="text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE]"
           >
             ✕
           </button>
@@ -80,7 +80,7 @@ export default function UserAssignRoleModal({ isOpen, onClose, user, availableRo
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-zinc-500 block">
+            <label className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] block">
               Select Role
             </label>
             <CustomSelect

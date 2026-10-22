@@ -114,7 +114,7 @@ export default function SalesSettings() {
   const activeDocLabel = DOCUMENT_TYPES.find(d => d.value === docType)?.label || 'Quotation';
 
   return (
-    <div className="w-full h-full flex flex-col min-h-0 bg-zinc-50/50">
+    <div className="w-full h-full flex flex-col min-h-0 bg-zinc-50/50 dark:bg-[#0F1117]">
       <div className="p-4 sm:p-6 pb-2 shrink-0 w-full">
         <SettingsNavbar activeTab="module_account" />
       </div>
@@ -122,11 +122,11 @@ export default function SalesSettings() {
       <PageHeader
         title="Sales Settings"
         description="Configure default payment terms, terms & conditions, delivery terms, and warranty terms for sales documents."
-        icon={<Sliders size={20} className="text-zinc-800" />}
+        icon={<Sliders size={20} className="text-zinc-800 dark:text-zinc-200" />}
         border={true}
-        className="shrink-0 bg-white"
+        className="shrink-0 bg-white dark:bg-[#161922]"
       >
-        <div className="flex items-center gap-1.5 p-1 bg-zinc-100 rounded-lg border border-zinc-200/70 overflow-x-auto max-w-full">
+        <div className="flex items-center gap-1.5 p-1 bg-zinc-100 dark:bg-[#1D212C] rounded-lg border border-zinc-200/70 dark:border-[#2A2F3D] overflow-x-auto max-w-full">
           {DOCUMENT_TYPES.map(dt => {
             const isSelected = docType === dt.value;
             return (
@@ -136,8 +136,8 @@ export default function SalesSettings() {
                 onClick={() => setDocType(dt.value)}
                 className={`px-3 py-1 text-xs font-semibold rounded-md transition-all whitespace-nowrap cursor-pointer ${
                   isSelected
-                    ? 'bg-white text-zinc-900 shadow-2xs'
-                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50'
+                    ? 'bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] shadow-2xs'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#222736]'
                 }`}
               >
                 {dt.label}
@@ -155,7 +155,7 @@ export default function SalesSettings() {
           <SectionCard
             title="Payment Terms"
             subtitle={`Default payment terms for ${activeDocLabel.toLowerCase()}s`}
-            icon={<CreditCard size={17} className="text-zinc-700" />}
+            icon={<CreditCard size={17} className="text-zinc-700 dark:text-zinc-300" />}
             count={paymentTerms.length}
             isLoading={isLoadingPt}
             onAdd={() => setPtModal({ open: true, mode: 'create', data: null })}
@@ -164,33 +164,33 @@ export default function SalesSettings() {
             {paymentTerms.map((pt) => (
               <div 
                 key={pt.id} 
-                className="group border border-zinc-200/80 rounded-xl p-3.5 hover:border-zinc-300 hover:shadow-2xs transition-all bg-white relative shrink-0"
+                className="group border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl p-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-2xs transition-all bg-white dark:bg-[#1D212C] relative shrink-0"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-semibold text-zinc-900 text-xs truncate">{pt.name}</h4>
+                      <h4 className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-xs truncate">{pt.name}</h4>
                       {pt.isDefault && (
-                        <span className="shrink-0 px-2 py-0.5 bg-zinc-900 text-white text-[10px] font-semibold rounded-full">
+                        <span className="shrink-0 px-2 py-0.5 bg-zinc-900 dark:bg-[#4C8DFF] text-white text-[10px] font-semibold rounded-full">
                           Default
                         </span>
                       )}
                       {!pt.isActive && (
-                        <span className="shrink-0 px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-medium rounded-full">
+                        <span className="shrink-0 px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 text-[10px] font-medium rounded-full">
                           Inactive
                         </span>
                       )}
                     </div>
                     {pt.description && (
-                      <p className="text-xs text-zinc-500 mt-1 whitespace-pre-wrap leading-relaxed line-clamp-2">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 whitespace-pre-wrap leading-relaxed line-clamp-2">
                         {pt.description}
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 bg-white shadow-2xs rounded-lg border border-zinc-200 p-0.5">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 bg-white dark:bg-[#161922] shadow-2xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] p-0.5">
                     <button 
                       onClick={() => setPtModal({ open: true, mode: 'edit', data: pt })} 
-                      className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
+                      className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-md transition-colors"
                       title="Edit"
                     >
                       <Edit2 size={13} />
@@ -204,7 +204,7 @@ export default function SalesSettings() {
                         itemName: pt.name,
                         loading: false
                       })} 
-                      className="p-1.5 text-zinc-500 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                      className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-md transition-colors"
                       title="Delete"
                     >
                       <Trash2 size={13} />
@@ -219,7 +219,7 @@ export default function SalesSettings() {
           <SectionCard
             title="Terms & Conditions"
             subtitle={`Default legal terms & conditions for ${activeDocLabel.toLowerCase()}s`}
-            icon={<ScrollText size={17} className="text-zinc-700" />}
+            icon={<ScrollText size={17} className="text-zinc-700 dark:text-zinc-300" />}
             count={termsConditions.length}
             isLoading={isLoadingTc}
             onAdd={() => setTcModal({ open: true, mode: 'create', data: null })}
@@ -246,7 +246,7 @@ export default function SalesSettings() {
           <SectionCard
             title="Delivery Terms"
             subtitle={`Default shipping and logistics terms for ${activeDocLabel.toLowerCase()}s`}
-            icon={<Truck size={17} className="text-zinc-700" />}
+            icon={<Truck size={17} className="text-zinc-700 dark:text-zinc-300" />}
             count={deliveryTerms.length}
             isLoading={isLoadingDt}
             onAdd={() => setDtModal({ open: true, mode: 'create', data: null })}
@@ -255,33 +255,33 @@ export default function SalesSettings() {
             {deliveryTerms.map((dt) => (
               <div 
                 key={dt.id} 
-                className="group border border-zinc-200/80 rounded-xl p-3.5 hover:border-zinc-300 hover:shadow-2xs transition-all bg-white relative shrink-0"
+                className="group border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl p-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-2xs transition-all bg-white dark:bg-[#1D212C] relative shrink-0"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-semibold text-zinc-900 text-xs truncate">{dt.name}</h4>
+                      <h4 className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-xs truncate">{dt.name}</h4>
                       {dt.isDefault && (
-                        <span className="shrink-0 px-2 py-0.5 bg-zinc-900 text-white text-[10px] font-semibold rounded-full">
+                        <span className="shrink-0 px-2 py-0.5 bg-zinc-900 dark:bg-[#4C8DFF] text-white text-[10px] font-semibold rounded-full">
                           Default
                         </span>
                       )}
                       {!dt.isActive && (
-                        <span className="shrink-0 px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-medium rounded-full">
+                        <span className="shrink-0 px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 text-[10px] font-medium rounded-full">
                           Inactive
                         </span>
                       )}
                     </div>
                     {dt.description && (
-                      <p className="text-xs text-zinc-500 mt-1 whitespace-pre-wrap leading-relaxed line-clamp-2">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 whitespace-pre-wrap leading-relaxed line-clamp-2">
                         {dt.description}
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 bg-white shadow-2xs rounded-lg border border-zinc-200 p-0.5">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 bg-white dark:bg-[#161922] shadow-2xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] p-0.5">
                     <button 
                       onClick={() => setDtModal({ open: true, mode: 'edit', data: dt })} 
-                      className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
+                      className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-md transition-colors"
                       title="Edit"
                     >
                       <Edit2 size={13} />
@@ -295,7 +295,7 @@ export default function SalesSettings() {
                         itemName: dt.name,
                         loading: false
                       })} 
-                      className="p-1.5 text-zinc-500 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                      className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-md transition-colors"
                       title="Delete"
                     >
                       <Trash2 size={13} />
@@ -310,7 +310,7 @@ export default function SalesSettings() {
           <SectionCard
             title="Warranty Terms"
             subtitle={`Default warranty coverage policies for ${activeDocLabel.toLowerCase()}s`}
-            icon={<ShieldCheck size={17} className="text-zinc-700" />}
+            icon={<ShieldCheck size={17} className="text-zinc-700 dark:text-zinc-300" />}
             count={warrantyTerms.length}
             isLoading={isLoadingWt}
             onAdd={() => setWtModal({ open: true, mode: 'create', data: null })}
@@ -319,33 +319,33 @@ export default function SalesSettings() {
             {warrantyTerms.map((wt) => (
               <div 
                 key={wt.id} 
-                className="group border border-zinc-200/80 rounded-xl p-3.5 hover:border-zinc-300 hover:shadow-2xs transition-all bg-white relative shrink-0"
+                className="group border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl p-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-2xs transition-all bg-white dark:bg-[#1D212C] relative shrink-0"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-semibold text-zinc-900 text-xs truncate">{wt.name}</h4>
+                      <h4 className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-xs truncate">{wt.name}</h4>
                       {wt.isDefault && (
-                        <span className="shrink-0 px-2 py-0.5 bg-zinc-900 text-white text-[10px] font-semibold rounded-full">
+                        <span className="shrink-0 px-2 py-0.5 bg-zinc-900 dark:bg-[#4C8DFF] text-white text-[10px] font-semibold rounded-full">
                           Default
                         </span>
                       )}
                       {!wt.isActive && (
-                        <span className="shrink-0 px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-medium rounded-full">
+                        <span className="shrink-0 px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 text-[10px] font-medium rounded-full">
                           Inactive
                         </span>
                       )}
                     </div>
                     {wt.description && (
-                      <p className="text-xs text-zinc-500 mt-1 whitespace-pre-wrap leading-relaxed line-clamp-2">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 whitespace-pre-wrap leading-relaxed line-clamp-2">
                         {wt.description}
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 bg-white shadow-2xs rounded-lg border border-zinc-200 p-0.5">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 bg-white dark:bg-[#161922] shadow-2xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] p-0.5">
                     <button 
                       onClick={() => setWtModal({ open: true, mode: 'edit', data: wt })} 
-                      className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
+                      className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-md transition-colors"
                       title="Edit"
                     >
                       <Edit2 size={13} />
@@ -359,7 +359,7 @@ export default function SalesSettings() {
                         itemName: wt.name,
                         loading: false
                       })} 
-                      className="p-1.5 text-zinc-500 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                      className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-md transition-colors"
                       title="Delete"
                     >
                       <Trash2 size={13} />
@@ -451,28 +451,28 @@ export default function SalesSettings() {
  */
 function SectionCard({ title, subtitle, icon, count, isLoading, onAdd, emptyMessage, children }) {
   return (
-    <div className="bg-white border border-zinc-200/90 rounded-2xl shadow-2xs flex flex-col h-full min-h-[300px] overflow-hidden">
+    <div className="bg-white dark:bg-[#161922] border border-zinc-200/90 dark:border-[#2A2F3D] rounded-2xl shadow-2xs flex flex-col h-full min-h-[300px] overflow-hidden">
       {/* Card Header */}
-      <div className="px-5 py-3.5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/60 shrink-0">
+      <div className="px-5 py-3.5 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/60 dark:bg-[#1D212C]/60 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0 border border-zinc-200/70">
+          <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-[#161922] text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200/70 dark:border-[#2A2F3D]">
             {icon}
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-zinc-900 tracking-tight">{title}</h3>
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">{title}</h3>
               {count > 0 && (
-                <span className="px-1.5 py-0.2 bg-zinc-200/80 text-zinc-700 text-[10px] font-semibold rounded-full">
+                <span className="px-1.5 py-0.2 bg-zinc-200/80 dark:bg-[#2A2F3D] text-zinc-700 dark:text-zinc-300 text-[10px] font-semibold rounded-full">
                   {count}
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-zinc-500 truncate mt-0.5">{subtitle}</p>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{subtitle}</p>
           </div>
         </div>
         <button 
           onClick={onAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 text-white text-xs font-semibold rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer shadow-2xs active:scale-95 shrink-0"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 dark:bg-[#4C8DFF] text-white text-xs font-semibold rounded-lg hover:bg-zinc-800 dark:hover:bg-[#3A78E6] transition-colors cursor-pointer shadow-2xs active:scale-95 shrink-0"
         >
           <Plus size={13} strokeWidth={2.5} />
           <span>Add</span>
@@ -480,17 +480,17 @@ function SectionCard({ title, subtitle, icon, count, isLoading, onAdd, emptyMess
       </div>
 
       {/* Card Content List */}
-      <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-2.5 bg-zinc-50/20">
+      <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-2.5 bg-zinc-50/20 dark:bg-[#0F1117]/30">
         {isLoading ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 gap-2 py-8">
-            <Loader2 size={20} className="animate-spin text-zinc-400" />
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 gap-2 py-8">
+            <Loader2 size={20} className="animate-spin text-zinc-400 dark:text-zinc-500" />
             <span className="text-xs">Loading items...</span>
           </div>
         ) : count === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 text-xs p-6 text-center border-2 border-dashed border-zinc-200 rounded-xl bg-white/50 my-auto">
-            <FileText size={28} className="mb-2 text-zinc-300" />
-            <p className="text-zinc-500 font-medium">{emptyMessage}</p>
-            <p className="text-[11px] text-zinc-400 mt-1">Click "Add" above to create your first preset.</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 text-xs p-6 text-center border-2 border-dashed border-zinc-200 dark:border-[#2A2F3D] rounded-xl bg-white/50 dark:bg-[#161922]/50 my-auto">
+            <FileText size={28} className="mb-2 text-zinc-300 dark:text-zinc-600" />
+            <p className="text-zinc-500 dark:text-zinc-400 font-medium">{emptyMessage}</p>
+            <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1">Click "Add" above to create your first preset.</p>
           </div>
         ) : (
           children
@@ -507,30 +507,30 @@ function TermsConditionItem({ tc, onEdit, onDelete }) {
   const [expanded, setExpanded] = useState(false);
   
   return (
-    <div className="group border border-zinc-200/80 rounded-xl p-3.5 hover:border-zinc-300 hover:shadow-2xs transition-all bg-white relative shrink-0">
+    <div className="group border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl p-3.5 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-2xs transition-all bg-white dark:bg-[#1D212C] relative shrink-0">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="font-semibold text-zinc-900 text-xs truncate">{tc.title}</h4>
+            <h4 className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-xs truncate">{tc.title}</h4>
             {tc.isDefault && (
-              <span className="shrink-0 px-2 py-0.5 bg-zinc-900 text-white text-[10px] font-semibold rounded-full">
+              <span className="shrink-0 px-2 py-0.5 bg-zinc-900 dark:bg-[#4C8DFF] text-white text-[10px] font-semibold rounded-full">
                 Default
               </span>
             )}
             {!tc.isActive && (
-              <span className="shrink-0 px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-medium rounded-full">
+              <span className="shrink-0 px-2 py-0.5 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 text-[10px] font-medium rounded-full">
                 Inactive
               </span>
             )}
           </div>
-          <div className={`text-xs text-zinc-600 mt-2 whitespace-pre-wrap leading-relaxed bg-zinc-50 p-2.5 rounded-lg border border-zinc-100 ${expanded ? '' : 'line-clamp-3'}`}>
+          <div className={`text-xs text-zinc-600 dark:text-zinc-300 mt-2 whitespace-pre-wrap leading-relaxed bg-zinc-50 dark:bg-[#161922] p-2.5 rounded-lg border border-zinc-100 dark:border-[#2A2F3D] ${expanded ? '' : 'line-clamp-3'}`}>
             {tc.content}
           </div>
           {tc.content && tc.content.length > 140 && (
             <button 
               type="button"
               onClick={() => setExpanded(!expanded)} 
-              className="mt-1.5 text-[11px] font-semibold text-zinc-600 hover:text-zinc-900 transition-colors inline-flex items-center gap-1 focus:outline-none cursor-pointer"
+              className="mt-1.5 text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#E6E8EE] transition-colors inline-flex items-center gap-1 focus:outline-none cursor-pointer"
             >
               {expanded ? (
                 <>Show less <ChevronUp size={12} /></>
@@ -540,17 +540,17 @@ function TermsConditionItem({ tc, onEdit, onDelete }) {
             </button>
           )}
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 bg-white shadow-2xs rounded-lg border border-zinc-200 p-0.5">
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 bg-white dark:bg-[#161922] shadow-2xs rounded-lg border border-zinc-200 dark:border-[#2A2F3D] p-0.5">
           <button 
             onClick={() => onEdit(tc)} 
-            className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
+            className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-md transition-colors"
             title="Edit"
           >
             <Edit2 size={13} />
           </button>
           <button 
             onClick={() => onDelete(tc.id, tc.title)} 
-            className="p-1.5 text-zinc-500 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+            className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-md transition-colors"
             title="Delete"
           >
             <Trash2 size={13} />
@@ -608,28 +608,28 @@ function GenericTermModal({
 
   const modal = (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 dark:bg-black/70 backdrop-blur-xs animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isSubmitting) onClose();
       }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-200 animate-scale-in">
-        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
-          <h3 className="text-sm sm:text-base font-bold text-zinc-900">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-zinc-200 dark:border-[#2A2F3D] animate-scale-in">
+        <div className="px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/50 dark:bg-[#1D212C]/50">
+          <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">
             {mode === 'create' ? `Add ${title}` : `Edit ${title}`}
           </h3>
           <button 
             type="button"
             onClick={onClose} 
             disabled={isSubmitting}
-            className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/60 rounded-lg transition-colors cursor-pointer"
+            className="p-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-[#222736] rounded-lg transition-colors cursor-pointer"
           >
             <X size={17} />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
               Name <span className="text-rose-500">*</span>
             </label>
             <input 
@@ -637,12 +637,12 @@ function GenericTermModal({
               type="text" 
               value={formData.name} 
               onChange={e => setFormData({ ...formData, name: e.target.value })}
-              className="w-full h-9 px-3 text-xs bg-white border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-all"
+              className="w-full h-9 px-3 text-xs bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] focus:border-zinc-900 dark:focus:border-[#4C8DFF] transition-all"
               placeholder={namePlaceholder}
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
               Description <span className="text-rose-500">*</span>
             </label>
             <textarea 
@@ -650,43 +650,43 @@ function GenericTermModal({
               rows={3}
               value={formData.description} 
               onChange={e => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 text-xs bg-white border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-all resize-y"
+              className="w-full px-3 py-2 text-xs bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] focus:border-zinc-900 dark:focus:border-[#4C8DFF] transition-all resize-y"
               placeholder={descPlaceholder}
             />
           </div>
           <div className="flex items-center gap-6 pt-1">
-            <label className="flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer select-none">
               <input 
                 type="checkbox" 
                 checked={formData.isDefault}
                 onChange={e => setFormData({ ...formData, isDefault: e.target.checked })}
-                className="w-4 h-4 rounded text-zinc-900 focus:ring-zinc-900 border-zinc-300 cursor-pointer"
+                className="w-4 h-4 rounded text-zinc-900 dark:text-[#4C8DFF] focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] border-zinc-300 dark:border-[#2A2F3D] cursor-pointer"
               />
               Set as Default
             </label>
-            <label className="flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer select-none">
               <input 
                 type="checkbox" 
                 checked={formData.isActive}
                 onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
-                className="w-4 h-4 rounded text-zinc-900 focus:ring-zinc-900 border-zinc-300 cursor-pointer"
+                className="w-4 h-4 rounded text-zinc-900 dark:text-[#4C8DFF] focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] border-zinc-300 dark:border-[#2A2F3D] cursor-pointer"
               />
               Active
             </label>
           </div>
-          <div className="pt-3 border-t border-zinc-100 flex justify-end gap-2.5">
+          <div className="pt-3 border-t border-zinc-100 dark:border-[#2A2F3D] flex justify-end gap-2.5">
             <button 
               type="button" 
               onClick={onClose} 
               disabled={isSubmitting}
-              className="h-8 px-4 text-xs font-medium text-zinc-600 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors cursor-pointer"
+              className="h-8 px-4 text-xs font-medium text-zinc-600 dark:text-zinc-400 bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button 
               type="submit" 
               disabled={isSubmitting} 
-              className="h-8 px-4 text-xs font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              className="h-8 px-4 text-xs font-semibold text-white bg-zinc-900 dark:bg-[#4C8DFF] rounded-lg hover:bg-zinc-800 dark:hover:bg-[#3A78E6] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
               {isSubmitting ? (
                 <>
@@ -742,28 +742,28 @@ function TermsConditionModal({ mode, initialData, documentType, companyId, onClo
 
   const modal = (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 dark:bg-black/70 backdrop-blur-xs animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isSubmitting) onClose();
       }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-zinc-200 animate-scale-in">
-        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
-          <h3 className="text-sm sm:text-base font-bold text-zinc-900">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-zinc-200 dark:border-[#2A2F3D] animate-scale-in">
+        <div className="px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/50 dark:bg-[#1D212C]/50">
+          <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-[#E6E8EE]">
             {mode === 'create' ? 'Add Terms & Conditions' : 'Edit Terms & Conditions'}
           </h3>
           <button 
             type="button"
             onClick={onClose} 
             disabled={isSubmitting}
-            className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/60 rounded-lg transition-colors cursor-pointer"
+            className="p-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-[#222736] rounded-lg transition-colors cursor-pointer"
           >
             <X size={17} />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
               Title <span className="text-rose-500">*</span>
             </label>
             <input 
@@ -771,12 +771,12 @@ function TermsConditionModal({ mode, initialData, documentType, companyId, onClo
               type="text" 
               value={formData.title} 
               onChange={e => setFormData({ ...formData, title: e.target.value })}
-              className="w-full h-9 px-3 text-xs bg-white border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-all"
+              className="w-full h-9 px-3 text-xs bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] focus:border-zinc-900 dark:focus:border-[#4C8DFF] transition-all"
               placeholder="e.g. Standard Quotation Terms & Conditions"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
               Content <span className="text-rose-500">*</span>
             </label>
             <textarea 
@@ -784,43 +784,43 @@ function TermsConditionModal({ mode, initialData, documentType, companyId, onClo
               rows={8}
               value={formData.content} 
               onChange={e => setFormData({ ...formData, content: e.target.value })}
-              className="w-full px-3 py-2 text-xs bg-white border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 font-mono transition-all resize-y"
+              className="w-full px-3 py-2 text-xs bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] focus:border-zinc-900 dark:focus:border-[#4C8DFF] font-mono transition-all resize-y"
               placeholder="1. Payment must be made within the agreed timeline.&#10;2. Delivery is subject to inventory availability.&#10;3. Goods once sold are not returnable without prior approval."
             />
           </div>
           <div className="flex items-center gap-6 pt-1">
-            <label className="flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer select-none">
               <input 
                 type="checkbox" 
                 checked={formData.isDefault}
                 onChange={e => setFormData({ ...formData, isDefault: e.target.checked })}
-                className="w-4 h-4 rounded text-zinc-900 focus:ring-zinc-900 border-zinc-300 cursor-pointer"
+                className="w-4 h-4 rounded text-zinc-900 dark:text-[#4C8DFF] focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] border-zinc-300 dark:border-[#2A2F3D] cursor-pointer"
               />
               Set as Default
             </label>
-            <label className="flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer select-none">
               <input 
                 type="checkbox" 
                 checked={formData.isActive}
                 onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
-                className="w-4 h-4 rounded text-zinc-900 focus:ring-zinc-900 border-zinc-300 cursor-pointer"
+                className="w-4 h-4 rounded text-zinc-900 dark:text-[#4C8DFF] focus:ring-zinc-900 dark:focus:ring-[#4C8DFF] border-zinc-300 dark:border-[#2A2F3D] cursor-pointer"
               />
               Active
             </label>
           </div>
-          <div className="pt-3 border-t border-zinc-100 flex justify-end gap-2.5">
+          <div className="pt-3 border-t border-zinc-100 dark:border-[#2A2F3D] flex justify-end gap-2.5">
             <button 
               type="button" 
               onClick={onClose} 
               disabled={isSubmitting}
-              className="h-8 px-4 text-xs font-medium text-zinc-600 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors cursor-pointer"
+              className="h-8 px-4 text-xs font-medium text-zinc-600 dark:text-zinc-400 bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button 
               type="submit" 
               disabled={isSubmitting} 
-              className="h-8 px-4 text-xs font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              className="h-8 px-4 text-xs font-semibold text-white bg-zinc-900 dark:bg-[#4C8DFF] rounded-lg hover:bg-zinc-800 dark:hover:bg-[#3A78E6] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
               {isSubmitting ? (
                 <>

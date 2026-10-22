@@ -69,17 +69,17 @@ export default function RolesTab({ organizationId, buildPath }) {
   }, [standardRoles, search, scopeFilter]);
 
   return (
-    <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
-      <div className="p-5 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+      <div className="p-5 border-b border-zinc-100 dark:border-[#2A2F3D] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900 tracking-tight flex items-center gap-2">
-            <ShieldCheck size={16} className="text-violet-600" />
+          <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight flex items-center gap-2">
+            <ShieldCheck size={16} className="text-violet-600 dark:text-violet-400" />
             Roles & Access Control Policies
-            <span className="text-[11px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200">
+            <span className="text-[11px] font-bold text-zinc-600 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1D212C] px-2 py-0.5 rounded-full border border-zinc-200 dark:border-[#2A2F3D]">
               {standardRoles.length} Policies
             </span>
           </h3>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
             Role definitions and security permissions applicable to users in this organization
           </p>
         </div>
@@ -118,25 +118,25 @@ export default function RolesTab({ organizationId, buildPath }) {
             {filteredRoles.map((role) => (
               <div
                 key={role.name}
-                className="p-4 rounded-xl border border-zinc-200/80 bg-zinc-50/40 hover:bg-white hover:shadow-xs transition-all space-y-2.5"
+                className="p-4 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] bg-zinc-50/40 dark:bg-[#1D212C]/50 hover:bg-white dark:hover:bg-[#1D212C] hover:shadow-xs transition-all space-y-2.5"
               >
                 <div className="flex items-center justify-between">
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${role.badge}`}>
                     {role.name}
                   </span>
-                  <span className="text-[10px] font-semibold text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-semibold text-zinc-500 dark:text-[#A0A6B5] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] px-2 py-0.5 rounded-full">
                     {role.scope}
                   </span>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold text-zinc-900">{role.label}</h4>
-                  <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{role.desc}</p>
+                  <h4 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">{role.label}</h4>
+                  <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5 leading-relaxed">{role.desc}</p>
                 </div>
 
-                <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[11px] text-zinc-400">
+                <div className="pt-2 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between text-[11px] text-zinc-400 dark:text-[#6B7184]">
                   <span>{role.level}</span>
-                  <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold">
+                  <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
                     <CheckCircle2 size={12} /> Active Policy
                   </span>
                 </div>
@@ -144,10 +144,10 @@ export default function RolesTab({ organizationId, buildPath }) {
             ))}
           </div>
         ) : (
-          <div className="p-8 text-center bg-zinc-50/50 rounded-xl">
-            <ShieldCheck size={26} className="mx-auto text-zinc-300 mb-2" />
-            <p className="text-xs font-semibold text-zinc-700">No roles match "{search}"</p>
-            <p className="text-[11px] text-zinc-400 mt-1">Try resetting search keywords or scope filter.</p>
+          <div className="p-8 text-center bg-zinc-50/50 dark:bg-[#1D212C]/50 rounded-xl">
+            <ShieldCheck size={26} className="mx-auto text-zinc-300 dark:text-[#6B7184] mb-2" />
+            <p className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE]">No roles match "{search}"</p>
+            <p className="text-[11px] text-zinc-400 dark:text-[#6B7184] mt-1">Try resetting search keywords or scope filter.</p>
             <button
               type="button"
               onClick={() => {

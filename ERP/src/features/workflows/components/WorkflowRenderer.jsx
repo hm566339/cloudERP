@@ -57,14 +57,14 @@ export default function WorkflowRenderer({
   return (
     <div className="space-y-6">
       {/* Top Header Card */}
-      <div className="bg-white rounded-xl border border-zinc-200 p-5 shadow-sm">
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             {onBack && (
               <button
                 type="button"
                 onClick={onBack}
-                className="p-1.5 rounded-lg border border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 transition-colors"
+                className="p-1.5 rounded-lg border border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors"
                 title="Go Back"
               >
                 <ArrowLeft size={16} />

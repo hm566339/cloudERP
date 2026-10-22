@@ -12,8 +12,8 @@ export default function GrnLineItemsTable({
   onItemChange,
 }) {
   return (
-    <div className="bg-white rounded-xl border border-zinc-200/80 p-4 shadow-2xs space-y-3">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-zinc-100">
+    <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D]/80 p-4 shadow-2xs space-y-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-2">
           <Package size={14} className="text-zinc-400" />
           <span className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider">
@@ -55,7 +55,7 @@ export default function GrnLineItemsTable({
               <col className="w-[130px]" />
             </colgroup>
             <thead>
-              <tr className="bg-zinc-50 border-b border-zinc-200/80 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+              <tr className="bg-zinc-50 border-b border-zinc-200/80 text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">
                 <th className="py-2.5 px-1.5 text-center">#</th>
                 <th className="py-2.5 px-2">Item</th>
                 <th className="py-2.5 px-1 text-right">Ordered</th>
@@ -121,7 +121,7 @@ export default function GrnLineItemsTable({
                         step="any"
                         min="0"
                         max={row.pendingQuantity}
-                        className={`w-full h-8 px-1.5 text-xs text-right font-mono font-bold bg-white border rounded-md outline-none focus:ring-1 focus:ring-zinc-900/10 ${
+                        className={`w-full h-8 px-1.5 text-xs text-right font-mono font-bold bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 border dark:border-border-dark rounded-md outline-none focus:ring-1 focus:ring-zinc-900/10 ${
                           rcvdErr ? 'border-rose-400 bg-rose-50/30 text-rose-700' : 'border-zinc-300 focus:border-zinc-500 text-zinc-900'
                         }`}
                         value={row.receivedQuantity}
@@ -138,7 +138,7 @@ export default function GrnLineItemsTable({
                         step="any"
                         min="0"
                         max={row.receivedQuantity}
-                        className={`w-full h-8 px-1.5 text-xs text-right font-mono font-bold bg-white border rounded-md outline-none focus:ring-1 focus:ring-emerald-500/20 ${
+                        className={`w-full h-8 px-1.5 text-xs text-right font-mono font-bold bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 border dark:border-border-dark rounded-md outline-none focus:ring-1 focus:ring-emerald-500/20 ${
                           acceptedErr ? 'border-rose-400 bg-rose-50/30 text-rose-700' : 'border-emerald-300 text-emerald-700 focus:border-emerald-500'
                         }`}
                         value={row.acceptedQuantity}
@@ -155,7 +155,7 @@ export default function GrnLineItemsTable({
                         step="any"
                         min="0"
                         max={row.receivedQuantity}
-                        className={`w-full h-8 px-1.5 text-xs text-right font-mono font-bold bg-white border rounded-md outline-none focus:ring-1 focus:ring-rose-500/20 ${
+                        className={`w-full h-8 px-1.5 text-xs text-right font-mono font-bold bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 border dark:border-border-dark rounded-md outline-none focus:ring-1 focus:ring-rose-500/20 ${
                           rejectedErr || (isRejected && reasonErr) ? 'border-rose-400 bg-rose-50/30 text-rose-700' : isRejected ? 'border-rose-300 text-rose-700' : 'border-zinc-300 text-zinc-600 focus:border-zinc-500'
                         }`}
                         value={row.rejectedQuantity}
@@ -177,7 +177,7 @@ export default function GrnLineItemsTable({
                       <input
                         type="text"
                         placeholder="Batch"
-                        className="w-full h-8 px-1.5 text-[11px] font-mono bg-white border border-zinc-200 rounded-md outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/5 text-zinc-700"
+                        className="w-full h-8 px-1.5 text-[11px] font-mono bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/5 text-zinc-700"
                         value={row.batchNumber}
                         onChange={(e) => onItemChange(idx, 'batchNumber', e.target.value)}
                       />
@@ -188,7 +188,7 @@ export default function GrnLineItemsTable({
                       <input
                         type="text"
                         placeholder="Serial"
-                        className="w-full h-8 px-1.5 text-[11px] font-mono bg-white border border-zinc-200 rounded-md outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/5 text-zinc-700"
+                        className="w-full h-8 px-1.5 text-[11px] font-mono bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/5 text-zinc-700"
                         value={row.serialNumber}
                         onChange={(e) => onItemChange(idx, 'serialNumber', e.target.value)}
                       />
@@ -228,7 +228,7 @@ export default function GrnLineItemsTable({
                           <input
                             type="text"
                             placeholder="Rejection reason *"
-                            className={`w-full h-8 px-1.5 text-[11px] bg-white border rounded-md outline-none focus:ring-1 ${
+                            className={`w-full h-8 px-1.5 text-[11px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 border dark:border-border-dark rounded-md outline-none focus:ring-1 ${
                               reasonErr ? 'border-rose-400 bg-rose-50/20 text-rose-700 placeholder-rose-400' : 'border-rose-300 text-rose-700 focus:border-rose-500'
                             }`}
                             value={row.rejectionReason}
@@ -241,7 +241,7 @@ export default function GrnLineItemsTable({
                         <input
                           type="text"
                           placeholder="Notes..."
-                          className="w-full h-8 px-1.5 text-[11px] bg-white border border-zinc-200 rounded-md outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/5 text-zinc-700"
+                          className="w-full h-8 px-1.5 text-[11px] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/5 text-zinc-700"
                           value={row.notes}
                           onChange={(e) => onItemChange(idx, 'notes', e.target.value)}
                         />

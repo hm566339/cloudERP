@@ -43,7 +43,7 @@ export default function InventorySnapshotForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white dark:bg-card-dark">
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
         
         <div className="p-3 bg-blue-50 text-blue-800 rounded-lg border border-blue-100 text-[9.6px] mb-4">
@@ -64,7 +64,7 @@ export default function InventorySnapshotForm({
             value={formData.snapshotScope}
             onChange={handleChange}
             placeholder="e.g. EOM_MARCH_2026, AUDIT_Q1"
-            className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+            className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
               errors.snapshotScope ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
             }`}
             autoFocus
@@ -86,7 +86,7 @@ export default function InventorySnapshotForm({
             name="snapshotDate"
             value={formData.snapshotDate}
             onChange={handleChange}
-            className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+            className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
               errors.snapshotDate ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
             }`}
           />
@@ -98,12 +98,12 @@ export default function InventorySnapshotForm({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto shrink-0">
+      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 mt-auto shrink-0">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

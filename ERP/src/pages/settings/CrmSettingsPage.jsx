@@ -61,50 +61,50 @@ export default function CrmSettingsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <Link
           to={`${prefix}/crm/leads`}
-          className="p-3.5 bg-white border border-zinc-200/80 rounded-xl hover:border-zinc-300 hover:shadow-xs transition-all flex items-center justify-between group"
+          className="p-3.5 bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-xs transition-all flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 flex items-center justify-center">
               <Target size={16} />
             </div>
             <div>
-              <p className="text-xs font-bold text-zinc-900">Leads Pipeline</p>
-              <p className="text-[10px] text-zinc-500">Track deal stages</p>
+              <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Leads Pipeline</p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Track deal stages</p>
             </div>
           </div>
-          <ArrowRight size={14} className="text-zinc-400 group-hover:text-zinc-700 group-hover:translate-x-0.5 transition-all" />
+          <ArrowRight size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all" />
         </Link>
 
         <Link
           to={`${prefix}/crm/communication`}
-          className="p-3.5 bg-white border border-zinc-200/80 rounded-xl hover:border-zinc-300 hover:shadow-xs transition-all flex items-center justify-between group"
+          className="p-3.5 bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-xs transition-all flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
               <MessageSquare size={16} />
             </div>
             <div>
-              <p className="text-xs font-bold text-zinc-900">Communication</p>
-              <p className="text-[10px] text-zinc-500">Customer touchpoints & logs</p>
+              <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Communication</p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Customer touchpoints & logs</p>
             </div>
           </div>
-          <ArrowRight size={14} className="text-zinc-400 group-hover:text-zinc-700 group-hover:translate-x-0.5 transition-all" />
+          <ArrowRight size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all" />
         </Link>
 
         <Link
           to={`${prefix}/crm/analytics`}
-          className="p-3.5 bg-white border border-zinc-200/80 rounded-xl hover:border-zinc-300 hover:shadow-xs transition-all flex items-center justify-between group"
+          className="p-3.5 bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-xs transition-all flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-400 flex items-center justify-center">
               <BarChart3 size={16} />
             </div>
             <div>
-              <p className="text-xs font-bold text-zinc-900">Sales Analytics</p>
-              <p className="text-[10px] text-zinc-500">Performance & win rates</p>
+              <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Sales Analytics</p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Performance & win rates</p>
             </div>
           </div>
-          <ArrowRight size={14} className="text-zinc-400 group-hover:text-zinc-700 group-hover:translate-x-0.5 transition-all" />
+          <ArrowRight size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all" />
         </Link>
       </div>
 

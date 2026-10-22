@@ -165,7 +165,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
     return (
       <div key={node.id} className="animate-in fade-in slide-in-from-top-1">
         <div 
-          className="flex items-center justify-between py-2.5 px-4 border-b border-zinc-100 hover:bg-zinc-50 transition-colors group relative"
+          className="flex items-center justify-between py-2.5 px-4 border-b border-zinc-100 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors group relative"
           style={{ paddingLeft: `${(depth * 28) + 16}px` }}
         >
           {depth > 0 && (
@@ -259,7 +259,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
     <div className="space-y-4 relative min-h-[320px]">
       <div className="card overflow-hidden">
         {/* Toolbar */}
-        <div className="p-4 border-b border-zinc-200 bg-white">
+        <div className="p-4 border-b border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark">
           <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <div className="relative w-full sm:w-72">
@@ -278,7 +278,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
                   type="button"
                   onClick={() => setViewMode('TABLE')}
                   className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                    viewMode === 'TABLE' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'
+                    viewMode === 'TABLE' ? 'bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 shadow-sm' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
                   }`}
                 >
                   <List size={14} /> Table
@@ -287,7 +287,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
                   type="button"
                   onClick={() => setViewMode('TREE')}
                   className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                    viewMode === 'TREE' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'
+                    viewMode === 'TREE' ? 'bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 shadow-sm' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
                   }`}
                 >
                   <FolderTree size={14} /> Tree
@@ -302,7 +302,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
                 className={`h-9 px-3 text-[10.4px] font-semibold rounded-lg border transition-all flex items-center gap-1.5 active:scale-95 ${
                   showAdvancedFilters || activeAdvancedFilterCount > 0
                     ? 'bg-zinc-100 border-zinc-300 text-zinc-900 shadow-sm'
-                    : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                    : 'bg-white dark:bg-surface-dark border-zinc-200 dark:border-border-dark text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-hover-dark/40'
                 }`}
               >
                 <SlidersHorizontal size={14} />
@@ -318,7 +318,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
               <button
                 type="button"
                 onClick={() => refetch()}
-                className="h-9 w-9 text-zinc-500 hover:text-zinc-800 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 flex items-center justify-center transition-all active:scale-95"
+                className="h-9 w-9 text-zinc-500 hover:text-zinc-800 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 flex items-center justify-center transition-all active:scale-95"
                 title="Refresh List"
               >
                 <RefreshCw size={14} className={isFetching ? 'animate-spin' : ''} />
@@ -357,7 +357,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
                       type="text"
                       value={filters.locationCode || ''}
                       onChange={(e) => setFilter('locationCode', e.target.value)}
-                      className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] outline-none focus:border-zinc-400"
+                      className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] outline-none focus:border-zinc-400"
                     />
                   </div>
                   <div>
@@ -366,7 +366,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
                       type="text"
                       value={filters.locationName || ''}
                       onChange={(e) => setFilter('locationName', e.target.value)}
-                      className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] outline-none focus:border-zinc-400"
+                      className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] outline-none focus:border-zinc-400"
                     />
                   </div>
                   <div>
@@ -374,7 +374,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
                     <select
                       value={filters.isActive !== undefined ? String(filters.isActive) : ''}
                       onChange={(e) => setFilter('isActive', e.target.value)}
-                      className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] outline-none focus:border-zinc-400"
+                      className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] outline-none focus:border-zinc-400"
                     >
                       <option value="">All Statuses</option>
                       <option value="true">Active</option>
@@ -388,7 +388,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
         </div>
 
         {/* Data View */}
-        <div className="w-full bg-white relative min-h-[160px]">
+        <div className="w-full bg-white dark:bg-card-dark relative min-h-[160px]">
           {isLoading ? (
             <TableSkeleton columns={4} />
           ) : locations?.length === 0 ? (
@@ -494,7 +494,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
 
       {isFormModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-md max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200">
+          <div className="bg-white dark:bg-card-dark w-full max-w-md max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200 dark:border-border-dark">
             <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center border border-zinc-200 text-zinc-700">
@@ -508,7 +508,7 @@ export default function WarehouseLocationManagement({ warehouseId }) {
                 <X size={18} strokeWidth={2.5} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar bg-white">
+            <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-card-dark">
               <WarehouseLocationForm
                 initialData={initialFormData}
                 warehouseId={warehouseId}

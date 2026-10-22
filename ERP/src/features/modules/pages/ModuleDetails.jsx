@@ -47,8 +47,8 @@ function CopyButton({ text, label, dispatch }) {
       onClick={handleCopy}
       className={`p-1.5 rounded-md border transition-all ${
         copied
-          ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
-          : 'bg-white border-zinc-200 text-zinc-400 hover:text-zinc-700 shadow-sm'
+          ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400'
+          : 'bg-white dark:bg-[#1D212C] border-zinc-200 dark:border-[#2A2F3D] text-zinc-400 dark:text-[#A0A6B5] hover:text-zinc-700 dark:hover:text-[#E6E8EE] shadow-sm'
       }`}
       title={`Copy ${label}`}
     >
@@ -127,10 +127,10 @@ export default function ModuleDetails() {
 
   if (error || !data) {
     return (
-      <div className="max-w-4xl mx-auto p-12 text-center bg-white rounded-xl shadow-sm border border-rose-200 mt-10">
+      <div className="max-w-4xl mx-auto p-12 text-center bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-rose-200 dark:border-rose-900/60 mt-10">
         <AlertCircle size={48} className="mx-auto text-rose-400 mb-4" />
-        <h2 className="text-xl font-bold text-rose-700">Failed to Load Module</h2>
-        <p className="text-rose-600/80 mt-2 max-w-md mx-auto mb-6">
+        <h2 className="text-xl font-bold text-rose-700 dark:text-rose-400">Failed to Load Module</h2>
+        <p className="text-rose-600/80 dark:text-rose-300/80 mt-2 max-w-md mx-auto mb-6">
           {error || 'The module could not be found.'}
         </p>
         <button onClick={() => navigate(-1)} className="btn-secondary">
@@ -230,17 +230,17 @@ export default function ModuleDetails() {
       </div>
 
       {/* ── Executive Hero Card ── */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-6 space-y-6">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-5">
           {/* Avatar & Title */}
           <div className="flex items-start gap-4 sm:gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 flex items-center justify-center text-white text-2xl font-black shrink-0 shadow-sm border border-indigo-200">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 flex items-center justify-center text-white text-2xl font-black shrink-0 shadow-sm border border-indigo-200 dark:border-indigo-800">
               <Layers size={28} />
             </div>
 
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-2xl font-extrabold text-zinc-900 tracking-tight">
+                <h1 className="text-2xl font-extrabold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
                   {data.name}
                 </h1>
 
@@ -315,7 +315,7 @@ export default function ModuleDetails() {
         {/* ── 4 Executive KPI Metric Cards ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-5 border-t border-zinc-100">
           <div className="p-3.5 bg-zinc-50/70 rounded-xl border border-zinc-200/70">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">Assigned Workspaces</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] block mb-1">Assigned Workspaces</span>
             <div className="flex items-center justify-between">
               <span className="text-lg font-extrabold text-zinc-900">{usedByCompanies.length}</span>
               <Briefcase size={16} className="text-zinc-400" />
@@ -324,7 +324,7 @@ export default function ModuleDetails() {
           </div>
           
           <div className="p-3.5 bg-zinc-50/70 rounded-xl border border-zinc-200/70">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">Gateway Endpoint</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] block mb-1">Gateway Endpoint</span>
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono font-bold text-zinc-800 truncate max-w-[130px]">{data.host || 'Default Gateway'}</span>
               <Globe size={16} className="text-zinc-400" />
@@ -333,7 +333,7 @@ export default function ModuleDetails() {
           </div>
 
           <div className="p-3.5 bg-zinc-50/70 rounded-xl border border-zinc-200/70">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">SSO Auth Status</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] block mb-1">SSO Auth Status</span>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-800">{data.clientId ? 'Provisioned' : 'Pending'}</span>
               <ShieldCheck size={16} className="text-emerald-500" />
@@ -342,7 +342,7 @@ export default function ModuleDetails() {
           </div>
 
           <div className="p-3.5 bg-zinc-50/70 rounded-xl border border-zinc-200/70">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">Audit Synchronized</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] block mb-1">Audit Synchronized</span>
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-800">{data.updatedAt ? new Date(data.updatedAt).toLocaleDateString() : 'Active'}</span>
               <Clock size={16} className="text-zinc-400" />
@@ -358,14 +358,14 @@ export default function ModuleDetails() {
         {/* Left Column: General Configuration & Audit */}
         <div className="space-y-6">
           {/* Service Configuration */}
-          <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
-            <div className="p-4 border-b border-zinc-100 bg-white flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100">
+          <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+            <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-900/40">
                 <Globe size={15} />
               </div>
               <div>
-                <h2 className="text-xs font-bold text-zinc-900 tracking-tight">Service Configuration</h2>
-                <p className="text-[11px] text-zinc-400">Runtime host specifications and route bindings</p>
+                <h2 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Service Configuration</h2>
+                <p className="text-[11px] text-zinc-400 dark:text-[#6B7184]">Runtime host specifications and route bindings</p>
               </div>
             </div>
             <div className="p-5 grid grid-cols-1 gap-3.5">
@@ -373,22 +373,22 @@ export default function ModuleDetails() {
               <InfoRow label="Host URL" value={data.host} mono />
               <InfoRow label="Operational Status">
                 <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'}`} />
-                  <span className="text-xs font-bold text-zinc-800">{isActive ? 'Active • Receiving Traffic' : 'Inactive • Traffic Suspended'}</span>
+                  <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
+                  <span className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE]">{isActive ? 'Active • Receiving Traffic' : 'Inactive • Traffic Suspended'}</span>
                 </div>
               </InfoRow>
             </div>
           </div>
 
           {/* Audit & Telemetry */}
-          <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
-            <div className="p-4 border-b border-zinc-100 bg-white flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-100">
+          <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+            <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/40">
                 <Clock size={15} />
               </div>
               <div>
-                <h2 className="text-xs font-bold text-zinc-900 tracking-tight">Audit & Governance</h2>
-                <p className="text-[11px] text-zinc-400">Creation timestamps and deployment synchronizations</p>
+                <h2 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Audit & Governance</h2>
+                <p className="text-[11px] text-zinc-400 dark:text-[#6B7184]">Creation timestamps and deployment synchronizations</p>
               </div>
             </div>
             <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -399,20 +399,20 @@ export default function ModuleDetails() {
         </div>
 
         {/* Right Column: Security & API Credentials */}
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-zinc-100 bg-white flex items-center justify-between">
+        <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/40">
                 <ShieldCheck size={15} />
               </div>
               <div>
-                <h2 className="text-xs font-bold text-zinc-900 tracking-tight">API Credentials</h2>
-                <p className="text-[11px] text-zinc-400">OAuth2/OIDC gateway secrets</p>
+                <h2 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">API Credentials</h2>
+                <p className="text-[11px] text-zinc-400 dark:text-[#6B7184]">OAuth2/OIDC gateway secrets</p>
               </div>
             </div>
             <button
               onClick={() => setRotateSecretModal({ isOpen: true })}
-              className="text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-lg border border-rose-200/80 transition-colors flex items-center gap-1.5 shadow-2xs"
+              className="text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 px-2.5 py-1.5 rounded-lg border border-rose-200/80 dark:border-rose-900/60 transition-colors flex items-center gap-1.5 shadow-2xs"
             >
               <Key size={13} /> Rotate Secret
             </button>
@@ -422,41 +422,41 @@ export default function ModuleDetails() {
             {/* Client ID */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Client ID</label>
+                <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Client ID</label>
               </div>
               <div className="flex items-center gap-2.5">
-                <div className="flex-1 bg-zinc-50/90 border border-zinc-200/80 rounded-xl px-3.5 py-2.5 font-mono text-xs text-zinc-800 break-all shadow-inner">
+                <div className="flex-1 bg-zinc-50/90 dark:bg-[#1D212C] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl px-3.5 py-2.5 font-mono text-xs text-zinc-800 dark:text-[#E6E8EE] break-all shadow-inner">
                   {data.clientId || 'Not generated'}
                 </div>
                 <CopyButton text={data.clientId} label="Client ID" dispatch={dispatch} />
               </div>
             </div>
 
-            <hr className="border-zinc-100" />
+            <hr className="border-zinc-100 dark:border-[#2A2F3D]" />
 
             {/* Client Secret */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Client Secret</label>
+                <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Client Secret</label>
                 <button
                   onClick={() => setShowSecret(!showSecret)}
-                  className="text-xs font-semibold text-zinc-900 hover:text-zinc-700 flex items-center gap-1.5 cursor-pointer"
+                  className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] hover:text-zinc-700 dark:hover:text-[#A0A6B5] flex items-center gap-1.5 cursor-pointer"
                 >
                   {showSecret ? <><EyeOff size={13} /> Hide Secret</> : <><Eye size={13} /> Reveal Secret</>}
                 </button>
               </div>
               
               <div className="flex items-center gap-2.5">
-                <div className="flex-1 bg-zinc-50/90 border border-zinc-200/80 rounded-xl px-3.5 py-2.5 font-mono text-xs text-zinc-800 break-all shadow-inner">
+                <div className="flex-1 bg-zinc-50/90 dark:bg-[#1D212C] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl px-3.5 py-2.5 font-mono text-xs text-zinc-800 dark:text-[#E6E8EE] break-all shadow-inner">
                   {data.clientSecret ? (
                     showSecret ? data.clientSecret : '•'.repeat(40)
                   ) : (
-                    <span className="text-zinc-400 italic font-sans text-xs">Secret masked by backend</span>
+                    <span className="text-zinc-400 dark:text-[#6B7184] italic font-sans text-xs">Secret masked by backend</span>
                   )}
                 </div>
                 <CopyButton text={data.clientSecret} label="Client Secret" dispatch={dispatch} />
               </div>
-              <p className="mt-2.5 text-[11px] text-zinc-500 flex items-center gap-1.5 bg-amber-50/50 p-2 rounded-lg border border-amber-200/60">
+              <p className="mt-2.5 text-[11px] text-zinc-500 dark:text-[#A0A6B5] flex items-center gap-1.5 bg-amber-50/50 dark:bg-amber-950/20 p-2 rounded-lg border border-amber-200/60 dark:border-amber-900/40">
                 <AlertCircle size={13} className="text-amber-500 shrink-0" />
                 <span>These credentials are used by the gateway to authenticate internal RPC routing and SSO session delegation.</span>
               </p>
@@ -466,18 +466,18 @@ export default function ModuleDetails() {
       </div>
 
       {/* ── Assigned Companies & Workspaces ── */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
-        <div className="p-4 border-b border-zinc-100 bg-white flex items-center justify-between">
+      <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+        <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-700 flex items-center justify-center border border-zinc-200/80">
+            <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-[#222736] text-zinc-700 dark:text-[#E6E8EE] flex items-center justify-center border border-zinc-200/80 dark:border-[#2A2F3D]">
               <Building2 size={15} />
             </div>
             <div>
-              <h2 className="text-xs font-bold text-zinc-900 tracking-tight">Assigned Workspaces & Tenant Companies</h2>
-              <p className="text-[11px] text-zinc-400">Multi-tenant client workspaces with this module service deployed</p>
+              <h2 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Assigned Workspaces & Tenant Companies</h2>
+              <p className="text-[11px] text-zinc-400 dark:text-[#6B7184]">Multi-tenant client workspaces with this module service deployed</p>
             </div>
           </div>
-          <div className="text-[11px] font-bold text-zinc-700 bg-zinc-100 border border-zinc-200/80 px-2.5 py-1 rounded-full">
+          <div className="text-[11px] font-bold text-zinc-700 dark:text-[#E6E8EE] bg-zinc-100 dark:bg-[#222736] border border-zinc-200/80 dark:border-[#2A2F3D] px-2.5 py-1 rounded-full">
             {loadingCompanyModules ? 'Loading...' : `${usedByCompanies.length} Total Allocations`}
           </div>
         </div>
@@ -504,7 +504,7 @@ export default function ModuleDetails() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                 <thead>
-                  <tr className="bg-zinc-50/80 border-b border-zinc-100 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">
+                  <tr className="bg-zinc-50/80 border-b border-zinc-100 dark:border-[#2A2F3D] text-[10px] uppercase tracking-wider text-zinc-400 font-semibold">
                     <th className="py-3 px-4 w-12 text-center text-[10px] uppercase tracking-wider text-zinc-400">#</th>
                     <th className="px-5 py-3">Company Workspace</th>
                     <th className="px-5 py-3">Tenant Code</th>

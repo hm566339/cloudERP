@@ -12,6 +12,7 @@ import { getAllFeatures } from '../../api/sso/feature';
 import PageHeader from '../../components/common/PageHeader';
 import ModuleTabs, { userTabs } from '../../components/module-tabs';
 import DataTable from '../../components/data-table/DataTable';
+import SettingsNavbar from '../../components/settings/SettingsNavbar';
 
 export default function UserPermissionsSettings() {
   const dispatch = useAppDispatch();
@@ -175,7 +176,7 @@ export default function UserPermissionsSettings() {
       label: 'Module',
       sortable: true,
       render: (val, row) => (
-        row._isDuplicateModule ? null : <span className="font-medium text-zinc-900">{row.moduleName}</span>
+        row._isDuplicateModule ? null : <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{row.moduleName}</span>
       )
     },
     {
@@ -184,8 +185,8 @@ export default function UserPermissionsSettings() {
       sortable: true,
       render: (val, row) => (
         <div>
-           <div className="font-medium text-zinc-900">{row.name}</div>
-           <div className="text-xs text-zinc-500">{row.code}</div>
+           <div className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{row.name}</div>
+           <div className="text-xs text-zinc-500 dark:text-[#A0A6B5]">{row.code}</div>
         </div>
       )
     },
@@ -200,14 +201,14 @@ export default function UserPermissionsSettings() {
         if (activeTab === 'effective') {
           return isSupported ? (
             hasEffectivePermission(row.code, action) ? (
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-600">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 dark:bg-[#34C38F]/15 dark:text-[#34C38F]">
                 <ShieldCheck size={14} />
               </span>
             ) : (
-              <span className="text-zinc-300 text-xs">-</span>
+              <span className="text-zinc-300 dark:text-zinc-600 text-xs">-</span>
             )
           ) : (
-            <span className="text-zinc-300 text-xs">-</span>
+            <span className="text-zinc-300 dark:text-zinc-600 text-xs">-</span>
           );
         }
 
@@ -216,10 +217,10 @@ export default function UserPermissionsSettings() {
             type="checkbox"
             checked={hasDirectPermission(row.code, action)}
             onChange={() => handleToggle(row.code, action)}
-            className="w-4 h-4 text-zinc-900 border-zinc-300 rounded focus:ring-zinc-900 accent-zinc-900 cursor-pointer"
+            className="w-4 h-4 text-[#4C8DFF] border-zinc-300 dark:border-[#2A2F3D] dark:bg-[#1D212C] rounded focus:ring-[#4C8DFF] accent-[#4C8DFF] cursor-pointer"
           />
         ) : (
-          <span className="text-zinc-300 text-xs">-</span>
+          <span className="text-zinc-300 dark:text-zinc-600 text-xs">-</span>
         );
       }
     }))
@@ -235,7 +236,10 @@ export default function UserPermissionsSettings() {
   ], [users]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 relative">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] dark:bg-transparent relative">
+      <div className="px-4 sm:px-6 pt-4 shrink-0">
+        <SettingsNavbar activeTab="users_permissions" />
+      </div>
       <PageHeader
         title="User Permissions"
         description="Manage direct permission overrides or view effective access resolving role inheritance."
@@ -255,12 +259,12 @@ export default function UserPermissionsSettings() {
       <ModuleTabs tabs={userTabs} activeKey="user-permissions" />
 
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
-        <div className="flex border-b border-zinc-200 mb-4 shrink-0">
+        <div className="flex border-b border-zinc-200 dark:border-[#2A2F3D] mb-4 shrink-0">
           <button
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'direct'
-                ? 'border-zinc-900 text-zinc-900 font-bold'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'
+                ? 'border-zinc-900 text-zinc-900 dark:border-[#4C8DFF] dark:text-[#4C8DFF] font-bold'
+                : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:hover:border-[#3A4154]'
             }`}
             onClick={() => setActiveTab('direct')}
           >
@@ -269,8 +273,8 @@ export default function UserPermissionsSettings() {
           <button
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'effective'
-                ? 'border-zinc-900 text-zinc-900 font-bold'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'
+                ? 'border-zinc-900 text-zinc-900 dark:border-[#4C8DFF] dark:text-[#4C8DFF] font-bold'
+                : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:hover:border-[#3A4154]'
             }`}
             onClick={() => setActiveTab('effective')}
           >
@@ -279,7 +283,7 @@ export default function UserPermissionsSettings() {
         </div>
 
         {activeTab === 'effective' && (
-          <div className="flex items-center gap-2 p-3 mb-4 bg-blue-50 text-blue-700 rounded-lg text-sm shrink-0">
+          <div className="flex items-center gap-2 p-3 mb-4 bg-blue-50 text-blue-700 dark:bg-[#38BDF8]/15 dark:text-[#38BDF8] dark:border dark:border-[#38BDF8]/30 rounded-lg text-sm shrink-0">
             <Info size={16} />
             This view shows the final resolved access for this user, including permissions inherited from their assigned roles. It cannot be edited directly.
           </div>

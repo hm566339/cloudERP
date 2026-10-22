@@ -312,15 +312,15 @@ export default function WarehouseManagement() {
   const renderExpandedRow = (wh) => (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Warehouse Name</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Warehouse Name</span>
         <p className="text-sm font-semibold text-zinc-900">{wh.warehouseName || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Code</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Code</span>
         <p className="text-sm font-semibold text-zinc-900">{wh.warehouseCode || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Status</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Status</span>
         <div>
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${wh.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
             {wh.status === 'ACTIVE' ? 'Active' : 'Inactive'}
@@ -328,16 +328,16 @@ export default function WarehouseManagement() {
         </div>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Type</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Type</span>
         <p className="text-sm font-medium text-zinc-700">{getTypeName(wh.warehouseType) || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Location</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Location</span>
         <p className="text-sm font-medium text-zinc-700">{wh.city || '-'}{wh.state ? `, ${wh.state}` : ''}</p>
         <p className="text-xs text-zinc-500">{wh.country || '-'}{wh.pinCode ? ` ${wh.pinCode}` : ''}</p>
       </div>
       <div className="space-y-1 col-span-2">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Full Address</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Full Address</span>
         <p className="text-sm font-medium text-zinc-700">{wh.addressLine1 || '-'}</p>
         {wh.addressLine2 && <p className="text-xs text-zinc-500">{wh.addressLine2}</p>}
       </div>
@@ -345,7 +345,7 @@ export default function WarehouseManagement() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Warehouse Management"
         description="Manage physical storage locations, capacities, and types"

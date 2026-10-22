@@ -120,6 +120,16 @@ function ChartCard({
       margin: { top: 10, right: 10, left: -20, bottom: 0 }
     };
 
+    const tooltipStyle = {
+      backgroundColor: 'var(--color-surface-elevated, #ffffff)',
+      borderColor: 'var(--color-border, #e4e4e7)',
+      color: 'var(--color-text-primary, #09090b)',
+      borderRadius: '8px',
+      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+    };
+    const axisTick = { fontSize: 12, fill: 'var(--color-text-secondary, #71717a)' };
+    const gridStroke = 'var(--color-border, #e4e4e7)';
+
     switch (type) {
       case 'area':
         return (
@@ -132,11 +142,11 @@ function ChartCard({
                 </linearGradient>
               ))}
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey={xAxisKey} tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Legend />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
+            <XAxis dataKey={xAxisKey} tick={axisTick} stroke={gridStroke} />
+            <YAxis tick={axisTick} stroke={gridStroke} />
+            <Tooltip contentStyle={tooltipStyle} />
+            <Legend wrapperStyle={{ color: 'var(--color-text-secondary, #71717a)' }} />
             {dataKeys.map((key, i) => (
               <Area 
                 key={key} 
@@ -153,11 +163,11 @@ function ChartCard({
       case 'line':
         return (
           <LineChart {...commonProps}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey={xAxisKey} tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Legend />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
+            <XAxis dataKey={xAxisKey} tick={axisTick} stroke={gridStroke} />
+            <YAxis tick={axisTick} stroke={gridStroke} />
+            <Tooltip contentStyle={tooltipStyle} />
+            <Legend wrapperStyle={{ color: 'var(--color-text-secondary, #71717a)' }} />
             {dataKeys.map((key, i) => (
               <Line 
                 key={key} 
@@ -176,11 +186,11 @@ function ChartCard({
       default:
         return (
           <BarChart {...commonProps}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey={xAxisKey} tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip cursor={{ fill: 'transparent' }} />
-            <Legend />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
+            <XAxis dataKey={xAxisKey} tick={axisTick} stroke={gridStroke} />
+            <YAxis tick={axisTick} stroke={gridStroke} />
+            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={tooltipStyle} />
+            <Legend wrapperStyle={{ color: 'var(--color-text-secondary, #71717a)' }} />
             {dataKeys.map((key, i) => (
               <Bar 
                 key={key} 
@@ -196,10 +206,10 @@ function ChartCard({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-4 flex flex-col h-full min-w-0">
+    <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-4 flex flex-col h-full min-w-0">
       <div className="mb-3">
-        <h3 className="text-sm font-bold text-zinc-900">{title}</h3>
-        {description && <p className="text-xs text-zinc-500 mt-1">{description}</p>}
+        <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">{title}</h3>
+        {description && <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-1">{description}</p>}
       </div>
       <div 
         ref={containerRef}

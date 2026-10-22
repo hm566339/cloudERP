@@ -103,7 +103,7 @@ export default function HsnSacSelect({
         createSubtext="Add New HSN/SAC"
         onSearchChange={setSearchTerm}
         serverSideSearch={true}
-        inputClassName="w-full h-8 pl-8 pr-8 bg-white border border-zinc-200 rounded-md text-[8.8px] hover:border-zinc-300 text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 transition-all"
+        inputClassName="w-full h-8 pl-8 pr-8 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[8.8px] hover:border-zinc-300 text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 transition-all"
       />
       {errorMessage && <div className="text-red-500 text-xs mt-1">{errorMessage}</div>}
     </div>

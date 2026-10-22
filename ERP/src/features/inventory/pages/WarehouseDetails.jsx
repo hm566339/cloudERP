@@ -80,7 +80,7 @@ export default function WarehouseDetails() {
       : (error?.message || "Warehouse Not Found");
 
     return (
-      <div className="p-8 mt-6 max-w-lg mx-auto bg-white rounded-xl border border-rose-200 shadow-sm text-center animate-fade-in">
+      <div className="p-8 mt-6 max-w-lg mx-auto bg-white dark:bg-card-dark rounded-xl border border-rose-200 dark:border-rose-900/40 shadow-sm text-center animate-fade-in">
         <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center mx-auto mb-4">
           <AlertCircle size={24} />
         </div>
@@ -109,7 +109,7 @@ export default function WarehouseDetails() {
   return (
     <div className="animate-fade-in pb-12 bg-zinc-50/30 min-h-screen">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-40 bg-white border-b border-zinc-200 shadow-sm pt-4 pb-0 mb-6">
+      <div className="sticky top-0 z-40 bg-white dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark shadow-sm pt-4 pb-0 mb-6">
         <div className="max-w-5xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
             
@@ -146,7 +146,7 @@ export default function WarehouseDetails() {
               <RequirePermission module="INVENTORY" action="EDIT">
                 <button 
                   onClick={() => setIsEditModalOpen(true)}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-700 rounded-lg text-sm font-semibold transition-all shadow-2xs"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-50 text-zinc-700 rounded-lg text-sm font-semibold transition-all shadow-2xs"
                 >
                   <Edit2 size={16} /> Edit
                 </button>
@@ -155,7 +155,7 @@ export default function WarehouseDetails() {
               <RequirePermission module="INVENTORY" action="DELETE">
                 <button 
                   onClick={handleDelete}
-                  className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 rounded-lg text-sm font-semibold transition-all shadow-2xs"
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-white dark:bg-card-dark border border-rose-200 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-lg text-sm font-semibold transition-all shadow-2xs"
                   title="Delete Warehouse"
                 >
                   <Trash2 size={16} />
@@ -192,8 +192,8 @@ export default function WarehouseDetails() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-slide-up">
             
             {/* Basic Info Card */}
-            <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
+            <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50">
                 <h3 className="font-semibold text-zinc-800 flex items-center gap-2 text-sm">
                   <WarehouseIcon size={16} className="text-zinc-400" /> Basic Information
                 </h3>
@@ -217,8 +217,8 @@ export default function WarehouseDetails() {
             </div>
 
             {/* Address Card */}
-            <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
+            <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50">
                 <h3 className="font-semibold text-zinc-800 flex items-center gap-2 text-sm">
                   <MapPin size={16} className="text-zinc-400" /> Location Details
                 </h3>
@@ -258,7 +258,7 @@ export default function WarehouseDetails() {
         )}
 
         {activeTab === 'audit' && (
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden p-6 animate-slide-up">
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden p-6 animate-slide-up">
             <h3 className="font-semibold text-zinc-800 mb-6 text-sm">System Information</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>

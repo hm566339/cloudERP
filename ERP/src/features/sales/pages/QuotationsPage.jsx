@@ -31,86 +31,86 @@ const QuotationOverview = ({ quote }) => {
   const audit = quote.audit || {};
 
   return (
-    <div className="p-5 bg-white border border-zinc-100 rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2 cursor-default" onClick={(e) => e.stopPropagation()}>
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100">
+    <div className="p-5 bg-white dark:bg-[#1D212C] border border-zinc-100 dark:border-[#2A2F3D] rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2 cursor-default" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded border border-zinc-200">
+          <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 dark:bg-[#161922] text-zinc-800 dark:text-[#E6E8EE] rounded border border-zinc-200 dark:border-[#2A2F3D]">
             {quote.quotationNumber || quote.quoteNo || '—'}
           </span>
           <div>
-            <h3 className="text-lg font-bold text-zinc-900">{cust.customerName || cust.companyName || quote.customerName || '—'} {cust.customerCode ? <span className="text-sm font-medium text-zinc-500">({cust.customerCode})</span> : ''}</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">Date: {quote.quotationDate ? new Date(quote.quotationDate).toLocaleDateString() : '—'} | Valid Until: {quote.validUntil ? new Date(quote.validUntil).toLocaleDateString() : '—'}</p>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">{cust.customerName || cust.companyName || quote.customerName || '—'} {cust.customerCode ? <span className="text-sm font-medium text-zinc-500 dark:text-[#6B7184]">({cust.customerCode})</span> : ''}</h3>
+            <p className="text-xs text-zinc-500 dark:text-[#6B7184] mt-0.5">Date: {quote.quotationDate ? new Date(quote.quotationDate).toLocaleDateString() : '—'} | Valid Until: {quote.validUntil ? new Date(quote.validUntil).toLocaleDateString() : '—'}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200`}>
+          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border bg-zinc-50 dark:bg-[#161922] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]`}>
             {quote.status || 'DRAFT'}
           </span>
         </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-4 sm:gap-6 mb-6">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Grand Total</p>
-          <p className="text-sm font-bold text-zinc-900 mt-1">{curr} {fmt(amtSummary.totalAmount)}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Grand Total</p>
+          <p className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">{curr} {fmt(amtSummary.totalAmount)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Outstanding</p>
-          <p className="text-sm font-bold text-amber-600 mt-1">{curr} {fmt(amtSummary.outstandingAmount || 0)}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Outstanding</p>
+          <p className="text-sm font-bold text-amber-600 dark:text-amber-400 mt-1">{curr} {fmt(amtSummary.outstandingAmount || 0)}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Payment %</p>
-          <p className="text-sm font-bold text-emerald-600 mt-1">{stats.paymentPercentage ?? '—'}{stats.paymentPercentage != null ? '%' : ''}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Payment %</p>
+          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1">{stats.paymentPercentage ?? '—'}{stats.paymentPercentage != null ? '%' : ''}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Item Count</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{stats.itemCount ?? lineItems.length}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Item Count</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{stats.itemCount ?? lineItems.length}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Days Outstanding</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{stats.daysOutstanding != null ? `${stats.daysOutstanding} days` : '—'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Days Outstanding</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{stats.daysOutstanding != null ? `${stats.daysOutstanding} days` : '—'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Aging Bucket</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{stats.agingBucket || '—'}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Aging Bucket</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{stats.agingBucket || '—'}</p>
         </div>
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Currency</p>
-          <p className="text-sm font-medium text-zinc-900 mt-1">{curr}</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Currency</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{curr}</p>
         </div>
       </div>
 
       <div className="mb-6">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Items</h4>
-        <div className="border border-zinc-200 rounded-lg overflow-x-auto min-w-0 custom-scrollbar">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-3">Items</h4>
+        <div className="border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-x-auto min-w-0 custom-scrollbar">
           <table className="w-full min-w-[750px] text-left text-sm">
-            <thead className="bg-zinc-50 border-b border-zinc-200">
+            <thead className="bg-zinc-50 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D]">
               <tr>
-                <th className="px-4 py-2 font-medium text-zinc-500">Item/Product</th>
-                <th className="px-4 py-2 font-medium text-zinc-500">Description</th>
-                <th className="px-4 py-2 font-medium text-zinc-500 text-right">Qty</th>
-                <th className="px-4 py-2 font-medium text-zinc-500">Unit</th>
-                <th className="px-4 py-2 font-medium text-zinc-500 text-right">Rate</th>
-                <th className="px-4 py-2 font-medium text-zinc-500 text-right">Discount</th>
-                <th className="px-4 py-2 font-medium text-zinc-500 text-right">Tax</th>
-                <th className="px-4 py-2 font-medium text-zinc-500 text-right">Tax %</th>
-                <th className="px-4 py-2 font-medium text-zinc-500 text-right">Line Total</th>
+                <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184]">Item/Product</th>
+                <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184]">Description</th>
+                <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Qty</th>
+                <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184]">Unit</th>
+                <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Rate</th>
+                <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Discount</th>
+                <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Tax</th>
+                <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Tax %</th>
+                <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Line Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
               {lineItems.length > 0 ? lineItems.map((it, i) => (
-                <tr key={i} className="hover:bg-zinc-50/50">
-                  <td className="px-4 py-2 font-medium text-zinc-900">{it.itemName || it.productName || it.name || '—'}</td>
-                  <td className="px-4 py-2 text-zinc-500 truncate max-w-[120px]">{it.description || '—'}</td>
-                  <td className="px-4 py-2 text-right">{it.quantity || 0}</td>
-                  <td className="px-4 py-2">{it.uom || it.unit || '—'}</td>
-                  <td className="px-4 py-2 text-right">{fmt(it.unitPrice || it.rate || 0)}</td>
-                  <td className="px-4 py-2 text-right">{fmt(it.discountAmount || 0)}</td>
-                  <td className="px-4 py-2 text-right">{fmt(it.taxAmount || 0)}</td>
-                  <td className="px-4 py-2 text-right">{it.taxRate != null ? `${it.taxRate}%` : (it.gstRate != null ? `${it.gstRate}%` : '—')}</td>
-                  <td className="px-4 py-2 text-right font-medium">{fmt(it.totalAmount || it.lineTotal || 0)}</td>
+                <tr key={i} className="hover:bg-zinc-50/50 dark:hover:bg-[#222736]">
+                  <td className="px-4 py-2 font-medium text-zinc-900 dark:text-[#E6E8EE]">{it.itemName || it.productName || it.name || '—'}</td>
+                  <td className="px-4 py-2 text-zinc-500 dark:text-[#6B7184] truncate max-w-[120px]">{it.description || '—'}</td>
+                  <td className="px-4 py-2 text-right text-zinc-900 dark:text-[#E6E8EE]">{it.quantity || 0}</td>
+                  <td className="px-4 py-2 text-zinc-700 dark:text-[#A0A6B5]">{it.uom || it.unit || '—'}</td>
+                  <td className="px-4 py-2 text-right text-zinc-900 dark:text-[#E6E8EE]">{fmt(it.unitPrice || it.rate || 0)}</td>
+                  <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{fmt(it.discountAmount || 0)}</td>
+                  <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{fmt(it.taxAmount || 0)}</td>
+                  <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{it.taxRate != null ? `${it.taxRate}%` : (it.gstRate != null ? `${it.gstRate}%` : '—')}</td>
+                  <td className="px-4 py-2 text-right font-medium text-zinc-900 dark:text-[#E6E8EE]">{fmt(it.totalAmount || it.lineTotal || 0)}</td>
                 </tr>
               )) : (
-                <tr><td colSpan={9} className="px-4 py-4 text-center text-zinc-400">No items available</td></tr>
+                <tr><td colSpan={9} className="px-4 py-4 text-center text-zinc-400 dark:text-[#6B7184]">No items available</td></tr>
               )}
             </tbody>
           </table>
@@ -119,40 +119,40 @@ const QuotationOverview = ({ quote }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Additional Details</h4>
+          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-3">Additional Details</h4>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-zinc-500">Payment Terms</span><span className="font-medium text-right">{terms.paymentTerms || '—'}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500">Delivery Terms</span><span className="font-medium text-right">{terms.deliveryTerms || '—'}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500">Created By</span><span className="font-medium text-right">{audit.created?.by?.username || audit.createdBy || quote.createdByName || '—'}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500">Created Date</span><span className="font-medium text-right">{audit.created?.at ? new Date(audit.created.at).toLocaleString() : (quote.createdAt ? new Date(quote.createdAt).toLocaleString() : '—')}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500">Updated Date</span><span className="font-medium text-right">{audit.updated?.at ? new Date(audit.updated.at).toLocaleString() : (quote.updatedAt ? new Date(quote.updatedAt).toLocaleString() : '—')}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Payment Terms</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{terms.paymentTerms || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Delivery Terms</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{terms.deliveryTerms || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Created By</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{audit.created?.by?.username || audit.createdBy || quote.createdByName || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Created Date</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{audit.created?.at ? new Date(audit.created.at).toLocaleString() : (quote.createdAt ? new Date(quote.createdAt).toLocaleString() : '—')}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Updated Date</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{audit.updated?.at ? new Date(audit.updated.at).toLocaleString() : (quote.updatedAt ? new Date(quote.updatedAt).toLocaleString() : '—')}</span></div>
             <div>
-              <span className="text-zinc-500 block mb-1">Notes</span>
-              <p className="text-zinc-800 bg-zinc-50 p-2 rounded border border-zinc-100 text-xs min-h-[32px] whitespace-pre-wrap">{terms.notes || quote.notes || '—'}</p>
+              <span className="text-zinc-500 dark:text-[#6B7184] block mb-1">Notes</span>
+              <p className="text-zinc-800 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#161922] p-2 rounded border border-zinc-100 dark:border-[#2A2F3D] text-xs min-h-[32px] whitespace-pre-wrap">{terms.notes || quote.notes || '—'}</p>
             </div>
             <div>
-              <span className="text-zinc-500 block mb-1">Terms & Conditions</span>
-              <p className="text-zinc-800 bg-zinc-50 p-2 rounded border border-zinc-100 text-xs min-h-[32px] whitespace-pre-wrap">{terms.termsAndConditions || quote.termsAndConditions || '—'}</p>
+              <span className="text-zinc-500 dark:text-[#6B7184] block mb-1">Terms & Conditions</span>
+              <p className="text-zinc-800 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#161922] p-2 rounded border border-zinc-100 dark:border-[#2A2F3D] text-xs min-h-[32px] whitespace-pre-wrap">{terms.termsAndConditions || quote.termsAndConditions || '—'}</p>
             </div>
           </div>
         </div>
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Amount Summary</h4>
-          <div className="space-y-2 text-sm bg-zinc-50 p-4 rounded-lg border border-zinc-200">
-            <div className="flex justify-between"><span className="text-zinc-500">Subtotal</span><span className="font-medium">{curr} {fmt(amtSummary.subtotal || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500">Discount</span><span className="font-medium text-red-600">{amtSummary.discountAmount ? `-${curr} ${fmt(amtSummary.discountAmount)}` : '—'}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500">Taxable Amount</span><span className="font-medium">{curr} {fmt(taxSummary.taxableAmount || amtSummary.subtotal || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500">CGST</span><span className="font-medium">{curr} {fmt(taxSummary.cgst || taxSummary.cgstAmount || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500">SGST</span><span className="font-medium">{curr} {fmt(taxSummary.sgst || taxSummary.sgstAmount || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500">IGST</span><span className="font-medium">{curr} {fmt(taxSummary.igst || taxSummary.igstAmount || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500">Other Charges</span><span className="font-medium">{curr} {fmt(amtSummary.otherCharges || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500">Round Off</span><span className="font-medium">{curr} {fmt(amtSummary.roundOff || 0)}</span></div>
-            <div className="pt-2 mt-2 border-t border-zinc-200 flex justify-between items-center">
-              <span className="font-bold text-zinc-900">Grand Total</span>
-              <span className="font-bold text-lg text-zinc-900">{curr} {fmt(amtSummary.totalAmount || 0)}</span>
+          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-3">Amount Summary</h4>
+          <div className="space-y-2 text-sm bg-zinc-50 dark:bg-[#161922] p-4 rounded-lg border border-zinc-200 dark:border-[#2A2F3D]">
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Subtotal</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(amtSummary.subtotal || 0)}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Discount</span><span className="font-medium text-red-600 dark:text-red-400">{amtSummary.discountAmount ? `-${curr} ${fmt(amtSummary.discountAmount)}` : '—'}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Taxable Amount</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(taxSummary.taxableAmount || amtSummary.subtotal || 0)}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">CGST</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(taxSummary.cgst || taxSummary.cgstAmount || 0)}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">SGST</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(taxSummary.sgst || taxSummary.sgstAmount || 0)}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">IGST</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(taxSummary.igst || taxSummary.igstAmount || 0)}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Other Charges</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(amtSummary.otherCharges || 0)}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Round Off</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(amtSummary.roundOff || 0)}</span></div>
+            <div className="pt-2 mt-2 border-t border-zinc-200 dark:border-[#2A2F3D] flex justify-between items-center">
+              <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">Grand Total</span>
+              <span className="font-bold text-lg text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(amtSummary.totalAmount || 0)}</span>
             </div>
-            <div className="flex justify-between mt-1"><span className="text-zinc-500">Paid Amount</span><span className="font-medium text-emerald-600">{curr} {fmt(amtSummary.paidAmount || amtSummary.receivedAmount || 0)}</span></div>
-            <div className="flex justify-between mt-1"><span className="text-zinc-500 font-bold">Outstanding Amount</span><span className="font-bold text-amber-600">{curr} {fmt(amtSummary.outstandingAmount || 0)}</span></div>
+            <div className="flex justify-between mt-1"><span className="text-zinc-500 dark:text-[#6B7184]">Paid Amount</span><span className="font-medium text-emerald-600 dark:text-emerald-400">{curr} {fmt(amtSummary.paidAmount || amtSummary.receivedAmount || 0)}</span></div>
+            <div className="flex justify-between mt-1"><span className="text-zinc-500 dark:text-[#6B7184] font-bold">Outstanding Amount</span><span className="font-bold text-amber-600 dark:text-amber-400">{curr} {fmt(amtSummary.outstandingAmount || 0)}</span></div>
           </div>
         </div>
       </div>
@@ -502,11 +502,11 @@ export default function QuotationsPage() {
   // Custom badge renderer to match Sales Invoices style strictly
   const renderStatusBadge = (status) => {
     const s = (status || 'DRAFT').toUpperCase();
-    if (s === 'ACCEPTED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200">{s}</span>;
-    if (s === 'SENT') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200">{s}</span>;
-    if (s === 'EXPIRED' || s === 'REJECTED' || s === 'CANCELLED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-red-50 text-red-700 border-red-200">{s}</span>;
-    if (s === 'DRAFT') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-amber-50 text-amber-700 border-amber-200">{s}</span>;
-    return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200">{s}</span>;
+    if (s === 'ACCEPTED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">{s}</span>;
+    if (s === 'SENT') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-[#4C8DFF] dark:border-blue-500/20">{s}</span>;
+    if (s === 'EXPIRED' || s === 'REJECTED' || s === 'CANCELLED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-[#F0616D] dark:border-red-500/20">{s}</span>;
+    if (s === 'DRAFT') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-[#F5B544] dark:border-amber-500/20">{s}</span>;
+    return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]">{s}</span>;
   };
 
   const formatCurrency = (amount, currency = 'INR') => {
@@ -797,7 +797,7 @@ export default function QuotationsPage() {
   });
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 animate-in fade-in">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] animate-in fade-in">
       {/* Top Header */}
       <PageHeader
         title="Quotations"
@@ -944,32 +944,32 @@ export default function QuotationsPage() {
 
       {isSendEmailModalOpen && quotationToSendEmail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-in fade-in" style={{zIndex: 9999}}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-zinc-100">
-              <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2"><Mail size={18} className="text-zinc-500"/> Send Quotation Email</h3>
-              <button onClick={() => { setIsSendEmailModalOpen(false); setQuotationToSendEmail(null); }} className="text-zinc-400 hover:text-zinc-600 transition-colors">
+          <div className="bg-white dark:bg-[#1D212C] rounded-xl shadow-xl w-full max-w-md mx-4 animate-in zoom-in-95 border border-zinc-200 dark:border-[#2A2F3D]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
+              <h3 className="text-base font-bold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-2"><Mail size={18} className="text-zinc-500 dark:text-[#6B7184]"/> Send Quotation Email</h3>
+              <button onClick={() => { setIsSendEmailModalOpen(false); setQuotationToSendEmail(null); }} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-[#E6E8EE] transition-colors">
                 <X size={20} />
               </button>
             </div>
             <div className="p-5">
-              <p className="text-sm text-zinc-600 mb-4">Are you sure you want to send this quotation again?</p>
-              <div className="bg-zinc-50 border border-zinc-100 rounded-lg p-3 space-y-2 mb-4">
+              <p className="text-sm text-zinc-600 dark:text-[#A0A6B5] mb-4">Are you sure you want to send this quotation again?</p>
+              <div className="bg-zinc-50 dark:bg-[#161922] border border-zinc-100 dark:border-[#2A2F3D] rounded-lg p-3 space-y-2 mb-4">
                 <div className="flex justify-between">
-                  <span className="text-[8.8px] font-semibold text-zinc-500 uppercase">Quotation</span>
-                  <span className="text-sm font-medium text-zinc-900">{quotationToSendEmail.quotationNumber || '—'}</span>
+                  <span className="text-[8.8px] font-semibold text-zinc-500 dark:text-[#6B7184] uppercase">Quotation</span>
+                  <span className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{quotationToSendEmail.quotationNumber || '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[8.8px] font-semibold text-zinc-500 uppercase">Customer</span>
-                  <span className="text-sm font-medium text-zinc-900">{quotationToSendEmail.customer?.customerName || quotationToSendEmail.customerName || '—'}</span>
+                  <span className="text-[8.8px] font-semibold text-zinc-500 dark:text-[#6B7184] uppercase">Customer</span>
+                  <span className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{quotationToSendEmail.customer?.customerName || quotationToSendEmail.customerName || '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[8.8px] font-semibold text-zinc-500 uppercase">Email</span>
-                  <span className="text-sm font-medium text-zinc-900">{quotationToSendEmail.customer?.email || quotationToSendEmail.customerEmail || '—'}</span>
+                  <span className="text-[8.8px] font-semibold text-zinc-500 dark:text-[#6B7184] uppercase">Email</span>
+                  <span className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{quotationToSendEmail.customer?.email || quotationToSendEmail.customerEmail || '—'}</span>
                 </div>
               </div>
-              <p className="text-xs text-zinc-500 text-center">The quotation PDF will be attached to the email.</p>
+              <p className="text-xs text-zinc-500 dark:text-[#6B7184] text-center">The quotation PDF will be attached to the email.</p>
             </div>
-            <div className="flex items-center justify-end gap-3 p-4 border-t border-zinc-100 bg-zinc-50/50 rounded-b-xl">
+            <div className="flex items-center justify-end gap-3 p-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922] rounded-b-xl">
               <button
                 type="button"
                 onClick={() => { setIsSendEmailModalOpen(false); setQuotationToSendEmail(null); }}

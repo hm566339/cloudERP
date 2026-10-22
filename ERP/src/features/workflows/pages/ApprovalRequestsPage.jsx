@@ -139,8 +139,8 @@ export default function ApprovalRequestsPage() {
         }}
       />
 
-      <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-zinc-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="rounded-xl border border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-zinc-200 dark:border-border-dark p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2.5 max-w-lg">
             <div className="flex-1 min-w-[200px]">
               <SearchInput
@@ -167,7 +167,7 @@ export default function ApprovalRequestsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-zinc-500 self-end sm:self-auto">
+          <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 self-end sm:self-auto">
             <span className="font-medium">Rows:</span>
             <div className="w-20">
               <CustomSelect
@@ -187,7 +187,7 @@ export default function ApprovalRequestsPage() {
 
         <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
           <table className="w-full min-w-[700px] text-left text-sm" aria-label="Approval Requests Table">
-            <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-600 border-b border-zinc-200 sticky top-0 z-10">
+            <thead className="bg-zinc-50 dark:bg-hover-dark/40 text-xs uppercase tracking-wide text-zinc-600 dark:text-zinc-400 border-b border-zinc-200 dark:border-border-dark sticky top-0 z-10">
               <tr>
                 <th scope="col" className="px-4 py-3 font-semibold">Document</th>
                 <th scope="col" className="px-4 py-3 font-semibold">Transaction</th>
@@ -197,7 +197,7 @@ export default function ApprovalRequestsPage() {
                 <th scope="col" className="px-4 py-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-zinc-100 dark:divide-border-dark/60">
               {isLoading ? (
                 <tr>
                   <td className="px-4 py-10 text-center text-zinc-500" colSpan={6}>Loading pending approvals…</td>
@@ -208,16 +208,16 @@ export default function ApprovalRequestsPage() {
                 </tr>
               ) : (
                 pageItems.map((task) => (
-                  <tr key={task.id} className="hover:bg-zinc-50/70">
+                  <tr key={task.id} className="hover:bg-zinc-50/70 dark:hover:bg-hover-dark/30">
                     <td className="px-4 py-3 align-top">
-                      <div className="font-semibold text-zinc-900">{formatType(task.documentType)}</div>
-                      <div className="mt-1 text-xs text-zinc-500">{task.documentId || '—'}</div>
+                      <div className="font-semibold text-zinc-900 dark:text-zinc-100">{formatType(task.documentType)}</div>
+                      <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{task.documentId || '—'}</div>
                     </td>
                     <td className="px-4 py-3 align-top">
-                      <div className="font-medium text-zinc-700">{task.transactionId || task.id || '—'}</div>
+                      <div className="font-medium text-zinc-700 dark:text-zinc-300">{task.transactionId || task.id || '—'}</div>
                     </td>
-                    <td className="px-4 py-3 align-top text-zinc-600">{formatDate(task.assignedAt)}</td>
-                    <td className="px-4 py-3 align-top text-zinc-600">{formatDate(task.dueAt)}</td>
+                    <td className="px-4 py-3 align-top text-zinc-600 dark:text-zinc-400">{formatDate(task.assignedAt)}</td>
+                    <td className="px-4 py-3 align-top text-zinc-600 dark:text-zinc-400">{formatDate(task.dueAt)}</td>
                     <td className="px-4 py-3 align-top">
                       <DataTableStatusBadge status={task.status} label={task.status ? task.status.replace(/_/g, ' ') : 'Pending'} />
                     </td>
@@ -225,14 +225,14 @@ export default function ApprovalRequestsPage() {
                       <div className="flex justify-end gap-2">
                         <Link
                           to={`/workflows/transactions/${task.transactionId || task.workflowTransactionId || task.id}`}
-                          className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100"
+                          className="inline-flex items-center gap-1 rounded-md border border-blue-200 dark:border-blue-900/40 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-400 transition hover:bg-blue-100 dark:hover:bg-blue-900/50"
                         >
                           <ExternalLink size={14} /> Review
                         </Link>
                         <button
                           type="button"
                           onClick={() => handleAction(task.id, 'approve')}
-                          className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100"
+                          className="inline-flex items-center gap-1 rounded-md border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 transition hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
                           disabled={approveMutation.isLoading || rejectMutation.isLoading}
                         >
                           <Check size={14} /> Approve
@@ -240,7 +240,7 @@ export default function ApprovalRequestsPage() {
                         <button
                           type="button"
                           onClick={() => handleAction(task.id, 'reject')}
-                          className="inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-100"
+                          className="inline-flex items-center gap-1 rounded-md border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1.5 text-xs font-medium text-rose-700 dark:text-rose-400 transition hover:bg-rose-100 dark:hover:bg-rose-900/50"
                           disabled={approveMutation.isLoading || rejectMutation.isLoading}
                         >
                           <X size={14} /> Reject
@@ -255,7 +255,7 @@ export default function ApprovalRequestsPage() {
         </div>
 
         {!isLoading && filteredTasks.length > 0 && (
-          <div className="border-t border-zinc-200 px-4 py-3">
+          <div className="border-t border-zinc-200 dark:border-border-dark px-4 py-3">
             <Pagination
               page={page}
               totalPages={totalPages}

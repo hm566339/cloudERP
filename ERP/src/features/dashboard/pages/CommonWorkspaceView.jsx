@@ -152,7 +152,7 @@ export default function CommonWorkspaceView() {
   return (
     <div className="min-h-screen bg-zinc-50/60 flex flex-col font-sans text-zinc-900 selection:bg-zinc-900 selection:text-white">
       {/* ── Top Bar / Global Header ── */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-zinc-200/80 shadow-xs transition-all">
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-card-dark/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-border-dark shadow-xs transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
           {/* Brand Logo & Organization Context */}
@@ -194,7 +194,7 @@ export default function CommonWorkspaceView() {
                 <button
                   type="button"
                   onClick={() => setCompanyDropdownOpen(!companyDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-semibold shadow-2xs transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-border-dark bg-white dark:bg-surface-dark hover:bg-zinc-50 dark:hover:bg-hover-dark/40 text-zinc-700 dark:text-zinc-300 text-xs font-semibold shadow-2xs transition-colors"
                 >
                   <Building2 size={14} className="text-zinc-500" />
                   <span className="max-w-[140px] truncate">{activeCompanyName}</span>
@@ -204,8 +204,8 @@ export default function CommonWorkspaceView() {
                 {companyDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setCompanyDropdownOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1.5 w-64 bg-white border border-zinc-200 rounded-2xl shadow-xl py-2 z-50 animate-scale-up origin-top-right">
-                      <div className="px-3 py-1.5 border-b border-zinc-100 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="absolute right-0 top-full mt-1.5 w-64 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-2xl shadow-xl py-2 z-50 animate-scale-up origin-top-right">
+                      <div className="px-3 py-1.5 border-b border-zinc-100 dark:border-[#2A2F3D] text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
                         Switch Company
                       </div>
                       <div className="max-h-60 overflow-y-auto py-1">
@@ -215,7 +215,7 @@ export default function CommonWorkspaceView() {
                             <button
                               key={comp.id || comp.code}
                               onClick={() => handleSelectCompany(comp)}
-                              className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-zinc-50 transition-colors ${
+                              className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors ${
                                 isCurrent ? 'font-bold text-zinc-900 bg-zinc-50/80' : 'text-zinc-600'
                               }`}
                             >
@@ -242,7 +242,7 @@ export default function CommonWorkspaceView() {
             {isOwner && (
               <Link
                 to="/owner/dashboard"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200/90 hover:bg-zinc-50 bg-white text-xs font-semibold text-zinc-700 shadow-2xs transition-colors"
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200/90 dark:border-border-dark hover:bg-zinc-50 dark:hover:bg-hover-dark/40 bg-white dark:bg-surface-dark text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-2xs transition-colors"
               >
                 <ShieldCheck size={13} className="text-emerald-600" />
                 <span>Control Center</span>
@@ -254,7 +254,7 @@ export default function CommonWorkspaceView() {
               <button
                 type="button"
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-zinc-200/90 hover:bg-zinc-50 bg-white transition-all shadow-2xs group"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-zinc-200/90 dark:border-border-dark hover:bg-zinc-50 dark:hover:bg-hover-dark/40 bg-white dark:bg-surface-dark transition-all shadow-2xs group"
               >
                 <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white font-bold text-xs flex items-center justify-center shadow-xs">
                   {userName.charAt(0).toUpperCase()}
@@ -271,8 +271,8 @@ export default function CommonWorkspaceView() {
               {profileDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setProfileDropdownOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1.5 w-72 bg-white border border-zinc-200 rounded-2xl shadow-xl py-2 z-50 animate-scale-up origin-top-right">
-                    <div className="px-4 py-3 border-b border-zinc-100 bg-zinc-50/50 rounded-t-xl mb-1">
+                  <div className="absolute right-0 top-full mt-1.5 w-72 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-2xl shadow-xl py-2 z-50 animate-scale-up origin-top-right">
+                    <div className="px-4 py-3 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 rounded-t-xl mb-1">
                       <p className="text-xs font-bold text-zinc-900 truncate">{userName}</p>
                       <p className="text-[11px] text-zinc-500 font-medium truncate">{userEmail}</p>
                       <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -378,7 +378,7 @@ export default function CommonWorkspaceView() {
                 Active applications provisioned for {activeCompanyName} under your subscription plan.
               </p>
             </div>
-            <span className="text-xs font-bold text-zinc-500 bg-white px-2.5 py-1 rounded-lg border border-zinc-200">
+            <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 bg-white dark:bg-surface-dark px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-border-dark">
               {activeLaunchers.length} Active {activeLaunchers.length === 1 ? 'Module' : 'Modules'}
             </span>
           </div>
@@ -389,7 +389,7 @@ export default function CommonWorkspaceView() {
               return (
                 <div
                   key={mod.id}
-                  className={`bg-white rounded-2xl p-6 border flex flex-col justify-between transition-all duration-200 hover:shadow-lg hover:-translate-y-1 group ${mod.borderColor}`}
+                  className={`bg-white dark:bg-card-dark rounded-2xl p-6 border dark:border-border-dark flex flex-col justify-between transition-all duration-200 hover:shadow-lg hover:-translate-y-1 group ${mod.borderColor}`}
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -430,7 +430,7 @@ export default function CommonWorkspaceView() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-zinc-200/80 bg-white py-6 mt-12">
+      <footer className="border-t border-zinc-200/80 dark:border-border-dark bg-white dark:bg-card-dark py-6 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
           <p>© {new Date().getFullYear()} Cloud ERP. All rights reserved.</p>
           <div className="flex items-center gap-4">

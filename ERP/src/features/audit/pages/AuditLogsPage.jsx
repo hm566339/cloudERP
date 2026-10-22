@@ -252,13 +252,13 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
 
   // Style tokens matching Customer Management
   const label = 'mb-1 block text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider';
-  const fieldCls = `w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all`;
-  const resetBtn = 'h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95';
+  const fieldCls = `w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all`;
+  const resetBtn = 'h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95';
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] dark:bg-[#0F1117]">
       {/* Page Header (same as Customer Management) */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white border-b border-zinc-200">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 tracking-tight flex items-center gap-2">
             <FileText size={22} className="text-zinc-900" />
@@ -269,7 +269,7 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsExportModalOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-zinc-700 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all active:scale-95 shadow-2xs"
+            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-zinc-700 hover:text-zinc-900 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 transition-all active:scale-95 shadow-2xs"
             title="Export CSV"
           >
             <Download size={14} />
@@ -286,9 +286,9 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-sm border border-zinc-200 flex flex-col h-full overflow-hidden">
+        <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark flex flex-col h-full overflow-hidden">
           {/* Filters Bar */}
-          <div className="p-4 border-b border-zinc-200 bg-white space-y-3">
+          <div className="p-4 border-b border-zinc-200 dark:border-border-dark bg-white dark:bg-card-dark space-y-3">
             <form onSubmit={(e) => { e.preventDefault(); fetchLogs(query, filters); }}>
               {/* Row 1: Filters */}
               <div className="flex flex-wrap items-end justify-between gap-3">
@@ -423,7 +423,7 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
                     onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                     className={`h-9 px-3 text-[10.4px] font-semibold rounded-lg border transition-all flex items-center gap-1.5 active:scale-95 ${showAdvancedFilters || activeAdvancedFilterCount > 0
                       ? 'bg-zinc-100 border-zinc-300 text-zinc-900 shadow-sm'
-                      : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                      : 'bg-white dark:bg-surface-dark border-zinc-200 dark:border-border-dark text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-hover-dark/40'
                       }`}
                   >
                     <SlidersHorizontal size={14} />
@@ -439,7 +439,7 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
                   <button
                     type="button"
                     onClick={() => fetchLogs(query, filters)}
-                    className="h-9 w-9 text-zinc-500 hover:text-zinc-800 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 flex items-center justify-center transition-all active:scale-95"
+                    className="h-9 w-9 text-zinc-500 hover:text-zinc-800 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 flex items-center justify-center transition-all active:scale-95"
                     title="Refresh List"
                   >
                     <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -476,7 +476,7 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
                         value={filters.performedBy}
                         onChange={handleFilterChange}
                         placeholder="User ID..."
-                        className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
+                        className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
                       />
                     </div>
                     <div>
@@ -487,7 +487,7 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
                         value={filters.ipAddress}
                         onChange={handleFilterChange}
                         placeholder="Search IP..."
-                        className="w-full h-8 px-2.5 bg-white border border-zinc-200 rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
+                        className="w-full h-8 px-2.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] text-zinc-800 focus:border-zinc-400 outline-none"
                       />
                     </div>
                   </div>
@@ -524,7 +524,7 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
                       <td className="p-4 text-zinc-500">{row.performedByUsername || row.performedBy}</td>
                       <td className="p-4 text-zinc-500 font-mono text-xs">{row.ipAddress}</td>
                       <td className="p-4 text-zinc-500 text-xs truncate max-w-[120px]">{row.userAgent}</td>
-                      <td className="p-4 text-right sticky right-0 bg-white shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">
+                      <td className="p-4 text-right sticky right-0 bg-white dark:bg-card-dark shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">
                         <div className="flex items-center justify-end">
                           <button
                             onClick={() => openDrawer(row)}
@@ -563,12 +563,12 @@ export default function AuditLogsPage({ moduleFilter } = {}) {
       </div>
 
       {/* Side Drawer */}
-      <div className={`fixed inset-y-0 right-0 w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 border-l border-zinc-200 overflow-y-auto ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed inset-y-0 right-0 w-96 bg-white dark:bg-card-dark shadow-2xl border-l border-zinc-200 dark:border-border-dark transform transition-transform duration-300 ease-in-out z-50 border-l border-zinc-200 overflow-y-auto ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         {selectedLog && (
           <div className="flex flex-col h-full">
             <div className="px-6 py-4 border-b border-zinc-200 bg-zinc-50 flex justify-between items-center sticky top-0 z-10">
               <h2 className="text-lg font-semibold text-zinc-900">Audit Log Details</h2>
-              <button onClick={closeDrawer} className="text-zinc-400 hover:text-zinc-600 focus:outline-none bg-white rounded-full p-1 border border-zinc-200">
+              <button onClick={closeDrawer} className="text-zinc-400 hover:text-zinc-600 focus:outline-none bg-white dark:bg-surface-dark rounded-full p-1 border border-zinc-200 dark:border-border-dark text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300">
                 <X className="w-5 h-5" />
               </button>
             </div>

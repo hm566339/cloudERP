@@ -69,8 +69,8 @@ const getRfqBasePath = (pathname) => {
 
 const RfqOverview = ({ rfq }) => {
   return (
-    <div className="p-5 bg-white border border-zinc-100 rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2 cursor-default" onClick={(e) => e.stopPropagation()}>
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100">
+    <div className="p-5 bg-white dark:bg-card-dark border border-zinc-100 dark:border-border-dark rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2 cursor-default" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
           <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded border border-zinc-200">
             {rfq.rfqNumber || '—'}
@@ -112,7 +112,7 @@ const RfqOverview = ({ rfq }) => {
           <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
             {rfq.items && rfq.items.length > 0 ? (
               rfq.items.map((item, idx) => (
-                <div key={item.id || idx} className="bg-white p-2.5 rounded border border-zinc-200 text-xs">
+                <div key={item.id || idx} className="bg-white dark:bg-surface-dark p-2.5 rounded border border-zinc-200 dark:border-border-dark text-xs text-zinc-800 dark:text-zinc-200">
                   <div className="font-semibold text-zinc-900">{item.itemName || '—'}</div>
                   <div className="text-zinc-500 text-[11px] mt-0.5">
                     Qty: <span className="font-medium text-zinc-800">{item.quantity != null ? Number(item.quantity).toLocaleString() : '—'} {item.unit || ''}</span>
@@ -134,7 +134,7 @@ const RfqOverview = ({ rfq }) => {
           <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
             {rfq.vendors && rfq.vendors.length > 0 ? (
               rfq.vendors.map((v, idx) => (
-                <div key={v.id || idx} className="bg-white p-2.5 rounded border border-zinc-200 text-xs flex items-center justify-between">
+                <div key={v.id || idx} className="bg-white dark:bg-surface-dark p-2.5 rounded border border-zinc-200 dark:border-border-dark text-xs text-zinc-800 dark:text-zinc-200 flex items-center justify-between">
                   <div className="font-medium text-zinc-900 truncate mr-2">{v.vendorName || v.vendorId || '—'}</div>
                   <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
                     v.status === 'RESPONDED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
@@ -478,7 +478,7 @@ export default function RFQs() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* Top Header */}
       <PageHeader
         title="RFQs"

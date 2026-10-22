@@ -1149,7 +1149,7 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
               }}
               disabled={disabled || isLoading}
               className="w-full"
-              buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
+              buttonClassName="w-full h-8 px-2.5 border border-zinc-200 dark:border-[#2A2F3D] rounded-md bg-white dark:bg-[#1D212C] text-[10px] text-zinc-800 dark:text-[#E6E8EE] flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
             />
             {currentVal === 'CUSTOM' && customKey && (
               <div className="flex flex-col gap-1 mt-1">
@@ -1161,9 +1161,9 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
                   }}
                   disabled={disabled}
                   placeholder={`Enter custom ${field.label?.toLowerCase() || 'terms'}...`}
-                  className={`w-full h-auto py-2 px-2.5 border rounded-md bg-white text-[10px] text-zinc-800 outline-none focus:ring-1 disabled:bg-zinc-50 disabled:text-zinc-400 resize-y min-h-[60px] ${customError
+                  className={`w-full h-auto py-2 px-2.5 border rounded-md bg-white dark:bg-[#1D212C] text-[10px] text-zinc-800 dark:text-[#E6E8EE] outline-none focus:ring-1 disabled:bg-zinc-50 dark:disabled:bg-[#161922] disabled:text-zinc-400 dark:disabled:text-[#6B7184] resize-y min-h-[60px] ${customError
                     ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
-                    : 'border-zinc-200 focus:border-zinc-400 focus:ring-zinc-900/10'
+                    : 'border-zinc-200 dark:border-[#2A2F3D] focus:border-zinc-400 focus:ring-zinc-900/10'
                     }`}
                 />
                 {customError && <p className="text-[8px] text-rose-500">{customError}</p>}
@@ -1201,7 +1201,7 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
                 ...f,
                 render: () => (
                   <div className="relative">
-                    <label className="block text-xs font-bold text-zinc-800 tracking-wide mb-1">Customer <span className="text-rose-500">*</span></label>
+                    <label className="block text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] tracking-wide mb-1">Customer <span className="text-rose-500">*</span></label>
                     <CustomerCombobox
                       value={formData.customerId}
                       onChange={(val, custObj) => {
@@ -1228,10 +1228,10 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
                 ...f,
                 render: () => (
                   <div className="space-y-2">
-                    <label className="block text-[8px] font-semibold text-zinc-700 mb-1">Delivery Address</label>
+                    <label className="block text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">Delivery Address</label>
                     <CustomSelect
                       className="w-full"
-                      buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
+                      buttonClassName="w-full h-8 px-2.5 border border-zinc-200 dark:border-[#2A2F3D] rounded-md bg-white dark:bg-[#1D212C] text-[10px] text-zinc-800 dark:text-[#E6E8EE] flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
                       value={formData.deliveryAddressId || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, deliveryAddressId: e.target.value }))}
                       disabled={!formData.customerId}
@@ -1245,11 +1245,11 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
                       <option value="NEW">+ Add New Delivery Address</option>
                     </CustomSelect>
                     {formData.deliveryAddressId === 'NEW' && (
-                      <div className="mt-2 p-2 border border-zinc-200 rounded-lg bg-zinc-50 space-y-2">
+                      <div className="mt-2 p-2 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg bg-zinc-50 dark:bg-[#161922] space-y-2">
                         <input type="text" placeholder="Street Address *" className="input-field w-full h-7 text-[8px]" value={formData.newDeliveryAddress.addressLine1} onChange={e => setFormData(prev => ({ ...prev, newDeliveryAddress: { ...prev.newDeliveryAddress, addressLine1: e.target.value } }))} />
                         <input type="text" placeholder="Apt, Suite, etc. (Optional)" className="input-field w-full h-7 text-[8px]" value={formData.newDeliveryAddress.addressLine2} onChange={e => setFormData(prev => ({ ...prev, newDeliveryAddress: { ...prev.newDeliveryAddress, addressLine2: e.target.value } }))} />
                         <input type="text" placeholder="City *" className="input-field w-full h-7 text-[8px]" value={formData.newDeliveryAddress.city} onChange={e => setFormData(prev => ({ ...prev, newDeliveryAddress: { ...prev.newDeliveryAddress, city: e.target.value } }))} />
-                        <CustomSelect className="w-full" buttonClassName="w-full h-7 px-2 border border-zinc-200 rounded-md bg-white text-[8px] text-zinc-800 flex items-center justify-between" value={formData.newDeliveryAddress.gstStateId} onChange={e => setFormData(prev => ({ ...prev, newDeliveryAddress: { ...prev.newDeliveryAddress, gstStateId: e.target.value } }))}>
+                        <CustomSelect className="w-full" buttonClassName="w-full h-7 px-2 border border-zinc-200 dark:border-[#2A2F3D] rounded-md bg-white dark:bg-[#1D212C] text-[8px] text-zinc-800 dark:text-[#E6E8EE] flex items-center justify-between" value={formData.newDeliveryAddress.gstStateId} onChange={e => setFormData(prev => ({ ...prev, newDeliveryAddress: { ...prev.newDeliveryAddress, gstStateId: e.target.value } }))}>
                           <option value="">Select State *</option>
                           {gstStates.map(s => <option key={s.id} value={s.id}>{s.displayName || `${s.stateCode} - ${s.stateName}`}</option>)}
                         </CustomSelect>
@@ -1265,10 +1265,10 @@ export default function InvoiceFormModal({ isOpen, onClose, onSubmit, initialDat
                 ...f,
                 render: () => (
                   <div>
-                    <label className="block text-[8px] font-semibold text-zinc-700 mb-1">Place of Supply *</label>
+                    <label className="block text-[8px] font-semibold text-zinc-700 dark:text-[#A0A6B5] mb-1">Place of Supply *</label>
                     <CustomSelect
                       className="w-full"
-                      buttonClassName="w-full h-8 px-2.5 border border-zinc-200 rounded-md bg-white text-[10px] text-zinc-800 flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
+                      buttonClassName="w-full h-8 px-2.5 border border-zinc-200 dark:border-[#2A2F3D] rounded-md bg-white dark:bg-[#1D212C] text-[10px] text-zinc-800 dark:text-[#E6E8EE] flex items-center justify-between outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10"
                       value={formData.placeOfSupplyStateId || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, placeOfSupplyStateId: e.target.value }))}
                       searchable={true}

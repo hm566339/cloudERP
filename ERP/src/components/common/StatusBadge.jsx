@@ -55,49 +55,49 @@ const StatusBadge = ({
 
     // Use caller-provided statusConfig first, then fallback to built-in basics
     const builtInConfig = {
-      OPEN: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      CLOSED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-      LOCKED: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-      ACTIVE: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      INACTIVE: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-      ENABLED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      DISABLED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-      CREATED: { cls: 'bg-zinc-100 text-zinc-700 border-zinc-200', dot: 'bg-zinc-400' },
-      NOT_POSTED: { cls: 'bg-zinc-100 text-zinc-700 border-zinc-200', dot: 'bg-zinc-400' },
-      ACCEPTED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      AWARDED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      EXPIRED: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-      DRAFT: { cls: 'bg-zinc-100 text-zinc-700 border-zinc-200', dot: 'bg-zinc-400' },
-      POSTED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      APPROVED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      SUBMITTED: { cls: 'bg-teal-50 text-teal-700 border-teal-200', dot: 'bg-teal-500' },
-      CANCELLED: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-      REJECTED: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-      REVERSED: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-      PAID: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      PARTIAL: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-      PARTIALLY_PAID: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-      PARTIALLY_RECEIVED: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-      PENDING: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-      PENDING_APPROVAL: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-      OVERDUE: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-      UNPAID: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-      FAILED: { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
-      VOIDED: { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' },
-      SUCCESS: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      SENT: { cls: 'bg-teal-50 text-teal-700 border-teal-200', dot: 'bg-teal-500' },
-      SHORTLISTED: { cls: 'bg-teal-50 text-teal-700 border-teal-200', dot: 'bg-teal-500' },
-      ORDERED: { cls: 'bg-teal-50 text-teal-700 border-teal-200', dot: 'bg-teal-500' },
-      RECEIVED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      COMPLETED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      IN_PROGRESS: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-      UNDER_REVIEW: { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-      CONFIRMED: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-      VERIFIED: { cls: 'bg-teal-50 text-teal-700 border-teal-200', dot: 'bg-teal-500' },
+      OPEN: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      CLOSED: { cls: 'bg-zinc-100 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]', dot: 'bg-zinc-400 dark:bg-[#6B7184]' },
+      LOCKED: { cls: 'bg-red-50 dark:bg-[#F0616D]/15 text-red-700 dark:text-[#F0616D] border-red-200 dark:border-[#F0616D]/30', dot: 'bg-red-500 dark:bg-[#F0616D]' },
+      ACTIVE: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      INACTIVE: { cls: 'bg-red-50 dark:bg-[#F0616D]/15 text-red-700 dark:text-[#F0616D] border-red-200 dark:border-[#F0616D]/30', dot: 'bg-red-500 dark:bg-[#F0616D]' },
+      ENABLED: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      DISABLED: { cls: 'bg-zinc-100 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]', dot: 'bg-zinc-400 dark:bg-[#6B7184]' },
+      CREATED: { cls: 'bg-zinc-100 dark:bg-[#222736] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]', dot: 'bg-zinc-400 dark:bg-[#6B7184]' },
+      NOT_POSTED: { cls: 'bg-zinc-100 dark:bg-[#222736] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]', dot: 'bg-zinc-400 dark:bg-[#6B7184]' },
+      ACCEPTED: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      AWARDED: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      EXPIRED: { cls: 'bg-red-50 dark:bg-[#F0616D]/15 text-red-700 dark:text-[#F0616D] border-red-200 dark:border-[#F0616D]/30', dot: 'bg-red-500 dark:bg-[#F0616D]' },
+      DRAFT: { cls: 'bg-zinc-100 dark:bg-[#222736] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]', dot: 'bg-zinc-400 dark:bg-[#6B7184]' },
+      POSTED: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      APPROVED: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      SUBMITTED: { cls: 'bg-teal-50 dark:bg-[#38BDF8]/15 text-teal-700 dark:text-[#38BDF8] border-teal-200 dark:border-[#38BDF8]/30', dot: 'bg-teal-500 dark:bg-[#38BDF8]' },
+      CANCELLED: { cls: 'bg-red-50 dark:bg-[#F0616D]/15 text-red-700 dark:text-[#F0616D] border-red-200 dark:border-[#F0616D]/30', dot: 'bg-red-500 dark:bg-[#F0616D]' },
+      REJECTED: { cls: 'bg-red-50 dark:bg-[#F0616D]/15 text-red-700 dark:text-[#F0616D] border-red-200 dark:border-[#F0616D]/30', dot: 'bg-red-500 dark:bg-[#F0616D]' },
+      REVERSED: { cls: 'bg-amber-50 dark:bg-[#F5B544]/15 text-amber-700 dark:text-[#F5B544] border-amber-200 dark:border-[#F5B544]/30', dot: 'bg-amber-500 dark:bg-[#F5B544]' },
+      PAID: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      PARTIAL: { cls: 'bg-amber-50 dark:bg-[#F5B544]/15 text-amber-700 dark:text-[#F5B544] border-amber-200 dark:border-[#F5B544]/30', dot: 'bg-amber-500 dark:bg-[#F5B544]' },
+      PARTIALLY_PAID: { cls: 'bg-amber-50 dark:bg-[#F5B544]/15 text-amber-700 dark:text-[#F5B544] border-amber-200 dark:border-[#F5B544]/30', dot: 'bg-amber-500 dark:bg-[#F5B544]' },
+      PARTIALLY_RECEIVED: { cls: 'bg-amber-50 dark:bg-[#F5B544]/15 text-amber-700 dark:text-[#F5B544] border-amber-200 dark:border-[#F5B544]/30', dot: 'bg-amber-500 dark:bg-[#F5B544]' },
+      PENDING: { cls: 'bg-amber-50 dark:bg-[#F5B544]/15 text-amber-700 dark:text-[#F5B544] border-amber-200 dark:border-[#F5B544]/30', dot: 'bg-amber-500 dark:bg-[#F5B544]' },
+      PENDING_APPROVAL: { cls: 'bg-amber-50 dark:bg-[#F5B544]/15 text-amber-700 dark:text-[#F5B544] border-amber-200 dark:border-[#F5B544]/30', dot: 'bg-amber-500 dark:bg-[#F5B544]' },
+      OVERDUE: { cls: 'bg-red-50 dark:bg-[#F0616D]/15 text-red-700 dark:text-[#F0616D] border-red-200 dark:border-[#F0616D]/30', dot: 'bg-red-500 dark:bg-[#F0616D]' },
+      UNPAID: { cls: 'bg-red-50 dark:bg-[#F0616D]/15 text-red-700 dark:text-[#F0616D] border-red-200 dark:border-[#F0616D]/30', dot: 'bg-red-500 dark:bg-[#F0616D]' },
+      FAILED: { cls: 'bg-red-50 dark:bg-[#F0616D]/15 text-red-700 dark:text-[#F0616D] border-red-200 dark:border-[#F0616D]/30', dot: 'bg-red-500 dark:bg-[#F0616D]' },
+      VOIDED: { cls: 'bg-zinc-100 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]', dot: 'bg-zinc-400 dark:bg-[#6B7184]' },
+      SUCCESS: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      SENT: { cls: 'bg-teal-50 dark:bg-[#38BDF8]/15 text-teal-700 dark:text-[#38BDF8] border-teal-200 dark:border-[#38BDF8]/30', dot: 'bg-teal-500 dark:bg-[#38BDF8]' },
+      SHORTLISTED: { cls: 'bg-teal-50 dark:bg-[#38BDF8]/15 text-teal-700 dark:text-[#38BDF8] border-teal-200 dark:border-[#38BDF8]/30', dot: 'bg-teal-500 dark:bg-[#38BDF8]' },
+      ORDERED: { cls: 'bg-teal-50 dark:bg-[#38BDF8]/15 text-teal-700 dark:text-[#38BDF8] border-teal-200 dark:border-[#38BDF8]/30', dot: 'bg-teal-500 dark:bg-[#38BDF8]' },
+      RECEIVED: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      COMPLETED: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      IN_PROGRESS: { cls: 'bg-amber-50 dark:bg-[#F5B544]/15 text-amber-700 dark:text-[#F5B544] border-amber-200 dark:border-[#F5B544]/30', dot: 'bg-amber-500 dark:bg-[#F5B544]' },
+      UNDER_REVIEW: { cls: 'bg-amber-50 dark:bg-[#F5B544]/15 text-amber-700 dark:text-[#F5B544] border-amber-200 dark:border-[#F5B544]/30', dot: 'bg-amber-500 dark:bg-[#F5B544]' },
+      CONFIRMED: { cls: 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30', dot: 'bg-emerald-500 dark:bg-[#34C38F]' },
+      VERIFIED: { cls: 'bg-teal-50 dark:bg-[#38BDF8]/15 text-teal-700 dark:text-[#38BDF8] border-teal-200 dark:border-[#38BDF8]/30', dot: 'bg-teal-500 dark:bg-[#38BDF8]' },
     };
 
     const effectiveConfig = statusConfig || builtInConfig;
-    const cfg = effectiveConfig[s] || { cls: 'bg-zinc-100 text-zinc-600 border-zinc-200', dot: 'bg-zinc-400' };
+    const cfg = effectiveConfig[s] || { cls: 'bg-zinc-100 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]', dot: 'bg-zinc-400 dark:bg-[#6B7184]' };
     const label = `${labelPrefix}${s.replace(/_/g, ' ')}`;
 
     return (
@@ -114,7 +114,7 @@ const StatusBadge = ({
   // 3. Boolean flags
   if (isDeleted) {
     return (
-      <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-red-50 text-red-700 border-red-200 inline-flex items-center gap-1.5">
+      <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-red-50 dark:bg-[#F0616D]/15 text-red-700 dark:text-[#F0616D] border-red-200 dark:border-[#F0616D]/30 inline-flex items-center gap-1.5">
         <AlertCircle size={14} /> Deleted
       </span>
     );
@@ -122,7 +122,7 @@ const StatusBadge = ({
 
   if (isClosed) {
     return (
-      <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-red-50 text-red-700 border-red-200 inline-flex items-center gap-1.5">
+      <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-red-50 dark:bg-[#F0616D]/15 text-red-700 dark:text-[#F0616D] border-red-200 dark:border-[#F0616D]/30 inline-flex items-center gap-1.5">
         <AlertCircle size={14} /> Closed
       </span>
     );
@@ -130,7 +130,7 @@ const StatusBadge = ({
 
   if (effectiveActive === false) {
     return (
-      <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-red-50 text-red-700 border-red-200 inline-flex items-center gap-1.5">
+      <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-red-50 dark:bg-[#F0616D]/15 text-red-700 dark:text-[#F0616D] border-red-200 dark:border-[#F0616D]/30 inline-flex items-center gap-1.5">
         <AlertCircle size={14} /> Inactive
       </span>
     );
@@ -138,7 +138,7 @@ const StatusBadge = ({
 
   // Default to Active / Open if isActive/active is true or undefined
   return (
-    <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200 inline-flex items-center gap-1.5">
+    <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30 inline-flex items-center gap-1.5">
       <CheckCircle size={14} /> {isClosed === false ? 'Open' : 'Active'}
     </span>
   );

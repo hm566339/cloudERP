@@ -6,22 +6,22 @@ import { format } from 'date-fns';
 import { useRoutePath } from "../../../hooks/useRoutePath";
 
 const SummaryCard = ({ title, value, icon: Icon, colorClass }) => (
-  <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-center">
+  <div className="bg-white dark:bg-[#161922] p-5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm flex flex-col justify-center">
     <div className="flex justify-between items-start mb-2">
-      <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{title}</p>
-      {Icon && <Icon size={16} className="text-zinc-400" />}
+      <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{title}</p>
+      {Icon && <Icon size={16} className="text-zinc-400 dark:text-zinc-500" />}
     </div>
-    <p className={`text-xl font-black ${colorClass || 'text-zinc-900'} truncate`} title={value}>
+    <p className={`text-xl font-black ${colorClass || 'text-zinc-900 dark:text-[#E6E8EE]'} truncate`} title={value}>
       {value || '-'}
     </p>
   </div>
 );
 
 const DetailSection = ({ title, icon: Icon, children }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-    <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 flex items-center gap-2">
-      {Icon && <Icon size={18} className="text-blue-500" />}
-      <h2 className="text-sm font-bold text-zinc-800 uppercase tracking-wide">{title}</h2>
+  <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
+    <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/50 flex items-center gap-2">
+      {Icon && <Icon size={18} className="text-blue-500 dark:text-[#4C8DFF]" />}
+      <h2 className="text-sm font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wide">{title}</h2>
     </div>
     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {children}
@@ -35,43 +35,43 @@ const ReadOnlyField = ({ label, value, isBoolean }) => {
     displayValue = value ? 'Yes' : 'No';
   }
   return (
-    <div className="bg-zinc-50 p-3 rounded-lg border border-zinc-100 flex flex-col justify-center">
-      <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">{label}</p>
-      <p className="text-sm font-bold text-zinc-900">{displayValue}</p>
+    <div className="bg-zinc-50 dark:bg-[#1D212C] p-3 rounded-lg border border-zinc-100 dark:border-[#2A2F3D] flex flex-col justify-center">
+      <p className="text-[8px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">{label}</p>
+      <p className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">{displayValue}</p>
     </div>
   );
 };
 
 const LoadingSkeleton = () => (
-  <div className="flex flex-col min-h-screen bg-zinc-50/50">
-    <div className="h-24 bg-white border-b border-zinc-200 animate-pulse" />
+  <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117]">
+    <div className="h-24 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] animate-pulse" />
     <div className="p-6 max-w-[1280px] mx-auto w-full space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-zinc-200 rounded-xl animate-pulse" />)}
+        {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-zinc-200 dark:bg-[#1D212C] rounded-xl animate-pulse" />)}
       </div>
-      <div className="h-48 bg-zinc-200 rounded-xl animate-pulse" />
-      <div className="h-48 bg-zinc-200 rounded-xl animate-pulse" />
+      <div className="h-48 bg-zinc-200 dark:bg-[#1D212C] rounded-xl animate-pulse" />
+      <div className="h-48 bg-zinc-200 dark:bg-[#1D212C] rounded-xl animate-pulse" />
     </div>
   </div>
 );
 
 const ErrorState = ({ onRetry }) => (
-  <div className="flex flex-col min-h-screen bg-zinc-50/50 items-center justify-center p-6">
-    <div className="bg-white p-8 rounded-xl shadow-sm border border-zinc-200 flex flex-col items-center max-w-md w-full text-center">
+  <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117] items-center justify-center p-6">
+    <div className="bg-white dark:bg-[#161922] p-8 rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] flex flex-col items-center max-w-md w-full text-center">
       <ShieldCheck size={48} className="text-red-400 mb-4" />
-      <h3 className="text-lg font-bold text-zinc-900 mb-2">Unable to load GST State details.</h3>
-      <p className="text-sm text-zinc-500 mb-6">There was a problem fetching the data from the server.</p>
+      <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mb-2">Unable to load GST State details.</h3>
+      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">There was a problem fetching the data from the server.</p>
       <button onClick={onRetry} className="btn-primary w-full">Retry</button>
     </div>
   </div>
 );
 
 const EmptyState = ({ onBack }) => (
-  <div className="flex flex-col min-h-screen bg-zinc-50/50 items-center justify-center p-6">
-    <div className="bg-white p-8 rounded-xl shadow-sm border border-zinc-200 flex flex-col items-center max-w-md w-full text-center">
-      <MapPin size={48} className="text-zinc-300 mb-4" />
-      <h3 className="text-lg font-bold text-zinc-900 mb-2">GST State not found.</h3>
-      <p className="text-sm text-zinc-500 mb-6">The requested state code might have been deleted or does not exist.</p>
+  <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117] items-center justify-center p-6">
+    <div className="bg-white dark:bg-[#161922] p-8 rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] flex flex-col items-center max-w-md w-full text-center">
+      <MapPin size={48} className="text-zinc-300 dark:text-zinc-600 mb-4" />
+      <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mb-2">GST State not found.</h3>
+      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">The requested state code might have been deleted or does not exist.</p>
       <button onClick={onBack} className="btn-secondary w-full">Go Back</button>
     </div>
   </div>
@@ -108,27 +108,27 @@ export default function GstStateMasterDetails() {
   };
 
   return (
-    <div className="animate-fade-in pb-12 bg-zinc-50/30 min-h-screen">
+    <div className="animate-fade-in pb-12 bg-zinc-50/30 dark:bg-[#0F1117] min-h-screen">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-40 bg-white border-b border-zinc-200 shadow-sm pt-4 pb-4 mb-6">
+      <div className="sticky top-0 z-40 bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] shadow-sm pt-4 pb-4 mb-6">
         <div className="max-w-[1280px] mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => navigate(buildPath('/accounts/tax/gst-state-master'))}
-                className="p-2.5 bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 border border-zinc-200 rounded-lg transition-colors shrink-0"
+                className="p-2.5 bg-zinc-50 dark:bg-[#1D212C] text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg transition-colors shrink-0"
                 title="Go Back"
               >
                 <ArrowLeft size={20} />
               </button>
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-3">
+                  <h1 className="text-2xl font-black text-zinc-900 dark:text-[#E6E8EE] tracking-tight flex items-center gap-3">
                     GST State Details
                   </h1>
                 </div>
-                <div className="flex items-center gap-4 mt-1 text-sm font-medium text-zinc-500">
+                <div className="flex items-center gap-4 mt-1 text-sm font-medium text-zinc-500 dark:text-zinc-400">
                   <span className="flex items-center gap-1.5">Complete GST State Profile for {stateData.state?.stateName || '-'}</span>
                 </div>
               </div>
@@ -151,14 +151,14 @@ export default function GstStateMasterDetails() {
       <div className="max-w-[1280px] mx-auto px-4 md:px-8 mt-8 space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <SummaryCard title="State Code" value={stateData.state?.stateCode} icon={FileText} colorClass="text-zinc-900" />
-          <SummaryCard title="State Name" value={stateData.state?.stateName} icon={MapPin} colorClass="text-blue-600" />
-          <SummaryCard title="Country" value={stateData.country?.countryCode || 'IN'} icon={Map} colorClass="text-emerald-600" />
+          <SummaryCard title="State Code" value={stateData.state?.stateCode} icon={FileText} colorClass="text-zinc-900 dark:text-[#E6E8EE]" />
+          <SummaryCard title="State Name" value={stateData.state?.stateName} icon={MapPin} colorClass="text-blue-600 dark:text-[#4C8DFF]" />
+          <SummaryCard title="Country" value={stateData.country?.countryCode || 'IN'} icon={Map} colorClass="text-emerald-600 dark:text-emerald-400" />
           <SummaryCard 
             title="Registration Allowed" 
             value={stateData.gstInformation?.registrationAllowed !== false ? 'Yes' : 'No'} 
             icon={ShieldCheck} 
-            colorClass={stateData.gstInformation?.registrationAllowed !== false ? 'text-emerald-600' : 'text-rose-600'} 
+            colorClass={stateData.gstInformation?.registrationAllowed !== false ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'} 
           />
         </div>
 

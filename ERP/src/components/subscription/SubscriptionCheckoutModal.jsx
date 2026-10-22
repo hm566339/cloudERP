@@ -290,24 +290,24 @@ export default function SubscriptionCheckoutModal({
       aria-labelledby="checkout-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-xs animate-fade-in"
     >
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-zinc-200/80 space-y-6 max-h-[92vh] overflow-y-auto no-scrollbar relative animate-scale-up">
+      <div className="bg-white dark:bg-[#161922] rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-zinc-200/80 dark:border-[#2A2F3D] space-y-6 max-h-[92vh] overflow-y-auto no-scrollbar relative animate-scale-up">
         {/* Top Header */}
-        <div className="flex items-start justify-between gap-4 pb-4 border-b border-zinc-100">
+        <div className="flex items-start justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-800 flex items-center justify-center shrink-0 border border-zinc-200/80 shadow-2xs">
+            <div className="w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE] flex items-center justify-center shrink-0 border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs">
               <CreditCard size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10.5px] font-bold text-zinc-500 uppercase tracking-wider">
+                <span className="text-[10.5px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">
                   Secure Checkout
                 </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80">
-                  <ShieldCheck size={11} className="text-emerald-600" />
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50">
+                  <ShieldCheck size={11} className="text-emerald-600 dark:text-emerald-400" />
                   <span>256-Bit SSL</span>
                 </span>
               </div>
-              <h2 id="checkout-modal-title" className="text-lg font-bold text-zinc-900 tracking-tight mt-0.5">
+              <h2 id="checkout-modal-title" className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight mt-0.5">
                 Upgrade to {selectedPlan.name}
               </h2>
             </div>
@@ -317,7 +317,7 @@ export default function SubscriptionCheckoutModal({
             type="button"
             onClick={onClose}
             disabled={isLoading || isVerifying}
-            className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors disabled:opacity-40"
+            className="p-1.5 rounded-xl text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:hover:bg-[#1D212C] transition-colors disabled:opacity-40"
             aria-label="Close"
           >
             <X size={18} />
@@ -325,16 +325,16 @@ export default function SubscriptionCheckoutModal({
         </div>
 
         {/* Target Organization & Company Context Pill */}
-        <div className="bg-zinc-50 rounded-xl p-3 border border-zinc-200/60 flex items-center justify-between text-xs">
+        <div className="bg-zinc-50 dark:bg-[#1D212C]/60 rounded-xl p-3 border border-zinc-200/60 dark:border-[#2A2F3D] flex items-center justify-between text-xs">
           <div className="flex items-center gap-2 min-w-0">
-            <Building2 size={14} className="text-zinc-400 shrink-0" />
+            <Building2 size={14} className="text-zinc-400 dark:text-[#6B7184] shrink-0" />
             <div className="truncate">
-              <span className="text-zinc-500">Subscribing for: </span>
-              <strong className="text-zinc-900 font-semibold">{orgName}</strong>
-              {orgCode && <span className="font-mono text-[10.5px] text-zinc-400 ml-1">({orgCode})</span>}
+              <span className="text-zinc-500 dark:text-[#A0A6B5]">Subscribing for: </span>
+              <strong className="text-zinc-900 dark:text-[#E6E8EE] font-semibold">{orgName}</strong>
+              {orgCode && <span className="font-mono text-[10.5px] text-zinc-400 dark:text-[#6B7184] ml-1">({orgCode})</span>}
             </div>
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md border border-zinc-200/80 shrink-0">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md border border-zinc-200/80 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D] shrink-0">
             OWNER AUTHORIZED
           </span>
         </div>
@@ -342,37 +342,37 @@ export default function SubscriptionCheckoutModal({
         {/* Plan Overview & Features Summary */}
         <div className="space-y-3">
           <div className="flex items-baseline justify-between">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Plan Highlights</span>
-            <span className="text-xs font-semibold text-zinc-400 flex items-center gap-1">
+            <span className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">Plan Highlights</span>
+            <span className="text-xs font-semibold text-zinc-400 dark:text-[#6B7184] flex items-center gap-1">
               <Clock size={12} />
               <span>{selectedPlan.durationDays || 30} Days Validity</span>
             </span>
           </div>
 
-          <div className="bg-zinc-50/80 rounded-2xl p-4 border border-zinc-200/60 space-y-3">
+          <div className="bg-zinc-50/80 dark:bg-[#1D212C]/60 rounded-2xl p-4 border border-zinc-200/60 dark:border-[#2A2F3D] space-y-3">
             {/* Description */}
-            <p className="text-xs text-zinc-600 leading-relaxed font-normal">
+            <p className="text-xs text-zinc-600 dark:text-[#A0A6B5] leading-relaxed font-normal">
               {selectedPlan.description || 'Full enterprise tier with unlimited platform access and modular rights.'}
             </p>
 
             {/* Quota Highlights */}
-            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-zinc-200/60 text-xs">
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-zinc-200/60 dark:border-[#2A2F3D] text-xs">
               <div className="space-y-0.5">
-                <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-500 uppercase">
-                  <Building2 size={11} className="text-zinc-700" />
+                <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase">
+                  <Building2 size={11} className="text-zinc-700 dark:text-[#A0A6B5]" />
                   <span>Max Companies</span>
                 </div>
-                <div className="text-xs font-bold text-zinc-900">
+                <div className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE]">
                   {formatPlanLimit(selectedPlan.maxCompanies, 'companies')}
                 </div>
               </div>
 
               <div className="space-y-0.5">
-                <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-500 uppercase">
-                  <Users size={11} className="text-zinc-700" />
+                <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase">
+                  <Users size={11} className="text-zinc-700 dark:text-[#A0A6B5]" />
                   <span>Users / Company</span>
                 </div>
-                <div className="text-xs font-bold text-zinc-900">
+                <div className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE]">
                   {formatPlanLimit(selectedPlan.maxUsersPerCompany, 'users')}
                 </div>
               </div>
@@ -380,17 +380,17 @@ export default function SubscriptionCheckoutModal({
 
             {/* Included Modules list */}
             {activeModules.length > 0 && (
-              <div className="pt-2 border-t border-zinc-200/60 space-y-1.5">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">
+              <div className="pt-2 border-t border-zinc-200/60 dark:border-[#2A2F3D] space-y-1.5">
+                <span className="text-[10px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider block">
                   Included Modules ({activeModules.length})
                 </span>
                 <div className="flex flex-wrap gap-1">
                   {activeModules.map((m, idx) => (
                     <span
                       key={m.moduleId || m.id || idx}
-                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-white border border-zinc-200 text-zinc-800 shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-800 shadow-2xs dark:bg-[#161922] dark:border-[#2A2F3D] dark:text-[#E6E8EE]"
                     >
-                      <Check size={10} className="text-zinc-700 stroke-[2.5]" />
+                      <Check size={10} className="text-zinc-700 dark:text-emerald-400 stroke-[2.5]" />
                       <span>{m.moduleName || m.name ? formatModuleName(m.moduleName || m.name) : 'Module'}</span>
                     </span>
                   ))}
@@ -402,26 +402,26 @@ export default function SubscriptionCheckoutModal({
 
         {/* Payment Summary */}
         <div className="space-y-2 pt-1">
-          <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider block">
+          <span className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider block">
             Payment Summary
           </span>
 
-          <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-200/80 space-y-2.5 text-xs">
-            <div className="flex items-center justify-between text-zinc-600">
+          <div className="bg-zinc-50 dark:bg-[#1D212C]/60 rounded-2xl p-4 border border-zinc-200/80 dark:border-[#2A2F3D] space-y-2.5 text-xs">
+            <div className="flex items-center justify-between text-zinc-600 dark:text-[#A0A6B5]">
               <span>Plan Subscription ({selectedPlan.durationDays || 30} days)</span>
-              <span className="font-semibold text-zinc-900">{pricing.formattedBasePrice}</span>
+              <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{pricing.formattedBasePrice}</span>
             </div>
 
             {pricing.taxAmount > 0 && (
-              <div className="flex items-center justify-between text-zinc-600">
+              <div className="flex items-center justify-between text-zinc-600 dark:text-[#A0A6B5]">
                 <span>Tax</span>
-                <span className="font-semibold text-zinc-900">{pricing.formattedTax}</span>
+                <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{pricing.formattedTax}</span>
               </div>
             )}
 
-            <div className="border-t border-zinc-200/80 pt-2.5 flex items-center justify-between text-sm">
-              <span className="font-bold text-zinc-900">Total Payable Amount</span>
-              <span className="text-lg font-black font-display text-zinc-900">
+            <div className="border-t border-zinc-200/80 dark:border-[#2A2F3D] pt-2.5 flex items-center justify-between text-sm">
+              <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">Total Payable Amount</span>
+              <span className="text-lg font-black font-display text-zinc-900 dark:text-[#E6E8EE]">
                 {pricing.formattedTotal}
               </span>
             </div>
@@ -430,30 +430,30 @@ export default function SubscriptionCheckoutModal({
 
         {/* Error Feedback Banner */}
         {errorMessage && (
-          <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5 shadow-2xs">
-            <AlertTriangle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 dark:bg-rose-950/30 dark:border-rose-900/40 dark:text-rose-200 text-xs flex items-start gap-2.5 shadow-2xs">
+            <AlertTriangle size={16} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="font-bold text-rose-900">Payment Issue</p>
-              <p className="mt-0.5 text-rose-800 leading-relaxed">{errorMessage}</p>
+              <p className="font-bold text-rose-900 dark:text-rose-200">Payment Issue</p>
+              <p className="mt-0.5 text-rose-800 dark:text-rose-300 leading-relaxed">{errorMessage}</p>
             </div>
           </div>
         )}
 
         {/* Success Feedback Banner */}
         {successMessage && (
-          <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-start gap-2.5 shadow-2xs">
-            <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 dark:bg-emerald-950/30 dark:border-emerald-800/40 dark:text-emerald-200 text-xs flex items-start gap-2.5 shadow-2xs">
+            <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="font-bold text-emerald-900">Subscription Updated</p>
-              <p className="mt-0.5 text-emerald-800 leading-relaxed">{successMessage}</p>
+              <p className="font-bold text-emerald-900 dark:text-emerald-200">Subscription Updated</p>
+              <p className="mt-0.5 text-emerald-800 dark:text-emerald-300 leading-relaxed">{successMessage}</p>
             </div>
           </div>
         )}
 
         {/* Verifying Spinner Indicator */}
         {isVerifying && (
-          <div className="p-4 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-800 text-xs flex items-center justify-center gap-2.5 font-bold">
-            <Loader2 size={16} className="animate-spin text-zinc-700" />
+          <div className="p-4 rounded-2xl bg-zinc-100 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-800 dark:text-[#E6E8EE] text-xs flex items-center justify-center gap-2.5 font-bold">
+            <Loader2 size={16} className="animate-spin text-zinc-700 dark:text-[#A0A6B5]" />
             <span>Verifying payment with billing server...</span>
           </div>
         )}
@@ -464,7 +464,7 @@ export default function SubscriptionCheckoutModal({
             type="button"
             onClick={onClose}
             disabled={isLoading || isVerifying}
-            className="px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-40"
+            className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#1D212C] dark:hover:text-[#E6E8EE] transition-colors disabled:opacity-40"
           >
             Cancel
           </button>
@@ -473,7 +473,7 @@ export default function SubscriptionCheckoutModal({
             type="button"
             onClick={handleProceedToPayment}
             disabled={isLoading || isVerifying || !!successMessage}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold shadow-sm hover:shadow transition-all disabled:opacity-50 active:scale-95"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-[#4C8DFF] dark:hover:bg-[#3B7AE8] dark:text-white rounded-xl text-xs font-bold shadow-sm hover:shadow transition-all disabled:opacity-50 active:scale-95"
           >
             {isLoading ? (
               <>

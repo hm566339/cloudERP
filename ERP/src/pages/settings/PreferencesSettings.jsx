@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { setThemeMode } from '../../features/theme/themeSlice';
 import {
   SettingsLayout,
   SettingsPageHeader,
@@ -8,6 +10,11 @@ import {
 } from '../../components/settings/shared';
 
 export default function PreferencesSettings() {
+  const dispatch = useAppDispatch();
+  const themeMode = useAppSelector((state) => state.theme?.mode || 'system');
+  const [density, setDensity] = useState('comfortable');
+  const [language, setLanguage] = useState('en-US');
+  const [rowsPerPage, setRowsPerPage] = useState('25');
   const [isSaving, setIsSaving] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -32,6 +39,11 @@ export default function PreferencesSettings() {
           <SettingsSelect
             id="theme"
             label="Theme"
+            value={themeMode}
+            onChange={(e, val) => {
+              const selected = val || e?.target?.value;
+              if (selected) dispatch(setThemeMode(selected));
+            }}
             options={[
               { label: 'System Default', value: 'system' },
               { label: 'Light Mode', value: 'light' },

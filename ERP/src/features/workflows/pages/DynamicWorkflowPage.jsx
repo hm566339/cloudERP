@@ -175,7 +175,7 @@ export default function DynamicWorkflowPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-4 sm:p-6 max-w-6xl mx-auto">
+    <div className="h-full overflow-y-auto p-4 sm:p-6 max-w-6xl mx-auto dark:bg-page-dark">
       <WorkflowRenderer
         workflowData={workflowData}
         onAction={handleAction}

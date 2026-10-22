@@ -128,37 +128,37 @@ export default function EmployeeList() {
                 {sorted.length === 0 && (
                   <tr>
                     <td colSpan={8}>
-                      <div className="p-8 text-center border-2 border-dashed border-zinc-200 m-4 rounded-xl">
-                        <UserCircle className="mx-auto text-zinc-300 mb-3" size={28} />
-                        <p className="text-sm font-medium text-zinc-600">No employees found</p>
-                        <p className="text-xs text-zinc-400 mt-1">Adjust your filters or add a new employee.</p>
+                      <div className="p-8 text-center border-2 border-dashed border-zinc-200 dark:border-border-dark m-4 rounded-xl">
+                        <UserCircle className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" size={28} />
+                        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">No employees found</p>
+                        <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Adjust your filters or add a new employee.</p>
                       </div>
                     </td>
                   </tr>
                 )}
                 {sorted.map((emp, index) => (
                   <tr key={emp.id}>
-                    <td className="text-center font-medium text-zinc-500 tabular-nums">
+                    <td className="text-center font-medium text-zinc-500 dark:text-zinc-400 tabular-nums">
                       {getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}
                     </td>
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-400 flex items-center justify-center font-bold text-xs">
                           {emp.name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
-                        <span className="font-medium text-zinc-900">
+                        <span className="font-medium text-zinc-900 dark:text-zinc-200">
                           {emp.name}
                         </span>
                       </div>
                     </td>
                     <td>
-                      <span className="font-mono text-xs text-zinc-500">
+                      <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
                         {emp.id}
                       </span>
                     </td>
-                    <td className="text-zinc-700">{emp.department}</td>
-                    <td className="text-zinc-500">{emp.role}</td>
-                    <td className="text-zinc-500">{emp.joinDate}</td>
+                    <td className="text-zinc-700 dark:text-zinc-300">{emp.department}</td>
+                    <td className="text-zinc-500 dark:text-zinc-400">{emp.role}</td>
+                    <td className="text-zinc-500 dark:text-zinc-400">{emp.joinDate}</td>
                     <td>
                       <span
                         className={`badge ${
@@ -175,7 +175,7 @@ export default function EmployeeList() {
                     <td>
                       <button
                         onClick={() => setViewingEmployee(emp)}
-                        className="text-xs text-primary hover:underline font-medium"
+                        className="text-xs text-primary dark:text-blue-400 hover:underline font-medium"
                       >
                         Profile
                       </button>
@@ -187,7 +187,7 @@ export default function EmployeeList() {
           </div>
         )}
         {!isLoading && (
-          <div className="p-4 border-t border-zinc-100 bg-white rounded-b-xl">
+          <div className="p-4 border-t border-zinc-100 dark:border-border-dark bg-white dark:bg-card-dark rounded-b-xl">
              <Pagination
                {...paginationProps}
                totalPages={employeesData?.totalPages || 1}

@@ -21,20 +21,20 @@ export function ToastItem({
 
   const config = {
     success: {
-      icon: <CheckCircle2 size={16} className="text-emerald-600" />,
-      bg: 'bg-emerald-50/90 border-emerald-200/80 text-emerald-950',
+      icon: <CheckCircle2 size={16} className="text-emerald-600 dark:text-[#34C38F]" />,
+      bg: 'bg-emerald-50/90 dark:bg-[#1D212C] border-emerald-200/80 dark:border-[#34C38F]/30 text-emerald-950 dark:text-[#E6E8EE]',
     },
     error: {
-      icon: <AlertCircle size={16} className="text-rose-600" />,
-      bg: 'bg-rose-50/90 border-rose-200/80 text-rose-950',
+      icon: <AlertCircle size={16} className="text-rose-600 dark:text-[#F0616D]" />,
+      bg: 'bg-rose-50/90 dark:bg-[#1D212C] border-rose-200/80 dark:border-[#F0616D]/30 text-rose-950 dark:text-[#E6E8EE]',
     },
     warning: {
-      icon: <AlertTriangle size={16} className="text-amber-600" />,
-      bg: 'bg-amber-50/90 border-amber-200/80 text-amber-950',
+      icon: <AlertTriangle size={16} className="text-amber-600 dark:text-[#F5B544]" />,
+      bg: 'bg-amber-50/90 dark:bg-[#1D212C] border-amber-200/80 dark:border-[#F5B544]/30 text-amber-950 dark:text-[#E6E8EE]',
     },
     info: {
-      icon: <Info size={16} className="text-zinc-600" />,
-      bg: 'bg-white border-zinc-200 text-zinc-900',
+      icon: <Info size={16} className="text-zinc-600 dark:text-[#38BDF8]" />,
+      bg: 'bg-white dark:bg-[#1D212C] border-zinc-200 dark:border-[#2A2F3D] text-zinc-900 dark:text-[#E6E8EE]',
     },
   };
 
@@ -52,7 +52,7 @@ export function ToastItem({
           type="button"
           onClick={onClose}
           aria-label="Dismiss toast"
-          className="shrink-0 p-1 text-zinc-400 hover:text-zinc-700 rounded-md transition-colors cursor-pointer"
+          className="shrink-0 p-1 text-zinc-400 dark:text-[#6B7184] hover:text-zinc-700 dark:hover:text-[#E6E8EE] rounded-md transition-colors cursor-pointer"
         >
           <X size={14} />
         </button>

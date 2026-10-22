@@ -562,17 +562,17 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-zinc-900/40 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl lg:max-w-5xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-[#161922] border border-transparent dark:border-[#2A2F3D] rounded-xl shadow-xl w-full max-w-4xl lg:max-w-5xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50/50 rounded-t-xl shrink-0">
+        <div className="px-6 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/50 dark:bg-[#1D212C] rounded-t-xl shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center border border-indigo-100 text-indigo-600">
+            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-blue-500/10 flex items-center justify-center border border-indigo-100 dark:border-blue-500/20 text-indigo-600 dark:text-[#4C8DFF]">
               <Truck size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-zinc-900 tracking-tight">Generate Delivery Challan</h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Generate Delivery Challan</h2>
+              <p className="text-xs text-zinc-500 dark:text-[#6B7184] mt-0.5">
                 {step === 1 ? 'Step 1: Select a confirmed Sales Order' : `Step 2: Dispatch from Sales Order ${fullOrder?.soNumber || fullOrder?.orderNumber || '—'}`}
               </p>
             </div>
@@ -580,7 +580,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
           <button
             onClick={onClose}
             disabled={isSubmittingInProgress}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors disabled:opacity-50"
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] transition-colors disabled:opacity-50"
             title="Close modal"
           >
             <X size={18} />
@@ -588,26 +588,26 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-zinc-50/30">
+        <div className="flex-1 overflow-y-auto p-6 bg-zinc-50/30 dark:bg-[#0F1117]">
           
           {/* STEP 1: SELECT CONFIRMED SALES ORDER */}
           {step === 1 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="relative flex-1 max-w-md">
-                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-[#6B7184]" />
                   <input
                     type="text"
                     placeholder="Search by SO number or customer..."
                     value={orderSearchKey}
                     onChange={(e) => setOrderSearchKey(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-zinc-900/10 bg-white shadow-2xs"
+                    className="w-full pl-9 pr-4 py-2 text-xs border border-zinc-200 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:ring-1 focus:ring-zinc-900/10 bg-white dark:bg-[#161922] text-zinc-800 dark:text-[#E6E8EE] shadow-2xs"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => refetchOrders()}
-                  className="px-3 py-2 text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 flex items-center gap-1.5 transition-colors shadow-2xs"
+                  className="px-3 py-2 text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] flex items-center gap-1.5 transition-colors shadow-2xs"
                 >
                   <RefreshCw size={13} className={isLoadingOrders ? 'animate-spin' : ''} />
                   <span>Refresh</span>
@@ -615,31 +615,31 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
               </div>
 
               {/* Confirmed SO List Table */}
-              <div className="border border-zinc-200 rounded-lg overflow-hidden bg-white shadow-2xs">
+              <div className="border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-hidden bg-white dark:bg-[#161922] shadow-2xs">
                 <div className="max-h-[380px] overflow-y-auto">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="bg-zinc-50/80 sticky top-0 border-b border-zinc-200 z-10">
+                    <thead className="bg-zinc-50/80 dark:bg-[#1D212C] sticky top-0 border-b border-zinc-200 dark:border-[#2A2F3D] z-10">
                       <tr>
-                        <th className="p-3 font-semibold text-zinc-600">Order Number</th>
-                        <th className="p-3 font-semibold text-zinc-600">Customer</th>
-                        <th className="p-3 font-semibold text-zinc-600">Date</th>
-                        <th className="p-3 font-semibold text-zinc-600">Status</th>
-                        <th className="p-3 font-semibold text-zinc-600 text-right">Action</th>
+                        <th className="p-3 font-semibold text-zinc-600 dark:text-[#A0A6B5]">Order Number</th>
+                        <th className="p-3 font-semibold text-zinc-600 dark:text-[#A0A6B5]">Customer</th>
+                        <th className="p-3 font-semibold text-zinc-600 dark:text-[#A0A6B5]">Date</th>
+                        <th className="p-3 font-semibold text-zinc-600 dark:text-[#A0A6B5]">Status</th>
+                        <th className="p-3 font-semibold text-zinc-600 dark:text-[#A0A6B5] text-right">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100">
+                    <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                       {isLoadingOrders ? (
                         <tr>
-                          <td colSpan={5} className="p-8 text-center text-zinc-400">
+                          <td colSpan={5} className="p-8 text-center text-zinc-400 dark:text-[#6B7184]">
                             <div className="flex flex-col items-center justify-center gap-2">
-                              <div className="w-5 h-5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
+                              <div className="w-5 h-5 border-2 border-zinc-900 dark:border-primary border-t-transparent rounded-full animate-spin" />
                               <span>Loading confirmed sales orders...</span>
                             </div>
                           </td>
                         </tr>
                       ) : filteredOrders.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="p-8 text-center text-zinc-400">
+                          <td colSpan={5} className="p-8 text-center text-zinc-400 dark:text-[#6B7184]">
                             {orderSearchKey.trim() 
                               ? 'No confirmed sales orders matching your search.' 
                               : 'No confirmed sales orders available to dispatch.'}
@@ -650,15 +650,15 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                           <tr 
                             key={o.id} 
                             onClick={() => handleSelectOrder(o)}
-                            className="hover:bg-indigo-50/40 cursor-pointer transition-colors group"
+                            className="hover:bg-indigo-50/40 dark:hover:bg-[#222736] cursor-pointer transition-colors group"
                           >
-                            <td className="p-3 font-mono font-semibold text-zinc-900">
+                            <td className="p-3 font-mono font-semibold text-zinc-900 dark:text-[#E6E8EE]">
                               {o.soNumber || o.orderNumber || o.id?.slice(0, 8)}
                             </td>
-                            <td className="p-3 text-zinc-700 font-medium truncate max-w-[180px]">
+                            <td className="p-3 text-zinc-700 dark:text-[#A0A6B5] font-medium truncate max-w-[180px]">
                               {o.customerName || o.customer?.name || '—'}
                             </td>
-                            <td className="p-3 text-zinc-500">
+                            <td className="p-3 text-zinc-500 dark:text-[#6B7184]">
                               {fmtDate(o.soDate || o.orderDate)}
                             </td>
                             <td className="p-3">
@@ -670,7 +670,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); handleSelectOrder(o); }}
-                                className="px-2.5 py-1 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors flex items-center gap-1 ml-auto"
+                                className="px-2.5 py-1 text-xs font-semibold text-indigo-600 dark:text-[#4C8DFF] bg-indigo-50 dark:bg-blue-500/10 hover:bg-indigo-100 dark:hover:bg-blue-500/20 rounded-md transition-colors flex items-center gap-1 ml-auto"
                               >
                                 <span>Select</span>
                                 <ChevronRight size={13} />
@@ -693,7 +693,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                 type="button"
                 onClick={() => setStep(1)}
                 disabled={isSubmittingInProgress}
-                className="text-xs font-semibold text-zinc-500 hover:text-zinc-900 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                className="text-xs font-semibold text-zinc-500 dark:text-[#6B7184] hover:text-zinc-900 dark:hover:text-[#E6E8EE] flex items-center gap-1.5 transition-colors disabled:opacity-50"
               >
                 <ArrowLeft size={14} />
                 <span>Change Sales Order</span>
@@ -701,20 +701,20 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
 
               {/* Order Summary Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="bg-white p-3.5 rounded-lg border border-zinc-200 shadow-2xs">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Customer</p>
-                  <p className="text-sm font-semibold text-zinc-900 truncate">
+                <div className="bg-white dark:bg-[#161922] p-3.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Customer</p>
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate">
                     {fullOrder?.customerName || fullOrder?.customer?.name || '—'}
                   </p>
                 </div>
-                <div className="bg-white p-3.5 rounded-lg border border-zinc-200 shadow-2xs">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Date</p>
-                  <p className="text-sm font-semibold text-zinc-900">
+                <div className="bg-white dark:bg-[#161922] p-3.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Date</p>
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE]">
                     {fmtDate(fullOrder?.soDate || fullOrder?.orderDate)}
                   </p>
                 </div>
-                <div className="bg-white p-3.5 rounded-lg border border-zinc-200 shadow-2xs">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Status</p>
+                <div className="bg-white dark:bg-[#161922] p-3.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-1">Status</p>
                   <span className="badge badge-success inline-flex items-center gap-1">
                     <CheckCircle size={12} /> Confirmed
                   </span>
@@ -722,22 +722,22 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
               </div>
 
               {/* Warehouse Selection Section */}
-              <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
+              <div className="bg-white dark:bg-[#161922] p-4 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <label htmlFor="step2-warehouse-select" className="text-xs font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
-                      <Warehouse size={15} className="text-indigo-600" />
+                    <label htmlFor="step2-warehouse-select" className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider flex items-center gap-1.5">
+                      <Warehouse size={15} className="text-indigo-600 dark:text-[#4C8DFF]" />
                       Dispatch Warehouse <span className="text-red-500">*</span>
                     </label>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">
+                    <p className="text-[11px] text-zinc-500 dark:text-[#6B7184] mt-0.5">
                       Select the warehouse from which items will be dispatched.
                     </p>
                   </div>
 
                   <div className="w-full sm:w-80">
                     {isLoadingWarehouses ? (
-                      <div className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg">
-                        <div className="w-3.5 h-3.5 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
+                      <div className="flex items-center gap-2 px-3 py-2 text-xs text-zinc-500 dark:text-[#6B7184] bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg">
+                        <div className="w-3.5 h-3.5 border-2 border-zinc-900 dark:border-primary border-t-transparent rounded-full animate-spin" />
                         <span>Loading warehouses...</span>
                       </div>
                     ) : warehouseLoadError ? (
@@ -762,10 +762,10 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                         value={selectedWarehouseId}
                         onChange={handleWarehouseChange}
                         disabled={isSubmittingInProgress}
-                        className={`w-full px-3 py-2 text-sm rounded-lg border bg-white text-zinc-800 font-medium transition-all outline-none ${
+                        className={`w-full px-3 py-2 text-sm rounded-lg border bg-white dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE] font-medium transition-all outline-none ${
                           !selectedWarehouseId && validationErrors.length > 0
                             ? 'border-red-400 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                            : 'border-zinc-300 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
+                            : 'border-zinc-300 dark:border-[#2A2F3D] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
                         }`}
                       >
                         <option value="">Select Warehouse *</option>
@@ -780,20 +780,20 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                 </div>
 
                 {selectedWarehouseId && (
-                  <div className="mt-2 pt-2 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500">
+                  <div className="mt-2 pt-2 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between text-xs text-zinc-500 dark:text-[#6B7184]">
                     <span className="flex items-center gap-1">
-                      <MapPin size={12} className="text-zinc-400" />
+                      <MapPin size={12} className="text-zinc-400 dark:text-[#6B7184]" />
                       {isLoadingLocations ? (
                         'Loading warehouse locations...'
                       ) : locationsLoadError ? (
-                        <span className="text-red-600">{locationsLoadError}</span>
+                        <span className="text-red-600 dark:text-red-400">{locationsLoadError}</span>
                       ) : locations.length > 0 ? (
                         `${locations.length} warehouse location${locations.length > 1 ? 's' : ''} available`
                       ) : (
                         'No specific sub-locations configured for this warehouse'
                       )}
                     </span>
-                    <span className="font-mono text-[10px] text-zinc-400">
+                    <span className="font-mono text-[10px] text-zinc-400 dark:text-[#6B7184]">
                       ID: {selectedWarehouseId.slice(0, 8)}...
                     </span>
                   </div>
@@ -801,14 +801,14 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
               </div>
 
               {/* Items Table */}
-              <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden shadow-sm">
-                <div className="px-4 py-3 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <Package size={14} className="text-zinc-400" />
+              <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-hidden shadow-sm">
+                <div className="px-4 py-3 bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider flex items-center gap-1.5">
+                    <Package size={14} className="text-zinc-400 dark:text-[#6B7184]" />
                     Dispatch Items
                   </h3>
                   {locations.length > 0 && (
-                    <span className="text-[11px] text-zinc-500 font-medium">
+                    <span className="text-[11px] text-zinc-500 dark:text-[#6B7184] font-medium">
                       Assign location per dispatched item
                     </span>
                   )}
@@ -824,7 +824,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                       <col className="w-[19%]" />
                       <col className="w-[14%]" />
                     </colgroup>
-                    <thead className="bg-zinc-50/80 border-b border-zinc-200 text-xs font-semibold text-zinc-600">
+                    <thead className="bg-zinc-50/80 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5]">
                       <tr>
                         <th className="px-3 py-2.5 text-left">Product</th>
                         <th className="px-2 py-2.5 text-right">Ordered</th>
@@ -835,12 +835,12 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                         <th className="px-3 py-2.5 text-right">Dispatch Qty</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100 bg-white">
+                    <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] bg-white dark:bg-[#161922]">
                       {isLoadingDetail && (
                         <tr>
-                          <td colSpan={7} className="px-4 py-8 text-center text-zinc-500 text-xs">
+                          <td colSpan={7} className="px-4 py-8 text-center text-zinc-500 dark:text-[#6B7184] text-xs">
                             <div className="flex items-center justify-center gap-2">
-                              <div className="w-4 h-4 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
+                              <div className="w-4 h-4 border-2 border-zinc-900 dark:border-primary border-t-transparent rounded-full animate-spin" />
                               <span>Loading items from Sales Order...</span>
                             </div>
                           </td>
@@ -863,51 +863,51 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                         return (
                           <tr 
                             key={it.sourceSalesOrderItemId || idx} 
-                            className={isQtyError || isMissingLocation ? 'bg-red-50/40' : 'hover:bg-zinc-50/60 transition-colors'}
+                            className={isQtyError || isMissingLocation ? 'bg-red-50/40 dark:bg-red-950/20' : 'hover:bg-zinc-50/60 dark:hover:bg-[#222736] transition-colors'}
                           >
                             {/* Product info */}
                             <td className="px-3 py-2.5 align-top">
-                              <div className="font-semibold text-zinc-900 text-xs break-words leading-snug">
+                              <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] text-xs break-words leading-snug">
                                 {it.itemName}
                               </div>
                               {it.description && (
-                                <div className="text-[11px] text-zinc-500 mt-0.5 line-clamp-1 break-words" title={it.description}>
+                                <div className="text-[11px] text-zinc-500 dark:text-[#6B7184] mt-0.5 line-clamp-1 break-words" title={it.description}>
                                   {it.description}
                                 </div>
                               )}
                               {isLoadingStock ? (
-                                <div className="text-[10px] text-zinc-400 animate-pulse mt-1">Checking stock...</div>
+                                <div className="text-[10px] text-zinc-400 dark:text-[#6B7184] animate-pulse mt-1">Checking stock...</div>
                               ) : it.isMatched ? (
-                                <div className="text-[10px] font-medium text-emerald-600 flex items-center gap-1 mt-1">
+                                <div className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1">
                                   <CheckCircle size={11} className="shrink-0" />
                                   <span>Stock matched</span>
                                 </div>
                               ) : (
                                 <div 
-                                  className="text-[10px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 inline-flex items-center gap-1 mt-1 max-w-full" 
+                                  className="text-[10px] font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/40 inline-flex items-center gap-1 mt-1 max-w-full" 
                                   title={it.itemProductId || 'No ID'}
                                 >
-                                  <AlertCircle size={10} className="shrink-0 text-amber-600" />
+                                  <AlertCircle size={10} className="shrink-0 text-amber-600 dark:text-amber-400" />
                                   <span className="truncate">Product ID not in stock</span>
                                 </div>
                               )}
                             </td>
 
                             {/* Quantities */}
-                            <td className="px-2 py-2.5 text-right font-medium text-zinc-700 text-xs align-middle">{fmt(it.ordered)}</td>
-                            <td className="px-2 py-2.5 text-right font-medium text-emerald-600 text-xs align-middle">{fmt(it.delivered)}</td>
-                            <td className="px-2 py-2.5 text-right font-bold text-zinc-900 text-xs align-middle">{fmt(it.available)}</td>
+                            <td className="px-2 py-2.5 text-right font-medium text-zinc-700 dark:text-[#A0A6B5] text-xs align-middle">{fmt(it.ordered)}</td>
+                            <td className="px-2 py-2.5 text-right font-medium text-emerald-600 dark:text-emerald-400 text-xs align-middle">{fmt(it.delivered)}</td>
+                            <td className="px-2 py-2.5 text-right font-bold text-zinc-900 dark:text-[#E6E8EE] text-xs align-middle">{fmt(it.available)}</td>
 
                             {/* Available Stock */}
                             <td className="px-2 py-2.5 text-right text-xs align-middle">
                               {!selectedWarehouseId ? (
-                                <span className="text-zinc-400 text-[11px] italic">Select Wh</span>
+                                <span className="text-zinc-400 dark:text-[#6B7184] text-[11px] italic">Select Wh</span>
                               ) : it.availableStock === 0 ? (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200 leading-tight">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/40 leading-tight">
                                   0 (Out)
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
                                   {fmt(it.availableStock)}
                                 </span>
                               )}
@@ -916,25 +916,25 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                             {/* Location Dropdown */}
                             <td className="px-2.5 py-2.5 align-middle">
                               {!selectedWarehouseId ? (
-                                <span className="text-xs text-zinc-400 italic">Select warehouse</span>
+                                <span className="text-xs text-zinc-400 dark:text-[#6B7184] italic">Select warehouse</span>
                               ) : isLoadingLocations || isLoadingStock ? (
-                                <span className="text-xs text-zinc-400 flex items-center gap-1">
+                                <span className="text-xs text-zinc-400 dark:text-[#6B7184] flex items-center gap-1">
                                   <div className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                                   <span className="text-[11px]">Loading...</span>
                                 </span>
                               ) : itemLocations.length === 0 ? (
-                                <span className="text-xs text-zinc-400 italic">Default</span>
+                                <span className="text-xs text-zinc-400 dark:text-[#6B7184] italic">Default</span>
                               ) : (
                                 <select
                                   value={it.warehouseLocationId || ''}
                                   onChange={(e) => handleLocationChange(idx, e.target.value)}
                                   disabled={isDisabled || isSubmittingInProgress}
-                                  className={`w-full px-2 py-1 text-xs rounded-md border bg-white outline-none transition-all truncate ${
+                                  className={`w-full px-2 py-1 text-xs rounded-md border bg-white dark:bg-[#1D212C] outline-none transition-all truncate ${
                                     isDisabled
-                                      ? 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed'
+                                      ? 'bg-zinc-100 dark:bg-[#222736] border-zinc-200 dark:border-[#2A2F3D] text-zinc-400 dark:text-[#6B7184] cursor-not-allowed'
                                       : isMissingLocation
-                                        ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/50 text-red-700'
-                                        : 'border-zinc-300 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 text-zinc-800'
+                                        ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/50 dark:bg-red-950/30 text-red-700 dark:text-red-400'
+                                        : 'border-zinc-300 dark:border-[#2A2F3D] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 text-zinc-800 dark:text-[#E6E8EE]'
                                   }`}
                                 >
                                   <option value="">Select Location *</option>
@@ -960,19 +960,19 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                                   onChange={(e) => handleQtyChange(idx, e.target.value)}
                                   className={`w-full max-w-[85px] px-2 py-1 text-right text-xs font-semibold rounded-md border ${
                                     isDisabled 
-                                      ? 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed'
+                                      ? 'bg-zinc-100 dark:bg-[#222736] border-zinc-200 dark:border-[#2A2F3D] text-zinc-400 dark:text-[#6B7184] cursor-not-allowed'
                                       : isQtyError 
-                                        ? 'border-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50 text-red-700' 
-                                        : 'border-zinc-300 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
+                                        ? 'border-red-300 dark:border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400' 
+                                        : 'border-zinc-300 dark:border-[#2A2F3D] focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 bg-white dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE]'
                                   } outline-none transition-all`}
                                 />
                                 {isExcessStock && (
-                                  <div className="text-[9px] text-red-600 font-semibold mt-0.5 leading-tight text-right break-words max-w-[85px]">
+                                  <div className="text-[9px] text-red-600 dark:text-red-400 font-semibold mt-0.5 leading-tight text-right break-words max-w-[85px]">
                                     &gt; Stock ({it.availableStock})
                                   </div>
                                 )}
                                 {isExcess && !isExcessStock && (
-                                  <div className="text-[9px] text-red-600 font-semibold mt-0.5 leading-tight text-right break-words max-w-[85px]">
+                                  <div className="text-[9px] text-red-600 dark:text-red-400 font-semibold mt-0.5 leading-tight text-right break-words max-w-[85px]">
                                     &gt; Pending ({it.available})
                                   </div>
                                 )}
@@ -984,7 +984,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
 
                       {!isLoadingDetail && items.length === 0 && (
                         <tr>
-                          <td colSpan={6} className="px-4 py-8 text-center text-zinc-400 text-xs">
+                          <td colSpan={6} className="px-4 py-8 text-center text-zinc-400 dark:text-[#6B7184] text-xs">
                             No items found in this Sales Order.
                           </td>
                         </tr>
@@ -992,7 +992,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
 
                       {!isLoadingDetail && items.length > 0 && items.every(it => it.available === 0) && (
                         <tr>
-                          <td colSpan={6} className="px-4 py-4 text-center text-zinc-500 font-medium bg-zinc-50/50 text-xs">
+                          <td colSpan={6} className="px-4 py-4 text-center text-zinc-500 dark:text-[#6B7184] font-medium bg-zinc-50/50 dark:bg-[#1D212C] text-xs">
                             All items have already been completely delivered.
                           </td>
                         </tr>
@@ -1003,15 +1003,15 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
               </div>
 
               {hasExcessError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 text-red-700 text-xs">
-                  <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600" />
+                <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 rounded-lg flex items-start gap-2 text-red-700 dark:text-red-400 text-xs">
+                  <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
                   <p className="font-medium">Dispatch quantity cannot exceed available quantity for any item.</p>
                 </div>
               )}
 
               {hasMissingLocation && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 text-red-700 text-xs">
-                  <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600" />
+                <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 rounded-lg flex items-start gap-2 text-red-700 dark:text-red-400 text-xs">
+                  <AlertCircle size={15} className="shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
                   <p className="font-medium">Please select a warehouse location for each item being dispatched.</p>
                 </div>
               )}
@@ -1023,14 +1023,14 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-200 bg-white flex items-center justify-between rounded-b-xl shrink-0">
-          <div className="text-sm text-zinc-500">
+        <div className="px-6 py-4 border-t border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] flex items-center justify-between rounded-b-xl shrink-0">
+          <div className="text-sm text-zinc-500 dark:text-[#6B7184]">
             {step === 2 && (
               <>
-                Total Dispatch Items: <span className="font-bold text-zinc-900">{totalDispatchItems}</span>
+                Total Dispatch Items: <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">{totalDispatchItems}</span>
                 {totalDispatchQty > 0 && (
-                  <span className="text-xs text-zinc-400 ml-1.5 font-normal">
-                    (Total Qty: <span className="font-semibold text-zinc-700">{fmt(totalDispatchQty)}</span>)
+                  <span className="text-xs text-zinc-400 dark:text-[#6B7184] ml-1.5 font-normal">
+                    (Total Qty: <span className="font-semibold text-zinc-700 dark:text-[#A0A6B5]">{fmt(totalDispatchQty)}</span>)
                   </span>
                 )}
               </>
@@ -1041,7 +1041,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
               type="button"
               onClick={onClose}
               disabled={isSubmittingInProgress}
-              className="px-4 py-2 text-sm font-semibold text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-zinc-300 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
@@ -1050,7 +1050,7 @@ export default function CreateDeliveryChallanModal({ isOpen, onClose, companyId,
                 type="button"
                 onClick={handleSubmit}
                 disabled={!isFormValid || isSubmittingInProgress || isLoadingDetail || isLoadingWarehouses}
-                className="px-5 py-2 text-sm font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-5 py-2 text-sm font-semibold text-white bg-zinc-900 dark:bg-primary rounded-lg hover:bg-zinc-800 dark:hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isSubmittingInProgress ? (
                   <>

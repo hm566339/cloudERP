@@ -119,14 +119,14 @@ export default function Tooltip({
           }}
           className="pointer-events-none transition-opacity duration-micro ease-enter whitespace-nowrap animate-fade-in"
         >
-          <div className="relative bg-[#111827] text-white text-[11px] font-medium px-2.5 py-1 rounded shadow-lg tracking-normal leading-tight">
+          <div className="relative bg-[#111827] dark:bg-[#1D212C] text-white dark:text-[#E6E8EE] text-[11px] font-medium px-2.5 py-1 rounded shadow-lg tracking-normal leading-tight border border-transparent dark:border-[#2A2F3D]">
             {content}
             {/* Arrow */}
             <span 
               className={`absolute w-0 h-0 border-x-[4px] border-x-transparent ${
                 coords.showBelow 
-                  ? '-top-1 border-b-[4px] border-b-[#111827]' 
-                  : '-bottom-1 border-t-[4px] border-t-[#111827]'
+                  ? '-top-1 border-b-[4px] border-b-[#111827] dark:border-b-[#1D212C]' 
+                  : '-bottom-1 border-t-[4px] border-t-[#111827] dark:border-t-[#1D212C]'
               }`}
               style={{
                 left: `calc(50% + ${coords.arrowOffset}px)`,

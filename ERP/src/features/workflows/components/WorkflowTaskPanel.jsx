@@ -10,15 +10,15 @@ export default function WorkflowTaskPanel({
 }) {
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-zinc-200 p-6 text-center text-xs text-zinc-500">
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] p-6 text-center text-xs text-zinc-500">
         No approval tasks generated yet for this transaction.
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-      <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
+    <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+      <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-zinc-900">Assigned Tasks & Approvers</h3>
           <p className="text-xs text-zinc-500 mt-0.5">Authoritative list of approval assignments</p>

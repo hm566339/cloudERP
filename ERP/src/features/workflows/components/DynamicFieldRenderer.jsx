@@ -27,9 +27,9 @@ export default function DynamicFieldRenderer({
             onChange={(e) => onChange?.(field.name, e.target.value)}
             className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
               error
-                ? 'border-red-400 bg-red-50/20 focus:border-red-500'
-                : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
-            } ${isFieldReadOnly ? 'bg-zinc-50 text-zinc-700 cursor-not-allowed border-zinc-200' : 'bg-white'}`}
+                ? 'border-red-400 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:border-red-500'
+                : 'border-zinc-200 dark:border-border-dark focus:border-zinc-400 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-primary/20'
+            } ${isFieldReadOnly ? 'bg-zinc-50 dark:bg-hover-dark text-zinc-700 dark:text-zinc-400 cursor-not-allowed border-zinc-200 dark:border-border-dark' : 'bg-white dark:bg-card-dark text-zinc-900 dark:text-zinc-100'}`}
           />
         );
 
@@ -44,9 +44,9 @@ export default function DynamicFieldRenderer({
             onChange={(e) => onChange?.(field.name, e.target.value === '' ? '' : Number(e.target.value))}
             className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
               error
-                ? 'border-red-400 bg-red-50/20 focus:border-red-500'
-                : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
-            } ${isFieldReadOnly ? 'bg-zinc-50 text-zinc-700 cursor-not-allowed border-zinc-200' : 'bg-white'}`}
+                ? 'border-red-400 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:border-red-500'
+                : 'border-zinc-200 dark:border-border-dark focus:border-zinc-400 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-primary/20'
+            } ${isFieldReadOnly ? 'bg-zinc-50 dark:bg-hover-dark text-zinc-700 dark:text-zinc-400 cursor-not-allowed border-zinc-200 dark:border-border-dark' : 'bg-white dark:bg-card-dark text-zinc-900 dark:text-zinc-100'}`}
           />
         );
 
@@ -77,9 +77,9 @@ export default function DynamicFieldRenderer({
               disabled={isFieldReadOnly}
               checked={Boolean(currentValue)}
               onChange={(e) => onChange?.(field.name, e.target.checked)}
-              className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-zinc-900/10 disabled:opacity-50"
+              className="h-4 w-4 rounded border-zinc-300 dark:border-border-dark dark:bg-card-dark text-blue-600 focus:ring-zinc-900/10 dark:focus:ring-primary/20 disabled:opacity-50"
             />
-            <span className="text-xs text-zinc-700 select-none">{field.label}</span>
+            <span className="text-xs text-zinc-700 dark:text-zinc-300 select-none">{field.label}</span>
           </label>
         );
 
@@ -87,7 +87,7 @@ export default function DynamicFieldRenderer({
         return (
           <div className="flex flex-wrap gap-4 mt-1">
             {(field.options || []).map((opt) => (
-              <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-xs text-zinc-700">
+              <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-xs text-zinc-700 dark:text-zinc-300">
                 <input
                   type="radio"
                   name={field.name}
@@ -95,7 +95,7 @@ export default function DynamicFieldRenderer({
                   value={opt.value}
                   checked={String(currentValue) === String(opt.value)}
                   onChange={(e) => onChange?.(field.name, e.target.value)}
-                  className="h-4 w-4 text-blue-600 focus:ring-zinc-900/10 disabled:opacity-50"
+                  className="h-4 w-4 text-blue-600 focus:ring-zinc-900/10 dark:focus:ring-primary/20 disabled:opacity-50"
                 />
                 <span>{opt.label || opt.value}</span>
               </label>
@@ -114,9 +114,9 @@ export default function DynamicFieldRenderer({
             onChange={(e) => onChange?.(field.name, e.target.value)}
             className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
               error
-                ? 'border-red-400 bg-red-50/20 focus:border-red-500'
-                : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
-            } ${isFieldReadOnly ? 'bg-zinc-50 text-zinc-700 cursor-not-allowed border-zinc-200' : 'bg-white'}`}
+                ? 'border-red-400 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:border-red-500'
+                : 'border-zinc-200 dark:border-border-dark focus:border-zinc-400 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-primary/20'
+            } ${isFieldReadOnly ? 'bg-zinc-50 dark:bg-hover-dark text-zinc-700 dark:text-zinc-400 cursor-not-allowed border-zinc-200 dark:border-border-dark' : 'bg-white dark:bg-card-dark text-zinc-900 dark:text-zinc-100'}`}
           />
         );
 
@@ -124,8 +124,8 @@ export default function DynamicFieldRenderer({
         return (
           <div className="mt-1">
             {isFieldReadOnly ? (
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 border border-zinc-200 text-xs text-zinc-600">
-                <Paperclip size={14} className="text-zinc-400" />
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50 dark:bg-hover-dark border border-zinc-200 dark:border-border-dark text-xs text-zinc-600 dark:text-zinc-300">
+                <Paperclip size={14} className="text-zinc-400 dark:text-zinc-500" />
                 <span>{currentValue || 'No file attached'}</span>
               </div>
             ) : (
@@ -133,7 +133,7 @@ export default function DynamicFieldRenderer({
                 id={`field-${field.name}`}
                 type="file"
                 onChange={(e) => onChange?.(field.name, e.target.files?.[0])}
-                className="block w-full text-xs text-zinc-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                className="block w-full text-xs text-zinc-500 dark:text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 dark:file:bg-blue-950/50 file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50"
               />
             )}
           </div>
@@ -151,9 +151,9 @@ export default function DynamicFieldRenderer({
             onChange={(e) => onChange?.(field.name, e.target.value)}
             className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
               error
-                ? 'border-red-400 bg-red-50/20 focus:border-red-500'
-                : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'
-            } ${isFieldReadOnly ? 'bg-zinc-50 text-zinc-700 cursor-not-allowed border-zinc-200' : 'bg-white'}`}
+                ? 'border-red-400 dark:border-red-500 bg-red-50/20 dark:bg-red-950/20 focus:border-red-500'
+                : 'border-zinc-200 dark:border-border-dark focus:border-zinc-400 dark:focus:border-primary focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-primary/20'
+            } ${isFieldReadOnly ? 'bg-zinc-50 dark:bg-hover-dark text-zinc-700 dark:text-zinc-400 cursor-not-allowed border-zinc-200 dark:border-border-dark' : 'bg-white dark:bg-card-dark text-zinc-900 dark:text-zinc-100'}`}
           />
         );
     }
@@ -163,21 +163,21 @@ export default function DynamicFieldRenderer({
     return (
       <div className="space-y-1">
         {renderInput()}
-        {field.helperText && <p className="text-[11px] text-zinc-400">{field.helperText}</p>}
-        {error && <p className="text-[11px] text-red-600 font-medium">{error}</p>}
+        {field.helperText && <p className="text-[11px] text-zinc-400 dark:text-zinc-500">{field.helperText}</p>}
+        {error && <p className="text-[11px] text-red-600 dark:text-red-400 font-medium">{error}</p>}
       </div>
     );
   }
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={`field-${field.name}`} className="block text-xs font-semibold text-zinc-700">
+      <label htmlFor={`field-${field.name}`} className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
         {field.label}
         {field.required && <span className="text-red-500 ml-1 font-bold">*</span>}
       </label>
       {renderInput()}
-      {field.helperText && <p className="text-[11px] text-zinc-400">{field.helperText}</p>}
-      {error && <p className="text-[11px] text-red-600 font-medium">{error}</p>}
+      {field.helperText && <p className="text-[11px] text-zinc-400 dark:text-zinc-500">{field.helperText}</p>}
+      {error && <p className="text-[11px] text-red-600 dark:text-red-400 font-medium">{error}</p>}
     </div>
   );
 }

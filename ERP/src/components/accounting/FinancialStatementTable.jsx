@@ -84,7 +84,7 @@ export default function FinancialStatementTable({
 
   if (loading) {
     return (
-      <div className="bg-white border border-zinc-200 rounded-xl shadow-2xs p-6 space-y-4 animate-pulse">
+      <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-2xs p-6 space-y-4 animate-pulse">
         <div className="h-9 bg-zinc-100 rounded-lg w-1/3" />
         <div className="space-y-2">
           {[...Array(8)].map((_, i) => (
@@ -100,7 +100,7 @@ export default function FinancialStatementTable({
 
   if (totalRowCount === 0 && !loading) {
     return (
-      <div className="bg-white border border-zinc-200 rounded-xl shadow-2xs p-12 text-center flex flex-col items-center justify-center">
+      <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-2xs p-12 text-center flex flex-col items-center justify-center">
         <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mb-3">
           <FileText size={24} />
         </div>
@@ -111,7 +111,7 @@ export default function FinancialStatementTable({
   }
 
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl shadow-2xs overflow-hidden flex flex-col">
+    <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-2xs overflow-hidden flex flex-col">
       {/* Table Toolbar */}
       <div className="p-3 sm:p-4 border-b border-zinc-200 bg-zinc-50/50 flex flex-wrap items-center justify-between gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-xs">
@@ -121,14 +121,14 @@ export default function FinancialStatementTable({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Filter accounts..."
-            className="w-full h-8 pl-8 pr-3 text-xs bg-white border border-zinc-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-zinc-900 transition-all placeholder:text-zinc-400"
+            className="w-full h-8 pl-8 pr-3 text-xs bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg focus:outline-hidden focus:ring-1 focus:ring-zinc-900 transition-all placeholder:text-zinc-400"
           />
         </div>
 
         <button
           type="button"
           onClick={toggleAll}
-          className="h-8 px-2.5 text-[11px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 shadow-2xs"
+          className="h-8 px-2.5 text-[11px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 shadow-2xs"
         >
           <ChevronsUpDown size={13} />
           <span>Toggle All Sections</span>

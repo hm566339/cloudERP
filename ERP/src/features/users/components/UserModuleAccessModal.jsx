@@ -293,22 +293,22 @@ export default function UserModuleAccessModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4">
-      <div className="card max-w-md w-full p-6 space-y-6 animate-slide-up bg-white rounded-2xl shadow-2xl border border-zinc-200">
+      <div className="card max-w-md w-full p-6 space-y-6 animate-slide-up bg-white dark:bg-[#1D212C] rounded-2xl shadow-2xl border border-zinc-200 dark:border-[#2A2F3D]">
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2">
-              <Layers size={18} className="text-zinc-700" />
-              <h3 className="text-lg font-bold text-zinc-900">
+              <Layers size={18} className="text-zinc-700 dark:text-[#4C8DFF]" />
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">
                 Manage Module Access
               </h3>
             </div>
-            <p className="text-xs sm:text-sm text-zinc-500 mt-1">
-              Assign or revoke active company modules for <strong className="text-zinc-800">{user.name || user.fullName || user.username}</strong>. Changes apply instantly.
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-[#A0A6B5] mt-1">
+              Assign or revoke active company modules for <strong className="text-zinc-800 dark:text-[#E6E8EE]">{user.name || user.fullName || user.username}</strong>. Changes apply instantly.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-600 transition-colors p-1 rounded-md hover:bg-zinc-100"
+            className="text-zinc-400 dark:text-[#6B7184] hover:text-zinc-600 dark:hover:text-[#E6E8EE] transition-colors p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-[#222736]"
             aria-label="Close"
           >
             ✕
@@ -318,16 +318,16 @@ export default function UserModuleAccessModal({
         {canAssignModules && (
           <div className="space-y-4">
             {loading ? (
-              <div className="p-8 bg-zinc-50 rounded-xl text-center flex flex-col items-center justify-center gap-2 border border-zinc-100">
-                <Loader2 className="animate-spin text-zinc-500" size={24} />
-                <span className="text-sm font-medium text-zinc-600">
+              <div className="p-8 bg-zinc-50 dark:bg-[#161922] rounded-xl text-center flex flex-col items-center justify-center gap-2 border border-zinc-100 dark:border-[#2A2F3D]">
+                <Loader2 className="animate-spin text-zinc-500 dark:text-[#A0A6B5]" size={24} />
+                <span className="text-sm font-medium text-zinc-600 dark:text-[#E6E8EE]">
                   Loading active company modules...
                 </span>
               </div>
             ) : currentError ? (
-              <div className="p-4 bg-rose-50 rounded-xl border border-rose-200 text-rose-800 space-y-2">
+              <div className="p-4 bg-rose-50 dark:bg-[#F0616D]/15 rounded-xl border border-rose-200 dark:border-[#F0616D]/30 text-rose-800 dark:text-[#F0616D] space-y-2">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 shrink-0 text-rose-600 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 shrink-0 text-rose-600 dark:text-[#F0616D] mt-0.5" />
                   <div className="text-xs sm:text-sm">
                     {typeof currentError === "string" ? currentError : currentError?.data?.message || currentError?.message || "Failed to load company modules."}
                   </div>
@@ -335,28 +335,28 @@ export default function UserModuleAccessModal({
                 <button
                   type="button"
                   onClick={fetchModalData}
-                  className="text-xs font-semibold text-rose-700 hover:text-rose-900 underline flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-semibold text-rose-700 dark:text-[#F0616D] hover:text-rose-900 underline flex items-center gap-1 cursor-pointer"
                 >
                   <RefreshCw size={12} /> Try again
                 </button>
               </div>
             ) : activeModules.length === 0 ? (
-              <div className="p-6 bg-zinc-50 rounded-xl text-center text-sm text-zinc-500 border border-zinc-100 flex flex-col items-center justify-center gap-1">
-                <AlertCircle className="text-zinc-400 mb-1" size={24} />
-                <span className="font-medium text-zinc-700">No active company modules found.</span>
-                <span className="text-xs text-zinc-500">Ensure this company has modules assigned and enabled.</span>
+              <div className="p-6 bg-zinc-50 dark:bg-[#161922] rounded-xl text-center text-sm text-zinc-500 dark:text-[#A0A6B5] border border-zinc-100 dark:border-[#2A2F3D] flex flex-col items-center justify-center gap-1">
+                <AlertCircle className="text-zinc-400 dark:text-[#6B7184] mb-1" size={24} />
+                <span className="font-medium text-zinc-700 dark:text-[#E6E8EE]">No active company modules found.</span>
+                <span className="text-xs text-zinc-500 dark:text-[#A0A6B5]">Ensure this company has modules assigned and enabled.</span>
                 <button
                   type="button"
                   onClick={fetchModalData}
-                  className="mt-2 text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 cursor-pointer"
+                  className="mt-2 text-xs text-indigo-600 dark:text-[#4C8DFF] hover:text-indigo-800 font-semibold flex items-center gap-1 cursor-pointer"
                 >
                   <RefreshCw size={12} /> Refresh
                 </button>
               </div>
             ) : (
               <div className="space-y-2.5">
-                <div className="flex items-center justify-between text-xs text-zinc-500 font-medium px-0.5">
-                  <label className="font-bold text-zinc-700 uppercase tracking-wider text-[11px]">
+                <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-[#A0A6B5] font-medium px-0.5">
+                  <label className="font-bold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider text-[11px]">
                     Available Company Modules
                   </label>
                   <span>{assignedCount} of {activeModules.length} assigned</span>
@@ -376,8 +376,8 @@ export default function UserModuleAccessModal({
                         onClick={() => handleTogglePortalAccess(mod)}
                         className={`p-3 rounded-xl border text-sm font-medium transition-all text-left cursor-pointer ${
                           isSelected
-                            ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20 shadow-xs"
-                            : "border-zinc-200 text-zinc-600 hover:border-primary/40 hover:bg-zinc-50"
+                            ? "border-primary bg-primary/5 text-primary ring-1 ring-primary/20 shadow-xs dark:border-[#4C8DFF] dark:bg-[#4C8DFF]/15 dark:text-[#4C8DFF]"
+                            : "border-zinc-200 text-zinc-600 hover:border-primary/40 hover:bg-zinc-50 dark:border-[#2A2F3D] dark:text-[#E6E8EE] dark:hover:bg-[#222736]"
                         } ${isToggling ? "opacity-50 cursor-wait" : ""}`}
                       >
                         <div className="flex items-center justify-between">
@@ -385,11 +385,11 @@ export default function UserModuleAccessModal({
                           {isToggling ? (
                             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin ml-2 shrink-0"></div>
                           ) : (
-                            isSelected && <CheckCircle2 size={16} className="text-primary flex-shrink-0 ml-2" />
+                            isSelected && <CheckCircle2 size={16} className="text-primary dark:text-[#4C8DFF] flex-shrink-0 ml-2" />
                           )}
                         </div>
                         {mod.host && (
-                          <p className="text-[10px] font-mono text-zinc-400 mt-1.5 truncate" title={mod.host}>
+                          <p className="text-[10px] font-mono text-zinc-400 dark:text-[#6B7184] mt-1.5 truncate" title={mod.host}>
                             {mod.host}
                           </p>
                         )}
@@ -402,12 +402,12 @@ export default function UserModuleAccessModal({
           </div>
         )}
 
-        <div className="pt-2 flex items-center justify-between border-t border-zinc-100">
+        <div className="pt-2 flex items-center justify-between border-t border-zinc-100 dark:border-[#2A2F3D]">
           <button
             type="button"
             onClick={fetchModalData}
             disabled={loading}
-            className="text-xs text-zinc-500 hover:text-zinc-800 flex items-center gap-1.5 px-2 py-1 rounded transition-colors"
+            className="text-xs text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-800 dark:hover:text-[#E6E8EE] flex items-center gap-1.5 px-2 py-1 rounded transition-colors"
             title="Reload modules"
           >
             <RefreshCw size={13} className={loading ? "animate-spin" : ""} />

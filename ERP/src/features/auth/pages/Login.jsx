@@ -420,13 +420,13 @@ export default function Login() {
   if (isOrgMode && isOrgLoading) {
     return (
       <div className="w-full max-w-[368px] mx-auto animate-fade-in-up">
-        <div className="bg-white rounded-[2rem] p-8 sm:p-12 shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-zinc-100 flex flex-col items-center justify-center space-y-4 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex items-center justify-center">
-            <Loader2 className="w-6 h-6 text-zinc-700 animate-spin" />
+        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-8 sm:p-12 shadow-[0_8px_40px_rgb(0,0,0,0.06)] dark:shadow-none border border-zinc-100 dark:border-zinc-800 flex flex-col items-center justify-center space-y-4 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700/80 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 text-zinc-700 dark:text-zinc-300 animate-spin" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-zinc-900">Resolving Organization</h3>
-            <p className="text-xs text-zinc-500 mt-1">Checking organization workspace…</p>
+            <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">Resolving Organization</h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Checking organization workspace…</p>
           </div>
         </div>
       </div>
@@ -437,30 +437,30 @@ export default function Login() {
   if (isOrgMode && isOrgNotFound) {
     return (
       <div className="w-full max-w-[368px] mx-auto animate-fade-in-up">
-        <div className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-zinc-100 text-center space-y-5">
-          <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center mx-auto shadow-sm">
+        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-8 sm:p-10 shadow-[0_8px_40px_rgb(0,0,0,0.06)] dark:shadow-none border border-zinc-100 dark:border-zinc-800 text-center space-y-5">
+          <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40 flex items-center justify-center mx-auto shadow-sm">
             <Building2 size={26} />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-display font-black text-zinc-900 tracking-tight">
+            <h2 className="text-xl font-display font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
               Organization Not Found
             </h2>
-            <p className="text-xs text-zinc-500 leading-relaxed max-w-xs mx-auto">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-xs mx-auto">
               The organization login link is invalid or the organization is no longer available.
             </p>
           </div>
           <div className="pt-2 space-y-2.5">
             <Link
               to="/"
-              className="w-full h-11 inline-flex items-center justify-center rounded-xl bg-zinc-900 text-white text-xs font-semibold hover:bg-zinc-800 transition-colors shadow-sm"
+              className="w-full h-11 inline-flex items-center justify-center rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors shadow-sm"
             >
               Back to Home
             </Link>
             <Link
               to="/try-free"
-              className="w-full h-10 inline-flex items-center justify-center gap-1.5 rounded-xl bg-zinc-50 text-zinc-700 text-xs font-semibold hover:bg-zinc-100 border border-zinc-200/80 transition-colors"
+              className="w-full h-10 inline-flex items-center justify-center gap-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200/80 dark:border-zinc-700/80 transition-colors"
             >
-              <Sparkles size={13} className="text-emerald-600" />
+              <Sparkles size={13} className="text-emerald-600 dark:text-emerald-400" />
               <span>Start Free Trial</span>
             </Link>
           </div>
@@ -474,13 +474,13 @@ export default function Login() {
 
   return (
     <div className="w-full max-w-[368px] mx-auto animate-fade-in-up">
-      <div className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-zinc-100">
+      <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-8 sm:p-10 shadow-[0_8px_40px_rgb(0,0,0,0.06)] dark:shadow-none border border-zinc-100 dark:border-zinc-800">
 
         {/* Back Link */}
         <Link
           to={isOrgMode ? buildPath('/try-free') : buildPath('/')}
           title={isOrgMode ? 'Back to Signup' : 'Back to Home'}
-          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-zinc-50 hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-colors mb-8"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors mb-8"
         >
           <ChevronLeft size={20} />
         </Link>
@@ -488,25 +488,25 @@ export default function Login() {
         {/* Title Header */}
         <div className="space-y-3 mb-8">
           {isOrgMode && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-100 mb-1">
-              <Building2 size={12} className="text-emerald-600" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold border border-emerald-100 dark:border-emerald-800 mb-1">
+              <Building2 size={12} className="text-emerald-600 dark:text-emerald-400" />
               <span>Organization Owner Portal</span>
             </div>
           )}
           {isCompanyMode && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-semibold border border-indigo-100 mb-1">
-              <Building2 size={12} className="text-indigo-600" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 text-[11px] font-semibold border border-indigo-100 dark:border-indigo-800 mb-1">
+              <Building2 size={12} className="text-indigo-600 dark:text-indigo-400" />
               <span>Company Portal: {routeCompanyCode}</span>
             </div>
           )}
-          <h2 className="text-3xl font-display font-black text-zinc-900 tracking-tight">
+          <h2 className="text-3xl font-display font-black text-zinc-900 dark:text-zinc-100 tracking-tight">
             {isOrgMode ? 'Owner Sign In' : 'Welcome Back'}
           </h2>
-          <p className="text-sm text-zinc-500 font-medium">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
             {isOrgMode ? (
-              <>Sign in to organization <span className="text-zinc-900 font-bold capitalize">{orgDisplayName}</span> control center</>
+              <>Sign in to organization <span className="text-zinc-900 dark:text-zinc-100 font-bold capitalize">{orgDisplayName}</span> control center</>
             ) : isCompanyMode ? (
-              <>Sign in to your account at <span className="text-zinc-900 font-bold uppercase">{routeCompanyCode}</span></>
+              <>Sign in to your account at <span className="text-zinc-900 dark:text-zinc-100 font-bold uppercase">{routeCompanyCode}</span></>
             ) : (
               `Please enter your details to sign in to ${moduleName}.`
             )}
@@ -515,8 +515,8 @@ export default function Login() {
 
         {/* In-form error display */}
         {formError && (
-          <div className="mb-6 p-3.5 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-700 text-xs font-medium flex items-start gap-2.5 animate-slide-up">
-            <AlertCircle size={16} className="shrink-0 mt-0.5 text-rose-600" />
+          <div className="mb-6 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 text-rose-700 dark:text-rose-400 text-xs font-medium flex items-start gap-2.5 animate-slide-up">
+            <AlertCircle size={16} className="shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
             <span className="leading-relaxed">{formError}</span>
           </div>
         )}
@@ -525,7 +525,7 @@ export default function Login() {
 
           {/* Email or Username */}
           <div className="space-y-1.5">
-            <label className="text-[11.2px] font-bold text-zinc-700 block">
+            <label className="text-[11.2px] font-bold text-zinc-700 dark:text-zinc-300 block">
               {isOrgMode ? 'Email or Username' : 'Username'}
             </label>
             <input
@@ -533,7 +533,7 @@ export default function Login() {
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3.5 bg-white border border-zinc-200/80 focus:border-primary focus:ring-primary/20 rounded-2xl text-[12px] font-medium text-zinc-800 shadow-sm transition-all"
+              className="w-full px-4 py-3.5 bg-white dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700 focus:border-primary focus:ring-primary/20 rounded-2xl text-[12px] font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-sm transition-all"
               placeholder={isOrgMode ? 'Enter your email or username' : 'Enter your username'}
               autoComplete="username"
             />
@@ -542,14 +542,14 @@ export default function Login() {
           {/* Optional Company Code (for company users on global login) */}
           {!isOrgMode && !isCompanyMode && (
             <div className="space-y-1.5">
-              <label className="text-[11.2px] font-bold text-zinc-700 block">
-                Company Code <span className="text-zinc-400 font-normal">(Optional for Admin)</span>
+              <label className="text-[11.2px] font-bold text-zinc-700 dark:text-zinc-300 block">
+                Company Code <span className="text-zinc-400 dark:text-zinc-500 font-normal">(Optional for Admin)</span>
               </label>
               <input
                 type="text"
                 value={companyCode}
                 onChange={(e) => setCompanyCode(e.target.value.toUpperCase())}
-                className="w-full px-4 py-3.5 bg-white border border-zinc-200/80 focus:border-primary focus:ring-primary/20 rounded-2xl text-[12px] font-medium text-zinc-800 shadow-sm transition-all uppercase placeholder:normal-case"
+                className="w-full px-4 py-3.5 bg-white dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700 focus:border-primary focus:ring-primary/20 rounded-2xl text-[12px] font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-sm transition-all uppercase placeholder:normal-case"
                 placeholder="e.g. MOHIT, KASERA (leave blank for Admin)"
                 autoComplete="organization"
               />
@@ -559,10 +559,10 @@ export default function Login() {
           {/* Password with Visibility Toggle */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-[11.2px] font-bold text-zinc-700 block">Password</label>
+              <label className="text-[11.2px] font-bold text-zinc-700 dark:text-zinc-300 block">Password</label>
               <Link
                 to={buildPath('/forgot-password')}
-                className="text-[10.4px] font-bold text-zinc-500 hover:text-zinc-900 transition-colors"
+                className="text-[10.4px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
               >
                 Forgot password?
               </Link>
@@ -573,7 +573,7 @@ export default function Login() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3.5 pr-11 bg-white border border-zinc-200/80 focus:border-primary focus:ring-primary/20 rounded-2xl text-[12px] font-medium text-zinc-800 shadow-sm transition-all"
+                className="w-full px-4 py-3.5 pr-11 bg-white dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700 focus:border-primary focus:ring-primary/20 rounded-2xl text-[12px] font-medium text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-sm transition-all"
                 placeholder="Enter your password"
                 autoComplete="current-password"
               />
@@ -582,7 +582,7 @@ export default function Login() {
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors p-1"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-1"
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -593,10 +593,10 @@ export default function Login() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center items-center gap-2 px-4 py-4 bg-zinc-900 hover:bg-zinc-800 text-white text-[12.8px] font-bold rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-xl shadow-zinc-900/20 disabled:opacity-70 disabled:cursor-not-allowed group mt-7"
+            className="w-full flex justify-center items-center gap-2 px-4 py-4 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-[12.8px] font-bold rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-xl shadow-zinc-900/20 dark:shadow-none disabled:opacity-70 disabled:cursor-not-allowed group mt-7"
           >
             {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-white/40 dark:border-zinc-900/40 border-t-white dark:border-t-zinc-900 rounded-full animate-spin" />
             ) : (
               <>
                 <span>Sign In</span>
@@ -608,24 +608,24 @@ export default function Login() {
 
         {/* Organization Information Badge */}
         {isOrgMode && (
-          <div className="mt-8 pt-6 border-t border-zinc-100 space-y-2">
+          <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400 font-medium">Organization</span>
-              <span className="text-zinc-900 font-bold capitalize">{orgDisplayName}</span>
+              <span className="text-zinc-400 dark:text-zinc-500 font-medium">Organization</span>
+              <span className="text-zinc-900 dark:text-zinc-100 font-bold capitalize">{orgDisplayName}</span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-zinc-400">
+            <div className="flex items-center justify-between text-[11px] text-zinc-400 dark:text-zinc-500">
               <span>Code</span>
-              <span className="font-mono text-zinc-600 font-bold uppercase">{orgDisplayCode}</span>
+              <span className="font-mono text-zinc-600 dark:text-zinc-300 font-bold uppercase">{orgDisplayCode}</span>
             </div>
           </div>
         )}
 
         {/* Company Portal Information Badge */}
         {isCompanyMode && (
-          <div className="mt-8 pt-6 border-t border-zinc-100 space-y-2">
+          <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400 font-medium">Company Workspace</span>
-              <span className="font-mono text-zinc-900 font-bold uppercase">{routeCompanyCode}</span>
+              <span className="text-zinc-400 dark:text-zinc-500 font-medium">Company Workspace</span>
+              <span className="font-mono text-zinc-900 dark:text-zinc-100 font-bold uppercase">{routeCompanyCode}</span>
             </div>
           </div>
         )}

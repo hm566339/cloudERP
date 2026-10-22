@@ -210,14 +210,14 @@ export default function GstReportViewer({ reportType, meta, fetcher }) {
       )}
 
       {/* Period filters */}
-      <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-4">
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
           <div className="space-y-1.5">
             <label className="block text-[8.8px] font-bold uppercase tracking-wider text-zinc-500">Return Month</label>
             <CustomSelect
               value={period.month}
               onChange={(e) => setPeriod((p) => ({ ...p, month: Number(e.target.value) }))}
-              className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none"
+              className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark text-sm text-zinc-800 dark:text-zinc-200 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none"
             >
               {MONTHS.map((m, idx) => (
                 <option key={m} value={idx + 1}>{m}</option>
@@ -229,7 +229,7 @@ export default function GstReportViewer({ reportType, meta, fetcher }) {
             <CustomSelect
               value={period.year}
               onChange={(e) => setPeriod((p) => ({ ...p, year: Number(e.target.value) }))}
-              className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none"
+              className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark text-sm text-zinc-800 dark:text-zinc-200 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none"
             >
               {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 4 + i).map((y) => (
                 <option key={y} value={y}>{y}</option>

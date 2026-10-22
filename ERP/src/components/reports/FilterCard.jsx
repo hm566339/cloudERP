@@ -29,11 +29,11 @@ export default function FilterCard({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden animate-slide-up">
+    <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-2xl shadow-sm overflow-hidden animate-slide-up">
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-zinc-50 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors"
       >
         <span className="flex items-center gap-2 text-[10.4px] font-bold text-zinc-800">
           <Filter size={15} className="text-zinc-500" />
@@ -51,7 +51,7 @@ export default function FilterCard({
             {subtitle && <p className="text-[9.6px] text-zinc-400 mb-3">{subtitle}</p>}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">{children}</div>
           </div>
-          <div className="px-5 py-3.5 border-t border-zinc-100 bg-zinc-50/60 flex items-center justify-between gap-3 flex-wrap">
+          <div className="px-5 py-3.5 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/60 flex items-center justify-between gap-3 flex-wrap">
             {toolbar}
             <div className="flex items-center gap-2 ml-auto">
               {onReset && (

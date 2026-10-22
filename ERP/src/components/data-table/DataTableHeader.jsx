@@ -94,7 +94,7 @@ export default function DataTableHeader({
     });
   }, [bulkActions, user?.permissions, tableFeature]);
   return (
-    <div className="p-4 border-b border-zinc-200 bg-white space-y-3">
+    <div className="p-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
         {/* Left Side: Search + Quick Basic Filters */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 flex-1 items-end">
@@ -123,7 +123,7 @@ export default function DataTableHeader({
         <div className="flex items-center gap-2 flex-wrap shrink-0 pt-2 sm:pt-0">
           {/* Selected Count Indicator */}
           {selectable && selectedCount > 0 && (
-            <div className="flex items-center gap-1.5 px-2.5 h-9 bg-zinc-900 text-white rounded-lg text-[11px] font-medium animate-in fade-in slide-in-from-left-2 duration-150 shadow-2xs">
+            <div className="flex items-center gap-1.5 px-2.5 h-9 bg-zinc-900 text-white dark:bg-[#4C8DFF] dark:text-white rounded-lg text-[11px] font-medium animate-in fade-in slide-in-from-left-2 duration-150 shadow-2xs">
               <span className="font-semibold">{selectedCount}</span>
               <span>selected</span>
               {onClearSelection && (
@@ -150,7 +150,7 @@ export default function DataTableHeader({
                   onClick={() => action.onClick && action.onClick(selectedRows)}
                   disabled={action.disabled}
                   className={`h-9 px-3 text-[10.4px] font-semibold rounded-lg border transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs ${
-                    action.className || 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                    action.className || 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50 dark:bg-[#1D212C] dark:border-[#2A2F3D] dark:text-[#E6E8EE] dark:hover:bg-[#222736]'
                   }`}
                   title={action.tooltip || action.label}
                 >
@@ -166,7 +166,7 @@ export default function DataTableHeader({
             <button
               type="button"
               onClick={onExport}
-              className="h-9 px-3 text-[10.4px] font-semibold text-zinc-700 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs"
+              className="h-9 px-3 text-[10.4px] font-semibold text-zinc-700 hover:text-zinc-900 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:text-[#E6E8EE] dark:hover:text-white dark:bg-[#1D212C] dark:border-[#2A2F3D] dark:hover:bg-[#222736] transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs"
               title={exportLabel}
             >
               <Download size={14} />
@@ -196,7 +196,7 @@ export default function DataTableHeader({
             <button
               type="button"
               onClick={onReset}
-              className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs"
+              className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:bg-[#1D212C] dark:border-[#2A2F3D] dark:hover:bg-[#222736] transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs"
               title="Reset all filters"
             >
               <RotateCcw size={14} />
@@ -211,14 +211,14 @@ export default function DataTableHeader({
               onClick={onToggleAdvanced}
               className={`h-9 px-3 text-[10.4px] font-semibold rounded-lg border transition-all flex items-center gap-1.5 active:scale-95 ${
                 isAdvancedOpen || activeAdvancedCount > 0
-                  ? 'bg-zinc-100 border-zinc-300 text-zinc-900 shadow-xs'
-                  : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50 shadow-2xs'
+                  ? 'bg-zinc-100 border-zinc-300 text-zinc-900 shadow-xs dark:bg-[#222736] dark:border-[#4C8DFF]/50 dark:text-[#E6E8EE]'
+                  : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50 shadow-2xs dark:bg-[#1D212C] dark:border-[#2A2F3D] dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:hover:bg-[#222736]'
               }`}
             >
               <SlidersHorizontal size={14} />
               <span>Advanced Filters</span>
               {activeAdvancedCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-zinc-900 text-white text-[8.8px] flex items-center justify-center font-bold ml-0.5">
+                <span className="w-5 h-5 rounded-full bg-zinc-900 text-white dark:bg-[#4C8DFF] text-[8.8px] flex items-center justify-center font-bold ml-0.5">
                   {activeAdvancedCount}
                 </span>
               )}
@@ -231,7 +231,7 @@ export default function DataTableHeader({
             <button
               type="button"
               onClick={onRefresh}
-              className="h-9 w-9 text-zinc-500 hover:text-zinc-800 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 flex items-center justify-center transition-all active:scale-95 shadow-2xs"
+              className="h-9 w-9 text-zinc-500 hover:text-zinc-800 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:bg-[#1D212C] dark:border-[#2A2F3D] dark:hover:bg-[#222736] flex items-center justify-center transition-all active:scale-95 shadow-2xs"
               title="Refresh List"
             >
               <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />

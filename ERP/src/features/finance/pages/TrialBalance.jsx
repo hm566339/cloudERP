@@ -100,36 +100,36 @@ const AccountTransactionsOverview = ({ account, companyId, fromDate, toDate }) =
   const transactions = data?.transactions || data?.content || [];
 
   return (
-    <div className="p-4 bg-zinc-50/70 border-y border-zinc-200 animate-in fade-in duration-200" onClick={(e) => e.stopPropagation()}>
-      <div className="bg-white rounded-xl border border-zinc-200 p-4 shadow-2xs space-y-3">
-        <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+    <div className="p-4 bg-zinc-50/70 dark:bg-[#161922]/70 border-y border-zinc-200 dark:border-[#2A2F3D] animate-in fade-in duration-200" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] p-4 shadow-2xs space-y-3">
+        <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
           <div className="flex items-center gap-2">
-            <BookMarked size={16} className="text-zinc-600" />
-            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
+            <BookMarked size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+            <h4 className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] uppercase tracking-wider">
               Recent Transactions: {account.accountCode ? `${account.accountCode} - ` : ''}{account.accountName || 'Account'}
             </h4>
           </div>
-          <span className="text-[10px] text-zinc-400 font-medium">
+          <span className="text-[10px] text-zinc-400 dark:text-[#6B7184] font-medium">
             Showing latest 10 vouchers
           </span>
         </div>
 
         {loading ? (
-          <div className="p-6 text-center text-xs text-zinc-400 animate-pulse">
+          <div className="p-6 text-center text-xs text-zinc-400 dark:text-[#6B7184] animate-pulse">
             Loading recent transactions...
           </div>
         ) : error ? (
-          <div className="p-3 text-xs text-rose-600 bg-rose-50 rounded-lg">
+          <div className="p-3 text-xs text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 rounded-lg">
             {error}
           </div>
         ) : transactions.length === 0 ? (
-          <div className="p-4 text-center text-xs text-zinc-500 italic">
+          <div className="p-4 text-center text-xs text-zinc-500 dark:text-[#A0A6B5] italic">
             No transactions found for this account in the specified period.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-[11px] text-left">
-              <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-bold uppercase text-[9px] tracking-wider">
+              <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-[#A0A6B5] font-bold uppercase text-[9px] tracking-wider">
                 <tr>
                   <th className="px-3 py-2">Date</th>
                   <th className="px-3 py-2">Voucher No</th>
@@ -140,20 +140,20 @@ const AccountTransactionsOverview = ({ account, companyId, fromDate, toDate }) =
                   <th className="px-3 py-2 text-right">Running Bal</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 font-medium">
+              <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] font-medium">
                 {transactions.map((tx, idx) => (
-                  <tr key={tx.id || tx.voucherNumber || idx} className="hover:bg-zinc-50/60">
-                    <td className="px-3 py-2 whitespace-nowrap text-zinc-700">{formatLedgerDate(tx.voucherDate)}</td>
-                    <td className="px-3 py-2 font-semibold text-zinc-900">{tx.voucherNumber || '—'}</td>
-                    <td className="px-3 py-2 text-zinc-600 capitalize">{(tx.type || tx.voucherType || '—').toLowerCase().replace(/_/g, ' ')}</td>
-                    <td className="px-3 py-2 text-zinc-500 font-mono text-[10px]">{tx.referenceNo || '—'}</td>
-                    <td className="px-3 py-2 text-right font-bold text-emerald-600">
+                  <tr key={tx.id || tx.voucherNumber || idx} className="hover:bg-zinc-50/60 dark:hover:bg-[#222736]/60">
+                    <td className="px-3 py-2 whitespace-nowrap text-zinc-700 dark:text-[#A0A6B5]">{formatLedgerDate(tx.voucherDate)}</td>
+                    <td className="px-3 py-2 font-semibold text-zinc-900 dark:text-[#E6E8EE]">{tx.voucherNumber || '—'}</td>
+                    <td className="px-3 py-2 text-zinc-600 dark:text-[#A0A6B5] capitalize">{(tx.type || tx.voucherType || '—').toLowerCase().replace(/_/g, ' ')}</td>
+                    <td className="px-3 py-2 text-zinc-500 dark:text-[#6B7184] font-mono text-[10px]">{tx.referenceNo || '—'}</td>
+                    <td className="px-3 py-2 text-right font-bold text-emerald-600 dark:text-emerald-400">
                       {Number(tx.debit || 0) > 0 ? formatINR(tx.debit) : '—'}
                     </td>
-                    <td className="px-3 py-2 text-right font-bold text-rose-600">
+                    <td className="px-3 py-2 text-right font-bold text-rose-600 dark:text-rose-400">
                       {Number(tx.credit || 0) > 0 ? formatINR(tx.credit) : '—'}
                     </td>
-                    <td className="px-3 py-2 text-right font-bold text-zinc-900">
+                    <td className="px-3 py-2 text-right font-bold text-zinc-900 dark:text-[#E6E8EE]">
                       {tx.runningBalance?.amount != null ? formatINR(tx.runningBalance.amount) : '₹0.00'}
                     </td>
                   </tr>
@@ -338,7 +338,7 @@ export default function TrialBalance() {
       key: 'accountCode',
       label: 'ACCOUNT CODE',
       sortable: true,
-      className: 'w-36 whitespace-nowrap font-mono font-semibold text-zinc-900',
+      className: 'w-36 whitespace-nowrap font-mono font-semibold text-zinc-900 dark:text-[#E6E8EE]',
       render: (val) => val || '—'
     },
     {
@@ -348,9 +348,9 @@ export default function TrialBalance() {
       className: 'min-w-[220px]',
       render: (val, row) => (
         <div>
-          <div className="font-semibold text-zinc-900 hover:text-zinc-700">{val || '—'}</div>
+          <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE] hover:text-zinc-700 dark:hover:text-[#A0A6B5]">{val || '—'}</div>
           {row.accountGroup && (
-            <span className="text-[10px] text-zinc-400 font-medium">{row.accountGroup}</span>
+            <span className="text-[10px] text-zinc-400 dark:text-[#6B7184] font-medium">{row.accountGroup}</span>
           )}
         </div>
       )
@@ -361,7 +361,7 @@ export default function TrialBalance() {
       sortable: true,
       className: 'w-36 whitespace-nowrap',
       render: (val) => (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-600 border border-zinc-200">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200 dark:border-[#2A2F3D]">
           {val || 'General'}
         </span>
       )
@@ -373,7 +373,7 @@ export default function TrialBalance() {
       className: 'text-right w-36 whitespace-nowrap',
       render: (val, row) => {
         const amt = Number(val ?? row.openingDebit ?? 0);
-        return <span className="font-medium text-zinc-700">{formatINR(amt)}</span>;
+        return <span className="font-medium text-zinc-700 dark:text-[#A0A6B5]">{formatINR(amt)}</span>;
       }
     },
     {
@@ -384,9 +384,9 @@ export default function TrialBalance() {
       render: (val, row) => {
         const debit = Number(val ?? row.debitTotal ?? row.debit ?? 0);
         return debit > 0 ? (
-          <span className="font-bold text-emerald-600">{formatINR(debit)}</span>
+          <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatINR(debit)}</span>
         ) : (
-          <span className="text-zinc-400 font-medium">—</span>
+          <span className="text-zinc-400 dark:text-[#6B7184] font-medium">—</span>
         );
       }
     },
@@ -398,9 +398,9 @@ export default function TrialBalance() {
       render: (val, row) => {
         const credit = Number(val ?? row.creditTotal ?? row.credit ?? 0);
         return credit > 0 ? (
-          <span className="font-bold text-rose-600">{formatINR(credit)}</span>
+          <span className="font-bold text-rose-600 dark:text-rose-400">{formatINR(credit)}</span>
         ) : (
-          <span className="text-zinc-400 font-medium">—</span>
+          <span className="text-zinc-400 dark:text-[#6B7184] font-medium">—</span>
         );
       }
     },
@@ -411,7 +411,7 @@ export default function TrialBalance() {
       className: 'text-right w-36 whitespace-nowrap',
       render: (val, row) => {
         const amt = Number(val ?? row.balance ?? 0);
-        return <span className="font-bold text-zinc-900">{formatINR(amt)}</span>;
+        return <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">{formatINR(amt)}</span>;
       }
     }
   ];
@@ -497,7 +497,7 @@ export default function TrialBalance() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* 1. Page Header */}
       <PageHeader
         title="Trial Balance"
@@ -536,7 +536,7 @@ export default function TrialBalance() {
       <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-5 min-h-0">
         {/* Error Alert */}
         {error && (
-          <div className="flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium">
+          <div className="flex items-center gap-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-400 px-4 py-3 rounded-xl text-sm font-medium">
             <AlertCircle size={16} className="shrink-0" />
             {error}
           </div>
@@ -589,7 +589,7 @@ export default function TrialBalance() {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 hover:text-zinc-900 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs"
+                  className="h-9 px-3 text-[10.4px] font-semibold text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs"
                   title="Print Report"
                 >
                   <Printer size={14} />

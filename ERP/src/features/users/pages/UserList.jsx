@@ -711,7 +711,7 @@ export default function UserList() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 relative">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] relative">
       <PageHeader
         title="User Management"
         description="Control organizational users, roles assignment, status and password resets"

@@ -95,12 +95,12 @@ export default function Dropdown({
               left: `${coords.left}px`,
               zIndex: 9999,
             }}
-            className={`min-w-[170px] bg-white border border-zinc-200 rounded-xl shadow-xl py-1 animate-scale-in text-xs font-medium text-zinc-800 ${className}`}
+            className={`min-w-[170px] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-xl dark:shadow-2xl py-1 animate-scale-in text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] ${className}`}
           >
             {items
               ? items.map((item, idx) => {
                   if (item.divider) {
-                    return <div key={`div-${idx}`} className="my-1 border-t border-zinc-100" />;
+                    return <div key={`div-${idx}`} className="my-1 border-t border-zinc-100 dark:border-[#2A2F3D]" />;
                   }
 
                   const Icon = item.icon;
@@ -116,8 +116,8 @@ export default function Dropdown({
                       }}
                       className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                         item.danger
-                          ? 'text-rose-600 hover:bg-rose-50 hover:text-rose-700'
-                          : 'text-zinc-700 hover:bg-zinc-50 hover:text-zinc-950'
+                          ? 'text-rose-600 dark:text-[#F0616D] hover:bg-rose-50 dark:hover:bg-[#F0616D]/15 hover:text-rose-700 dark:hover:text-[#F0616D]'
+                          : 'text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-950 dark:hover:text-[#E6E8EE]'
                       }`}
                     >
                       {Icon && (

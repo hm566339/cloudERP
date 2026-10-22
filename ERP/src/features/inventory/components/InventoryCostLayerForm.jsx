@@ -54,7 +54,7 @@ export default function InventoryCostLayerForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white dark:bg-card-dark">
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Product ID */}
@@ -67,7 +67,7 @@ export default function InventoryCostLayerForm({
               name="productId"
               value={formData.productId}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.productId ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -88,7 +88,7 @@ export default function InventoryCostLayerForm({
               name="warehouseId"
               value={formData.warehouseId}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.warehouseId ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -107,7 +107,7 @@ export default function InventoryCostLayerForm({
               name="batchId"
               value={formData.batchId}
               onChange={handleChange}
-              className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
@@ -119,7 +119,7 @@ export default function InventoryCostLayerForm({
               name="sourceMovementId"
               value={formData.sourceMovementId}
               onChange={handleChange}
-              className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function InventoryCostLayerForm({
               name="receivedQuantity"
               value={formData.receivedQuantity}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.receivedQuantity ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -156,7 +156,7 @@ export default function InventoryCostLayerForm({
               name="remainingQuantity"
               value={formData.remainingQuantity}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.remainingQuantity ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -176,7 +176,7 @@ export default function InventoryCostLayerForm({
               name="unitCost"
               value={formData.unitCost}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.unitCost ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -196,18 +196,18 @@ export default function InventoryCostLayerForm({
               name="totalCost"
               value={formData.totalCost}
               onChange={handleChange}
-              className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto shrink-0">
+      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 mt-auto shrink-0">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

@@ -43,21 +43,21 @@ export default function DataTableActionMenu({ actions = [], row, index, module, 
         const ariaLabel = action['aria-label'] || label || tooltip || 'Action';
 
         // Visual styling default
-        let colorClass = 'text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100';
+        let colorClass = 'text-zinc-400 dark:text-[#A0A6B5] hover:text-zinc-700 dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736]';
         if (isActive) {
           colorClass = isDanger 
-            ? 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100 shadow-sm'
-            : 'text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 shadow-sm';
+            ? 'text-red-700 dark:text-[#F0616D] bg-red-50 dark:bg-[#F0616D]/15 border border-red-200 dark:border-[#F0616D]/30 hover:bg-red-100 dark:hover:bg-[#F0616D]/25 shadow-sm'
+            : 'text-indigo-700 dark:text-[#4C8DFF] bg-indigo-50 dark:bg-[#4C8DFF]/15 border border-indigo-200 dark:border-[#4C8DFF]/30 hover:bg-indigo-100 dark:hover:bg-[#4C8DFF]/25 shadow-sm';
         } else if (isDanger) {
-          colorClass = 'text-zinc-400 hover:text-red-600 hover:bg-red-50';
+          colorClass = 'text-zinc-400 dark:text-[#A0A6B5] hover:text-red-600 dark:hover:text-[#F0616D] hover:bg-red-50 dark:hover:bg-[#F0616D]/15';
         } else if (action.variant === 'primary' || action.variant === 'indigo') {
-          colorClass = 'text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50';
+          colorClass = 'text-zinc-400 dark:text-[#A0A6B5] hover:text-indigo-600 dark:hover:text-[#4C8DFF] hover:bg-indigo-50 dark:hover:bg-[#4C8DFF]/15';
         } else if (action.variant === 'blue') {
-          colorClass = 'text-zinc-400 hover:text-blue-600 hover:bg-blue-50';
+          colorClass = 'text-zinc-400 dark:text-[#A0A6B5] hover:text-blue-600 dark:hover:text-[#38BDF8] hover:bg-blue-50 dark:hover:bg-[#38BDF8]/15';
         } else if (action.variant === 'emerald' || action.variant === 'success') {
-          colorClass = 'text-zinc-400 hover:text-emerald-600 hover:bg-emerald-50';
+          colorClass = 'text-zinc-400 dark:text-[#A0A6B5] hover:text-emerald-600 dark:hover:text-[#34C38F] hover:bg-emerald-50 dark:hover:bg-[#34C38F]/15';
         } else if (action.variant === 'amber' || action.variant === 'warning') {
-          colorClass = 'text-zinc-400 hover:text-amber-600 hover:bg-amber-50';
+          colorClass = 'text-zinc-400 dark:text-[#A0A6B5] hover:text-amber-600 dark:hover:text-[#F5B544] hover:bg-amber-50 dark:hover:bg-[#F5B544]/15';
         }
 
         const buttonElement = (
@@ -73,7 +73,7 @@ export default function DataTableActionMenu({ actions = [], row, index, module, 
             aria-label={ariaLabel}
             aria-disabled={isDisabled || isLoading ? true : undefined}
             aria-pressed={action.active !== undefined ? isActive : undefined}
-            className={`w-8 h-8 sm:w-7 sm:h-7 min-w-[32px] min-h-[32px] sm:min-w-[28px] sm:min-h-[28px] flex items-center justify-center shrink-0 rounded-lg transition-colors duration-micro ease-enter active:scale-[0.96] disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500/40 focus-visible:ring-offset-1 focus-visible:ring-offset-white ${colorClass} ${customClass}`}
+            className={`w-8 h-8 sm:w-7 sm:h-7 min-w-[32px] min-h-[32px] sm:min-w-[28px] sm:min-h-[28px] flex items-center justify-center shrink-0 rounded-lg transition-colors duration-micro ease-enter active:scale-[0.96] disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500/40 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#161922] ${colorClass} ${customClass}`}
           >
             {RawIcon ? (
               React.isValidElement(RawIcon) ? (

@@ -109,21 +109,21 @@ export default function PayablesReport() {
               <tbody className="staggered-list">
                 {displayedData.map((item, idx) => (
                   <tr key={item.id || idx}>
-                    <td className="text-center font-medium text-zinc-500 tabular-nums">
+                    <td className="text-center font-medium text-zinc-500 dark:text-zinc-400 tabular-nums">
                       {getSerialNumber({ page, pageSize, rowIndex: idx, pageBase: 0 })}
                     </td>
                     <td>
                       <div className="flex items-center gap-2">
-                        <FileText size={14} className="text-zinc-400" />
-                        <span className="font-mono text-xs font-semibold text-primary">
+                        <FileText size={14} className="text-zinc-400 dark:text-zinc-500" />
+                        <span className="font-mono text-xs font-semibold text-primary dark:text-blue-400">
                           {item.id}
                         </span>
                       </div>
                     </td>
-                    <td className="font-medium">{item.name}</td>
-                    <td className="font-medium">{item.type}</td>
-                    <td className="font-medium">{item.lastGenerated}</td>
-                    <td className="font-medium">{item.period}</td>
+                    <td className="font-medium text-zinc-900 dark:text-zinc-200">{item.name}</td>
+                    <td className="font-medium text-zinc-700 dark:text-zinc-300">{item.type}</td>
+                    <td className="font-medium text-zinc-500 dark:text-zinc-400 text-xs">{item.lastGenerated}</td>
+                    <td className="font-medium text-zinc-500 dark:text-zinc-400 text-xs">{item.period}</td>
                     <td>
                       <span className={`badge ${getStatusBadge(item.status)}`}>
                         {item.status}
@@ -131,7 +131,7 @@ export default function PayablesReport() {
                     </td>
                     <td>
                       <div className="flex justify-end gap-2">
-                        <button className="text-xs text-primary hover:underline font-medium">
+                        <button className="text-xs text-primary dark:text-blue-400 hover:underline font-medium">
                           Download
                         </button>
                       </div>
@@ -140,7 +140,7 @@ export default function PayablesReport() {
                 ))}
                 {filteredData.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="text-center py-8 text-zinc-500">
+                    <td colSpan={8} className="text-center py-8 text-zinc-500 dark:text-zinc-400">
                       No records found.
                     </td>
                   </tr>

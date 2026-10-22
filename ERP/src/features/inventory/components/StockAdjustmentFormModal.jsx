@@ -134,19 +134,19 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4 sm:p-6 overflow-hidden">
       <div 
-        className="bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200"
+        className="bg-white dark:bg-card-dark rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200 dark:border-border-dark"
         style={{ width: '1150px', maxWidth: 'calc(100vw - 56px)', maxHeight: 'calc(100vh - 90px)' }}
       >
         
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-200 shrink-0 bg-white">
-          <h2 className="text-[14.4px] font-bold text-zinc-900 tracking-tight flex items-center gap-2">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-200 dark:border-border-dark shrink-0 bg-white dark:bg-card-dark">
+          <h2 className="text-[14.4px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight flex items-center gap-2">
             Create Stock Adjustment
           </h2>
           <button 
             type="button"
             onClick={onClose} 
-            className="p-1 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors active:scale-95"
+            className="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-hover-dark rounded-md transition-colors active:scale-95"
             disabled={createMutation.isLoading}
           >
             <X size={18} strokeWidth={2.5} />
@@ -154,19 +154,19 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
         </div>
 
         {/* Content */}
-        <div className="px-6 py-4 bg-white flex-1">
+        <div className="px-6 py-4 bg-white dark:bg-card-dark flex-1 overflow-y-auto">
           <form id="adjustment-form" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
             {/* LEFT COLUMN: Header Info */}
             <div>
-              <h3 className="text-[9.6px] font-bold text-zinc-800 uppercase tracking-wider mb-3 border-b border-zinc-200 pb-2">Document Details</h3>
+              <h3 className="text-[9.6px] font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider mb-3 border-b border-zinc-200 dark:border-border-dark pb-2">Document Details</h3>
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Adjustment No.</label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Adjustment No.</label>
                   <input 
                     type="text" 
                     name="adjustmentNo"
-                    className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-md text-[10.4px] text-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] text-zinc-900 dark:text-zinc-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                     value={formData.adjustmentNo}
                     onChange={handleChange}
                     placeholder="Auto-generated if left blank"
@@ -174,11 +174,11 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
                 
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Date <span className="text-rose-500">*</span></label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Date <span className="text-rose-500">*</span></label>
                   <input 
                     type="date" 
                     name="adjustmentDate"
-                    className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-md text-[10.4px] text-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] text-zinc-900 dark:text-zinc-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     value={formData.adjustmentDate}
                     onChange={handleChange}
                     required
@@ -186,12 +186,12 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Warehouse <span className="text-rose-500">*</span></label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Warehouse <span className="text-rose-500">*</span></label>
                   <CustomSelect
                     name="warehouseId"
                     value={formData.warehouseId}
                     onChange={handleChange}
-                    className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-md text-[10.4px] transition-all hover:border-zinc-400"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] transition-all hover:border-zinc-400"
                     required
                     disabled={isLoadingWarehouses}
                   >
@@ -203,12 +203,12 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Location <span className="text-rose-500">*</span></label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Location <span className="text-rose-500">*</span></label>
                   <CustomSelect
                     name="locationId"
                     value={formData.locationId}
                     onChange={handleChange}
-                    className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-md text-[10.4px] transition-all hover:border-zinc-400"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] transition-all hover:border-zinc-400"
                     required
                     disabled={!formData.warehouseId || isLoadingLocations}
                   >
@@ -220,12 +220,12 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Reason <span className="text-rose-500">*</span></label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Reason <span className="text-rose-500">*</span></label>
                   <CustomSelect
                     name="reason"
                     value={formData.reason}
                     onChange={handleChange}
-                    className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-md text-[10.4px] transition-all hover:border-zinc-400"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] transition-all hover:border-zinc-400"
                     required
                   >
                     {ADJUSTMENT_REASONS.map(r => (
@@ -235,12 +235,12 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Status <span className="text-rose-500">*</span></label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Status <span className="text-rose-500">*</span></label>
                   <CustomSelect
                     name="status"
                     value={formData.status}
                     onChange={handleChange}
-                    className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-md text-[10.4px] transition-all hover:border-zinc-400"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] transition-all hover:border-zinc-400"
                     required
                   >
                     <option value="DRAFT">Draft</option>
@@ -249,10 +249,10 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
                 
                 <div className="col-span-2 space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Remarks</label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Remarks</label>
                   <textarea 
                     name="remarks"
-                    className="w-full p-2 bg-white border border-zinc-300 rounded-md text-[10.4px] text-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 resize-none"
+                    className="w-full p-2 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] text-zinc-900 dark:text-zinc-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 resize-none"
                     value={formData.remarks}
                     onChange={handleChange}
                     placeholder="Optional remarks..."
@@ -264,16 +264,16 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
 
             {/* RIGHT COLUMN: Line Details */}
             <div>
-              <h3 className="text-[9.6px] font-bold text-zinc-800 uppercase tracking-wider mb-3 border-b border-zinc-200 pb-2">Adjustment Line</h3>
+              <h3 className="text-[9.6px] font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider mb-3 border-b border-zinc-200 dark:border-border-dark pb-2">Adjustment Line</h3>
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 
                 <div className="col-span-2 space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Product <span className="text-rose-500">*</span></label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Product <span className="text-rose-500">*</span></label>
                   <CustomSelect
                     name="productId"
                     value={formData.productId}
                     onChange={handleChange}
-                    className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-md text-[10.4px] transition-all hover:border-zinc-400"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] transition-all hover:border-zinc-400"
                     required
                     disabled={isLoadingProducts}
                     searchable={true}
@@ -286,11 +286,11 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Batch / Lot (Optional)</label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Batch / Lot (Optional)</label>
                   <input 
                     type="text" 
                     name="batchId"
-                    className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-md text-[10.4px] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] text-zinc-900 dark:text-zinc-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                     value={formData.batchId}
                     onChange={handleChange}
                     placeholder="Batch No..."
@@ -298,11 +298,11 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Serial (Optional)</label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Serial (Optional)</label>
                   <input 
                     type="text" 
                     name="serialId"
-                    className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-md text-[10.4px] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] text-zinc-900 dark:text-zinc-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                     value={formData.serialId}
                     onChange={handleChange}
                     placeholder="Serial No..."
@@ -310,12 +310,12 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Adjustment Type <span className="text-rose-500">*</span></label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Adjustment Type <span className="text-rose-500">*</span></label>
                   <CustomSelect
                     name="adjustmentType"
                     value={formData.adjustmentType}
                     onChange={handleChange}
-                    className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-md text-[10.4px] transition-all hover:border-zinc-400"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] transition-all hover:border-zinc-400"
                     required
                   >
                     <option value="ADJUSTMENT_IN">Adjustment In (+)</option>
@@ -324,13 +324,13 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Quantity <span className="text-rose-500">*</span></label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Quantity <span className="text-rose-500">*</span></label>
                   <input 
                     type="number" 
                     name="quantity"
                     min="1"
                     step="0.01"
-                    className="w-full h-9 px-3 bg-white border border-zinc-300 rounded-md text-[10.4px] text-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] text-zinc-900 dark:text-zinc-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     value={formData.quantity}
                     onChange={handleChange}
                     required
@@ -338,15 +338,15 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Unit Cost <span className="text-rose-500">*</span></label>
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Unit Cost <span className="text-rose-500">*</span></label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10.4px]">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-400 text-[10.4px]">$</span>
                     <input 
                       type="number" 
                       name="unitCost"
                       min="0"
                       step="0.01"
-                      className="w-full h-9 pl-7 pr-3 bg-white border border-zinc-300 rounded-md text-[10.4px] text-zinc-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      className="w-full h-9 pl-7 pr-3 bg-white dark:bg-surface-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] text-zinc-900 dark:text-zinc-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                       value={formData.unitCost}
                       onChange={handleChange}
                       required
@@ -355,9 +355,9 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10.4px] font-semibold text-zinc-700">Total Value</label>
-                  <div className="w-full h-9 px-3 bg-zinc-50 border border-zinc-300 rounded-md text-[10.4px] font-medium text-zinc-900 flex items-center gap-2">
-                    <Calculator size={14} className="text-zinc-500" />
+                  <label className="text-[10.4px] font-semibold text-zinc-700 dark:text-zinc-300">Total Value</label>
+                  <div className="w-full h-9 px-3 bg-zinc-50 dark:bg-hover-dark border border-zinc-300 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                    <Calculator size={14} className="text-zinc-500 dark:text-zinc-400" />
                     <span>₹{adjustmentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 </div>
@@ -369,11 +369,11 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-200 shrink-0 flex items-center justify-end gap-3 bg-white rounded-b-xl">
+        <div className="px-6 py-4 border-t border-zinc-200 dark:border-border-dark shrink-0 flex items-center justify-end gap-3 bg-white dark:bg-card-dark rounded-b-xl">
           <button 
             type="button" 
             onClick={onClose} 
-            className="px-5 py-2.5 text-[10.4px] font-medium text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors"
+            className="px-5 py-2.5 text-[10.4px] font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-hover-dark rounded-md transition-colors"
             disabled={createMutation.isLoading}
           >
             Cancel
@@ -381,7 +381,7 @@ export default function StockAdjustmentFormModal({ isOpen, onClose, onSuccess })
           <button 
             type="submit" 
             form="adjustment-form" 
-            className="px-6 py-2.5 text-[10.4px] font-medium text-white bg-zinc-900 hover:bg-zinc-800 rounded-md transition-colors shadow-sm flex items-center justify-center min-w-[112px]"
+            className="px-6 py-2.5 text-[10.4px] font-medium text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-primary dark:hover:bg-primary-600 rounded-md transition-colors shadow-sm flex items-center justify-center min-w-[112px]"
             disabled={createMutation.isLoading}
           >
             {createMutation.isLoading ? 'Creating...' : 'Create Adjustment'}

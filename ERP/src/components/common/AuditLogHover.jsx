@@ -144,8 +144,8 @@ export default function AuditLogHover({ audit, className = '' }) {
           {/* Invisible hover bridge to prevent closing when moving from icon to panel */}
           <div className="absolute -inset-8 z-[-1]" />
 
-          <div className="w-64 bg-white border border-zinc-200 rounded-xl shadow-xl animate-in fade-in zoom-in-95 duration-150 overflow-hidden relative">
-            <div className="px-3 py-2 border-b border-zinc-100 bg-zinc-50/80 flex items-center justify-between">
+          <div className="w-64 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-xl animate-in fade-in zoom-in-95 duration-150 overflow-hidden relative">
+            <div className="px-3 py-2 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/80 flex items-center justify-between">
               <h4 className="text-[11px] font-semibold text-zinc-800 flex items-center gap-1.5 uppercase tracking-wide">
                 <History size={12} className="text-zinc-500" />
                 Audit History

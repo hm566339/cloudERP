@@ -181,7 +181,7 @@ export default function TableRowActions({
                 left: `${menuCoords.left}px`,
                 zIndex: 99999 
               }}
-              className="bg-white border border-zinc-200 rounded-xl shadow-xl py-1.5 w-40 animate-in fade-in zoom-in-95 duration-100"
+              className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-xl py-1.5 w-40 animate-in fade-in zoom-in-95 duration-100"
             >
               {visibleExtraActions.map((action, idx) => (
                 <button

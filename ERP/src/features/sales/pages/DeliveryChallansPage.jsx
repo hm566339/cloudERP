@@ -92,38 +92,38 @@ function DeliveryChallanOverview({ challan }) {
   if (!challan) return null;
 
   return (
-    <div className="bg-zinc-50/60 p-6 shadow-inner border-y border-zinc-200/80 space-y-5 animate-in fade-in slide-in-from-top-1 duration-150">
+    <div className="bg-zinc-50/60 dark:bg-[#1D212C] p-6 shadow-inner border-y border-zinc-200/80 dark:border-[#2A2F3D] space-y-5 animate-in fade-in slide-in-from-top-1 duration-150">
       {/* Metadata Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">Customer</span>
-          <p className="text-xs font-semibold text-zinc-900 truncate">{challan.customerName || '—'}</p>
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Customer</span>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate">{challan.customerName || '—'}</p>
         </div>
 
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">Source Sales Order</span>
-          <p className="text-xs font-semibold text-zinc-900 font-mono">{challan.sourceSalesOrderNumber || '—'}</p>
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Source Sales Order</span>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] font-mono">{challan.sourceSalesOrderNumber || '—'}</p>
         </div>
 
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">Challan Date</span>
-          <p className="text-xs font-semibold text-zinc-900">{fmtDate(challan.dcDate)}</p>
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Challan Date</span>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE]">{fmtDate(challan.dcDate)}</p>
         </div>
 
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">Dispatch Date</span>
-          <p className="text-xs font-semibold text-zinc-900">{fmtDate(challan.dispatchDate)}</p>
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Dispatch Date</span>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE]">{fmtDate(challan.dispatchDate)}</p>
         </div>
 
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">Status</span>
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Status</span>
           <div>
             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
               challan.status === 'CONFIRMED'
-                ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20'
+                ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20'
                 : challan.status === 'CANCELLED'
-                ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-600/20'
-                : 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20'
+                ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-600/20 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20'
+                : 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 dark:bg-amber-500/10 dark:text-[#F5B544] dark:ring-amber-500/20'
             }`}>
               {challan.status || 'DRAFT'}
             </span>
@@ -131,78 +131,78 @@ function DeliveryChallanOverview({ challan }) {
         </div>
 
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">Billing State</span>
-          <p className="text-xs font-semibold text-zinc-900">{challan.billingStateCode || '—'}</p>
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Billing State</span>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE]">{challan.billingStateCode || '—'}</p>
         </div>
 
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">Transporter</span>
-          <p className="text-xs font-semibold text-zinc-900 truncate">
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Transporter</span>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] truncate">
             {challan.transporterName && !isUuid(challan.transporterName) ? challan.transporterName : '—'}
           </p>
         </div>
 
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">Vehicle Number</span>
-          <p className="text-xs font-semibold text-zinc-900 font-mono">{challan.vehicleNumber || '—'}</p>
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Vehicle Number</span>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] font-mono">{challan.vehicleNumber || '—'}</p>
         </div>
 
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">LR Number</span>
-          <p className="text-xs font-semibold text-zinc-900 font-mono">{challan.lrNumber || '—'}</p>
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">LR Number</span>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] font-mono">{challan.lrNumber || '—'}</p>
         </div>
 
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">Reference Number</span>
-          <p className="text-xs font-semibold text-zinc-900 font-mono">{challan.referenceNumber || '—'}</p>
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Reference Number</span>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] font-mono">{challan.referenceNumber || '—'}</p>
         </div>
 
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">Subtotal</span>
-          <p className="text-xs font-semibold text-zinc-900 font-mono">{fmtCurrency(challan.subtotal)}</p>
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Subtotal</span>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] font-mono">{fmtCurrency(challan.subtotal)}</p>
         </div>
 
         <div className="space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500">Total Amount</span>
-          <p className="text-xs font-bold text-indigo-700 font-mono">{fmtCurrency(challan.totalAmount)}</p>
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Total Amount</span>
+          <p className="text-xs font-bold text-indigo-700 dark:text-indigo-400 font-mono">{fmtCurrency(challan.totalAmount)}</p>
         </div>
       </div>
 
       {/* Addresses & Notes */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-        <div className="bg-white p-3 rounded-lg border border-zinc-200/80 shadow-2xs space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1">
+        <div className="bg-white dark:bg-[#161922] p-3 rounded-lg border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs space-y-1">
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] flex items-center gap-1">
             <MapPin size={11} /> Billing Address
           </span>
-          <p className="text-zinc-700 leading-relaxed">{formatAddress(challan.billingAddressSnapshot)}</p>
+          <p className="text-zinc-700 dark:text-[#A0A6B5] leading-relaxed">{formatAddress(challan.billingAddressSnapshot)}</p>
         </div>
 
-        <div className="bg-white p-3 rounded-lg border border-zinc-200/80 shadow-2xs space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1">
+        <div className="bg-white dark:bg-[#161922] p-3 rounded-lg border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs space-y-1">
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] flex items-center gap-1">
             <Truck size={11} /> Delivery Address
           </span>
-          <p className="text-zinc-700 leading-relaxed">{formatAddress(challan.deliveryAddressSnapshot)}</p>
+          <p className="text-zinc-700 dark:text-[#A0A6B5] leading-relaxed">{formatAddress(challan.deliveryAddressSnapshot)}</p>
         </div>
 
-        <div className="bg-white p-3 rounded-lg border border-zinc-200/80 shadow-2xs space-y-1">
-          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1">
+        <div className="bg-white dark:bg-[#161922] p-3 rounded-lg border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs space-y-1">
+          <span className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] flex items-center gap-1">
             <FileText size={11} /> Notes
           </span>
-          <p className="text-zinc-700 leading-relaxed">{challan.notes || '—'}</p>
+          <p className="text-zinc-700 dark:text-[#A0A6B5] leading-relaxed">{challan.notes || '—'}</p>
         </div>
       </div>
 
       {/* Line Items Table */}
-      <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden shadow-2xs">
-        <div className="px-4 py-2.5 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
-          <span className="text-[9px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
-            <Package size={13} className="text-zinc-400" />
+      <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-hidden shadow-2xs">
+        <div className="px-4 py-2.5 bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-between">
+          <span className="text-[9px] font-bold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider flex items-center gap-1.5">
+            <Package size={13} className="text-zinc-400 dark:text-[#6B7184]" />
             Line Items ({challan.items?.length || 0})
           </span>
         </div>
         <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
           <table className="w-full min-w-[750px] text-left text-xs whitespace-nowrap" aria-label="Delivery Challan Line Items Table">
-            <thead className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold text-zinc-600 sticky top-0 z-10">
+            <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] sticky top-0 z-10">
               <tr>
                 <th scope="col" className="px-3 py-2 font-semibold">Product</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Description</th>
@@ -216,19 +216,19 @@ function DeliveryChallanOverview({ challan }) {
                 <th scope="col" className="px-3 py-2 font-semibold text-right">Total Amount</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100 bg-white">
+            <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] bg-white dark:bg-[#161922]">
               {(challan.items || []).map((it, idx) => (
-                <tr key={it.id || idx} className="hover:bg-zinc-50/50">
-                  <td className="px-3 py-2 font-semibold text-zinc-900">{it.itemName || '—'}</td>
-                  <td className="px-3 py-2 text-zinc-500 max-w-[140px] truncate">{it.description || '—'}</td>
-                  <td className="px-3 py-2 font-mono text-zinc-600">{it.hsnSacCode || '—'}</td>
-                  <td className="px-3 py-2 text-right font-medium text-zinc-900 font-mono tabular-nums">{it.quantity}</td>
-                  <td className="px-3 py-2 text-zinc-600">{it.unit || 'Nos'}</td>
-                  <td className="px-3 py-2 text-right font-mono text-zinc-700 tabular-nums">{fmtCurrency(it.unitPrice)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-zinc-500 tabular-nums">{fmtCurrency(it.discountAmount)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-zinc-700 tabular-nums">{fmtCurrency(it.taxableAmount)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-zinc-700 tabular-nums">{fmtCurrency(it.taxAmount)}</td>
-                  <td className="px-3 py-2 text-right font-mono font-bold text-zinc-900 tabular-nums">{fmtCurrency(it.totalAmount)}</td>
+                <tr key={it.id || idx} className="hover:bg-zinc-50/50 dark:hover:bg-[#222736]">
+                  <td className="px-3 py-2 font-semibold text-zinc-900 dark:text-[#E6E8EE]">{it.itemName || '—'}</td>
+                  <td className="px-3 py-2 text-zinc-500 dark:text-[#6B7184] max-w-[140px] truncate">{it.description || '—'}</td>
+                  <td className="px-3 py-2 font-mono text-zinc-600 dark:text-[#A0A6B5]">{it.hsnSacCode || '—'}</td>
+                  <td className="px-3 py-2 text-right font-medium text-zinc-900 dark:text-[#E6E8EE] font-mono tabular-nums">{it.quantity}</td>
+                  <td className="px-3 py-2 text-zinc-600 dark:text-[#A0A6B5]">{it.unit || 'Nos'}</td>
+                  <td className="px-3 py-2 text-right font-mono text-zinc-700 dark:text-[#A0A6B5] tabular-nums">{fmtCurrency(it.unitPrice)}</td>
+                  <td className="px-3 py-2 text-right font-mono text-zinc-500 dark:text-[#6B7184] tabular-nums">{fmtCurrency(it.discountAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono text-zinc-700 dark:text-[#A0A6B5] tabular-nums">{fmtCurrency(it.taxableAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono text-zinc-700 dark:text-[#A0A6B5] tabular-nums">{fmtCurrency(it.taxAmount)}</td>
+                  <td className="px-3 py-2 text-right font-mono font-bold text-zinc-900 dark:text-[#E6E8EE] tabular-nums">{fmtCurrency(it.totalAmount)}</td>
                 </tr>
               ))}
             </tbody>
@@ -646,7 +646,7 @@ export default function DeliveryChallansPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 animate-in fade-in">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] animate-in fade-in">
       {/* ── 1. Page Header ── */}
       <PageHeader title="Delivery Challans" description="Manage delivery challans" icon={Truck}>
         <button

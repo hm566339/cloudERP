@@ -28,7 +28,7 @@ export default function DataTableFilters({
           return (
             <div key={filterKey} className={filter.className || ''}>
               {filter.label && (
-                <label className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block">
+                <label className="text-[8.8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                   {filter.label}
                 </label>
               )}
@@ -36,7 +36,7 @@ export default function DataTableFilters({
                 value={value !== null && value !== undefined ? String(value) : ''}
                 onChange={handleChange}
                 searchable={filter.searchable || false}
-                buttonClassName="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all cursor-pointer"
+                buttonClassName="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-zinc-400 dark:focus:border-[#4C8DFF] focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 outline-none transition-all cursor-pointer"
               >
                 {!filter.hideAllOption && (
                   <option value="">{filter.placeholder || `All ${filter.label || 'Options'}`}</option>
@@ -54,7 +54,7 @@ export default function DataTableFilters({
         return (
           <div key={filterKey} className={filter.className || ''}>
             {filter.label && (
-              <label className="text-[8.8px] font-bold text-zinc-500 uppercase tracking-wider mb-1 block">
+              <label className="text-[8.8px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1 block">
                 {filter.label}
               </label>
             )}
@@ -66,7 +66,7 @@ export default function DataTableFilters({
               min={filter.min}
               max={filter.max}
               step={filter.step}
-              className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10 outline-none transition-all"
+              className="w-full h-9 px-3 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] placeholder-zinc-400 dark:placeholder-[#6B7184] focus:border-zinc-400 dark:focus:border-[#4C8DFF] focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-[#4C8DFF]/20 outline-none transition-all"
             />
           </div>
         );

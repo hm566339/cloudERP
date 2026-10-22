@@ -36,15 +36,15 @@ export default function SortableHeader({
       scope={Component === "th" ? "col" : undefined}
       aria-sort={isSorted ? (activeSortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
       style={width ? { width, minWidth: width } : undefined}
-      className={`px-4 py-3 text-xs font-semibold text-zinc-600 uppercase tracking-wider cursor-pointer hover:text-zinc-900 transition-colors group select-none whitespace-nowrap ${className} ${alignClass}`}
+      className={`px-4 py-3 text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider cursor-pointer hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors group select-none whitespace-nowrap ${className} ${alignClass}`}
       onClick={() => onSort && onSort(field)}
     >
       <div className={`flex items-center gap-1 ${justifyClass}`}>
         <span>{displayText}</span>
         {isSorted ? (
-          activeSortOrder === 'asc' ? <ArrowUp size={13} className="text-zinc-900 shrink-0" /> : <ArrowDown size={13} className="text-zinc-900 shrink-0" />
+          activeSortOrder === 'asc' ? <ArrowUp size={13} className="text-zinc-900 dark:text-zinc-100 shrink-0" /> : <ArrowDown size={13} className="text-zinc-900 dark:text-zinc-100 shrink-0" />
         ) : (
-          <ArrowUpDown size={13} className="text-zinc-300 group-hover:text-zinc-500 transition-colors shrink-0" />
+          <ArrowUpDown size={13} className="text-zinc-300 dark:text-zinc-600 group-hover:text-zinc-500 dark:group-hover:text-zinc-300 transition-colors shrink-0" />
         )}
       </div>
     </Component>

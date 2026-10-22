@@ -95,16 +95,16 @@ export default function CustomLocationCellSelect({
           setSearch('');
         }}
         title={selectedLocation ? (selectedLocation.locationName || selectedLocation.locationCode) : (fallbackName || 'Default Location')}
-        className={`w-full h-8 px-1.5 bg-white border rounded-md text-left flex items-center justify-between transition-colors cursor-pointer text-[11px] ${
-          disabled ? 'opacity-50 cursor-not-allowed bg-zinc-50' : 'hover:border-zinc-300'
-        } ${isOpen ? 'border-zinc-900 ring-1 ring-zinc-900/10' : 'border-zinc-200'}`}
+        className={`w-full h-8 px-1.5 bg-white dark:bg-[#1D212C] border rounded-md text-left flex items-center justify-between transition-colors cursor-pointer text-[11px] ${
+          disabled ? 'opacity-50 cursor-not-allowed bg-zinc-50 dark:bg-[#161922]' : 'hover:border-zinc-300 dark:hover:border-zinc-600'
+        } ${isOpen ? 'border-zinc-900 dark:border-[#4C8DFF] ring-1 ring-zinc-900/10 dark:ring-[#4C8DFF]/20' : 'border-zinc-200 dark:border-[#2A2F3D]'}`}
       >
-        <span className="truncate flex-1 font-medium text-zinc-700">
+        <span className="truncate flex-1 font-medium text-zinc-700 dark:text-[#E6E8EE]">
           {selectedLocation
             ? (selectedLocation.locationName || selectedLocation.locationCode || selectedLocation.name)
             : (fallbackName && value ? fallbackName : 'Default')}
         </span>
-        <ChevronDown size={11} className={`text-zinc-400 shrink-0 ml-1 transition-transform ${isOpen ? 'rotate-180 text-zinc-700' : ''}`} />
+        <ChevronDown size={11} className={`text-zinc-400 dark:text-[#6B7184] shrink-0 ml-1 transition-transform ${isOpen ? 'rotate-180 text-zinc-700 dark:text-[#E6E8EE]' : ''}`} />
       </button>
 
       {isOpen && createPortal(
@@ -117,34 +117,34 @@ export default function CustomLocationCellSelect({
             width: '220px',
             zIndex: 99999,
           }}
-          className="bg-white border border-zinc-200 rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100 divide-y divide-zinc-100"
+          className="bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100 divide-y divide-zinc-100 dark:divide-[#2A2F3D]"
         >
           {availableLocations.length > 4 && (
-            <div className="p-2 bg-zinc-50/80 border-b border-zinc-100">
+            <div className="p-2 bg-zinc-50/80 dark:bg-[#161922] border-b border-zinc-100 dark:border-[#2A2F3D]">
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search racks/bins..."
-                className="w-full h-7 px-2 bg-white border border-zinc-200 rounded-md text-xs outline-none focus:border-zinc-900"
+                className="w-full h-7 px-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-xs text-zinc-800 dark:text-[#E6E8EE] placeholder-zinc-400 dark:placeholder-[#6B7184] outline-none focus:border-zinc-900 dark:focus:border-[#4C8DFF]"
                 autoFocus
               />
             </div>
           )}
 
-          <div className="max-h-48 overflow-y-auto py-1 divide-y divide-zinc-50">
+          <div className="max-h-48 overflow-y-auto py-1 divide-y divide-zinc-50 dark:divide-[#2A2F3D]/50">
             {/* Default option */}
             <div
               onClick={() => {
                 onChange('', null);
                 setIsOpen(false);
               }}
-              className={`px-2.5 py-1.5 cursor-pointer hover:bg-zinc-50 text-[11px] flex items-center justify-between ${
-                !value ? 'bg-zinc-50/90 font-bold text-zinc-900' : 'text-zinc-600'
+              className={`px-2.5 py-1.5 cursor-pointer hover:bg-zinc-50 dark:hover:bg-[#222736] text-[11px] flex items-center justify-between ${
+                !value ? 'bg-zinc-50/90 dark:bg-[#222736] font-bold text-zinc-900 dark:text-[#E6E8EE]' : 'text-zinc-600 dark:text-[#A0A6B5]'
               }`}
             >
               <span>Default (No specific rack/bin)</span>
-              {!value && <Check size={13} className="text-zinc-900 shrink-0" />}
+              {!value && <Check size={13} className="text-zinc-900 dark:text-[#4C8DFF] shrink-0" />}
             </div>
 
             {filteredLocations.map((loc) => {
@@ -157,19 +157,19 @@ export default function CustomLocationCellSelect({
                     onChange(loc.id, loc);
                     setIsOpen(false);
                   }}
-                  className={`px-2.5 py-1.5 cursor-pointer hover:bg-zinc-50 text-[11px] flex items-center justify-between ${
-                    isSelected ? 'bg-zinc-50/90 font-bold text-zinc-900' : 'text-zinc-700'
+                  className={`px-2.5 py-1.5 cursor-pointer hover:bg-zinc-50 dark:hover:bg-[#222736] text-[11px] flex items-center justify-between ${
+                    isSelected ? 'bg-zinc-50/90 dark:bg-[#222736] font-bold text-zinc-900 dark:text-[#E6E8EE]' : 'text-zinc-700 dark:text-[#A0A6B5]'
                   }`}
                 >
                   <div className="min-w-0 flex-1 truncate">
                     <span className="truncate">{name}</span>
                     {loc.locationCode && loc.locationName && (
-                      <span className="text-[9px] font-mono text-zinc-400 block truncate">
+                      <span className="text-[9px] font-mono text-zinc-400 dark:text-[#6B7184] block truncate">
                         {loc.locationCode}
                       </span>
                     )}
                   </div>
-                  {isSelected && <Check size={13} className="text-zinc-900 shrink-0 ml-1.5" />}
+                  {isSelected && <Check size={13} className="text-zinc-900 dark:text-[#4C8DFF] shrink-0 ml-1.5" />}
                 </div>
               );
             })}

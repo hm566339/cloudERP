@@ -52,7 +52,7 @@ export default function ProductBatchForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white dark:bg-card-dark">
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -66,7 +66,7 @@ export default function ProductBatchForm({
               name="productId"
               value={formData.productId}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.productId ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
               autoFocus
@@ -89,7 +89,7 @@ export default function ProductBatchForm({
               value={formData.batchNumber}
               onChange={handleChange}
               placeholder="e.g. BATCH-2026-A"
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.batchNumber ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -122,7 +122,7 @@ export default function ProductBatchForm({
               name="manufacturingDate"
               value={formData.manufacturingDate}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.manufacturingDate ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -143,7 +143,7 @@ export default function ProductBatchForm({
               name="expiryDate"
               value={formData.expiryDate}
               onChange={handleChange}
-              className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+              className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                 errors.expiryDate ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
               }`}
             />
@@ -211,12 +211,12 @@ export default function ProductBatchForm({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto shrink-0">
+      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 mt-auto shrink-0">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

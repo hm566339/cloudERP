@@ -57,8 +57,8 @@ function CreditUtilizationSection({ outstanding, ledgerInfo }) {
   const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
 
   return (
-    <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
-      <h3 className="text-sm font-bold text-zinc-800 mb-5 flex items-center gap-2">
+    <div className="bg-white dark:bg-[#161922] p-6 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm">
+      <h3 className="text-sm font-bold text-zinc-800 dark:text-[#E6E8EE] mb-5 flex items-center gap-2">
         <Activity size={15} className="text-zinc-500" />
         Credit Utilization
       </h3>
@@ -69,7 +69,7 @@ function CreditUtilizationSection({ outstanding, ledgerInfo }) {
           <span className="text-xs font-semibold py-1 px-2 uppercase rounded-lg text-rose-600 bg-rose-100">
             Outstanding: {formatCurrency(used)}
           </span>
-          <span className="text-xs font-semibold py-1 px-2 uppercase rounded-lg text-zinc-600 bg-zinc-100">
+          <span className="text-xs font-semibold py-1 px-2 uppercase rounded-lg text-zinc-600 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1D212C]">
             Limit: {formatCurrency(limit)}
           </span>
         </div>
@@ -100,7 +100,7 @@ function CreditUtilizationSection({ outstanding, ledgerInfo }) {
           { label: 'Not Yet Due',      value: formatCurrency(outstanding.notYetDueAmount),    color: 'text-zinc-900' },
         ].map((m) => (
           <div key={m.label}>
-            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400">
+            <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">
               {m.label}
             </p>
             <p className={`text-lg font-black mt-1 ${m.color}`}>{m.value}</p>
@@ -116,7 +116,7 @@ function CreditUtilizationSection({ outstanding, ledgerInfo }) {
 ───────────────────────────────────────────────────────────────── */
 function DetailTabs({ activeTab, onChange }) {
   return (
-    <div className="bg-zinc-50/80 rounded-lg shadow-sm border border-zinc-200/80 p-1.5 sticky top-[192px] z-30">
+    <div className="bg-zinc-50/80 dark:bg-[#161922] rounded-lg shadow-sm border border-zinc-200/80 dark:border-[#2A2F3D] p-1.5 sticky top-[192px] z-30">
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
         {TABS.map((tab) => {
           const Icon = tab.icon;
@@ -127,8 +127,8 @@ function DetailTabs({ activeTab, onChange }) {
               onClick={() => onChange(tab.id)}
               className={`flex items-center justify-center gap-2 px-2 py-2 text-xs xl:text-sm font-semibold rounded-lg transition-all outline-none ${
                 isActive
-                  ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/60'
-                  : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100/80 border border-transparent'
+                  ? 'bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] shadow-sm border border-zinc-200/60 dark:border-[#2A2F3D]'
+                  : 'text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-800 dark:hover:text-[#E6E8EE] hover:bg-zinc-100/80 dark:hover:bg-[#222736] border border-transparent'
               }`}
             >
               <Icon
@@ -150,11 +150,11 @@ function DetailTabs({ activeTab, onChange }) {
 ───────────────────────────────────────────────────────────────── */
 function TabCard({ title, count, children }) {
   return (
-    <div className="animate-fade-in bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
-        <h3 className="text-sm font-bold text-zinc-800">{title}</h3>
+    <div className="animate-fade-in bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+      <div className="px-6 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50 dark:bg-[#1D212C]">
+        <h3 className="text-sm font-bold text-zinc-800 dark:text-[#E6E8EE]">{title}</h3>
         {count != null && (
-          <span className="text-xs font-bold bg-zinc-200 text-zinc-700 px-2.5 py-1 rounded-lg">
+          <span className="text-xs font-bold bg-zinc-200 dark:bg-[#2A2F3D] text-zinc-700 dark:text-[#A0A6B5] px-2.5 py-1 rounded-lg">
             {count} Total
           </span>
         )}
@@ -230,11 +230,11 @@ export default function CustomerDetails() {
   /* ── Error / not-found state ── */
   if (error || !customer) {
     return (
-      <div className="p-8 mt-6 max-w-lg mx-auto bg-white rounded-xl border border-rose-200 shadow-sm text-center animate-fade-in">
+      <div className="p-8 mt-6 max-w-lg mx-auto bg-white dark:bg-[#161922] rounded-xl border border-rose-200 dark:border-rose-800/40 shadow-sm text-center animate-fade-in">
         <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center mx-auto mb-4">
           <AlertCircle size={24} />
         </div>
-        <h2 className="text-xl font-bold text-zinc-900 mb-2">{error || 'Customer Not Found'}</h2>
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-[#E6E8EE] mb-2">{error || 'Customer Not Found'}</h2>
         <p className="text-sm text-zinc-500 mb-6">We couldn't find the requested customer record.</p>
         <button
           onClick={() => navigate(-1)}
@@ -397,7 +397,7 @@ export default function CustomerDetails() {
      Render
   ════════════════════════════════════ */
   return (
-    <div className="animate-fade-in pb-12 bg-zinc-50/30 min-h-screen">
+    <div className="animate-fade-in pb-12 bg-zinc-50/30 dark:bg-[#0F1117] min-h-screen">
 
       {/* ── EntityHeader (sticky) ── */}
       <EntityHeader
@@ -430,7 +430,7 @@ export default function CustomerDetails() {
                 <InfoField label="GSTIN"         value={customer.gstin}  mono highlight />
                 <InfoField label="PAN Number"    value={customer.panNo}  mono />
                 <div>
-                  <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                  <p className="text-[8.5px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] mb-1.5">
                     Account Status
                   </p>
                   <RequirePermission module="CUSTOMERS" action="UPDATE" behavior="disable">
@@ -461,7 +461,7 @@ export default function CustomerDetails() {
                         }}
                       />
                       <div className="w-9 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1.6px] after:left-[1.6px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500" />
-                      <span className="ml-2 text-sm font-bold text-zinc-700 group-hover:text-zinc-900 transition-colors">
+                      <span className="ml-2 text-sm font-bold text-zinc-700 group-hover:text-zinc-900 dark:text-[#E6E8EE] dark:group-hover:text-white transition-colors">
                         {customer.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </label>
@@ -541,7 +541,7 @@ export default function CustomerDetails() {
                     <div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm whitespace-nowrap">
-                          <thead className="bg-white border-b border-zinc-200 text-[8.8px] uppercase tracking-wider text-zinc-500 font-bold">
+                          <thead className="bg-white dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-[8.8px] uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] font-bold">
                             <tr>
                               <th className="px-6 py-4">Invoice No</th>
                               <th className="px-6 py-4">Date</th>
@@ -551,16 +551,16 @@ export default function CustomerDetails() {
                               <th className="px-6 py-4 text-center">Status</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-zinc-100">
+                          <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                             {paginate(invoices).map((inv, idx) => (
-                              <tr key={idx} className="hover:bg-zinc-50 transition-colors">
-                                <td className="px-6 py-4 font-mono font-bold text-zinc-900">{inv.invoiceNumber}</td>
-                                <td className="px-6 py-4 font-medium text-zinc-600">{inv.invoiceDate}</td>
-                                <td className="px-6 py-4 font-medium text-zinc-600">{inv.dueDate}</td>
-                                <td className="px-6 py-4 font-bold text-zinc-900 text-right">{formatCurrency(inv.invoiceAmount)}</td>
+                              <tr key={idx} className="hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
+                                <td className="px-6 py-4 font-mono font-bold text-zinc-900 dark:text-[#E6E8EE]">{inv.invoiceNumber}</td>
+                                <td className="px-6 py-4 font-medium text-zinc-600 dark:text-[#A0A6B5]">{inv.invoiceDate}</td>
+                                <td className="px-6 py-4 font-medium text-zinc-600 dark:text-[#A0A6B5]">{inv.dueDate}</td>
+                                <td className="px-6 py-4 font-bold text-zinc-900 dark:text-[#E6E8EE] text-right">{formatCurrency(inv.invoiceAmount)}</td>
                                 <td className="px-6 py-4 font-bold text-rose-600 text-right">{formatCurrency(inv.pendingAmount)}</td>
                                 <td className="px-6 py-4 text-center">
-                                  <span className={`inline-flex px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-wider border ${inv.status === 'PAID' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-100 text-zinc-700 border-zinc-200'}`}>
+                                  <span className={`inline-flex px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-wider border ${inv.status === 'PAID' ? 'bg-emerald-50 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F] border-emerald-200 dark:border-[#34C38F]/30' : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]'}`}>
                                     {inv.status}
                                   </span>
                                 </td>
@@ -634,9 +634,9 @@ export default function CustomerDetails() {
                 <TabCard title="Recent Transactions">
                   {transactions.length > 0 ? (
                     <div>
-                      <ul className="divide-y divide-zinc-100">
+                      <ul className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                         {paginate(transactions).map((tx, idx) => (
-                          <li key={idx} className="p-6 hover:bg-zinc-50 transition-colors flex items-start gap-4">
+                          <li key={idx} className="p-6 hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors flex items-start gap-4">
                             <div className={`p-3 rounded-lg border shadow-sm ${tx.transactionType === 'INVOICE' ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-emerald-50 border-emerald-100 text-emerald-600'}`}>
                               {tx.transactionType === 'INVOICE' ? <FileText size={20} /> : <Receipt size={20} />}
                             </div>
@@ -645,15 +645,15 @@ export default function CustomerDetails() {
                                 <div>
                                   <p className="text-sm font-bold text-zinc-900">
                                     {tx.transactionType}{' '}
-                                    <span className="font-mono bg-zinc-100 px-1.5 py-0.5 rounded-lg text-xs ml-2 border border-zinc-200">
+                                    <span className="font-mono bg-zinc-100 dark:bg-[#1D212C] px-1.5 py-0.5 rounded-lg text-xs ml-2 border border-zinc-200 dark:border-[#2A2F3D]">
                                       {tx.referenceNumber}
                                     </span>
                                   </p>
-                                  <p className="text-xs font-semibold text-zinc-500 mt-1">{tx.date}</p>
+                                  <p className="text-xs font-semibold text-zinc-500 dark:text-[#A0A6B5] mt-1">{tx.date}</p>
                                 </div>
                                 <div className="text-right">
-                                  <p className="text-base font-black text-zinc-900">{formatCurrency(tx.amount)}</p>
-                                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-lg text-[8px] font-bold uppercase tracking-wider ${tx.status === 'DRAFT' ? 'bg-zinc-100 text-zinc-600' : 'bg-emerald-100 text-emerald-700'}`}>
+                                  <p className="text-base font-black text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(tx.amount)}</p>
+                                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-lg text-[8px] font-bold uppercase tracking-wider ${tx.status === 'DRAFT' ? 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5]' : 'bg-emerald-100 dark:bg-[#34C38F]/15 text-emerald-700 dark:text-[#34C38F]'}`}>
                                     {tx.status}
                                   </span>
                                 </div>
@@ -685,25 +685,25 @@ export default function CustomerDetails() {
                     <div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm whitespace-nowrap">
-                          <thead className="bg-white border-b border-zinc-200 text-[8.8px] uppercase tracking-wider text-zinc-500 font-bold">
+                          <thead className="bg-white dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-[8.8px] uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5] font-bold">
                             <tr>
                               <th className="px-6 py-4">Date</th>
                               <th className="px-6 py-4">Voucher</th>
                               <th className="px-6 py-4">Reference</th>
                               <th className="px-6 py-4 text-right">Debit</th>
                               <th className="px-6 py-4 text-right">Credit</th>
-                              <th className="px-6 py-4 text-right text-zinc-900">Balance</th>
+                              <th className="px-6 py-4 text-right text-zinc-900 dark:text-[#E6E8EE]">Balance</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-zinc-100">
+                          <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                             {paginate(ledgerEntries).map((entry, idx) => (
-                              <tr key={idx} className="hover:bg-zinc-50 transition-colors">
-                                <td className="px-6 py-4 font-medium text-zinc-600">{entry.date}</td>
-                                <td className="px-6 py-4 font-bold text-zinc-800">{entry.voucherType}</td>
-                                <td className="px-6 py-4 font-mono font-medium text-zinc-500">{entry.voucherNumber}</td>
-                                <td className="px-6 py-4 font-bold text-zinc-900 text-right">{entry.debit > 0 ? formatCurrency(entry.debit) : '–'}</td>
-                                <td className="px-6 py-4 font-bold text-zinc-900 text-right">{entry.credit > 0 ? formatCurrency(entry.credit) : '–'}</td>
-                                <td className="px-6 py-4 font-black text-zinc-900 text-right bg-zinc-50/50">{formatCurrency(entry.balance)}</td>
+                              <tr key={idx} className="hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors">
+                                <td className="px-6 py-4 font-medium text-zinc-600 dark:text-[#A0A6B5]">{entry.date}</td>
+                                <td className="px-6 py-4 font-bold text-zinc-800 dark:text-[#E6E8EE]">{entry.voucherType}</td>
+                                <td className="px-6 py-4 font-mono font-medium text-zinc-500 dark:text-[#A0A6B5]">{entry.voucherNumber}</td>
+                                <td className="px-6 py-4 font-bold text-zinc-900 dark:text-[#E6E8EE] text-right">{entry.debit > 0 ? formatCurrency(entry.debit) : '–'}</td>
+                                <td className="px-6 py-4 font-bold text-zinc-900 dark:text-[#E6E8EE] text-right">{entry.credit > 0 ? formatCurrency(entry.credit) : '–'}</td>
+                                <td className="px-6 py-4 font-black text-zinc-900 dark:text-[#E6E8EE] text-right bg-zinc-50/50 dark:bg-[#1D212C]">{formatCurrency(entry.balance)}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -737,38 +737,38 @@ export default function CustomerDetails() {
                 <TabCard title="Audit Log">
                   <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="border border-zinc-200 rounded-lg p-5 bg-zinc-50/50">
-                        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-2">
+                      <div className="border border-zinc-200 dark:border-[#2A2F3D] rounded-lg p-5 bg-zinc-50/50 dark:bg-[#1D212C]">
+                        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] mb-4 flex items-center gap-2">
                           <Plus size={14} /> Created Record
                         </p>
                         <div className="space-y-4">
                           <div>
-                            <p className="text-xs text-zinc-500 font-semibold mb-1">Created By</p>
-                            <p className="text-sm font-mono font-bold text-zinc-900 bg-white inline-block px-2 py-1 rounded-lg border border-zinc-200">
+                            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-semibold mb-1">Created By</p>
+                            <p className="text-sm font-mono font-bold text-zinc-900 dark:text-[#E6E8EE] bg-white dark:bg-[#161922] inline-block px-2 py-1 rounded-lg border border-zinc-200 dark:border-[#2A2F3D]">
                               {customer.auditInformation?.createdBy || customer.createdBy || 'System'}
                             </p>
                           </div>
                           <div>
-                            <p className="text-xs text-zinc-500 font-semibold mb-1">Created At</p>
+                            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-semibold mb-1">Created At</p>
                             <p className="text-sm font-bold text-zinc-900">
                               {customer.auditInformation?.createdAt || customer.createdAt || 'N/A'}
                             </p>
                           </div>
                         </div>
                       </div>
-                      <div className="border border-zinc-200 rounded-lg p-5 bg-zinc-50/50">
-                        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400 mb-4 flex items-center gap-2">
+                      <div className="border border-zinc-200 dark:border-[#2A2F3D] rounded-lg p-5 bg-zinc-50/50 dark:bg-[#1D212C]">
+                        <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184] mb-4 flex items-center gap-2">
                           <Edit2 size={14} /> Last Updated
                         </p>
                         <div className="space-y-4">
                           <div>
-                            <p className="text-xs text-zinc-500 font-semibold mb-1">Updated By</p>
-                            <p className="text-sm font-mono font-bold text-zinc-900 bg-white inline-block px-2 py-1 rounded-lg border border-zinc-200">
+                            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-semibold mb-1">Updated By</p>
+                            <p className="text-sm font-mono font-bold text-zinc-900 dark:text-[#E6E8EE] bg-white dark:bg-[#161922] inline-block px-2 py-1 rounded-lg border border-zinc-200 dark:border-[#2A2F3D]">
                               {customer.auditInformation?.updatedBy || customer.updatedBy || 'System'}
                             </p>
                           </div>
                           <div>
-                            <p className="text-xs text-zinc-500 font-semibold mb-1">Updated At</p>
+                            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-semibold mb-1">Updated At</p>
                             <p className="text-sm font-bold text-zinc-900">
                               {customer.auditInformation?.updatedAt || customer.updatedAt || 'N/A'}
                             </p>

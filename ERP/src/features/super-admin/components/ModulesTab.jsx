@@ -79,17 +79,17 @@ export default function ModulesTab({ organizationId, globalModules, buildPath })
   }, [standardModules, search, categoryFilter]);
 
   return (
-    <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
-      <div className="p-5 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+      <div className="p-5 border-b border-zinc-100 dark:border-[#2A2F3D] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900 tracking-tight flex items-center gap-2">
-            <Layers size={16} className="text-emerald-600" />
+          <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight flex items-center gap-2">
+            <Layers size={16} className="text-emerald-600 dark:text-emerald-400" />
             Allocated Modules & Service Access
-            <span className="text-[11px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200">
+            <span className="text-[11px] font-bold text-zinc-600 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1D212C] px-2 py-0.5 rounded-full border border-zinc-200 dark:border-[#2A2F3D]">
               {standardModules.length} Modules
             </span>
           </h3>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
             Cloud microservices enabled for this organization and available to provision on workspaces
           </p>
         </div>
@@ -138,34 +138,34 @@ export default function ModulesTab({ organizationId, globalModules, buildPath })
             {filteredModules.map((mod) => (
               <div
                 key={mod.code}
-                className="rounded-xl border border-zinc-200/80 p-4 bg-zinc-50/40 hover:bg-white hover:shadow-xs hover:border-zinc-300 transition-all space-y-3 flex flex-col justify-between"
+                className="rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] p-4 bg-zinc-50/40 dark:bg-[#1D212C]/50 hover:bg-white dark:hover:bg-[#1D212C] hover:shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all space-y-3 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${mod.color}`}>
                       {mod.code}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-[9.5px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    <span className="inline-flex items-center gap-1.5 text-[9.5px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> ACTIVE
                     </span>
                   </div>
 
-                  <h4 className="text-sm font-bold text-zinc-900">{mod.name}</h4>
-                  <p className="text-xs text-zinc-500 mt-1 leading-relaxed">{mod.desc}</p>
+                  <h4 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">{mod.name}</h4>
+                  <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-1 leading-relaxed">{mod.desc}</p>
                 </div>
 
-                <div className="pt-3 border-t border-zinc-100 flex items-center justify-between text-[11px] text-zinc-400">
-                  <span className="font-mono text-zinc-500">{mod.category} Category</span>
-                  <span className="text-emerald-600 font-semibold">Enabled</span>
+                <div className="pt-3 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between text-[11px] text-zinc-400 dark:text-[#6B7184]">
+                  <span className="font-mono text-zinc-500 dark:text-[#A0A6B5]">{mod.category} Category</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Enabled</span>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="p-8 text-center bg-zinc-50/50 rounded-xl">
-            <Layers size={26} className="mx-auto text-zinc-300 mb-2" />
-            <p className="text-xs font-semibold text-zinc-700">No modules match "{search}"</p>
-            <p className="text-[11px] text-zinc-400 mt-1">Try resetting search keywords or category filters.</p>
+          <div className="p-8 text-center bg-zinc-50/50 dark:bg-[#1D212C]/50 rounded-xl">
+            <Layers size={26} className="mx-auto text-zinc-300 dark:text-[#6B7184] mb-2" />
+            <p className="text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE]">No modules match "{search}"</p>
+            <p className="text-[11px] text-zinc-400 dark:text-[#6B7184] mt-1">Try resetting search keywords or category filters.</p>
             <button
               type="button"
               onClick={() => {

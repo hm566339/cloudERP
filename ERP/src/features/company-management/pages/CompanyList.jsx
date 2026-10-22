@@ -564,19 +564,19 @@ export default function CompanyList() {
     const location = addressParts.length > 0 ? addressParts.join(', ') : '—';
 
     return (
-      <div className="p-4 bg-zinc-50/80 border border-zinc-200/80 rounded-xl whitespace-normal break-words">
+      <div className="p-4 bg-zinc-50/80 dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl whitespace-normal break-words">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="space-y-1 bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Legal Name</span>
-            <p className="text-xs font-semibold text-zinc-900 break-words">{company.legalName || '—'}</p>
+          <div className="space-y-1 bg-white dark:bg-[#1D212C] p-3 rounded-lg border border-zinc-200/70 dark:border-[#2A2F3D] shadow-2xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Legal Name</span>
+            <p className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE] break-words">{company.legalName || '—'}</p>
           </div>
-          <div className="space-y-1 bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Base Currency</span>
-            <p className="text-xs font-semibold text-zinc-800">{company.baseCurrency || '—'}</p>
+          <div className="space-y-1 bg-white dark:bg-[#1D212C] p-3 rounded-lg border border-zinc-200/70 dark:border-[#2A2F3D] shadow-2xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Base Currency</span>
+            <p className="text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE]">{company.baseCurrency || '—'}</p>
           </div>
-          <div className="space-y-1 bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Website</span>
-            <div className="text-xs font-medium text-blue-600 truncate">
+          <div className="space-y-1 bg-white dark:bg-[#1D212C] p-3 rounded-lg border border-zinc-200/70 dark:border-[#2A2F3D] shadow-2xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Website</span>
+            <div className="text-xs font-medium text-blue-600 dark:text-[#4C8DFF] truncate">
               {company.website ? (
                 <a
                   href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
@@ -585,18 +585,18 @@ export default function CompanyList() {
                   className="hover:underline inline-flex items-center gap-1 max-w-full"
                 >
                   <span className="truncate">{company.website}</span>
-                  <ExternalLink size={11} className="shrink-0 text-blue-500" />
+                  <ExternalLink size={11} className="shrink-0 text-blue-500 dark:text-[#4C8DFF]" />
                 </a>
               ) : '—'}
             </div>
           </div>
-          <div className="space-y-1 bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs sm:col-span-2 lg:col-span-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Full Address</span>
-            <p className="text-xs font-medium text-zinc-700 break-words leading-relaxed">{location}</p>
+          <div className="space-y-1 bg-white dark:bg-[#1D212C] p-3 rounded-lg border border-zinc-200/70 dark:border-[#2A2F3D] shadow-2xs sm:col-span-2 lg:col-span-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Full Address</span>
+            <p className="text-xs font-medium text-zinc-700 dark:text-[#A0A6B5] break-words leading-relaxed">{location}</p>
           </div>
-          <div className="space-y-1 bg-white p-3 rounded-lg border border-zinc-200/70 shadow-2xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Created At</span>
-            <p className="text-xs font-medium text-zinc-700">
+          <div className="space-y-1 bg-white dark:bg-[#1D212C] p-3 rounded-lg border border-zinc-200/70 dark:border-[#2A2F3D] shadow-2xs">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#6B7184]">Created At</span>
+            <p className="text-xs font-medium text-zinc-700 dark:text-[#A0A6B5]">
               {company.createdAt
                 ? new Date(company.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                 : '—'}
@@ -608,7 +608,7 @@ export default function CompanyList() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] dark:bg-[#0F1117]">
       <PageHeader
         title="Company Management"
         description="Super Administrator console to monitor and toggle client tenant instances."

@@ -103,29 +103,29 @@ export default function PayrollPage() {
  {paginated.length === 0 && (
    <tr>
      <td colSpan={9}>
-       <div className="p-8 text-center border-2 border-dashed border-zinc-200 m-4 rounded-xl">
-         <IndianRupee className="mx-auto text-zinc-300 mb-3" size={28} />
-         <p className="text-sm font-medium text-zinc-600">No payroll records found</p>
-         <p className="text-xs text-zinc-400 mt-1">Adjust filters or process payroll.</p>
+       <div className="p-8 text-center border-2 border-dashed border-zinc-200 dark:border-border-dark m-4 rounded-xl">
+         <IndianRupee className="mx-auto text-zinc-300 dark:text-zinc-600 mb-3" size={28} />
+         <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">No payroll records found</p>
+         <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Adjust filters or process payroll.</p>
        </div>
      </td>
    </tr>
  )}
  {paginated.map((p, index) => (
  <tr key={p.id}>
-                    <td className="text-center font-medium text-zinc-500 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
- <td className="font-medium text-zinc-800">{p.name}</td>
- <td className="text-zinc-600">{p.department}</td>
- <td className="text-right text-zinc-600">{p.basic.toLocaleString()}</td>
- <td className="text-right text-emerald-600">+{p.allowances.toLocaleString()}</td>
- <td className="text-right text-red-500">-{p.deductions.toLocaleString()}</td>
- <td className="text-right font-bold text-zinc-900">₹{p.net.toLocaleString()}</td>
+                    <td className="text-center font-medium text-zinc-500 dark:text-zinc-400 tabular-nums">{getSerialNumber({ page, pageSize, rowIndex: index, pageBase: 0 })}</td>
+ <td className="font-medium text-zinc-800 dark:text-zinc-200">{p.name}</td>
+ <td className="text-zinc-600 dark:text-zinc-300">{p.department}</td>
+ <td className="text-right text-zinc-600 dark:text-zinc-300">{p.basic.toLocaleString()}</td>
+ <td className="text-right text-emerald-600 dark:text-emerald-400">+{p.allowances.toLocaleString()}</td>
+ <td className="text-right text-red-500 dark:text-red-400">-{p.deductions.toLocaleString()}</td>
+ <td className="text-right font-bold text-zinc-900 dark:text-zinc-100">₹{p.net.toLocaleString()}</td>
  <td>
  <span className={`badge ${p.status === 'Processed' ? 'badge-success' : 'badge-warning'}`}>
  {p.status}
  </span>
  </td>
- <td><button onClick={() => setViewingPayroll(p)} className="text-xs text-primary hover:underline font-medium">Details</button></td>
+ <td><button onClick={() => setViewingPayroll(p)} className="text-xs text-primary dark:text-blue-400 hover:underline font-medium">Details</button></td>
  </tr>
  ))}
  </tbody>
@@ -133,7 +133,7 @@ export default function PayrollPage() {
  </div>
  )}
  {!isLoading && (
-   <div className="p-4 border-t border-zinc-100 bg-white rounded-b-xl">
+   <div className="p-4 border-t border-zinc-100 dark:border-border-dark bg-white dark:bg-card-dark rounded-b-xl">
      <Pagination
        {...paginationProps}
        totalPages={totalPages}

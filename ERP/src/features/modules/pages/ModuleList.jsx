@@ -223,7 +223,7 @@ export default function ModuleList() {
   ], [handleEdit, handleDelete]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] dark:bg-[#0F1117]">
       <PageHeader
         title="Module Management"
         description="Manage system modules and their configurations."

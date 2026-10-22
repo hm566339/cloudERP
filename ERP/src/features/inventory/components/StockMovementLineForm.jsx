@@ -69,12 +69,12 @@ export default function StockMovementLineForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white dark:bg-card-dark">
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
         
         {/* Identifiers */}
         <div className="space-y-4">
-          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 pb-2">Core Identifiers</h3>
+          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">Core Identifiers</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-[9.6px] font-bold text-zinc-700 mb-1.5 block">
@@ -85,7 +85,7 @@ export default function StockMovementLineForm({
                 name="stockMovementId"
                 value={formData.stockMovementId}
                 onChange={handleChange}
-                className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                   errors.stockMovementId ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
                 }`}
                 autoFocus
@@ -106,7 +106,7 @@ export default function StockMovementLineForm({
                 name="productId"
                 value={formData.productId}
                 onChange={handleChange}
-                className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                   errors.productId ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
                 }`}
               />
@@ -124,7 +124,7 @@ export default function StockMovementLineForm({
                 name="batchId"
                 value={formData.batchId}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
             
@@ -135,7 +135,7 @@ export default function StockMovementLineForm({
                 name="serialId"
                 value={formData.serialId}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
           </div>
@@ -143,7 +143,7 @@ export default function StockMovementLineForm({
 
         {/* Source & Destination */}
         <div className="space-y-4">
-          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 pb-2">Source & Destination</h3>
+          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">Source & Destination</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-zinc-50/50 p-4 rounded-lg border border-zinc-100">
             <div>
               <label className="text-[9.6px] font-bold text-zinc-700 mb-1.5 block">Source Warehouse ID</label>
@@ -152,7 +152,7 @@ export default function StockMovementLineForm({
                 name="sourceWarehouseId"
                 value={formData.sourceWarehouseId}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
             
@@ -163,7 +163,7 @@ export default function StockMovementLineForm({
                 name="destinationWarehouseId"
                 value={formData.destinationWarehouseId}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -174,7 +174,7 @@ export default function StockMovementLineForm({
                 name="sourceLocationId"
                 value={formData.sourceLocationId}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -185,7 +185,7 @@ export default function StockMovementLineForm({
                 name="destinationLocationId"
                 value={formData.destinationLocationId}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
           </div>
@@ -193,7 +193,7 @@ export default function StockMovementLineForm({
 
         {/* Quantities & Costs */}
         <div className="space-y-4">
-          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 pb-2">Metrics</h3>
+          <h3 className="text-[10.4px] font-bold text-zinc-800 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">Metrics</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             
             <div>
@@ -205,7 +205,7 @@ export default function StockMovementLineForm({
                 name="quantity"
                 value={formData.quantity}
                 onChange={handleChange}
-                className={`w-full h-9 px-3 rounded-md border text-[10.4px] bg-white transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`w-full h-9 px-3 rounded-md border dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 transition-all outline-none focus:ring-2 focus:ring-primary/20 ${
                   errors.quantity ? 'border-rose-300 focus:border-rose-500' : 'border-zinc-200 focus:border-primary'
                 }`}
               />
@@ -223,7 +223,7 @@ export default function StockMovementLineForm({
                 name="unitCost"
                 value={formData.unitCost}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -245,7 +245,7 @@ export default function StockMovementLineForm({
                 name="quantityBefore"
                 value={formData.quantityBefore}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
@@ -256,7 +256,7 @@ export default function StockMovementLineForm({
                 name="quantityAfter"
                 value={formData.quantityAfter}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
             
@@ -267,7 +267,7 @@ export default function StockMovementLineForm({
                 name="uomId"
                 value={formData.uomId}
                 onChange={handleChange}
-                className="w-full h-9 px-3 rounded-md border border-zinc-200 text-[10.4px] bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full h-9 px-3 rounded-md border border-zinc-200 dark:border-border-dark text-[10.4px] bg-white dark:bg-surface-dark text-zinc-900 dark:text-zinc-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
             
@@ -276,12 +276,12 @@ export default function StockMovementLineForm({
 
       </div>
 
-      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 bg-zinc-50/50 mt-auto shrink-0">
+      <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C]/50 mt-auto shrink-0">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-[10.4px] font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

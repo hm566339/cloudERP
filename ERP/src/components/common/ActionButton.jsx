@@ -91,17 +91,17 @@ export default function ActionButton({
 
   let variantClass = 'btn-primary';
   if (variant === 'secondary') {
-    variantClass = 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 shadow-2xs';
+    variantClass = 'bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-white shadow-2xs';
   } else if (variant === 'danger') {
-    variantClass = 'bg-rose-600 hover:bg-rose-700 text-white shadow-2xs focus:ring-rose-500';
+    variantClass = 'bg-rose-600 hover:bg-rose-700 dark:bg-[#F0616D] dark:hover:bg-[#d94854] text-white shadow-2xs focus:ring-rose-500';
   } else if (variant === 'ghost') {
-    variantClass = 'bg-transparent text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 border-transparent';
+    variantClass = 'bg-transparent text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-100 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-[#E6E8EE] border-transparent';
   } else if (variant === 'outline') {
-    variantClass = 'bg-transparent border border-zinc-300 text-zinc-700 hover:bg-zinc-50';
+    variantClass = 'bg-transparent border border-zinc-300 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736]';
   } else if (variant === 'indigo') {
-    variantClass = 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xs focus:ring-indigo-500';
+    variantClass = 'bg-indigo-600 hover:bg-indigo-700 dark:bg-[#4C8DFF] dark:hover:bg-[#6AA1FF] text-white shadow-2xs focus:ring-indigo-500';
   } else if (variant === 'emerald' || variant === 'success') {
-    variantClass = 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs focus:ring-emerald-500';
+    variantClass = 'bg-emerald-600 hover:bg-emerald-700 dark:bg-[#34C38F] dark:hover:bg-[#2fb080] text-white shadow-2xs focus:ring-emerald-500';
   }
 
   const sizeClass =

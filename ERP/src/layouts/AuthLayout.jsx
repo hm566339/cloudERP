@@ -4,6 +4,7 @@ import { Shield, X, AlertCircle, CheckCircle, Info, AlertTriangle, Blocks, Zap, 
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { removeAlert } from '../features/notifications/notificationSlice'
 import MarkLogo from '../components/common/MarkLogo'
+import ThemeToggle from '../components/common/ThemeToggle'
 
 // Single Toast Alert Item
 export function ToastAlert({ alert, onClose }) {
@@ -15,32 +16,32 @@ export function ToastAlert({ alert, onClose }) {
   }, [alert.id, onClose])
 
   let icon = <Info className="text-primary-500" size={18} />
-  let bgColor = 'bg-white border-zinc-200'
-  let textColor = 'text-zinc-800'
+  let bgColor = 'bg-white/80 dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-700'
+  let textColor = 'text-zinc-800 dark:text-zinc-100'
 
   if (alert.type === 'success') {
     icon = <CheckCircle className="text-emerald-500" size={18} />
-    bgColor = 'bg-white border-emerald-200/60'
-    textColor = 'text-zinc-800'
+    bgColor = 'bg-white/80 dark:bg-zinc-900/80 border-emerald-200/60 dark:border-emerald-800/60'
+    textColor = 'text-zinc-800 dark:text-zinc-100'
   } else if (alert.type === 'error') {
     icon = <AlertCircle className="text-rose-500" size={18} />
-    bgColor = 'bg-white border-rose-200/60'
-    textColor = 'text-zinc-800'
+    bgColor = 'bg-white/80 dark:bg-zinc-900/80 border-rose-200/60 dark:border-rose-800/60'
+    textColor = 'text-zinc-800 dark:text-zinc-100'
   } else if (alert.type === 'warning') {
     icon = <AlertTriangle className="text-amber-500" size={18} />
-    bgColor = 'bg-white border-amber-200/60'
-    textColor = 'text-zinc-800'
+    bgColor = 'bg-white/80 dark:bg-zinc-900/80 border-amber-200/60 dark:border-amber-800/60'
+    textColor = 'text-zinc-800 dark:text-zinc-100'
   }
 
   return (
     <div
-      className={`flex items-start gap-3 p-4 rounded-xl border shadow-xl shadow-slate-200/50 animate-slide-up ${bgColor} ${textColor} transition-all duration-300 backdrop-blur-xl bg-white/80`}
+      className={`flex items-start gap-3 p-4 rounded-xl border shadow-xl shadow-slate-200/50 dark:shadow-none animate-slide-up ${bgColor} ${textColor} transition-all duration-300 backdrop-blur-xl`}
     >
       <div className="flex-shrink-0 mt-0.5">{icon}</div>
       <div className="flex-grow text-[10.4px] font-medium leading-relaxed">{alert.message}</div>
       <button
         onClick={onClose}
-        className="flex-shrink-0 ml-auto text-zinc-400 hover:text-zinc-600 transition-colors"
+        className="flex-shrink-0 ml-auto text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
       >
         <X size={16} />
       </button>
@@ -69,7 +70,7 @@ export function ToastNotification() {
 
 export default function AuthLayout() {
   return (
-    <div className="h-screen w-screen flex font-sans overflow-hidden selection:bg-primary/30 selection:text-white bg-zinc-50">
+    <div className="h-screen w-screen flex font-sans overflow-hidden selection:bg-primary/30 selection:text-white bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
 
       {/* ── Left Side: Information Panel (Hidden on Mobile) ── */}
       <div className="hidden lg:flex lg:w-[45%] xl:w-1/2 relative bg-zinc-950 text-white flex-col justify-between p-6 lg:p-10 overflow-hidden">
@@ -128,18 +129,23 @@ export default function AuthLayout() {
       </div>
 
       {/* ── Right Side: Auth Forms ── */}
-      <div className="flex-1 flex flex-col relative overflow-hidden w-full lg:w-[55%] xl:w-1/2">
+      <div className="flex-1 flex flex-col relative overflow-hidden w-full lg:w-[55%] xl:w-1/2 bg-zinc-50 dark:bg-zinc-950">
+        {/* Top-Right Theme Toggle */}
+        <div className="absolute top-4 right-4 z-30">
+          <ThemeToggle />
+        </div>
+
         {/* Mobile Background */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 lg:hidden">
           <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-primary-400/20 blur-[96px] mix-blend-multiply animate-blob"></div>
           <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10 mix-blend-overlay"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-50/90"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-50/90 dark:to-zinc-950/90"></div>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative z-10 w-full min-h-full">
           {/* Mobile Logo */}
           <div className="lg:hidden mb-8 animate-fade-in-up">
-            <MarkLogo variant="light" className="w-48 h-auto object-contain object-center" />
+            <MarkLogo variant="auto" className="w-48 h-auto object-contain object-center" />
           </div>
 
           <div className="w-full flex justify-center px-2 sm:px-0 mx-auto">

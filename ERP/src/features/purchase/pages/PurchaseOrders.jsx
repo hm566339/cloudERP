@@ -437,7 +437,7 @@ export default function PurchaseOrders() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsExportModalOpen(true)}
-              className="btn-secondary flex items-center gap-1.5 h-9 px-3 text-xs bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-2xs"
+              className="btn-secondary flex items-center gap-1.5 h-9 px-3 text-xs bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors shadow-2xs"
             >
               <Download size={15} />
               <span className="hidden sm:inline">Export</span>

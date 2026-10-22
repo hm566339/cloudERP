@@ -288,21 +288,21 @@ export default function UpdateModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="bg-white w-full max-w-5xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200"
+        className="bg-white dark:bg-[#1D212C] w-full max-w-5xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200 dark:border-[#2A2F3D]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
       >
         {/* ── Header ── */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
-          <h2 id="modal-title" className="text-[13.6px] font-bold text-zinc-900 tracking-tight">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#161922] shrink-0">
+          <h2 id="modal-title" className="text-[13.6px] font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg transition-colors active:scale-95"
+            className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:text-[#6B7184] dark:hover:text-[#E6E8EE] hover:bg-zinc-200 dark:hover:bg-[#222736] rounded-lg transition-colors active:scale-95"
           >
             <X size={17} strokeWidth={2.5} />
           </button>
@@ -310,9 +310,9 @@ export default function UpdateModal({
 
         {/* ── Body ── */}
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 size={24} className="animate-spin text-zinc-400" />
-            <span className="ml-3 text-sm text-zinc-500">Loading details...</span>
+          <div className="flex items-center justify-center py-16 bg-white dark:bg-[#1D212C]">
+            <Loader2 size={24} className="animate-spin text-zinc-400 dark:text-[#A0A6B5]" />
+            <span className="ml-3 text-sm text-zinc-500 dark:text-[#A0A6B5]">Loading details...</span>
           </div>
         ) : (
           <form
@@ -320,10 +320,10 @@ export default function UpdateModal({
             onSubmit={handleSubmit}
             className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="min-h-0 flex-1 overflow-y-auto bg-white px-6 py-5">
+            <div className="min-h-0 flex-1 overflow-y-auto bg-white dark:bg-[#1D212C] px-6 py-5">
               {/* Error banner */}
               {errorMsg && (
-                <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-700 animate-fade-in">
+                <div className="mb-4 p-3 bg-rose-50 dark:bg-[#F0616D]/15 border border-rose-200 dark:border-[#F0616D]/30 rounded-lg text-sm text-rose-700 dark:text-[#F0616D] animate-fade-in">
                   {errorMsg}
                 </div>
               )}
@@ -341,7 +341,7 @@ export default function UpdateModal({
                     return (
                       <div key={sIdx} className="space-y-4">
                         {/* Section heading */}
-                        <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider pb-2 border-b border-zinc-100">
+                        <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
                           {section.title}
                         </h3>
                         {/* Section fields grid */}
@@ -388,11 +388,11 @@ export default function UpdateModal({
             </div>
 
             {/* ── Footer ── */}
-            <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-zinc-200 bg-zinc-50/80 px-6 py-4 sm:flex-row sm:justify-end">
+            <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#161922] px-6 py-4 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full sm:w-auto px-5 py-2 text-[10.8px] font-semibold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 bg-white border border-zinc-200 rounded-md transition-all active:scale-95"
+                className="w-full sm:w-auto px-5 py-2 text-[10.8px] font-semibold text-zinc-700 dark:text-[#E6E8EE] hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-[#222736] bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md transition-all active:scale-95"
               >
                 {cancelLabel}
               </button>
@@ -400,7 +400,7 @@ export default function UpdateModal({
                 type="submit"
                 form="update-modal-form"
                 disabled={isSubmitting || submitting || !isDirty}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2 text-[10.8px] font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-md transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2 text-[10.8px] font-semibold text-white bg-zinc-900 dark:bg-[#4C8DFF] hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] rounded-md transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
               >
                 {isSubmitting || submitting ? (
                   <>
@@ -429,7 +429,7 @@ export default function UpdateModal({
 ────────────────────────────────────────────────────────────────────────── */
 function FieldRenderer({ field, value, onChange, error, legacyLargeForm = false }) {
   const inputClass =
-    'w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400 placeholder:font-normal';
+    'w-full h-9 px-3 bg-zinc-50 dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-[#4C8DFF] focus:ring-0 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-[#6B7184] placeholder:font-normal';
 
   // Span override: 'full' means md:col-span-2
   const spanClass = field.span === 'full' ? 'md:col-span-2' : '';
@@ -446,14 +446,14 @@ function FieldRenderer({ field, value, onChange, error, legacyLargeForm = false 
               checked={!!value}
               onChange={(e) => onChange(field.key, e.target.checked, field)}
               disabled={field.disabled}
-              className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-0 focus:ring-offset-0 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-4 h-4 rounded border-zinc-300 dark:border-[#2A2F3D] dark:bg-[#161922] text-zinc-900 dark:text-[#4C8DFF] focus:ring-0 focus:ring-offset-0 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            <span className="text-[10.4px] font-bold text-zinc-700 select-none group-hover:text-zinc-900 transition-colors">
+            <span className="text-[10.4px] font-bold text-zinc-700 dark:text-[#E6E8EE] select-none group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
               {field.label}
               {field.required && <span className="text-rose-500 ml-0.5">*</span>}
             </span>
           </label>
-          {error && <p className="text-[9px] text-rose-600 mt-1">{error}</p>}
+          {error && <p className="text-[9px] text-rose-600 dark:text-[#F0616D] mt-1">{error}</p>}
         </div>
       </div>
     );
@@ -461,13 +461,13 @@ function FieldRenderer({ field, value, onChange, error, legacyLargeForm = false 
 
   return (
     <div className={`space-y-1.5 min-w-0 ${spanClass}`}>
-      <label className="text-[9.6px] font-semibold text-zinc-700 block">
+      <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-[#A0A6B5] block">
         {field.label}
         {field.required && <span className="text-rose-500 ml-0.5">*</span>}
       </label>
 
       {field.type === 'info' ? (
-        <div className="w-full h-9 px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-700 flex items-center overflow-hidden text-ellipsis whitespace-nowrap">
+        <div className="w-full h-9 px-3 py-2 bg-zinc-50 dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-700 dark:text-[#E6E8EE] flex items-center overflow-hidden text-ellipsis whitespace-nowrap">
           {value ?? '—'}
         </div>
       ) : field.type === 'select' ? (
@@ -479,7 +479,7 @@ function FieldRenderer({ field, value, onChange, error, legacyLargeForm = false 
           isLoading={field.isLoading}
           options={field.options || []}
           placeholder="— Select —"
-          buttonClassName={`${inputClass} flex items-center justify-between ${field.disabled ? 'opacity-60 cursor-not-allowed bg-zinc-100' : ''}`}
+          buttonClassName={`${inputClass} flex items-center justify-between ${field.disabled ? 'opacity-60 cursor-not-allowed bg-zinc-100 dark:bg-[#1D212C]' : ''}`}
         />
       ) : field.type === 'textarea' ? (
         <textarea
@@ -490,7 +490,7 @@ function FieldRenderer({ field, value, onChange, error, legacyLargeForm = false 
           placeholder={field.placeholder || ''}
           maxLength={field.maxLength}
           disabled={field.disabled}
-          className={`${inputClass} h-auto py-2 resize-none ${field.disabled ? 'opacity-60 cursor-not-allowed bg-zinc-100' : ''}`}
+          className={`${inputClass} h-auto py-2 resize-none ${field.disabled ? 'opacity-60 cursor-not-allowed bg-zinc-100 dark:bg-[#1D212C]' : ''}`}
         />
       ) : (
         <input
@@ -513,10 +513,10 @@ function FieldRenderer({ field, value, onChange, error, legacyLargeForm = false 
           max={field.max}
           step={field.type === 'number' ? (field.step ?? '0.01') : undefined}
           disabled={field.disabled}
-          className={`${inputClass} ${field.uppercase ? 'uppercase placeholder:normal-case' : ''} ${field.disabled ? 'opacity-60 cursor-not-allowed bg-zinc-100' : ''}`}
+          className={`${inputClass} ${field.uppercase ? 'uppercase placeholder:normal-case' : ''} ${field.disabled ? 'opacity-60 cursor-not-allowed bg-zinc-100 dark:bg-[#1D212C]' : ''}`}
         />
       )}
-      {error && <p className="text-[9px] text-rose-600">{error}</p>}
+      {error && <p className="text-[9px] text-rose-600 dark:text-[#F0616D]">{error}</p>}
     </div>
   );
 }

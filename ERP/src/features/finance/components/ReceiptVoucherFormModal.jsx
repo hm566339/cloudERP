@@ -314,13 +314,13 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
 
   return createPortal(
     <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-[960px] max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-[#161922] rounded-xl shadow-2xl w-full max-w-[960px] max-h-[90vh] flex flex-col border border-zinc-200 dark:border-[#2A2F3D]">
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b border-zinc-100 bg-zinc-50/50 flex-none rounded-t-xl">
-          <h2 className="text-base font-bold text-zinc-800">
+        <div className="flex justify-between items-center p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/50 flex-none rounded-t-xl">
+          <h2 className="text-base font-bold text-zinc-800 dark:text-[#E6E8EE]">
             {isEditing ? 'Edit Receipt Voucher' : 'Create Receipt Voucher'}
           </h2>
-          <button type="button" onClick={onClose} className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100 transition-colors">
+          <button type="button" onClick={onClose} className="p-1.5 text-zinc-400 dark:text-zinc-400 hover:text-zinc-600 dark:hover:text-[#E6E8EE] rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -329,30 +329,30 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
         <form id="receipt-form" onSubmit={handleSubmit} className="flex-1 flex flex-col text-xs min-h-0">
 
           {/* Header Controls */}
-          <div className="p-6 flex-none bg-white border-b border-zinc-100 overflow-y-auto max-h-[50vh]">
+          <div className="p-6 flex-none bg-white dark:bg-[#161922] border-b border-zinc-100 dark:border-[#2A2F3D] overflow-y-auto max-h-[50vh]">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
               
               {/* SECTION: VOUCHER DETAILS */}
               <div className="space-y-4">
-                <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider pb-2 border-b border-zinc-100">
+                <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
                   Voucher Details
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9.6px] font-semibold text-zinc-700 block">Receipt Number</label>
-                    <input type="text" name="receiptNo" value={formData.receiptNo || ''} placeholder="Auto Generated" disabled className="w-full h-9 px-3 bg-zinc-100 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 cursor-not-allowed opacity-60" />
+                    <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300 block">Receipt Number</label>
+                    <input type="text" name="receiptNo" value={formData.receiptNo || ''} placeholder="Auto Generated" disabled className="w-full h-9 px-3 bg-zinc-100 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] cursor-not-allowed opacity-60" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9.6px] font-semibold text-zinc-700 block">Receipt Date <span className="text-rose-500 ml-0.5">*</span></label>
-                    <input type="date" name="receiptDate" value={formData.receiptDate} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 outline-none transition-all" required />
+                    <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300 block">Receipt Date <span className="text-rose-500 ml-0.5">*</span></label>
+                    <input type="date" name="receiptDate" value={formData.receiptDate} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-[#4C8DFF] outline-none transition-all" required />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9.6px] font-semibold text-zinc-700 block">Receipt Amount <span className="text-rose-500 ml-0.5">*</span></label>
-                    <input type="number" step="0.01" name="receiptAmount" value={formData.receiptAmount} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 outline-none transition-all" required />
+                    <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300 block">Receipt Amount <span className="text-rose-500 ml-0.5">*</span></label>
+                    <input type="number" step="0.01" name="receiptAmount" value={formData.receiptAmount} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-[#4C8DFF] outline-none transition-all" required />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9.6px] font-semibold text-zinc-700 block">Payment Mode <span className="text-rose-500 ml-0.5">*</span></label>
-                    <CustomSelect name="paymentMode" value={formData.paymentMode} onChange={handleInputChange} buttonClassName="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 outline-none transition-all flex items-center justify-between" required>
+                    <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300 block">Payment Mode <span className="text-rose-500 ml-0.5">*</span></label>
+                    <CustomSelect name="paymentMode" value={formData.paymentMode} onChange={handleInputChange} buttonClassName="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-[#4C8DFF] outline-none transition-all flex items-center justify-between" required>
                       <option value="CASH">CASH</option>
                       <option value="BANK_TRANSFER">BANK TRANSFER</option>
                       <option value="CHEQUE">CHEQUE</option>
@@ -366,12 +366,12 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
 
               {/* SECTION: ACCOUNTING INFORMATION */}
               <div className="space-y-4">
-                <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider pb-2 border-b border-zinc-100">
+                <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
                   Accounting Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9.6px] font-semibold text-zinc-700 block">Customer <span className="text-rose-500 ml-0.5">*</span></label>
+                    <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300 block">Customer <span className="text-rose-500 ml-0.5">*</span></label>
                     <ComboBox
                       name="customerId"
                       value={formData.customerId}
@@ -384,11 +384,11 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
                         setIsAddCustomerOpen(true);
                       }}
                       createSubtext="Create New Customer"
-                      inputClassName="w-full h-9 pl-8 pr-2 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 outline-none transition-all"
+                      inputClassName="w-full h-9 pl-8 pr-2 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-[#4C8DFF] outline-none transition-all"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9.6px] font-semibold text-zinc-700 block">Bank Account</label>
+                    <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300 block">Bank Account</label>
                     <ComboBox
                       name="bankAccountId"
                       value={formData.bankAccountId}
@@ -400,11 +400,11 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
                         setIsAddBankAccountOpen(true);
                       }}
                       createSubtext="Create New Bank Account"
-                      inputClassName="w-full h-9 pl-8 pr-2 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 outline-none transition-all"
+                      inputClassName="w-full h-9 pl-8 pr-2 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-[#4C8DFF] outline-none transition-all"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9.6px] font-semibold text-zinc-700 block">Receivable Account <span className="text-rose-500 ml-0.5">*</span></label>
+                    <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300 block">Receivable Account <span className="text-rose-500 ml-0.5">*</span></label>
                     <ComboBox
                       name="receivableAccountId"
                       value={formData.receivableAccountId}
@@ -418,11 +418,11 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
                         setIsAddAccountOpen(true);
                       }}
                       createSubtext="Create New GL Account"
-                      inputClassName="w-full h-9 pl-8 pr-2 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 outline-none transition-all"
+                      inputClassName="w-full h-9 pl-8 pr-2 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-[#4C8DFF] outline-none transition-all"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9.6px] font-semibold text-zinc-700 block">Receipt Account <span className="text-rose-500 ml-0.5">*</span></label>
+                    <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300 block">Receipt Account <span className="text-rose-500 ml-0.5">*</span></label>
                     <ComboBox
                       name="receiptAccountId"
                       value={formData.receiptAccountId}
@@ -436,7 +436,7 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
                         setIsAddAccountOpen(true);
                       }}
                       createSubtext="Create New GL Account"
-                      inputClassName="w-full h-9 pl-8 pr-2 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 outline-none transition-all"
+                      inputClassName="w-full h-9 pl-8 pr-2 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-[#4C8DFF] outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -444,17 +444,17 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
 
               {/* SECTION: ADDITIONAL DETAILS */}
               <div className="space-y-4 md:col-span-2">
-                <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider pb-2 border-b border-zinc-100">
+                <h3 className="text-xs font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
                   Additional Details
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[9.6px] font-semibold text-zinc-700 block">Remarks</label>
-                    <textarea name="remarks" value={formData.remarks} onChange={handleInputChange} rows={2} className="w-full py-2 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 outline-none transition-all resize-none" placeholder="Optional notes..."></textarea>
+                    <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300 block">Remarks</label>
+                    <textarea name="remarks" value={formData.remarks} onChange={handleInputChange} rows={2} className="w-full py-2 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-[#4C8DFF] outline-none transition-all resize-none" placeholder="Optional notes..."></textarea>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9.6px] font-semibold text-zinc-700 block">Reference Number</label>
-                    <input type="text" name="referenceNo" value={formData.referenceNo} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 outline-none transition-all" placeholder="e.g. TRN-12345" />
+                    <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300 block">Reference Number</label>
+                    <input type="text" name="referenceNo" value={formData.referenceNo} onChange={handleInputChange} className="w-full h-9 px-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-[#E6E8EE] focus:bg-white dark:focus:bg-[#161922] focus:border-zinc-900 dark:focus:border-[#4C8DFF] outline-none transition-all" placeholder="e.g. TRN-12345" />
                   </div>
                 </div>
               </div>
@@ -463,27 +463,27 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
           </div>
 
           {/* Allocations Table */}
-          <div className="flex-1 overflow-auto bg-zinc-50/30">
+          <div className="flex-1 overflow-auto bg-zinc-50/30 dark:bg-[#0F1117]/30">
             <table className="w-full text-left border-collapse whitespace-nowrap">
-              <thead className="bg-zinc-100/80 text-zinc-500 sticky top-0 z-10 border-b border-zinc-200">
+              <thead className="bg-zinc-100/80 dark:bg-[#1D212C]/80 text-zinc-500 dark:text-zinc-400 sticky top-0 z-10 border-b border-zinc-200 dark:border-[#2A2F3D]">
                 <tr className="h-[24px] text-[8.8px]">
                   <th className="p-1 font-semibold min-w-[240px]">Sales Invoice</th>
                   <th className="p-1 font-semibold w-[120px] text-right">Invoice Balance</th>
                   <th className="p-1 font-semibold w-[160px]">Allocated Amount</th>
                   <th className="p-1 w-[25.6px] text-center">
-                    <button type="button" onClick={handleAddAllocation} className="p-1 text-blue-600 hover:bg-blue-50 rounded flex justify-center w-full" title="Add Allocation">
+                    <button type="button" onClick={handleAddAllocation} className="p-1 text-blue-600 dark:text-[#4C8DFF] hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded flex justify-center w-full" title="Add Allocation">
                       <Plus size={14} />
                     </button>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                 {formData.allocations.length > 0 ? formData.allocations.map((alloc, index) => {
                   const invId = alloc.salesInvoiceId || alloc.arInvoiceId;
                   const inv = salesInvoices.find(i => i.id === invId);
                   const displayBalance = inv ? (inv.outstandingAmount ?? inv.remainingBalance ?? 0) : '-';
                   return (
-                    <tr key={index} className="bg-white hover:bg-zinc-50/50">
+                    <tr key={index} className="bg-white dark:bg-[#161922] hover:bg-zinc-50/50 dark:hover:bg-[#1D212C]/50">
                       <td className="p-1 align-middle">
                         <ComboBox
                           name={`salesInvoiceId-${index}`}
@@ -497,10 +497,10 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
                             setIsAddInvoiceOpen(true);
                           }}
                           createSubtext="Create New Sales Invoice"
-                          inputClassName="w-full h-8 pl-8 pr-2 bg-white border border-zinc-200 rounded-md text-xs hover:border-zinc-300 focus:border-zinc-400 outline-none"
+                          inputClassName="w-full h-8 pl-8 pr-2 bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-900 dark:text-[#E6E8EE] rounded-md text-xs hover:border-zinc-300 dark:hover:border-zinc-500 focus:border-zinc-400 dark:focus:border-[#4C8DFF] outline-none"
                         />
                       </td>
-                      <td className="p-1 align-middle text-right font-medium text-zinc-700">
+                      <td className="p-1 align-middle text-right font-medium text-zinc-700 dark:text-zinc-300">
                         {displayBalance}
                       </td>
                       <td className="p-1 align-middle">
@@ -514,7 +514,7 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
                         />
                       </td>
                       <td className="p-1 align-middle text-center">
-                        <button type="button" onClick={() => handleRemoveAllocation(index)} className="p-1 text-zinc-400 hover:text-red-500 rounded hover:bg-red-50 flex justify-center w-full">
+                        <button type="button" onClick={() => handleRemoveAllocation(index)} className="p-1 text-zinc-400 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-950/30 flex justify-center w-full">
                           <Trash2 size={14} />
                         </button>
                       </td>
@@ -522,7 +522,7 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
                   );
                 }) : (
                   <tr>
-                    <td colSpan="4" className="text-center py-8 text-zinc-500 text-xs bg-zinc-50 border-b border-dashed border-zinc-200">
+                    <td colSpan="4" className="text-center py-8 text-zinc-500 dark:text-zinc-400 text-xs bg-zinc-50 dark:bg-[#1D212C]/50 border-b border-dashed border-zinc-200 dark:border-[#2A2F3D]">
                       No allocations added. Click the + button to allocate receipt amount to invoices.
                     </td>
                   </tr>
@@ -532,19 +532,19 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
           </div>
 
           {/* Notes / Summary */}
-          <div className="p-4 flex-none border-t border-zinc-100 bg-white flex justify-end">
-            <div className="bg-zinc-50 p-4 rounded-lg border border-zinc-200 w-80 space-y-2">
+          <div className="p-4 flex-none border-t border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] flex justify-end">
+            <div className="bg-zinc-50 dark:bg-[#1D212C] p-4 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] w-80 space-y-2">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-zinc-600">Total Receipt</span>
-                <span className="font-bold text-zinc-900">{parseFloat(formData.receiptAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="font-bold text-zinc-600 dark:text-zinc-400">Total Receipt</span>
+                <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">{parseFloat(formData.receiptAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
-              <div className="flex justify-between items-center text-xs border-b border-zinc-200 pb-2">
-                <span className="font-bold text-zinc-600">Total Allocated</span>
-                <span className="font-bold text-zinc-900">{formData.allocations.reduce((sum, a) => sum + (parseFloat(a.allocatedAmount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              <div className="flex justify-between items-center text-xs border-b border-zinc-200 dark:border-[#2A2F3D] pb-2">
+                <span className="font-bold text-zinc-600 dark:text-zinc-400">Total Allocated</span>
+                <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">{formData.allocations.reduce((sum, a) => sum + (parseFloat(a.allocatedAmount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between items-center text-sm pt-1">
-                <span className="font-bold text-zinc-800">Remaining</span>
-                <span className={`font-bold ${calculateRemainingBalance() < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                <span className="font-bold text-zinc-800 dark:text-zinc-200">Remaining</span>
+                <span className={`font-bold ${calculateRemainingBalance() < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                   {calculateRemainingBalance().toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>
               </div>
@@ -553,7 +553,7 @@ export default function ReceiptVoucherFormModal({ isOpen, onClose, initialData, 
         </form>
 
         {/* Footer Actions */}
-        <div className="flex justify-end gap-3 p-3 border-t border-zinc-200 bg-zinc-100 flex-none rounded-b-xl">
+        <div className="flex justify-end gap-3 p-3 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-100 dark:bg-[#1D212C] flex-none rounded-b-xl">
           <button type="button" onClick={onClose} className="btn-secondary py-1.5 px-5">Cancel</button>
           <button type="submit" form="receipt-form" className="btn-primary py-1.5 px-5" disabled={createMutation.isPending || updateMutation.isPending}>
             {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save Receipt'}

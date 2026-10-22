@@ -870,7 +870,7 @@ export default function AppRoutes() {
           <Route path="/features" element={<ProtectedRoute module="FEATURE"><FeatureList /></ProtectedRoute>} />
 
           {/* Settings */}
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings" element={<Navigate to="/settings/general" replace />} />
           <Route path="/settings/general" element={<GeneralSettings />} />
           <Route path="/settings/security" element={<SecuritySettings />} />
           <Route path="/settings/security/features" element={<FeatureList />} />
@@ -973,7 +973,7 @@ export default function AppRoutes() {
           <Route path="reports/bs" element={<BalanceSheet />} />
 
           {/* Utility */}
-          <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings" element={<Navigate to="general" replace />} />
           <Route path="settings/general" element={<GeneralSettings />} />
           <Route path="settings/security" element={<SecuritySettings />} />
           <Route path="settings/security/features" element={<FeatureList />} />

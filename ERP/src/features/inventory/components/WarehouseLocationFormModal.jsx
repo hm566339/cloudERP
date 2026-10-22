@@ -65,38 +65,38 @@ export default function WarehouseLocationFormModal({ isOpen, onClose, onSubmit, 
 
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-lg rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200">
+      <div className="bg-white dark:bg-card-dark w-full max-w-lg rounded-md shadow-2xl flex flex-col overflow-hidden animate-slide-up border border-zinc-200 dark:border-border-dark">
         
         {/* Header */}
-        <div className="flex justify-between items-center px-5 py-3 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
-          <h2 className="text-base font-bold text-zinc-900 tracking-tight">
+        <div className="flex justify-between items-center px-5 py-3 border-b border-zinc-200 dark:border-border-dark bg-zinc-50/80 dark:bg-hover-dark shrink-0">
+          <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
             Add New Location
           </h2>
           <button 
             type="button"
             onClick={onClose} 
-            className="p-1 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors active:scale-95"
+            className="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-md transition-colors active:scale-95"
           >
             <X size={18} strokeWidth={2.5} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 bg-white">
+        <div className="flex-1 overflow-y-auto px-6 py-4 bg-white dark:bg-card-dark">
           <form id="location-sub-form" onSubmit={handleSubmit} className="space-y-4">
             
             {/* Context */}
-            <div className="bg-blue-50/50 border border-blue-100 rounded-md p-3 mb-4 flex flex-col gap-1">
-              <p className="text-[8.8px] font-bold text-blue-600 uppercase tracking-wider">Warehouse</p>
-              <p className="text-[10.4px] font-semibold text-zinc-900">{warehouse.warehouseName}</p>
+            <div className="bg-blue-50/50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-md p-3 mb-4 flex flex-col gap-1">
+              <p className="text-[8.8px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Warehouse</p>
+              <p className="text-[10.4px] font-semibold text-zinc-900 dark:text-zinc-100">{warehouse.warehouseName}</p>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[9.6px] font-semibold text-zinc-700">Location Name <span className="text-red-500">*</span></label>
+              <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300">Location Name <span className="text-red-500">*</span></label>
               <input 
                 type="text" 
                 name="locationName"
-                className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all placeholder:text-zinc-400"
+                className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 dark:focus:border-primary focus:ring-0 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
                 value={formData.locationName}
                 onChange={handleChange}
                 placeholder="e.g., Zone A, Rack 1"
@@ -105,12 +105,12 @@ export default function WarehouseLocationFormModal({ isOpen, onClose, onSubmit, 
             </div>
 
             <div className="space-y-1">
-              <label className="text-[9.6px] font-semibold text-zinc-700">Location Type <span className="text-red-500">*</span></label>
+              <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300">Location Type <span className="text-red-500">*</span></label>
               <CustomSelect
                 name="locationType"
                 value={formData.locationType}
                 onChange={handleChange}
-                className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all"
+                className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 dark:focus:border-primary focus:ring-0 outline-none transition-all"
                 required
               >
                 <option value="" disabled>Select Type</option>
@@ -121,12 +121,12 @@ export default function WarehouseLocationFormModal({ isOpen, onClose, onSubmit, 
             </div>
 
             <div className="space-y-1">
-              <label className="text-[9.6px] font-semibold text-zinc-700">Parent Location (Optional)</label>
+              <label className="text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300">Parent Location (Optional)</label>
               <CustomSelect
                 name="parentLocationId"
                 value={formData.parentLocationId}
                 onChange={handleChange}
-                className="w-full h-8 px-3 bg-zinc-50 border border-zinc-200 rounded-md text-[10.4px] font-medium text-zinc-900 focus:bg-white focus:border-zinc-900 focus:ring-0 outline-none transition-all"
+                className="w-full h-8 px-3 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] font-medium text-zinc-900 dark:text-zinc-100 focus:bg-white dark:focus:bg-card-dark focus:border-zinc-900 dark:focus:border-primary focus:ring-0 outline-none transition-all"
                 disabled={isLoadingLocations}
               >
                 <option value="">None (Top-Level Location)</option>
@@ -136,7 +136,7 @@ export default function WarehouseLocationFormModal({ isOpen, onClose, onSubmit, 
                   </option>
                 ))}
               </CustomSelect>
-              {isLoadingLocations && <p className="text-[8px] text-zinc-500 mt-1">Loading locations...</p>}
+              {isLoadingLocations && <p className="text-[8px] text-zinc-500 dark:text-zinc-400 mt-1">Loading locations...</p>}
             </div>
 
             <div className="pt-2">
@@ -145,7 +145,7 @@ export default function WarehouseLocationFormModal({ isOpen, onClose, onSubmit, 
                   <input
                     type="checkbox"
                     name="isActive"
-                    className="peer appearance-none w-4 h-4 border border-zinc-300 rounded bg-white checked:bg-zinc-900 checked:border-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 transition-all cursor-pointer"
+                    className="peer appearance-none w-4 h-4 border border-zinc-300 dark:border-border-dark rounded bg-white dark:bg-card-dark checked:bg-zinc-900 dark:checked:bg-primary checked:border-zinc-900 dark:checked:border-primary focus:outline-none focus:ring-2 focus:ring-zinc-900/20 dark:focus:ring-primary/20 transition-all cursor-pointer"
                     checked={formData.isActive}
                     onChange={handleChange}
                   />
@@ -153,7 +153,7 @@ export default function WarehouseLocationFormModal({ isOpen, onClose, onSubmit, 
                     <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <span className="text-[10.4px] font-medium text-zinc-700 group-hover:text-zinc-900 transition-colors select-none">
+                <span className="text-[10.4px] font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors select-none">
                   Active Status
                 </span>
               </label>
@@ -163,11 +163,11 @@ export default function WarehouseLocationFormModal({ isOpen, onClose, onSubmit, 
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 bg-zinc-50/80 border-t border-zinc-200 shrink-0 flex items-center justify-end gap-3 rounded-b-md">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-[10.4px] font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors">
+        <div className="px-5 py-3 bg-zinc-50/80 dark:bg-hover-dark border-t border-zinc-200 dark:border-border-dark shrink-0 flex items-center justify-end gap-3 rounded-b-md">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-[10.4px] font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-md transition-colors">
             Cancel
           </button>
-          <button type="submit" form="location-sub-form" className="px-6 py-2 text-[10.4px] font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-md transition-colors shadow-sm">
+          <button type="submit" form="location-sub-form" className="px-6 py-2 text-[10.4px] font-bold text-white bg-zinc-900 dark:bg-primary hover:bg-zinc-800 dark:hover:bg-primary-600 rounded-md transition-colors shadow-sm">
             Save Location
           </button>
         </div>

@@ -85,7 +85,7 @@ const BudgetHeaderFormModal = ({ isOpen, onClose, editingRecord, onSuccess }) =>
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-zinc-700">Fiscal Year *</label>
+          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Fiscal Year *</label>
           <CustomSelect
             options={fiscalYearOptions}
             value={formData.fiscalYearId}
@@ -95,7 +95,7 @@ const BudgetHeaderFormModal = ({ isOpen, onClose, editingRecord, onSuccess }) =>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-zinc-700">Budget Name *</label>
+          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Budget Name *</label>
           <input
             type="text"
             name="budgetName"
@@ -108,9 +108,9 @@ const BudgetHeaderFormModal = ({ isOpen, onClose, editingRecord, onSuccess }) =>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-zinc-700">Total Budget *</label>
+          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Total Budget *</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">₹</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-400 font-medium">₹</span>
             <input
               type="number"
               name="totalBudget"
@@ -125,7 +125,7 @@ const BudgetHeaderFormModal = ({ isOpen, onClose, editingRecord, onSuccess }) =>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 mt-6">
+        <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-border-dark mt-6">
           <button type="button" onClick={onClose} className="btn-secondary">
             Cancel
           </button>

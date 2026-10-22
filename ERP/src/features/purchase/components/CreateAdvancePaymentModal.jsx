@@ -107,7 +107,7 @@ export default function CreateAdvancePaymentModal({ isOpen, onClose, purchaseOrd
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-card-dark rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col border border-zinc-200 dark:border-border-dark">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-zinc-200 bg-zinc-50/50">
           <div className="flex items-center gap-3">
@@ -162,7 +162,7 @@ export default function CreateAdvancePaymentModal({ isOpen, onClose, purchaseOrd
                     value={formData.amount}
                     onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                     placeholder="Enter advance amount"
-                    className="w-full h-9 pl-11 pr-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all disabled:opacity-60 disabled:bg-zinc-50"
+                    className="w-full h-9 pl-11 pr-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all disabled:opacity-60 disabled:bg-zinc-50"
                   />
                 </div>
               </div>
@@ -175,7 +175,7 @@ export default function CreateAdvancePaymentModal({ isOpen, onClose, purchaseOrd
                   disabled={isLoading}
                   value={formData.paymentDate}
                   onChange={(e) => setFormData(prev => ({ ...prev, paymentDate: e.target.value }))}
-                  className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all disabled:opacity-60 disabled:bg-zinc-50"
+                  className="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all disabled:opacity-60 disabled:bg-zinc-50"
                 />
               </div>
 
@@ -190,7 +190,7 @@ export default function CreateAdvancePaymentModal({ isOpen, onClose, purchaseOrd
                   options={bankAccounts.map(acc => ({ value: acc.id, label: `${acc.bankName} - ${acc.accountNumber}` }))}
                   placeholder={isLoadingBanks ? 'Loading bank accounts...' : (bankAccounts.length === 0 ? 'No bank accounts found' : 'Select bank account')}
                   isLoading={isLoadingBanks}
-                  buttonClassName="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all cursor-pointer disabled:opacity-60 disabled:bg-zinc-50"
+                  buttonClassName="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all cursor-pointer disabled:opacity-60 disabled:bg-zinc-50"
                 />
               </div>
 
@@ -205,7 +205,7 @@ export default function CreateAdvancePaymentModal({ isOpen, onClose, purchaseOrd
                   options={liabilityAccounts.map(acc => ({ value: acc.id, label: `${acc.accountCode} - ${acc.accountName}` }))}
                   placeholder={isLoadingAccounts ? 'Loading payable accounts...' : (liabilityAccounts.length === 0 ? 'No payable accounts found' : 'Select payable account')}
                   isLoading={isLoadingAccounts}
-                  buttonClassName="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all cursor-pointer disabled:opacity-60 disabled:bg-zinc-50"
+                  buttonClassName="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all cursor-pointer disabled:opacity-60 disabled:bg-zinc-50"
                 />
               </div>
               
@@ -219,7 +219,7 @@ export default function CreateAdvancePaymentModal({ isOpen, onClose, purchaseOrd
                   onChange={(e) => setFormData(prev => ({ ...prev, paymentMode: e.target.value }))}
                   options={PaymentMode.map(mode => ({ value: mode.value, label: mode.label }))}
                   placeholder="Select payment mode"
-                  buttonClassName="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all cursor-pointer disabled:opacity-60 disabled:bg-zinc-50"
+                  buttonClassName="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] font-medium text-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all cursor-pointer disabled:opacity-60 disabled:bg-zinc-50"
                 />
               </div>
 
@@ -231,7 +231,7 @@ export default function CreateAdvancePaymentModal({ isOpen, onClose, purchaseOrd
                   value={formData.reference}
                   onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
                   placeholder="Enter payment reference (e.g. UTR number)"
-                  className="w-full h-9 px-3 bg-white border border-zinc-200 rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all disabled:opacity-60 disabled:bg-zinc-50"
+                  className="w-full h-9 px-3 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all disabled:opacity-60 disabled:bg-zinc-50"
                 />
               </div>
 
@@ -243,7 +243,7 @@ export default function CreateAdvancePaymentModal({ isOpen, onClose, purchaseOrd
                   onChange={(e) => setFormData(prev => ({ ...prev, remarks: e.target.value }))}
                   placeholder="Enter remarks"
                   rows={3}
-                  className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all resize-none disabled:opacity-60 disabled:bg-zinc-50"
+                  className="w-full px-3 py-2 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg text-[10.4px] text-zinc-800 placeholder-zinc-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all resize-none disabled:opacity-60 disabled:bg-zinc-50"
                 />
               </div>
             </div>
@@ -256,7 +256,7 @@ export default function CreateAdvancePaymentModal({ isOpen, onClose, purchaseOrd
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="h-9 px-4 rounded-lg text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-60 disabled:hover:bg-white"
+            className="h-9 px-4 rounded-lg text-xs font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-60 disabled:hover:bg-white"
           >
             Cancel
           </button>

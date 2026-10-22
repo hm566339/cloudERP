@@ -79,11 +79,11 @@ const APPaymentOverview = ({ payment, onPost, onReverse, onDelete, canApprove, c
 
   return (
     <div
-      className="p-5 bg-white border border-zinc-200/80 rounded-xl shadow-xs m-2 mb-1 animate-in fade-in slide-in-from-top-2 cursor-default"
+      className="p-5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D]/80 rounded-xl shadow-xs m-2 mb-1 animate-in fade-in slide-in-from-top-2 cursor-default"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Overview Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-zinc-100">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
         <div className="flex items-center gap-3">
           <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 text-zinc-800 rounded border border-zinc-200">
             {payment.paymentNo || '—'}
@@ -142,7 +142,7 @@ const APPaymentOverview = ({ payment, onPost, onReverse, onDelete, canApprove, c
               <button
                 type="button"
                 onClick={() => onDelete(payment.id)}
-                className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 rounded-md transition-colors flex items-center gap-1.5"
+                className="px-2.5 py-1 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-white dark:bg-card-dark hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-md transition-colors flex items-center gap-1.5"
                 title="Delete Voucher"
               >
                 <Trash2 size={13} />
@@ -193,7 +193,7 @@ const APPaymentOverview = ({ payment, onPost, onReverse, onDelete, canApprove, c
 
           <div className="pt-1">
             <span className="text-[11px] text-zinc-500 block mb-1">Notes / Narration:</span>
-            <p className="text-xs text-zinc-700 bg-white p-2.5 rounded-lg border border-zinc-200/60 min-h-[44px] italic">
+            <p className="text-xs text-zinc-700 dark:text-zinc-300 bg-white dark:bg-surface-dark p-2.5 rounded-lg border border-zinc-200/60 dark:border-border-dark min-h-[44px] italic">
               {payment.narration || payment.notes || 'No narration provided.'}
             </p>
           </div>
@@ -235,7 +235,7 @@ const APPaymentOverview = ({ payment, onPost, onReverse, onDelete, canApprove, c
             <div className="max-h-24 overflow-y-auto space-y-1.5 pr-1">
               {payment.allocations && payment.allocations.length > 0 ? (
                 payment.allocations.map((alloc, idx) => (
-                  <div key={alloc.id || idx} className="bg-white p-2 rounded border border-zinc-200 text-xs flex items-center justify-between">
+                  <div key={alloc.id || idx} className="bg-white dark:bg-surface-dark p-2 rounded border border-zinc-200 dark:border-border-dark text-xs flex text-zinc-800 dark:text-zinc-200 items-center justify-between">
                     <div>
                       <span className="font-mono font-semibold text-zinc-900">{alloc.invoiceNo || `Invoice #${idx + 1}`}</span>
                       {alloc.invoiceDate && <span className="text-[10px] text-zinc-400 ml-2">{formatDate(alloc.invoiceDate)}</span>}
@@ -244,7 +244,7 @@ const APPaymentOverview = ({ payment, onPost, onReverse, onDelete, canApprove, c
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-zinc-400 italic bg-white p-2.5 rounded-lg border border-zinc-200/60 text-center">
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 italic bg-white dark:bg-surface-dark p-2.5 rounded-lg border border-zinc-200/60 dark:border-border-dark text-center">
                   Direct payment voucher (no linked invoice breakdown)
                 </p>
               )}
@@ -284,7 +284,7 @@ const APPaymentOverview = ({ payment, onPost, onReverse, onDelete, canApprove, c
           {payment.audit && (
             <div className="pt-1">
               <span className="text-[11px] text-zinc-500 block mb-1">Full Audit Trail:</span>
-              <div className="bg-white p-2.5 rounded-lg border border-zinc-200/60 flex items-center justify-between">
+              <div className="bg-white dark:bg-surface-dark p-2.5 rounded-lg border border-zinc-200/60 dark:border-border-dark flex items-center justify-between text-zinc-800 dark:text-zinc-200">
                 <span className="text-xs text-zinc-600">Audit metadata recorded</span>
                 <AuditLogHover audit={payment.audit} />
               </div>

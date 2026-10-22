@@ -100,7 +100,7 @@ const GstSlabFormModal = ({ isOpen, onClose, onSuccess, initialData = null }) =>
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-zinc-700">Slab Name *</label>
+          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Slab Name *</label>
           <input
             type="text"
             name="slabName"
@@ -114,7 +114,7 @@ const GstSlabFormModal = ({ isOpen, onClose, onSuccess, initialData = null }) =>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-zinc-700">CGST Rate (%)</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">CGST Rate (%)</label>
             <input
               type="number"
               step="0.01"
@@ -127,7 +127,7 @@ const GstSlabFormModal = ({ isOpen, onClose, onSuccess, initialData = null }) =>
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-zinc-700">SGST Rate (%)</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">SGST Rate (%)</label>
             <input
               type="number"
               step="0.01"
@@ -143,7 +143,7 @@ const GstSlabFormModal = ({ isOpen, onClose, onSuccess, initialData = null }) =>
         
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-zinc-700">IGST Rate (%)</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">IGST Rate (%)</label>
             <input
               type="number"
               step="0.01"
@@ -156,7 +156,7 @@ const GstSlabFormModal = ({ isOpen, onClose, onSuccess, initialData = null }) =>
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-zinc-700">Cess Rate (%)</label>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Cess Rate (%)</label>
             <input
               type="number"
               step="0.01"
@@ -170,13 +170,13 @@ const GstSlabFormModal = ({ isOpen, onClose, onSuccess, initialData = null }) =>
           </div>
         </div>
 
-        <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-lg flex justify-between items-center">
-          <span className="text-sm font-semibold text-blue-800">Total GST Rate</span>
-          <span className="text-xl font-bold text-blue-700">{currentTotalRate.toFixed(2)}%</span>
+        <div className="p-3 bg-blue-50/50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-lg flex justify-between items-center">
+          <span className="text-sm font-semibold text-blue-800 dark:text-blue-300">Total GST Rate</span>
+          <span className="text-xl font-bold text-blue-700 dark:text-blue-200">{currentTotalRate.toFixed(2)}%</span>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-zinc-700">Effective From *</label>
+          <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Effective From *</label>
           <input
             type="date"
             name="effectiveFrom"
@@ -187,7 +187,7 @@ const GstSlabFormModal = ({ isOpen, onClose, onSuccess, initialData = null }) =>
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
+        <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100 dark:border-border-dark">
           <button
             type="button"
             onClick={onClose}

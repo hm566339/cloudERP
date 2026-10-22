@@ -414,15 +414,15 @@ export default function CustomerManagement() {
     return (
     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Name</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Name</span>
         <p className="text-sm font-semibold text-zinc-900">{customer.customerName || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Code</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Code</span>
         <p className="text-sm font-semibold text-zinc-900">{customer.customerCode || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Status</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Status</span>
         <div>
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${customer.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
             {customer.isActive ? 'Active' : 'Inactive'}
@@ -430,45 +430,45 @@ export default function CustomerManagement() {
         </div>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Email</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Email</span>
         <p className="text-sm font-medium text-zinc-700">{customer.email || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Phone</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Phone</span>
         <p className="text-sm font-medium text-zinc-700">{customer.phone || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Credit Limit</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Credit Limit</span>
         <p className="text-sm font-medium text-zinc-700">
           {formatAmount(customer.creditLimit)}
         </p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Outstanding</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Outstanding</span>
         <p className={`text-sm font-medium ${customer.outstandingBalance > 0 ? 'text-red-600' : 'text-zinc-700'}`}>
           {formatAmount(customer.outstandingBalance)}
         </p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">GSTIN</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">GSTIN</span>
         <p className="text-sm font-medium text-zinc-700">{customer.gstin || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">PAN Number</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">PAN Number</span>
         <p className="text-sm font-medium text-zinc-700">{customer.panNo || '-'}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Location</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Location</span>
         <p className="text-sm font-medium text-zinc-700">
           {location || '-'}
         </p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Available Credit</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Available Credit</span>
         <p className="text-sm font-medium text-zinc-700">{formatAmount(customer.availableCredit)}</p>
       </div>
       <div className="space-y-1">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Created At</span>
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Created At</span>
         <p className="text-sm font-medium text-zinc-700">
           {formatDate(customer.createdAt)}
         </p>
@@ -478,7 +478,7 @@ export default function CustomerManagement() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Customer Management"
         description="Manage customer accounts, balances, and profiles"

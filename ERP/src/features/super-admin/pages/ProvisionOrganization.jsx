@@ -127,34 +127,34 @@ export default function ProvisionOrganization() {
 
       {/* ── Header & Breadcrumb ── */}
       <div>
-        <nav className="flex items-center gap-1.5 text-[11px] text-zinc-400 font-medium mb-2">
-          <Link to={buildPath('/super-admin/dashboard')} className="hover:text-zinc-600 transition-colors">Global Console</Link>
+        <nav className="flex items-center gap-1.5 text-[11px] text-zinc-400 dark:text-zinc-500 font-medium mb-2">
+          <Link to={buildPath('/super-admin/dashboard')} className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">Global Console</Link>
           <ChevronRight size={12} />
-          <Link to={buildPath('/super-admin/organizations')} className="hover:text-zinc-600 transition-colors">Organizations</Link>
+          <Link to={buildPath('/super-admin/organizations')} className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">Organizations</Link>
           <ChevronRight size={12} />
-          <span className="text-zinc-700">Provision Organization</span>
+          <span className="text-zinc-700 dark:text-zinc-200">Provision Organization</span>
         </nav>
-        <h1 className="text-[22px] font-bold text-zinc-900 tracking-tight flex items-center gap-2.5">
+        <h1 className="text-[22px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight flex items-center gap-2.5">
           <PlusCircle size={20} className="text-blue-600 shrink-0" />
           Provision Organization
         </h1>
-        <p className="text-sm text-zinc-500 mt-0.5">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
           Create a new organization as the top-level tenant on the platform.
         </p>
       </div>
 
       {/* ── API info notice ── */}
-      <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-800">
+      <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 rounded-xl text-xs text-blue-800 dark:text-blue-300">
         <Info size={15} className="shrink-0 mt-0.5 text-blue-500" />
         <div>
           <span className="font-semibold">Organization Provisioning</span>{' '}
-          Submits to <code className="font-mono bg-blue-100 px-1 rounded">POST /api/sso/signup</code>.
+          Submits to <code className="font-mono bg-blue-100 dark:bg-blue-900/50 px-1 rounded">POST /api/sso/signup</code>.
           Ensure you have System Admin access before provisioning.
         </div>
       </div>
 
       {/* ── Step Indicator ── */}
-      <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-4">
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-4">
         <div className="flex items-center justify-between">
           {stepDefs.map((s, i) => {
             const stepNum = i + 1;
@@ -167,19 +167,19 @@ export default function ProvisionOrganization() {
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all ${
                     isDone ? 'bg-emerald-500 border-emerald-500 text-white' :
                     isActive ? 'bg-blue-500 border-blue-500 text-white' :
-                    'bg-white border-zinc-300 text-zinc-400'
+                    'bg-white dark:bg-[#1D212C] border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500'
                   }`}>
                     {isDone ? <CheckCircle2 size={16} /> : <Icon size={16} />}
                   </div>
                   <span className={`text-[10px] font-semibold text-center leading-tight ${
-                    isActive ? 'text-blue-600' : isDone ? 'text-emerald-600' : 'text-zinc-400'
+                    isActive ? 'text-blue-600 dark:text-blue-400' : isDone ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400 dark:text-zinc-500'
                   }`}>
                     {s.label}
                   </span>
                 </div>
                 {i < stepDefs.length - 1 && (
                   <div className={`h-0.5 flex-1 max-w-[60px] mx-1 rounded transition-all ${
-                    step > stepNum ? 'bg-emerald-400' : 'bg-zinc-200'
+                    step > stepNum ? 'bg-emerald-400' : 'bg-zinc-200 dark:bg-[#2A2F3D]'
                   }`} />
                 )}
               </React.Fragment>
@@ -189,7 +189,7 @@ export default function ProvisionOrganization() {
       </div>
 
       {/* ── Step Content ── */}
-      <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs p-6">
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs p-6">
 
         {/* Step 1: Organization Information */}
         {step === 1 && (
@@ -318,7 +318,7 @@ export default function ProvisionOrganization() {
                 <select
                   value={adminInfo.role}
                   onChange={e => setAdminInfo({ ...adminInfo, role: e.target.value })}
-                  className="w-full h-9 px-3 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-blue-400 bg-white text-zinc-900"
+                  className="w-full h-9 px-3 text-xs border border-zinc-200 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-zinc-100"
                 >
                   <option value="org_admin">Organization Admin</option>
                   <option value="org_member">Organization Member</option>
@@ -333,14 +333,14 @@ export default function ProvisionOrganization() {
           <StepSection title="Companies" subtitle="Optionally create one or more companies under this organization. Companies are child entities — not separate tenants.">
             <div className="space-y-4">
               {companies.map((c, idx) => (
-                <div key={idx} className="border border-zinc-200 rounded-xl p-4 bg-zinc-50/40 relative">
+                <div key={idx} className="border border-zinc-200 dark:border-[#2A2F3D] rounded-xl p-4 bg-zinc-50/40 dark:bg-[#1D212C]/40 relative">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-zinc-700">Company #{idx + 1}</span>
+                    <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Company #{idx + 1}</span>
                     {companies.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleRemoveCompany(idx)}
-                        className="p-1.5 rounded hover:bg-rose-50 text-zinc-400 hover:text-rose-600 transition-colors"
+                        className="p-1.5 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
                       >
                         <Trash2 size={13} />
                       </button>
@@ -376,12 +376,12 @@ export default function ProvisionOrganization() {
               <button
                 type="button"
                 onClick={handleAddCompany}
-                className="w-full h-10 rounded-lg border-2 border-dashed border-zinc-200 text-zinc-500 hover:border-blue-300 hover:text-blue-600 text-xs font-semibold transition-all flex items-center justify-center gap-2"
+                className="w-full h-10 rounded-lg border-2 border-dashed border-zinc-200 dark:border-[#2A2F3D] text-zinc-500 dark:text-zinc-400 hover:border-blue-300 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 text-xs font-semibold transition-all flex items-center justify-center gap-2"
               >
                 <PlusCircle size={14} /> Add Another Company
               </button>
 
-              <p className="text-[11px] text-zinc-400 text-center">
+              <p className="text-[11px] text-zinc-400 dark:text-zinc-500 text-center">
                 You can also add companies later from the organization detail page.
               </p>
             </div>
@@ -392,9 +392,9 @@ export default function ProvisionOrganization() {
         {step === 4 && (
           <StepSection title="Platform Modules" subtitle="Assign available platform modules to this organization.">
             {modulesLoading ? (
-              <div className="text-center py-8 text-xs text-zinc-400">Loading modules…</div>
+              <div className="text-center py-8 text-xs text-zinc-400 dark:text-zinc-500">Loading modules…</div>
             ) : modulesList.length === 0 ? (
-              <div className="text-center py-8 text-xs text-zinc-400">No platform modules available.</div>
+              <div className="text-center py-8 text-xs text-zinc-400 dark:text-zinc-500">No platform modules available.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {modulesList.map((m) => {
@@ -406,23 +406,23 @@ export default function ProvisionOrganization() {
                       onClick={() => handleToggleModule(m.id)}
                       className={`text-left p-4 rounded-xl border-2 transition-all ${
                         isSelected
-                          ? 'border-blue-400 bg-blue-50 text-blue-900'
-                          : 'border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300'
+                          ? 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-200'
+                          : 'border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-600'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shrink-0">
-                          <Layers size={16} className={isSelected ? 'text-blue-600' : 'text-zinc-500'} />
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-950 dark:to-indigo-950 flex items-center justify-center shrink-0">
+                          <Layers size={16} className={isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 dark:text-zinc-400'} />
                         </div>
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                          isSelected ? 'bg-blue-500 border-blue-500' : 'border-zinc-300'
+                          isSelected ? 'bg-blue-500 border-blue-500' : 'border-zinc-300 dark:border-zinc-700'
                         }`}>
                           {isSelected && <CheckCircle2 size={10} className="text-white" />}
                         </div>
                       </div>
                       <div className="mt-2">
                         <div className="text-xs font-semibold">{m.name || m.moduleName}</div>
-                        <div className="text-[10px] text-zinc-400 font-mono mt-0.5">{m.code || m.moduleCode}</div>
+                        <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono mt-0.5">{m.code || m.moduleCode}</div>
                       </div>
                     </button>
                   );
@@ -459,11 +459,11 @@ export default function ProvisionOrganization() {
                 ) : (
                   companies.filter(c => c.name.trim()).map((c, i) => (
                     <div key={i} className="flex items-center gap-2 py-1">
-                      <div className="w-5 h-5 rounded bg-blue-50 text-blue-700 flex items-center justify-center text-[10px] font-bold border border-blue-100">
+                      <div className="w-5 h-5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 flex items-center justify-center text-[10px] font-bold border border-blue-100 dark:border-blue-800/60">
                         {c.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-xs text-zinc-800 font-medium">{c.name}</span>
-                      {c.code && <span className="font-mono text-[10px] text-zinc-400">({c.code})</span>}
+                      <span className="text-xs text-zinc-800 dark:text-zinc-200 font-medium">{c.name}</span>
+                      {c.code && <span className="font-mono text-[10px] text-zinc-400 dark:text-zinc-500">({c.code})</span>}
                     </div>
                   ))
                 )}
@@ -472,13 +472,13 @@ export default function ProvisionOrganization() {
               {/* Modules Summary */}
               <ReviewSection title="Modules" icon={Layers}>
                 {selectedModules.length === 0 ? (
-                  <p className="text-xs text-zinc-400">No modules selected — you can assign them later.</p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500">No modules selected — you can assign them later.</p>
                 ) : (
                   <div className="flex flex-wrap gap-1.5">
                     {selectedModules.map(id => {
                       const m = modulesList.find(x => x.id === id);
                       return (
-                        <span key={id} className="text-[11px] font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md">
+                        <span key={id} className="text-[11px] font-semibold px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 rounded-md">
                           {m?.name || id}
                         </span>
                       );
@@ -503,7 +503,7 @@ export default function ProvisionOrganization() {
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-zinc-400">Step {step} of {TOTAL_STEPS}</span>
+          <span className="text-[11px] text-zinc-400 dark:text-zinc-500">Step {step} of {TOTAL_STEPS}</span>
           {step < TOTAL_STEPS ? (
             <button
               type="button"
@@ -538,8 +538,8 @@ function StepSection({ title, subtitle, children }) {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-base font-bold text-zinc-900">{title}</h2>
-        {subtitle && <p className="text-xs text-zinc-500 mt-0.5">{subtitle}</p>}
+        <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100">{title}</h2>
+        {subtitle && <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -557,11 +557,11 @@ function FormGrid({ children, columns = 2 }) {
 function FormField({ label, hint, children }) {
   return (
     <div className="space-y-1">
-      <label className="text-[11px] font-semibold text-zinc-600 uppercase tracking-wide block">
+      <label className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide block">
         {label}
       </label>
       {children}
-      {hint && <p className="text-[10px] text-zinc-400">{hint}</p>}
+      {hint && <p className="text-[10px] text-zinc-400 dark:text-zinc-500">{hint}</p>}
     </div>
   );
 }
@@ -570,21 +570,21 @@ function Input({ className = '', ...props }) {
   return (
     <input
       {...props}
-      className={`w-full h-9 px-3 text-xs border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900/10/20 focus:border-blue-400 bg-white text-zinc-900 placeholder-zinc-400 ${className}`}
+      className={`w-full h-9 px-3 text-xs border border-zinc-200 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 ${className}`}
     />
   );
 }
 
 function ReviewSection({ title, icon: Icon, children }) {
   return (
-    <div className="border border-zinc-200 rounded-xl overflow-hidden">
-      <div className="px-4 py-3 bg-zinc-50/80 border-b border-zinc-100 flex items-center gap-2">
-        <div className="w-6 h-6 rounded-md bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+    <div className="border border-zinc-200 dark:border-[#2A2F3D] rounded-xl overflow-hidden">
+      <div className="px-4 py-3 bg-zinc-50/80 dark:bg-[#1D212C] border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center gap-2">
+        <div className="w-6 h-6 rounded-md bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400">
           <Icon size={13} />
         </div>
-        <span className="text-xs font-bold text-zinc-800">{title}</span>
+        <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">{title}</span>
       </div>
-      <div className="px-4 py-3 space-y-2">
+      <div className="px-4 py-3 space-y-2 bg-white dark:bg-[#161922]">
         {children}
       </div>
     </div>
@@ -594,8 +594,8 @@ function ReviewSection({ title, icon: Icon, children }) {
 function ReviewRow({ label, value, mono = false }) {
   return (
     <div className="flex items-center justify-between text-xs">
-      <span className="text-zinc-400 font-medium">{label}</span>
-      <span className={`text-zinc-800 font-semibold ${mono ? 'font-mono' : ''}`}>{value || '—'}</span>
+      <span className="text-zinc-400 dark:text-zinc-500 font-medium">{label}</span>
+      <span className={`text-zinc-800 dark:text-zinc-200 font-semibold ${mono ? 'font-mono' : ''}`}>{value || '—'}</span>
     </div>
   );
 }

@@ -168,7 +168,7 @@ export default function SupplierQuotationDetail() {
 
   if (error || !quotation) {
     return (
-      <div className="flex flex-col h-full bg-zinc-50/50">
+      <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
         <PurchaseNavigation />
         <ErrorState
           title="Supplier Quotation Not Found"
@@ -182,9 +182,9 @@ export default function SupplierQuotationDetail() {
   const items = quotation.items || [];
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PurchaseNavigation />
-      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white border-b border-zinc-200 shadow-sm">
+      <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-white dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark shadow-sm">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(buildPath('/accounts/transactions/supplier-quotations'))}
@@ -256,31 +256,31 @@ export default function SupplierQuotationDetail() {
 
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 space-y-6">
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
-            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100">Quotation Information</h3>
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-6">
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Quotation Information</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Quotation Number</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Quotation Number</p>
                 <p className="text-sm font-mono font-bold text-zinc-900 mt-1">{displayValue(quotation.quotationNumber)}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">RFQ Number</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">RFQ Number</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{displayValue(rfq?.rfqNumber || quotation.rfqNumber || '—')}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Quotation Date</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Quotation Date</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{quotation.quotationDate ? new Date(quotation.quotationDate).toLocaleDateString() : 'N/A'}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Valid Until</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Valid Until</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{quotation.validUntil ? new Date(quotation.validUntil).toLocaleDateString() : 'N/A'}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Status</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Status</p>
                 <div className="mt-1"><StatusBadge status={quotation.status} /></div>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Created</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Created</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{quotation.createdAt ? new Date(quotation.createdAt).toLocaleString() : 'N/A'}</p>
               </div>
             </div>
@@ -288,19 +288,19 @@ export default function SupplierQuotationDetail() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-4 border-t border-zinc-100">
                 {quotation.deliveryTerms && (
                   <div>
-                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Delivery Terms</p>
+                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Delivery Terms</p>
                     <p className="text-sm font-medium text-zinc-900 mt-1 whitespace-pre-wrap">{quotation.deliveryTerms}</p>
                   </div>
                 )}
                 {quotation.paymentTerms && (
                   <div>
-                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Payment Terms</p>
+                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Payment Terms</p>
                     <p className="text-sm font-medium text-zinc-900 mt-1 whitespace-pre-wrap">{quotation.paymentTerms}</p>
                   </div>
                 )}
                 {quotation.remarks && (
                   <div className="md:col-span-2">
-                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Remarks</p>
+                    <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Remarks</p>
                     <p className="text-sm font-medium text-zinc-900 mt-1 whitespace-pre-wrap">{quotation.remarks}</p>
                   </div>
                 )}
@@ -308,30 +308,30 @@ export default function SupplierQuotationDetail() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
-            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100">Supplier</h3>
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-6">
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Supplier</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Supplier Name</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Supplier Name</p>
                 <p className="text-sm font-semibold text-zinc-900 mt-1 flex items-center gap-1.5">
                   <User size={12} className="text-zinc-400" />
                   {displayValue(vendor?.vendorName || vendor?.name || quotation.vendorName || 'Supplier')}
                 </p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Vendor Code</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Vendor Code</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{displayValue(vendor?.vendorCode || vendor?.code)}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">GSTIN</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">GSTIN</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{displayValue(vendor?.gstin || vendor?.gstNumber)}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Contact</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Contact</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1">{displayValue(vendor?.primaryContactName || vendor?.contactName || vendor?.email)}</p>
               </div>
               <div>
-                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Phone</p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Phone</p>
                 <p className="text-sm font-medium text-zinc-900 mt-1 flex items-center gap-1.5">
                   <Phone size={12} className="text-zinc-400" />
                   {displayValue(vendor?.phone || vendor?.phoneNumber)}
@@ -340,7 +340,7 @@ export default function SupplierQuotationDetail() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
             <div className="p-6 pb-4">
               <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">Items</h3>
             </div>
@@ -401,8 +401,8 @@ export default function SupplierQuotationDetail() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
-            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100">Totals</h3>
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-6">
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Totals</h3>
             <div className="flex justify-end">
               <div className="w-full max-w-sm space-y-2">
                 <div className="flex justify-between items-center text-[10.4px]">
@@ -449,25 +449,25 @@ export default function SupplierQuotationDetail() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6">
-            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100">Workflow Audit</h3>
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-6">
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider mb-4 pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">Workflow Audit</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {quotation.awardedBy && (
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Awarded By</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Awarded By</p>
                   <p className="text-sm font-medium text-emerald-700 mt-1">{quotation.awardedBy}</p>
                   {quotation.awardedAt && <p className="text-[10px] text-zinc-400 mt-0.5">{new Date(quotation.awardedAt).toLocaleString()}</p>}
                 </div>
               )}
               {quotation.createdAt && (
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Created</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Created</p>
                   <p className="text-sm font-medium text-zinc-900 mt-1 flex items-center gap-1"><Clock size={12} className="text-zinc-400" />{new Date(quotation.createdAt).toLocaleString()}</p>
                 </div>
               )}
               {quotation.updatedAt && (
                 <div>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">Last Updated</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">Last Updated</p>
                   <p className="text-sm font-medium text-zinc-900 mt-1">{new Date(quotation.updatedAt).toLocaleString()}</p>
                 </div>
               )}

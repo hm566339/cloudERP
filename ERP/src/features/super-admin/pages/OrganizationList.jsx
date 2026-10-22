@@ -69,13 +69,13 @@ export default function OrganizationList() {
               Global Console
             </Link>
             <ChevronRight size={12} />
-            <span className="text-zinc-700">Organizations</span>
+            <span className="text-zinc-700 dark:text-[#E6E8EE]">Organizations</span>
           </nav>
-          <h1 className="text-[22px] font-bold text-zinc-900 tracking-tight flex items-center gap-2.5">
-            <Building2 size={22} className="text-blue-600 shrink-0" />
+          <h1 className="text-[22px] font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight flex items-center gap-2.5">
+            <Building2 size={22} className="text-blue-600 dark:text-blue-400 shrink-0" />
             Organizations
           </h1>
-          <p className="text-sm text-zinc-500 mt-0.5">
+          <p className="text-sm text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
             All tenant organizations on the platform.
           </p>
         </div>
@@ -101,11 +101,11 @@ export default function OrganizationList() {
 
       {/* Show error notice if org API fails */}
       {list.error && (
-        <div className="flex items-start gap-3 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
+        <div className="flex items-start gap-3 px-4 py-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-xl text-xs text-rose-800 dark:text-rose-400">
           <AlertTriangle size={15} className="shrink-0 mt-0.5 text-rose-500" />
           <div>
             <span className="font-semibold block mb-0.5">Failed to load organizations</span>
-            <code className="font-mono bg-rose-100 px-1 rounded">GET /api/sso/admin/organizations</code> returned an error.
+            <code className="font-mono bg-rose-100 dark:bg-rose-900/50 px-1 rounded">GET /api/sso/admin/organizations</code> returned an error.
             Check that the platform admin API is running and you have System Admin access.
           </div>
         </div>
@@ -124,7 +124,7 @@ export default function OrganizationList() {
         </div>
 
         {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1 bg-zinc-100 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-zinc-100 dark:bg-[#1D212C] rounded-lg p-1">
           {['ALL', 'ACTIVE', 'SUSPENDED', 'INACTIVE'].map((s) => {
             const isSelected = statusFilter === s;
             return (
@@ -134,8 +134,8 @@ export default function OrganizationList() {
                 onClick={() => list.setFilter('status', s === 'ALL' ? '' : s)}
                 className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${
                   isSelected
-                    ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200/60'
-                    : 'text-zinc-500 hover:text-zinc-700'
+                    ? 'bg-white dark:bg-[#161922] text-zinc-900 dark:text-[#E6E8EE] shadow-sm border border-zinc-200/60 dark:border-[#2A2F3D]'
+                    : 'text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-700 dark:hover:text-[#E6E8EE]'
                 }`}
               >
                 {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
@@ -144,26 +144,26 @@ export default function OrganizationList() {
           })}
         </div>
 
-        <span className="text-[11px] text-zinc-400 font-medium sm:ml-auto">
+        <span className="text-[11px] text-zinc-400 dark:text-[#6B7184] font-medium sm:ml-auto">
           {list.total} {list.total === 1 ? 'organization' : 'organizations'}
         </span>
       </div>
 
       {/* ── Main Table ── */}
-      <div className="bg-white rounded-xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
         {isLoading && orgs.length === 0 ? (
           <div className="p-8 flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-            <span className="text-xs text-zinc-400">Loading organizations…</span>
+            <span className="text-xs text-zinc-400 dark:text-[#6B7184]">Loading organizations…</span>
           </div>
         ) : orgs.length === 0 ? (
           <div className="p-10 flex flex-col items-center justify-center gap-3 text-center">
-            <div className="w-12 h-12 rounded-xl bg-zinc-50 border border-zinc-200 flex items-center justify-center text-zinc-400">
+            <div className="w-12 h-12 rounded-xl bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-center text-zinc-400 dark:text-[#6B7184]">
               <Building2 size={24} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-zinc-800 mb-1">No organizations found</p>
-              <p className="text-xs text-zinc-400">
+              <p className="text-sm font-semibold text-zinc-800 dark:text-[#E6E8EE] mb-1">No organizations found</p>
+              <p className="text-xs text-zinc-400 dark:text-[#6B7184]">
                 {list.searchTerm || statusFilter !== 'ALL'
                   ? 'Try adjusting your search or clearing active filters.'
                   : 'Provision your first organization to get started.'}
@@ -190,9 +190,9 @@ export default function OrganizationList() {
         ) : (
           <div className={`overflow-x-auto min-w-0 max-w-full custom-scrollbar transition-opacity ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
             <table className="w-full min-w-[750px] text-left text-xs whitespace-nowrap" aria-label="Organizations Table">
-              <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 sticky top-0 z-10">
+              <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] sticky top-0 z-10">
                 <tr>
-                  <th scope="col" className="p-3.5 w-10 text-center text-xs uppercase font-semibold tracking-wider">#</th>
+                  <th scope="col" className="p-3.5 w-10 text-center text-xs uppercase font-semibold tracking-wider text-zinc-500 dark:text-[#6B7184]">#</th>
                   <th scope="col" className="p-3.5 text-xs uppercase font-semibold tracking-wider">Organization</th>
                   <th scope="col" className="p-3.5 text-xs uppercase font-semibold tracking-wider">Code</th>
                   <th scope="col" className="p-3.5 text-xs uppercase font-semibold tracking-wider">Status</th>
@@ -202,7 +202,7 @@ export default function OrganizationList() {
                   <th scope="col" className="p-3.5 text-right text-xs uppercase font-semibold tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
                 {orgs.map((org, idx) => (
                   <OrgRow
                     key={org.id}
@@ -232,16 +232,16 @@ function OrgRow({ org, serialNumber, buildPath, onStatusToggle }) {
   const detailPath = `/super-admin/organizations/${org.id}`;
 
   return (
-    <tr className="hover:bg-zinc-50/70 transition-colors group">
-      <td className="p-3.5 text-center text-zinc-400 font-medium tabular-nums">{serialNumber}</td>
+    <tr className="hover:bg-zinc-50/70 dark:hover:bg-[#1D212C]/60 transition-colors group">
+      <td className="p-3.5 text-center text-zinc-400 dark:text-[#6B7184] font-medium tabular-nums">{serialNumber}</td>
 
       {/* Name */}
       <td className="p-3.5">
         <Link
           to={buildPath(detailPath)}
-          className="flex items-center gap-2.5 font-semibold text-zinc-900 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-2.5 font-semibold text-zinc-900 dark:text-[#E6E8EE] hover:text-blue-600 dark:hover:text-[#4C8DFF] transition-colors"
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-100 text-blue-700 flex items-center justify-center text-sm font-bold shrink-0 border border-blue-200/60">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/60 dark:to-indigo-950/60 text-blue-700 dark:text-blue-300 flex items-center justify-center text-sm font-bold shrink-0 border border-blue-200/60 dark:border-blue-800/60">
             {org?.name?.charAt(0)?.toUpperCase() || '?'}
           </div>
           <div>
@@ -252,7 +252,7 @@ function OrgRow({ org, serialNumber, buildPath, onStatusToggle }) {
 
       {/* Code */}
       <td className="p-3.5">
-        <span className="font-mono text-[11px] font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">
+        <span className="font-mono text-[11px] font-semibold text-zinc-600 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1D212C] px-2 py-0.5 rounded border border-zinc-200 dark:border-[#2A2F3D]">
           {org.code || '—'}
         </span>
       </td>
@@ -263,17 +263,17 @@ function OrgRow({ org, serialNumber, buildPath, onStatusToggle }) {
       </td>
 
       {/* Companies count */}
-      <td className="p-3.5 text-zinc-700 font-semibold">
+      <td className="p-3.5 text-zinc-700 dark:text-[#E6E8EE] font-semibold">
         {org.companyCount !== undefined ? org.companyCount : '—'}
       </td>
 
       {/* Members count */}
-      <td className="p-3.5 text-zinc-700 font-semibold">
+      <td className="p-3.5 text-zinc-700 dark:text-[#E6E8EE] font-semibold">
         {org.memberCount !== undefined ? org.memberCount : '—'}
       </td>
 
       {/* Created */}
-      <td className="p-3.5 text-zinc-500">
+      <td className="p-3.5 text-zinc-500 dark:text-[#A0A6B5]">
         {org.createdAt ? new Date(org.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
       </td>
 
@@ -282,7 +282,7 @@ function OrgRow({ org, serialNumber, buildPath, onStatusToggle }) {
         <div className="flex items-center justify-end gap-2">
           <Link
             to={buildPath(detailPath)}
-            className="h-7 px-2.5 rounded-md text-[11px] font-semibold text-zinc-600 border border-zinc-200 bg-white hover:border-zinc-300 hover:text-zinc-900 hover:bg-zinc-50 transition-all inline-flex items-center gap-1"
+            className="h-7 px-2.5 rounded-md text-[11px] font-semibold text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:border-zinc-300 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all inline-flex items-center gap-1"
           >
             <Eye size={12} />
             View
@@ -293,8 +293,8 @@ function OrgRow({ org, serialNumber, buildPath, onStatusToggle }) {
             onClick={() => onStatusToggle(org)}
             className={`h-7 px-2.5 rounded-md text-[11px] font-semibold border transition-all inline-flex items-center gap-1 ${
               org.status === 'ACTIVE'
-                ? 'text-rose-600 border-rose-200 bg-rose-50 hover:bg-rose-100'
-                : 'text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100'
+                ? 'text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60'
+                : 'text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
             }`}
           >
             {org.status === 'ACTIVE' ? <XCircle size={12} /> : <CheckCircle size={12} />}
@@ -312,22 +312,22 @@ function OrgRow({ org, serialNumber, buildPath, onStatusToggle }) {
 function OrgStatusBadge({ status }) {
   const s = status || 'UNKNOWN';
   if (s === 'ACTIVE') return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
     </span>
   );
   if (s === 'SUSPENDED') return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60">
       <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Suspended
     </span>
   );
   if (s === 'INACTIVE') return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-500 border border-zinc-200">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-[#1D212C] text-zinc-500 dark:text-[#A0A6B5] border border-zinc-200 dark:border-[#2A2F3D]">
       <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" /> Inactive
     </span>
   );
   return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> {s}
     </span>
   );

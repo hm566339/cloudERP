@@ -80,12 +80,12 @@ export default function Gstr2bHistoryPage() {
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">GSTR-2B Reconciliation</h1>
-          <p className="text-sm text-zinc-500">Upload GSTR-2B JSON and view reconciliation audit trails</p>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">GSTR-2B Reconciliation</h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">Upload GSTR-2B JSON and view reconciliation audit trails</p>
         </div>
         
         <div className="flex items-center gap-4">
-           {error && <span className="text-sm text-red-500">{error}</span>}
+           {error && <span className="text-sm text-red-500 dark:text-red-400">{error}</span>}
            <input 
              type="file" 
              accept=".json" 
@@ -104,14 +104,14 @@ export default function Gstr2bHistoryPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-        <div className="p-6 border-b border-zinc-200">
-          <h2 className="text-lg font-bold text-zinc-900">Reconciliation Records</h2>
+      <div className="bg-white dark:bg-card-dark rounded-xl shadow-sm border border-zinc-200 dark:border-border-dark overflow-hidden">
+        <div className="p-6 border-b border-zinc-200 dark:border-border-dark">
+          <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Reconciliation Records</h2>
         </div>
         <div className="p-6">
-          <div className="border border-zinc-200 rounded-lg overflow-x-auto">
+          <div className="border border-zinc-200 dark:border-border-dark rounded-lg overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 uppercase">
+              <thead className="bg-zinc-50 dark:bg-hover-dark/40 border-b border-zinc-200 dark:border-border-dark text-zinc-500 dark:text-zinc-400 uppercase">
                 <tr>
                   <th className="px-4 py-3 font-bold">GSTIN</th>
                   <th className="px-4 py-3 font-bold">Invoice No</th>
@@ -121,30 +121,30 @@ export default function Gstr2bHistoryPage() {
                   <th className="px-4 py-3 font-bold">Reconciled At</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-zinc-100 dark:divide-border-dark/60">
                 {reconciliations.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-4 py-8 text-center text-zinc-500">
+                    <td colSpan="6" className="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">
                       No reconciliation history found. Run a new GSTR-2B matching to generate records.
                     </td>
                   </tr>
                 ) : (
                   reconciliations.map((r, idx) => (
-                    <tr key={r.id || idx}>
-                      <td className="px-4 py-3">{r.supplierGstin || '-'}</td>
-                      <td className="px-4 py-3 font-medium">{r.invoiceNumber || '-'}</td>
-                      <td className="px-4 py-3">{r.taxableValue !== '-' ? `₹ ${r.taxableValue}` : '-'}</td>
-                      <td className="px-4 py-3">{r.taxAmount !== '-' ? `₹ ${r.taxAmount}` : '-'}</td>
+                    <tr key={r.id || idx} className="hover:bg-zinc-50/60 dark:hover:bg-hover-dark/30 transition-colors">
+                      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{r.supplierGstin || '-'}</td>
+                      <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-200">{r.invoiceNumber || '-'}</td>
+                      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{r.taxableValue !== '-' ? `₹ ${r.taxableValue}` : '-'}</td>
+                      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{r.taxAmount !== '-' ? `₹ ${r.taxAmount}` : '-'}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold flex w-fit items-center gap-1 ${
-                          r.matchStatus === 'MATCHED' ? 'bg-green-100 text-green-700' :
-                          'bg-amber-100 text-amber-700'
+                          r.matchStatus === 'MATCHED' ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400 dark:border dark:border-green-800/40' :
+                          'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 dark:border dark:border-amber-800/40'
                         }`}>
                           {r.matchStatus === 'MATCHED' ? <CheckCircle2 size={12}/> : <AlertCircle size={12}/>}
                           {r.matchStatus}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-zinc-500">{r.reconciliationDate ? new Date(r.reconciliationDate).toLocaleString() : new Date().toLocaleString()}</td>
+                      <td className="px-4 py-3 text-zinc-500 dark:text-zinc-400">{r.reconciliationDate ? new Date(r.reconciliationDate).toLocaleString() : new Date().toLocaleString()}</td>
                     </tr>
                   ))
                 )}

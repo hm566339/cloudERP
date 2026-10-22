@@ -47,11 +47,11 @@ export default function QuickActionsCard({ title = 'Quick Actions', actions = []
 
   return (
     <div
-      className={`bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden ${className}`}
+      className={`bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden ${className}`}
     >
       {/* Header */}
-      <div className="px-4 py-3.5 border-b border-zinc-100 bg-zinc-50/50">
-        <h3 className="font-bold text-zinc-800 text-[13.5px] tracking-tight">{title}</h3>
+      <div className="px-4 py-3.5 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]">
+        <h3 className="font-bold text-zinc-800 dark:text-[#E6E8EE] text-[13.5px] tracking-tight">{title}</h3>
       </div>
 
       {/* Actions list */}
@@ -78,22 +78,22 @@ export default function QuickActionsCard({ title = 'Quick Actions', actions = []
             <button
               onClick={onClick}
               disabled={disabled}
-              className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-zinc-50 rounded-xl transition-colors group disabled:opacity-40 disabled:pointer-events-none"
+              className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-xl transition-colors group disabled:opacity-40 disabled:pointer-events-none"
             >
               <div className="flex items-center gap-3">
                 <div
-                  className={`p-2 rounded-lg transition-colors ${iconBg} ${iconColor} group-hover:${hoverIconBg}`}
+                  className={`p-2 rounded-lg transition-colors ${iconBg} ${iconColor} group-hover:${hoverIconBg} dark:bg-[#1D212C] dark:text-[#4C8DFF]`}
                 >
                   {Icon && <Icon size={16} />}
                 </div>
-                <span className="text-sm font-semibold text-zinc-700 group-hover:text-zinc-900 transition-colors">
+                <span className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE] group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
                   {label}
                 </span>
               </div>
               {TrailingIcon && (
                 <TrailingIcon
                   size={15}
-                  className={`shrink-0 transition-colors ${trailingColor} group-hover:${iconColor}`}
+                  className={`shrink-0 transition-colors ${trailingColor} dark:text-[#6B7184] group-hover:${iconColor} dark:group-hover:text-[#4C8DFF]`}
                 />
               )}
             </button>
