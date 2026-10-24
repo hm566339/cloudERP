@@ -134,21 +134,13 @@ export default function LandingNavbar({ isAuthenticated }) {
                 <ArrowRight size={14} />
               </button>
             ) : (
-              <>
-                <Link
-                  to="/"
-                  className="inline-flex items-center px-4 py-2 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#1D212C] transition-colors active:scale-[0.98]"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/try-free"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 dark:bg-[#4C8DFF] text-white text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] transition-colors active:scale-[0.98] shadow-sm"
-                >
-                  <span>Start Free Trial</span>
-                  <ArrowRight size={14} />
-                </Link>
-              </>
+              <Link
+                to="/try-free"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 dark:bg-[#4C8DFF] text-white text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] transition-colors active:scale-[0.98] shadow-sm"
+              >
+                <span>Start Free Trial</span>
+                <ArrowRight size={14} />
+              </Link>
             )}
           </div>
 
@@ -230,22 +222,13 @@ export default function LandingNavbar({ isAuthenticated }) {
                     Go to Workspace
                   </button>
                 ) : (
-                  <>
-                    <Link
-                      to="/"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="w-full text-center py-3 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#1D212C] transition-colors"
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      to="/try-free"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="w-full text-center py-3 rounded-xl bg-zinc-900 dark:bg-[#4C8DFF] text-white text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] transition-colors shadow-sm"
-                    >
-                      Start Free Trial
-                    </Link>
-                  </>
+                  <Link
+                    to="/try-free"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full text-center py-3 rounded-xl bg-zinc-900 dark:bg-[#4C8DFF] text-white text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] transition-colors shadow-sm"
+                  >
+                    Start Free Trial
+                  </Link>
                 )}
               </div>
             </div>
