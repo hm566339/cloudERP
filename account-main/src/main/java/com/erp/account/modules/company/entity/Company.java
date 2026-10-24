@@ -30,6 +30,9 @@ public class Company extends BaseEntity implements Serializable {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
+    @Column(name = "organization_id")
+    private UUID organizationId;
+
     @Column(name = "company_code")
     private String companyCode;
 

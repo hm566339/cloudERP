@@ -151,10 +151,16 @@ public class GstReportController {
                             )
                     )
             })
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER','OWNER') or hasAuthority('ROLE_OWNER') or hasAuthority('OWNER')")
     public ResponseEntity<ApiResponse<GstSummaryDto>> getSummary(
-            @Valid @RequestBody RequestWrapper<GstReportFilterDto> requestWrapper) {
-        GstReportFilterDto filter = requestWrapper.unwrap();
+            @RequestParam(required = false) java.util.UUID companyId,
+            @Valid @RequestBody(required = false) RequestWrapper<GstReportFilterDto> requestWrapper) {
+        GstReportFilterDto filter = requestWrapper != null && requestWrapper.unwrap() != null
+                ? requestWrapper.unwrap()
+                : new GstReportFilterDto();
+        if (filter.getCompanyId() == null && companyId != null) {
+            filter.setCompanyId(companyId);
+        }
         validateFilter(filter);
         GstSummaryDto response = facade.getGstSummary(filter);
         return ResponseEntity.ok(ApiResponse.success(response, "GST summary retrieved successfully"));
@@ -162,14 +168,21 @@ public class GstReportController {
 
     @PostMapping("/gstr1")
     @Operation(summary = "Get GSTR-1 Data with Pagination")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER','OWNER') or hasAuthority('ROLE_OWNER') or hasAuthority('OWNER')")
     public ResponseEntity<ApiResponse<Gstr1ReportResponse>> getGstr1(
+            @RequestParam(required = false) java.util.UUID companyId,
             @Valid @RequestBody GstReportRequest request) {
         GstReportFilterDto filter = request.getFilters();
         if (filter != null) {
+            if (filter.getCompanyId() == null && companyId != null) {
+                filter.setCompanyId(companyId);
+            }
             validateFilter(filter);
         } else {
             filter = new GstReportFilterDto();
+            if (companyId != null) {
+                filter.setCompanyId(companyId);
+            }
             request.setFilters(filter);
         }
         Page<Gstr1Dto> page = facade.getGstr1(request);
@@ -205,49 +218,69 @@ public class GstReportController {
 
     @PostMapping("/gstr3b")
     @Operation(summary = "Get GSTR-3B summary report")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER','OWNER') or hasAuthority('ROLE_OWNER') or hasAuthority('OWNER')")
     public ResponseEntity<ApiResponse<Gstr3bDto>> getGstr3b(
+            @RequestParam(required = false) java.util.UUID companyId,
             @Valid @RequestBody GstReportRequest request) {
+        if (request.getFilters() != null && request.getFilters().getCompanyId() == null && companyId != null) {
+            request.getFilters().setCompanyId(companyId);
+        }
         Gstr3bDto response = facade.getGstr3b(request);
         return ResponseEntity.ok(ApiResponse.success(response, "GSTR-3B Summary retrieved successfully"));
     }
 
     @PostMapping("/hsn-summary")
     @Operation(summary = "Get HSN summary report")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER','OWNER') or hasAuthority('ROLE_OWNER') or hasAuthority('OWNER')")
     public ResponseEntity<ApiResponse<HsnSummaryResponse>> getHsnSummary(
+            @RequestParam(required = false) java.util.UUID companyId,
             @Valid @RequestBody GstReportRequest request) {
+        if (request.getFilters() != null && request.getFilters().getCompanyId() == null && companyId != null) {
+            request.getFilters().setCompanyId(companyId);
+        }
         HsnSummaryResponse response = facade.getHsnSummary(request);
         return ResponseEntity.ok(ApiResponse.success(response, "HSN summary retrieved successfully"));
     }
 
     @PostMapping("/itc")
     @Operation(summary = "Get ITC report")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER','OWNER') or hasAuthority('ROLE_OWNER') or hasAuthority('OWNER')")
     public ResponseEntity<ApiResponse<ItcReportDto>> getItcReport(
+            @RequestParam(required = false) java.util.UUID companyId,
             @Valid @RequestBody GstReportRequest request) {
+        if (request.getFilters() != null && request.getFilters().getCompanyId() == null && companyId != null) {
+            request.getFilters().setCompanyId(companyId);
+        }
         ItcReportDto response = facade.getItcReport(request);
         return ResponseEntity.ok(ApiResponse.success(response, "ITC report retrieved successfully"));
     }
 
     @PostMapping("/gstr2b/reconcile")
     @Operation(summary = "Reconcile Purchase Register with GSTR-2B")
-    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER')")
+    @PreAuthorize("hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','VIEWER','OWNER') or hasAuthority('ROLE_OWNER') or hasAuthority('OWNER')")
     public ResponseEntity<ApiResponse<Gstr2bReconciliationDto>> reconcileGstr2b(
+            @RequestParam(required = false) java.util.UUID companyId,
             @Valid @RequestBody Gstr2bReconciliationRequest request) {
+        if (request.getCompanyId() == null && companyId != null) {
+            request.setCompanyId(companyId);
+        }
         Gstr2bReconciliationDto response = gstr2bReconciliationService.reconcileGstr2b(request);
         return ResponseEntity.ok(ApiResponse.success(response, "GSTR-2B reconciliation completed successfully"));
     }
 
     @PostMapping("/export/{type}")
     @Operation(summary = "Export Report (PDF, EXCEL, CSV)")
-    @PreAuthorize("hasAuthority('REPORT_EXPORT')")
+    @PreAuthorize("hasAuthority('REPORT_EXPORT') or hasAnyRole('SYSTEM_ADMIN','COMPANY_ADMIN','ACCOUNTANT','OWNER') or hasAuthority('ROLE_OWNER') or hasAuthority('OWNER')")
     public ResponseEntity<org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody> exportReport(
             @PathVariable String type,
             @RequestParam(required = false, defaultValue = "SUMMARY") String reportName,
+            @RequestParam(required = false) java.util.UUID companyId,
             @Valid @RequestBody RequestWrapper<GstReportFilterDto> requestWrapper) {
 
         GstReportFilterDto filter = requestWrapper.unwrap();
+        if (filter.getCompanyId() == null && companyId != null) {
+            filter.setCompanyId(companyId);
+        }
         validateFilter(filter);
         Object reportData;
         var rt = com.erp.account.modules.report.gst.enums.ReportType.fromString(reportName);

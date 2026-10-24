@@ -913,8 +913,34 @@ public class GstSummaryService {
             if (count.longValue() == 0L) {
                 throw new ValidationException("Company does not exist", "COMPANY_NOT_FOUND");
             }
-        } catch (ValidationException ve) {
-            throw ve;
+
+            // Tenant isolation & company access validation
+            if (!CurrentUserContext.isSystemAdmin()) {
+                if (CurrentUserContext.isOwner()) {
+                    UUID orgId = CurrentUserContext.getOrganizationId();
+                    if (orgId != null) {
+                        Query orgQuery = entityManager.createNativeQuery(
+                                "SELECT COUNT(1) FROM company c WHERE c.id = :companyId AND c.organization_id = :orgId");
+                        orgQuery.setParameter("companyId", companyId);
+                        orgQuery.setParameter("orgId", orgId);
+                        Number orgCount = (Number) orgQuery.getSingleResult();
+                        if (orgCount.longValue() == 0L) {
+                            throw new ForbiddenException(
+                                    "Access denied: Company does not belong to authorized organization",
+                                    "COMPANY_ACCESS_DENIED");
+                        }
+                    }
+                } else {
+                    UUID assignedCompanyId = CurrentUserContext.getCompanyId();
+                    if (assignedCompanyId != null && !assignedCompanyId.equals(companyId)) {
+                        throw new ForbiddenException(
+                                "Access denied for the requested company resource",
+                                "COMPANY_ACCESS_DENIED");
+                    }
+                }
+            }
+        } catch (ValidationException | ForbiddenException ex) {
+            throw ex;
         } catch (Exception e) {
             log.debug("Company validation unavailable: {}", e.getMessage());
         }

@@ -91,6 +91,12 @@ public class SsoAuthorizationProperties {
         map.put("/confirm", "POST");
         map.put("/verify", "UPDATE");
         map.put("/export", "EXPORT");
+        map.put("/summary", "READ");
+        map.put("/gstr1", "READ");
+        map.put("/gstr3b", "READ");
+        map.put("/hsn-summary", "READ");
+        map.put("/itc", "READ");
+        map.put("/reconcile", "READ");
         return map;
     }
 

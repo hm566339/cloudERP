@@ -16,6 +16,7 @@ import com.erp.account.security.CurrentUserContext;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -237,6 +238,10 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
             return null;
         }
 
+        Comparator<String> patternComparator = pathMatcher.getPatternComparator(uri);
+        String bestPattern = null;
+        String bestModule = null;
+
         for (Map.Entry<String, List<String>> entry : properties.getModules().entrySet()) {
             String moduleName = entry.getKey();
             if ("ALL_MODULES".equals(moduleName)) {
@@ -244,12 +249,15 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
             }
             for (String pattern : entry.getValue()) {
                 if (pathMatcher.match(pattern, uri)) {
-                    return moduleName;
+                    if (bestPattern == null || patternComparator.compare(pattern, bestPattern) < 0) {
+                        bestPattern = pattern;
+                        bestModule = moduleName;
+                    }
                 }
             }
         }
 
-        return null;
+        return bestModule;
     }
 
     private boolean isAuthenticatedProfileEndpoint(String uri) {

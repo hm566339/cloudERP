@@ -3,6 +3,7 @@ package com.erp.account.security;
 import java.util.UUID;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.erp.account.common.exception.ForbiddenException;
 import com.erp.account.common.exception.UnauthorizedException;
 import com.erp.account.common.exception.ValidationException;
 
@@ -256,6 +257,26 @@ public class CurrentUserContext {
     }
 
     /**
+     * Checks if the current user has the OWNER role.
+     * Organization owners have full administrative access within their organization.
+     *
+     * @return true if user has OWNER / ROLE_OWNER role, false otherwise
+     */
+    public static boolean isOwner() {
+        String role = userRoleHolder.get();
+        if (role != null && ("OWNER".equalsIgnoreCase(role) || "ROLE_OWNER".equalsIgnoreCase(role))) {
+            return true;
+        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_OWNER".equalsIgnoreCase(authority.getAuthority())
+                        || "OWNER".equalsIgnoreCase(authority.getAuthority()));
+    }
+
+    /**
      * Checks if the current user is authenticated.
      * Verifies that both user ID and authentication context are available.
      * 
@@ -287,10 +308,14 @@ public class CurrentUserContext {
      * - If companyId is null → ValidationException (required parameter)
      * - Never reads from ThreadLocal (system admins have no default company)
      * - Allows cross-tenant operations with explicit company specification
+     *
+     * CASE 2 - ORGANIZATION OWNER:
+     * - Operates across companies within their organization
+     * - Uses requested companyId if provided, falls back to assigned company
      * 
-     * CASE 2 - NORMAL USER:
+     * CASE 3 - NORMAL USER:
      * - Always uses companyId from ThreadLocal (their assigned tenant)
-     * - Ignores any companyId parameter in the request (security enforcement)
+     * - If requestCompanyId is provided and differs from assigned tenant → ForbiddenException
      * - If ThreadLocal companyId is null → UnauthorizedException (security error)
      * - Prevents users from accessing other companies
      * 
@@ -341,6 +366,19 @@ public class CurrentUserContext {
             return requestCompanyId;
         }
 
+        if (isOwner()) {
+            if (requestCompanyId != null) {
+                return requestCompanyId;
+            }
+            UUID ownerCompanyId = getCompanyId();
+            if (ownerCompanyId != null) {
+                return ownerCompanyId;
+            }
+            throw new ValidationException(
+                    "Company ID is required for organization owner operations. " +
+                            "You must specify which company to operate on.");
+        }
+
         // NORMAL USER: Use their assigned company from ThreadLocal
         UUID tenantCompanyId = getCompanyId();
         if (tenantCompanyId == null) {
@@ -348,6 +386,9 @@ public class CurrentUserContext {
                     "Company context not found in user session. " +
                             "User must be authenticated and assigned to a company. " +
                             "Contact system administrator if this error persists.");
+        }
+        if (requestCompanyId != null && !requestCompanyId.equals(tenantCompanyId)) {
+            throw new ForbiddenException("Access denied for the requested company resource", "COMPANY_ACCESS_DENIED");
         }
         return tenantCompanyId;
     }
@@ -360,7 +401,8 @@ public class CurrentUserContext {
      * - System admin with null company: returns null (queries across all companies)
      * - System admin with specified company: returns specified company (filtered
      * query)
-     * - Normal user: always returns their company (like resolveCompanyId)
+     * - Owner: returns requested company if specified, else default company
+     * - Normal user: always returns their company (and denies cross-company access)
      * 
      * Use this for:
      * - getAllXxx() methods that support cross-company admin queries
@@ -380,6 +422,13 @@ public class CurrentUserContext {
             return requestCompanyId;
         }
 
+        if (isOwner()) {
+            if (requestCompanyId != null) {
+                return requestCompanyId;
+            }
+            return getCompanyId();
+        }
+
         // Normal user: always return their company
         UUID tenantCompanyId = getCompanyId();
         if (tenantCompanyId == null) {
@@ -387,6 +436,9 @@ public class CurrentUserContext {
                     "Company context not found in user session. " +
                             "User must be authenticated and assigned to a company. " +
                             "Contact system administrator if this error persists.");
+        }
+        if (requestCompanyId != null && !requestCompanyId.equals(tenantCompanyId)) {
+            throw new ForbiddenException("Access denied for the requested company resource", "COMPANY_ACCESS_DENIED");
         }
         return tenantCompanyId;
     }

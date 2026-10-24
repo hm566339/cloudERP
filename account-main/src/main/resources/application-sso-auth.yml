@@ -117,6 +117,12 @@ sso:
       BUDGET_LINES:
         - "/api/account/budget-lines/**"
         - "/api/account/budgets/lines/**"
+      GST_REPORTS:
+        - "/api/reports/gst/**"
+        - "/api/account/reports/gst/**"
+        - "/api/account/gst/ledger/**"
+        - "/api/gst/ecl/**"
+        - "/api/gst/gstr2b/**"
       REPORTS:
         - "/api/account/reports"
         - "/api/account/reports/**"
@@ -163,12 +169,6 @@ sso:
         - "/api/account/fiscal-years/**"
       GST_MASTER:
         - "/api/account/gst/master/**"
-      GST_REPORTS:
-        - "/api/reports/gst/**"
-        - "/api/account/reports/gst/**"
-        - "/api/account/gst/ledger/**"
-        - "/api/gst/ecl/**"
-        - "/api/gst/gstr2b/**"
       SETTINGS:
         - "/api/account/v1/settings/**"
         - "/api/account/workflow/**"
@@ -200,6 +200,12 @@ sso:
       "/confirm": "POST"
       "/verify": "UPDATE"
       "/export": "EXPORT"
+      "/summary": "READ"
+      "/gstr1": "READ"
+      "/gstr3b": "READ"
+      "/hsn-summary": "READ"
+      "/itc": "READ"
+      "/reconcile": "READ"
 
     feature-groups:
       SALES_INVOICE:
@@ -216,5 +222,9 @@ sso:
           - READ
         GST_SLABS:
           - READ
+      GST_REPORTS:
+        GST_REPORTS:
+          - READ
+          - EXPORT
 
     write-implies-create-update: false

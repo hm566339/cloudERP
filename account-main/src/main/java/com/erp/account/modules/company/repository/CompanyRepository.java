@@ -28,4 +28,5 @@ public interface CompanyRepository extends JpaRepository<Company, UUID>, JpaSpec
     @Query("select c from Company c where c.id = :id")
     Optional<Company> findByIdForUpdate(@Param("id") UUID id);
 
+    boolean existsByIdAndOrganizationId(UUID id, UUID organizationId);
 }
