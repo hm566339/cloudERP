@@ -31,28 +31,17 @@ import {
   CHART_DEFINITIONS,
   pick,
   num,
+  getIndianFinancialYearDates,
+  getDefaultGstSummaryFilters,
+  findCurrentFiscalYear,
+  cleanFilterDate,
+  buildGstSummaryPayload,
 } from '../gstSummaryConfig';
 
 const MODULE = 'GST_REPORTS';
 const STORAGE_KEY = 'gstSummaryDashboardFilters';
 
-const DEFAULT_FILTERS = {
-  companyId: '',
-  branchId: '',
-  gstRegistrationId: '',
-  financialYearId: '',
-  fromDate: '',
-  toDate: '',
-  invoiceType: 'ALL',
-  stateCode: '',
-  gstRate: '',
-  hsn: '',
-  customerId: '',
-  vendorId: '',
-  sortBy: 'invoiceDate',
-  sortDirection: 'DESC',
-  pageSize: '20',
-};
+const DEFAULT_FILTERS = getDefaultGstSummaryFilters();
 
 const SORT_OPTIONS = [
   { value: 'invoiceDate', label: 'Invoice Date' },
@@ -76,13 +65,27 @@ const PAGE_SIZE_OPTIONS = [
   { value: '100', label: '100 per page' },
 ];
 
-function loadSavedFilters() {
+function loadSavedFilters(companyId = '') {
+  const defaultDates = getIndianFinancialYearDates();
+  const defaults = getDefaultGstSummaryFilters(companyId);
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return { ...DEFAULT_FILTERS, ...JSON.parse(raw) };
+    if (!raw) return defaults;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return defaults;
+
+    const fromDate = cleanFilterDate(parsed.fromDate) || defaultDates.fromDate;
+    const toDate = cleanFilterDate(parsed.toDate) || defaultDates.toDate;
+
+    return {
+      ...defaults,
+      ...parsed,
+      companyId: companyId || parsed.companyId || '',
+      fromDate,
+      toDate,
+    };
   } catch {
-    return null;
+    return defaults;
   }
 }
 
@@ -157,10 +160,12 @@ export default function GstSummaryDashboardPage() {
     authUser?.roles?.includes('SYSTEM_ADMIN') ||
     authUser?.roles?.includes('ROLE_SYSTEM_ADMIN');
 
-  const [filters, setFilters] = useState(() => loadSavedFilters() ?? DEFAULT_FILTERS);
+  const [filters, setFilters] = useState(() => loadSavedFilters(companyId));
   const [exporting, setExporting] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
   const lastRequestKeyRef = useRef(null);
+  const prevCompanyIdRef = useRef(companyId);
+  const userChangedFyRef = useRef(false);
 
   // Remember the last selected filters across reloads.
   useEffect(() => {
@@ -201,94 +206,111 @@ export default function GstSummaryDashboardPage() {
   const vendors = useMemo(() => extractList(vendorsResponse), [vendorsResponse]);
   const hsnList = useMemo(() => extractList(hsnResponse), [hsnResponse]);
 
-  const activeFiscalYear = useMemo(() => fiscalYears.find((fy) => fy.isActive || fy.status === 'ACTIVE'), [fiscalYears]);
+  const activeFiscalYear = useMemo(() => findCurrentFiscalYear(fiscalYears), [fiscalYears]);
 
-  // Default the period to the active financial year (once).
+  // Default the period to the current active financial year if available and not explicitly modified by the user.
   useEffect(() => {
-    if (!activeFiscalYear) return;
+    if (!activeFiscalYear || userChangedFyRef.current) return;
     setFilters((prev) => {
-      if (prev.financialYearId || prev.fromDate || prev.toDate) return prev;
+      if (prev.financialYearId) return prev;
       return {
         ...prev,
         financialYearId: activeFiscalYear.id || '',
-        fromDate: String(activeFiscalYear.startDate || '').slice(0, 10),
-        toDate: String(activeFiscalYear.endDate || '').slice(0, 10),
       };
     });
   }, [activeFiscalYear]);
-
-  useEffect(() => {
-    if (selectedCompany?.id) {
-      setFilters((prev) => (prev.companyId === selectedCompany.id ? prev : { ...prev, companyId: selectedCompany.id }));
-    }
-  }, [selectedCompany]);
-
-  // companyId is only sent for SYSTEM_ADMIN users.
-  // The backend resolves it from the JWT for all other roles.
-  const buildPayload = useCallback(
-    (f) => {
-      const payload = {
-        branchId: f.branchId || null,
-        gstRegistrationId: f.gstRegistrationId || null,
-        financialYearId: f.financialYearId || null,
-        fromDate: f.fromDate || null,
-        toDate: f.toDate || null,
-        invoiceType: f.invoiceType || 'ALL',
-        stateCode: f.stateCode || '',
-        gstRate: f.gstRate === '' || f.gstRate === null ? null : Number(f.gstRate),
-        hsn: f.hsn || '',
-        customerId: f.customerId || null,
-        vendorId: f.vendorId || null,
-        page: 0,
-        size: Number(f.pageSize) || 20,
-        sortBy: f.sortBy || 'invoiceDate',
-        sortDirection: f.sortDirection || 'DESC',
-      };
-      if (isSystemAdmin) {
-        payload.companyId = f.companyId || companyId;
-      }
-      return payload;
-    },
-    [companyId, isSystemAdmin]
-  );
 
   const { data, isLoading, error, refetch } = useGstReport({
     fetcher: gstReportsApi.getSummaryDashboard,
     autoFetch: false,
   });
 
-  // Auto-load: call the API as soon as the page opens (no click needed)
+  // Handle selected company updates and company switching
+  useEffect(() => {
+    if (!prevCompanyIdRef.current && companyId) {
+      prevCompanyIdRef.current = companyId;
+      setFilters((prev) => (prev.companyId === companyId ? prev : { ...prev, companyId }));
+      return;
+    }
+    if (prevCompanyIdRef.current && companyId && prevCompanyIdRef.current !== companyId) {
+      prevCompanyIdRef.current = companyId;
+      userChangedFyRef.current = false;
+      const defaults = getDefaultGstSummaryFilters(companyId);
+      setFilters(defaults);
+      const payload = buildGstSummaryPayload(defaults, companyId);
+      setHasSearched(true);
+      refetch(payload);
+    }
+  }, [companyId, refetch]);
+
+  // Auto-load: call the API as soon as the page opens and companyId is available
   const hasAutoLoaded = useRef(false);
   useEffect(() => {
+    const effectiveCompanyId = filters.companyId || companyId;
+    if (!effectiveCompanyId) return;
     if (hasAutoLoaded.current) return;
     hasAutoLoaded.current = true;
-    const payload = buildPayload(filters);
+    const initialFilters = {
+      ...filters,
+      companyId: effectiveCompanyId,
+    };
+    const payload = buildGstSummaryPayload(initialFilters, effectiveCompanyId);
     setHasSearched(true);
     refetch(payload);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [companyId, filters, refetch]);
 
   const handleSearch = useCallback(() => {
     if (isLoading) return;
-    const payload = buildPayload(filters);
+    const effectiveCompanyId = filters.companyId || companyId;
+    const payload = buildGstSummaryPayload(filters, effectiveCompanyId);
     setHasSearched(true);
     refetch(payload);
-  }, [buildPayload, filters, isLoading, refetch]);
+  }, [filters, companyId, isLoading, refetch]);
 
   const handleReset = () => {
-    const defaults = {
-      ...DEFAULT_FILTERS,
-      companyId: companyId || '',
-      financialYearId: activeFiscalYear?.id || '',
-      fromDate: String(activeFiscalYear?.startDate || '').slice(0, 10),
-      toDate: String(activeFiscalYear?.endDate || '').slice(0, 10),
-    };
+    userChangedFyRef.current = false;
+    const currentCompanyId = selectedCompany?.id || companyId || filters.companyId || '';
+    const defaults = getDefaultGstSummaryFilters(currentCompanyId);
+    if (activeFiscalYear?.id) {
+      defaults.financialYearId = activeFiscalYear.id;
+    }
     setFilters(defaults);
     lastRequestKeyRef.current = null;
-    setHasSearched(false);
+    setHasSearched(true);
+    refetch(buildGstSummaryPayload(defaults, currentCompanyId));
   };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'financialYearId') {
+      userChangedFyRef.current = true;
+      if (value) {
+        const fy = fiscalYears.find((f) => f.id === value);
+        if (fy) {
+          const isCurrentFy = activeFiscalYear && fy.id === activeFiscalYear.id;
+          if (isCurrentFy) {
+            const { fromDate, toDate } = getIndianFinancialYearDates();
+            setFilters((prev) => ({
+              ...prev,
+              financialYearId: value,
+              fromDate,
+              toDate,
+            }));
+            return;
+          } else {
+            const fyStart = cleanFilterDate(fy.startDate);
+            const fyEnd = cleanFilterDate(fy.endDate);
+            setFilters((prev) => ({
+              ...prev,
+              financialYearId: value,
+              fromDate: fyStart || prev.fromDate,
+              toDate: fyEnd || prev.toDate,
+            }));
+            return;
+          }
+        }
+      }
+    }
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -296,7 +318,8 @@ export default function GstSummaryDashboardPage() {
     if (!canExport || exporting) return;
     setExporting(format);
     try {
-      const blob = await gstReportsApi.exportDashboard(format, buildPayload(filters));
+      const payload = buildGstSummaryPayload(filters, companyId);
+      const blob = await gstReportsApi.exportDashboard(format, payload);
       if (!blob || blob.size === 0) {
         dispatch(addAlert({ type: 'error', message: 'Export returned an empty file' }));
         return;

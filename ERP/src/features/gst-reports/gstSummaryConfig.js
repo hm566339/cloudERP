@@ -13,7 +13,7 @@ import {
   RotateCcw,
   BarChart3,
 } from 'lucide-react';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency } from '../../utils/formatters.js';
 
 // ─── DTO contracts (JSDoc typedefs — the project is JSX, so types are documented here) ──
 
@@ -317,3 +317,166 @@ export const EXPORT_FORMATS = [
   { type: 'excel', label: 'Excel' },
   { type: 'csv', label: 'CSV' },
 ];
+
+// ─── Default Filters and Indian Financial Year Helpers ───────────────────────
+
+/**
+ * Calculates dynamic Indian Financial Year dates (April 1 through March 31).
+ * From Date: First day of current financial year (April 1).
+ * To Date: Today's date (formatted as ISO YYYY-MM-DD).
+ * For months Jan-Mar (0, 1, 2), financial year started on April 1 of previous calendar year.
+ * For months Apr-Dec (3..11), financial year started on April 1 of current calendar year.
+ *
+ * @param {Date} [referenceDate=new Date()]
+ * @returns {{ fromDate: string, toDate: string }}
+ */
+export function getIndianFinancialYearDates(referenceDate = new Date()) {
+  const d = referenceDate instanceof Date && !isNaN(referenceDate.getTime()) ? referenceDate : new Date();
+  const year = d.getFullYear();
+  const month = d.getMonth(); // 0 = Jan, 2 = Mar, 3 = Apr, ..., 11 = Dec
+  const date = d.getDate();
+
+  const fyStartYear = month >= 3 ? year : year - 1;
+  const pad = (n) => String(n).padStart(2, '0');
+
+  return {
+    fromDate: `${fyStartYear}-04-01`,
+    toDate: `${year}-${pad(month + 1)}-${pad(date)}`,
+  };
+}
+
+/**
+ * Default filter object for the GST Summary Dashboard.
+ *
+ * @param {string} [companyId='']
+ * @param {Date} [referenceDate=new Date()]
+ * @returns {object}
+ */
+export function getDefaultGstSummaryFilters(companyId = '', referenceDate = new Date()) {
+  const { fromDate, toDate } = getIndianFinancialYearDates(referenceDate);
+  return {
+    companyId: companyId || '',
+    branchId: '',
+    gstRegistrationId: '',
+    financialYearId: '',
+    fromDate,
+    toDate,
+    invoiceType: 'ALL',
+    stateCode: '',
+    gstRate: '',
+    hsn: '',
+    customerId: '',
+    vendorId: '',
+    sortBy: 'invoiceDate',
+    sortDirection: 'DESC',
+    pageSize: '20',
+  };
+}
+
+/**
+ * Finds the current financial year from a list of fiscal year records.
+ * Matches by explicit active status, date range inclusion, or year label.
+ *
+ * @param {Array} fiscalYears
+ * @param {Date} [referenceDate=new Date()]
+ * @returns {object|null}
+ */
+export function findCurrentFiscalYear(fiscalYears = [], referenceDate = new Date()) {
+  if (!Array.isArray(fiscalYears) || fiscalYears.length === 0) return null;
+
+  // 1. Check by date range: today falling between startDate and endDate
+  const { toDate: todayStr } = getIndianFinancialYearDates(referenceDate);
+  const byDate = fiscalYears.find((fy) => {
+    const start = String(fy.startDate || '').slice(0, 10);
+    const end = String(fy.endDate || '').slice(0, 10);
+    return Boolean(start && end && todayStr >= start && todayStr <= end);
+  });
+  if (byDate) return byDate;
+
+  // 2. Explicit active flag/status
+  const active = fiscalYears.find((fy) => fy.isActive === true || fy.status === 'ACTIVE');
+  if (active) return active;
+
+  // 3. Check by FY label/name containing the start year (e.g. 2026)
+  const { fromDate } = getIndianFinancialYearDates(referenceDate);
+  const fyStartYear = fromDate.slice(0, 4);
+  const byName = fiscalYears.find((fy) => {
+    const label = String(fy.name || fy.fiscalYear || fy.code || fy.year || '');
+    return label.includes(fyStartYear);
+  });
+  if (byName) return byName;
+
+  return null;
+}
+
+/**
+ * Cleans a filter value so placeholder labels like "All Branches" or empty strings are represented as null for backend UUIDs.
+ *
+ * @param {string|null|undefined} val
+ * @returns {string|null}
+ */
+export function cleanFilterId(val) {
+  if (!val || typeof val !== 'string') return null;
+  const trimmed = val.trim();
+  if (!trimmed || trimmed.toLowerCase().startsWith('all ') || trimmed.toLowerCase().startsWith('select ')) {
+    return null;
+  }
+  return trimmed;
+}
+
+/**
+ * Normalizes and validates an ISO YYYY-MM-DD date string.
+ *
+ * @param {string|null|undefined} val
+ * @returns {string|null}
+ */
+export function cleanFilterDate(val) {
+  if (!val || typeof val !== 'string') return null;
+  const trimmed = val.trim().slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : null;
+}
+
+/**
+ * Normalizes filter state into a clean payload for the backend API.
+ * Ensures IDs are UUIDs or null, dropdown defaults are properly mapped,
+ * dates are valid ISO strings, and the company ID is included.
+ *
+ * @param {object} filters
+ * @param {string} [fallbackCompanyId='']
+ * @returns {object}
+ */
+export function buildGstSummaryPayload(filters = {}, fallbackCompanyId = '') {
+  const effectiveCompanyId = cleanFilterId(filters.companyId) || cleanFilterId(fallbackCompanyId);
+
+  return {
+    companyId: effectiveCompanyId,
+    branchId: cleanFilterId(filters.branchId),
+    gstRegistrationId: cleanFilterId(filters.gstRegistrationId),
+    financialYearId: cleanFilterId(filters.financialYearId),
+    fromDate: cleanFilterDate(filters.fromDate),
+    toDate: cleanFilterDate(filters.toDate),
+    invoiceType:
+      filters.invoiceType && !filters.invoiceType.toLowerCase().startsWith('all ')
+        ? filters.invoiceType
+        : 'ALL',
+    stateCode:
+      filters.stateCode && !filters.stateCode.toLowerCase().startsWith('all ')
+        ? filters.stateCode.trim()
+        : '',
+    gstRate:
+      filters.gstRate === '' || filters.gstRate === null || filters.gstRate === undefined || isNaN(Number(filters.gstRate))
+        ? null
+        : Number(filters.gstRate),
+    hsn:
+      filters.hsn && !filters.hsn.toLowerCase().startsWith('all ')
+        ? filters.hsn.trim()
+        : '',
+    customerId: cleanFilterId(filters.customerId),
+    vendorId: cleanFilterId(filters.vendorId),
+    page: 0,
+    size: Number(filters.pageSize) || 20,
+    sortBy: filters.sortBy || 'invoiceDate',
+    sortDirection: filters.sortDirection || 'DESC',
+  };
+}
+

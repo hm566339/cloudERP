@@ -7,12 +7,21 @@ const post = (url, payload = {}, options = {}) =>
   apiClient.post(url, payload, options).then((r) => r.data);
 
 export const gstReportsApi = {
-  getSummary: (payload = {}) => post(`${GST_SUMMARY_BASE}/summary`, payload?.data ? payload : { data: payload }),
+  getSummary: (payload = {}, options = {}) => {
+    const data = payload?.data ? payload.data : payload;
+    const cid = data?.companyId;
+    const url = cid ? `${GST_SUMMARY_BASE}/summary?companyId=${encodeURIComponent(cid)}` : `${GST_SUMMARY_BASE}/summary`;
+    return post(url, payload?.data ? payload : { data: payload }, options);
+  },
 
   // Dashboard summary — request body is wrapped in a `data` envelope per API contract:
-  // POST /api/account/reports/gst/summary  { "data": { companyId, branchId, gstRegistrationId, ... } }
-  getSummaryDashboard: (payload = {}) =>
-    post(`${GST_SUMMARY_BASE}/summary`, payload?.data ? payload : { data: payload }),
+  // POST /api/account/reports/gst/summary?companyId=...  { "data": { companyId, branchId, gstRegistrationId, ... } }
+  getSummaryDashboard: (payload = {}, options = {}) => {
+    const data = payload?.data ? payload.data : payload;
+    const cid = data?.companyId;
+    const url = cid ? `${GST_SUMMARY_BASE}/summary?companyId=${encodeURIComponent(cid)}` : `${GST_SUMMARY_BASE}/summary`;
+    return post(url, payload?.data ? payload : { data: payload }, options);
+  },
 
   getGstr1: (payload = {}) => post(`${GST_REPORTS_BASE}/gstr1`, {
     filters: payload,
@@ -37,6 +46,12 @@ export const gstReportsApi = {
     post(`${GST_REPORTS_BASE}/export/${format.toUpperCase()}?reportName=${reportName}`, payload?.data ? payload : { data: payload }, { responseType: 'blob' }),
 
   // Dashboard export — same `data` envelope as the summary request body.
-  exportDashboard: (type, payload = {}) =>
-    post(`${GST_REPORTS_BASE}/export/${type}?reportName=SUMMARY`, payload?.data ? payload : { data: payload }, { responseType: 'blob' }),
+  exportDashboard: (type, payload = {}) => {
+    const data = payload?.data ? payload.data : payload;
+    const cid = data?.companyId;
+    const url = cid
+      ? `${GST_REPORTS_BASE}/export/${type}?reportName=SUMMARY&companyId=${encodeURIComponent(cid)}`
+      : `${GST_REPORTS_BASE}/export/${type}?reportName=SUMMARY`;
+    return post(url, payload?.data ? payload : { data: payload }, { responseType: 'blob' });
+  },
 };
