@@ -916,15 +916,30 @@ public class GstSummaryService {
 
             // Tenant isolation & company access validation
             if (!CurrentUserContext.isSystemAdmin()) {
+                UUID orgId = CurrentUserContext.getOrganizationId();
+                String role = CurrentUserContext.getUserRole();
+
+                // Retrieve stored organizationId for the requested company
+                Query storedOrgQuery = entityManager.createNativeQuery(
+                        "SELECT c.organization_id FROM company c WHERE c.id = :companyId");
+                storedOrgQuery.setParameter("companyId", companyId);
+                List<?> results = storedOrgQuery.getResultList();
+                Object storedOrgObj = (results != null && !results.isEmpty()) ? results.get(0) : null;
+                UUID storedOrgId = null;
+                if (storedOrgObj instanceof UUID) {
+                    storedOrgId = (UUID) storedOrgObj;
+                } else if (storedOrgObj != null) {
+                    storedOrgId = UUID.fromString(storedOrgObj.toString());
+                }
+
+                log.info("Company validation: requested companyId={}, authenticated orgId={}, role={}, storedOrgId={}",
+                        companyId, orgId, role, storedOrgId);
+
                 if (CurrentUserContext.isOwner()) {
-                    UUID orgId = CurrentUserContext.getOrganizationId();
                     if (orgId != null) {
-                        Query orgQuery = entityManager.createNativeQuery(
-                                "SELECT COUNT(1) FROM company c WHERE c.id = :companyId AND c.organization_id = :orgId");
-                        orgQuery.setParameter("companyId", companyId);
-                        orgQuery.setParameter("orgId", orgId);
-                        Number orgCount = (Number) orgQuery.getSingleResult();
-                        if (orgCount.longValue() == 0L) {
+                        if (storedOrgId == null || !orgId.equals(storedOrgId)) {
+                            log.warn("Access denied: companyId={} storedOrgId={} does not match authorized orgId={}",
+                                    companyId, storedOrgId, orgId);
                             throw new ForbiddenException(
                                     "Access denied: Company does not belong to authorized organization",
                                     "COMPANY_ACCESS_DENIED");

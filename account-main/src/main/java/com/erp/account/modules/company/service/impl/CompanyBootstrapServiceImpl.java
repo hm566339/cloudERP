@@ -14,6 +14,7 @@ import com.erp.account.modules.company.service.CompanyBootstrapService;
 import com.erp.account.modules.company.service.CompanyServiceSys;
 import com.erp.account.modules.companyinitialization.dto.CompanyInitializationResult;
 import com.erp.account.modules.companyinitialization.service.CompanyInitializationService;
+import com.erp.account.security.CurrentUserContext;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class CompanyBootstrapServiceImpl implements CompanyBootstrapService {
 
         UUID localId = resolveCompanyLocally(null, companyCode);
         if (localId != null) {
+            syncOrganizationIdIfNeeded(localId, bearerToken);
             return initializeIfNeeded(localId);
         }
 
@@ -53,6 +55,7 @@ public class CompanyBootstrapServiceImpl implements CompanyBootstrapService {
 
         UUID localId = resolveCompanyLocally(companyId, null);
         if (localId != null) {
+            syncOrganizationIdIfNeeded(localId, bearerToken);
             return initializeIfNeeded(localId);
         }
 
@@ -110,8 +113,14 @@ public class CompanyBootstrapServiceImpl implements CompanyBootstrapService {
         log.info("Provisioning new local company from SSO data. ID: {}, Code: {}", ssoCompany.getId(),
                 ssoCompany.getCompanyCode());
 
+        UUID orgId = ssoCompany.getOrganizationId();
+        if (orgId == null) {
+            orgId = CurrentUserContext.getOrganizationId();
+        }
+
         Company company = Company.builder()
                 .id(ssoCompany.getId()) // Use the SSO-provided ID for consistency
+                .organizationId(orgId)
                 .companyCode(ssoCompany.getCompanyCode())
                 .companyName(ssoCompany.getCompanyName())
                 .legalName(ssoCompany.getLegalName())
@@ -162,6 +171,27 @@ public class CompanyBootstrapServiceImpl implements CompanyBootstrapService {
                 throw bootstrapEx;
             }
             return existing.getId();
+        }
+    }
+
+    private void syncOrganizationIdIfNeeded(UUID companyId, String bearerToken) {
+        if (companyId == null) {
+            return;
+        }
+        try {
+            Company company = companyRepository.findById(companyId).orElse(null);
+            if (company != null && company.getOrganizationId() == null && bearerToken != null && !bearerToken.isBlank()) {
+                log.info("Company {} has null organizationId; querying SSO to verify and sync ownership", companyId);
+                CompanyResponseClient ssoCompany = companyServiceSys.verifyCompany(companyId, company.getCompanyCode(), bearerToken);
+                if (ssoCompany != null && ssoCompany.getOrganizationId() != null) {
+                    company.setOrganizationId(ssoCompany.getOrganizationId());
+                    companyRepository.saveAndFlush(company);
+                    log.info("Successfully updated company {} with verified organizationId {} from SSO",
+                            companyId, ssoCompany.getOrganizationId());
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Could not sync organizationId from SSO for company {}: {}", companyId, ex.getMessage());
         }
     }
 }

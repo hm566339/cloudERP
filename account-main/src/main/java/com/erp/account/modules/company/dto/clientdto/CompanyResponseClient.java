@@ -12,6 +12,7 @@ import java.util.UUID;
 public class CompanyResponseClient {
 
     private UUID id;
+    private UUID organizationId;
     private String companyCode;
     private String companyName;
     private String legalName;

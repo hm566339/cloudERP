@@ -18,6 +18,8 @@ public class CompanyResponse {
 
     private UUID id;
 
+    private UUID organizationId;
+
     private String companyCode;
 
     private String companyName;

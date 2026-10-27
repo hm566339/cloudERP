@@ -21,7 +21,7 @@ public interface CompanyMapper {
         Company toCompany(CompanyRequest request);
 
         // Entity -> Response
-
+        @Mapping(target = "organizationId", source = "organization.id")
         CompanyResponse toCompanyResponse(Company company);
 
         // Entity List -> Response List
