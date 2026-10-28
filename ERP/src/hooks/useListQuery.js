@@ -253,11 +253,14 @@ export default function useListQuery(queryHook, options = {}) {
   }, [rawData, pageSize]);
 
   // Automatic clamping if dataset shrank and current page is out of bounds
+  // Only clamp when queryHook is provided and rawData has loaded, or when totalPages is explicitly supplied,
+  // preventing premature clamping to page 0 when list state is unmanaged or data is loading.
   useEffect(() => {
-    if (parsedData.totalPages > 0 && page >= parsedData.totalPages) {
+    const hasManagedData = Boolean(queryHook && rawData) || options.totalPages !== undefined;
+    if (hasManagedData && parsedData.totalPages > 0 && page >= parsedData.totalPages) {
       setPageInternal(Math.max(0, parsedData.totalPages - 1));
     }
-  }, [parsedData.totalPages, page]);
+  }, [queryHook, rawData, options.totalPages, parsedData.totalPages, page]);
 
   // Pre-bound props for <Pagination />
   const paginationProps = useMemo(() => ({

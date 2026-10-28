@@ -117,8 +117,27 @@ const HsnSacMaster = () => {
   });
 
   const hsnSacs = hsnData?.data?.data?.hsnSacMasters || hsnData?.data?.hsnSacMasters || hsnData?.hsnSacMasters || [];
-  const pageInfo = hsnData?.data?.paginationResponse || hsnData?.paginationResponse || hsnData?.pagination || {};
+  const pageInfo = hsnData?.data?.data?.paginationResponse
+    || hsnData?.data?.paginationResponse
+    || hsnData?.paginationResponse
+    || hsnData?.data?.data?.pagination
+    || hsnData?.data?.pagination
+    || hsnData?.pagination
+    || {};
   const metadata = hsnData?.data?.metadata || hsnData?.metadata || {};
+
+  const totalElements = Number(pageInfo.totalElements ?? pageInfo.totalCount ?? metadata.totalCount ?? hsnSacs.length);
+  const resolvedPageSize = Number(pageInfo.size ?? pageInfo.pageSize ?? pageSize ?? 10);
+  const totalPages = Number(pageInfo.totalPages) > 0
+    ? Number(pageInfo.totalPages)
+    : Math.max(1, Math.ceil(totalElements / resolvedPageSize));
+
+  // If current page is beyond totalPages (e.g. after filter change or data shrinkage), clamp to last page
+  useEffect(() => {
+    if (hsnData && totalPages > 0 && page >= totalPages) {
+      handlePageChange(Math.max(0, totalPages - 1));
+    }
+  }, [hsnData, totalPages, page, handlePageChange]);
 
   const createHsnSacMutation = useApiMutation(hsnSacMasterApi.createHsnSac);
   const updateHsnSacMutation = useApiMutation(hsnSacMasterApi.updateHsnSac);
@@ -390,10 +409,10 @@ const HsnSacMaster = () => {
           renderExpandedRow={(row) => <HsnSacOverview item={row} />}
 
           pagination={{
-            page: pageInfo.currentPage !== undefined ? pageInfo.currentPage : (pageInfo.page !== undefined ? pageInfo.page - 1 : page),
-            pageSize: pageInfo.size ?? pageInfo.pageSize ?? pageSize,
-            totalPages: pageInfo.totalPages || 1,
-            totalElements: pageInfo.totalElements ?? pageInfo.totalCount ?? hsnSacs.length
+            page,
+            pageSize: resolvedPageSize,
+            totalPages,
+            totalElements
           }}
           pageIndexBase={0}
           onPageChange={handlePageChange}
