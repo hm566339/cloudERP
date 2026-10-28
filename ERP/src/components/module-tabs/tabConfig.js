@@ -55,49 +55,49 @@ export const purchaseTabs = [
     label: 'Purchase Requisitions',
     icon: ClipboardList,
     path: '/accounts/transactions/purchase-requisitions',
-    aliases: ['/purchase-requisitions', '/purchases/requisitions']
+    aliases: ['/purchase-requisitions', '/purchases/requisitions', '/transactions/purchase-requisitions']
   },
   {
     key: 'rfqs',
     label: 'RFQs',
     icon: FileSearch,
     path: '/accounts/transactions/rfqs',
-    aliases: ['/rfqs', '/purchases/rfqs']
+    aliases: ['/rfqs', '/purchases/rfqs', '/transactions/rfqs']
   },
   {
     key: 'supplier-quotes',
     label: 'Supplier Quotes',
     icon: FileText,
     path: '/accounts/transactions/purchase-quotations',
-    aliases: ['/supplier-quotes', '/supplier-quotations', '/purchases/quotations', '/purchases/supplier-quotations']
+    aliases: ['/supplier-quotes', '/supplier-quotations', '/purchases/quotations', '/purchases/supplier-quotations', '/transactions/purchase-quotations', '/transactions/supplier-quotes', '/accounts/transactions/supplier-quotes']
   },
   {
     key: 'purchase-orders',
     label: 'Purchase Orders',
     icon: ShoppingCart,
     path: '/accounts/transactions/purchase-orders',
-    aliases: ['/purchase-orders', '/purchases/purchase-orders', '/purchases/orders']
+    aliases: ['/purchase-orders', '/purchases/purchase-orders', '/purchases/orders', '/transactions/purchase-orders']
   },
   {
     key: 'goods-receipts',
     label: 'Goods Receipts',
     icon: Truck,
     path: '/accounts/transactions/goods-receipts',
-    aliases: ['/goods-receipts', '/purchases/goods-receipts']
+    aliases: ['/goods-receipts', '/purchases/goods-receipts', '/transactions/goods-receipts']
   },
   {
     key: 'purchase-invoices',
     label: 'Purchase Invoices',
     icon: Receipt,
     path: '/accounts/transactions/purchase',
-    aliases: ['/purchase-invoices', '/purchases/invoices']
+    aliases: ['/purchase-invoices', '/purchases/invoices', '/accounts/transactions/purchase-invoices', '/transactions/purchase', '/transactions/purchase-invoices', '/accounts/purchase/invoices']
   },
   {
     key: 'payments',
     label: 'Payments',
     icon: CreditCard,
     path: '/accounts/transactions/payments',
-    aliases: ['/payments', '/purchases/payments']
+    aliases: ['/payments', '/purchases/payments', '/transactions/payments']
   }
 ];
 

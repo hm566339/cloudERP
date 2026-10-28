@@ -189,6 +189,20 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
                 }
             }
 
+            // Suffix action fallback: sending a document mutates state, so WRITE or UPDATE on the module satisfies SEND
+            if (!granted && "SEND".equalsIgnoreCase(action)) {
+                if (authenticatedUser != null) {
+                    granted = authenticatedUser.hasPermission(requestedModule, "WRITE")
+                            || authenticatedUser.hasPermission(requestedModule, "UPDATE");
+                }
+                if (!granted) {
+                    granted = SsoAuthorities.hasModuleAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "UPDATE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "UPDATE");
+                }
+            }
+
             log.debug("Matching SSO permission for module [{}] action [{}]: {}", requestedModule, action, granted);
             if (granted) {
                 log.debug("Access granted for URI: {} to module: {} with action: {}", uri, requestedModule, action);
@@ -230,6 +244,10 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
         String suffixAction = properties.actionForSuffix(uri);
         if (suffixAction != null && !suffixAction.isBlank()) {
             actions.add(suffixAction.toUpperCase());
+            if ("SEND".equalsIgnoreCase(suffixAction)) {
+                actions.add("WRITE");
+                actions.add("UPDATE");
+            }
         } else {
             actions.addAll(properties.actionsForMethod(method));
         }

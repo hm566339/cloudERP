@@ -830,5 +830,11 @@ export function canViewModule(authContext, moduleOrFeature) {
   if (!allowed && (normUpper === 'QUOTATIONS' || upper === 'QUOTATIONS')) {
     allowed = hasPermission(authContext, 'SALES_INVOICES', 'READ') || hasPermission(authContext, 'SALES', 'READ');
   }
+  if (!allowed && (normUpper === 'PURCHASE_REQUISITIONS' || upper === 'PURCHASE_REQUISITIONS')) {
+    allowed = hasPermission(authContext, 'PURCHASE_INVOICES', 'READ') || hasPermission(authContext, 'PURCHASE', 'READ');
+  }
+  if (!allowed && (normUpper === 'PURCHASE_INVOICES' || upper === 'PURCHASE_INVOICES')) {
+    allowed = hasPermission(authContext, 'PURCHASE_REQUISITIONS', 'READ') || hasPermission(authContext, 'PURCHASE', 'READ');
+  }
   return allowed;
 }

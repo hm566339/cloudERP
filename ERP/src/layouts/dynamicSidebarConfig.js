@@ -212,7 +212,7 @@ function getModuleNavigationBlueprint(moduleName, base, authContext) {
           icon: TrendingUp,
           children: [
             { id: 'acc-txn-sales', label: 'Sales', path: `${base}/accounts/transactions/quotations`, icon: FileText, featureCode: 'SALES_INVOICES', action: 'READ' },
-            { id: 'acc-txn-pur', label: 'Purchase Invoices', path: `${base}/accounts/transactions/purchase`, icon: FileText, featureCode: 'PURCHASE_INVOICES', action: 'READ' },
+            { id: 'acc-txn-pur', label: 'Purchase', path: `${base}/accounts/transactions/purchase-requisitions`, icon: FileText, featureCode: 'PURCHASE_INVOICES', action: 'READ' },
             { id: 'acc-txn-exp', label: 'Expense', path: `${base}/accounts/transactions/expenses`, icon: Receipt, featureCode: 'EXPENSES', action: 'READ' },
             { id: 'acc-txn-pay', label: 'Payment Vouchers', path: `${base}/accounts/transactions/payments`, icon: CreditCard, featureCode: 'PAYMENT_VOUCHERS', action: 'READ' },
             { id: 'acc-txn-cn', label: 'Credit Notes', path: `${base}/accounts/transactions/credit-notes`, icon: ArrowDownCircle, featureCode: 'CREDIT_NOTES', action: 'READ' },
@@ -648,6 +648,13 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
           hasFeature(authContext, 'SALES', moduleName) ||
           hasFeature(authContext, 'SALES_ORDERS', moduleName);
       }
+      if (!hasFeat && (featureCode === 'PURCHASE_INVOICES' || featureCode === 'PURCHASE_REQUISITIONS')) {
+        hasFeat = hasFeature(authContext, 'PURCHASE_INVOICES', moduleName) ||
+          hasFeature(authContext, 'PURCHASE_REQUISITIONS', moduleName) ||
+          hasFeature(authContext, 'PURCHASE_REQUESTS', moduleName) ||
+          hasFeature(authContext, 'PURCHASE', moduleName) ||
+          hasFeature(authContext, 'PURCHASE_ORDERS', moduleName);
+      }
       if (!hasFeat) return null;
     }
 
@@ -665,6 +672,12 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
             checkHasPermission(authContext, 'QUOTATIONS', action, moduleName) ||
             checkHasPermission(authContext, 'SALES', action, moduleName) ||
             checkHasPermission(authContext, 'SALES_ORDERS', action, moduleName);
+        } else if (featureCode === 'PURCHASE_INVOICES' || featureCode === 'PURCHASE_REQUISITIONS') {
+          hasPerm = checkHasPermission(authContext, 'PURCHASE_INVOICES', action, moduleName) ||
+            checkHasPermission(authContext, 'PURCHASE_REQUISITIONS', action, moduleName) ||
+            checkHasPermission(authContext, 'PURCHASE_REQUESTS', action, moduleName) ||
+            checkHasPermission(authContext, 'PURCHASE', action, moduleName) ||
+            checkHasPermission(authContext, 'PURCHASE_ORDERS', action, moduleName);
         } else if (featureCode === 'EXPENSE_CATEGORIES') {
           hasPerm = checkHasPermission(authContext, 'EXPENSES', action, moduleName);
         } else if (featureCode === 'GST_STATE_MASTER' || featureCode === 'GST_REGISTRATIONS') {

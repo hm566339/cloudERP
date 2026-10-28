@@ -2,9 +2,9 @@ import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { useSidebar } from './SidebarContext'
-import { isItemOrChildActive, isSalesTransactionsRoute } from './SidebarNavUtils.js'
+import { isItemOrChildActive, isSalesTransactionsRoute, isPurchaseTransactionsRoute } from './SidebarNavUtils.js'
 
-export { isItemOrChildActive, isSalesTransactionsRoute }
+export { isItemOrChildActive, isSalesTransactionsRoute, isPurchaseTransactionsRoute }
 
 function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
   const { isMenuOpen, toggleMenu, setMenuOpen } = useSidebar();
@@ -24,6 +24,8 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
 
   if (!hasChildren) {
     const isSalesMenu = item.id === 'acc-txn-sales' || item.id === 'txn-si';
+    const isPurchaseMenu = item.id === 'acc-txn-pur' || item.id === 'txn-pi';
+    const isPurchaseRoute = isPurchaseTransactionsRoute(currentPath);
     const isSalesRoute = isSalesTransactionsRoute(currentPath);
     const isExpenseMenu = item.id === 'expense' || item.id === 'txn-exp' || (typeof item.path === 'string' && item.path.includes('/transactions/expenses'));
     const isApprovalsRoute = currentPath === '/workflows/approvals' ||
@@ -43,6 +45,7 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
       (item.path !== '/super-admin/dashboard' && item.path !== '/' && item.path !== '/owner/dashboard' && item.path !== '/dashboard' &&
         currentPath.startsWith(item.path + '/'))
       || (isSalesMenu && isSalesRoute)
+      || (isPurchaseMenu && isPurchaseRoute)
       || (isExpenseMenu && currentPath.includes('/transactions/expenses'))
       || (isWorkflowApprovals && isWorkflowRoute && !isApprovalsRoute)
       || (isWorkflowRequests && isApprovalsRoute);

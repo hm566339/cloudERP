@@ -34,7 +34,8 @@ class SsoAuthorizationManagerPermissionTest {
         properties.setModules(Map.of(
                 "CUSTOMERS", List.of("/api/account/customers/**"),
                 "DASHBOARD", List.of("/api/account/dashboard", "/api/account/dashboard/**"),
-                "PURCHASE_ORDERS", List.of("/api/account/purchase-orders/**")
+                "PURCHASE_ORDERS", List.of("/api/account/purchase-orders/**"),
+                "QUOTATIONS", List.of("/api/account/sales/quotations/**", "/api/account/v1/quotations/**")
         ));
         manager = new SsoAuthorizationManager(properties);
     }
@@ -483,5 +484,72 @@ class SsoAuthorizationManagerPermissionTest {
                 .build();
 
         assertThat(decide(user, "GET", "/api/account/customers")).matches(AuthorizationDecision::isGranted);
+    }
+
+    @Test
+    @DisplayName("7. Quotation send endpoint (/send suffix) with QUOTATIONS:WRITE is granted, READ is denied")
+    void quotationSendAuthorizationWithWriteAndRead() {
+        String sendUrl = "/api/account/v1/quotations/58994921-5f9e-47d7-a0bc-261d05472b4e/send";
+
+        // Owner with active+allowed QUOTATIONS:WRITE
+        AuthenticatedUser ownerWithWrite = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("owner@company.com")
+                .companyCode("ea811382-0afc-4908-a209-9bedcc63c445")
+                .roles(List.of("OWNER"))
+                .activeFeatures(Set.of("QUOTATIONS"))
+                .permissions(List.of(
+                        permission("QUOTATIONS", "READ", true, true),
+                        permission("QUOTATIONS", "WRITE", true, true)
+                ))
+                .build();
+        assertThat(decide(ownerWithWrite, "POST", sendUrl)).matches(AuthorizationDecision::isGranted);
+
+        // User with active+allowed QUOTATIONS:UPDATE
+        AuthenticatedUser userWithUpdate = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("user@company.com")
+                .companyCode("ea811382-0afc-4908-a209-9bedcc63c445")
+                .roles(List.of("USER"))
+                .activeFeatures(Set.of("QUOTATIONS"))
+                .permissions(List.of(
+                        permission("QUOTATIONS", "READ", true, true),
+                        permission("QUOTATIONS", "UPDATE", true, true)
+                ))
+                .build();
+        assertThat(decide(userWithUpdate, "POST", sendUrl)).matches(AuthorizationDecision::isGranted);
+
+        // User with only active+allowed QUOTATIONS:READ
+        AuthenticatedUser userWithOnlyRead = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("readonly@company.com")
+                .companyCode("ea811382-0afc-4908-a209-9bedcc63c445")
+                .roles(List.of("USER"))
+                .activeFeatures(Set.of("QUOTATIONS"))
+                .permissions(List.of(permission("QUOTATIONS", "READ", true, true)))
+                .build();
+        assertThat(decide(userWithOnlyRead, "POST", sendUrl)).matches(d -> !d.isGranted());
+
+        // User with inactive QUOTATIONS:WRITE
+        AuthenticatedUser userWithInactiveWrite = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("inactive@company.com")
+                .companyCode("ea811382-0afc-4908-a209-9bedcc63c445")
+                .roles(List.of("USER"))
+                .activeFeatures(Set.of("QUOTATIONS"))
+                .permissions(List.of(permission("QUOTATIONS", "WRITE", false, true)))
+                .build();
+        assertThat(decide(userWithInactiveWrite, "POST", sendUrl)).matches(d -> !d.isGranted());
+
+        // User with allowed=false QUOTATIONS:WRITE
+        AuthenticatedUser userWithDisallowedWrite = AuthenticatedUser.builder()
+                .userId(UUID.randomUUID())
+                .username("disallowed@company.com")
+                .companyCode("ea811382-0afc-4908-a209-9bedcc63c445")
+                .roles(List.of("USER"))
+                .activeFeatures(Set.of("QUOTATIONS"))
+                .permissions(List.of(permission("QUOTATIONS", "WRITE", true, false)))
+                .build();
+        assertThat(decide(userWithDisallowedWrite, "POST", sendUrl)).matches(d -> !d.isGranted());
     }
 }

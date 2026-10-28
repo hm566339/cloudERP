@@ -169,6 +169,11 @@ export default function ModuleTabs({ tabs = salesTabs, module, activeKey, active
       return effectiveTabs[0].key || effectiveTabs[0].label;
     }
 
+    // 6. Default fallback: if in purchase module or on purchase route, default to first tab (requisitions)
+    if (!bestKey && effectiveTabs.length > 0 && (detectedModule === 'PURCHASE' || cleanCurrentPath.includes('purchase') || cleanCurrentPath.includes('requisition') || cleanCurrentPath.includes('rfq'))) {
+      return effectiveTabs[0].key || effectiveTabs[0].label;
+    }
+
     return bestKey;
   }, [effectiveTabs, currentPath, cleanCurrentPath, queryTab, activeKey, activeTab, buildPath]);
 

@@ -29,7 +29,8 @@ class SsoAuthorizationManagerTest {
                 "PURCHASE_ORDERS", List.of("/api/account/purchase-orders/**"),
                 "GOODS_RECEIPTS", List.of("/api/account/goods-receipts/**"),
                 "REPORTS", List.of("/api/account/reports", "/api/account/reports/**"),
-                "HSN_SAC", List.of("/api/account/hsn-sac/**", "/api/account/reports/export/hsn-sac", "/api/account/reports/export/hsn-sac/**")
+                "HSN_SAC", List.of("/api/account/hsn-sac/**", "/api/account/reports/export/hsn-sac", "/api/account/reports/export/hsn-sac/**"),
+                "QUOTATIONS", List.of("/api/account/sales/quotations/**", "/api/account/v1/quotations/**")
         ));
         manager = new SsoAuthorizationManager(properties);
     }
@@ -199,6 +200,36 @@ class SsoAuthorizationManagerTest {
         // Granted with legacy REPORT_EXPORT authority
         AuthorizationDecision withReportExportAuthority = decide(List.of("REPORT_EXPORT"), "POST", url);
         assertThat(withReportExportAuthority.isGranted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Send suffix endpoint allows WRITE or UPDATE or SEND, but denies READ or missing permission")
+    void sendSuffixAuthorization() {
+        String quotationSendUrl = "/api/account/v1/quotations/58994921-5f9e-47d7-a0bc-261d05472b4e/send";
+
+        // Denied with only READ
+        AuthorizationDecision withRead = decide(List.of("MODULE_QUOTATIONS_ACTION_READ"), "POST", quotationSendUrl);
+        assertThat(withRead.isGranted()).isFalse();
+
+        // Denied with unrelated module permission
+        AuthorizationDecision withCustomersWrite = decide(List.of("MODULE_CUSTOMERS_ACTION_WRITE"), "POST", quotationSendUrl);
+        assertThat(withCustomersWrite.isGranted()).isFalse();
+
+        // Granted with QUOTATIONS:WRITE
+        AuthorizationDecision withWrite = decide(List.of("MODULE_QUOTATIONS_ACTION_WRITE"), "POST", quotationSendUrl);
+        assertThat(withWrite.isGranted()).isTrue();
+
+        // Granted with QUOTATIONS:UPDATE
+        AuthorizationDecision withUpdate = decide(List.of("MODULE_QUOTATIONS_ACTION_UPDATE"), "POST", quotationSendUrl);
+        assertThat(withUpdate.isGranted()).isTrue();
+
+        // Granted with QUOTATIONS:SEND
+        AuthorizationDecision withSend = decide(List.of("MODULE_QUOTATIONS_ACTION_SEND"), "POST", quotationSendUrl);
+        assertThat(withSend.isGranted()).isTrue();
+
+        // Also works with feature-scoped authority
+        AuthorizationDecision withFeatureWrite = decide(List.of("FEATURE_QUOTATIONS_ACTION_WRITE"), "POST", quotationSendUrl);
+        assertThat(withFeatureWrite.isGranted()).isTrue();
     }
 
     // ── write-implies-create-update opt-in ─────────────────────────────────
