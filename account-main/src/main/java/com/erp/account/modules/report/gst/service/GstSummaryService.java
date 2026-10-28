@@ -152,9 +152,10 @@ public class GstSummaryService {
 
         BigDecimal openingItc = queryOpeningItc(companyId, branchId);
         BigDecimal availableItc = inputGst;
-        BigDecimal eligibleItc = availableItc;
         BigDecimal blockedItc = BigDecimal.ZERO;
         BigDecimal reversedItc = BigDecimal.ZERO;
+        BigDecimal eligibleItc = availableItc.subtract(blockedItc).subtract(reversedItc).max(BigDecimal.ZERO);
+
         // Component-wise ITC set-off against forward-charge output liability under GST Rule 88A
         TaxCalculationEngine.Rule88aSetoffResult setoff = calculationEngine != null
                 ? calculationEngine.calculateRule88aSetoff(
@@ -163,12 +164,13 @@ public class GstSummaryService {
                         reverseCharge, interest, lateFee)
                 : null;
 
-        BigDecimal utilizedItc = setoff != null ? setoff.getTotalUtilizedItc() : inputGst.min(outputGst);
+        BigDecimal utilizedItc = setoff != null ? setoff.getTotalUtilizedItc() : eligibleItc.min(outputGst);
         BigDecimal closingItc = openingItc.add(availableItc).subtract(utilizedItc).max(BigDecimal.ZERO);
         BigDecimal forwardChargePayable = setoff != null ? setoff.getForwardCashPayable() : outputGst.subtract(utilizedItc).max(BigDecimal.ZERO);
         // Net GST Liability = Forward charge cash payable + RCM cash liability + Interest + Late fee
         // RCM cannot be offset using ITC (Section 49(4) of CGST Act)
-        BigDecimal netGstLiability = setoff != null ? setoff.getTotalCashPayable() : forwardChargePayable.add(reverseCharge).add(interest).add(lateFee);
+        // Double-deduction eliminated: available ITC and utilized ITC are never subtracted together
+        BigDecimal netGstLiability = setoff != null ? setoff.getTotalCashPayable() : calculateNetTaxLiability(outputGst, utilizedItc, reverseCharge, interest, lateFee);
 
         // ============================================================
         // 2. SUPPLY SUMMARY
@@ -420,6 +422,38 @@ public class GstSummaryService {
         return points;
     }
 
+    /**
+     * Calculates the net GST liability (cash payable) under CGST Act Section 49 and Rule 88A.
+     *
+     * <p>Conceptual Calculation:
+     * 1. Forward-charge output tax payable = max(0, outputGST - utilizedITC)
+     * 2. RCM liability cannot be offset by eligible ITC and must be discharged in cash (Section 49(4))
+     * 3. Net GST liability = Forward-charge payable + RCM liability + interest + lateFee
+     * 4. Double deduction eliminated: available ITC and utilized ITC are never subtracted simultaneously.
+     *
+     * @param outputGst total output GST on outward supplies
+     * @param utilizedItc eligible ITC utilized against forward-charge output liability
+     * @param reverseCharge tax payable under reverse charge mechanism (RCM)
+     * @param interest applicable interest
+     * @param lateFee applicable late fees
+     * @return net GST liability payable in cash
+     */
+    public BigDecimal calculateNetTaxLiability(
+            BigDecimal outputGst, BigDecimal utilizedItc,
+            BigDecimal reverseCharge, BigDecimal interest, BigDecimal lateFee) {
+        if (calculationEngine != null) {
+            return calculationEngine.calculateCashLiability(outputGst, utilizedItc, reverseCharge, interest, lateFee);
+        }
+        BigDecimal output = outputGst != null ? outputGst.max(BigDecimal.ZERO) : BigDecimal.ZERO;
+        BigDecimal itc = utilizedItc != null ? utilizedItc.max(BigDecimal.ZERO) : BigDecimal.ZERO;
+        BigDecimal rcm = reverseCharge != null ? reverseCharge.max(BigDecimal.ZERO) : BigDecimal.ZERO;
+        BigDecimal intAmt = interest != null ? interest.max(BigDecimal.ZERO) : BigDecimal.ZERO;
+        BigDecimal fee = lateFee != null ? lateFee.max(BigDecimal.ZERO) : BigDecimal.ZERO;
+
+        BigDecimal forwardChargePayable = output.subtract(itc).max(BigDecimal.ZERO);
+        return forwardChargePayable.add(rcm).add(intAmt).add(fee);
+    }
+
     private List<MonthlyLiabilityTrendPoint> buildLiabilityTrend(
             List<MonthlyTaxTrendPoint> taxTrend, List<MonthlyItcTrendPoint> itcTrend) {
         Map<String, MonthlyTaxTrendPoint> taxByMonth = new LinkedHashMap<>();
@@ -430,11 +464,15 @@ public class GstSummaryService {
         for (MonthlyItcTrendPoint itc : itcTrend) {
             MonthlyTaxTrendPoint tax = taxByMonth.get(itc.getMonth());
             BigDecimal outputGst = tax != null ? tax.getTotalTax() : BigDecimal.ZERO;
+            BigDecimal utilized = itc.getUtilizedItc() != null
+                    ? itc.getUtilizedItc()
+                    : (itc.getInputTax() != null ? itc.getInputTax().min(outputGst) : BigDecimal.ZERO);
+            BigDecimal netLiability = outputGst.subtract(utilized).max(BigDecimal.ZERO);
             points.add(MonthlyLiabilityTrendPoint.builder()
                     .month(itc.getMonth())
                     .outputGst(outputGst)
                     .inputGst(itc.getInputTax())
-                    .netGstLiability(outputGst.subtract(itc.getInputTax()).max(BigDecimal.ZERO))
+                    .netGstLiability(netLiability)
                     .build());
         }
         // Include months present only in the sales trend (no ITC booked)
