@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
@@ -270,8 +271,17 @@ public class SalesInvoicePdfServiceImpl implements SalesInvoicePdfService {
         context.setVariable("shipCountry", shipCountry);
         context.setVariable("shipPostalCode", shipPostalCode);
 
-        // Generate QR Code
-        String qrData = "Invoice: " + invoice.getInvoiceNumber() + ", Date: " + invoice.getInvoiceDate();
+        // E-Invoice attributes and QR Code (Rule 48(4))
+        String qrData;
+        boolean hasGenuineIrn = StringUtils.hasText(invoice.getIrn());
+        boolean isMock = Boolean.TRUE.equals(invoice.getIsMockEinvoice());
+
+        if (StringUtils.hasText(invoice.getSignedQrCode())) {
+            qrData = invoice.getSignedQrCode();
+        } else {
+            qrData = "Invoice: " + invoice.getInvoiceNumber() + ", Date: " + invoice.getInvoiceDate();
+        }
+
         try {
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(qrData, BarcodeFormat.QR_CODE, 150, 150);
@@ -282,6 +292,13 @@ public class SalesInvoicePdfServiceImpl implements SalesInvoicePdfService {
         } catch (Exception e) {
             context.setVariable("qrCodeImage", null);
         }
+
+        context.setVariable("irn", invoice.getIrn());
+        context.setVariable("ackNo", invoice.getAckNo());
+        context.setVariable("ackDate", invoice.getAckDate());
+        context.setVariable("hasGenuineIrn", hasGenuineIrn);
+        context.setVariable("isMockEinvoice", isMock);
+        context.setVariable("einvoiceStatus", invoice.getEinvoiceStatus() != null ? invoice.getEinvoiceStatus().name() : null);
 
         // Fetch Bank Details
         try {

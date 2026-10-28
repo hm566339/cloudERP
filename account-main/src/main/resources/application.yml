@@ -135,3 +135,27 @@ workflow:
 account:
   service:
     callback-base-url: ${ACCOUNT_SERVICE_CALLBACK_BASE_URL:http://account-service:8081}
+
+erp:
+  einvoice:
+    default-provider: ${ERP_EINVOICE_DEFAULT_PROVIDER:MOCK}
+    security:
+      # Master AES-256 key for decrypting database credentials at rest. Never commit actual key to Git.
+      master-key: ${ERP_EINVOICE_SECURITY_MASTER_KEY:}
+    nic:
+      sandbox-base-url: ${NIC_EINVOICE_SANDBOX_BASE_URL:https://einv-apisandbox.nic.in}
+      production-base-url: ${NIC_EINVOICE_PRODUCTION_BASE_URL:https://einvoice6.gst.gov.in}
+      connect-timeout-ms: ${NIC_EINVOICE_CONNECT_TIMEOUT_MS:10000}
+      read-timeout-ms: ${NIC_EINVOICE_READ_TIMEOUT_MS:30000}
+      public-key-path: ${NIC_EINVOICE_PUBLIC_KEY_PATH:}
+    rabbitmq:
+      exchange: ${ERP_EINVOICE_RABBITMQ_EXCHANGE:erp.einvoice.exchange}
+      dlx-exchange: ${ERP_EINVOICE_RABBITMQ_DLX:erp.einvoice.dlx}
+      queue: ${ERP_EINVOICE_RABBITMQ_QUEUE:erp.einvoice.generate.queue}
+      routing-key: ${ERP_EINVOICE_RABBITMQ_ROUTING_KEY:einvoice.generate}
+      dlq: ${ERP_EINVOICE_RABBITMQ_DLQ:erp.einvoice.generate.dlq}
+      dlq-routing-key: ${ERP_EINVOICE_RABBITMQ_DLQ_ROUTING_KEY:einvoice.generate.dlq}
+      max-attempts: ${ERP_EINVOICE_RABBITMQ_MAX_ATTEMPTS:3}
+      initial-interval-ms: ${ERP_EINVOICE_RABBITMQ_INITIAL_INTERVAL_MS:1000}
+      multiplier: ${ERP_EINVOICE_RABBITMQ_MULTIPLIER:2.0}
+      max-interval-ms: ${ERP_EINVOICE_RABBITMQ_MAX_INTERVAL_MS:10000}

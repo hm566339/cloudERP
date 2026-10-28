@@ -20,6 +20,8 @@ import com.erp.account.modules.common.entity.BaseEntity;
 import com.erp.account.modules.company.entity.Company;
 import com.erp.account.modules.customer.entity.Customer;
 import com.erp.account.modules.invoicetax.entity.InvoiceTax;
+import com.erp.account.modules.gst.entity.GstRegistration;
+import com.erp.account.enums.EinvoiceStatus;
 import com.erp.account.util.Invoice;
 
 /**
@@ -281,6 +283,44 @@ public class SalesInvoice extends BaseEntity implements Serializable {
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
+
+    // ============================================================
+    // GST E-INVOICE / IRP ATTRIBUTES (Rule 48(4))
+    // ============================================================
+
+    @Column(name = "gst_registration_id")
+    private UUID gstRegistrationId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "gst_registration_id", insertable = false, updatable = false)
+    private GstRegistration gstRegistration;
+
+    @Column(name = "irn", length = 64)
+    private String irn;
+
+    @Column(name = "ack_no", length = 50)
+    private String ackNo;
+
+    @Column(name = "ack_date")
+    private LocalDateTime ackDate;
+
+    @Column(name = "signed_invoice", columnDefinition = "TEXT")
+    private String signedInvoice;
+
+    @Column(name = "signed_qr_code", columnDefinition = "TEXT")
+    private String signedQrCode;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "einvoice_status", length = 30)
+    @Builder.Default
+    private EinvoiceStatus einvoiceStatus = EinvoiceStatus.NOT_REQUESTED;
+
+    @Column(name = "einvoice_failure_reason", columnDefinition = "TEXT")
+    private String einvoiceFailureReason;
+
+    @Column(name = "is_mock_einvoice")
+    @Builder.Default
+    private Boolean isMockEinvoice = false;
 
     /**
      * One-to-Many relationship with SalesInvoiceItem

@@ -760,10 +760,10 @@ public class SalesInvoiceServiceImpl implements SalesInvoiceService {
 
                 // 15. E-Invoice & E-Way Bill
                 .eInvoiceAndEWayBill(SiEinvoiceEwayBillDto.builder()
-                        .irn(null)
-                        .ackNumber(null)
-                        .ackDate(null)
-                        .qrCode(null)
+                        .irn(inv.getIrn())
+                        .ackNumber(inv.getAckNo())
+                        .ackDate(inv.getAckDate())
+                        .qrCode(inv.getSignedQrCode())
                         .eWayBillNumber(null)
                         .eWayBillValidity(null)
                         .build())
