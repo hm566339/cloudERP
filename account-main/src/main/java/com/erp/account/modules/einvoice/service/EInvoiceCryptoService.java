@@ -1,6 +1,7 @@
 package com.erp.account.modules.einvoice.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -38,6 +39,12 @@ public class EInvoiceCryptoService {
     private final SecureRandom secureRandom;
     private final boolean configured;
 
+    /**
+     * Primary Spring dependency injection constructor.
+     * Explicitly marked with @Autowired to instruct Spring to use this constructor
+     * when multiple constructors exist in the class.
+     */
+    @Autowired
     public EInvoiceCryptoService(@Value("${erp.einvoice.security.master-key:}") String masterKeyProperty) {
         this.secureRandom = new SecureRandom();
         if (StringUtils.hasText(masterKeyProperty)) {
@@ -50,6 +57,13 @@ public class EInvoiceCryptoService {
             log.warn("EInvoiceCryptoService: No master encryption key configured ('erp.einvoice.security.master-key' is empty). " +
                     "Production secrets cannot be encrypted. Only MOCK mode is permitted until master key is supplied.");
         }
+    }
+
+    /**
+     * Protected default constructor for CGLIB proxying and framework instantiation fallback.
+     */
+    protected EInvoiceCryptoService() {
+        this("");
     }
 
     /**

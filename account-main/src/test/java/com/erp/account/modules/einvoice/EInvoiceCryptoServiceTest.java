@@ -121,4 +121,24 @@ class EInvoiceCryptoServiceTest {
         assertFalse(sanitized.contains("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.secret"));
         assertTrue(sanitized.contains("Bearer ********"));
     }
+
+    @Test
+    @DisplayName("8. Fallback no-arg constructor instantiates unconfigured safe state")
+    void testNoArgConstructor_InstantiatesSafely() {
+        class TestSubclass extends EInvoiceCryptoService {
+            public TestSubclass() {
+                super();
+            }
+        }
+        TestSubclass instance = new TestSubclass();
+        assertNotNull(instance);
+        assertFalse(instance.isMasterKeyConfigured());
+    }
+
+    @Test
+    @DisplayName("9. Primary DI constructor with valid property initializes master key")
+    void testPrimaryConstructor_InitializesMasterKey() {
+        EInvoiceCryptoService service = new EInvoiceCryptoService(MASTER_KEY_32);
+        assertTrue(service.isMasterKeyConfigured());
+    }
 }
