@@ -460,14 +460,13 @@ public class GstSummaryService {
                 .append("COALESCE(SUM(CASE WHEN si.igst_amount IS NOT NULL AND si.igst_amount > 0 THEN si.taxable_amount ELSE 0 END),0), ")
                 .append("COALESCE(SUM(CASE WHEN (COALESCE(si.igst_amount,0) = 0) AND (COALESCE(si.cgst_amount,0) + COALESCE(si.sgst_amount,0)) > 0 THEN si.taxable_amount ELSE 0 END),0), ")
                 .append("COALESCE(SUM(CASE WHEN (COALESCE(si.cgst_amount,0) + COALESCE(si.sgst_amount,0) + COALESCE(si.igst_amount,0) + COALESCE(si.cess_amount,0)) = 0 ")
-                .append("AND UPPER(COALESCE(c.country,'IN')) NOT IN (:in1,:in2,:in3,:in4,:in5) THEN si.taxable_amount ELSE 0 END),0), ")
+                .append("AND UPPER(COALESCE(s.billing_country,'IN')) NOT IN (:in1,:in2,:in3,:in4,:in5) THEN si.taxable_amount ELSE 0 END),0), ")
                 .append("COALESCE(SUM(CASE WHEN (COALESCE(si.cgst_amount,0) + COALESCE(si.sgst_amount,0) + COALESCE(si.igst_amount,0) + COALESCE(si.cess_amount,0)) = 0 ")
-                .append("AND UPPER(COALESCE(c.country,'IN')) IN (:in1,:in2,:in3,:in4,:in5) AND COALESCE(g.igst_rate,-1) = 0 THEN si.taxable_amount ELSE 0 END),0), ")
+                .append("AND UPPER(COALESCE(s.billing_country,'IN')) IN (:in1,:in2,:in3,:in4,:in5) AND COALESCE(g.igst_rate,-1) = 0 THEN si.taxable_amount ELSE 0 END),0), ")
                 .append("COALESCE(SUM(CASE WHEN (COALESCE(si.cgst_amount,0) + COALESCE(si.sgst_amount,0) + COALESCE(si.igst_amount,0) + COALESCE(si.cess_amount,0)) = 0 ")
-                .append("AND UPPER(COALESCE(c.country,'IN')) IN (:in1,:in2,:in3,:in4,:in5) AND g.igst_rate IS NULL THEN si.taxable_amount ELSE 0 END),0) ")
+                .append("AND UPPER(COALESCE(s.billing_country,'IN')) IN (:in1,:in2,:in3,:in4,:in5) AND g.igst_rate IS NULL THEN si.taxable_amount ELSE 0 END),0) ")
                 .append("FROM sales_invoice_item si ")
                 .append("JOIN sales_invoice s ON si.sales_invoice_id = s.id ")
-                .append("LEFT JOIN customer c ON s.customer_id = c.id ")
                 .append("LEFT JOIN hsn_sac_master h ON si.hsn_sac_id = h.id ")
                 .append("LEFT JOIN gst_slab g ON h.gst_slab_id = g.id ")
                 .append(salesItemWhere(s));
@@ -778,7 +777,7 @@ public class GstSummaryService {
         }
 
         String gstin = companyGstin;
-        if (gstRegistrationId != null) {
+        if (gstRegistrationId != null && tableExists("gst_registration")) {
             try {
                 Query q = entityManager.createNativeQuery(
                         "SELECT gstin, legal_name FROM gst_registration WHERE id = :gstRegistrationId");
@@ -818,6 +817,9 @@ public class GstSummaryService {
     }
 
     private String queryBranchName(UUID branchId) {
+        if (!tableExists("branch")) {
+            return "";
+        }
         for (String column : new String[]{"branch_name", "name"}) {
             try {
                 Query q = entityManager.createNativeQuery(
@@ -836,6 +838,9 @@ public class GstSummaryService {
     }
 
     private FiscalYearInfo resolveFiscalYear(UUID financialYearId, UUID companyId) {
+        if (!tableExists("fiscal_year")) {
+            return null;
+        }
         try {
             StringBuilder sql = new StringBuilder("SELECT id, fiscal_year, start_date, end_date FROM fiscal_year WHERE company_id = :companyId");
             if (financialYearId != null) {
@@ -879,7 +884,7 @@ public class GstSummaryService {
         if (gstRegistrationId != null) {
             return gstRegistrationId;
         }
-        if (companyId == null) {
+        if (companyId == null || !tableExists("gst_registration")) {
             return null;
         }
         try {
@@ -962,7 +967,7 @@ public class GstSummaryService {
     }
 
     private void validateBranchOwnership(UUID branchId, UUID companyId) {
-        if (branchId == null) {
+        if (branchId == null || !tableExists("branch")) {
             return;
         }
         try {
@@ -988,7 +993,7 @@ public class GstSummaryService {
     }
 
     private void validateGstRegistrationOwnership(UUID gstRegistrationId, UUID companyId, UUID branchId) {
-        if (gstRegistrationId == null) {
+        if (gstRegistrationId == null || !tableExists("gst_registration")) {
             return;
         }
         try {

@@ -41,13 +41,6 @@ export default function LandingHero({ children }) {
             <span>Start 30-Day Free Trial</span>
             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </Link>
-
-          <Link
-            to="/"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-12 rounded-xl bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-800 dark:text-[#E6E8EE] text-sm font-semibold hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors active:scale-[0.98] shadow-sm"
-          >
-            <span>Sign In to Workspace</span>
-          </Link>
         </div>
 
         {/* Micro Trust Details */}
