@@ -152,6 +152,10 @@ sso:
       HSN_SAC:
         - "/api/account/hsn-sac/**"
         - "/api/account/tax/hsn-sac/**"
+        - "/api/account/reports/export/hsn-sac"
+        - "/api/account/reports/export/hsn-sac/**"
+        - "/api/account/reports/export/hsnpage-export"
+        - "/api/account/reports/export/hsnpage-export/**"
       SALES_TAXES:
         - "/api/account/sales-taxes/**"
         - "/api/account/tax/sales-taxes/**"

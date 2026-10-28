@@ -71,7 +71,7 @@ const HsnSacMaster = () => {
   const dispatch = useAppDispatch();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const companyId = JSON.parse(localStorage.getItem('selected_company'))?.id || JSON.parse(localStorage.getItem('auth_user'))?.companyCode;
-  
+
   const [expandedRowId, setExpandedRowId] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [visibleColumns, setVisibleColumns] = useState(DEFAULT_COLUMNS);
@@ -91,6 +91,15 @@ const HsnSacMaster = () => {
     defaultSortBy: 'createdAt',
     defaultSortOrder: 'desc'
   });
+
+  // Reset pagination state to Page 1 when company context changes
+  const prevCompanyIdRef = React.useRef(companyId);
+  useEffect(() => {
+    if (prevCompanyIdRef.current !== companyId) {
+      prevCompanyIdRef.current = companyId;
+      handlePageChange(0);
+    }
+  }, [companyId, handlePageChange]);
 
   const { data: hsnData, isLoading, refetch, isFetching } = useApiQuery(hsnSacMasterApi.getHsnSacList, {
     companyId,
@@ -232,9 +241,8 @@ const HsnSacMaster = () => {
       label: 'Type',
       sortable: true,
       render: (val, row) => (
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider border ${
-          row.type === 'HSN' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-purple-50 text-purple-700 border-purple-200'
-        }`}>
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider border ${row.type === 'HSN' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-purple-50 text-purple-700 border-purple-200'
+          }`}>
           {row.type}
         </span>
       )
@@ -348,7 +356,7 @@ const HsnSacMaster = () => {
           rowKey={(row) => row.id}
           loading={isLoading}
           isRefreshing={isFetching}
-          
+
           searchable
           searchValue={filters.searchKey || ''}
           searchPlaceholder="Search HSN / SAC code or description..."
@@ -359,30 +367,30 @@ const HsnSacMaster = () => {
             description: 'Add as new code',
             onCreate: (searchTerm) => handleOpenModal({ code: searchTerm, description: searchTerm })
           }}
-          
+
           filters={basicFilters}
           advancedFilters={advancedFilters}
           filterValues={filters}
           onFilterChange={handleFilterChange}
-          
+
           onReset={handleReset}
           onRefresh={refetch}
           onExport={() => setIsExportModalOpen(true)}
-          
+
           visibleColumns={visibleColumns}
           onVisibleColumnsChange={setVisibleColumns}
 
           sort={{ key: sortBy, direction: sortOrder }}
           onSortChange={({ key }) => handleSort(key)}
-          
+
           rowActions={rowActions}
-          
+
           expandedRowId={expandedRowId}
           onToggleExpand={setExpandedRowId}
           renderExpandedRow={(row) => <HsnSacOverview item={row} />}
-          
+
           pagination={{
-            page: pageInfo.page ?? pageInfo.currentPage ?? page,
+            page: pageInfo.currentPage !== undefined ? pageInfo.currentPage : (pageInfo.page !== undefined ? pageInfo.page - 1 : page),
             pageSize: pageInfo.size ?? pageInfo.pageSize ?? pageSize,
             totalPages: pageInfo.totalPages || 1,
             totalElements: pageInfo.totalElements ?? pageInfo.totalCount ?? hsnSacs.length
@@ -391,7 +399,7 @@ const HsnSacMaster = () => {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
           itemName="HSN/SAC codes"
-          
+
           emptyMessage="No HSN / SAC codes found"
           emptyDescription="Try adjusting your search keywords or filter criteria to find codes."
           customAdvancedFilterRender={() => (

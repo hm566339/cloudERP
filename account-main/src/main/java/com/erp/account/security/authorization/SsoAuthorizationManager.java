@@ -175,6 +175,20 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
                         SsoAuthorities.normalize(requestedModule), SsoAuthorities.normalize(action)));
             }
 
+            // Fallback for report exports: if uri is under /reports/, also accept REPORTS:EXPORT or REPORT_EXPORT
+            if (!granted && "EXPORT".equalsIgnoreCase(action) && uri.contains("/reports/")) {
+                if (authenticatedUser != null) {
+                    granted = authenticatedUser.hasPermission("REPORTS", "EXPORT");
+                }
+                if (!granted) {
+                    granted = SsoAuthorities.hasModuleAction(authorities, "REPORTS", "EXPORT")
+                            || SsoAuthorities.hasFeatureAction(authorities, "REPORTS", "EXPORT")
+                            || authorities.stream().anyMatch(a -> "REPORT_EXPORT".equalsIgnoreCase(a.getAuthority())
+                                    || "MODULE_REPORTS_ACTION_EXPORT".equalsIgnoreCase(a.getAuthority())
+                                    || "FEATURE_REPORTS_ACTION_EXPORT".equalsIgnoreCase(a.getAuthority()));
+                }
+            }
+
             log.debug("Matching SSO permission for module [{}] action [{}]: {}", requestedModule, action, granted);
             if (granted) {
                 log.debug("Access granted for URI: {} to module: {} with action: {}", uri, requestedModule, action);

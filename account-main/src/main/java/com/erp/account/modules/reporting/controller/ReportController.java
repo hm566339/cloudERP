@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.erp.account.modules.reporting.dto.request.ReportExportRequest;
 import com.erp.account.modules.reporting.service.export.ReportExportManager;
+import com.erp.account.security.CurrentUserContext;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -38,9 +39,16 @@ public class ReportController {
     @PostMapping("/export/{reportName}")
     public void exportReport(
             @PathVariable String reportName,
+            @RequestParam(required = false) UUID companyId,
             @RequestBody RequestWrapper<ReportExportRequest> requestWrapper,
             HttpServletResponse response) throws IOException {
-        reportExportManager.exportReport(reportName, requestWrapper.unwrap(), response);
+        ReportExportRequest request = requestWrapper != null ? requestWrapper.unwrap() : new ReportExportRequest();
+        UUID effectiveCompanyId = companyId != null ? companyId : (request != null ? request.getCompanyId() : null);
+        UUID resolvedCompanyId = CurrentUserContext.resolveCompanyIdForQuery(effectiveCompanyId);
+        if (request != null) {
+            request.setCompanyId(resolvedCompanyId);
+        }
+        reportExportManager.exportReport(reportName, request, response);
     }
 
     @GetMapping("/trial-balance")

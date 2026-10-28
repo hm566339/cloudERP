@@ -27,7 +27,9 @@ class SsoAuthorizationManagerTest {
         properties.setModules(Map.of(
                 "CUSTOMERS", List.of("/api/account/customers/**"),
                 "PURCHASE_ORDERS", List.of("/api/account/purchase-orders/**"),
-                "GOODS_RECEIPTS", List.of("/api/account/goods-receipts/**")
+                "GOODS_RECEIPTS", List.of("/api/account/goods-receipts/**"),
+                "REPORTS", List.of("/api/account/reports", "/api/account/reports/**"),
+                "HSN_SAC", List.of("/api/account/hsn-sac/**", "/api/account/reports/export/hsn-sac", "/api/account/reports/export/hsn-sac/**")
         ));
         manager = new SsoAuthorizationManager(properties);
     }
@@ -40,8 +42,7 @@ class SsoAuthorizationManagerTest {
     private AuthorizationDecision decide(List<String> authorities, String method, String uri) {
         TestingAuthenticationToken auth = new TestingAuthenticationToken(
                 "user", "password",
-                authorities.stream().map(SimpleGrantedAuthority::new).toList()
-        );
+                authorities.stream().map(SimpleGrantedAuthority::new).toList());
         MockHttpServletRequest request = new MockHttpServletRequest(method, uri);
         return manager.authorize(() -> auth, new RequestAuthorizationContext(request, null));
     }
@@ -95,8 +96,10 @@ class SsoAuthorizationManagerTest {
     @Test
     @DisplayName("DELETE is NOT granted by READ or WRITE alone")
     void deleteNotGrantedByReadOrWrite() {
-        AuthorizationDecision withRead = decide(List.of("MODULE_CUSTOMERS_ACTION_READ"), "DELETE", "/api/account/customers/123");
-        AuthorizationDecision withWrite = decide(List.of("MODULE_CUSTOMERS_ACTION_WRITE"), "DELETE", "/api/account/customers/123");
+        AuthorizationDecision withRead = decide(List.of("MODULE_CUSTOMERS_ACTION_READ"), "DELETE",
+                "/api/account/customers/123");
+        AuthorizationDecision withWrite = decide(List.of("MODULE_CUSTOMERS_ACTION_WRITE"), "DELETE",
+                "/api/account/customers/123");
         assertThat(withRead.isGranted()).isFalse();
         assertThat(withWrite.isGranted()).isFalse();
     }
@@ -106,7 +109,8 @@ class SsoAuthorizationManagerTest {
     @Test
     @DisplayName("Missing permission grants no access")
     void missingPermissionDenied() {
-        AuthorizationDecision decision = decide(List.of("MODULE_CUSTOMERS_ACTION_READ"), "POST", "/api/account/customers");
+        AuthorizationDecision decision = decide(List.of("MODULE_CUSTOMERS_ACTION_READ"), "POST",
+                "/api/account/customers");
         assertThat(decision.isGranted()).isFalse();
     }
 
@@ -153,8 +157,10 @@ class SsoAuthorizationManagerTest {
     @Test
     @DisplayName("Custom approve suffix requires the APPROVE action (not create/write)")
     void approveSuffixRequiresApprove() {
-        AuthorizationDecision withWrite = decide(List.of("MODULE_PURCHASE_ORDERS_ACTION_WRITE"), "POST", "/api/account/purchase-orders/123/approve");
-        AuthorizationDecision withApprove = decide(List.of("MODULE_PURCHASE_ORDERS_ACTION_APPROVE"), "POST", "/api/account/purchase-orders/123/approve");
+        AuthorizationDecision withWrite = decide(List.of("MODULE_PURCHASE_ORDERS_ACTION_WRITE"), "POST",
+                "/api/account/purchase-orders/123/approve");
+        AuthorizationDecision withApprove = decide(List.of("MODULE_PURCHASE_ORDERS_ACTION_APPROVE"), "POST",
+                "/api/account/purchase-orders/123/approve");
         assertThat(withWrite.isGranted()).isFalse();
         assertThat(withApprove.isGranted()).isTrue();
     }
@@ -162,10 +168,37 @@ class SsoAuthorizationManagerTest {
     @Test
     @DisplayName("Export suffix requires the EXPORT action")
     void exportSuffixRequiresExport() {
-        AuthorizationDecision withRead = decide(List.of("MODULE_CUSTOMERS_ACTION_READ"), "GET", "/api/account/customers/export");
-        AuthorizationDecision withExport = decide(List.of("MODULE_CUSTOMERS_ACTION_EXPORT"), "GET", "/api/account/customers/123/export");
+        AuthorizationDecision withRead = decide(List.of("MODULE_CUSTOMERS_ACTION_READ"), "GET",
+                "/api/account/customers/export");
+        AuthorizationDecision withExport = decide(List.of("MODULE_CUSTOMERS_ACTION_EXPORT"), "GET",
+                "/api/account/customers/123/export");
         assertThat(withRead.isGranted()).isFalse();
         assertThat(withExport.isGranted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("HSN/SAC export endpoint requires EXPORT action: denied with READ/WRITE, allowed with HSN_SAC:EXPORT or REPORTS:EXPORT")
+    void hsnSacExportAuthorization() {
+        String url = "/api/account/reports/export/hsn-sac";
+        // Denied with only READ
+        AuthorizationDecision withRead = decide(List.of("MODULE_HSN_SAC_ACTION_READ"), "POST", url);
+        assertThat(withRead.isGranted()).isFalse();
+
+        // Denied with only WRITE
+        AuthorizationDecision withWrite = decide(List.of("MODULE_HSN_SAC_ACTION_WRITE"), "POST", url);
+        assertThat(withWrite.isGranted()).isFalse();
+
+        // Granted with HSN_SAC:EXPORT
+        AuthorizationDecision withHsnExport = decide(List.of("MODULE_HSN_SAC_ACTION_EXPORT"), "POST", url);
+        assertThat(withHsnExport.isGranted()).isTrue();
+
+        // Granted with REPORTS:EXPORT
+        AuthorizationDecision withReportsExport = decide(List.of("MODULE_REPORTS_ACTION_EXPORT"), "POST", url);
+        assertThat(withReportsExport.isGranted()).isTrue();
+
+        // Granted with legacy REPORT_EXPORT authority
+        AuthorizationDecision withReportExportAuthority = decide(List.of("REPORT_EXPORT"), "POST", url);
+        assertThat(withReportExportAuthority.isGranted()).isTrue();
     }
 
     // ── write-implies-create-update opt-in ─────────────────────────────────
@@ -174,7 +207,8 @@ class SsoAuthorizationManagerTest {
     @DisplayName("Without the opt-in flag WRITE does not satisfy a custom CREATE requirement")
     void writeDoesNotImplyCreateByDefault() {
         properties.setMethodActions(Map.of("POST", List.of("CREATE")));
-        AuthorizationDecision decision = decide(List.of("MODULE_CUSTOMERS_ACTION_WRITE"), "POST", "/api/account/customers");
+        AuthorizationDecision decision = decide(List.of("MODULE_CUSTOMERS_ACTION_WRITE"), "POST",
+                "/api/account/customers");
         assertThat(decision.isGranted()).isFalse();
     }
 
@@ -185,7 +219,8 @@ class SsoAuthorizationManagerTest {
         properties.setWriteImpliesCreateUpdate(true);
 
         AuthorizationDecision post = decide(List.of("MODULE_CUSTOMERS_ACTION_WRITE"), "POST", "/api/account/customers");
-        AuthorizationDecision put = decide(List.of("MODULE_CUSTOMERS_ACTION_WRITE"), "PUT", "/api/account/customers/123");
+        AuthorizationDecision put = decide(List.of("MODULE_CUSTOMERS_ACTION_WRITE"), "PUT",
+                "/api/account/customers/123");
 
         assertThat(post.isGranted()).isTrue();
         assertThat(put.isGranted()).isTrue();
@@ -211,7 +246,8 @@ class SsoAuthorizationManagerTest {
     @DisplayName("READ_ONLY allows authorized reads")
     void readOnlyAllowsRead() {
         CurrentUserContext.setAccessMode("READ_ONLY");
-        AuthorizationDecision decision = decide(List.of("MODULE_CUSTOMERS_ACTION_READ"), "GET", "/api/account/customers");
+        AuthorizationDecision decision = decide(List.of("MODULE_CUSTOMERS_ACTION_READ"), "GET",
+                "/api/account/customers");
         assertThat(decision.isGranted()).isTrue();
     }
 
@@ -219,7 +255,8 @@ class SsoAuthorizationManagerTest {
     @DisplayName("READ_ONLY denies business mutations even with a write permission")
     void readOnlyDeniesMutation() {
         CurrentUserContext.setAccessMode("READ_ONLY");
-        AuthorizationDecision decision = decide(List.of("MODULE_CUSTOMERS_ACTION_WRITE"), "POST", "/api/account/customers");
+        AuthorizationDecision decision = decide(List.of("MODULE_CUSTOMERS_ACTION_WRITE"), "POST",
+                "/api/account/customers");
         assertThat(decision.isGranted()).isFalse();
     }
 }
