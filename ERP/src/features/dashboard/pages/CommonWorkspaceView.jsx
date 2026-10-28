@@ -150,7 +150,7 @@ export default function CommonWorkspaceView() {
   const activeLaunchers = moduleCards.filter((m) => m.isEntitled);
 
   return (
-    <div className="min-h-screen bg-zinc-50/60 flex flex-col font-sans text-zinc-900 selection:bg-zinc-900 selection:text-white">
+    <div className="min-h-screen bg-zinc-50/60 dark:bg-[#0F1117] flex flex-col font-sans text-zinc-900 dark:text-[#E6E8EE] selection:bg-zinc-900 selection:text-white">
       {/* ── Top Bar / Global Header ── */}
       <header className="sticky top-0 z-30 bg-white/95 dark:bg-card-dark/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-border-dark shadow-xs transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">

@@ -279,7 +279,7 @@ export default function SubscriptionPlansSettings() {
   const maxUsersQuota = effectiveActiveSub?.maxUsersPerCompany ?? effectiveActiveSub?.plan?.maxUsersPerCompany ?? 10;
 
   return (
-    <div className="flex-1 bg-zinc-50/50 min-h-screen">
+    <div className="flex-1 bg-zinc-50/50 dark:bg-[#0F1117] min-h-screen">
       <div className="w-full p-4 sm:p-6 space-y-6 animate-fade-in">
         {/* Settings Navigation Bar */}
         <div className="shrink-0">

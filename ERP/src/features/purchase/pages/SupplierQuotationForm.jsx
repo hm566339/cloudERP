@@ -544,12 +544,13 @@ export default function SupplierQuotationForm() {
   /* ── Shared style tokens (exact match with PurchaseRequisitionForm) ── */
   const sidebarCard = 'flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-2.5 bg-white dark:bg-card-dark shadow-2xs space-y-1.5';
   const cardHead = 'flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]';
-  const cardTitle = 'text-[8px] font-bold text-zinc-800 uppercase tracking-wider';
-  const label = 'text-[8px] font-semibold text-zinc-700 block mb-1';
+  const cardTitle = 'text-[8px] font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider';
+  const label = 'text-[8px] font-semibold text-zinc-700 dark:text-zinc-300 block mb-1';
   const field = (hasErr = false) =>
-    `input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark ${hasErr ? 'border-rose-300' : ''}`;
-  const errText = 'text-[7.2px] text-rose-600 mt-0.5 font-medium';
-  const btnSecondary = 'px-4 py-2 text-xs font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 shadow-xs transition-colors flex items-center gap-2';
+    `input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark ${hasErr ? 'border-rose-300 dark:border-rose-500' : ''}`;
+  const disabledField = `${field()} !bg-zinc-50 dark:!bg-[#1D212C]/60 text-zinc-500 dark:text-zinc-400 cursor-not-allowed font-medium`;
+  const errText = 'text-[7.2px] text-rose-600 dark:text-rose-400 mt-0.5 font-medium';
+  const btnSecondary = 'px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 dark:hover:bg-[#222736] shadow-xs transition-colors flex items-center gap-2';
   const btnPrimary = 'px-4 py-2 text-xs font-bold text-white bg-primary rounded-md hover:bg-primary/90 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2';
   const colTemplate = 'grid-cols-[36px_minmax(120px,1.4fr)_minmax(110px,1.3fr)_85px_65px_95px_105px_95px_110px_minmax(110px,1.2fr)]';
 
@@ -564,16 +565,16 @@ export default function SupplierQuotationForm() {
           <button
             type="button"
             onClick={handleCancel}
-            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors cursor-pointer"
             title="Back"
           >
             <ArrowLeft size={16} />
           </button>
           <div className="flex flex-col min-w-0">
-            <h2 className="text-base font-bold text-zinc-800 truncate">
+            <h2 className="text-base font-bold text-zinc-800 dark:text-zinc-100 truncate">
               {isEditing ? 'Edit Supplier Quotation' : 'New Supplier Quotation'}
             </h2>
-            <div className="text-[8px] text-zinc-500 font-medium truncate">
+            <div className="text-[8px] text-zinc-500 dark:text-zinc-400 font-medium truncate">
               {isEditing ? 'Update supplier quotation pricing, taxes and terms' : 'Submit a supplier quotation against an RFQ'}
             </div>
           </div>
@@ -583,7 +584,7 @@ export default function SupplierQuotationForm() {
           <button
             type="button"
             onClick={handleCancel}
-            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors cursor-pointer"
             title="Close"
           >
             <X size={16} />
@@ -597,7 +598,7 @@ export default function SupplierQuotationForm() {
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-border-dark bg-white dark:bg-page-dark">
 
         {/* ── LEFT COLUMN (~230px, stacked sections) ── */}
-        <div className="w-full lg:w-[230px] flex-none p-2 bg-zinc-50/40 overflow-y-auto overflow-x-hidden flex flex-col gap-2">
+        <div className="w-full lg:w-[230px] flex-none p-2 bg-zinc-50/40 dark:bg-transparent overflow-y-auto overflow-x-hidden flex flex-col gap-2">
 
           {/* SECTION 1: QUOTATION INFORMATION */}
           <div className={sidebarCard}>
@@ -614,7 +615,7 @@ export default function SupplierQuotationForm() {
                     value={quotation?.rfqNumber || formData.rfqId}
                     disabled
                     readOnly
-                    className={`${field()} bg-zinc-50 text-zinc-500 cursor-not-allowed font-medium`}
+                    className={disabledField}
                   />
                 ) : (
                   <CustomSelect
@@ -645,7 +646,7 @@ export default function SupplierQuotationForm() {
                         value={v?.vendorName || v?.name || quotation?.vendorName || formData.vendorId || 'Supplier'}
                         disabled
                         readOnly
-                        className={`${field()} bg-zinc-50 text-zinc-500 cursor-not-allowed font-medium`}
+                        className={disabledField}
                       />
                     );
                   })()
@@ -787,9 +788,9 @@ export default function SupplierQuotationForm() {
           )}
 
           {/* 1. Quote Items Section Header */}
-          <div className="px-4 py-2.5 bg-zinc-50/80 border-b border-zinc-200 flex justify-between items-center flex-none sticky top-0 z-20">
+          <div className="px-4 py-2.5 bg-zinc-50/80 dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark flex justify-between items-center flex-none sticky top-0 z-20">
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">QUOTE ITEMS</h3>
+              <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">QUOTE ITEMS</h3>
               {items.length > 0 && (
                 <span className="text-[8.8px] font-medium text-zinc-500 dark:text-zinc-400 bg-white dark:bg-surface-dark px-2 py-0.5 rounded-full border border-zinc-200 dark:border-border-dark shadow-2xs">
                   {items.length} {items.length === 1 ? 'item' : 'items'} loaded
@@ -797,7 +798,7 @@ export default function SupplierQuotationForm() {
               )}
             </div>
             {formData.rfqId && (
-              <span className="text-[8.8px] font-medium text-zinc-400">
+              <span className="text-[8.8px] font-medium text-zinc-400 dark:text-zinc-500">
                 Loaded from selected RFQ
               </span>
             )}
@@ -805,12 +806,12 @@ export default function SupplierQuotationForm() {
 
           {/* 2. Quote Items Table */}
           {items.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-500">
-              <div className="w-12 h-12 bg-zinc-50 border border-zinc-200 rounded-full flex items-center justify-center mb-3 shadow-2xs">
-                <FileText size={20} className="text-zinc-400" />
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-500 dark:text-zinc-400">
+              <div className="w-12 h-12 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-full flex items-center justify-center mb-3 shadow-2xs">
+                <FileText size={20} className="text-zinc-400 dark:text-zinc-500" />
               </div>
-              <p className="text-[13px] font-semibold text-zinc-700 mb-1">Select an RFQ to load items for quotation.</p>
-              <p className="text-[11px] text-zinc-500 max-w-sm leading-relaxed">
+              <p className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200 mb-1">Select an RFQ to load items for quotation.</p>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-sm leading-relaxed">
                 Choose an eligible RFQ from the left panel to automatically load the requested items.
               </p>
             </div>
@@ -818,7 +819,7 @@ export default function SupplierQuotationForm() {
             <div className="overflow-x-auto flex-1">
               <div className="min-w-[1020px]">
                 {/* Table Header */}
-                <div className="w-full text-left bg-zinc-100 text-zinc-600 border-b border-zinc-200 flex-none pr-1">
+                <div className="w-full text-left bg-zinc-100 dark:bg-surface-dark text-zinc-600 dark:text-zinc-300 border-b border-zinc-200 dark:border-border-dark flex-none pr-1">
                   <div className={`grid ${colTemplate} w-full min-w-0`}>
                     <div className="p-1.5 font-semibold truncate text-[10px] text-center uppercase tracking-wider">#</div>
                     <div className="p-1.5 font-semibold truncate text-[10px] uppercase tracking-wider">ITEM</div>
@@ -834,17 +835,17 @@ export default function SupplierQuotationForm() {
                 </div>
 
                 {/* Table Body */}
-                <div className="flex flex-col divide-y divide-zinc-100">
+                <div className="flex flex-col divide-y divide-zinc-100 dark:divide-border-dark">
                   {items.map((item, idx) => {
                     const { lineTotal } = calculateLine(item);
 
                     return (
                       <div
                         key={idx}
-                        className={`grid ${colTemplate} w-full bg-white dark:bg-card-dark hover:bg-zinc-50/50 dark:hover:bg-hover-dark/40 min-w-0 border-b border-zinc-100 dark:border-[#2A2F3D] last:border-0 box-border transition-colors`}
+                        className={`grid ${colTemplate} w-full bg-white dark:bg-card-dark hover:bg-zinc-50/50 dark:hover:bg-hover-dark/40 min-w-0 border-b border-zinc-100 dark:border-border-dark last:border-0 box-border transition-colors`}
                       >
                         {/* # */}
-                        <div className="p-1 pt-2 pb-2 min-w-0 flex items-center justify-center text-[8.8px] text-zinc-400 font-medium">
+                        <div className="p-1 pt-2 pb-2 min-w-0 flex items-center justify-center text-[8.8px] text-zinc-400 dark:text-zinc-500 font-medium">
                           {idx + 1}
                         </div>
 
@@ -856,7 +857,7 @@ export default function SupplierQuotationForm() {
                             readOnly
                             disabled
                             title={item.itemName}
-                            className={`${field()} bg-zinc-50 text-zinc-700 font-semibold cursor-not-allowed`}
+                            className={disabledField}
                           />
                         </div>
 
@@ -869,7 +870,7 @@ export default function SupplierQuotationForm() {
                             disabled
                             placeholder="-"
                             title={item.description}
-                            className={`${field()} bg-zinc-50 text-zinc-500 cursor-not-allowed`}
+                            className={disabledField}
                           />
                         </div>
 
@@ -880,7 +881,7 @@ export default function SupplierQuotationForm() {
                             value={item.requestedQuantity ?? '-'}
                             readOnly
                             disabled
-                            className={`${field()} bg-zinc-50 text-zinc-700 text-right cursor-not-allowed font-medium`}
+                            className={`${disabledField} text-right`}
                           />
                         </div>
 
@@ -891,7 +892,7 @@ export default function SupplierQuotationForm() {
                             value={item.unit || '-'}
                             readOnly
                             disabled
-                            className={`${field()} bg-zinc-50 text-zinc-700 text-center cursor-not-allowed`}
+                            className={`${disabledField} text-center`}
                           />
                         </div>
 
@@ -939,7 +940,7 @@ export default function SupplierQuotationForm() {
                               placeholder="0"
                               className={`${field(errors[`item_${idx}_tax`])} text-right pr-4`}
                             />
-                            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[8.8px] text-zinc-400 pointer-events-none">
+                            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[8.8px] text-zinc-400 dark:text-zinc-500 pointer-events-none">
                               %
                             </span>
                           </div>
@@ -950,7 +951,7 @@ export default function SupplierQuotationForm() {
 
                         {/* TOTAL (Line Subtotal + Tax) */}
                         <div className="p-1 pt-2 min-w-0 flex items-center justify-end pr-2">
-                          <span className="text-[9.6px] font-semibold text-zinc-800 font-mono">
+                          <span className="text-[9.6px] font-semibold text-zinc-800 dark:text-zinc-200 font-mono">
                             {fmt(lineTotal)}
                           </span>
                         </div>
@@ -974,43 +975,43 @@ export default function SupplierQuotationForm() {
           )}
 
           {/* 3. Quotation Summary (Follows New Purchase Requisition summary pattern) */}
-          <div className="p-4 border-t border-zinc-200 bg-zinc-50/40 mt-auto flex-none">
+          <div className="p-4 border-t border-zinc-200 dark:border-border-dark bg-zinc-50/40 dark:bg-transparent mt-auto flex-none">
             <div className="bg-white dark:bg-card-dark p-3.5 rounded-xl border border-zinc-200 dark:border-border-dark shadow-2xs space-y-2.5">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
-                <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">QUOTATION SUMMARY</h3>
-                <span className="text-[8.8px] font-medium text-zinc-500 bg-zinc-50 border border-zinc-200 px-2 py-0.5 rounded-full">
+                <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">QUOTATION SUMMARY</h3>
+                <span className="text-[8.8px] font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark px-2 py-0.5 rounded-full">
                   {items.length} {items.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-                <div className="text-[9.6px] text-zinc-500">
-                  <span className="font-semibold text-zinc-700">Commercial Summary:</span> Review subtotal, freight, discount, and tax calculations before saving.
+                <div className="text-[9.6px] text-zinc-500 dark:text-zinc-400">
+                  <span className="font-semibold text-zinc-700 dark:text-zinc-300">Commercial Summary:</span> Review subtotal, freight, discount, and tax calculations before saving.
                 </div>
                 <div className="w-full sm:max-w-xs space-y-1.5">
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Total Items</span>
-                    <span className="font-semibold text-zinc-800">{items.length}</span>
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">Total Items</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200">{items.length}</span>
                   </div>
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Subtotal</span>
-                    <span className="font-semibold text-zinc-800 font-mono">{fmt(totals.subtotal)}</span>
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">Subtotal</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200 font-mono">{fmt(totals.subtotal)}</span>
                   </div>
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Freight</span>
-                    <span className="font-semibold text-zinc-800 font-mono">{fmt(totals.freight)}</span>
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">Freight</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200 font-mono">{fmt(totals.freight)}</span>
                   </div>
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Discount</span>
-                    <span className="font-semibold text-rose-600 font-mono">
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">Discount</span>
+                    <span className="font-semibold text-rose-600 dark:text-rose-400 font-mono">
                       {totals.discount > 0 ? `-${fmt(totals.discount)}` : fmt(0)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Tax</span>
-                    <span className="font-semibold text-zinc-800 font-mono">{fmt(totals.tax)}</span>
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">Tax</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200 font-mono">{fmt(totals.tax)}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs border-t border-zinc-200 pt-2 font-bold">
-                    <span className="text-zinc-900">Grand Total</span>
+                  <div className="flex justify-between items-center text-xs border-t border-zinc-200 dark:border-border-dark pt-2 font-bold">
+                    <span className="text-zinc-900 dark:text-zinc-100">Grand Total</span>
                     <span className="text-primary font-mono text-sm">{fmt(totals.grandTotal)}</span>
                   </div>
                 </div>
@@ -1024,7 +1025,7 @@ export default function SupplierQuotationForm() {
       {/* ═══════════════════════════════════════════════════════════════════
           BOTTOM ACTION BAR (exact same action-bar style as PR)
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex justify-between items-center p-3 border-t border-zinc-200 bg-zinc-100 flex-none shadow-sm z-30">
+      <div className="flex justify-between items-center p-3 border-t border-zinc-200 dark:border-border-dark bg-zinc-100 dark:bg-card-dark flex-none shadow-sm z-30">
         <button
           type="button"
           onClick={handleCancel}
@@ -1059,8 +1060,8 @@ export default function SupplierQuotationForm() {
       {showDiscardModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
           <div className="w-full max-w-sm bg-white dark:bg-card-dark rounded-xl shadow-xl border border-zinc-200 dark:border-border-dark p-6 animate-fade-in">
-            <h2 className="text-base font-semibold text-zinc-900">Discard unsaved changes?</h2>
-            <p className="mt-2 text-sm text-zinc-500">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Discard unsaved changes?</h2>
+            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
               Your changes will be lost if you leave without saving.
             </p>
             <div className="mt-5 flex justify-end gap-3">

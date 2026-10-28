@@ -485,7 +485,7 @@ export default function APInvoices() {
       accessor: 'companyName',
       sortable: true,
       cell: (row) => (
-        <span className="text-xs font-medium text-zinc-800">{row.companyName || '-'}</span>
+        <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200">{row.companyName || '-'}</span>
       )
     },
     {
@@ -495,8 +495,8 @@ export default function APInvoices() {
       sortable: true,
       cell: (row) => (
         <div>
-          <span className="text-xs font-semibold text-zinc-900 block">{row.vendorName || '-'}</span>
-          {row.vendorGstin && <span className="text-[10px] text-zinc-400 font-mono">GST: {row.vendorGstin}</span>}
+          <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 block">{row.vendorName || '-'}</span>
+          {row.vendorGstin && <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">GST: {row.vendorGstin}</span>}
         </div>
       )
     },
@@ -506,7 +506,7 @@ export default function APInvoices() {
       accessor: 'invoiceDate',
       sortable: true,
       cell: (row) => (
-        <span className="text-xs text-zinc-600 font-medium">
+        <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
           {row.invoiceDate ? new Date(row.invoiceDate).toLocaleDateString() : '-'}
         </span>
       )
@@ -518,7 +518,7 @@ export default function APInvoices() {
       sortable: true,
       cell: (row) => (
         <div>
-          <span className={`text-xs font-medium ${row.isOverdue ? 'text-rose-600 font-semibold' : 'text-zinc-700'}`}>
+          <span className={`text-xs font-medium ${row.isOverdue ? 'text-rose-600 font-semibold' : 'text-zinc-700 dark:text-zinc-300'}`}>
             {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : '-'}
           </span>
           {row.isOverdue && <span className="text-[10px] text-rose-500 block font-medium">{row.daysOverdue}d overdue</span>}
@@ -532,7 +532,7 @@ export default function APInvoices() {
       sortable: true,
       headerClassName: 'text-right',
       cell: (row) => (
-        <div className="text-right font-mono text-xs font-semibold text-zinc-900">
+        <div className="text-right font-mono text-xs font-semibold text-zinc-900 dark:text-zinc-100">
           {row.invoiceCurrency || 'INR'} {(row.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
         </div>
       )
@@ -557,13 +557,13 @@ export default function APInvoices() {
       headerClassName: 'text-center',
       cell: (row) => (
         <div className="flex flex-col items-center justify-center">
-          <div className="w-16 bg-zinc-200 rounded-full h-1.5 mb-1">
+          <div className="w-16 bg-zinc-200 dark:bg-[#2A2F3D] rounded-full h-1.5 mb-1">
             <div
               className={`h-1.5 rounded-full ${row.paymentPercentage === 100 ? 'bg-emerald-500' : 'bg-amber-500'}`}
               style={{ width: `${Math.min(100, Math.max(0, row.paymentPercentage || 0))}%` }}
             />
           </div>
-          <span className="text-[10px] font-medium text-zinc-500 font-mono">{row.paymentPercentage || 0}%</span>
+          <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 font-mono">{row.paymentPercentage || 0}%</span>
         </div>
       )
     },
@@ -700,7 +700,7 @@ export default function APInvoices() {
   ], [handleBulkEmail, handleBulkDownload, isProcessingBulk]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50/50">
+    <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Purchase Invoices"
         description="Manage accounts payable bills and vendor tracking"

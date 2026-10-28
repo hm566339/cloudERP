@@ -257,7 +257,7 @@ describe('Phase 11 — Trial Status, Organization Context & Subscription UX Test
         accessMode: 'FULL',
         subscription: {
           status: 'TRIALING',
-          trialEndsAt: '2026-10-24T12:00:00.000Z'
+          trialEndsAt: new Date(Date.now() + 10 * 86400000).toISOString()
         }
       };
 

@@ -5,11 +5,8 @@ import Gstr1Page from './Gstr1Page';
 import Gstr3bPage from './Gstr3bPage';
 import HsnSummaryPage from './HsnSummaryPage';
 import ItcPage from './ItcPage';
-import { useRoutePath } from "../../../hooks/useRoutePath";
 
 export default function GstReportPage({ reportType }) {
-  const { buildPath } = useRoutePath();
-
   if (reportType === GST_REPORT_TYPES.GSTR1) {
     return <Gstr1Page />;
   }
@@ -31,8 +28,10 @@ export default function GstReportPage({ reportType }) {
 
   if (!meta || typeof fetcher !== 'function') {
     return (
-      <div className="bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-2xl p-10 text-center">
-        <p className="text-sm font-semibold text-zinc-500">Unknown report type: {reportType}</p>
+      <div className="bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-xl p-10 text-center">
+        <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+          Unknown report type: {reportType}
+        </p>
       </div>
     );
   }

@@ -678,12 +678,12 @@ export default function PurchaseRequisitionForm() {
   /* ── Shared style tokens (mirror Create Quotation / QuotationFormModal) ── */
   const sidebarCard = 'flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-2.5 bg-white dark:bg-card-dark shadow-2xs space-y-1.5';
   const cardHead = 'flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]';
-  const cardTitle = 'text-[8px] font-bold text-zinc-800 uppercase tracking-wider';
-  const label = 'text-[8px] font-semibold text-zinc-700 block mb-1';
+  const cardTitle = 'text-[8px] font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider';
+  const label = 'text-[8px] font-semibold text-zinc-700 dark:text-zinc-300 block mb-1';
   const field = (hasErr = false) =>
-    `input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark ${hasErr ? 'border-rose-300' : ''}`;
-  const errText = 'text-[7.2px] text-rose-600 mt-0.5 font-medium';
-  const btnSecondary = 'px-4 py-2 text-xs font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 shadow-xs transition-colors flex items-center gap-2';
+    `input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark ${hasErr ? 'border-rose-300 dark:border-rose-500' : ''}`;
+  const errText = 'text-[7.2px] text-rose-600 dark:text-rose-400 mt-0.5 font-medium';
+  const btnSecondary = 'px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 dark:hover:bg-[#222736] shadow-xs transition-colors flex items-center gap-2';
   const btnPrimary = 'px-4 py-2 text-xs font-bold text-white bg-primary rounded-md hover:bg-primary/90 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2';
   const colTemplate = 'grid-cols-[3%_13%_11%_8%_8%_8%_11%_10%_10%_12%_6%]';
 
@@ -698,16 +698,16 @@ export default function PurchaseRequisitionForm() {
           <button
             type="button"
             onClick={handleCancel}
-            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100 transition-colors"
+            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors"
             title="Back"
           >
             <ArrowLeft size={16} />
           </button>
           <div className="flex flex-col min-w-0">
-            <h2 className="text-base font-bold text-zinc-800 truncate">
+            <h2 className="text-base font-bold text-zinc-800 dark:text-zinc-100 truncate">
               {isEditing ? 'Edit Purchase Requisition' : 'New Purchase Requisition'}
             </h2>
-            <div className="text-[8px] text-zinc-500 font-medium truncate">
+            <div className="text-[8px] text-zinc-500 dark:text-zinc-400 font-medium truncate">
               {isEditing ? 'Update requisition details and items' : 'Create a new internal request for equipment and services'}
             </div>
           </div>
@@ -717,7 +717,7 @@ export default function PurchaseRequisitionForm() {
           <button
             type="button"
             onClick={handleCancel}
-            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100 transition-colors"
+            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors"
             title="Close"
           >
             <X size={16} />
@@ -755,6 +755,7 @@ export default function PurchaseRequisitionForm() {
             handleProductSearch={handleProductSearch}
             setProductSearchTerm={setProductSearchTerm}
             productSearchResults={productSearchResults}
+            setProductSearchResults={setProductSearchResults}
             initialProducts={initialProducts}
             isSearchingProducts={isSearchingProducts}
             handleOpenCreateProduct={handleOpenCreateProduct}
@@ -773,19 +774,19 @@ export default function PurchaseRequisitionForm() {
           />
 
           {/* 3. Request Summary (non-financial, pinned to bottom of right column) */}
-          <div className="p-4 border-t border-zinc-200 bg-zinc-50/40 mt-auto flex-none">
+          <div className="p-4 border-t border-zinc-200 dark:border-border-dark bg-zinc-50/40 dark:bg-transparent mt-auto flex-none">
             <div className="bg-white dark:bg-card-dark p-3.5 rounded-xl border border-zinc-200 dark:border-border-dark flex flex-col justify-between shadow-2xs space-y-2.5">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
-                <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Request Summary</h3>
+                <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">Request Summary</h3>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-[9.6px]">
-                  <span className="text-zinc-600 font-medium">Total Items</span>
-                  <span className="font-semibold text-zinc-800">{items.length}</span>
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium">Total Items</span>
+                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">{items.length}</span>
                 </div>
                 <div className="flex justify-between items-center text-[9.6px]">
-                  <span className="text-zinc-600 font-medium">Pending Approval</span>
-                  <span className="font-semibold text-zinc-800">0</span>
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium">Pending Approval</span>
+                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">0</span>
                 </div>
               </div>
             </div>
@@ -797,12 +798,12 @@ export default function PurchaseRequisitionForm() {
       {/* ═══════════════════════════════════════════════════════════════════
           BOTTOM ACTION BAR (fixed at bottom of page)
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex justify-between items-center p-3 border-t border-zinc-200 bg-zinc-100 flex-none">
+      <div className="flex justify-between items-center p-3 border-t border-zinc-200 dark:border-border-dark bg-zinc-100 dark:bg-card-dark flex-none">
         <div className="flex items-center gap-6 px-2">
-          <button type="button" className="flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer" onClick={() => window.print()}>
+          <button type="button" className="flex items-center gap-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer" onClick={() => window.print()}>
             <FileText size={14} /> Download PDF
           </button>
-          <button type="button" className="flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer" onClick={() => window.print()}>
+          <button type="button" className="flex items-center gap-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer" onClick={() => window.print()}>
             <Printer size={14} /> Print Requisition
           </button>
         </div>
@@ -855,8 +856,8 @@ export default function PurchaseRequisitionForm() {
       {showDiscardModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
           <div className="w-full max-w-sm bg-white dark:bg-card-dark rounded-xl shadow-xl border border-zinc-200 dark:border-border-dark p-6 animate-fade-in">
-            <h2 className="text-base font-semibold text-zinc-900">Discard unsaved changes?</h2>
-            <p className="mt-2 text-sm text-zinc-500">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Discard unsaved changes?</h2>
+            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
               Your changes will be lost if you leave without saving.
             </p>
             <div className="mt-5 flex justify-end gap-3">
@@ -883,16 +884,16 @@ export default function PurchaseRequisitionForm() {
       {isCreateProductOpen && (
         <div className="fixed inset-0 z-[400] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-card-dark w-full max-w-2xl h-[95vh] max-h-[95vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-200 dark:border-border-dark">
-            <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-200 dark:border-border-dark bg-zinc-50/80 dark:bg-card-dark shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center border border-zinc-200 text-zinc-700">
+                <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-surface-dark flex items-center justify-center border border-zinc-200 dark:border-border-dark text-zinc-700 dark:text-zinc-200">
                   <Package size={16} />
                 </div>
-                <h2 className="text-base font-bold text-zinc-900 tracking-tight">New Product</h2>
+                <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">New Product</h2>
               </div>
               <button
                 onClick={() => { setIsCreateProductOpen(false); setNewProductName(''); }}
-                className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors"
+                className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-hover-dark transition-colors"
               >
                 <X size={18} />
               </button>

@@ -756,7 +756,7 @@ export default function APPayments() {
   }), [filters]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50/50">
+    <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* ── Page Header ── */}
       <PageHeader
         title="Payments"
