@@ -1077,8 +1077,7 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
     <Route path={`${prefix}reports/profit-loss`} element={<ProtectedRoute module="REPORTS"><ProfitLoss /></ProtectedRoute>} />
     <Route path={`${prefix}reports/balance-sheet`} element={<ProtectedRoute module="REPORTS"><BalanceSheet /></ProtectedRoute>} />
     <Route path={`${prefix}reports/cash-flow`} element={<ProtectedRoute module="REPORTS"><CashFlow /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/gst`} element={<ProtectedRoute module="GST_REPORTS"><Navigate to={toPath('reports/gst/summary')} replace /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/gst/summary`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="summary" /></ProtectedRoute>} />
+    <Route path={`${prefix}reports/gst`} element={<ProtectedRoute module="GST_REPORTS"><Navigate to={toPath('reports/gst/gstr1')} replace /></ProtectedRoute>} />
     <Route path={`${prefix}reports/gst/gstr1`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="gstr1" /></ProtectedRoute>} />
     <Route path={`${prefix}reports/gst/gstr3b`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="gstr3b" /></ProtectedRoute>} />
     <Route path={`${prefix}reports/gst/hsn-summary`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="hsn-summary" /></ProtectedRoute>} />

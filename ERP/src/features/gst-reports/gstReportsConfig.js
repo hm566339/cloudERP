@@ -3,7 +3,6 @@ import { formatCurrency } from '../../utils/formatters';
 
 // ─── Report type keys (used by routes, nav, and API) ────────────────────────
 export const GST_REPORT_TYPES = {
-  SUMMARY: 'summary',
   GSTR1: 'gstr1',
   GSTR3B: 'gstr3b',
   HSN_SUMMARY: 'hsn-summary',
@@ -36,29 +35,6 @@ const invoiceDateColumn = { header: 'Invoice Date', accessor: (r) => dateText(r.
 const invoiceTypeColumn = { header: 'Type', accessor: (r) => text(r.invoiceType ?? r.type ?? r.documentType) };
 
 export const gstReportMeta = {
-  [GST_REPORT_TYPES.SUMMARY]: {
-    title: 'GST Summary',
-    subtitle: 'Dashboard (GST Summary) — period-wise tax liability and input tax credit',
-    summaryCards: [
-      { label: 'Total Taxable Value', key: 'totalTaxableValue', currency: true },
-      { label: 'CGST', key: 'totalCgst', currency: true },
-      { label: 'SGST', key: 'totalSgst', currency: true },
-      { label: 'IGST', key: 'totalIgst', currency: true },
-      { label: 'Total Tax', key: 'totalTax', currency: true },
-      { label: 'ITC Available', key: 'inputTaxCredit', currency: true },
-      { label: 'Net Payable', key: 'netPayable', currency: true },
-    ],
-    columns: [
-      invoiceTypeColumn,
-      { header: 'Count', accessor: (r) => num(r.count).toLocaleString(), className: 'text-right', cellClassName: 'text-right font-medium' },
-      amountColumn,
-      cgstColumn,
-      sgstColumn,
-      igstColumn,
-      cessColumn,
-      totalTaxColumn,
-    ],
-  },
   [GST_REPORT_TYPES.GSTR1]: {
     title: 'GSTR-1',
     subtitle: 'Outward supplies — monthly return',
@@ -154,7 +130,6 @@ export const gstReportMeta = {
 
 // ─── Report fetchers keyed by report type ───────────────────────────────────
 export const gstReportFetchers = {
-  [GST_REPORT_TYPES.SUMMARY]: gstReportsApi.getSummary,
   [GST_REPORT_TYPES.GSTR1]: gstReportsApi.getGstr1,
   [GST_REPORT_TYPES.GSTR3B]: gstReportsApi.getGstr3b,
   [GST_REPORT_TYPES.HSN_SUMMARY]: gstReportsApi.getHsnSummary,
@@ -163,7 +138,6 @@ export const gstReportFetchers = {
 
 // ─── Export options (shown on the Export Reports page) ──────────────────────
 export const gstExportOptions = [
-  { id: 'summary', type: GST_REPORT_TYPES.SUMMARY, label: 'GST Summary', description: 'Consolidated period summary (JSON)' },
   { id: 'gstr1', type: GST_REPORT_TYPES.GSTR1, label: 'GSTR-1', description: 'Outward supplies return (JSON / CSV)' },
   { id: 'gstr3b', type: GST_REPORT_TYPES.GSTR3B, label: 'GSTR-3B', description: 'Monthly summary return (JSON)' },
   { id: 'hsn-summary', type: GST_REPORT_TYPES.HSN_SUMMARY, label: 'HSN Summary', description: 'HSN-wise outward supplies (JSON / CSV)' },

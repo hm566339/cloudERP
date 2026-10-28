@@ -267,7 +267,6 @@ function getModuleNavigationBlueprint(moduleName, base, authContext) {
               icon: BarChart3,
               path: `${base}/accounts/reports/gst`,
               children: [
-                { id: 'acc-rep-gst-summary', label: 'GST Summary', path: `${base}/accounts/reports/gst/summary`, icon: LayoutDashboard, featureCode: 'GST_REPORTS', action: 'READ' },
                 { id: 'acc-rep-gst-gstr1', label: 'GSTR-1', path: `${base}/accounts/reports/gst/gstr1`, icon: FileText, featureCode: 'GST_REPORTS', action: 'READ' },
                 { id: 'acc-rep-gst-gstr3b', label: 'GSTR-3B', path: `${base}/accounts/reports/gst/gstr3b`, icon: Receipt, featureCode: 'GST_REPORTS', action: 'READ' },
                 { id: 'acc-rep-gst-hsn', label: 'HSN Summary', path: `${base}/accounts/reports/gst/hsn-summary`, icon: FileSpreadsheet, featureCode: 'GST_REPORTS', action: 'READ' },

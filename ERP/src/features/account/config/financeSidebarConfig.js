@@ -76,7 +76,6 @@ export const FINANCE_SIDEBAR = [
         icon: BarChart3,
         module: 'GST_REPORTS',
         children: [
-          { id: 'rpt-gst-summary', label: 'GST Summary', path: '/accounts/reports/gst/summary', module: 'GST_REPORTS', action: 'READ' },
           { id: 'rpt-gst-gstr1', label: 'GSTR-1', path: '/accounts/reports/gst/gstr1', module: 'GST_REPORTS', action: 'READ' },
           { id: 'rpt-gst-gstr3b', label: 'GSTR-3B', path: '/accounts/reports/gst/gstr3b', module: 'GST_REPORTS', action: 'READ' },
           { id: 'rpt-gst-hsn', label: 'HSN Summary', path: '/accounts/reports/gst/hsn-summary', module: 'GST_REPORTS', action: 'READ' },

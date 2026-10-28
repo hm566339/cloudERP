@@ -1,7 +1,6 @@
 import React from 'react';
 import { GST_REPORT_TYPES, gstReportMeta, gstReportFetchers } from '../gstReportsConfig';
 import GstReportViewer from '../components/GstReportViewer';
-import GstSummaryDashboardPage from './GstSummaryDashboardPage';
 import Gstr1Page from './Gstr1Page';
 import Gstr3bPage from './Gstr3bPage';
 import HsnSummaryPage from './HsnSummaryPage';
@@ -11,11 +10,6 @@ import { useRoutePath } from "../../../hooks/useRoutePath";
 export default function GstReportPage({ reportType }) {
   const { buildPath } = useRoutePath();
 
-  // The summary report type renders the dedicated GST Summary Dashboard.
-  if (reportType === GST_REPORT_TYPES.SUMMARY) {
-    return <GstSummaryDashboardPage />;
-  }
-  
   if (reportType === GST_REPORT_TYPES.GSTR1) {
     return <Gstr1Page />;
   }

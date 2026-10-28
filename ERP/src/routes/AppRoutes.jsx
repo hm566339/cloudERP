@@ -447,7 +447,7 @@ function CompanyRedirect() {
 
 function CompanyGstRedirect() {
   const { companyId } = useParams();
-  return <Navigate to={`/company/${encodeURIComponent(companyId || '')}/accounts/reports/gst/summary`} replace />;
+  return <Navigate to={`/company/${encodeURIComponent(companyId || '')}/accounts/reports/gst/gstr1`} replace />;
 }
 
 function CompanyWorkflowRedirect() {
