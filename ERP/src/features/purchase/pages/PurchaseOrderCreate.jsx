@@ -367,15 +367,15 @@ export default function PurchaseOrderCreate({ initialData }) {
   /* ── Shared style tokens (exact match with PurchaseRequisitionForm) ── */
   const sidebarCard = 'flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-2.5 bg-white dark:bg-card-dark shadow-2xs space-y-1.5';
   const cardHead = 'flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-[#2A2F3D]';
-  const cardTitle = 'text-[8px] font-bold text-zinc-800 uppercase tracking-wider';
-  const label = 'text-[8px] font-semibold text-zinc-700 block mb-1';
+  const cardTitle = 'text-[8px] font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider';
+  const label = 'text-[8px] font-semibold text-zinc-700 dark:text-zinc-300 block mb-1';
   const field = (hasErr = false) =>
-    `input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md px-2 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${
-      hasErr ? 'border-rose-300' : ''
+    `input-field w-full h-8 text-[8.8px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-[#2A2F3D] rounded-md px-2 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${
+      hasErr ? 'border-rose-300 dark:border-rose-500' : ''
     }`;
-  const errText = 'text-[7.2px] text-rose-600 mt-0.5 font-medium';
+  const errText = 'text-[7.2px] text-rose-600 dark:text-rose-400 mt-0.5 font-medium';
   const btnSecondary =
-    'px-4 py-2 text-xs font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 shadow-xs transition-colors flex items-center gap-2 cursor-pointer';
+    'px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 dark:hover:bg-[#222736] shadow-xs transition-colors flex items-center gap-2 cursor-pointer';
   const btnPrimary =
     'px-4 py-2 text-xs font-bold text-white bg-primary rounded-md hover:bg-primary/90 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 cursor-pointer';
   const colTemplate =
@@ -392,16 +392,16 @@ export default function PurchaseOrderCreate({ initialData }) {
           <button
             type="button"
             onClick={handleCancel}
-            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors cursor-pointer"
             title="Back"
           >
             <ArrowLeft size={16} />
           </button>
           <div className="flex flex-col min-w-0">
-            <h2 className="text-base font-bold text-zinc-800 truncate">
+            <h2 className="text-base font-bold text-zinc-800 dark:text-zinc-100 truncate">
               {initialData ? 'Edit Purchase Order' : 'Create Purchase Order'}
             </h2>
-            <div className="text-[8px] text-zinc-500 font-medium truncate">
+            <div className="text-[8px] text-zinc-500 dark:text-zinc-400 font-medium truncate">
               {initialData
                 ? 'Update purchase order details and items'
                 : 'Fill in the details to generate a new purchase order'}
@@ -413,7 +413,7 @@ export default function PurchaseOrderCreate({ initialData }) {
           <button
             type="button"
             onClick={handleCancel}
-            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 rounded-full hover:bg-zinc-100 dark:hover:bg-[#222736] transition-colors cursor-pointer"
             title="Close"
           >
             <X size={16} />
@@ -427,7 +427,7 @@ export default function PurchaseOrderCreate({ initialData }) {
       <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-border-dark bg-white dark:bg-page-dark">
 
         {/* ── LEFT INTERNAL FORM PANEL ── */}
-        <div className="w-full lg:w-[320px] xl:w-[340px] flex-none p-2.5 sm:p-3 bg-zinc-50/40 overflow-y-auto overflow-x-hidden sm:grid sm:grid-cols-2 lg:flex lg:flex-col gap-2.5 sm:gap-3">
+        <div className="w-full lg:w-[320px] xl:w-[340px] flex-none p-2.5 sm:p-3 bg-zinc-50/40 dark:bg-transparent overflow-y-auto overflow-x-hidden sm:grid sm:grid-cols-2 lg:flex lg:flex-col gap-2.5 sm:gap-3">
 
           {/* SECTION 1: PURCHASE ORDER INFORMATION */}
           <div className={sidebarCard}>
@@ -686,9 +686,9 @@ export default function PurchaseOrderCreate({ initialData }) {
           )}
 
           {/* 1. Order Items Section Header */}
-          <div className="px-4 py-2.5 bg-zinc-50/80 border-b border-zinc-200 flex justify-between items-center flex-none sticky top-0 z-20">
+          <div className="px-4 py-2.5 bg-zinc-50/80 dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark flex justify-between items-center flex-none sticky top-0 z-20">
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">ORDER ITEMS</h3>
+              <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">ORDER ITEMS</h3>
               {formData.items.length > 0 && (
                 <span className="text-[8.8px] font-medium text-zinc-500 dark:text-zinc-400 bg-white dark:bg-surface-dark px-2 py-0.5 rounded-full border border-zinc-200 dark:border-border-dark shadow-2xs">
                   {formData.items.length} {formData.items.length === 1 ? 'item' : 'items'}
@@ -708,7 +708,7 @@ export default function PurchaseOrderCreate({ initialData }) {
           <div className="overflow-x-auto flex-1">
             <div className="min-w-[880px]">
               {/* Table Header */}
-              <div className="w-full text-left bg-zinc-100 text-zinc-600 border-b border-zinc-200 flex-none pr-1">
+              <div className="w-full text-left bg-zinc-100 dark:bg-surface-dark text-zinc-600 dark:text-zinc-300 border-b border-zinc-200 dark:border-border-dark flex-none pr-1">
                 <div className={`grid ${colTemplate} w-full min-w-0`}>
                   <div className="p-1.5 font-semibold truncate text-[10px] text-center uppercase tracking-wider">#</div>
                   <div className="p-1.5 font-semibold truncate text-[10px] uppercase tracking-wider">PRODUCT / ITEM *</div>
@@ -723,7 +723,7 @@ export default function PurchaseOrderCreate({ initialData }) {
               </div>
 
               {/* Table Body */}
-              <div className="flex flex-col divide-y divide-zinc-100">
+              <div className="flex flex-col divide-y divide-zinc-100 dark:divide-border-dark">
                 {formData.items.map((item, idx) => {
                   const { lineTotal } = calculateLine(item);
 
@@ -892,45 +892,45 @@ export default function PurchaseOrderCreate({ initialData }) {
           </div>
 
           {/* 3. ORDER SUMMARY (pinned to bottom of right column) */}
-          <div className="p-4 border-t border-zinc-200 bg-zinc-50/40 mt-auto flex-none">
+          <div className="p-4 border-t border-zinc-200 dark:border-border-dark bg-zinc-50/40 dark:bg-transparent mt-auto flex-none">
             <div className="bg-white dark:bg-card-dark p-3.5 rounded-xl border border-zinc-200 dark:border-border-dark shadow-2xs space-y-2.5">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
-                <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">ORDER SUMMARY</h3>
-                <span className="text-[8.8px] font-medium text-zinc-500 bg-zinc-50 border border-zinc-200 px-2 py-0.5 rounded-full">
+                <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">ORDER SUMMARY</h3>
+                <span className="text-[8.8px] font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark px-2 py-0.5 rounded-full">
                   {totals.totalItems} {totals.totalItems === 1 ? 'item' : 'items'}
                 </span>
               </div>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-                <div className="text-[9.6px] text-zinc-500">
-                  <span className="font-semibold text-zinc-700">Commercial Summary:</span> Review subtotal, freight, other charges, and tax calculations before saving.
+                <div className="text-[9.6px] text-zinc-500 dark:text-zinc-400">
+                  <span className="font-semibold text-zinc-700 dark:text-zinc-300">Commercial Summary:</span> Review subtotal, freight, other charges, and tax calculations before saving.
                 </div>
                 <div className="w-full sm:max-w-xs space-y-1.5">
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Total Items</span>
-                    <span className="font-semibold text-zinc-800">{totals.totalItems}</span>
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">Total Items</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200">{totals.totalItems}</span>
                   </div>
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Subtotal</span>
-                    <span className="font-semibold text-zinc-800 font-mono">{fmt(totals.subtotal)}</span>
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">Subtotal</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200 font-mono">{fmt(totals.subtotal)}</span>
                   </div>
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Taxable Amount</span>
-                    <span className="font-semibold text-zinc-800 font-mono">{fmt(totals.taxableAmount)}</span>
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">Taxable Amount</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200 font-mono">{fmt(totals.taxableAmount)}</span>
                   </div>
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Freight</span>
-                    <span className="font-semibold text-zinc-800 font-mono">{fmt(totals.freight)}</span>
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">Freight</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200 font-mono">{fmt(totals.freight)}</span>
                   </div>
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Other Charges</span>
-                    <span className="font-semibold text-zinc-800 font-mono">{fmt(totals.otherCharges)}</span>
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">Other Charges</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200 font-mono">{fmt(totals.otherCharges)}</span>
                   </div>
                   <div className="flex justify-between items-center text-[9.6px]">
-                    <span className="text-zinc-600 font-medium">Tax</span>
-                    <span className="font-semibold text-zinc-800 font-mono">{fmt(totals.tax)}</span>
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">Tax</span>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200 font-mono">{fmt(totals.tax)}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs border-t border-zinc-200 pt-2 font-bold">
-                    <span className="text-zinc-900">Grand Total</span>
+                  <div className="flex justify-between items-center text-xs border-t border-zinc-200 dark:border-border-dark pt-2 font-bold">
+                    <span className="text-zinc-900 dark:text-zinc-100">Grand Total</span>
                     <span className="text-primary font-mono text-sm">{fmt(totals.grandTotal)}</span>
                   </div>
                 </div>
@@ -944,7 +944,7 @@ export default function PurchaseOrderCreate({ initialData }) {
       {/* ═══════════════════════════════════════════════════════════════════
           BOTTOM ACTION BAR (exact same action-bar style as PR)
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex justify-between items-center p-3 border-t border-zinc-200 bg-zinc-100 flex-none shadow-sm z-30">
+      <div className="flex justify-between items-center p-3 border-t border-zinc-200 dark:border-border-dark bg-zinc-100 dark:bg-card-dark flex-none shadow-sm z-30">
         <button
           type="button"
           onClick={handleCancel}

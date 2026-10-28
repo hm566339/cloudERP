@@ -12,6 +12,7 @@ export default function PurchaseRequisitionItemsTable({
   handleProductSearch,
   setProductSearchTerm,
   productSearchResults,
+  setProductSearchResults,
   initialProducts,
   isSearchingProducts,
   handleOpenCreateProduct,
@@ -43,9 +44,9 @@ export default function PurchaseRequisitionItemsTable({
       )}
 
       {/* 1. Requested Items Section Header */}
-      <div className="px-4 py-2.5 bg-zinc-50/80 border-b border-zinc-200 flex justify-between items-center flex-none sticky top-0 z-20">
+      <div className="px-4 py-2.5 bg-zinc-50/80 dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark flex justify-between items-center flex-none sticky top-0 z-20">
         <div className="flex items-center gap-2">
-          <h3 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">Requested Items</h3>
+          <h3 className="text-xs font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">Requested Items</h3>
           <span className="text-[8.8px] font-medium text-zinc-500 dark:text-zinc-400 bg-white dark:bg-surface-dark px-2 py-0.5 rounded-full border border-zinc-200 dark:border-border-dark">
             {items.length} {items.length === 1 ? 'item' : 'items'} requested
           </span>
@@ -64,7 +65,7 @@ export default function PurchaseRequisitionItemsTable({
       <div className="overflow-x-auto">
         <div className="min-w-[1040px]">
           {/* Table Header */}
-          <div className="w-full text-left bg-zinc-100 text-zinc-600 border-b border-zinc-200 flex-none pr-1">
+          <div className="w-full text-left bg-zinc-100 dark:bg-surface-dark text-zinc-600 dark:text-zinc-300 border-b border-zinc-200 dark:border-border-dark flex-none pr-1">
             <div className={`grid ${colTemplate} w-full min-w-0`}>
               <div className="p-1.5 font-semibold truncate text-[11px] text-center">#</div>
               <div className="p-1.5 font-semibold truncate text-[11px]">Item Name *</div>
@@ -83,11 +84,11 @@ export default function PurchaseRequisitionItemsTable({
           </div>
 
           {/* Table Body */}
-          <div className="flex flex-col divide-y divide-zinc-100">
+          <div className="flex flex-col divide-y divide-zinc-100 dark:divide-border-dark">
             {items.map((item, idx) => (
               <div key={idx} className={`grid ${colTemplate} w-full bg-white dark:bg-card-dark hover:bg-zinc-50/50 dark:hover:bg-hover-dark/40 min-w-0 border-b border-zinc-100 dark:border-[#2A2F3D] last:border-0 box-border`}>
                 {/* # */}
-                <div className="p-1 pt-2 pb-2 min-w-0 flex items-center justify-center text-[8.8px] text-zinc-400 font-medium">
+                <div className="p-1 pt-2 pb-2 min-w-0 flex items-center justify-center text-[8.8px] text-zinc-400 dark:text-zinc-500 font-medium">
                   {idx + 1}
                 </div>
                 {/* ITEM NAME */}
@@ -100,9 +101,13 @@ export default function PurchaseRequisitionItemsTable({
                     comboInput={true}
                     onSearch={handleProductSearch}
                     onSearchChange={(term) => {
-                      setProductSearchTerm(term);
+                      if (typeof setProductSearchTerm === 'function') {
+                        setProductSearchTerm(term);
+                      }
                       if (!term || !term.trim()) {
-                        setProductSearchResults(initialProducts);
+                        if (typeof setProductSearchResults === 'function') {
+                          setProductSearchResults(initialProducts);
+                        }
                       }
                     }}
                     isLoading={isSearchingProducts}
@@ -118,7 +123,7 @@ export default function PurchaseRequisitionItemsTable({
                           <button
                             type="button"
                             onClick={() => { closeDropdown(); handleOpenCreateProduct(searchTerm); }}
-                            className="w-full text-left px-3 py-2 text-[9.6px] text-primary hover:bg-zinc-50 flex items-center gap-1 font-medium"
+                            className="w-full text-left px-3 py-2 text-[9.6px] text-primary hover:bg-zinc-50 dark:hover:bg-[#222736] flex items-center gap-1 font-medium"
                           >
                             <Plus size={14} /> Create New Product "{searchTerm}"
                           </button>
@@ -277,8 +282,8 @@ export default function PurchaseRequisitionItemsTable({
                     disabled={items.length <= 1}
                     title="Remove item"
                     className={`p-1.5 rounded-md transition-colors ${items.length <= 1
-                      ? 'text-zinc-300 cursor-not-allowed'
-                      : 'text-zinc-400 hover:text-red-500 hover:bg-red-50'
+                      ? 'text-zinc-300 dark:text-zinc-700 cursor-not-allowed'
+                      : 'text-zinc-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30'
                       }`}
                   >
                     <Trash2 size={14} />

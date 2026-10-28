@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FileText, Clock, ShoppingCart, Truck, Receipt, ClipboardList, FileSearch, CreditCard, BarChart3, Book, BookMarked, FileMinus, FilePlus, FileSpreadsheet, Scale, TrendingUp, Wallet, Users, ShieldAlert, Key, Layout, Shield } from 'lucide-react';
+import { FileText, Clock, ShoppingCart, Truck, Receipt, ClipboardList, FileSearch, CreditCard, BarChart3, Book, BookMarked, FileMinus, FilePlus, FileSpreadsheet, Scale, TrendingUp, Wallet, Users, ShieldAlert, Key, Layout, Shield, Download } from 'lucide-react';
 import { useRoutePath } from '../../hooks/useRoutePath';
 import { documentFlowApi } from '../../api/common/documentFlow.api';
 
@@ -322,6 +322,51 @@ export const userTabs = [
   }
 ];
 
+export const gstTabs = [
+  {
+    key: 'gstr1',
+    label: 'GSTR-1',
+    icon: FileText,
+    path: '/accounts/reports/gst/gstr1',
+    aliases: ['/accounts/reports/gst/gstr1', '/reports/gst/gstr1', '/gst-reports/gstr1']
+  },
+  {
+    key: 'gstr3b',
+    label: 'GSTR-3B',
+    icon: FileSpreadsheet,
+    path: '/accounts/reports/gst/gstr3b',
+    aliases: ['/accounts/reports/gst/gstr3b', '/reports/gst/gstr3b', '/gst-reports/gstr3b']
+  },
+  {
+    key: 'hsn-summary',
+    label: 'HSN Summary',
+    icon: BookMarked,
+    path: '/accounts/reports/gst/hsn-summary',
+    aliases: ['/accounts/reports/gst/hsn-summary', '/reports/gst/hsn-summary', '/gst-reports/hsn-summary']
+  },
+  {
+    key: 'itc',
+    label: 'ITC Report',
+    icon: TrendingUp,
+    path: '/accounts/reports/gst/itc',
+    aliases: ['/accounts/reports/gst/itc', '/reports/gst/itc', '/gst-reports/itc']
+  },
+  {
+    key: 'gstr2b',
+    label: 'GSTR-2B',
+    icon: Scale,
+    path: '/accounts/reports/gst/gstr2b',
+    aliases: ['/accounts/reports/gst/gstr2b', '/reports/gst/gstr2b', '/gst-reports/gstr2b']
+  },
+  {
+    key: 'export',
+    label: 'Export Returns',
+    icon: Download,
+    path: '/accounts/reports/gst/export',
+    aliases: ['/accounts/reports/gst/export', '/reports/gst/export', '/gst-reports/export']
+  }
+];
+
 const DOC_TYPE_TO_KEY = {
   QUOTATION: 'quotations',
   PROFORMA_INVOICE: 'proforma',
@@ -351,6 +396,7 @@ function detectModuleFromTabs(tabs) {
   if (keys.has('requisitions') || keys.has('rfqs') || keys.has('purchase-orders')) return 'PURCHASE';
   if (keys.has('requests') || keys.has('reimbursements')) return 'EXPENSES';
   if (keys.has('journal') || keys.has('credit-notes') || keys.has('debit-notes')) return 'ACCOUNT';
+  if (keys.has('gstr1') || keys.has('gstr3b') || keys.has('hsn-summary') || keys.has('itc')) return 'GST_REPORTS';
   return null;
 }
 

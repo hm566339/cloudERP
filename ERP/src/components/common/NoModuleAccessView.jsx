@@ -30,30 +30,30 @@ export default function NoModuleAccessView() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-50 p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-50 dark:bg-[#0F1117] p-6">
       <div className="bg-white dark:bg-card-dark p-8 rounded-2xl shadow-sm border border-zinc-200 dark:border-border-dark max-w-lg w-full text-center">
-        <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <div className="w-16 h-16 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-amber-200/50 dark:border-amber-800/40">
           <ShieldX size={32} />
         </div>
-        <h1 className="text-2xl font-bold text-zinc-900 mb-2">No Modules Assigned</h1>
-        <p className="text-zinc-600 mb-4 leading-relaxed">
-          Your account is active in <strong className="text-zinc-800">{orgName}</strong> (Company: <strong className="text-zinc-800">{companyName}</strong>), but no application modules have been entitled to your membership.
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">No Modules Assigned</h1>
+        <p className="text-zinc-600 dark:text-zinc-400 mb-4 leading-relaxed">
+          Your account is active in <strong className="text-zinc-800 dark:text-zinc-200">{orgName}</strong> (Company: <strong className="text-zinc-800 dark:text-zinc-200">{companyName}</strong>), but no application modules have been entitled to your membership.
         </p>
-        <p className="text-xs text-zinc-400 mb-8">
+        <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-8">
           Contact your organization administrator to assign module entitlements (Account, Inventory, or CRM).
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={handleSwitchCompany}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-200 font-medium text-zinc-700 hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors"
           >
             <ArrowLeftRight size={16} />
             <span>Switch Company</span>
           </button>
           <button
             onClick={handleLogout}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-900 font-medium text-white hover:bg-zinc-800 transition-colors"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-900 dark:bg-[#4C8DFF] font-medium text-white hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] transition-colors"
           >
             <LogOut size={16} />
             <span>Sign Out</span>

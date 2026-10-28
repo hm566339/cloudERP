@@ -580,7 +580,7 @@ export default function GoodsReceiptsPage() {
   ], [filters, setFilter]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50/50">
+    <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="Goods Receipts"
         description="Manage inbound warehouse deliveries, physical receipts, and 3-way matching"

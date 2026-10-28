@@ -24,6 +24,11 @@ export default {
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       colors: {
+        'page-dark': '#0F1117',
+        'card-dark': '#161922',
+        'surface-dark': '#1D212C',
+        'hover-dark': '#222736',
+        'border-dark': '#2A2F3D',
         primary: {
           DEFAULT: 'var(--color-primary)',
           hover: 'var(--color-primary-hover)',
@@ -50,6 +55,7 @@ export default {
         border: {
           DEFAULT: 'var(--color-border)',
           strong: 'var(--border-strong, #D4D4D8)',
+          dark: '#2A2F3D',
         },
         input: 'var(--color-input-bg)',
         placeholder: 'var(--placeholder, #A1A1AA)',

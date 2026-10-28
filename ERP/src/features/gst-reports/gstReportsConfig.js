@@ -122,8 +122,8 @@ export const gstReportMeta = {
       igstColumn,
       totalTaxColumn,
       { header: 'ITC Eligible', accessor: (r) => money(r.itcEligible ?? r.eligibleItc), className: 'text-right', cellClassName: 'text-right font-medium' },
-      { header: 'ITC Claimed', accessor: (r) => money(r.itcClaimed ?? r.claimedItc), className: 'text-right', cellClassName: 'text-right font-bold text-emerald-700' },
-      { header: 'ITC Reversed', accessor: (r) => money(r.itcReversed ?? r.reversedItc), className: 'text-right', cellClassName: 'text-right font-medium text-red-700' },
+      { header: 'ITC Claimed', accessor: (r) => money(r.itcClaimed ?? r.claimedItc), className: 'text-right', cellClassName: 'text-right font-bold text-emerald-600 dark:text-emerald-400' },
+      { header: 'ITC Reversed', accessor: (r) => money(r.itcReversed ?? r.reversedItc), className: 'text-right', cellClassName: 'text-right font-medium text-rose-600 dark:text-rose-400' },
     ],
   },
 };

@@ -349,17 +349,17 @@ export default function RFQForm() {
   /* ── Shared style tokens (mirror PurchaseRequisitionForm) ── */
   const sidebarCard = 'flex-none border border-zinc-200 dark:border-border-dark rounded-lg p-3 bg-white dark:bg-card-dark shadow-2xs space-y-2';
   const cardHead = 'flex items-center justify-between pb-1.5 border-b border-zinc-100 dark:border-[#2A2F3D]';
-  const cardTitle = 'text-[9.6px] font-bold text-zinc-800 uppercase tracking-wider';
-  const label = 'text-[9.6px] font-semibold text-zinc-700 block mb-1';
-  const field = (hasErr = false) => `input-field w-full h-8 text-[9.6px] text-zinc-700 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md px-2 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${hasErr ? 'border-rose-300' : ''}`;
-  const tableField = (hasErr = false) => `input-field w-full h-8 text-[9.6px] text-zinc-700 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md px-1.5 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${hasErr ? 'border-rose-300' : ''}`;
-  const errText = 'text-[8.8px] text-rose-600 mt-0.5 font-medium';
-  const btnSecondary = 'px-4 py-2 text-xs font-semibold text-zinc-600 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 shadow-xs transition-colors flex items-center gap-2';
+  const cardTitle = 'text-[9.6px] font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider';
+  const label = 'text-[9.6px] font-semibold text-zinc-700 dark:text-zinc-300 block mb-1';
+  const field = (hasErr = false) => `input-field w-full h-8 text-[9.6px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md px-2 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${hasErr ? 'border-rose-300' : ''}`;
+  const tableField = (hasErr = false) => `input-field w-full h-8 text-[9.6px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md px-1.5 focus:ring-1 focus:ring-zinc-900/10 focus:border-zinc-400 outline-none transition-all ${hasErr ? 'border-rose-300' : ''}`;
+  const errText = 'text-[8.8px] text-rose-600 dark:text-rose-400 mt-0.5 font-medium';
+  const btnSecondary = 'px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md hover:bg-zinc-50 dark:hover:bg-[#222736] shadow-xs transition-colors flex items-center gap-2';
   const btnPrimary = 'px-4 py-2 text-xs font-bold text-white bg-primary rounded-md hover:bg-primary/90 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2';
   const colTemplate = 'grid-cols-[4%_16%_16%_12%_12%_10%_12%_18%]';
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-zinc-50 animate-fade-in w-full h-full overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-zinc-50 dark:bg-page-dark animate-fade-in w-full h-full overflow-hidden">
 
       {/* ═══════════════════════════════════════════════════════════════════
           PAGE HEADER
@@ -369,16 +369,16 @@ export default function RFQForm() {
           <button
             type="button"
             onClick={handleCancel}
-            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 rounded-full transition-colors"
+            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-full transition-colors"
             title="Back"
           >
             <ArrowLeft size={16} />
           </button>
           <div className="flex flex-col min-w-0">
-            <h2 className="text-[15px] font-bold text-zinc-900 tracking-tight truncate">
+            <h2 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
               {isEditing ? 'Edit RFQ' : 'New RFQ'}
             </h2>
-            <div className="text-[10px] text-zinc-500 truncate mt-0.5">
+            <div className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
               {isEditing ? 'Update request for quotation details' : 'Create a new request for quotation based on an approved purchase requisition'}
             </div>
           </div>
@@ -388,7 +388,7 @@ export default function RFQForm() {
           <button
             type="button"
             onClick={handleCancel}
-            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 rounded-full transition-colors"
+            className="p-1.5 flex-none text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-full transition-colors"
             title="Close"
           >
             <X size={16} />
@@ -402,7 +402,7 @@ export default function RFQForm() {
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 divide-y lg:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-border-dark bg-white dark:bg-page-dark">
 
         {/* ── LEFT COLUMN (FORM SIDEBAR) ── */}
-        <div className="w-full lg:w-[260px] flex-none p-2.5 bg-zinc-50/40 overflow-y-auto overflow-x-hidden flex flex-col gap-2.5">
+        <div className="w-full lg:w-[260px] flex-none p-2.5 bg-zinc-50/40 dark:bg-transparent overflow-y-auto overflow-x-hidden flex flex-col gap-2.5">
 
           {/* 1. RFQ INFORMATION */}
           <div className={sidebarCard}>
@@ -417,7 +417,7 @@ export default function RFQForm() {
                     type="text"
                     value={pr?.requisitionNumber || formData.purchaseRequisitionId}
                     disabled
-                    className={`${field()} bg-zinc-50 text-zinc-500 cursor-not-allowed`}
+                    className={`${field()} !bg-zinc-50 dark:!bg-[#1D212C]/60 text-zinc-500 dark:text-zinc-400 cursor-not-allowed`}
                   />
                 ) : (
                   <CustomSelect
@@ -482,7 +482,7 @@ export default function RFQForm() {
           <div className={sidebarCard}>
             <div className={cardHead}>
               <h3 className={cardTitle}>Suppliers</h3>
-              <span className="text-[9.6px] font-semibold text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded-md">
+              <span className="text-[9.6px] font-semibold text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-surface-dark px-1.5 py-0.5 rounded-md">
                 {selectedVendorIds.length} selected
               </span>
             </div>
@@ -490,7 +490,7 @@ export default function RFQForm() {
             <div className="space-y-2">
               <div className="relative" ref={vendorDropdownRef}>
                 <div className="relative">
-                  <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
                   <input
                     type="text"
                     value={vendorSearchTerm}
@@ -500,16 +500,16 @@ export default function RFQForm() {
                     }}
                     onFocus={() => setIsVendorDropdownOpen(true)}
                     placeholder="Add a vendor..."
-                    className={`w-full h-8 pl-8 pr-2 text-[9.6px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark border dark:border-border-dark rounded-md outline-none transition-all ${errors.vendors ? 'border-rose-300' : 'border-zinc-200 focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900/10'}`}
+                    className={`w-full h-8 pl-8 pr-2 text-[9.6px] text-zinc-700 dark:text-zinc-200 bg-white dark:bg-surface-dark border dark:border-border-dark rounded-md outline-none transition-all ${errors.vendors ? 'border-rose-300 dark:border-rose-500' : 'border-zinc-200 dark:border-border-dark focus:border-zinc-400 dark:focus:border-primary/50 focus:ring-1 focus:ring-zinc-900/10'}`}
                   />
                 </div>
 
                 {isVendorDropdownOpen && (
                   <div className="absolute z-50 w-full mt-1 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md shadow-lg max-h-48 overflow-y-auto py-1">
                     {vendorsLoading ? (
-                      <div className="px-3 py-2 text-[10px] text-zinc-500 text-center">Loading vendors...</div>
+                      <div className="px-3 py-2 text-[10px] text-zinc-500 dark:text-zinc-400 text-center">Loading vendors...</div>
                     ) : filteredVendors.length === 0 ? (
-                      <div className="px-3 py-2 text-[10px] text-zinc-500 text-center">No vendors found.</div>
+                      <div className="px-3 py-2 text-[10px] text-zinc-500 dark:text-zinc-400 text-center">No vendors found.</div>
                     ) : (
                       filteredVendors.map(vendor => {
                         const isSelected = selectedVendorIds.includes(vendor.id);
@@ -526,9 +526,9 @@ export default function RFQForm() {
                               className="w-3.5 h-3.5 rounded border-zinc-300 text-primary focus:ring-primary"
                             />
                             <div className="flex flex-col min-w-0">
-                              <span className="text-[10px] font-medium text-zinc-800 truncate">{vendor.vendorName || vendor.name}</span>
+                              <span className="text-[10px] font-medium text-zinc-800 dark:text-zinc-200 truncate">{vendor.vendorName || vendor.name}</span>
                               {(vendor.vendorCode || vendor.code) && (
-                                <span className="text-[9px] text-zinc-500 truncate">{vendor.vendorCode || vendor.code}</span>
+                                <span className="text-[9px] text-zinc-500 dark:text-zinc-400 truncate">{vendor.vendorCode || vendor.code}</span>
                               )}
                             </div>
                           </div>
@@ -542,7 +542,7 @@ export default function RFQForm() {
 
               <div className="flex flex-col gap-1.5 mt-2">
                 {selectedVendorIds.length === 0 ? (
-                  <div className="text-[9.6px] text-zinc-500 text-center py-3 bg-zinc-50 rounded-md border border-dashed border-zinc-200">
+                  <div className="text-[9.6px] text-zinc-500 dark:text-zinc-400 text-center py-3 bg-zinc-50 dark:bg-surface-dark rounded-md border border-dashed border-zinc-200 dark:border-border-dark">
                     No vendors selected yet.
                   </div>
                 ) : (
@@ -551,15 +551,15 @@ export default function RFQForm() {
                     return (
                       <div key={vid} className="flex items-center justify-between gap-2 p-1.5 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-md shadow-2xs group">
                         <div className="flex flex-col min-w-0">
-                          <span className="text-[9.6px] font-medium text-zinc-800 truncate">{vendor.vendorName || vendor.name}</span>
+                          <span className="text-[9.6px] font-medium text-zinc-800 dark:text-zinc-200 truncate">{vendor.vendorName || vendor.name}</span>
                           {(vendor.vendorCode || vendor.code) && (
-                            <span className="text-[8.8px] text-zinc-500 truncate">{vendor.vendorCode || vendor.code}</span>
+                            <span className="text-[8.8px] text-zinc-500 dark:text-zinc-400 truncate">{vendor.vendorCode || vendor.code}</span>
                           )}
                         </div>
                         <button
                           type="button"
                           onClick={() => removeVendor(vid)}
-                          className="p-1 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors flex-none"
+                          className="p-1 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded transition-colors flex-none"
                           title="Remove vendor"
                         >
                           <X size={12} />
@@ -606,9 +606,9 @@ export default function RFQForm() {
         {/* ── RIGHT COLUMN: LARGE REQUESTED ITEMS AREA ── */}
         <div className="w-full flex-1 flex flex-col overflow-y-auto min-h-0 bg-white dark:bg-page-dark">
           {/* Requested Items Section Header */}
-          <div className="px-4 py-3 bg-zinc-50/80 border-b border-zinc-200 flex items-center justify-between flex-none sticky top-0 z-20">
+          <div className="px-4 py-3 bg-zinc-50/80 dark:bg-card-dark border-b border-zinc-200 dark:border-border-dark flex items-center justify-between flex-none sticky top-0 z-20">
             <div className="flex items-center gap-2">
-              <h3 className="text-[11px] font-bold text-zinc-800 uppercase tracking-wider">Requested Items</h3>
+              <h3 className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">Requested Items</h3>
               {items.length > 0 && (
                 <span className="text-[9.6px] font-semibold text-zinc-500 dark:text-zinc-400 bg-white dark:bg-surface-dark px-2 py-0.5 rounded-full border border-zinc-200 dark:border-border-dark shadow-2xs">
                   {items.length} {items.length === 1 ? 'item' : 'items'} loaded
@@ -626,12 +626,12 @@ export default function RFQForm() {
 
           {/* Items Table */}
           {items.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-500">
-              <div className="w-12 h-12 bg-zinc-50 border border-zinc-200 rounded-full flex items-center justify-center mb-3 shadow-2xs">
-                <FileText size={20} className="text-zinc-400" />
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-500 dark:text-zinc-400">
+              <div className="w-12 h-12 bg-zinc-50 dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-full flex items-center justify-center mb-3 shadow-2xs">
+                <FileText size={20} className="text-zinc-400 dark:text-zinc-500" />
               </div>
-              <p className="text-[13px] font-semibold text-zinc-700 mb-1">No items loaded</p>
-              <p className="text-[11px] text-zinc-500 max-w-sm leading-relaxed">
+              <p className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-200 mb-1">No items loaded</p>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-sm leading-relaxed">
                 Select an approved purchase requisition from the left sidebar to automatically load items for this RFQ.
               </p>
             </div>
@@ -639,7 +639,7 @@ export default function RFQForm() {
             <div className="overflow-x-auto flex-1">
               <div className="min-w-[1040px]">
                 {/* Table Header */}
-                <div className="w-full text-left bg-zinc-100/80 text-zinc-600 border-b border-zinc-200 flex-none">
+                <div className="w-full text-left bg-zinc-100/80 dark:bg-surface-dark text-zinc-600 dark:text-zinc-300 border-b border-zinc-200 dark:border-border-dark flex-none">
                   <div className={`grid ${colTemplate} w-full min-w-0`}>
                     <div className="p-2 font-semibold truncate text-[10px] uppercase text-center tracking-wider">#</div>
                     <div className="p-2 font-semibold truncate text-[10px] uppercase tracking-wider">Item Name *</div>
@@ -655,8 +655,8 @@ export default function RFQForm() {
                 {/* Table Body */}
                 <div className="w-full bg-white dark:bg-card-dark divide-y divide-zinc-100 dark:divide-border-dark/60 flex-1 overflow-y-auto pb-4">
                   {items.map((item, index) => (
-                    <div key={index} className={`grid ${colTemplate} w-full min-w-0 hover:bg-zinc-50/50 transition-colors`}>
-                      <div className="p-1.5 flex items-center justify-center text-[10.4px] text-zinc-400 font-medium">
+                    <div key={index} className={`grid ${colTemplate} w-full min-w-0 hover:bg-zinc-50/50 dark:hover:bg-hover-dark/40 transition-colors`}>
+                      <div className="p-1.5 flex items-center justify-center text-[10.4px] text-zinc-400 dark:text-zinc-500 font-medium">
                         {index + 1}
                       </div>
                       <div className="p-1.5 flex items-center">
@@ -734,19 +734,19 @@ export default function RFQForm() {
           )}
 
           {/* REQUEST SUMMARY - pinned to bottom of the Right Area */}
-          <div className="p-4 border-t border-zinc-200 bg-zinc-50/40 mt-auto flex-none">
+          <div className="p-4 border-t border-zinc-200 dark:border-border-dark bg-zinc-50/40 dark:bg-transparent mt-auto flex-none">
             <div className="bg-white dark:bg-card-dark p-3.5 rounded-xl border border-zinc-200 dark:border-border-dark flex flex-col shadow-2xs space-y-2.5">
               <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-[#2A2F3D]">
-                <h3 className="text-[10px] font-bold text-zinc-800 uppercase tracking-wider">Request Summary</h3>
+                <h3 className="text-[10px] font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">Request Summary</h3>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-[10.4px]">
-                  <span className="text-zinc-600 font-medium">Total Items</span>
-                  <span className="font-semibold text-zinc-800">{items.length}</span>
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium">Total Items</span>
+                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">{items.length}</span>
                 </div>
                 <div className="flex justify-between items-center text-[10.4px]">
-                  <span className="text-zinc-600 font-medium">Selected Vendors</span>
-                  <span className="font-semibold text-zinc-800">{selectedVendorIds.length}</span>
+                  <span className="text-zinc-600 dark:text-zinc-400 font-medium">Selected Vendors</span>
+                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">{selectedVendorIds.length}</span>
                 </div>
               </div>
             </div>
@@ -758,7 +758,7 @@ export default function RFQForm() {
       {/* ═══════════════════════════════════════════════════════════════════
           BOTTOM ACTION BAR
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="flex justify-between items-center p-3 border-t border-zinc-200 bg-zinc-100 flex-none shadow-sm z-50">
+      <div className="flex justify-between items-center p-3 border-t border-zinc-200 dark:border-border-dark bg-zinc-100 dark:bg-card-dark flex-none shadow-sm z-50">
         <button
           type="button"
           onClick={handleCancel}
