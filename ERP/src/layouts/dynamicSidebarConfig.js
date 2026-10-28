@@ -211,7 +211,7 @@ function getModuleNavigationBlueprint(moduleName, base, authContext) {
           label: 'Transactions',
           icon: TrendingUp,
           children: [
-            { id: 'acc-txn-sales', label: 'Sales Invoices', path: `${base}/accounts/transactions/sales`, icon: FileText, featureCode: 'SALES_INVOICES', action: 'READ' },
+            { id: 'acc-txn-sales', label: 'Sales', path: `${base}/accounts/transactions/quotations`, icon: FileText, featureCode: 'SALES_INVOICES', action: 'READ' },
             { id: 'acc-txn-pur', label: 'Purchase Invoices', path: `${base}/accounts/transactions/purchase`, icon: FileText, featureCode: 'PURCHASE_INVOICES', action: 'READ' },
             { id: 'acc-txn-exp', label: 'Expense', path: `${base}/accounts/transactions/expenses`, icon: Receipt, featureCode: 'EXPENSES', action: 'READ' },
             { id: 'acc-txn-pay', label: 'Payment Vouchers', path: `${base}/accounts/transactions/payments`, icon: CreditCard, featureCode: 'PAYMENT_VOUCHERS', action: 'READ' },
@@ -637,11 +637,17 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
     // A) If features[] is explicitly populated in session, feature must be present and active
     const featuresList = authContext?.features || [];
     if (featuresList.length > 0) {
-      const hasFeat = hasFeature(authContext, featureCode, moduleName) ||
-        (item.id?.startsWith('workflow-') && (
-          hasFeature(authContext, featureCode, CANONICAL_MODULES.WORKFLOW) ||
-          hasFeature(authContext, featureCode)
-        ));
+        let hasFeat = hasFeature(authContext, featureCode, moduleName) ||
+          (item.id?.startsWith('workflow-') && (
+            hasFeature(authContext, featureCode, CANONICAL_MODULES.WORKFLOW) ||
+            hasFeature(authContext, featureCode)
+          ));
+      if (!hasFeat && (featureCode === 'SALES_INVOICES' || featureCode === 'QUOTATIONS')) {
+        hasFeat = hasFeature(authContext, 'SALES_INVOICES', moduleName) ||
+          hasFeature(authContext, 'QUOTATIONS', moduleName) ||
+          hasFeature(authContext, 'SALES', moduleName) ||
+          hasFeature(authContext, 'SALES_ORDERS', moduleName);
+      }
       if (!hasFeat) return null;
     }
 
@@ -654,172 +660,177 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
         checkHasPermission(authContext, featureCode, action)
       ));
     if (!hasPerm) {
-      if (featureCode === 'EXPENSE_CATEGORIES') {
-        hasPerm = checkHasPermission(authContext, 'EXPENSES', action, moduleName);
-      } else if (featureCode === 'GST_STATE_MASTER' || featureCode === 'GST_REGISTRATIONS') {
-        hasPerm = checkHasPermission(authContext, 'GST_MASTER', action, moduleName);
-      } else if (featureCode === 'ORDERS') {
-        hasPerm = checkHasPermission(authContext, 'SALES_ORDERS', action, moduleName);
-      } else if (featureCode === 'SALES_ORDERS') {
-        hasPerm = checkHasPermission(authContext, 'ORDERS', action, moduleName);
-      } else if (featureCode === 'UNIT_OF_MEASURES') {
-        hasPerm = checkHasPermission(authContext, 'PRODUCT_UOMS', action, moduleName);
-      } else if (featureCode === 'PRODUCT_UOMS') {
-        hasPerm = checkHasPermission(authContext, 'UNIT_OF_MEASURES', action, moduleName);
-      } else if (featureCode === 'PURCHASE_REQUESTS') {
-        hasPerm = checkHasPermission(authContext, 'PURCHASE_REQUISITIONS', action, moduleName);
-      } else if (featureCode === 'PURCHASE_REQUISITIONS') {
-        hasPerm = checkHasPermission(authContext, 'PURCHASE_REQUESTS', action, moduleName);
+        if (featureCode === 'SALES_INVOICES' || featureCode === 'QUOTATIONS') {
+          hasPerm = checkHasPermission(authContext, 'SALES_INVOICES', action, moduleName) ||
+            checkHasPermission(authContext, 'QUOTATIONS', action, moduleName) ||
+            checkHasPermission(authContext, 'SALES', action, moduleName) ||
+            checkHasPermission(authContext, 'SALES_ORDERS', action, moduleName);
+        } else if (featureCode === 'EXPENSE_CATEGORIES') {
+          hasPerm = checkHasPermission(authContext, 'EXPENSES', action, moduleName);
+        } else if (featureCode === 'GST_STATE_MASTER' || featureCode === 'GST_REGISTRATIONS') {
+          hasPerm = checkHasPermission(authContext, 'GST_MASTER', action, moduleName);
+        } else if (featureCode === 'ORDERS') {
+          hasPerm = checkHasPermission(authContext, 'SALES_ORDERS', action, moduleName);
+        } else if (featureCode === 'SALES_ORDERS') {
+          hasPerm = checkHasPermission(authContext, 'ORDERS', action, moduleName);
+        } else if (featureCode === 'UNIT_OF_MEASURES') {
+          hasPerm = checkHasPermission(authContext, 'PRODUCT_UOMS', action, moduleName);
+        } else if (featureCode === 'PRODUCT_UOMS') {
+          hasPerm = checkHasPermission(authContext, 'UNIT_OF_MEASURES', action, moduleName);
+        } else if (featureCode === 'PURCHASE_REQUESTS') {
+          hasPerm = checkHasPermission(authContext, 'PURCHASE_REQUISITIONS', action, moduleName);
+        } else if (featureCode === 'PURCHASE_REQUISITIONS') {
+          hasPerm = checkHasPermission(authContext, 'PURCHASE_REQUESTS', action, moduleName);
+        }
       }
-    }
-    if (!hasPerm) {
-      // Special aliases for workflow & administration modules
-      if (moduleName === CANONICAL_MODULES.WORKFLOW || item.id?.startsWith('workflow-')) {
-        const hasWorkflowGeneral =
-          checkHasPermission(authContext, 'WORKFLOW', 'READ') ||
-          checkHasPermission(authContext, 'APPROVALS', 'READ') ||
-          checkHasPermission(authContext, 'WORKFLOW_APPROVALS', 'READ') ||
-          checkHasPermission(authContext, 'WORKFLOW_DEFINITIONS', 'READ') ||
-          checkHasPermission(authContext, 'WORKFLOW_TASKS', 'READ');
-        if (!hasWorkflowGeneral) return null;
-      } else if (moduleName === CANONICAL_MODULES.SSO && (featureCode === 'USER_MANAGEMENT' || featureCode === 'ROLE_MANAGEMENT')) {
-        const shortCode = featureCode === 'USER_MANAGEMENT' ? 'USER' : 'ROLE';
-        const hasShortPerm = checkHasPermission(authContext, shortCode, action, moduleName);
-        if (!hasShortPerm) return null;
-      } else {
+      if (!hasPerm) {
+        // Special aliases for workflow & administration modules
+        if (moduleName === CANONICAL_MODULES.WORKFLOW || item.id?.startsWith('workflow-')) {
+          const hasWorkflowGeneral =
+            checkHasPermission(authContext, 'WORKFLOW', 'READ') ||
+            checkHasPermission(authContext, 'APPROVALS', 'READ') ||
+            checkHasPermission(authContext, 'WORKFLOW_APPROVALS', 'READ') ||
+            checkHasPermission(authContext, 'WORKFLOW_DEFINITIONS', 'READ') ||
+            checkHasPermission(authContext, 'WORKFLOW_TASKS', 'READ');
+          if (!hasWorkflowGeneral) return null;
+        } else if (moduleName === CANONICAL_MODULES.SSO && (featureCode === 'USER_MANAGEMENT' || featureCode === 'ROLE_MANAGEMENT')) {
+          const shortCode = featureCode === 'USER_MANAGEMENT' ? 'USER' : 'ROLE';
+          const hasShortPerm = checkHasPermission(authContext, shortCode, action, moduleName);
+          if (!hasShortPerm) return null;
+        } else {
+          return null;
+        }
+      }
+    } else {
+      // No specific featureCode on leaf: check parent module read access
+      const hasModRead = checkHasPermission(authContext, moduleName, 'READ', moduleName) ||
+        checkHasPermission(authContext, 'ALL', 'READ') ||
+        checkHasPermission(authContext, 'ALL_MODULES', 'READ');
+      if (!hasModRead && (authContext?.permissions || []).length > 0) {
         return null;
       }
     }
-  } else {
-    // No specific featureCode on leaf: check parent module read access
-    const hasModRead = checkHasPermission(authContext, moduleName, 'READ', moduleName) ||
-      checkHasPermission(authContext, 'ALL', 'READ') ||
-      checkHasPermission(authContext, 'ALL_MODULES', 'READ');
-    if (!hasModRead && (authContext?.permissions || []).length > 0) {
-      return null;
-    }
+
+    return item;
   }
 
-  return item;
-}
-
-/**
- * Builds the fully dynamic role-based ERP sidebar navigation tree.
- * Sourced directly from the authenticated user's API response.
- *
- * @param {Object} options
- * @param {Object} options.authContext - Normalized or raw auth context from Redux/SSO
- * @param {string} [options.userRole] - User role
- * @param {string|number} [options.companyId] - Currently selected company ID
- * @param {boolean} [options.isSuperAdminGlobal] - Whether user is in Super Admin global console
- * @param {Function} [options.canAccess] - Optional custom permission evaluator
- * @param {Array} [options.permissions] - Optional permissions override
- * @returns {Array} List of top-level navigation sections with authorized child items
- */
-export function buildDynamicSidebar({
-  authContext = {},
-  userRole = null,
-  companyId = null,
-  isSuperAdminGlobal = false,
-  canAccess = null,
-  permissions = null,
-} = {}) {
-  // ── 1. System Admin Global Console Exception ──────────────────────────────
-  const normalizedContext = buildAuthContext(authContext);
-  if (permissions && Array.isArray(permissions)) {
-    normalizedContext.permissions = permissions;
-  }
-
-  const isSysAdmin = isSystemAdminUser(normalizedContext);
-  if (isSuperAdminGlobal && isSysAdmin) {
-    return getSystemAdminNavigation();
-  }
-
-  // ── 2. Guard against missing or blocked session ────────────────────────────
-  if (normalizedContext.accessMode === 'BLOCKED') {
-    return [];
-  }
-
-  // ── 3. Identify active entitled modules from API response ──────────────────
-  const entitledModules = getEntitledModules(normalizedContext);
-  if (!entitledModules || entitledModules.length === 0) {
-    return [];
-  }
-
-  const base = companyId ? `/company/${companyId}` : '';
-  const links = [];
-
-  // Deduplicate and preserve order
-  const uniqueModules = Array.from(new Set(entitledModules));
-
-  for (const moduleName of uniqueModules) {
-    // Workflow & Approvals should not appear as a top-level item in the main sidebar for regular organization roles
-    if (moduleName === CANONICAL_MODULES.WORKFLOW || normalizeModuleName(moduleName) === CANONICAL_MODULES.WORKFLOW) {
-      continue;
+  /**
+   * Builds the fully dynamic role-based ERP sidebar navigation tree.
+   * Sourced directly from the authenticated user's API response.
+   *
+   * @param {Object} options
+   * @param {Object} options.authContext - Normalized or raw auth context from Redux/SSO
+   * @param {string} [options.userRole] - User role
+   * @param {string|number} [options.companyId] - Currently selected company ID
+   * @param {boolean} [options.isSuperAdminGlobal] - Whether user is in Super Admin global console
+   * @param {Function} [options.canAccess] - Optional custom permission evaluator
+   * @param {Array} [options.permissions] - Optional permissions override
+   * @returns {Array} List of top-level navigation sections with authorized child items
+   */
+  export function buildDynamicSidebar({
+    authContext = {},
+    userRole = null,
+    companyId = null,
+    isSuperAdminGlobal = false,
+    canAccess = null,
+    permissions = null,
+  } = {}) {
+    // ── 1. System Admin Global Console Exception ──────────────────────────────
+    const normalizedContext = buildAuthContext(authContext);
+    if (permissions && Array.isArray(permissions)) {
+      normalizedContext.permissions = permissions;
     }
 
-    const meta = MODULE_UI_METADATA[moduleName] || {
-      id: moduleName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-      label: moduleName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-      icon: Layers,
-      defaultPath: (b) => `${b}/${moduleName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-    };
-
-    const blueprint = getModuleNavigationBlueprint(moduleName, base, normalizedContext);
-    if (!blueprint || blueprint.length === 0) continue;
-
-    const filteredChildren = blueprint
-      .map((item) => filterNavigationNode(item, normalizedContext, moduleName, canAccess))
-      .filter(Boolean);
-
-    // "Do not show empty parent menus after filtering."
-    // If a module has no authorized child navigation items, omit the entire module.
-    if (filteredChildren.length === 0) {
-      continue;
+    const isSysAdmin = isSystemAdminUser(normalizedContext);
+    if (isSuperAdminGlobal && isSysAdmin) {
+      return getSystemAdminNavigation();
     }
 
-    // If the only surviving child is the generic root dashboard and user has no explicit DASHBOARD permission,
-    // the parent module must not appear because all its children/features are inaccessible (Rule 4).
-    const isOnlyRootDashboard = filteredChildren.length === 1 &&
-      (filteredChildren[0].id === 'admin-dashboard' || filteredChildren[0].id === 'acc-dash' || filteredChildren[0].id === 'inv-dashboard' || filteredChildren[0].id === 'crm-dashboard');
-    if (isOnlyRootDashboard) {
-      const hasExplicitDash = checkHasPermission(normalizedContext, 'DASHBOARD', 'READ') ||
-        checkHasPermission(normalizedContext, `${moduleName}_DASHBOARD`, 'READ') ||
-        checkHasPermission(normalizedContext, moduleName, 'READ') ||
-        checkHasPermission(normalizedContext, 'ALL', 'READ') ||
-        checkHasPermission(normalizedContext, 'ALL_MODULES', 'READ');
-      if (!hasExplicitDash) {
+    // ── 2. Guard against missing or blocked session ────────────────────────────
+    if (normalizedContext.accessMode === 'BLOCKED') {
+      return [];
+    }
+
+    // ── 3. Identify active entitled modules from API response ──────────────────
+    const entitledModules = getEntitledModules(normalizedContext);
+    if (!entitledModules || entitledModules.length === 0) {
+      return [];
+    }
+
+    const base = companyId ? `/company/${companyId}` : '';
+    const links = [];
+
+    // Deduplicate and preserve order
+    const uniqueModules = Array.from(new Set(entitledModules));
+
+    for (const moduleName of uniqueModules) {
+      // Workflow & Approvals should not appear as a top-level item in the main sidebar for regular organization roles
+      if (moduleName === CANONICAL_MODULES.WORKFLOW || normalizeModuleName(moduleName) === CANONICAL_MODULES.WORKFLOW) {
         continue;
       }
+
+      const meta = MODULE_UI_METADATA[moduleName] || {
+        id: moduleName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+        label: moduleName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        icon: Layers,
+        defaultPath: (b) => `${b}/${moduleName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+      };
+
+      const blueprint = getModuleNavigationBlueprint(moduleName, base, normalizedContext);
+      if (!blueprint || blueprint.length === 0) continue;
+
+      const filteredChildren = blueprint
+        .map((item) => filterNavigationNode(item, normalizedContext, moduleName, canAccess))
+        .filter(Boolean);
+
+      // "Do not show empty parent menus after filtering."
+      // If a module has no authorized child navigation items, omit the entire module.
+      if (filteredChildren.length === 0) {
+        continue;
+      }
+
+      // If the only surviving child is the generic root dashboard and user has no explicit DASHBOARD permission,
+      // the parent module must not appear because all its children/features are inaccessible (Rule 4).
+      const isOnlyRootDashboard = filteredChildren.length === 1 &&
+        (filteredChildren[0].id === 'admin-dashboard' || filteredChildren[0].id === 'acc-dash' || filteredChildren[0].id === 'inv-dashboard' || filteredChildren[0].id === 'crm-dashboard');
+      if (isOnlyRootDashboard) {
+        const hasExplicitDash = checkHasPermission(normalizedContext, 'DASHBOARD', 'READ') ||
+          checkHasPermission(normalizedContext, `${moduleName}_DASHBOARD`, 'READ') ||
+          checkHasPermission(normalizedContext, moduleName, 'READ') ||
+          checkHasPermission(normalizedContext, 'ALL', 'READ') ||
+          checkHasPermission(normalizedContext, 'ALL_MODULES', 'READ');
+        if (!hasExplicitDash) {
+          continue;
+        }
+      }
+
+      links.push({
+        id: meta.id,
+        label: meta.label,
+        icon: meta.icon,
+        path: meta.defaultPath(base),
+        children: filteredChildren,
+      });
     }
 
-    links.push({
-      id: meta.id,
-      label: meta.label,
-      icon: meta.icon,
-      path: meta.defaultPath(base),
-      children: filteredChildren,
-    });
+    return links;
   }
 
-  return links;
-}
+  /**
+   * Reusable utility to obtain authorized navigation tree for any authenticated context.
+   */
+  export function getAuthorizedNavigation(authContext = {}, options = {}) {
+    const currentCompany = authContext?.currentCompany || options?.currentCompany;
+    const companyId = options?.companyId || currentCompany?.id || currentCompany?.code || null;
+    const userRole = options?.userRole || authContext?.user?.role || 'employee';
+    const isSuperAdminGlobal = Boolean(options?.isSuperAdminGlobal);
 
-/**
- * Reusable utility to obtain authorized navigation tree for any authenticated context.
- */
-export function getAuthorizedNavigation(authContext = {}, options = {}) {
-  const currentCompany = authContext?.currentCompany || options?.currentCompany;
-  const companyId = options?.companyId || currentCompany?.id || currentCompany?.code || null;
-  const userRole = options?.userRole || authContext?.user?.role || 'employee';
-  const isSuperAdminGlobal = Boolean(options?.isSuperAdminGlobal);
-
-  return buildDynamicSidebar({
-    authContext,
-    userRole,
-    companyId,
-    isSuperAdminGlobal,
-    canAccess: options?.canAccess,
-    permissions: options?.permissions || authContext?.permissions,
-  });
-}
+    return buildDynamicSidebar({
+      authContext,
+      userRole,
+      companyId,
+      isSuperAdminGlobal,
+      canAccess: options?.canAccess,
+      permissions: options?.permissions || authContext?.permissions,
+    });
+  }

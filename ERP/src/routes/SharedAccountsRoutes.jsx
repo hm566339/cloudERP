@@ -112,994 +112,995 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
 
   return (
     <>
-    <Route
-      path={`${prefix}masters/bank-accounts/:id/ledger`}
-      element={
-        <ProtectedRoute module="BANK_ACCOUNTS">
-          <BankLedger />
-        </ProtectedRoute>
-      }
-    />
-    <Route path={`${prefix}dashboard`} element={<AccountDashboard />} />
-    <Route
-      path={`${prefix}organization/financial-years`}
-      element={
-        <ProtectedRoute module="FISCAL_YEARS">
-          <FiscalYears />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}organization/financial-years/:id`}
-      element={
-        <ProtectedRoute module="FISCAL_YEARS">
-          <FiscalYearDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}organization/accounting-periods`}
-      element={
-        <ProtectedRoute module="ACCOUNTING_PERIODS">
-          <AccountingPeriods />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}organization/accounting-periods/:id`}
-      element={
-        <ProtectedRoute module="ACCOUNTING_PERIODS">
-          <AccountingPeriodDetails />
-        </ProtectedRoute>
-      }
-    />
-    {/* Aliases for direct convenience paths */}
-    <Route path={`${prefix}chart-of-accounts`} element={<Navigate to={toPath('masters/ledgers')} replace />} />
-    <Route path={`${prefix}customers`} element={<Navigate to={toPath('masters/customers')} replace />} />
-    <Route path={`${prefix}vendors`} element={<Navigate to={toPath('masters/vendors')} replace />} />
-    <Route path={`${prefix}fiscal-years`} element={<Navigate to={toPath('organization/financial-years')} replace />} />
-    <Route path={`${prefix}accounting-periods`} element={<Navigate to={toPath('organization/accounting-periods')} replace />} />
-    <Route path={`${prefix}bank-accounts`} element={<Navigate to={toPath('masters/bank-accounts')} replace />} />
+      <Route
+        path={`${prefix}masters/bank-accounts/:id/ledger`}
+        element={
+          <ProtectedRoute module="BANK_ACCOUNTS">
+            <BankLedger />
+          </ProtectedRoute>
+        }
+      />
+      <Route path={`${prefix}dashboard`} element={<AccountDashboard />} />
+      <Route
+        path={`${prefix}organization/financial-years`}
+        element={
+          <ProtectedRoute module="FISCAL_YEARS">
+            <FiscalYears />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}organization/financial-years/:id`}
+        element={
+          <ProtectedRoute module="FISCAL_YEARS">
+            <FiscalYearDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}organization/accounting-periods`}
+        element={
+          <ProtectedRoute module="ACCOUNTING_PERIODS">
+            <AccountingPeriods />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}organization/accounting-periods/:id`}
+        element={
+          <ProtectedRoute module="ACCOUNTING_PERIODS">
+            <AccountingPeriodDetails />
+          </ProtectedRoute>
+        }
+      />
+      {/* Aliases for direct convenience paths */}
+      <Route path={`${prefix}chart-of-accounts`} element={<Navigate to={toPath('masters/ledgers')} replace />} />
+      <Route path={`${prefix}customers`} element={<Navigate to={toPath('masters/customers')} replace />} />
+      <Route path={`${prefix}vendors`} element={<Navigate to={toPath('masters/vendors')} replace />} />
+      <Route path={`${prefix}fiscal-years`} element={<Navigate to={toPath('organization/financial-years')} replace />} />
+      <Route path={`${prefix}accounting-periods`} element={<Navigate to={toPath('organization/accounting-periods')} replace />} />
+      <Route path={`${prefix}bank-accounts`} element={<Navigate to={toPath('masters/bank-accounts')} replace />} />
 
-    {/* Masters */}
-    <Route
-      path={`${prefix}masters/ledgers`}
-      element={
-        <ProtectedRoute module="CHART_OF_ACCOUNTS">
-          <ChartOfAccounts />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/ledgers/:id`}
-      element={
-        <ProtectedRoute module="CHART_OF_ACCOUNTS">
-          <LedgerDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/chart-of-accounts`}
-      element={
-        <ProtectedRoute module="CHART_OF_ACCOUNTS">
-          <ChartOfAccounts />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/chart-of-accounts/:id`}
-      element={
-        <ProtectedRoute module="CHART_OF_ACCOUNTS">
-          <LedgerDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/customers`}
-      element={
-        <ProtectedRoute module="CUSTOMERS">
-          <CustomerManagement />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/customers/:id`}
-      element={
-        <ProtectedRoute module="CUSTOMERS">
-          <CustomerDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/vendors`}
-      element={
-        <ProtectedRoute module="VENDORS">
-          <VendorManagement />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/vendors/:id`}
-      element={
-        <ProtectedRoute module="VENDORS">
-          <VendorDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/bank-accounts`}
-      element={
-        <ProtectedRoute module="BANK_ACCOUNTS">
-          <BankAccounts />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/bank-accounts/:id`}
-      element={
-        <ProtectedRoute module="BANK_ACCOUNTS">
-          <BankAccountDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/expense-categories`}
-      element={
-        <ProtectedRoute module="EXPENSES">
-          <ExpenseCategoriesManagement />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/expense-categories/:id`}
-      element={
-        <ProtectedRoute module="EXPENSES">
-          <ExpenseCategoryDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/account-categories`}
-      element={
-        <ProtectedRoute module="ACCOUNT_CATEGORIES">
-          <AccountCategories />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/account-categories/:id`}
-      element={
-        <ProtectedRoute module="ACCOUNT_CATEGORIES">
-          <AccountCategoryDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/account-groups`}
-      element={
-        <ProtectedRoute module="ACCOUNT_GROUPS">
-          <AccountGroups />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/account-groups/:id`}
-      element={
-        <ProtectedRoute module="ACCOUNT_GROUPS">
-          <AccountGroupDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/gst-slabs`}
-      element={
-        <ProtectedRoute module="GST_SLABS">
-          <GstSlabs />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/gst-slabs/:id`}
-      element={
-        <ProtectedRoute module="GST_SLABS">
-          <GstSlabDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/hsn-sac`}
-      element={
-        <ProtectedRoute module="HSN_SAC">
-          <HsnSac />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}masters/hsn-sac/:id`}
-      element={
-        <ProtectedRoute module="HSN_SAC">
-          <HsnSacDetails />
-        </ProtectedRoute>
-      }
-    />
+      {/* Masters */}
+      <Route
+        path={`${prefix}masters/ledgers`}
+        element={
+          <ProtectedRoute module="CHART_OF_ACCOUNTS">
+            <ChartOfAccounts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/ledgers/:id`}
+        element={
+          <ProtectedRoute module="CHART_OF_ACCOUNTS">
+            <LedgerDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/chart-of-accounts`}
+        element={
+          <ProtectedRoute module="CHART_OF_ACCOUNTS">
+            <ChartOfAccounts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/chart-of-accounts/:id`}
+        element={
+          <ProtectedRoute module="CHART_OF_ACCOUNTS">
+            <LedgerDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/customers`}
+        element={
+          <ProtectedRoute module="CUSTOMERS">
+            <CustomerManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/customers/:id`}
+        element={
+          <ProtectedRoute module="CUSTOMERS">
+            <CustomerDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/vendors`}
+        element={
+          <ProtectedRoute module="VENDORS">
+            <VendorManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/vendors/:id`}
+        element={
+          <ProtectedRoute module="VENDORS">
+            <VendorDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/bank-accounts`}
+        element={
+          <ProtectedRoute module="BANK_ACCOUNTS">
+            <BankAccounts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/bank-accounts/:id`}
+        element={
+          <ProtectedRoute module="BANK_ACCOUNTS">
+            <BankAccountDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/expense-categories`}
+        element={
+          <ProtectedRoute module="EXPENSES">
+            <ExpenseCategoriesManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/expense-categories/:id`}
+        element={
+          <ProtectedRoute module="EXPENSES">
+            <ExpenseCategoryDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/account-categories`}
+        element={
+          <ProtectedRoute module="ACCOUNT_CATEGORIES">
+            <AccountCategories />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/account-categories/:id`}
+        element={
+          <ProtectedRoute module="ACCOUNT_CATEGORIES">
+            <AccountCategoryDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/account-groups`}
+        element={
+          <ProtectedRoute module="ACCOUNT_GROUPS">
+            <AccountGroups />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/account-groups/:id`}
+        element={
+          <ProtectedRoute module="ACCOUNT_GROUPS">
+            <AccountGroupDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/gst-slabs`}
+        element={
+          <ProtectedRoute module="GST_SLABS">
+            <GstSlabs />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/gst-slabs/:id`}
+        element={
+          <ProtectedRoute module="GST_SLABS">
+            <GstSlabDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/hsn-sac`}
+        element={
+          <ProtectedRoute module="HSN_SAC">
+            <HsnSac />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}masters/hsn-sac/:id`}
+        element={
+          <ProtectedRoute module="HSN_SAC">
+            <HsnSacDetails />
+          </ProtectedRoute>
+        }
+      />
 
-    {/* Transactions */}
-    <Route
-      path={`${prefix}transactions/sales`}
-      element={
-        <ProtectedRoute module="SALES_INVOICES">
-          <SalesInvoices />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/sales/create-from-order/:salesOrderId`}
-      element={
-        <ProtectedRoute module="SALES_INVOICES">
-          <InvoicePreviewPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/quotations`}
-      element={
-        <ProtectedRoute module="QUOTATIONS">
-          <QuotationsPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/proforma-invoices`}
-      element={
-        <ProtectedRoute module="QUOTATIONS">
-          <ProformaInvoicesPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/proforma-invoices/:id`}
-      element={
-        <ProtectedRoute module="QUOTATIONS">
-          <ProformaInvoiceDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/sales-orders`}
-      element={
-        <ProtectedRoute module="QUOTATIONS">
-          <SalesOrdersPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/sales-orders/:id`}
-      element={
-        <ProtectedRoute module="QUOTATIONS">
-          <SalesOrderDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/delivery-challans`}
-      element={
-        <ProtectedRoute module="QUOTATIONS">
-          <DeliveryChallansPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/quotations/:id`}
-      element={
-        <ProtectedRoute module="QUOTATIONS">
-          <QuotationDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/sales/:id`}
-      element={
-        <ProtectedRoute module="SALES_INVOICES">
-          <SalesInvoiceDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}sales/invoices`}
-      element={
-        <ProtectedRoute module="SALES_INVOICES">
-          <SalesInvoices />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}sales/invoices/create-from-order/:salesOrderId`}
-      element={
-        <ProtectedRoute module="SALES_INVOICES">
-          <InvoicePreviewPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}sales/invoices/:id`}
-      element={
-        <ProtectedRoute module="SALES_INVOICES">
-          <SalesInvoiceDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}sales/invoices/:invoiceId`}
-      element={
-        <ProtectedRoute module="SALES_INVOICES">
-          <SalesInvoiceDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}budget/budget-headers`}
-      element={
-        <ProtectedRoute module="BUDGET_HEADERS">
-          <BudgetHeaders />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}budget/budget-headers/:id`}
-      element={
-        <ProtectedRoute module="BUDGET_HEADERS">
-          <BudgetHeaderDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}budget/budget-lines`}
-      element={
-        <ProtectedRoute module="BUDGET_LINES">
-          <BudgetLines />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}budget/budget-lines/:id`}
-      element={
-        <ProtectedRoute module="BUDGET_LINES">
-          <BudgetLineDetails />
-        </ProtectedRoute>
-      }
-    />
-    {/* Procurement Routes (Under transactions) */}
-    <Route element={<PurchaseModuleLayout />}>
+      {/* Transactions */}
       <Route
-        path={`${prefix}transactions/purchase-requisitions`}
+        path={`${prefix}transactions/sales`}
         element={
-          <ProtectedRoute module="PURCHASE_REQUISITIONS">
-            <PurchaseRequests />
+          <ProtectedRoute module="SALES_INVOICES">
+            <SalesInvoices />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/purchase-requisitions/new`}
+        path={`${prefix}transactions/sales/create-from-order/:salesOrderId`}
         element={
-          <ProtectedRoute module="PURCHASE_REQUISITIONS">
-            <PurchaseRequisitionForm />
+          <ProtectedRoute module="SALES_INVOICES">
+            <InvoicePreviewPage />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/purchase-requisitions/:id`}
+        path={`${prefix}transactions/quotations`}
         element={
-          <ProtectedRoute module="PURCHASE_REQUISITIONS">
-            <PurchaseRequisitionDetail />
+          <ProtectedRoute module="QUOTATIONS">
+            <QuotationsPage />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/purchase-requisitions/:id/edit`}
+        path={`${prefix}transactions/proforma-invoices`}
         element={
-          <ProtectedRoute module="PURCHASE_REQUISITIONS">
-            <PurchaseRequisitionForm />
+          <ProtectedRoute module="QUOTATIONS">
+            <ProformaInvoicesPage />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/rfqs`}
+        path={`${prefix}transactions/proforma-invoices/:id`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <RFQs />
+          <ProtectedRoute module="QUOTATIONS">
+            <ProformaInvoiceDetails />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/rfqs/new`}
+        path={`${prefix}transactions/sales-orders`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <RFQForm />
+          <ProtectedRoute module="QUOTATIONS">
+            <SalesOrdersPage />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/rfqs/:id`}
+        path={`${prefix}transactions/sales-orders/:id`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <RFQDetail />
+          <ProtectedRoute module="QUOTATIONS">
+            <SalesOrderDetails />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/rfqs/:id/edit`}
+        path={`${prefix}transactions/delivery-challans`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <RFQForm />
+          <ProtectedRoute module="QUOTATIONS">
+            <DeliveryChallansPage />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/purchase-quotations`}
+        path={`${prefix}transactions/quotations/:id`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotations />
+          <ProtectedRoute module="QUOTATIONS">
+            <QuotationDetails />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/supplier-quotes`}
+        path={`${prefix}transactions/sales/:id`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotations />
+          <ProtectedRoute module="SALES_INVOICES">
+            <SalesInvoiceDetails />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/supplier-quotations`}
+        path={`${prefix}sales/invoices`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotations />
+          <ProtectedRoute module="SALES_INVOICES">
+            <SalesInvoices />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/supplier-quotations/new`}
+        path={`${prefix}sales/invoices/create-from-order/:salesOrderId`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotationForm />
+          <ProtectedRoute module="SALES_INVOICES">
+            <InvoicePreviewPage />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/supplier-quotations/:id`}
+        path={`${prefix}sales/invoices/:id`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotationDetail />
+          <ProtectedRoute module="SALES_INVOICES">
+            <SalesInvoiceDetails />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/supplier-quotations/:id/edit`}
+        path={`${prefix}sales/invoices/:invoiceId`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotationForm />
+          <ProtectedRoute module="SALES_INVOICES">
+            <SalesInvoiceDetails />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/supplier-quotations/compare/:rfqId`}
+        path={`${prefix}budget/budget-headers`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <QuotationComparison />
+          <ProtectedRoute module="BUDGET_HEADERS">
+            <BudgetHeaders />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/purchase-orders`}
+        path={`${prefix}budget/budget-headers/:id`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <PurchaseOrders />
+          <ProtectedRoute module="BUDGET_HEADERS">
+            <BudgetHeaderDetails />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/purchase-orders/new`}
+        path={`${prefix}budget/budget-lines`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <PurchaseOrderCreate />
+          <ProtectedRoute module="BUDGET_LINES">
+            <BudgetLines />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/purchase-orders/:id`}
+        path={`${prefix}budget/budget-lines/:id`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <PurchaseOrderDetails />
+          <ProtectedRoute module="BUDGET_LINES">
+            <BudgetLineDetails />
           </ProtectedRoute>
         }
       />
-      <Route
-        path={`${prefix}transactions/goods-receipts`}
-        element={
-          <ProtectedRoute module="GOODS_RECEIPTS">
-            <GoodsReceipts />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}transactions/payments`}
-        element={
-          <ProtectedRoute module="PAYMENT_VOUCHERS">
-            <APPayments />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}transactions/purchase`}
-        element={
-          <ProtectedRoute module="PURCHASE_INVOICES">
-            <APInvoices />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}transactions/purchase-invoices`}
-        element={
-          <ProtectedRoute module="PURCHASE_INVOICES">
-            <APInvoices />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}transactions/purchase/:id`}
-        element={
-          <ProtectedRoute module="PURCHASE_INVOICES">
-            <APInvoiceDetails />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}transactions/purchase-invoices/:id`}
-        element={
-          <ProtectedRoute module="PURCHASE_INVOICES">
-            <APInvoiceDetails />
-          </ProtectedRoute>
-        }
-      />
-    </Route>
+      {/* Procurement Routes (Under transactions) */}
+      <Route element={<PurchaseModuleLayout />}>
+        <Route
+          path={`${prefix}transactions/purchase-requisitions`}
+          element={
+            <ProtectedRoute module="PURCHASE_REQUISITIONS">
+              <PurchaseRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/purchase-requisitions/new`}
+          element={
+            <ProtectedRoute module="PURCHASE_REQUISITIONS">
+              <PurchaseRequisitionForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/purchase-requisitions/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_REQUISITIONS">
+              <PurchaseRequisitionDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/purchase-requisitions/:id/edit`}
+          element={
+            <ProtectedRoute module="PURCHASE_REQUISITIONS">
+              <PurchaseRequisitionForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/rfqs`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <RFQs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/rfqs/new`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <RFQForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/rfqs/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <RFQDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/rfqs/:id/edit`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <RFQForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/purchase-quotations`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/supplier-quotes`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/supplier-quotations`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/supplier-quotations/new`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotationForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/supplier-quotations/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotationDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/supplier-quotations/:id/edit`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotationForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/supplier-quotations/compare/:rfqId`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <QuotationComparison />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/purchase-orders`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <PurchaseOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/purchase-orders/new`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <PurchaseOrderCreate />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/purchase-orders/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <PurchaseOrderDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/goods-receipts`}
+          element={
+            <ProtectedRoute module="GOODS_RECEIPTS">
+              <GoodsReceipts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/payments`}
+          element={
+            <ProtectedRoute module="PAYMENT_VOUCHERS">
+              <APPayments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/purchase`}
+          element={
+            <ProtectedRoute module="PURCHASE_INVOICES">
+              <APInvoices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/purchase-invoices`}
+          element={
+            <ProtectedRoute module="PURCHASE_INVOICES">
+              <APInvoices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/purchase/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_INVOICES">
+              <APInvoiceDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/purchase-invoices/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_INVOICES">
+              <APInvoiceDetails />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
 
-    {/* Procurement Direct Routes */}
-    <Route element={<PurchaseModuleLayout />}>
+      {/* Procurement Direct Routes */}
+      <Route element={<PurchaseModuleLayout />}>
+        <Route
+          path={`${prefix}purchase-requisitions`}
+          element={
+            <ProtectedRoute module="PURCHASE_REQUISITIONS">
+              <PurchaseRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}purchase-requisitions/new`}
+          element={
+            <ProtectedRoute module="PURCHASE_REQUISITIONS">
+              <PurchaseRequisitionForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}purchase-requisitions/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_REQUISITIONS">
+              <PurchaseRequisitionDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}purchase-requisitions/:id/edit`}
+          element={
+            <ProtectedRoute module="PURCHASE_REQUISITIONS">
+              <PurchaseRequisitionForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}rfqs`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <RFQs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}rfqs/new`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <RFQForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}rfqs/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <RFQDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}rfqs/:id/edit`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <RFQForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}supplier-quotes`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}purchase-quotations`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}supplier-quotations`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}supplier-quotations/new`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotationForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}supplier-quotations/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotationDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}supplier-quotations/:id/edit`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <SupplierQuotationForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}supplier-quotations/compare/:rfqId`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <QuotationComparison />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}purchase-orders`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <PurchaseOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}purchase-orders/new`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <PurchaseOrderCreate />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}purchase-orders/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_ORDERS">
+              <PurchaseOrderDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}goods-receipts`}
+          element={
+            <ProtectedRoute module="GOODS_RECEIPTS">
+              <GoodsReceipts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}purchase-invoices`}
+          element={
+            <ProtectedRoute module="PURCHASE_INVOICES">
+              <APInvoices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}purchase-invoices/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_INVOICES">
+              <APInvoiceDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}payments`}
+          element={
+            <ProtectedRoute module="PAYMENT_VOUCHERS">
+              <APPayments />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
       <Route
-        path={`${prefix}purchase-requisitions`}
+        path={`${prefix}transactions/expenses`}
         element={
-          <ProtectedRoute module="PURCHASE_REQUISITIONS">
-            <PurchaseRequests />
+          <ProtectedRoute module="EXPENSES">
+            <ExpenseTracking />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}purchase-requisitions/new`}
+        path={`${prefix}transactions/expenses/:tab`}
         element={
-          <ProtectedRoute module="PURCHASE_REQUISITIONS">
-            <PurchaseRequisitionForm />
+          <ProtectedRoute module="EXPENSES">
+            <ExpenseTracking />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}purchase-requisitions/:id`}
+        path={`${prefix}transactions/expense-requests`}
         element={
-          <ProtectedRoute module="PURCHASE_REQUISITIONS">
-            <PurchaseRequisitionDetail />
+          <ProtectedRoute module="EXPENSES">
+            <ExpenseTracking forcedTab="requests" />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}purchase-requisitions/:id/edit`}
+        path={`${prefix}transactions/reimbursements`}
         element={
-          <ProtectedRoute module="PURCHASE_REQUISITIONS">
-            <PurchaseRequisitionForm />
+          <ProtectedRoute module="EXPENSES">
+            <ExpenseTracking forcedTab="reimbursements" />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}rfqs`}
+        path={`${prefix}transactions/expense-reports`}
         element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <RFQs />
+          <ProtectedRoute module="EXPENSES">
+            <ExpenseTracking forcedTab="reports" />
           </ProtectedRoute>
         }
       />
-      <Route
-        path={`${prefix}rfqs/new`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <RFQForm />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}rfqs/:id`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <RFQDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}rfqs/:id/edit`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <RFQForm />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}supplier-quotes`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotations />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}purchase-quotations`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotations />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}supplier-quotations`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotations />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}supplier-quotations/new`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotationForm />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}supplier-quotations/:id`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotationDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}supplier-quotations/:id/edit`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <SupplierQuotationForm />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}supplier-quotations/compare/:rfqId`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <QuotationComparison />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}purchase-orders`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <PurchaseOrders />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}purchase-orders/new`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <PurchaseOrderCreate />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}purchase-orders/:id`}
-        element={
-          <ProtectedRoute module="PURCHASE_ORDERS">
-            <PurchaseOrderDetails />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}goods-receipts`}
-        element={
-          <ProtectedRoute module="GOODS_RECEIPTS">
-            <GoodsReceipts />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}purchase-invoices`}
-        element={
-          <ProtectedRoute module="PURCHASE_INVOICES">
-            <APInvoices />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}purchase-invoices/:id`}
-        element={
-          <ProtectedRoute module="PURCHASE_INVOICES">
-            <APInvoiceDetails />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}payments`}
-        element={
-          <ProtectedRoute module="PAYMENT_VOUCHERS">
-            <APPayments />
-          </ProtectedRoute>
-        }
-      />
-    </Route>
-    <Route
-      path={`${prefix}transactions/expenses`}
-      element={
-        <ProtectedRoute module="EXPENSES">
-          <ExpenseTracking />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/expenses/:tab`}
-      element={
-        <ProtectedRoute module="EXPENSES">
-          <ExpenseTracking />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/expense-requests`}
-      element={
-        <ProtectedRoute module="EXPENSES">
-          <ExpenseTracking forcedTab="requests" />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/reimbursements`}
-      element={
-        <ProtectedRoute module="EXPENSES">
-          <ExpenseTracking forcedTab="reimbursements" />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/expense-reports`}
-      element={
-        <ProtectedRoute module="EXPENSES">
-          <ExpenseTracking forcedTab="reports" />
-        </ProtectedRoute>
-      }
-    />
-    <Route element={<PurchaseModuleLayout />}>
-      <Route
-        path={`${prefix}purchases/invoices`}
-        element={
-          <ProtectedRoute module="PURCHASE_INVOICES">
-            <APInvoices />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${prefix}purchases/invoices/:id`}
-        element={
-          <ProtectedRoute module="PURCHASE_INVOICES">
-            <APInvoiceDetails />
-          </ProtectedRoute>
-        }
-      />
-    </Route>
-    {/* Journal Aliases */}
-    <Route path={`${prefix}transactions/journal-entries`} element={<Navigate to={toPath('transactions/journal')} replace />} />
-    <Route path={`${prefix}transactions/journals`} element={<Navigate to={toPath('transactions/journal')} replace />} />
+      <Route element={<PurchaseModuleLayout />}>
+        <Route
+          path={`${prefix}purchases/invoices`}
+          element={
+            <ProtectedRoute module="PURCHASE_INVOICES">
+              <APInvoices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}purchases/invoices/:id`}
+          element={
+            <ProtectedRoute module="PURCHASE_INVOICES">
+              <APInvoiceDetails />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+      {/* Journal Aliases */}
+      <Route path={`${prefix}transactions/journal-entries`} element={<Navigate to={toPath('transactions/journal')} replace />} />
+      <Route path={`${prefix}transactions/journals`} element={<Navigate to={toPath('transactions/journal')} replace />} />
 
-    <Route
-      path={`${prefix}transactions/journal`}
-      element={
-        <ProtectedRoute module="GL_JOURNALS">
-          <JournalEntries />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/journal/:id`}
-      element={
-        <ProtectedRoute module="GL_JOURNALS">
-          <JournalEntryDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/journal-lines`}
-      element={
-        <ProtectedRoute module="GL_JOURNALS">
-          <JournalLines />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/journal-lines/:id`}
-      element={
-        <ProtectedRoute module="GL_JOURNALS">
-          <JournalLineDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/journal-lines/journal/:journalId`}
-      element={
-        <ProtectedRoute module="GL_JOURNALS">
-          <JournalLinesByJournal />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/journal-lines/account/:accountId`}
-      element={
-        <ProtectedRoute module="GL_JOURNALS">
-          <JournalLinesByAccount />
-        </ProtectedRoute>
-      }
-    />
-    <Route element={<PurchaseModuleLayout />}>
       <Route
-        path={`${prefix}transactions/payments`}
+        path={`${prefix}transactions/journal`}
         element={
-          <ProtectedRoute module="PAYMENT_VOUCHERS">
-            <PaymentVouchers />
+          <ProtectedRoute module="GL_JOURNALS">
+            <JournalEntries />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/payments/:id`}
+        path={`${prefix}transactions/journal/:id`}
         element={
-          <ProtectedRoute module="PAYMENT_VOUCHERS">
-            <PaymentVoucherDetails />
-          </ProtectedRoute>
-        }
-      />
-      <Route path={`${prefix}transactions/payment-vouchers`} element={<Navigate to={toPath('transactions/payments')} replace />} />
-    </Route>
-    <Route path={`${prefix}transactions/receipt-vouchers`} element={<Navigate to={toPath('transactions/receipts')} replace />} />
-    <Route
-      path={`${prefix}transactions/receipts`}
-      element={
-        <ProtectedRoute module="RECEIPTS">
-          <ReceiptVouchers />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/receipts/:id`}
-      element={
-        <ProtectedRoute module="RECEIPTS">
-          <ReceiptVoucherDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/credit-notes`}
-      element={
-        <ProtectedRoute module="CREDIT_NOTES">
-          <CreditNotes />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/credit-notes/:id`}
-      element={
-        <ProtectedRoute module="CREDIT_NOTES">
-          <CreditNoteDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/debit-notes`}
-      element={
-        <ProtectedRoute module="DEBIT_NOTES">
-          <DebitNotes />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/debit-notes/:id`}
-      element={
-        <ProtectedRoute module="DEBIT_NOTES">
-          <DebitNoteDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/banking`}
-      element={
-        <ProtectedRoute module="BANK_TRANSACTIONS">
-          <BankTransactions />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path={`${prefix}transactions/banking/:id`}
-      element={
-        <ProtectedRoute module="BANK_TRANSACTIONS">
-          <BankTransactionDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route element={<PurchaseModuleLayout />}>
-      <Route
-        path={`${prefix}transactions/ap-payments`}
-        element={
-          <ProtectedRoute module="AP_PAYMENTS">
-            <ApPayments />
+          <ProtectedRoute module="GL_JOURNALS">
+            <JournalEntryDetails />
           </ProtectedRoute>
         }
       />
       <Route
-        path={`${prefix}transactions/ap-payments/:id`}
+        path={`${prefix}transactions/journal-lines`}
         element={
-          <ProtectedRoute module="AP_PAYMENTS">
-            <ApPaymentDetails />
+          <ProtectedRoute module="GL_JOURNALS">
+            <JournalLines />
           </ProtectedRoute>
         }
       />
-    </Route>
-    <Route
-      path={`${prefix}transactions/bank-reconciliation`}
-      element={
-        <ProtectedRoute module="BANK_TRANSACTIONS">
-          <BankReconciliation />
-        </ProtectedRoute>
-      }
-    />
-
-
-    {/* Reports */}
-    <Route path={`${prefix}reports/trial-balance`} element={<ProtectedRoute module="REPORTS"><TrialBalance /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/hsn-report`} element={<ProtectedRoute module="REPORTS"><HsnReport /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/tax-reports`} element={<ProtectedRoute module="TAX_REPORTS"><GstReports /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/budget-variance`} element={<ProtectedRoute module="BUDGET_HEADERS"><BudgetVarianceReport /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/sac-report`} element={<ProtectedRoute module="REPORTS"><SacReport /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/ledger`} element={<ProtectedRoute module="REPORTS"><GeneralLedger /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/bank-ledger`} element={<ProtectedRoute module="REPORTS"><BankLedger /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/ledger/:accountId`} element={<ProtectedRoute module="REPORTS"><LedgerView /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/profit-loss`} element={<ProtectedRoute module="REPORTS"><ProfitLoss /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/balance-sheet`} element={<ProtectedRoute module="REPORTS"><BalanceSheet /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/cash-flow`} element={<ProtectedRoute module="REPORTS"><CashFlow /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/gst`} element={<ProtectedRoute module="GST_REPORTS"><Navigate to={toPath('reports/gst/gstr1')} replace /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/gst/gstr1`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="gstr1" /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/gst/gstr3b`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="gstr3b" /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/gst/hsn-summary`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="hsn-summary" /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/gst/itc`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="itc" /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/gst/export`} element={<ProtectedRoute module="GST_REPORTS"><ExportReportsPage /></ProtectedRoute>} />
-    <Route path={`${prefix}reports/gst/gstr2b`} element={<ProtectedRoute module="GST_REPORTS"><Gstr2bHistoryPage /></ProtectedRoute>} />
+      <Route
+        path={`${prefix}transactions/journal-lines/:id`}
+        element={
+          <ProtectedRoute module="GL_JOURNALS">
+            <JournalLineDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}transactions/journal-lines/journal/:journalId`}
+        element={
+          <ProtectedRoute module="GL_JOURNALS">
+            <JournalLinesByJournal />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}transactions/journal-lines/account/:accountId`}
+        element={
+          <ProtectedRoute module="GL_JOURNALS">
+            <JournalLinesByAccount />
+          </ProtectedRoute>
+        }
+      />
+      <Route element={<PurchaseModuleLayout />}>
+        <Route
+          path={`${prefix}transactions/payments`}
+          element={
+            <ProtectedRoute module="PAYMENT_VOUCHERS">
+              <PaymentVouchers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/payments/:id`}
+          element={
+            <ProtectedRoute module="PAYMENT_VOUCHERS">
+              <PaymentVoucherDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route path={`${prefix}transactions/payment-vouchers`} element={<Navigate to={toPath('transactions/payments')} replace />} />
+      </Route>
+      <Route path={`${prefix}transactions/sales-invoices`} element={<Navigate to={toPath('transactions/sales')} replace />} />
+      <Route path={`${prefix}transactions/receipt-vouchers`} element={<Navigate to={toPath('transactions/receipts')} replace />} />
+      <Route
+        path={`${prefix}transactions/receipts`}
+        element={
+          <ProtectedRoute module="RECEIPTS">
+            <ReceiptVouchers />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}transactions/receipts/:id`}
+        element={
+          <ProtectedRoute module="RECEIPTS">
+            <ReceiptVoucherDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}transactions/credit-notes`}
+        element={
+          <ProtectedRoute module="CREDIT_NOTES">
+            <CreditNotes />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}transactions/credit-notes/:id`}
+        element={
+          <ProtectedRoute module="CREDIT_NOTES">
+            <CreditNoteDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}transactions/debit-notes`}
+        element={
+          <ProtectedRoute module="DEBIT_NOTES">
+            <DebitNotes />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}transactions/debit-notes/:id`}
+        element={
+          <ProtectedRoute module="DEBIT_NOTES">
+            <DebitNoteDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}transactions/banking`}
+        element={
+          <ProtectedRoute module="BANK_TRANSACTIONS">
+            <BankTransactions />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${prefix}transactions/banking/:id`}
+        element={
+          <ProtectedRoute module="BANK_TRANSACTIONS">
+            <BankTransactionDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route element={<PurchaseModuleLayout />}>
+        <Route
+          path={`${prefix}transactions/ap-payments`}
+          element={
+            <ProtectedRoute module="AP_PAYMENTS">
+              <ApPayments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={`${prefix}transactions/ap-payments/:id`}
+          element={
+            <ProtectedRoute module="AP_PAYMENTS">
+              <ApPaymentDetails />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+      <Route
+        path={`${prefix}transactions/bank-reconciliation`}
+        element={
+          <ProtectedRoute module="BANK_TRANSACTIONS">
+            <BankReconciliation />
+          </ProtectedRoute>
+        }
+      />
 
 
-    {/* Tax */}
-    <Route path={`${prefix}tax/gst-state-master`} element={<ProtectedRoute module="FINANCE"><GstStateMaster /></ProtectedRoute>} />
-    <Route path={`${prefix}tax/gst-state-master/:id`} element={<ProtectedRoute module="FINANCE"><GstStateMasterDetails /></ProtectedRoute>} />
-    <Route path={`${prefix}tax/gst-registrations`} element={<ProtectedRoute module="FINANCE"><GstRegistrations /></ProtectedRoute>} />
-    <Route path={`${prefix}tax/gst-registrations/:id`} element={<ProtectedRoute module="FINANCE"><GstRegistrationsDetails /></ProtectedRoute>} />
+      {/* Reports */}
+      <Route path={`${prefix}reports/trial-balance`} element={<ProtectedRoute module="REPORTS"><TrialBalance /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/hsn-report`} element={<ProtectedRoute module="REPORTS"><HsnReport /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/tax-reports`} element={<ProtectedRoute module="TAX_REPORTS"><GstReports /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/budget-variance`} element={<ProtectedRoute module="BUDGET_HEADERS"><BudgetVarianceReport /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/sac-report`} element={<ProtectedRoute module="REPORTS"><SacReport /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/ledger`} element={<ProtectedRoute module="REPORTS"><GeneralLedger /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/bank-ledger`} element={<ProtectedRoute module="REPORTS"><BankLedger /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/ledger/:accountId`} element={<ProtectedRoute module="REPORTS"><LedgerView /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/profit-loss`} element={<ProtectedRoute module="REPORTS"><ProfitLoss /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/balance-sheet`} element={<ProtectedRoute module="REPORTS"><BalanceSheet /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/cash-flow`} element={<ProtectedRoute module="REPORTS"><CashFlow /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/gst`} element={<ProtectedRoute module="GST_REPORTS"><Navigate to={toPath('reports/gst/gstr1')} replace /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/gst/gstr1`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="gstr1" /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/gst/gstr3b`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="gstr3b" /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/gst/hsn-summary`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="hsn-summary" /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/gst/itc`} element={<ProtectedRoute module="GST_REPORTS"><GstReportPage reportType="itc" /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/gst/export`} element={<ProtectedRoute module="GST_REPORTS"><ExportReportsPage /></ProtectedRoute>} />
+      <Route path={`${prefix}reports/gst/gstr2b`} element={<ProtectedRoute module="GST_REPORTS"><Gstr2bHistoryPage /></ProtectedRoute>} />
 
-    {/* Budget */}
-    <Route path={`${prefix}budget`} element={<ProtectedRoute module="BUDGET_HEADERS"><BudgetManagement /></ProtectedRoute>} />
 
-    {/* Settings */}
-    <Route path={`${prefix}settings/sales`} element={<ProtectedRoute module="FINANCE"><SalesSettings /></ProtectedRoute>} />
-    <Route path={`${prefix}settings/workflow`} element={<ProtectedRoute module="APPROVALS"><ApprovalWorkflow /></ProtectedRoute>} />
-    <Route path={`${prefix}settings/audit-logs`} element={<ProtectedRoute module="AUDIT_LOGS"><AuditLogsPage moduleFilter="Accounts" /></ProtectedRoute>} />
+      {/* Tax */}
+      <Route path={`${prefix}tax/gst-state-master`} element={<ProtectedRoute module="FINANCE"><GstStateMaster /></ProtectedRoute>} />
+      <Route path={`${prefix}tax/gst-state-master/:id`} element={<ProtectedRoute module="FINANCE"><GstStateMasterDetails /></ProtectedRoute>} />
+      <Route path={`${prefix}tax/gst-registrations`} element={<ProtectedRoute module="FINANCE"><GstRegistrations /></ProtectedRoute>} />
+      <Route path={`${prefix}tax/gst-registrations/:id`} element={<ProtectedRoute module="FINANCE"><GstRegistrationsDetails /></ProtectedRoute>} />
 
-  </>
+      {/* Budget */}
+      <Route path={`${prefix}budget`} element={<ProtectedRoute module="BUDGET_HEADERS"><BudgetManagement /></ProtectedRoute>} />
+
+      {/* Settings */}
+      <Route path={`${prefix}settings/sales`} element={<ProtectedRoute module="FINANCE"><SalesSettings /></ProtectedRoute>} />
+      <Route path={`${prefix}settings/workflow`} element={<ProtectedRoute module="APPROVALS"><ApprovalWorkflow /></ProtectedRoute>} />
+      <Route path={`${prefix}settings/audit-logs`} element={<ProtectedRoute module="AUDIT_LOGS"><AuditLogsPage moduleFilter="Accounts" /></ProtectedRoute>} />
+
+    </>
   );
 };

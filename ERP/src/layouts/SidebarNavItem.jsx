@@ -2,9 +2,9 @@ import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { useSidebar } from './SidebarContext'
-import { isItemOrChildActive } from './SidebarNavUtils.js'
+import { isItemOrChildActive, isSalesTransactionsRoute } from './SidebarNavUtils.js'
 
-export { isItemOrChildActive }
+export { isItemOrChildActive, isSalesTransactionsRoute }
 
 function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
   const { isMenuOpen, toggleMenu, setMenuOpen } = useSidebar();
@@ -23,6 +23,8 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
   }, [isParentActive, item.id, setMenuOpen]);
 
   if (!hasChildren) {
+    const isSalesMenu = item.id === 'acc-txn-sales' || item.id === 'txn-si';
+    const isSalesRoute = isSalesTransactionsRoute(currentPath);
     const isExpenseMenu = item.id === 'expense' || item.id === 'txn-exp' || (typeof item.path === 'string' && item.path.includes('/transactions/expenses'));
     const isApprovalsRoute = currentPath === '/workflows/approvals' ||
       currentPath.startsWith('/workflows/approvals/') ||
@@ -36,9 +38,11 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
     const isWorkflowApprovals = item.id === 'workflow-approvals';
     const isWorkflowRequests = item.id === 'workflow-approval-requests';
 
-    const isActive = currentPath === item.path ||
+    const isActive = isItemOrChildActive(item, currentPath) ||
+      currentPath === item.path ||
       (item.path !== '/super-admin/dashboard' && item.path !== '/' && item.path !== '/owner/dashboard' && item.path !== '/dashboard' &&
         currentPath.startsWith(item.path + '/'))
+      || (isSalesMenu && isSalesRoute)
       || (isExpenseMenu && currentPath.includes('/transactions/expenses'))
       || (isWorkflowApprovals && isWorkflowRoute && !isApprovalsRoute)
       || (isWorkflowRequests && isApprovalsRoute);
@@ -71,7 +75,7 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
         />
       </button>
 
-      <div 
+      <div
         className="grid transition-[grid-template-rows] duration-standard ease-move"
         style={{ gridTemplateRows: open ? '1fr' : '0fr' }}
       >

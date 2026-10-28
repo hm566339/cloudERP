@@ -826,5 +826,9 @@ export function canViewModule(authContext, moduleOrFeature) {
   }
 
   // 3. User MUST have active READ permission (or wildcard ALL/ALL_MODULES)
-  return hasPermission(authContext, normUpper, 'READ') || hasPermission(authContext, upper, 'READ');
+  let allowed = hasPermission(authContext, normUpper, 'READ') || hasPermission(authContext, upper, 'READ');
+  if (!allowed && (normUpper === 'QUOTATIONS' || upper === 'QUOTATIONS')) {
+    allowed = hasPermission(authContext, 'SALES_INVOICES', 'READ') || hasPermission(authContext, 'SALES', 'READ');
+  }
+  return allowed;
 }
