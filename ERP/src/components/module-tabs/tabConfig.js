@@ -112,7 +112,10 @@ export const expenseTabs = [
       '/accounts/transactions/expense-requests',
       '/transactions/expense-requests',
       '/expense-requests',
-      '/finance/expenses/requests'
+      '/finance/expenses/requests',
+      '/accounts/transactions/expenses',
+      '/transactions/expenses',
+      '/finance/expenses'
     ]
   },
   {
@@ -121,11 +124,8 @@ export const expenseTabs = [
     icon: Receipt,
     path: '/accounts/transactions/expenses/expenses',
     aliases: [
-      '/accounts/transactions/expenses',
       '/accounts/transactions/expenses/expenses',
       '/accounts/transactions/expenses/expense-claims',
-      '/transactions/expenses',
-      '/finance/expenses',
       '/finance/expenses/expenses'
     ]
   },
@@ -318,13 +318,6 @@ export const userTabs = [
     icon: Key,
     path: '/settings/security/roles',
     aliases: ['/security/roles']
-  },
-  {
-    key: 'user-permissions',
-    label: 'User Permissions',
-    icon: Users,
-    path: '/settings/security/users',
-    aliases: ['/security/users', '/settings/security/permissions', '/security/permissions']
   }
 ];
 

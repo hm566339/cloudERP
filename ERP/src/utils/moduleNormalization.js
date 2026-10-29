@@ -97,44 +97,52 @@ export function normalizeRole(rawRole) {
 
 export function normalizeModulesList(rawModules) {
   if (!Array.isArray(rawModules)) return [];
-  return rawModules.map((m) => {
-    if (typeof m === 'string') {
-      const canonical = normalizeModuleName(m);
-      return { id: m, name: m, code: m.toLowerCase(), canonical, active: true };
-    }
-    const canonical = normalizeModuleName(m.canonical || m.code || m.name);
-    return {
-      ...m,
-      canonical,
-      active: m.active !== false,
-    };
-  });
+  return rawModules
+    .filter((m) => m !== null && m !== undefined)
+    .map((m) => {
+      if (typeof m === 'string') {
+        const canonical = normalizeModuleName(m);
+        return { id: m, name: m, code: m.toLowerCase(), canonical, active: true };
+      }
+      if (typeof m !== 'object') return null;
+      const canonical = normalizeModuleName(m.canonical || m.code || m.name);
+      return {
+        ...m,
+        canonical,
+        active: m.active !== false,
+      };
+    })
+    .filter(Boolean);
 }
 
 export function normalizeFeaturesList(rawFeatures) {
   if (!Array.isArray(rawFeatures)) return [];
-  return rawFeatures.map((f) => {
-    if (typeof f === 'string') {
-      const upper = f.toUpperCase();
-      const defaultMod = SSO_FEATURE_CODES.includes(upper) ? CANONICAL_MODULES.SSO : '';
+  return rawFeatures
+    .filter((f) => f !== null && f !== undefined)
+    .map((f) => {
+      if (typeof f === 'string') {
+        const upper = f.toUpperCase();
+        const defaultMod = SSO_FEATURE_CODES.includes(upper) ? CANONICAL_MODULES.SSO : '';
+        return {
+          featureCode: upper,
+          featureName: f,
+          moduleName: defaultMod,
+          active: true,
+        };
+      }
+      if (typeof f !== 'object') return null;
+      const feat = String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase();
+      const explicitMod = normalizeModuleName(f.moduleName);
+      const resolvedMod = explicitMod || (SSO_FEATURE_CODES.includes(feat) ? CANONICAL_MODULES.SSO : '');
       return {
-        featureCode: upper,
-        featureName: f,
-        moduleName: defaultMod,
-        active: true,
+        ...f,
+        featureCode: feat,
+        featureName: f.featureName || f.featureCode,
+        moduleName: resolvedMod,
+        active: f.active !== false,
       };
-    }
-    const feat = String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase();
-    const explicitMod = normalizeModuleName(f.moduleName);
-    const resolvedMod = explicitMod || (SSO_FEATURE_CODES.includes(feat) ? CANONICAL_MODULES.SSO : '');
-    return {
-      ...f,
-      featureCode: feat,
-      featureName: f.featureName || f.featureCode,
-      moduleName: resolvedMod,
-      active: f.active !== false,
-    };
-  });
+    })
+    .filter(Boolean);
 }
 
 const FEATURE_CODE_ALIASES = {
@@ -228,6 +236,17 @@ const FEATURE_CODE_ALIASES = {
   SUPPLIER_QUOTES: 'SUPPLIER_QUOTATIONS',
   SUPPLIER_QUOTATION: 'SUPPLIER_QUOTATIONS',
   GOODS_RECEIPT: 'GOODS_RECEIPTS',
+
+  // Workflow & Approvals
+  APPROVALS: 'WORKFLOW_TASKS',
+  APPROVAL_REQUEST: 'WORKFLOW_TASKS',
+  APPROVAL_REQUESTS: 'WORKFLOW_TASKS',
+  WORKFLOW_TASK: 'WORKFLOW_TASKS',
+  WORKFLOW_TASKS: 'WORKFLOW_TASKS',
+  WORKFLOW_APPROVAL: 'WORKFLOW_DEFINITIONS',
+  WORKFLOW_APPROVALS: 'WORKFLOW_DEFINITIONS',
+  WORKFLOW_DEFINITION: 'WORKFLOW_DEFINITIONS',
+  WORKFLOW_DEFINITIONS: 'WORKFLOW_DEFINITIONS',
 };
 
 export function normalizeFeatureCode(input) {
@@ -241,54 +260,59 @@ export function normalizeFeatureCode(input) {
 
 export function normalizePermissionsList(rawPermissions) {
   if (!Array.isArray(rawPermissions)) return [];
-  return rawPermissions.map((p) => {
-    if (typeof p === 'string') {
-      const upper = p.trim().toUpperCase();
-      let parts = upper.split(':');
-      let feat = parts[0] || upper;
-      let act = parts[1] || '';
-      if (!act && upper.includes('_')) {
-        const lastUnderscore = upper.lastIndexOf('_');
-        const suffix = upper.slice(lastUnderscore + 1);
-        if (['READ', 'VIEW', 'CREATE', 'WRITE', 'UPDATE', 'EDIT', 'DELETE', 'APPROVE'].includes(suffix)) {
-          feat = upper.slice(0, lastUnderscore);
-          act = suffix;
+  return rawPermissions
+    .filter((p) => p !== null && p !== undefined)
+    .map((p) => {
+      if (typeof p === 'string') {
+        const upper = p.trim().toUpperCase();
+        if (!upper) return null;
+        let parts = upper.split(':');
+        let feat = parts[0] || upper;
+        let act = parts[1] || '';
+        if (!act && upper.includes('_')) {
+          const lastUnderscore = upper.lastIndexOf('_');
+          const suffix = upper.slice(lastUnderscore + 1);
+          if (['READ', 'VIEW', 'CREATE', 'WRITE', 'UPDATE', 'EDIT', 'DELETE', 'APPROVE'].includes(suffix)) {
+            feat = upper.slice(0, lastUnderscore);
+            act = suffix;
+          }
         }
+        if (act === 'VIEW') act = 'READ';
+        const defaultMod = SSO_FEATURE_CODES.includes(feat) ? CANONICAL_MODULES.SSO : '';
+        return {
+          featureCode: feat,
+          action: act,
+          permissionCode: act ? `${feat}:${act}` : upper,
+          moduleName: defaultMod,
+          active: true,
+          allowed: true,
+        };
       }
+      if (typeof p !== 'object') return null;
+      let feat = String(p.featureCode || p.feature || '').trim().toUpperCase();
+      let act = String(p.action || '').trim().toUpperCase();
       if (act === 'VIEW') act = 'READ';
-      const defaultMod = SSO_FEATURE_CODES.includes(feat) ? CANONICAL_MODULES.SSO : '';
+      const permCode = String(p.permissionCode || (act ? `${feat}:${act}` : feat)).trim().toUpperCase();
+      if (!feat && permCode.includes(':')) {
+        const parts = permCode.split(':');
+        feat = parts[0] || '';
+        if (!act) act = parts[1] || '';
+        if (act === 'VIEW') act = 'READ';
+      }
+      const explicitMod = normalizeModuleName(p.moduleName);
+      const resolvedMod = explicitMod || (SSO_FEATURE_CODES.includes(feat) ? CANONICAL_MODULES.SSO : '');
+      const isActive = p.active !== false && String(p.status || '').toUpperCase() !== 'INACTIVE' && p.status !== false;
       return {
+        ...p,
         featureCode: feat,
         action: act,
-        permissionCode: act ? `${feat}:${act}` : upper,
-        moduleName: defaultMod,
-        active: true,
-        allowed: true,
+        permissionCode: permCode,
+        moduleName: resolvedMod,
+        active: isActive,
+        allowed: p.allowed !== false,
       };
-    }
-    let feat = String(p.featureCode || p.feature || '').trim().toUpperCase();
-    let act = String(p.action || '').trim().toUpperCase();
-    if (act === 'VIEW') act = 'READ';
-    const permCode = String(p.permissionCode || (act ? `${feat}:${act}` : feat)).trim().toUpperCase();
-    if (!feat && permCode.includes(':')) {
-      const parts = permCode.split(':');
-      feat = parts[0] || '';
-      if (!act) act = parts[1] || '';
-      if (act === 'VIEW') act = 'READ';
-    }
-    const explicitMod = normalizeModuleName(p.moduleName);
-    const resolvedMod = explicitMod || (SSO_FEATURE_CODES.includes(feat) ? CANONICAL_MODULES.SSO : '');
-    const isActive = p.active !== false && String(p.status || '').toUpperCase() !== 'INACTIVE' && p.status !== false;
-    return {
-      ...p,
-      featureCode: feat,
-      action: act,
-      permissionCode: permCode,
-      moduleName: resolvedMod,
-      active: isActive,
-      allowed: p.allowed !== false,
-    };
-  });
+    })
+    .filter(Boolean);
 }
 
 export function buildAuthContext(payload) {
@@ -601,7 +625,11 @@ export function hasPermission(authContextOrFeature, featureNameOrAction, actionO
     return false;
   });
 
-  const isDistinctCatalogFeature = SSO_FEATURE_CODES.includes(targetFeature);
+  const isDistinctCatalogFeature = SSO_FEATURE_CODES.includes(targetFeature) ||
+    targetFeature === 'WORKFLOW_TASKS' ||
+    targetFeature === 'WORKFLOW_DEFINITIONS' ||
+    targetFeature === 'APPROVAL_REQUESTS' ||
+    targetFeature === 'APPROVALS';
   const allowPrefixFallback = !hasExplicitFeaturePerm && !isDistinctCatalogFeature && targetFeature.includes('_');
 
   return permissions.some((p) => {
@@ -835,6 +863,21 @@ export function canViewModule(authContext, moduleOrFeature) {
   }
   if (!allowed && (normUpper === 'PURCHASE_INVOICES' || upper === 'PURCHASE_INVOICES')) {
     allowed = hasPermission(authContext, 'PURCHASE_REQUISITIONS', 'READ') || hasPermission(authContext, 'PURCHASE', 'READ');
+  }
+  if (!allowed && (normUpper === 'EXPENSE_REQUESTS' || upper === 'EXPENSE_REQUESTS')) {
+    allowed = hasPermission(authContext, 'EXPENSES', 'READ') || hasPermission(authContext, 'EXPENSE', 'READ');
+  }
+  if (!allowed && (normUpper === 'EXPENSES' || upper === 'EXPENSES')) {
+    allowed = hasPermission(authContext, 'EXPENSE_REQUESTS', 'READ') || hasPermission(authContext, 'EXPENSE', 'READ');
+  }
+    if (!allowed && (normUpper === 'WORKFLOW_DEFINITIONS' || upper === 'WORKFLOW_DEFINITIONS')) {
+    allowed = hasPermission(authContext, 'WORKFLOW', 'READ') || hasPermission(authContext, 'WORKFLOW_APPROVALS', 'READ');
+  }
+  if (!allowed && (normUpper === 'WORKFLOW_TASKS' || upper === 'APPROVAL_REQUESTS' || upper === 'APPROVALS')) {
+    allowed = hasPermission(authContext, 'APPROVAL_REQUESTS', 'READ') ||
+      hasPermission(authContext, 'APPROVALS', 'READ') ||
+      hasPermission(authContext, 'WORKFLOW_TASKS', 'APPROVE') ||
+      hasPermission(authContext, 'WORKFLOW_APPROVE', 'APPROVE');
   }
   return allowed;
 }

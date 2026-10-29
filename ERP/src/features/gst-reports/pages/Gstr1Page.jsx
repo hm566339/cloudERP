@@ -202,7 +202,7 @@ export default function Gstr1Page() {
   }, [filters]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117] animate-fade-in">
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-6.5rem)] h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="GSTR-1 Report"
         description="Monthly outward supplies return for GST compliance and audit reconciliation"
@@ -231,7 +231,7 @@ export default function Gstr1Page() {
 
       <ModuleTabs tabs={gstTabs} />
 
-      <div className="p-6 space-y-5">
+      <div className="p-6 space-y-6 flex-1">
         {/* Period & Parameter Filters */}
         <GstPeriodFilter
           period={{ month: filters.month, year: filters.year }}
@@ -253,7 +253,7 @@ export default function Gstr1Page() {
                 <CustomSelect
                   value={filters.invoiceType}
                   onChange={(e) => handleFilterChange('invoiceType', e.target.value)}
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none cursor-pointer"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all cursor-pointer"
                 >
                   <option value="">All Types</option>
                   <option value="B2B">B2B (Business to Business)</option>
@@ -272,7 +272,7 @@ export default function Gstr1Page() {
                   onChange={(e) => handleFilterChange('stateCode', e.target.value)}
                   placeholder="e.g. 27"
                   maxLength={2}
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 />
               </div>
 
@@ -285,7 +285,7 @@ export default function Gstr1Page() {
                   value={filters.gstRate}
                   onChange={(e) => handleFilterChange('gstRate', e.target.value)}
                   placeholder="e.g. 18"
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 />
               </div>
 
@@ -298,7 +298,7 @@ export default function Gstr1Page() {
                   value={filters.hsn}
                   onChange={(e) => handleFilterChange('hsn', e.target.value)}
                   placeholder="e.g. 998311"
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 />
               </div>
 
@@ -311,7 +311,7 @@ export default function Gstr1Page() {
                   value={filters.customerId}
                   onChange={(e) => handleFilterChange('customerId', e.target.value)}
                   placeholder="Search customer ID"
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 />
               </div>
             </div>
@@ -325,7 +325,7 @@ export default function Gstr1Page() {
         <div className="bg-white dark:bg-card-dark rounded-xl border border-zinc-200 dark:border-border-dark shadow-xs flex flex-col overflow-hidden">
           <div className="flex-1 overflow-x-auto custom-scrollbar">
             <table className="w-full text-left text-sm whitespace-nowrap" aria-label="GSTR-1 Records">
-              <thead className="bg-zinc-50 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] font-medium sticky top-0 z-20">
+              <thead className="bg-zinc-50 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] font-semibold text-xs sticky top-0 z-20">
                 <tr>
                   <th className="px-4 py-3 w-10 text-center text-xs font-semibold uppercase tracking-wider">#</th>
                   <SortableHeader

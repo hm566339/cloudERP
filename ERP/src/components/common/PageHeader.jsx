@@ -17,6 +17,7 @@ import React from 'react';
 function PageHeader({
   title,
   description,
+  subtitle,
   icon: Icon,
   action,
   actions,
@@ -30,6 +31,7 @@ function PageHeader({
   // Normalize actions: supports either single `action` object or `actions` array
   const actionList = React.useMemo(() => {
     if (actions && Array.isArray(actions)) return actions;
+    if (actions && React.isValidElement(actions)) return [actions];
     if (action) return [action];
     return [];
   }, [action, actions]);
@@ -55,11 +57,11 @@ function PageHeader({
             </h1>
           )}
         </div>
-        {description && (
+        {(description || subtitle) && (
           <p
             className={`text-xs sm:text-sm text-zinc-500 dark:text-[#A0A6B5] mt-0.5 leading-snug line-clamp-2 ${descriptionClassName}`}
           >
-            {description}
+            {(description || subtitle)}
           </p>
         )}
       </div>

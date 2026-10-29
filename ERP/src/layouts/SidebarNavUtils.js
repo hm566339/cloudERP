@@ -109,7 +109,9 @@ export function isItemOrChildActive(item, currentPath) {
     }
 
     // Special module patterns
-    if (item.path.includes('/transactions/expenses') && currentPath.includes('/transactions/expenses')) return true;
+    const isExpenseMenu = item.id === 'acc-txn-exp' || item.id === 'expense' || item.id === 'txn-exp' || (typeof item.path === 'string' && item.path.includes('/transactions/expenses'));
+    const isExpenseRoute = currentPath.includes('/transactions/expenses') || currentPath.includes('/transactions/expense-requests');
+    if (isExpenseMenu && isExpenseRoute) return true;
 
     // Special module patterns: Sales (Quotations, PI, Orders, Challans, Sales Invoices, Receipts)
     const isSalesMenu = item.id === 'acc-txn-sales' || item.id === 'txn-si';

@@ -7,7 +7,7 @@ import {
   MODULE_UI_METADATA,
 } from '../dynamicSidebarConfig.js';
 import { isItemOrChildActive } from '../SidebarNavUtils.js';
-import { CANONICAL_MODULES, buildAuthContext } from '../../utils/moduleNormalization.js';
+import { CANONICAL_MODULES, buildAuthContext, canViewModule, hasModule } from '../../utils/moduleNormalization.js';
 
 describe('Fully Dynamic Role-Based ERP Sidebar Navigation Suite', () => {
 
@@ -790,5 +790,243 @@ describe('Fully Dynamic Role-Based ERP Sidebar Navigation Suite', () => {
       false,
       'Parent group must not be active on unrelated sibling URL'
     );
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // TASK SPECIFICATION: 10 CORE PERMISSION-BASED SIDEBAR & ROUTING SCENARIOS
+  // ──────────────────────────────────────────────────────────────────────────
+  describe('Permission-Based Dynamic Sidebar & Route Authorization - 10 Core Scenarios', () => {
+
+    it('1. A user with Approval Requests READ permission sees the menu', () => {
+      const authContext = buildAuthContext({
+        user: { id: 'u-approver', role: 'approver' },
+        currentCompany: { id: 'comp-10' },
+        accessMode: 'FULL',
+        modules: [{ code: 'sso', active: true }, { code: 'workflow', active: true }],
+        permissions: ['WORKFLOW_TASKS:READ', 'USER_MANAGEMENT:READ'],
+      });
+      const links = buildDynamicSidebar({ authContext, companyId: 'comp-10' });
+      const adminSection = links.find((l) => l.id === 'admin');
+      assert.ok(adminSection, 'SSO & Admin section should be rendered');
+      const approvalMenu = adminSection.children.find((c) => c.id === 'workflow-approval-requests');
+      assert.ok(approvalMenu, 'Approval Requests menu must be visible to user with WORKFLOW_TASKS:READ');
+      assert.strictEqual(approvalMenu.path, '/workflows/approvals');
+      assert.strictEqual(approvalMenu.requiredPermission, 'WORKFLOW_TASKS:READ');
+      assert.strictEqual(canViewModule(authContext, 'WORKFLOW_TASKS'), true);
+    });
+
+    it('2. A user without that permission does not see the menu', () => {
+      const authContext = buildAuthContext({
+        user: { id: 'u-no-approver', role: 'admin' },
+        currentCompany: { id: 'comp-10' },
+        accessMode: 'FULL',
+        modules: [{ code: 'sso', active: true }, { code: 'workflow', active: true }],
+        permissions: ['WORKFLOW_DEFINITIONS:READ', 'USER_MANAGEMENT:READ'],
+      });
+      const links = buildDynamicSidebar({ authContext, companyId: 'comp-10' });
+      const adminSection = links.find((l) => l.id === 'admin');
+      assert.ok(adminSection, 'SSO & Admin section should be rendered');
+      const approvalMenu = adminSection.children.find((c) => c.id === 'workflow-approval-requests');
+      assert.strictEqual(approvalMenu, undefined, 'Approval Requests menu must NOT appear for user lacking permission');
+      assert.strictEqual(canViewModule(authContext, 'WORKFLOW_TASKS'), false);
+    });
+
+    it('3. A user with the WORKFLOW module enabled but without Approval Requests permission cannot access that feature', () => {
+      const authContext = buildAuthContext({
+        user: { id: 'u-wf-only', role: 'workflow_manager' },
+        currentCompany: { id: 'comp-10' },
+        accessMode: 'FULL',
+        modules: [{ code: 'workflow', canonical: 'WORKFLOW', active: true }],
+        permissions: ['WORKFLOW:READ', 'WORKFLOW_DEFINITIONS:READ'],
+      });
+      // User has WORKFLOW module enabled
+      assert.strictEqual(hasModule(authContext, 'WORKFLOW'), true, 'User has WORKFLOW module enabled');
+      assert.strictEqual(canViewModule(authContext, 'WORKFLOW'), true, 'User can view WORKFLOW module');
+      
+      // But lacks Approval Requests feature permission
+      assert.strictEqual(canViewModule(authContext, 'WORKFLOW_TASKS'), false, 'Approval Requests feature is blocked');
+      assert.strictEqual(canViewModule(authContext, 'APPROVAL_REQUESTS'), false, 'APPROVAL_REQUESTS alias is blocked');
+      assert.strictEqual(hasPermission(authContext, 'WORKFLOW_TASKS', 'READ'), false, 'READ on WORKFLOW_TASKS is denied');
+
+      const links = buildDynamicSidebar({ authContext, companyId: 'comp-10' });
+      const allItems = links.flatMap((l) => l.children ? [l, ...l.children] : [l]);
+      assert.strictEqual(allItems.some((i) => i.id === 'workflow-approval-requests'), false, 'Approval Requests cannot appear in sidebar');
+    });
+
+    it('4. A parent submenu disappears when all its children are inaccessible', () => {
+      const authContext = buildAuthContext({
+        user: { id: 'u-warehouse-only', role: 'warehouse_keeper' },
+        currentCompany: { id: 'comp-10' },
+        accessMode: 'FULL',
+        modules: [{ code: 'inventory', canonical: 'INVENTORY', active: true }],
+        permissions: ['WAREHOUSES:READ'],
+      });
+      const links = buildDynamicSidebar({ authContext, companyId: 'comp-10' });
+      const invModule = links.find((l) => l.id === 'inventory');
+      assert.ok(invModule, 'Inventory module is present');
+      // Stock Operations, Products, and Control groups have no accessible children, so they must be completely pruned
+      assert.strictEqual(invModule.children.some((c) => c.id === 'inv-products-group'), false, 'Products group should be pruned');
+      assert.strictEqual(invModule.children.some((c) => c.id === 'inv-stock-ops-group'), false, 'Stock Operations group should be pruned');
+      assert.strictEqual(invModule.children.some((c) => c.id === 'inv-control-group'), false, 'Inventory Control group should be pruned');
+      // Warehouse group has accessible WAREHOUSES child, so it remains
+      assert.ok(invModule.children.some((c) => c.id === 'inv-warehouse-group'), 'Warehouse group remains');
+    });
+
+    it('5. A parent submenu remains when at least one child is accessible', () => {
+      const authContext = buildAuthContext({
+        user: { id: 'u-catalog-only', role: 'catalog_manager' },
+        currentCompany: { id: 'comp-10' },
+        accessMode: 'FULL',
+        modules: [{ code: 'inventory', canonical: 'INVENTORY', active: true }],
+        permissions: ['PRODUCTS:READ'],
+      });
+      const links = buildDynamicSidebar({ authContext, companyId: 'comp-10' });
+      const invModule = links.find((l) => l.id === 'inventory');
+      const prodGroup = invModule.children.find((c) => c.id === 'inv-products-group');
+      assert.ok(prodGroup, 'Products parent group remains when at least one child is accessible');
+      assert.strictEqual(prodGroup.children.length, 1, 'Only the single authorized child is rendered');
+      assert.strictEqual(prodGroup.children[0].id, 'inv-products');
+      // Unauthorized siblings are omitted
+      assert.strictEqual(prodGroup.children.some((c) => c.id === 'inv-product-prices'), false);
+      assert.strictEqual(prodGroup.children.some((c) => c.id === 'inv-product-serials'), false);
+    });
+
+    it('6. Direct URL access is denied when the user lacks permission', () => {
+      const unauthorizedAuthContext = buildAuthContext({
+        user: { id: 'u-denied', role: 'viewer' },
+        currentCompany: { id: 'comp-10' },
+        accessMode: 'FULL',
+        modules: [{ code: 'workflow', active: true }],
+        permissions: ['WORKFLOW_DEFINITIONS:READ'],
+      });
+      // Direct access evaluation for protected route /workflows/approvals
+      assert.strictEqual(
+        canViewModule(unauthorizedAuthContext, 'WORKFLOW_TASKS'),
+        false,
+        'Direct URL guard denies access when user lacks WORKFLOW_TASKS permission'
+      );
+
+      const authorizedAuthContext = buildAuthContext({
+        user: { id: 'u-allowed', role: 'manager' },
+        currentCompany: { id: 'comp-10' },
+        accessMode: 'FULL',
+        modules: [{ code: 'workflow', active: true }],
+        permissions: ['WORKFLOW_TASKS:READ'],
+      });
+      assert.strictEqual(
+        canViewModule(authorizedAuthContext, 'WORKFLOW_TASKS'),
+        true,
+        'Direct URL guard allows access when user possesses WORKFLOW_TASKS permission'
+      );
+    });
+
+    it('7. Backend APIs reject unauthorized operations (action-level independence)', () => {
+      const readOnlyAuthContext = buildAuthContext({
+        user: { id: 'u-read-only', role: 'auditor' },
+        currentCompany: { id: 'comp-10' },
+        accessMode: 'FULL',
+        modules: [{ code: 'workflow', active: true }],
+        permissions: ['WORKFLOW_TASKS:READ'],
+      });
+      // READ is allowed
+      assert.strictEqual(hasPermission(readOnlyAuthContext, 'WORKFLOW_TASKS', 'READ'), true);
+      // Mutating actions are independently evaluated and denied
+      assert.strictEqual(hasPermission(readOnlyAuthContext, 'WORKFLOW_TASKS', 'CREATE'), false);
+      assert.strictEqual(hasPermission(readOnlyAuthContext, 'WORKFLOW_TASKS', 'UPDATE'), false);
+      assert.strictEqual(hasPermission(readOnlyAuthContext, 'WORKFLOW_TASKS', 'DELETE'), false);
+      assert.strictEqual(hasPermission(readOnlyAuthContext, 'WORKFLOW_TASKS', 'APPROVE'), false);
+    });
+
+    it('8. Revoked permissions are reflected correctly without stale caching', () => {
+      const initialPayload = {
+        user: { id: 'u-dynamic', role: 'admin' },
+        currentCompany: { id: 'comp-10' },
+        accessMode: 'FULL',
+        modules: [{ code: 'sso', active: true }],
+        permissions: ['WORKFLOW_TASKS:READ', 'WORKFLOW_DEFINITIONS:READ', 'USER_MANAGEMENT:READ'],
+      };
+      let ctx = buildAuthContext(initialPayload);
+      let links = buildDynamicSidebar({ authContext: ctx, companyId: 'comp-10' });
+      let admin = links.find((l) => l.id === 'admin');
+      assert.ok(admin.children.some((c) => c.id === 'workflow-approval-requests'), 'Initially shows Approval Requests');
+
+      // Revoke permission dynamically
+      const revokedPayload = {
+        ...initialPayload,
+        permissions: ['WORKFLOW_DEFINITIONS:READ', 'USER_MANAGEMENT:READ'],
+      };
+      ctx = buildAuthContext(revokedPayload);
+      links = buildDynamicSidebar({ authContext: ctx, companyId: 'comp-10' });
+      admin = links.find((l) => l.id === 'admin');
+      assert.strictEqual(
+        admin.children.some((c) => c.id === 'workflow-approval-requests'),
+        false,
+        'Revoked permission immediately removes Approval Requests from sidebar'
+      );
+      assert.ok(admin.children.some((c) => c.id === 'workflow-approvals'), 'Retains authorized Workflow & Approvals');
+    });
+
+    it('9. Existing authorized users retain their expected navigation and functionality', () => {
+      const fullManagerPayload = {
+        user: { id: 'u-mgr', role: 'manager' },
+        currentCompany: { id: 'comp-10' },
+        accessMode: 'FULL',
+        modules: [
+          { code: 'account', canonical: 'ACCOUNT', active: true },
+          { code: 'inventory', canonical: 'INVENTORY', active: true },
+          { code: 'crm', canonical: 'CRM', active: true },
+          { code: 'sso', canonical: 'SSO', active: true },
+        ],
+        permissions: [
+          'CUSTOMERS:READ',
+          'SALES_INVOICES:READ',
+          'PRODUCTS:READ',
+          'WAREHOUSES:READ',
+          'LEADS:READ',
+          'USER_MANAGEMENT:READ',
+          'WORKFLOW_TASKS:READ',
+          'WORKFLOW_DEFINITIONS:READ',
+        ],
+      };
+      const ctx = buildAuthContext(fullManagerPayload);
+      const links = buildDynamicSidebar({ authContext: ctx, companyId: 'comp-10' });
+      const moduleIds = links.map((l) => l.id);
+      assert.ok(moduleIds.includes('accounts'));
+      assert.ok(moduleIds.includes('inventory'));
+      assert.ok(moduleIds.includes('sales-crm'));
+      assert.ok(moduleIds.includes('admin'));
+
+      const admin = links.find((l) => l.id === 'admin');
+      assert.ok(admin.children.some((c) => c.id === 'workflow-approval-requests'));
+      assert.ok(admin.children.some((c) => c.id === 'workflow-approvals'));
+      assert.ok(admin.children.some((c) => c.id === 'users'));
+    });
+
+    it('10. Missing or malformed permission data never grants unintended access', () => {
+      // Empty permissions
+      const emptyCtx = buildAuthContext({ permissions: [] });
+      assert.strictEqual(hasPermission(emptyCtx, 'WORKFLOW_TASKS', 'READ'), false);
+      assert.strictEqual(canViewModule(emptyCtx, 'WORKFLOW_TASKS'), false);
+      assert.deepStrictEqual(buildDynamicSidebar({ authContext: emptyCtx }), []);
+
+      // Null permissions
+      const nullCtx = buildAuthContext({ permissions: null });
+      assert.strictEqual(hasPermission(nullCtx, 'WORKFLOW_TASKS', 'READ'), false);
+      assert.strictEqual(canViewModule(nullCtx, 'WORKFLOW_TASKS'), false);
+      assert.deepStrictEqual(buildDynamicSidebar({ authContext: nullCtx }), []);
+
+      // Malformed permission objects
+      const malformedCtx = buildAuthContext({ permissions: [{ invalid: true }, '', null, 123] });
+      assert.strictEqual(hasPermission(malformedCtx, 'WORKFLOW_TASKS', 'READ'), false);
+      assert.strictEqual(canViewModule(malformedCtx, 'WORKFLOW_TASKS'), false);
+
+      // Blocked access mode
+      const blockedCtx = buildAuthContext({
+        accessMode: 'BLOCKED',
+        permissions: ['ALL', 'WORKFLOW_TASKS:READ'],
+      });
+      assert.strictEqual(hasPermission(blockedCtx, 'WORKFLOW_TASKS', 'READ'), false);
+      assert.deepStrictEqual(buildDynamicSidebar({ authContext: blockedCtx }), []);
+    });
   });
 });

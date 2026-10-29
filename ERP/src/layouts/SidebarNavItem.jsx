@@ -27,7 +27,7 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
     const isPurchaseMenu = item.id === 'acc-txn-pur' || item.id === 'txn-pi';
     const isPurchaseRoute = isPurchaseTransactionsRoute(currentPath);
     const isSalesRoute = isSalesTransactionsRoute(currentPath);
-    const isExpenseMenu = item.id === 'expense' || item.id === 'txn-exp' || (typeof item.path === 'string' && item.path.includes('/transactions/expenses'));
+    const isExpenseMenu = item.id === 'acc-txn-exp' || item.id === 'expense' || item.id === 'txn-exp' || (typeof item.path === 'string' && (item.path.includes('/transactions/expenses') || item.path.includes('/transactions/expense')));
     const isApprovalsRoute = currentPath === '/workflows/approvals' ||
       currentPath.startsWith('/workflows/approvals/') ||
       currentPath.endsWith('/workflows/approvals') ||
@@ -46,7 +46,7 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
         currentPath.startsWith(item.path + '/'))
       || (isSalesMenu && isSalesRoute)
       || (isPurchaseMenu && isPurchaseRoute)
-      || (isExpenseMenu && currentPath.includes('/transactions/expenses'))
+      || (isExpenseMenu && (currentPath.includes('/transactions/expenses') || currentPath.includes('/transactions/expense-requests')))
       || (isWorkflowApprovals && isWorkflowRoute && !isApprovalsRoute)
       || (isWorkflowRequests && isApprovalsRoute);
 

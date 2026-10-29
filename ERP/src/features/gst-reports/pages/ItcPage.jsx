@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Printer, Download, RefreshCw, AlertCircle, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { TrendingUp, Printer, Download, RefreshCw, AlertCircle, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { useAppSelector } from '../../../app/hooks';
 import { gstReportsApi } from '../../../api/account/reports/gst';
@@ -275,16 +275,17 @@ export default function ItcPage() {
   ];
 
   return (
-    <div className="animate-fade-in space-y-6 pb-12">
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-6.5rem)] h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* Website Standard PageHeader */}
       <PageHeader
         title="ITC Report"
-        subtitle="Input Tax Credit statement — availed, utilized, and net balance"
+        description="Input Tax Credit statement — availed, utilized, and net balance"
+        icon={TrendingUp}
         actions={
           <div className="flex items-center gap-2">
             <button
               onClick={() => window.print()}
-              className="btn-secondary h-9 px-3 flex items-center gap-1.5"
+              className="btn-secondary h-9 px-3 text-xs bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-hover-dark/40 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5"
               type="button"
             >
               <Printer size={15} />
@@ -319,7 +320,7 @@ export default function ItcPage() {
             <button
               onClick={() => handleExport('csv')}
               disabled={exportingType === 'csv' || isLoading}
-              className="btn-primary h-9 px-3 flex items-center gap-1.5"
+              className="btn-primary h-9 px-3 text-xs flex items-center gap-1.5 shadow-2xs"
               type="button"
             >
               {exportingType === 'csv' ? (
@@ -336,6 +337,7 @@ export default function ItcPage() {
       {/* Cross-report Navigation Tabs */}
       <ModuleTabs tabs={gstTabs} />
 
+      <div className="p-6 space-y-6 flex-1">
       {/* Error Banner */}
       {error && (
         <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-300 p-6 rounded-xl flex flex-col items-center text-center">
@@ -374,7 +376,7 @@ export default function ItcPage() {
                   type="text"
                   value={filters.companyId}
                   onChange={(e) => handleFilterChange('companyId', e.target.value)}
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 />
               </div>
             )}
@@ -386,7 +388,7 @@ export default function ItcPage() {
                 type="text"
                 value={filters.branchId}
                 onChange={(e) => handleFilterChange('branchId', e.target.value)}
-                className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
               />
             </div>
             <div>
@@ -397,7 +399,7 @@ export default function ItcPage() {
                 type="text"
                 value={filters.gstRegistrationId}
                 onChange={(e) => handleFilterChange('gstRegistrationId', e.target.value)}
-                className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
               />
             </div>
             <div>
@@ -408,7 +410,7 @@ export default function ItcPage() {
                 type="text"
                 value={filters.financialYearId}
                 onChange={(e) => handleFilterChange('financialYearId', e.target.value)}
-                className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
               />
             </div>
             <div>
@@ -435,7 +437,7 @@ export default function ItcPage() {
                 onChange={(e) => handleFilterChange('stateCode', e.target.value)}
                 placeholder="e.g. 27"
                 maxLength={2}
-                className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
               />
             </div>
             <div>
@@ -447,7 +449,7 @@ export default function ItcPage() {
                 value={filters.gstRate}
                 onChange={(e) => handleFilterChange('gstRate', e.target.value)}
                 placeholder="e.g. 18"
-                className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
               />
             </div>
             <div>
@@ -459,7 +461,7 @@ export default function ItcPage() {
                 value={filters.hsn}
                 onChange={(e) => handleFilterChange('hsn', e.target.value)}
                 placeholder="e.g. 998311"
-                className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
               />
             </div>
             <div>
@@ -470,7 +472,7 @@ export default function ItcPage() {
                 type="text"
                 value={filters.vendorId}
                 onChange={(e) => handleFilterChange('vendorId', e.target.value)}
-                className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
               />
             </div>
           </div>
@@ -521,7 +523,7 @@ export default function ItcPage() {
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-[10.4px] min-w-[640px]">
-                    <thead className="bg-zinc-50/80 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-border-dark text-zinc-500 dark:text-[#A0A6B5] font-bold uppercase tracking-wider text-[8.8px] whitespace-nowrap">
+                    <thead className="bg-zinc-50 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] font-semibold uppercase tracking-wider text-xs whitespace-nowrap">
                       <tr>
                         <th className="p-3.5 w-[25%] border-r border-zinc-200 dark:border-border-dark">Category</th>
                         <th className="p-3.5 w-[15%] text-right">CGST</th>
@@ -730,6 +732,8 @@ export default function ItcPage() {
           )}
         </>
       )}
+
+      </div>
 
       <ExportModal
         isOpen={isExportModalOpen}

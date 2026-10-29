@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { CheckCircle2, AlertCircle, UploadCloud, RefreshCw, FileText } from 'lucide-react';
+import { Scale, CheckCircle2, AlertCircle, UploadCloud, RefreshCw, FileText } from 'lucide-react';
 import { gstReportsApi } from '../../../api/account/reports/gst';
 import { useAppSelector } from '../../../app/hooks';
 import PageHeader from '../../../components/common/PageHeader';
@@ -75,7 +75,7 @@ export default function Gstr2bHistoryPage() {
   };
 
   return (
-    <div className="animate-fade-in space-y-6 pb-12">
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-6.5rem)] h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <input
         type="file"
         accept=".json"
@@ -87,12 +87,13 @@ export default function Gstr2bHistoryPage() {
       {/* Website Standard PageHeader */}
       <PageHeader
         title="GSTR-2B Reconciliation"
-        subtitle="Upload counterparty GSTR-2B auto-drafted returns and audit matched input tax credits"
+        description="Upload counterparty GSTR-2B auto-drafted returns and audit matched input tax credits"
+        icon={Scale}
         actions={
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="btn-primary h-9 px-4 flex items-center gap-2 text-xs font-semibold"
+            className="btn-primary h-9 px-4 flex items-center gap-2 text-xs font-semibold shadow-2xs"
             type="button"
           >
             {isUploading ? (
@@ -108,6 +109,7 @@ export default function Gstr2bHistoryPage() {
       {/* Cross-report Navigation Tabs */}
       <ModuleTabs tabs={gstTabs} />
 
+      <div className="p-6 space-y-6 flex-1">
       {/* Error Alert */}
       {error && (
         <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-300 p-4 rounded-xl flex items-start gap-3 shadow-xs">
@@ -160,8 +162,8 @@ export default function Gstr2bHistoryPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[10.4px] min-w-[700px]">
-            <thead className="bg-zinc-50/80 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-border-dark text-zinc-500 dark:text-[#A0A6B5] font-semibold uppercase tracking-wider text-[8.8px] whitespace-nowrap">
+          <table className="w-full text-left text-xs min-w-[700px]">
+            <thead className="bg-zinc-50 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] font-semibold uppercase tracking-wider text-xs whitespace-nowrap">
               <tr>
                 <th className="p-3.5">Supplier GSTIN</th>
                 <th className="p-3.5">Invoice Number</th>
@@ -237,6 +239,7 @@ export default function Gstr2bHistoryPage() {
           </table>
         </div>
       </div>
+          </div>
     </div>
   );
 }

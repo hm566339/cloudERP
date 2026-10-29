@@ -201,7 +201,7 @@ export default function Gstr3bPage() {
   }, [filters]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117] animate-fade-in">
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-6.5rem)] h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="GSTR-3B Report"
         description="Monthly summary return of outward supplies, input tax credit claimed, and net tax liability"
@@ -230,7 +230,7 @@ export default function Gstr3bPage() {
 
       <ModuleTabs tabs={gstTabs} />
 
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 flex-1">
         {/* Period & Parameter Filters */}
         <GstPeriodFilter
           period={{ month: filters.month, year: filters.year }}
@@ -252,7 +252,7 @@ export default function Gstr3bPage() {
                     type="text"
                     value={filters.companyId}
                     onChange={(e) => handleFilterChange('companyId', e.target.value)}
-                    className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                    className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                   />
                 </div>
               )}
@@ -262,7 +262,7 @@ export default function Gstr3bPage() {
                   type="text"
                   value={filters.branchId}
                   onChange={(e) => handleFilterChange('branchId', e.target.value)}
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 />
               </div>
               <div>
@@ -271,7 +271,7 @@ export default function Gstr3bPage() {
                   type="text"
                   value={filters.gstRegistrationId}
                   onChange={(e) => handleFilterChange('gstRegistrationId', e.target.value)}
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 />
               </div>
               <div>
@@ -280,7 +280,7 @@ export default function Gstr3bPage() {
                   type="text"
                   value={filters.financialYearId}
                   onChange={(e) => handleFilterChange('financialYearId', e.target.value)}
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 />
               </div>
               <div>
@@ -288,7 +288,7 @@ export default function Gstr3bPage() {
                 <CustomSelect
                   value={filters.invoiceType}
                   onChange={(e) => handleFilterChange('invoiceType', e.target.value)}
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 >
                   <option value="ALL">All</option>
                   <option value="B2B">B2B</option>
@@ -301,7 +301,7 @@ export default function Gstr3bPage() {
                   type="text"
                   value={filters.stateCode}
                   onChange={(e) => handleFilterChange('stateCode', e.target.value)}
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 />
               </div>
               <div>
@@ -310,7 +310,7 @@ export default function Gstr3bPage() {
                   type="number"
                   value={filters.gstRate}
                   onChange={(e) => handleFilterChange('gstRate', e.target.value)}
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 />
               </div>
               <div>
@@ -319,7 +319,7 @@ export default function Gstr3bPage() {
                   type="text"
                   value={filters.customerId}
                   onChange={(e) => handleFilterChange('customerId', e.target.value)}
-                  className="w-full h-8 px-2.5 bg-white dark:bg-card-dark border border-zinc-200 dark:border-border-dark rounded-md text-[10.4px] text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none"
+                  className="w-full h-9 px-3 bg-white dark:bg-surface-dark border border-zinc-200 dark:border-border-dark rounded-lg text-xs font-medium text-zinc-800 dark:text-[#E6E8EE] focus:border-primary outline-none transition-all"
                 />
               </div>
             </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Download, Printer, RefreshCw, AlertCircle, Lock } from 'lucide-react';
+import { FileText, Download, Printer, RefreshCw, AlertCircle, Lock } from 'lucide-react';
 import { useAppSelector } from '../../../app/hooks';
 import usePermission from '../../../hooks/usePermission';
 import { useGstReport } from '../hooks/useGstReport';
@@ -162,11 +162,11 @@ export default function GstReportViewer({ reportType, meta, fetcher }) {
   }
 
   return (
-    <div className="animate-fade-in space-y-6 pb-12">
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-6.5rem)] h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* Website Standard PageHeader */}
       <PageHeader
         title={meta.title}
-        subtitle={
+        description={
           generatedAt
             ? `${meta.subtitle} • Generated at: ${new Date(generatedAt).toLocaleString()}`
             : meta.subtitle
@@ -205,6 +205,7 @@ export default function GstReportViewer({ reportType, meta, fetcher }) {
       {/* Cross-report Navigation Tabs */}
       <ModuleTabs tabs={gstTabs} />
 
+      <div className="p-6 space-y-6 flex-1">
       {error && (
         <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-300 p-4 rounded-xl flex items-start gap-3 shadow-xs">
           <AlertCircle size={18} className="text-rose-500 shrink-0 mt-0.5" />
@@ -242,6 +243,7 @@ export default function GstReportViewer({ reportType, meta, fetcher }) {
           emptyMessage={`No ${meta.title} data found for the selected period.`}
         />
       </div>
+          </div>
     </div>
   );
 }

@@ -504,7 +504,7 @@ export default function SupplierQuotations() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-6.5rem)] h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* Top Header */}
       <PageHeader
         title="Supplier Quotes"
@@ -526,7 +526,7 @@ export default function SupplierQuotations() {
       <ModuleTabs tabs={purchaseTabs} />
 
       {/* Main Content Area */}
-      <div className="flex-1 p-6 overflow-hidden flex flex-col">
+      <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0">
         <DataTable
           selectable
           rowKey="id"

@@ -1,7 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import useListQuery from '../../../hooks/useListQuery';
-import SearchInput from '../../../components/common/SearchInput';
-import Pagination from '../../../components/common/Pagination';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Truck, Plus, Search, SlidersHorizontal, ChevronDown, ChevronUp,
@@ -18,7 +15,7 @@ import { useGetWarehousesQuery } from '../../../api/inventory/inventory.api';
 import useUrlFilters from '../../../hooks/useUrlFilters';
 import PageHeader from '../../../components/common/PageHeader';
 import ModuleTabs, { purchaseTabs } from '../../../components/module-tabs';
-import DataTable from '../../../components/data-table/DataTable';
+import DataTable from '../../../components/data-table';
 import AuditLogHover from '../../../components/common/AuditLogHover';
 import ExportModal from '../../../components/common/ExportModal';
 import { confirmDialog } from '../../../utils/confirmDialog';
@@ -27,6 +24,17 @@ import { addAlert } from '../../notifications/notificationSlice';
 import { useRoutePath } from '../../../hooks/useRoutePath';
 import StatusBadge from '../../../components/common/StatusBadge';
 
+const ALL_COLUMNS = [
+  { id: 'grnNumber', label: 'GRN NUMBER' },
+  { id: 'grnDate', label: 'GRN DATE' },
+  { id: 'poNumber', label: 'PO NUMBER' },
+  { id: 'vendor', label: 'VENDOR' },
+  { id: 'warehouse', label: 'WAREHOUSE' },
+  { id: 'status', label: 'STATUS' },
+  { id: 'itemsCount', label: 'ITEMS COUNT' }
+];
+
+const DEFAULT_COLUMNS = ['grnNumber', 'grnDate', 'poNumber', 'vendor', 'warehouse', 'status', 'itemsCount'];
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-';
@@ -98,78 +106,70 @@ const GoodsReceiptOverview = ({ grn, warehouseMap, navigate, location, buildPath
               )}
             </div>
             <div className="flex justify-between py-1 border-b border-zinc-50">
-              <span className="text-zinc-500">Warehouse:</span>
-              <span className="font-medium text-zinc-800">{warehouseDisplay}</span>
-            </div>
-            <div className="flex justify-between py-1">
               <span className="text-zinc-500">Status:</span>
               <StatusBadge status={grn.status} />
+            </div>
+            <div className="flex justify-between py-1 border-b border-zinc-50">
+              <span className="text-zinc-500">Created:</span>
+              <span className="font-medium text-zinc-800">{formatDateTime(grn.createdAt)}</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-zinc-50">
+              <span className="text-zinc-500">Delivery Note:</span>
+              <span className="font-mono text-zinc-800">{grn.deliveryNoteNumber || '—'}</span>
             </div>
           </div>
         </div>
 
-        {/* Logistics & Vendor */}
+        {/* Vendor & Location */}
         <div className="space-y-3 bg-white dark:bg-card-dark p-4 rounded-xl border border-zinc-200/70 dark:border-border-dark shadow-xs">
           <h4 className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">
-            <FileText size={14} className="text-zinc-500" />
-            Logistics & Vendor
+            <Package size={14} className="text-zinc-500" />
+            Vendor & Logistics
           </h4>
           <div className="space-y-2 text-xs">
             <div className="flex justify-between py-1 border-b border-zinc-50">
               <span className="text-zinc-500">Vendor:</span>
-              <span className="font-semibold text-zinc-800">{vendorDisplay}</span>
+              <span className="font-semibold text-zinc-900">{vendorDisplay}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-zinc-50">
-              <span className="text-zinc-500">Delivery Note #:</span>
-              <span className="font-mono text-zinc-700">{grn.deliveryNoteNumber || '—'}</span>
+              <span className="text-zinc-500">Warehouse:</span>
+              <span className="font-medium text-zinc-800">{warehouseDisplay}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-zinc-50">
-              <span className="text-zinc-500">Vehicle #:</span>
-              <span className="font-mono text-zinc-700">{grn.vehicleNumber || '—'}</span>
+              <span className="text-zinc-500">Vehicle Number:</span>
+              <span className="font-mono text-zinc-800">{grn.vehicleNumber || '—'}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-zinc-50">
               <span className="text-zinc-500">Transporter:</span>
-              <span className="text-zinc-700">{grn.transporterName || '—'}</span>
+              <span className="font-medium text-zinc-800">{grn.transporterName || '—'}</span>
             </div>
-            <div className="flex justify-between py-1">
-              <span className="text-zinc-500">Created At:</span>
-              <span className="text-zinc-700">{formatDateTime(grn.createdAt)}</span>
+            <div className="flex justify-between py-1 border-b border-zinc-50">
+              <span className="text-zinc-500">Received Items:</span>
+              <span className="font-mono font-bold text-zinc-900">{itemCount} items</span>
             </div>
           </div>
         </div>
 
-        {/* Items Summary & Quick Actions */}
+        {/* Action Highlights */}
         <div className="space-y-3 bg-white dark:bg-card-dark p-4 rounded-xl border border-zinc-200/70 dark:border-border-dark shadow-xs flex flex-col justify-between">
           <div>
             <h4 className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5 border-b border-zinc-100 dark:border-[#2A2F3D] pb-2">
-              <Package size={14} className="text-zinc-500" />
-              Received Items ({itemCount})
+              <Receipt size={14} className="text-zinc-500" />
+              Overview Notes
             </h4>
-            <div className="mt-2 max-h-36 overflow-y-auto space-y-1.5 pr-1">
-              {(grn.items || []).map((it, i) => (
-                <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-zinc-50 last:border-none">
-                  <span className="font-medium text-zinc-800 truncate max-w-[140px]">
-                    {it.itemName || it.itemCode || `Item ${i + 1}`}
-                  </span>
-                  <span className="text-zinc-600 font-mono text-[11px]">
-                    Recv: <strong className="text-zinc-800">{it.receivedQuantity} {it.unit || ''}</strong>
-                    {it.rejectedQuantity > 0 && <span className="text-rose-600 ml-1">({it.rejectedQuantity} rej)</span>}
-                  </span>
-                </div>
-              ))}
-              {(!grn.items || grn.items.length === 0) && (
-                <p className="text-xs text-zinc-400 italic py-2">No items listed</p>
-              )}
-            </div>
+            <p className="text-xs text-zinc-600 mt-2">
+              {grn.remarks || 'No receipt remarks provided. Expand or click details to inspect line items, accepted/rejected counts, and quality check statuses.'}
+            </p>
           </div>
-          <div className="pt-2 border-t border-zinc-100 flex justify-end gap-2">
+          <div className="pt-2 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between">
             <button
               type="button"
               onClick={() => setSelectedGrn(grn)}
-              className="btn-secondary text-xs flex items-center gap-1 py-1 px-2.5 shadow-2xs"
+              className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
             >
-              <Eye size={13} /> Full Details
+              Full Breakdown <ArrowRight size={13} />
             </button>
+            <span className="text-[10px] text-zinc-400 font-mono">ID: {grn.id}</span>
           </div>
         </div>
       </div>
@@ -177,20 +177,29 @@ const GoodsReceiptOverview = ({ grn, warehouseMap, navigate, location, buildPath
   );
 };
 
-export default function GoodsReceiptsPage() {
+export default function GoodsReceipts() {
+  const companyId = useParams().companyId || JSON.parse(localStorage.getItem('selected_company'))?.id || JSON.parse(localStorage.getItem('auth_user'))?.companyCode;
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useAppDispatch();
   const { buildPath } = useRoutePath();
-  const companyId = useParams().companyId || JSON.parse(localStorage.getItem('selected_company'))?.id || JSON.parse(localStorage.getItem('auth_user'))?.companyCode;
+
+  const [visibleColumns, setVisibleColumns] = useState(() => {
+    try {
+      const saved = localStorage.getItem('grn_visible_columns_v2');
+      return saved ? JSON.parse(saved) : DEFAULT_COLUMNS;
+    } catch {
+      return DEFAULT_COLUMNS;
+    }
+  });
 
   const [expandedRowId, setExpandedRowId] = useState(null);
   const [selectedGrn, setSelectedGrn] = useState(null);
-  const [selectedGrns, setSelectedGrns] = useState([]);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [reversalReason, setReversalReason] = useState('');
+  const [selectedGrns, setSelectedGrns] = useState([]);
   const [isReverseModalOpen, setIsReverseModalOpen] = useState(false);
   const [grnToReverse, setGrnToReverse] = useState(null);
+  const [reversalReason, setReversalReason] = useState('');
   const [creatingInvoiceId, setCreatingInvoiceId] = useState(null);
 
   const {
@@ -371,35 +380,51 @@ export default function GoodsReceiptsPage() {
     const hasInvoice = grn.hasInvoice || grn.invoiceId || grn.purchaseInvoiceId;
 
     actions.push({
+      key: 'view',
+      label: 'View Details',
       tooltip: 'View Details',
-      icon: <Eye size={16} />,
-      onClick: () => setSelectedGrn(grn)
+      'aria-label': 'View Details',
+      icon: <Eye size={14} />,
+      onClick: () => setSelectedGrn(grn),
+      className: 'text-zinc-600 hover:text-indigo-600'
     });
 
     if (!hasInvoice) {
       actions.push({
+        key: 'create-invoice',
+        label: 'Create Invoice',
         tooltip: 'Create Invoice',
-        icon: creatingInvoiceId === grn.id ? <RefreshCw size={16} className="animate-spin" /> : <Receipt size={16} />,
+        'aria-label': 'Create Invoice',
+        icon: creatingInvoiceId === grn.id ? <RefreshCw size={14} className="animate-spin" /> : <Receipt size={14} />,
         disabled: creatingInvoiceId === grn.id,
-        onClick: () => handleCreateInvoiceDirect(grn)
+        onClick: () => handleCreateInvoiceDirect(grn),
+        className: 'text-zinc-600 hover:text-blue-600'
       });
     }
 
     if (grn.status === 'DRAFT') {
       actions.push({
+        key: 'confirm',
+        label: 'Confirm GRN',
         tooltip: 'Confirm GRN',
-        icon: <CheckCircle size={16} className="text-emerald-600" />,
+        'aria-label': 'Confirm GRN',
+        icon: <CheckCircle size={14} className="text-emerald-600" />,
         disabled: isConfirming,
-        onClick: () => handleConfirm(grn)
+        onClick: () => handleConfirm(grn),
+        className: 'text-emerald-600 hover:text-emerald-700'
       });
     }
 
     if (grn.status === 'CONFIRMED') {
       actions.push({
+        key: 'reverse',
+        label: 'Reverse GRN',
         tooltip: 'Reverse GRN',
-        icon: <RotateCcw size={16} className="text-amber-600" />,
+        'aria-label': 'Reverse GRN',
+        icon: <RotateCcw size={14} className="text-amber-600" />,
         disabled: isReversing,
-        onClick: () => handleOpenReverse(grn)
+        onClick: () => handleOpenReverse(grn),
+        className: 'text-amber-600 hover:text-amber-700'
       });
     }
 
@@ -408,13 +433,14 @@ export default function GoodsReceiptsPage() {
 
   const columns = useMemo(() => [
     {
+      key: 'grnNumber',
       id: 'grnNumber',
+      label: 'GRN NUMBER',
       header: 'GRN NUMBER',
-      accessor: 'grnNumber',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <div className="flex items-center gap-2">
-          <Truck size={15} className="text-zinc-400 shrink-0" />
+          <Truck size={14} className="text-zinc-400 shrink-0" />
           <span
             onClick={(e) => {
               e.stopPropagation();
@@ -429,20 +455,22 @@ export default function GoodsReceiptsPage() {
       )
     },
     {
+      key: 'grnDate',
       id: 'grnDate',
+      label: 'GRN DATE',
       header: 'GRN DATE',
-      accessor: 'grnDate',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <span className="text-xs text-zinc-600">{formatDate(row.grnDate)}</span>
       )
     },
     {
+      key: 'poNumber',
       id: 'poNumber',
+      label: 'PO NUMBER',
       header: 'PO NUMBER',
-      accessor: 'poNumber',
       sortable: true,
-      cell: (row) => {
+      render: (val, row) => {
         const poId = row.purchaseOrderId || row.purchaseOrder?.id;
         const poNum = row.purchaseOrder?.poNumber || row.poNumber;
         if (!poNum) return <span className="text-zinc-400">—</span>;
@@ -463,46 +491,52 @@ export default function GoodsReceiptsPage() {
       }
     },
     {
+      key: 'vendor',
       id: 'vendor',
+      label: 'VENDOR',
       header: 'VENDOR',
-      accessor: 'vendor',
       sortable: true,
-      cell: (row) => (
-        <span className="text-xs font-medium text-zinc-900">
+      render: (val, row) => (
+        <span className="text-xs font-semibold text-zinc-900">
           {row.vendor?.vendorName || row.vendorName || '—'}
         </span>
       )
     },
     {
+      key: 'warehouse',
       id: 'warehouse',
+      label: 'WAREHOUSE',
       header: 'WAREHOUSE',
-      accessor: 'warehouse',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <span className="text-xs text-zinc-700">
           {row.warehouseName || row.warehouse?.warehouseName || row.warehouse?.name || (row.warehouseId ? warehouseMap[row.warehouseId] : null) || '—'}
         </span>
       )
     },
     {
+      key: 'status',
       id: 'status',
+      label: 'STATUS',
       header: 'STATUS',
-      accessor: 'status',
       sortable: true,
+      align: 'center',
       headerClassName: 'text-center',
-      cell: (row) => (
+      render: (val, row) => (
         <div className="text-center">
           <StatusBadge status={row.status} />
         </div>
       )
     },
     {
+      key: 'itemsCount',
       id: 'itemsCount',
+      label: 'ITEMS COUNT',
       header: 'ITEMS COUNT',
-      accessor: 'itemsCount',
       sortable: true,
+      align: 'center',
       headerClassName: 'text-center',
-      cell: (row) => {
+      render: (val, row) => {
         const count = Array.isArray(row.items) ? row.items.length : (row.itemsCount ?? row.itemCount ?? 0);
         return (
           <div className="text-center font-mono text-xs font-medium text-zinc-700">
@@ -515,119 +549,86 @@ export default function GoodsReceiptsPage() {
 
   const basicFilters = useMemo(() => [
     {
-      id: 'status',
+      key: 'status',
       label: 'Status',
       type: 'select',
-      value: filters.status || '',
-      onChange: (val) => setFilter('status', val),
       options: [
-        { value: '', label: 'All Statuses' },
-        { value: 'DRAFT', label: 'Draft' },
-        { value: 'CONFIRMED', label: 'Confirmed' },
-        { value: 'VERIFIED', label: 'Verified' },
-        { value: 'POSTED', label: 'Posted' },
-        { value: 'REVERSED', label: 'Reversed' },
-        { value: 'CANCELLED', label: 'Cancelled' },
+        { label: 'All Statuses', value: '' },
+        { label: 'Draft', value: 'DRAFT' },
+        { label: 'Confirmed', value: 'CONFIRMED' },
+        { label: 'Verified', value: 'VERIFIED' },
+        { label: 'Posted', value: 'POSTED' },
+        { label: 'Reversed', value: 'REVERSED' },
+        { label: 'Cancelled', value: 'CANCELLED' }
       ]
     },
     {
-      id: 'grnDateFrom',
+      key: 'grnDateFrom',
       label: 'Date From',
-      type: 'date',
-      value: filters.grnDateFrom || '',
-      onChange: (val) => setFilter('grnDateFrom', val)
+      type: 'date'
     },
     {
-      id: 'grnDateTo',
+      key: 'grnDateTo',
       label: 'Date To',
-      type: 'date',
-      value: filters.grnDateTo || '',
-      onChange: (val) => setFilter('grnDateTo', val)
+      type: 'date'
     }
-  ], [filters.status, filters.grnDateFrom, filters.grnDateTo, setFilter]);
+  ], []);
 
   const advancedFilters = useMemo(() => [
     {
-      id: 'deliveryNote',
-      label: 'Delivery Note Number',
-      type: 'text',
-      placeholder: 'e.g. DN-1002',
-      value: filters.deliveryNote || '',
-      onChange: (val) => setFilter('deliveryNote', val)
-    },
-    {
-      id: 'transporter',
-      label: 'Transporter / Vehicle',
-      type: 'text',
-      placeholder: 'e.g. BlueDart or MH-12',
-      value: filters.transporter || '',
-      onChange: (val) => setFilter('transporter', val)
-    },
-    {
-      id: 'grnDateFrom',
-      label: 'GRN Date From',
-      type: 'date',
-      value: filters.grnDateFrom || '',
-      onChange: (val) => setFilter('grnDateFrom', val)
-    },
-    {
-      id: 'grnDateTo',
-      label: 'GRN Date To',
-      type: 'date',
-      value: filters.grnDateTo || '',
-      onChange: (val) => setFilter('grnDateTo', val)
+      title: 'Delivery & Transport',
+      fields: [
+        {
+          key: 'deliveryNote',
+          label: 'Delivery Note Number',
+          type: 'text',
+          placeholder: 'e.g. DN-1002'
+        },
+        {
+          key: 'transporter',
+          label: 'Transporter / Vehicle',
+          type: 'text',
+          placeholder: 'e.g. BlueDart or MH-12'
+        }
+      ]
     }
-  ], [filters, setFilter]);
+  ], []);
+
+  const filterValues = useMemo(() => ({
+    status: filters.status || '',
+    grnDateFrom: filters.grnDateFrom || '',
+    grnDateTo: filters.grnDateTo || '',
+    deliveryNote: filters.deliveryNote || '',
+    transporter: filters.transporter || ''
+  }), [filters]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117]">
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-6.5rem)] h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+      {/* Top Header */}
       <PageHeader
         title="Goods Receipts"
         description="Manage inbound warehouse deliveries, physical receipts, and 3-way matching"
         icon={Truck}
-        actions={
-          <button
-            type="button"
-            onClick={() => navigate(buildPath('/accounts/transactions/purchase-orders'))}
-            className="btn-primary flex items-center gap-2"
-            title="Create Goods Receipt from an Approved Purchase Order"
-          >
-            <Plus size={16} />
-            <span>New Goods Receipt</span>
-          </button>
-        }
-      />
+      >
+        <button
+          type="button"
+          onClick={() => navigate(buildPath('/accounts/transactions/purchase-orders'))}
+          className="btn-primary flex items-center gap-2"
+          title="Create Goods Receipt from an Approved Purchase Order"
+        >
+          <Plus size={16} />
+          <span>New Goods Receipt</span>
+        </button>
+      </PageHeader>
 
+      {/* ── Module Tabs ── */}
       <ModuleTabs tabs={purchaseTabs} />
 
-      <div className="p-6">
+      {/* Main Content Area */}
+      <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0">
         <DataTable
-          data={sortedList}
-          columns={columns}
-          keyField="id"
-          loading={isLoading}
-          searchable
-          searchPlaceholder="Search GRN number, vendor, PO..."
-          searchValue={searchTerm || ''}
-          onSearchChange={setSearchTerm}
-          filters={basicFilters}
-          filterValues={filters}
-          onFilterChange={setFilter}
-          onReset={handleReset}
-          advancedFilters={advancedFilters}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSort={handleColumnSort}
-          pagination={{
-            currentPage: page,
-            totalPages,
-            totalElements,
-            pageSize,
-            onPageChange: setPage,
-            onPageSizeChange: setPageSize
-          }}
-          columnVisibility
           selectable
+          rowKey="id"
           selectedRows={selectedGrns}
           onSelectionChange={setSelectedGrns}
           bulkActions={[
@@ -638,13 +639,47 @@ export default function GoodsReceiptsPage() {
               onClick: () => setIsExportModalOpen(true)
             }
           ]}
-          exportable
-          onExport={() => setIsExportModalOpen(true)}
-          refreshable
+          columns={columns}
+          data={sortedList}
+          loading={isLoading}
+          isRefreshing={isFetching}
+
+          // Search
+          searchable
+          searchValue={searchTerm || ''}
+          searchPlaceholder="Search GRN number, vendor, PO..."
+          onSearchChange={(val) => { setSearchTerm(val); setPage(0); }}
+
+          // Filters
+          filters={basicFilters}
+          filterValues={filterValues}
+          onFilterChange={(key, val) => { setFilter(key, val); setPage(0); }}
+
+          // Advanced Filters
+          advancedFilters={advancedFilters}
+
+          // Reset, Refresh, Export
+          onReset={handleReset}
           onRefresh={refetch}
-          getRowActions={getGrnActions}
+          onExport={() => setIsExportModalOpen(true)}
+
+          // Column Visibility
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={(cols) => {
+            setVisibleColumns(cols);
+            localStorage.setItem('grn_visible_columns_v2', JSON.stringify(cols));
+          }}
+
+          // Sorting
+          sort={{ key: sortBy, direction: sortOrder }}
+          onSortChange={({ key }) => handleColumnSort(key)}
+
+          // Row Actions
+          rowActions={getGrnActions}
+
+          // Expandable Sub-rows
           expandedRowId={expandedRowId}
-          onToggleExpand={(id) => setExpandedRowId(expandedRowId === id ? null : id)}
+          onToggleExpand={(id) => setExpandedRowId(prev => prev === id ? null : id)}
           renderExpandedRow={(grn) => (
             <GoodsReceiptOverview
               grn={grn}
@@ -655,16 +690,22 @@ export default function GoodsReceiptsPage() {
               setSelectedGrn={setSelectedGrn}
             />
           )}
-          emptyState={{
-            icon: Truck,
-            title: 'No Goods Receipts found',
-            description: 'Try adjusting your filters or create a new Goods Receipt from an approved Purchase Order.',
-            action: {
-              label: 'View Purchase Orders',
-              icon: ArrowRight,
-              onClick: () => navigate(buildPath('/accounts/transactions/purchase-orders'))
-            }
+
+          // Pagination
+          pagination={{
+            page,
+            pageSize,
+            totalPages,
+            totalElements
           }}
+          pageIndexBase={0}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemName="goods receipts"
+
+          // Empty State
+          emptyMessage="No goods receipts found"
+          emptyDescription="Goods receipts can be created when purchase orders are approved and items are physically delivered to the warehouse."
         />
       </div>
 

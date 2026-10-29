@@ -85,6 +85,61 @@ describe('Purchase Navigation and Default Tab Test Suite', () => {
         '/company/comp-1/accounts/transactions/purchase-requisitions'
       );
     });
+
+    it('verifies Payment Vouchers is removed from Transactions sidebar', () => {
+      const fullFinanceAuthContext = {
+        user: { id: 'usr-1', role: 'finance_manager' },
+        currentCompany: { id: 'comp-1', code: 'TEST_CO' },
+        accessMode: 'FULL',
+        modules: [{ code: 'account', canonical: 'ACCOUNT', active: true }],
+        features: [
+          { featureCode: 'SALES_INVOICES', moduleName: 'ACCOUNT', active: true },
+          { featureCode: 'PURCHASE_INVOICES', moduleName: 'ACCOUNT', active: true },
+          { featureCode: 'EXPENSES', moduleName: 'ACCOUNT', active: true },
+          { featureCode: 'PAYMENT_VOUCHERS', moduleName: 'ACCOUNT', active: true },
+          { featureCode: 'CREDIT_NOTES', moduleName: 'ACCOUNT', active: true },
+          { featureCode: 'DEBIT_NOTES', moduleName: 'ACCOUNT', active: true },
+          { featureCode: 'GL_JOURNALS', moduleName: 'ACCOUNT', active: true },
+          { featureCode: 'GL_JOURNAL_LINES', moduleName: 'ACCOUNT', active: true },
+        ],
+        permissions: [
+          'SALES_INVOICES:READ',
+          'PURCHASE_INVOICES:READ',
+          'EXPENSES:READ',
+          'PAYMENT_VOUCHERS:READ',
+          'CREDIT_NOTES:READ',
+          'DEBIT_NOTES:READ',
+          'GL_JOURNALS:READ',
+          'GL_JOURNAL_LINES:READ',
+        ],
+      };
+
+      const links = buildDynamicSidebar({
+        authContext: fullFinanceAuthContext,
+        companyId: 'comp-1',
+        userRole: 'finance_manager',
+      });
+
+      const accountsSection = links.find((l) => l.id === 'accounts');
+      const transactionsGroup = accountsSection.children.find((g) => g.id === 'acc-txn');
+      const itemIds = transactionsGroup.children.map((c) => c.id);
+      const itemLabels = transactionsGroup.children.map((c) => c.label);
+
+      // Payment Vouchers must NOT be present
+      assert.strictEqual(itemIds.includes('acc-txn-pay'), false, 'acc-txn-pay must not be in Transactions');
+      assert.strictEqual(itemLabels.includes('Payment Vouchers'), false, 'Payment Vouchers must not be in Transactions');
+
+      // Remaining items must be intact
+      assert.deepStrictEqual(itemLabels, [
+        'Sales',
+        'Purchase',
+        'Expense',
+        'Credit Notes',
+        'Debit Notes',
+        'GL Journals',
+        'GL Journal Lines',
+      ]);
+    });
   });
 
   describe('2. Purchase Module Tabs Structure and Ordering', () => {

@@ -63,8 +63,6 @@ export default function DataTablePagination({
     return rangeWithDots;
   }, [displayPage, totalPages]);
 
-  if (total === 0) return null;
-
   return (
     <div className="w-full px-4 py-3 sm:px-6 border-t border-zinc-200/80 dark:border-[#2A2F3D] bg-white dark:bg-[#161922]">
       {/* Mobile view (< sm) */}

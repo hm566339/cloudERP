@@ -179,7 +179,25 @@ export function getSystemAdminNavigation() {
 /**
  * Raw blueprint generator for each module.
  */
-function getModuleNavigationBlueprint(moduleName, base, authContext) {
+function enrichNodeWithMetadata(item, defaultModuleCode) {
+  const modCode = item.moduleCode || defaultModuleCode;
+  const featCode = item.featureCode || null;
+  const action = item.action || (Array.isArray(item.children) && item.children.length > 0 ? null : 'READ');
+  const requiredPermission = item.requiredPermission || (featCode && action ? `${featCode}:${action}` : null);
+  const enriched = {
+    ...item,
+    moduleCode: modCode,
+    featureCode: featCode,
+    action: action,
+    requiredPermission: requiredPermission,
+  };
+  if (Array.isArray(item.children)) {
+    enriched.children = item.children.map((child) => enrichNodeWithMetadata(child, modCode));
+  }
+  return enriched;
+}
+
+function getRawModuleNavigationBlueprint(moduleName, base, authContext) {
   switch (moduleName) {
     case CANONICAL_MODULES.ACCOUNT:
       return [
@@ -213,8 +231,7 @@ function getModuleNavigationBlueprint(moduleName, base, authContext) {
           children: [
             { id: 'acc-txn-sales', label: 'Sales', path: `${base}/accounts/transactions/quotations`, icon: FileText, featureCode: 'SALES_INVOICES', action: 'READ' },
             { id: 'acc-txn-pur', label: 'Purchase', path: `${base}/accounts/transactions/purchase-requisitions`, icon: FileText, featureCode: 'PURCHASE_INVOICES', action: 'READ' },
-            { id: 'acc-txn-exp', label: 'Expense', path: `${base}/accounts/transactions/expenses`, icon: Receipt, featureCode: 'EXPENSES', action: 'READ' },
-            { id: 'acc-txn-pay', label: 'Payment Vouchers', path: `${base}/accounts/transactions/payments`, icon: CreditCard, featureCode: 'PAYMENT_VOUCHERS', action: 'READ' },
+            { id: 'acc-txn-exp', label: 'Expense', path: `${base}/accounts/transactions/expenses/requests`, icon: Receipt, featureCode: 'EXPENSES', action: 'READ' },
             { id: 'acc-txn-cn', label: 'Credit Notes', path: `${base}/accounts/transactions/credit-notes`, icon: ArrowDownCircle, featureCode: 'CREDIT_NOTES', action: 'READ' },
             { id: 'acc-txn-dn', label: 'Debit Notes', path: `${base}/accounts/transactions/debit-notes`, icon: ArrowUpCircle, featureCode: 'DEBIT_NOTES', action: 'READ' },
             { id: 'acc-txn-jour', label: 'GL Journals', path: `${base}/accounts/transactions/journal`, icon: BookOpen, featureCode: 'GL_JOURNALS', action: 'READ' },
@@ -574,6 +591,11 @@ function getModuleNavigationBlueprint(moduleName, base, authContext) {
   }
 }
 
+export function getModuleNavigationBlueprint(moduleName, base, normalizedContext) {
+  const rawBlueprint = getRawModuleNavigationBlueprint(moduleName, base, normalizedContext);
+  return (rawBlueprint || []).map((node) => enrichNodeWithMetadata(node, moduleName));
+}
+
 /**
  * Filter an item or recursive group node.
  * Returns null if the item or group is unauthorized or has no surviving children.
@@ -655,6 +677,11 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
           hasFeature(authContext, 'PURCHASE', moduleName) ||
           hasFeature(authContext, 'PURCHASE_ORDERS', moduleName);
       }
+      if (!hasFeat && (featureCode === 'EXPENSES' || featureCode === 'EXPENSE_REQUESTS')) {
+        hasFeat = hasFeature(authContext, 'EXPENSES', moduleName) ||
+          hasFeature(authContext, 'EXPENSE_REQUESTS', moduleName) ||
+          hasFeature(authContext, 'EXPENSE', moduleName);
+      }
       if (!hasFeat) return null;
     }
 
@@ -678,6 +705,10 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
             checkHasPermission(authContext, 'PURCHASE_REQUESTS', action, moduleName) ||
             checkHasPermission(authContext, 'PURCHASE', action, moduleName) ||
             checkHasPermission(authContext, 'PURCHASE_ORDERS', action, moduleName);
+        } else if (featureCode === 'EXPENSES' || featureCode === 'EXPENSE_REQUESTS') {
+          hasPerm = checkHasPermission(authContext, 'EXPENSES', action, moduleName) ||
+            checkHasPermission(authContext, 'EXPENSE_REQUESTS', action, moduleName) ||
+            checkHasPermission(authContext, 'EXPENSE', action, moduleName);
         } else if (featureCode === 'EXPENSE_CATEGORIES') {
           hasPerm = checkHasPermission(authContext, 'EXPENSES', action, moduleName);
         } else if (featureCode === 'GST_STATE_MASTER' || featureCode === 'GST_REGISTRATIONS') {
@@ -694,32 +725,33 @@ function filterNavigationNode(item, authContext, moduleName, canAccessCustom) {
           hasPerm = checkHasPermission(authContext, 'PURCHASE_REQUISITIONS', action, moduleName);
         } else if (featureCode === 'PURCHASE_REQUISITIONS') {
           hasPerm = checkHasPermission(authContext, 'PURCHASE_REQUESTS', action, moduleName);
-        }
-      }
-      if (!hasPerm) {
-        // Special aliases for workflow & administration modules
-        if (moduleName === CANONICAL_MODULES.WORKFLOW || item.id?.startsWith('workflow-')) {
-          const hasWorkflowGeneral =
-            checkHasPermission(authContext, 'WORKFLOW', 'READ') ||
-            checkHasPermission(authContext, 'APPROVALS', 'READ') ||
-            checkHasPermission(authContext, 'WORKFLOW_APPROVALS', 'READ') ||
-            checkHasPermission(authContext, 'WORKFLOW_DEFINITIONS', 'READ') ||
-            checkHasPermission(authContext, 'WORKFLOW_TASKS', 'READ');
-          if (!hasWorkflowGeneral) return null;
+        } else if (featureCode === 'WORKFLOW_TASKS' || item.id === 'workflow-approval-requests') {
+          hasPerm = checkHasPermission(authContext, 'WORKFLOW_TASKS', action, CANONICAL_MODULES.WORKFLOW) ||
+            checkHasPermission(authContext, 'APPROVAL_REQUESTS', action, CANONICAL_MODULES.WORKFLOW) ||
+            checkHasPermission(authContext, 'APPROVALS', action, CANONICAL_MODULES.WORKFLOW) ||
+            checkHasPermission(authContext, 'WORKFLOW_TASKS', 'APPROVE', CANONICAL_MODULES.WORKFLOW) ||
+            checkHasPermission(authContext, 'APPROVAL_REQUESTS', 'APPROVE', CANONICAL_MODULES.WORKFLOW) ||
+            checkHasPermission(authContext, 'WORKFLOW_APPROVE', 'APPROVE', CANONICAL_MODULES.WORKFLOW);
+        } else if (featureCode === 'WORKFLOW_DEFINITIONS' || item.id === 'workflow-approvals') {
+          hasPerm = checkHasPermission(authContext, 'WORKFLOW_DEFINITIONS', action, CANONICAL_MODULES.WORKFLOW) ||
+            checkHasPermission(authContext, 'WORKFLOW', action, CANONICAL_MODULES.WORKFLOW) ||
+            checkHasPermission(authContext, 'WORKFLOW_APPROVALS', action, CANONICAL_MODULES.WORKFLOW) ||
+            checkHasPermission(authContext, 'WORKFLOW_VIEW', 'READ', CANONICAL_MODULES.WORKFLOW);
         } else if (moduleName === CANONICAL_MODULES.SSO && (featureCode === 'USER_MANAGEMENT' || featureCode === 'ROLE_MANAGEMENT')) {
           const shortCode = featureCode === 'USER_MANAGEMENT' ? 'USER' : 'ROLE';
-          const hasShortPerm = checkHasPermission(authContext, shortCode, action, moduleName);
-          if (!hasShortPerm) return null;
-        } else {
-          return null;
+          hasPerm = checkHasPermission(authContext, shortCode, action, moduleName);
         }
+      }
+
+      if (!hasPerm) {
+        return null;
       }
     } else {
       // No specific featureCode on leaf: check parent module read access
       const hasModRead = checkHasPermission(authContext, moduleName, 'READ', moduleName) ||
         checkHasPermission(authContext, 'ALL', 'READ') ||
         checkHasPermission(authContext, 'ALL_MODULES', 'READ');
-      if (!hasModRead && (authContext?.permissions || []).length > 0) {
+      if (!hasModRead) {
         return null;
       }
     }

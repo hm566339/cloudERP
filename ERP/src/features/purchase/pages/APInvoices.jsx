@@ -1,12 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import useListQuery from '../../../hooks/useListQuery';
-import SearchInput from '../../../components/common/SearchInput';
-import Pagination from '../../../components/common/Pagination';
 import {
   Plus, Search, CheckCircle, RefreshCw, FileText, RotateCcw,
   SlidersHorizontal, ChevronDown, ChevronUp, X, Edit, Trash2,
   Filter, Mail, Download, XCircle, Ban, ArrowRightCircle,
-  FileMinus, FilePlus, BookOpen, Eye
+  FileMinus, FilePlus, BookOpen, Eye, Receipt
 } from 'lucide-react';
 import { confirmDialog } from '../../../utils/confirmDialog';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -19,13 +16,27 @@ import usePermission from '../../../hooks/usePermission';
 import RequirePermission from '../../../components/common/RequirePermission';
 import PageHeader from '../../../components/common/PageHeader';
 import ModuleTabs, { purchaseTabs } from '../../../components/module-tabs';
-import DataTable from '../../../components/data-table/DataTable';
+import DataTable from '../../../components/data-table';
 import AuditLogHover from '../../../components/common/AuditLogHover';
 import APInvoiceFormModal from '../components/APInvoiceFormModal';
 import VendorFormModal from '../../account/components/VendorFormModal';
 import ExportModal from '../../../components/common/ExportModal';
 import { useRoutePath } from "../../../hooks/useRoutePath";
 import StatusBadge from '../../../components/common/StatusBadge';
+
+const ALL_COLUMNS = [
+  { id: 'invoiceNo', label: 'INVOICE NO' },
+  { id: 'companyName', label: 'COMPANY' },
+  { id: 'vendorName', label: 'VENDOR' },
+  { id: 'invoiceDate', label: 'DATE' },
+  { id: 'dueDate', label: 'DUE DATE' },
+  { id: 'totalAmount', label: 'TOTAL AMOUNT' },
+  { id: 'outstandingAmount', label: 'OUTSTANDING' },
+  { id: 'paymentPercentage', label: 'PAID %' },
+  { id: 'status', label: 'STATUS' }
+];
+
+const DEFAULT_COLUMNS = ['invoiceNo', 'companyName', 'vendorName', 'invoiceDate', 'dueDate', 'totalAmount', 'outstandingAmount', 'paymentPercentage', 'status'];
 
 const PurchaseInvoiceOverview = ({ inv }) => {
   const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
@@ -112,6 +123,15 @@ export default function APInvoices() {
   const canReadGL = usePermission('GENERAL_LEDGER', 'READ');
   const canPrint = usePermission('PURCHASE_INVOICES', 'PRINT');
   const canExport = usePermission('PURCHASE_INVOICES', 'EXPORT');
+
+  const [visibleColumns, setVisibleColumns] = useState(() => {
+    try {
+      const saved = localStorage.getItem('api_visible_columns_v2');
+      return saved ? JSON.parse(saved) : DEFAULT_COLUMNS;
+    } catch {
+      return DEFAULT_COLUMNS;
+    }
+  });
 
   const {
     page, setPage, pageSize, setPageSize, apiParams,
@@ -329,6 +349,8 @@ export default function APInvoices() {
 
   const handleReset = () => {
     resetFilters();
+    setSearch('');
+    setSelectedInvoices([]);
     setPage(0);
   };
 
@@ -336,92 +358,139 @@ export default function APInvoices() {
     const actions = [];
 
     actions.push({
+      key: 'view',
+      label: 'View Details',
       tooltip: 'View Details',
-      icon: <Eye size={16} />,
-      onClick: () => navigate(buildPath(`/accounts/purchases/invoices/${inv.id}`))
+      'aria-label': 'View Details',
+      icon: <Eye size={14} />,
+      onClick: () => navigate(buildPath(`/accounts/purchases/invoices/${inv.id}`)),
+      className: 'text-zinc-600 hover:text-indigo-600'
     });
 
     if ((inv.status === 'DRAFT' || inv.status === 'PENDING_APPROVAL') && canUpdate) {
       actions.push({
+        key: 'edit',
+        label: 'Edit Invoice',
         tooltip: 'Edit Invoice',
-        icon: <Edit size={16} />,
-        onClick: () => { setEditingInvoiceId(inv.id); setIsFormOpen(true); }
+        'aria-label': 'Edit Invoice',
+        icon: <Edit size={14} />,
+        onClick: () => { setEditingInvoiceId(inv.id); setIsFormOpen(true); },
+        className: 'text-zinc-600 hover:text-blue-600'
       });
     }
 
     if (inv.status === 'DRAFT' && canUpdate) {
       actions.push({
+        key: 'submit',
+        label: 'Submit for Approval',
         tooltip: 'Submit for Approval',
-        icon: <CheckCircle size={16} />,
-        onClick: () => handleAction('Submit', submitMutation, inv.id, 'Are you sure you want to submit this invoice for approval?')
+        'aria-label': 'Submit for Approval',
+        icon: <CheckCircle size={14} />,
+        onClick: () => handleAction('Submit', submitMutation, inv.id, 'Are you sure you want to submit this invoice for approval?'),
+        className: 'text-zinc-600 hover:text-emerald-600'
       });
     }
 
     if (inv.status === 'PENDING_APPROVAL' && canApprove) {
       actions.push({
+        key: 'approve',
+        label: 'Approve',
         tooltip: 'Approve',
-        icon: <CheckCircle size={16} className="text-emerald-600" />,
-        onClick: () => handleAction('Approve', approveMutation, inv.id, 'Are you sure you want to approve this invoice?')
+        'aria-label': 'Approve',
+        icon: <CheckCircle size={14} className="text-emerald-600" />,
+        onClick: () => handleAction('Approve', approveMutation, inv.id, 'Are you sure you want to approve this invoice?'),
+        className: 'text-emerald-600 hover:text-emerald-700'
       });
       actions.push({
+        key: 'reject',
+        label: 'Reject',
         tooltip: 'Reject',
-        icon: <XCircle size={16} className="text-rose-600" />,
-        onClick: () => handleAction('Reject', rejectMutation, inv.id, 'Are you sure you want to reject this invoice?')
+        'aria-label': 'Reject',
+        icon: <XCircle size={14} className="text-rose-600" />,
+        onClick: () => handleAction('Reject', rejectMutation, inv.id, 'Are you sure you want to reject this invoice?'),
+        className: 'text-rose-600 hover:text-rose-700'
       });
     }
 
     if (inv.status === 'APPROVED' && (canUpdate || canApprove)) {
       actions.push({
+        key: 'post',
+        label: 'Post to GL',
         tooltip: 'Post to GL',
-        icon: <ArrowRightCircle size={16} className="text-purple-600" />,
-        onClick: () => handleAction('Post', postMutation, inv.id, 'Are you sure you want to post this invoice to the General Ledger?')
+        'aria-label': 'Post to GL',
+        icon: <ArrowRightCircle size={14} className="text-purple-600" />,
+        onClick: () => handleAction('Post', postMutation, inv.id, 'Are you sure you want to post this invoice to the General Ledger?'),
+        className: 'text-purple-600 hover:text-purple-700'
       });
     }
 
     if ((inv.status === 'DRAFT' || inv.status === 'PENDING_APPROVAL' || inv.status === 'APPROVED') && (canUpdate || canDelete)) {
       actions.push({
+        key: 'cancel',
+        label: 'Cancel Invoice',
         tooltip: 'Cancel Invoice',
-        icon: <Ban size={16} className="text-rose-600" />,
-        onClick: () => handleAction('Cancel', cancelMutation, inv.id, 'Are you sure you want to cancel this invoice?')
+        'aria-label': 'Cancel Invoice',
+        icon: <Ban size={14} className="text-rose-600" />,
+        onClick: () => handleAction('Cancel', cancelMutation, inv.id, 'Are you sure you want to cancel this invoice?'),
+        className: 'text-rose-600 hover:text-rose-700'
       });
     }
 
     if (inv.status === 'APPROVED' && canCreateDebitNote) {
       actions.push({
+        key: 'debit-note',
+        label: 'Create Debit Note',
         tooltip: 'Create Debit Note',
-        icon: <FileMinus size={16} className="text-amber-600" />,
-        onClick: () => navigate(buildPath(`/accounts/purchases/debit-notes/new?invoiceId=${inv.id}`))
+        'aria-label': 'Create Debit Note',
+        icon: <FileMinus size={14} className="text-amber-600" />,
+        onClick: () => navigate(buildPath(`/accounts/purchases/debit-notes/new?invoiceId=${inv.id}`)),
+        className: 'text-amber-600 hover:text-amber-700'
       });
     }
 
     if (inv.status === 'APPROVED' && canCreateCreditNote) {
       actions.push({
+        key: 'credit-note',
+        label: 'Create Credit Note',
         tooltip: 'Create Credit Note',
-        icon: <FilePlus size={16} className="text-teal-600" />,
-        onClick: () => navigate(buildPath(`/accounts/purchases/credit-notes/new?invoiceId=${inv.id}`))
+        'aria-label': 'Create Credit Note',
+        icon: <FilePlus size={14} className="text-teal-600" />,
+        onClick: () => navigate(buildPath(`/accounts/purchases/credit-notes/new?invoiceId=${inv.id}`)),
+        className: 'text-teal-600 hover:text-teal-700'
       });
     }
 
     if (inv.status !== 'DRAFT' && inv.status !== 'PENDING_APPROVAL' && canReadGL) {
       actions.push({
+        key: 'ledger',
+        label: 'View Vendor Ledger',
         tooltip: 'View Vendor Ledger',
-        icon: <BookOpen size={16} className="text-indigo-600" />,
-        onClick: () => navigate(buildPath(`/accounts/ledger/vendor/${inv.vendorId}`))
+        'aria-label': 'View Vendor Ledger',
+        icon: <BookOpen size={14} className="text-indigo-600" />,
+        onClick: () => navigate(buildPath(`/accounts/ledger/vendor/${inv.vendorId}`)),
+        className: 'text-indigo-600 hover:text-indigo-700'
       });
     }
 
     if (canPrint) {
       actions.push({
+        key: 'print',
+        label: 'Print Invoice',
         tooltip: 'Print Invoice',
-        icon: <FileText size={16} />,
-        onClick: () => { window.open(buildPath(`/accounts/purchases/invoices/${inv.id}/print`), '_blank'); }
+        'aria-label': 'Print Invoice',
+        icon: <FileText size={14} />,
+        onClick: () => { window.open(buildPath(`/accounts/purchases/invoices/${inv.id}/print`), '_blank'); },
+        className: 'text-zinc-600 hover:text-zinc-800'
       });
     }
 
     if (canExport) {
       actions.push({
+        key: 'download',
+        label: 'Download PDF',
         tooltip: 'Download PDF',
-        icon: <Download size={16} />,
+        'aria-label': 'Download PDF',
+        icon: <Download size={14} />,
         onClick: async () => {
           try {
             const response = await apInvoicesApi.downloadPdf(inv.id, companyId);
@@ -438,11 +507,15 @@ export default function APInvoices() {
           } catch (err) {
             dispatch(addAlert({ type: 'error', message: 'Failed to download PDF' }));
           }
-        }
+        },
+        className: 'text-zinc-600 hover:text-zinc-800'
       });
       actions.push({
+        key: 'email',
+        label: 'Email Invoice',
         tooltip: 'Email Invoice',
-        icon: <Mail size={16} className="text-emerald-600" />,
+        'aria-label': 'Email Invoice',
+        icon: <Mail size={14} className="text-emerald-600" />,
         onClick: async () => {
           try {
             await apInvoicesApi.sendEmail(inv.id, companyId);
@@ -450,7 +523,8 @@ export default function APInvoices() {
           } catch (err) {
             dispatch(addAlert({ type: 'error', message: err?.response?.data?.message || 'Failed to email invoice' }));
           }
-        }
+        },
+        className: 'text-emerald-600 hover:text-emerald-700'
       });
     }
 
@@ -459,13 +533,14 @@ export default function APInvoices() {
 
   const columns = useMemo(() => [
     {
+      key: 'invoiceNo',
       id: 'invoiceNo',
+      label: 'INVOICE NO',
       header: 'INVOICE NO',
-      accessor: 'invoiceNo',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <div className="flex items-center gap-2">
-          <FileText size={15} className="text-zinc-400 shrink-0" />
+          <FileText size={14} className="text-zinc-400 shrink-0" />
           <span
             onClick={(e) => {
               e.stopPropagation();
@@ -480,20 +555,22 @@ export default function APInvoices() {
       )
     },
     {
+      key: 'companyName',
       id: 'companyName',
+      label: 'COMPANY',
       header: 'COMPANY',
-      accessor: 'companyName',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200">{row.companyName || '-'}</span>
       )
     },
     {
+      key: 'vendorName',
       id: 'vendorName',
+      label: 'VENDOR',
       header: 'VENDOR',
-      accessor: 'vendorName',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <div>
           <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 block">{row.vendorName || '-'}</span>
           {row.vendorGstin && <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">GST: {row.vendorGstin}</span>}
@@ -501,22 +578,24 @@ export default function APInvoices() {
       )
     },
     {
+      key: 'invoiceDate',
       id: 'invoiceDate',
+      label: 'DATE',
       header: 'DATE',
-      accessor: 'invoiceDate',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
           {row.invoiceDate ? new Date(row.invoiceDate).toLocaleDateString() : '-'}
         </span>
       )
     },
     {
+      key: 'dueDate',
       id: 'dueDate',
+      label: 'DUE DATE',
       header: 'DUE DATE',
-      accessor: 'dueDate',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <div>
           <span className={`text-xs font-medium ${row.isOverdue ? 'text-rose-600 font-semibold' : 'text-zinc-700 dark:text-zinc-300'}`}>
             {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : '-'}
@@ -526,36 +605,42 @@ export default function APInvoices() {
       )
     },
     {
+      key: 'totalAmount',
       id: 'totalAmount',
+      label: 'TOTAL AMOUNT',
       header: 'TOTAL AMOUNT',
-      accessor: 'totalAmount',
       sortable: true,
+      align: 'right',
       headerClassName: 'text-right',
-      cell: (row) => (
+      render: (val, row) => (
         <div className="text-right font-mono text-xs font-semibold text-zinc-900 dark:text-zinc-100">
           {row.invoiceCurrency || 'INR'} {(row.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
         </div>
       )
     },
     {
+      key: 'outstandingAmount',
       id: 'outstandingAmount',
+      label: 'OUTSTANDING',
       header: 'OUTSTANDING',
-      accessor: 'outstandingAmount',
       sortable: true,
+      align: 'right',
       headerClassName: 'text-right',
-      cell: (row) => (
+      render: (val, row) => (
         <div className="text-right font-mono text-xs font-semibold text-rose-600">
           {row.invoiceCurrency || 'INR'} {(row.outstandingAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
         </div>
       )
     },
     {
+      key: 'paymentPercentage',
       id: 'paymentPercentage',
+      label: 'PAID %',
       header: 'PAID %',
-      accessor: 'paymentPercentage',
       sortable: true,
+      align: 'center',
       headerClassName: 'text-center',
-      cell: (row) => (
+      render: (val, row) => (
         <div className="flex flex-col items-center justify-center">
           <div className="w-16 bg-zinc-200 dark:bg-[#2A2F3D] rounded-full h-1.5 mb-1">
             <div
@@ -568,12 +653,14 @@ export default function APInvoices() {
       )
     },
     {
+      key: 'status',
       id: 'status',
+      label: 'STATUS',
       header: 'STATUS',
-      accessor: 'status',
       sortable: true,
+      align: 'center',
       headerClassName: 'text-center',
-      cell: (row) => (
+      render: (val, row) => (
         <div className="text-center">
           <StatusBadge status={row.status} />
         </div>
@@ -583,224 +670,258 @@ export default function APInvoices() {
 
   const basicFilters = useMemo(() => [
     {
-      id: 'status',
+      key: 'status',
+      label: 'Status',
       type: 'select',
-      value: filters.status || '',
-      onChange: (val) => setFilter('status', val),
       options: [
-        { value: '', label: 'All Statuses' },
-        { value: 'DRAFT', label: 'Draft' },
-        { value: 'SUBMITTED', label: 'Submitted' },
-        { value: 'APPROVED', label: 'Approved' },
-        { value: 'POSTED', label: 'Posted to GL' },
-        { value: 'PARTIAL_PAID', label: 'Partially Paid' },
-        { value: 'PAID', label: 'Paid' },
-        { value: 'OVERDUE', label: 'Overdue' },
-        { value: 'CANCELLED', label: 'Cancelled' },
-        { value: 'REJECTED', label: 'Rejected' },
+        { label: 'All Statuses', value: '' },
+        { label: 'Draft', value: 'DRAFT' },
+        { label: 'Submitted', value: 'SUBMITTED' },
+        { label: 'Approved', value: 'APPROVED' },
+        { label: 'Posted to GL', value: 'POSTED' },
+        { label: 'Partially Paid', value: 'PARTIAL_PAID' },
+        { label: 'Paid', value: 'PAID' },
+        { label: 'Overdue', value: 'OVERDUE' },
+        { label: 'Cancelled', value: 'CANCELLED' },
+        { label: 'Rejected', value: 'REJECTED' }
       ]
+    },
+    {
+      key: 'dateFrom',
+      label: 'Date From',
+      type: 'date'
+    },
+    {
+      key: 'dateTo',
+      label: 'Date To',
+      type: 'date'
     }
-  ], [filters.status, setFilter]);
+  ], []);
 
   const advancedFilters = useMemo(() => [
     {
-      id: 'approvalStatus',
-      label: 'Approval Status',
-      type: 'select',
-      value: filters.approvalStatus || '',
-      onChange: (val) => setFilter('approvalStatus', val),
-      options: [
-        { value: '', label: 'All Approvals' },
-        { value: 'PENDING', label: 'Pending' },
-        { value: 'APPROVED', label: 'Approved' },
-        { value: 'REJECTED', label: 'Rejected' }
+      title: 'Approval & Due Date',
+      fields: [
+        {
+          key: 'approvalStatus',
+          label: 'Approval Status',
+          type: 'select',
+          options: [
+            { label: 'All Approvals', value: '' },
+            { label: 'Pending', value: 'PENDING' },
+            { label: 'Approved', value: 'APPROVED' },
+            { label: 'Rejected', value: 'REJECTED' }
+          ]
+        },
+        {
+          key: 'dueDateFrom',
+          label: 'Due Date From',
+          type: 'date'
+        },
+        {
+          key: 'dueDateTo',
+          label: 'Due Date To',
+          type: 'date'
+        }
       ]
     },
     {
-      id: 'dateFrom',
-      label: 'Date From',
-      type: 'date',
-      value: filters.dateFrom || '',
-      onChange: (val) => setFilter('dateFrom', val)
-    },
-    {
-      id: 'dateTo',
-      label: 'Date To',
-      type: 'date',
-      value: filters.dateTo || '',
-      onChange: (val) => setFilter('dateTo', val)
-    },
-    {
-      id: 'dueDateFrom',
-      label: 'Due Date From',
-      type: 'date',
-      value: filters.dueDateFrom || '',
-      onChange: (val) => setFilter('dueDateFrom', val)
-    },
-    {
-      id: 'dueDateTo',
-      label: 'Due Date To',
-      type: 'date',
-      value: filters.dueDateTo || '',
-      onChange: (val) => setFilter('dueDateTo', val)
-    },
-    {
-      id: 'minTotalAmount',
-      label: 'Min Total Amount',
-      type: 'number',
-      value: filters.minTotalAmount || '',
-      onChange: (val) => setFilter('minTotalAmount', val)
-    },
-    {
-      id: 'maxTotalAmount',
-      label: 'Max Total Amount',
-      type: 'number',
-      value: filters.maxTotalAmount || '',
-      onChange: (val) => setFilter('maxTotalAmount', val)
-    },
-    {
-      id: 'isOverdue',
-      label: 'Overdue Only',
-      type: 'select',
-      value: filters.isOverdue || '',
-      onChange: (val) => setFilter('isOverdue', val),
-      options: [
-        { value: '', label: 'Any' },
-        { value: 'true', label: 'Yes' },
-        { value: 'false', label: 'No' }
-      ]
-    },
-    {
-      id: 'hasOutstandingBalance',
-      label: 'Has Outstanding',
-      type: 'select',
-      value: filters.hasOutstandingBalance || '',
-      onChange: (val) => setFilter('hasOutstandingBalance', val),
-      options: [
-        { value: '', label: 'Any' },
-        { value: 'true', label: 'Yes' },
-        { value: 'false', label: 'No' }
+      title: 'Financials & Status',
+      fields: [
+        {
+          key: 'minTotalAmount',
+          label: 'Min Total Amount',
+          type: 'number'
+        },
+        {
+          key: 'maxTotalAmount',
+          label: 'Max Total Amount',
+          type: 'number'
+        },
+        {
+          key: 'isOverdue',
+          label: 'Overdue Only',
+          type: 'select',
+          options: [
+            { label: 'Any', value: '' },
+            { label: 'Yes', value: 'true' },
+            { label: 'No', value: 'false' }
+          ]
+        },
+        {
+          key: 'hasOutstandingBalance',
+          label: 'Has Outstanding',
+          type: 'select',
+          options: [
+            { label: 'Any', value: '' },
+            { label: 'Yes', value: 'true' },
+            { label: 'No', value: 'false' }
+          ]
+        }
       ]
     }
-  ], [filters, setFilter]);
+  ], []);
 
-  const bulkActions = useMemo(() => [
-    {
-      label: 'Email',
-      icon: Mail,
-      onClick: handleBulkEmail,
-      disabled: isProcessingBulk
-    },
-    {
-      label: 'Download PDF',
-      icon: Download,
-      onClick: handleBulkDownload,
-      disabled: isProcessingBulk
-    }
-  ], [handleBulkEmail, handleBulkDownload, isProcessingBulk]);
+  const filterValues = useMemo(() => ({
+    status: filters.status || '',
+    dateFrom: filters.dateFrom || '',
+    dateTo: filters.dateTo || '',
+    approvalStatus: filters.approvalStatus || '',
+    dueDateFrom: filters.dueDateFrom || '',
+    dueDateTo: filters.dueDateTo || '',
+    minTotalAmount: filters.minTotalAmount || '',
+    maxTotalAmount: filters.maxTotalAmount || '',
+    isOverdue: filters.isOverdue || '',
+    hasOutstandingBalance: filters.hasOutstandingBalance || ''
+  }), [filters]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117]">
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-6.5rem)] h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+      {/* Top Header */}
       <PageHeader
         title="Purchase Invoices"
         description="Manage accounts payable bills and vendor tracking"
-        icon={FileText}
-        actions={
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsExportModalOpen(true)}
-              className="btn-secondary flex items-center gap-1.5 h-9 px-3 text-xs bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors shadow-2xs"
-            >
-              <Download size={15} />
-              <span className="hidden sm:inline">Export</span>
-            </button>
-            <RequirePermission module="PURCHASE_INVOICES" action="CREATE">
-              <button
-                onClick={() => { setEditingInvoiceId(null); setIsFormOpen(true); }}
-                className="btn-primary flex items-center gap-2"
-              >
-                <Plus size={16} /> <span>New Purchase Invoice</span>
-              </button>
-            </RequirePermission>
-          </div>
-        }
-      />
+        icon={Receipt}
+      >
+        <RequirePermission module="PURCHASE_INVOICES" action="CREATE">
+          <button
+            onClick={() => { setEditingInvoiceId(null); setIsFormOpen(true); }}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={16} /> <span>New Purchase Invoice</span>
+          </button>
+        </RequirePermission>
+      </PageHeader>
 
+      {/* ── Module Tabs ── */}
       <ModuleTabs tabs={purchaseTabs} />
 
-      <div className="p-6">
+      {/* Main Content Area */}
+      <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0">
         <DataTable
-          data={invoices}
-          columns={columns}
-          rowKey={(row) => row.id || row.invoiceId}
-          loading={isLoading || isFetching}
-          searchable
-          searchPlaceholder="Search invoices, vendors, company..."
-          searchValue={search || ''}
-          onSearchChange={setSearch}
-          filters={basicFilters}
-          filterValues={filters}
-          onFilterChange={setFilter}
-          onReset={handleReset}
-          advancedFilters={advancedFilters}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSort={handleColumnSort}
-          pagination={{
-            currentPage: page,
-            totalPages,
-            totalElements: actualTotalElements,
-            pageSize: currentSize,
-            onPageChange: setPage,
-            onPageSizeChange: setPageSize
-          }}
-          columnVisibility
           selectable
+          rowKey="id"
           selectedRows={selectedInvoices}
           onSelectionChange={setSelectedInvoices}
-          bulkActions={bulkActions}
-          exportable
-          onExport={() => setIsExportModalOpen(true)}
-          refreshable
-          onRefresh={refetch}
-          getRowActions={getInvoiceActions}
-          expandedRowId={expandedRowId}
-          onToggleExpand={(id) => setExpandedRowId(expandedRowId === id ? null : id)}
-          renderExpandedRow={(inv) => <PurchaseInvoiceOverview inv={inv} />}
-          emptyState={{
-            icon: FileText,
-            title: 'No invoices found',
-            description: 'Try adjusting your filters or create a new purchase invoice.',
-            action: {
-              label: 'New Purchase Invoice',
-              icon: Plus,
-              onClick: () => { setEditingInvoiceId(null); setIsFormOpen(true); }
+          bulkActions={[
+            {
+              key: 'email',
+              label: 'Email',
+              icon: <Mail size={14} />,
+              onClick: handleBulkEmail,
+              disabled: isProcessingBulk
+            },
+            {
+              key: 'download',
+              label: 'Download PDF',
+              icon: <Download size={14} />,
+              onClick: handleBulkDownload,
+              disabled: isProcessingBulk
+            },
+            {
+              key: 'export',
+              label: 'Export Selected',
+              icon: <Download size={14} />,
+              onClick: () => setIsExportModalOpen(true)
             }
+          ]}
+          columns={columns}
+          data={invoices}
+          loading={isLoading}
+          isRefreshing={isFetching}
+
+          // Search
+          searchable
+          searchValue={search || ''}
+          searchPlaceholder="Search invoices, vendors, company..."
+          onSearchChange={(val) => { setSearch(val); setPage(0); }}
+
+          // Filters
+          filters={basicFilters}
+          filterValues={filterValues}
+          onFilterChange={(key, val) => { setFilter(key, val); setPage(0); }}
+
+          // Advanced Filters
+          advancedFilters={advancedFilters}
+
+          // Reset, Refresh, Export
+          onReset={handleReset}
+          onRefresh={refetch}
+          onExport={() => setIsExportModalOpen(true)}
+
+          // Column Visibility
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={(cols) => {
+            setVisibleColumns(cols);
+            localStorage.setItem('api_visible_columns_v2', JSON.stringify(cols));
           }}
+
+          // Sorting
+          sort={{ key: sortBy, direction: sortOrder }}
+          onSortChange={({ key }) => handleColumnSort(key)}
+
+          // Row Actions
+          rowActions={getInvoiceActions}
+
+          // Expandable Sub-rows
+          expandedRowId={expandedRowId}
+          onToggleExpand={(id) => setExpandedRowId(prev => prev === id ? null : id)}
+          renderExpandedRow={(inv) => <PurchaseInvoiceOverview inv={inv} />}
+
+          // Pagination
+          pagination={{
+            page,
+            pageSize: currentSize,
+            totalPages,
+            totalElements: actualTotalElements
+          }}
+          pageIndexBase={0}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemName="invoices"
+
+          // Empty State
+          emptyMessage="No purchase invoices found"
+          emptyDescription="Record your first vendor bill to track accounts payable and disbursements."
         />
       </div>
 
+      {/* Invoice Form Modal */}
       {isFormOpen && (
         <APInvoiceFormModal
           isOpen={isFormOpen}
           onClose={() => { setIsFormOpen(false); setEditingInvoiceId(null); }}
           onSubmit={handleCreateOrUpdate}
-          initialData={editingInvoiceId ? selectedInvoice : null}
+          invoice={selectedInvoice}
+          companyId={companyId}
+          onOpenNewVendor={(name) => {
+            setPrefillVendorName(name || '');
+            setIsVendorFormOpen(true);
+          }}
         />
       )}
 
-      <VendorFormModal
-        isOpen={isVendorFormOpen}
-        onClose={() => { setIsVendorFormOpen(false); setPrefillVendorName(''); }}
-        initialData={prefillVendorName ? { vendorName: prefillVendorName } : null}
-        onSuccess={() => { setIsVendorFormOpen(false); setPrefillVendorName(''); dispatch(addAlert({ type: 'success', message: 'Vendor created successfully' })); }}
-      />
+      {/* Vendor Form Modal */}
+      {isVendorFormOpen && (
+        <VendorFormModal
+          isOpen={isVendorFormOpen}
+          onClose={() => setIsVendorFormOpen(false)}
+          companyId={companyId}
+          initialData={prefillVendorName ? { name: prefillVendorName, vendorName: prefillVendorName } : null}
+        />
+      )}
 
-      <ExportModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-        reportName="ap-invoices"
-      />
+      {/* Export Modal */}
+      {isExportModalOpen && (
+        <ExportModal
+          isOpen={isExportModalOpen}
+          onClose={() => setIsExportModalOpen(false)}
+          reportName="purchase-invoices"
+          defaultFilters={listFilters}
+          selectedIds={selectedInvoices}
+          selectedCount={selectedInvoices.length}
+        />
+      )}
     </div>
   );
 }

@@ -23,7 +23,7 @@ import { confirmDialog } from '../../../utils/confirmDialog';
 import useUrlFilters from '../../../hooks/useUrlFilters';
 import PageHeader from '../../../components/common/PageHeader';
 import ModuleTabs, { purchaseTabs } from '../../../components/module-tabs';
-import DataTable from '../../../components/data-table/DataTable';
+import DataTable from '../../../components/data-table';
 import ExportModal from '../../../components/common/ExportModal';
 import AuditLogHover from '../../../components/common/AuditLogHover';
 import { useDispatch } from 'react-redux';
@@ -756,30 +756,29 @@ export default function APPayments() {
   }), [filters]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117]">
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-6.5rem)] h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       {/* ── Page Header ── */}
       <PageHeader
         title="Payments"
         description="Manage Accounts Payable Payments"
         icon={CreditCard}
-        actions={
-          <RequirePermission module="PAYMENT_VOUCHERS" action="CREATE" behavior="disable">
-            <button
-              className="btn-primary flex items-center gap-2"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
-              <Plus size={16} />
-              <span>Add Payment</span>
-            </button>
-          </RequirePermission>
-        }
-      />
+        >
+        <RequirePermission module="PAYMENT_VOUCHERS" action="CREATE" behavior="disable">
+          <button
+            className="btn-primary flex items-center gap-2"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            <Plus size={16} />
+            <span>Add Payment</span>
+          </button>
+        </RequirePermission>
+      </PageHeader>
 
       {/* ── Module Tabs ── */}
       <ModuleTabs tabs={purchaseTabs} />
 
       {/* ── Table Container ── */}
-      <div className="flex-1 p-6 overflow-hidden flex flex-col">
+      <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0">
         {error && (
           <div className="mb-4 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-xs flex items-center justify-between">
             <span>
@@ -814,8 +813,8 @@ export default function APPayments() {
             setPage(0);
           }}
 
-          // Basic Filters
-          basicFilters={basicFilters}
+          // Filters
+          filters={basicFilters}
           filterValues={filterValues}
           onFilterChange={(key, val) => {
             setFilter(key, val);

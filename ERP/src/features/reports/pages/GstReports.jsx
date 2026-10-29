@@ -49,14 +49,16 @@ export default function GstReports() {
   ];
 
   return (
-    <div className="animate-fade-in space-y-6 pb-12">
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-6.5rem)] h-full bg-zinc-50/50 dark:bg-[#0F1117]">
       <PageHeader
         title="GST Reports & Returns"
-        subtitle="Manage GST compliance, returns, reconciliations, and filing export archives"
+        description="Manage GST compliance, returns, reconciliations, and filing export archives"
+        icon={FileText}
       />
 
       <ModuleTabs tabs={gstTabs} />
 
+      <div className="p-6 space-y-6 flex-1">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {reports.map((r, i) => (
           <div
@@ -85,6 +87,7 @@ export default function GstReports() {
           </div>
         ))}
       </div>
+          </div>
     </div>
   );
 }

@@ -1,7 +1,5 @@
+
 import React, { useState, useMemo } from 'react';
-import useListQuery from '../../../hooks/useListQuery';
-import SearchInput from '../../../components/common/SearchInput';
-import Pagination from '../../../components/common/Pagination';
 import {
   Plus, FileSearch, RefreshCw, X, RotateCcw, FileText,
   Eye, Edit2, Search, SlidersHorizontal, ChevronDown, ChevronUp,
@@ -14,17 +12,16 @@ import { addAlert } from '../../notifications/notificationSlice';
 import useUrlFilters from '../../../hooks/useUrlFilters';
 import PageHeader from '../../../components/common/PageHeader';
 import ModuleTabs, { purchaseTabs } from '../../../components/module-tabs';
-import DataTable from '../../../components/data-table/DataTable';
+import DataTable from '../../../components/data-table';
 import AuditLogHover from '../../../components/common/AuditLogHover';
 import ExportModal from '../../../components/common/ExportModal';
-import PermissionGuard from '../../../components/common/PermissionGuard';
 import CreateAdvancePaymentModal from '../components/CreateAdvancePaymentModal';
 import RequireAdvanceModal from '../components/RequireAdvanceModal';
 import CreateGrnModal from '../components/CreateGrnModal';
 import { useRoutePath } from '../../../hooks/useRoutePath';
 import { useRBAC } from '../../../utils/rbac';
 
-import { 
+import {
   useGetPurchaseOrdersQuery,
   useSubmitPurchaseOrderMutation,
   useApprovePurchaseOrderMutation,
@@ -39,6 +36,18 @@ import StatusBadge from '../../../components/common/StatusBadge';
 import { PO_STATUS_CONFIG } from '../constants';
 import ActionReasonModal from '../components/ActionReasonModal';
 import PurchaseOrderOverview from '../components/PurchaseOrderOverview';
+
+const ALL_COLUMNS = [
+  { id: 'poNumber', label: 'PO NUMBER' },
+  { id: 'vendorName', label: 'SUPPLIER' },
+  { id: 'poDate', label: 'PO DATE' },
+  { id: 'expectedDeliveryDate', label: 'EXPECTED DELIVERY' },
+  { id: 'referenceNumber', label: 'REFERENCE NUMBER' },
+  { id: 'grandTotal', label: 'GRAND TOTAL' },
+  { id: 'status', label: 'STATUS' }
+];
+
+const DEFAULT_COLUMNS = ['poNumber', 'vendorName', 'poDate', 'expectedDeliveryDate', 'referenceNumber', 'grandTotal', 'status'];
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-';
@@ -56,6 +65,15 @@ export default function PurchaseOrders() {
   const location = useLocation();
   const { buildPath } = useRoutePath();
   const { canCreate, canEdit, canApprove } = useRBAC();
+
+  const [visibleColumns, setVisibleColumns] = useState(() => {
+    try {
+      const saved = localStorage.getItem('po_visible_columns_v2');
+      return saved ? JSON.parse(saved) : DEFAULT_COLUMNS;
+    } catch {
+      return DEFAULT_COLUMNS;
+    }
+  });
 
   const [expandedRowId, setExpandedRowId] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -119,6 +137,10 @@ export default function PurchaseOrders() {
     return [...allOrders].sort((a, b) => {
       let aVal = a[sortBy];
       let bVal = b[sortBy];
+      if (sortBy === 'grandTotal' || sortBy === 'totalAmount') {
+        aVal = a.totalAmount ?? a.grandTotal ?? 0;
+        bVal = b.totalAmount ?? b.grandTotal ?? 0;
+      }
       if (aVal == null) return 1;
       if (bVal == null) return -1;
       if (typeof aVal === 'string') {
@@ -132,7 +154,7 @@ export default function PurchaseOrders() {
   const extractedTotalElements = apiData?.data?.pagination?.totalElements || apiData?.pagination?.totalElements || apiData?.data?.totalElements || sortedOrders.length;
   const actualTotalElements = sortedOrders.length < extractedTotalElements ? sortedOrders.length : extractedTotalElements;
   const currentSize = apiParams.size || 10;
-  
+
   const totalElements = actualTotalElements;
   const totalPages = Math.ceil(totalElements / currentSize) || 1;
 
@@ -177,47 +199,71 @@ export default function PurchaseOrders() {
 
   const getPoActions = (po) => {
     const actions = [];
-    
+
     actions.push({
+      key: 'view',
+      label: 'View Details',
       tooltip: 'View Details',
-      icon: <Eye size={16} />,
-      onClick: () => navigate(buildPath('/accounts/transactions/purchase-orders/' + po.id))
+      'aria-label': 'View Details',
+      icon: <Eye size={14} />,
+      onClick: () => navigate(buildPath('/accounts/transactions/purchase-orders/' + po.id)),
+      className: 'text-zinc-600 hover:text-indigo-600'
     });
 
     if ((po.status === 'DRAFT' || po.status === 'REJECTED') && canEdit()) {
       actions.push({
+        key: 'edit',
+        label: 'Edit',
         tooltip: 'Edit',
-        icon: <Edit2 size={16} />,
-        onClick: () => navigate(buildPath('/accounts/transactions/purchase-orders/' + po.id))
+        'aria-label': 'Edit',
+        icon: <Edit2 size={14} />,
+        onClick: () => navigate(buildPath('/accounts/transactions/purchase-orders/' + po.id)),
+        className: 'text-zinc-600 hover:text-blue-600'
       });
     }
 
     if (po.status === 'DRAFT') {
       actions.push({
+        key: 'submit',
+        label: 'Submit for Approval',
         tooltip: 'Submit for Approval',
-        icon: <CheckCircle size={16} />,
-        onClick: () => handleAction(null, 'Submit', submitMutation, po.id, 'Are you sure you want to submit this Purchase Order for approval?')
+        'aria-label': 'Submit for Approval',
+        icon: <CheckCircle size={14} />,
+        onClick: () => handleAction(null, 'Submit', submitMutation, po.id, 'Are you sure you want to submit this Purchase Order for approval?'),
+        className: 'text-zinc-600 hover:text-emerald-600'
       });
     }
 
     if (po.status === 'PENDING_APPROVAL' && canApprove()) {
       actions.push({
+        key: 'approve',
+        label: 'Approve',
         tooltip: 'Approve',
-        icon: <CheckCircle size={16} className="text-emerald-600" />,
-        onClick: () => handleAction(null, 'Approve', approveMutation, po.id, 'Are you sure you want to approve this Purchase Order?')
+        'aria-label': 'Approve',
+        icon: <CheckCircle size={14} className="text-emerald-600" />,
+        onClick: () => handleAction(null, 'Approve', approveMutation, po.id, 'Are you sure you want to approve this Purchase Order?'),
+        className: 'text-emerald-600 hover:text-emerald-700'
       });
       actions.push({
+        key: 'reject',
+        label: 'Reject',
         tooltip: 'Reject',
-        icon: <Ban size={16} className="text-rose-600" />,
-        onClick: () => setReasonModalConfig({ isOpen: true, poId: po.id, actionType: 'Reject' })
+        'aria-label': 'Reject',
+        icon: <Ban size={14} className="text-rose-600" />,
+        onClick: () => setReasonModalConfig({ isOpen: true, poId: po.id, actionType: 'Reject' }),
+        className: 'text-rose-600 hover:text-rose-700'
       });
     }
 
     if (['APPROVED', 'SENT', 'PARTIALLY_RECEIVED'].includes(po.status)) {
       actions.push({
+        key: 'grn',
+        label: 'Create GRN',
         tooltip: 'Create GRN',
-        icon: <Truck size={16} className="text-emerald-600" />,
-        onClick: () => setSelectedPoForGrn(po)
+        'aria-label': 'Create GRN',
+        icon: <Truck size={14} className="text-emerald-600" />,
+        onClick: () => setSelectedPoForGrn(po),
+        className: 'text-emerald-600 hover:text-emerald-700'
       });
     }
 
@@ -229,34 +275,50 @@ export default function PurchaseOrders() {
 
       if (!advanceRequired) {
         actions.push({
+          key: 'require-advance',
+          label: 'Require Advance Payment',
           tooltip: 'Require Advance Payment',
-          icon: <DollarSign size={16} />,
-          onClick: () => setRequireAdvanceModalConfig({ isOpen: true, po })
+          'aria-label': 'Require Advance Payment',
+          icon: <DollarSign size={14} />,
+          onClick: () => setRequireAdvanceModalConfig({ isOpen: true, po }),
+          className: 'text-zinc-600 hover:text-indigo-600'
         });
       } else if (remainingAdvance > 0) {
         actions.push({
+          key: 'advance',
+          label: 'Create Advance Payment',
           tooltip: 'Create Advance Payment',
-          icon: <CreditCard size={16} />,
-          onClick: () => setSelectedPoForAdvance(po)
+          'aria-label': 'Create Advance Payment',
+          icon: <CreditCard size={14} />,
+          onClick: () => setSelectedPoForAdvance(po),
+          className: 'text-zinc-600 hover:text-indigo-600'
         });
       }
     }
 
     if (po.status === 'PARTIALLY_RECEIVED' || po.status === 'RECEIVED') {
       actions.push({
+        key: 'close',
+        label: 'Close Purchase Order',
         tooltip: 'Close Purchase Order',
-        icon: <CheckCircle size={16} />,
-        onClick: () => handleAction(null, 'Close', closeMutation, po.id, 'Are you sure you want to close this Purchase Order?')
+        'aria-label': 'Close Purchase Order',
+        icon: <CheckCircle size={14} />,
+        onClick: () => handleAction(null, 'Close', closeMutation, po.id, 'Are you sure you want to close this Purchase Order?'),
+        className: 'text-zinc-600 hover:text-emerald-600'
       });
     }
 
     const hasReceivedItems = po.items?.some(i => (Number(i.receivedQuantity) || 0) > 0) || po.status === 'PARTIALLY_RECEIVED' || po.status === 'RECEIVED';
-    
+
     if (['DRAFT', 'APPROVED', 'SENT'].includes(po.status) && !hasReceivedItems) {
       actions.push({
+        key: 'cancel',
+        label: 'Cancel Purchase Order',
         tooltip: 'Cancel Purchase Order',
-        icon: <Ban size={16} className="text-rose-600" />,
-        onClick: () => setReasonModalConfig({ isOpen: true, poId: po.id, actionType: 'Cancel' })
+        'aria-label': 'Cancel Purchase Order',
+        icon: <Ban size={14} className="text-rose-600" />,
+        onClick: () => setReasonModalConfig({ isOpen: true, poId: po.id, actionType: 'Cancel' }),
+        className: 'text-rose-600 hover:text-rose-700'
       });
     }
 
@@ -265,13 +327,14 @@ export default function PurchaseOrders() {
 
   const columns = useMemo(() => [
     {
+      key: 'poNumber',
       id: 'poNumber',
+      label: 'PO NUMBER',
       header: 'PO NUMBER',
-      accessor: 'poNumber',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <div className="flex items-center gap-2">
-          <FileText size={15} className="text-zinc-400 shrink-0" />
+          <FileText size={14} className="text-zinc-400 shrink-0" />
           <span
             onClick={(e) => {
               e.stopPropagation();
@@ -286,62 +349,70 @@ export default function PurchaseOrders() {
       )
     },
     {
+      key: 'vendorName',
       id: 'vendorName',
+      label: 'SUPPLIER',
       header: 'SUPPLIER',
-      accessor: 'vendorName',
       sortable: true,
-      cell: (row) => (
-        <span className="text-xs font-medium text-zinc-900">
+      render: (val, row) => (
+        <span className="font-semibold text-zinc-900">
           {row.vendorName || '-'}
         </span>
       )
     },
     {
+      key: 'poDate',
       id: 'poDate',
+      label: 'PO DATE',
       header: 'PO DATE',
-      accessor: 'poDate',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <span className="text-xs text-zinc-600">{formatDate(row.poDate)}</span>
       )
     },
     {
+      key: 'expectedDeliveryDate',
       id: 'expectedDeliveryDate',
+      label: 'EXPECTED DELIVERY',
       header: 'EXPECTED DELIVERY',
-      accessor: 'expectedDeliveryDate',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <span className="text-xs text-zinc-600">{formatDate(row.expectedDeliveryDate)}</span>
       )
     },
     {
+      key: 'referenceNumber',
       id: 'referenceNumber',
+      label: 'REFERENCE NUMBER',
       header: 'REFERENCE NUMBER',
-      accessor: 'referenceNumber',
       sortable: true,
-      cell: (row) => (
+      render: (val, row) => (
         <span className="text-xs text-zinc-600">{row.referenceNumber || '-'}</span>
       )
     },
     {
+      key: 'grandTotal',
       id: 'grandTotal',
+      label: 'GRAND TOTAL',
       header: 'GRAND TOTAL',
-      accessor: 'totalAmount',
       sortable: true,
+      align: 'right',
       headerClassName: 'text-right',
-      cell: (row) => (
-        <div className="text-right font-mono text-xs font-semibold text-zinc-900">
-          {row.currency || 'INR'} {(row.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-        </div>
+      render: (val, row) => (
+        <span className="font-medium text-zinc-900">
+          {row.currency || 'INR'} {(row.totalAmount ?? row.grandTotal ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+        </span>
       )
     },
     {
+      key: 'status',
       id: 'status',
+      label: 'STATUS',
       header: 'STATUS',
-      accessor: 'status',
       sortable: true,
+      align: 'center',
       headerClassName: 'text-center',
-      cell: (row) => (
+      render: (val, row) => (
         <div className="text-center">
           <StatusBadge status={row.status} statusConfig={PO_STATUS_CONFIG} />
         </div>
@@ -351,141 +422,102 @@ export default function PurchaseOrders() {
 
   const basicFilters = useMemo(() => [
     {
-      id: 'status',
+      key: 'status',
       label: 'Status',
       type: 'select',
-      value: filters.status || '',
-      onChange: (val) => setFilter('status', val),
       options: [
-        { value: '', label: 'All Statuses' },
-        { value: 'DRAFT', label: 'Draft' },
-        { value: 'PENDING_APPROVAL', label: 'Pending Approval' },
-        { value: 'APPROVED', label: 'Approved' },
-        { value: 'SENT', label: 'Sent' },
-        { value: 'PARTIALLY_RECEIVED', label: 'Partially Received' },
-        { value: 'RECEIVED', label: 'Received' },
-        { value: 'CLOSED', label: 'Closed' },
-        { value: 'CANCELLED', label: 'Cancelled' },
-        { value: 'REJECTED', label: 'Rejected' },
+        { label: 'All Statuses', value: '' },
+        { label: 'Draft', value: 'DRAFT' },
+        { label: 'Pending Approval', value: 'PENDING_APPROVAL' },
+        { label: 'Approved', value: 'APPROVED' },
+        { label: 'Sent', value: 'SENT' },
+        { label: 'Partially Received', value: 'PARTIALLY_RECEIVED' },
+        { label: 'Received', value: 'RECEIVED' },
+        { label: 'Closed', value: 'CLOSED' },
+        { label: 'Cancelled', value: 'CANCELLED' },
+        { label: 'Rejected', value: 'REJECTED' }
       ]
     },
     {
-      id: 'poDateFrom',
+      key: 'poDateFrom',
       label: 'Date From',
-      type: 'date',
-      value: filters.poDateFrom || '',
-      onChange: (val) => setFilter('poDateFrom', val)
+      type: 'date'
     },
     {
-      id: 'poDateTo',
+      key: 'poDateTo',
       label: 'Date To',
-      type: 'date',
-      value: filters.poDateTo || '',
-      onChange: (val) => setFilter('poDateTo', val)
+      type: 'date'
     }
-  ], [filters.status, filters.poDateFrom, filters.poDateTo, setFilter]);
+  ], []);
 
   const advancedFilters = useMemo(() => [
     {
-      id: 'vendorId',
-      label: 'Supplier',
-      type: 'select',
-      value: filters.vendorId || '',
-      onChange: (val) => setFilter('vendorId', val),
-      options: [
-        { value: '', label: 'All Suppliers' },
-        ...vendorList.map(v => ({ value: String(v.id), label: v.vendorName || v.name }))
+      title: 'Supplier Filters',
+      fields: [
+        {
+          key: 'vendorId',
+          label: 'Supplier',
+          type: 'select',
+          options: [
+            { label: 'All Suppliers', value: '' },
+            ...vendorList.map(v => ({ label: v.vendorName || v.name, value: String(v.id) }))
+          ]
+        }
       ]
     },
     {
-      id: 'poDateFrom',
-      label: 'PO Date From',
-      type: 'date',
-      value: filters.poDateFrom || '',
-      onChange: (val) => setFilter('poDateFrom', val)
-    },
-    {
-      id: 'poDateTo',
-      label: 'PO Date To',
-      type: 'date',
-      value: filters.poDateTo || '',
-      onChange: (val) => setFilter('poDateTo', val)
-    },
-    {
-      id: 'expectedDeliveryDateFrom',
-      label: 'Expected Delivery From',
-      type: 'date',
-      value: filters.expectedDeliveryDateFrom || '',
-      onChange: (val) => setFilter('expectedDeliveryDateFrom', val)
-    },
-    {
-      id: 'expectedDeliveryDateTo',
-      label: 'Expected Delivery To',
-      type: 'date',
-      value: filters.expectedDeliveryDateTo || '',
-      onChange: (val) => setFilter('expectedDeliveryDateTo', val)
+      title: 'Delivery Schedule',
+      fields: [
+        {
+          key: 'expectedDeliveryDateFrom',
+          label: 'Expected Delivery From',
+          type: 'date'
+        },
+        {
+          key: 'expectedDeliveryDateTo',
+          label: 'Expected Delivery To',
+          type: 'date'
+        }
+      ]
     }
-  ], [filters, setFilter, vendorList]);
+  ], [vendorList]);
+
+  const filterValues = useMemo(() => ({
+    status: filters.status || '',
+    poDateFrom: filters.poDateFrom || '',
+    poDateTo: filters.poDateTo || '',
+    vendorId: filters.vendorId || '',
+    expectedDeliveryDateFrom: filters.expectedDeliveryDateFrom || '',
+    expectedDeliveryDateTo: filters.expectedDeliveryDateTo || ''
+  }), [filters]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50/50 dark:bg-[#0F1117]">
+    <div className="flex-1 flex flex-col min-h-[calc(100vh-6.5rem)] h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+      {/* Top Header */}
       <PageHeader
         title="Purchase Orders"
         description="Manage purchase orders and track procurement"
         icon={ShoppingCart}
-        actions={
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsExportModalOpen(true)}
-              className="btn-secondary flex items-center gap-1.5 h-9 px-3 text-xs bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors shadow-2xs"
-            >
-              <Download size={15} />
-              <span className="hidden sm:inline">Export</span>
-            </button>
-            <PermissionGuard permission="PURCHASE_ORDERS:CREATE">
-              <button
-                onClick={() => navigate(buildPath('/accounts/transactions/purchase-orders/new'))}
-                className="btn-primary flex items-center gap-2"
-              >
-                <Plus size={16} />
-                <span>New Purchase Order</span>
-              </button>
-            </PermissionGuard>
-          </div>
-        }
-      />
+      >
+        {canCreate() && (
+          <button
+            onClick={() => navigate(buildPath('/accounts/transactions/purchase-orders/new'))}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={16} />
+            <span>New Purchase Order</span>
+          </button>
+        )}
+      </PageHeader>
 
+      {/* ── Module Tabs ── */}
       <ModuleTabs tabs={purchaseTabs} />
 
-      <div className="p-6">
+      {/* Main Content Area */}
+      <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0">
         <DataTable
-          permissionFeature="PURCHASE_ORDERS"
-          data={orders}
-          columns={columns}
-          keyField="id"
-          loading={isLoading || isFetching}
-          searchable
-          searchPlaceholder="Search purchase orders..."
-          searchValue={searchTerm || ''}
-          onSearchChange={setSearchTerm}
-          filters={basicFilters}
-          filterValues={filters}
-          onFilterChange={setFilter}
-          onReset={handleReset}
-          advancedFilters={advancedFilters}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSort={handleColumnSort}
-          pagination={{
-            currentPage: page,
-            totalPages,
-            totalElements,
-            pageSize: currentSize,
-            onPageChange: setPage,
-            onPageSizeChange: setPageSize
-          }}
-          columnVisibility
           selectable
+          rowKey="id"
           selectedRows={selectedOrders}
           onSelectionChange={setSelectedOrders}
           bulkActions={[
@@ -496,32 +528,78 @@ export default function PurchaseOrders() {
               onClick: () => setIsExportModalOpen(true)
             }
           ]}
-          exportable
-          onExport={() => setIsExportModalOpen(true)}
-          refreshable
+          columns={columns}
+          data={orders}
+          loading={isLoading}
+          isRefreshing={isFetching}
+
+          // Search
+          searchable
+          searchValue={searchTerm || ''}
+          searchPlaceholder="Search purchase orders..."
+          onSearchChange={(val) => { setSearchTerm(val); setPage(0); }}
+
+          // Filters
+          filters={basicFilters}
+          filterValues={filterValues}
+          onFilterChange={(key, val) => { setFilter(key, val); setPage(0); }}
+
+          // Advanced Filters
+          advancedFilters={advancedFilters}
+
+          // Reset, Refresh, Export
+          onReset={handleReset}
           onRefresh={refetch}
-          getRowActions={getPoActions}
-          expandedRowId={expandedRowId}
-          onToggleExpand={(id) => setExpandedRowId(expandedRowId === id ? null : id)}
-          renderExpandedRow={(po) => <PurchaseOrderOverview po={po} navigate={navigate} buildPath={buildPath} />}
-          emptyState={{
-            icon: ShoppingCart,
-            title: 'No Purchase Orders found',
-            description: 'Create a purchase order to start managing your procurement.',
-            action: canCreate() ? {
-              label: 'New Purchase Order',
-              icon: Plus,
-              onClick: () => navigate(buildPath('/accounts/transactions/purchase-orders/new'))
-            } : null
+          onExport={() => setIsExportModalOpen(true)}
+
+          // Column Visibility
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={(cols) => {
+            setVisibleColumns(cols);
+            localStorage.setItem('po_visible_columns_v2', JSON.stringify(cols));
           }}
+
+          // Sorting
+          sort={{ key: sortBy, direction: sortOrder }}
+          onSortChange={({ key }) => handleColumnSort(key)}
+
+          // Row Actions
+          rowActions={getPoActions}
+
+          // Expandable Sub-rows
+          expandedRowId={expandedRowId}
+          onToggleExpand={(id) => setExpandedRowId(prev => prev === id ? null : id)}
+          renderExpandedRow={(po) => <PurchaseOrderOverview po={po} navigate={navigate} buildPath={buildPath} />}
+
+          // Pagination
+          pagination={{
+            page,
+            pageSize: currentSize,
+            totalPages,
+            totalElements
+          }}
+          pageIndexBase={0}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemName="orders"
+
+          // Empty State
+          emptyMessage="No purchase orders found"
+          emptyDescription="Create a purchase order to start managing your procurement."
         />
       </div>
 
-      <ExportModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-        reportName="purchase-orders"
-      />
+      {/* Export Modal */}
+      {isExportModalOpen && (
+        <ExportModal
+          isOpen={isExportModalOpen}
+          onClose={() => setIsExportModalOpen(false)}
+          reportName="purchase-orders"
+          defaultFilters={listFilters}
+          selectedIds={selectedOrders}
+          selectedCount={selectedOrders.length}
+        />
+      )}
 
       <CreateAdvancePaymentModal
         isOpen={!!selectedPoForAdvance}
@@ -540,7 +618,7 @@ export default function PurchaseOrders() {
           }}
         />
       )}
-      
+
       <RequireAdvanceModal
         isOpen={requireAdvanceModalConfig.isOpen}
         onClose={() => setRequireAdvanceModalConfig({ isOpen: false, po: null })}
@@ -554,7 +632,7 @@ export default function PurchaseOrders() {
         onSubmit={async (reason) => {
           const { poId, actionType } = reasonModalConfig;
           if (processingId) return;
-          
+
           setProcessingId(poId + actionType);
           try {
             const extraArgs = { reason };

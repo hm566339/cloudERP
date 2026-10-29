@@ -49,8 +49,11 @@ export function buildSidebarLinks(userRoleOrOptions, companyId, permissions, isS
   // Backwards compatibility for callers passing positional arguments
   const resolvedPermissions = Array.isArray(permissions) ? [...permissions] : [];
   if (resolvedPermissions.length === 0 && typeof canViewModule === 'function') {
-    if (isOwnerUser || isCompAdmin || canViewModule('workflow')) {
-      resolvedPermissions.push('WORKFLOW:READ', 'WORKFLOW_DEFINITIONS:READ', 'WORKFLOW_TASKS:READ', 'WORKFLOW_VIEW', 'WORKFLOW_APPROVE');
+    if (canViewModule('workflow') || canViewModule('workflows') || canViewModule('WORKFLOW_DEFINITIONS')) {
+      resolvedPermissions.push('WORKFLOW:READ', 'WORKFLOW_DEFINITIONS:READ', 'WORKFLOW_VIEW');
+    }
+    if (canViewModule('APPROVAL_REQUESTS') || canViewModule('WORKFLOW_TASKS') || canViewModule('approvals')) {
+      resolvedPermissions.push('WORKFLOW_TASKS:READ', 'APPROVAL_REQUESTS:READ', 'WORKFLOW_APPROVE');
     }
     if (isOwnerUser || isCompAdmin || canViewModule('sso') || canViewModule('admin')) {
       resolvedPermissions.push('USER:READ', 'ROLE:READ', 'PORTAL_ACCESS:READ', 'SESSION:READ', 'AUDIT_LOGS:READ', 'DASHBOARD:READ');

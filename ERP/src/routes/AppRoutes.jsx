@@ -864,7 +864,7 @@ export default function AppRoutes() {
           <Route path="/sessions" element={<ProtectedRoute module="SESSION"><SessionList /></ProtectedRoute>} />
           <Route path="/security/roles" element={<ProtectedRoute module="ROLE"><RolePermissionsSettings /></ProtectedRoute>} />
           <Route path="/roles/permissions" element={<ProtectedRoute module="ROLE"><RolePermissionsSettings /></ProtectedRoute>} />
-          <Route path="/security/users" element={<ProtectedRoute module="USER"><UserPermissionsSettings /></ProtectedRoute>} />
+          <Route path="/security/users" element={<ProtectedRoute module="USER"><Navigate to="/settings/security/roles" replace /></ProtectedRoute>} />
           <Route path="/security/features" element={<ProtectedRoute module="FEATURE"><FeatureList /></ProtectedRoute>} />
           <Route path="/security/permissions" element={<ProtectedRoute module="PERMISSION"><PermissionList /></ProtectedRoute>} />
           <Route path="/features" element={<ProtectedRoute module="FEATURE"><FeatureList /></ProtectedRoute>} />
@@ -876,14 +876,14 @@ export default function AppRoutes() {
           <Route path="/settings/security/features" element={<FeatureList />} />
           <Route path="/settings/security/permissions" element={<PermissionList />} />
           <Route path="/settings/security/roles" element={<RolePermissionsSettings />} />
-          <Route path="/settings/security/users" element={<UserPermissionsSettings />} />
+          <Route path="/settings/security/users" element={<Navigate to="/settings/security/roles" replace />} />
           <Route path="/settings/notifications" element={<NotificationsSettings />} />
           <Route path="/settings/integrations" element={<IntegrationsSettings />} />
           <Route path="/settings/audit-logs" element={<AuditLogsSettings />} />
           <Route path="/settings/preferences" element={<PreferencesSettings />} />
           <Route path="/settings/plans" element={<SubscriptionPlansSettings />} />
           <Route path="/settings/roles" element={<Navigate to="/settings/security/roles" replace />} />
-          <Route path="/settings/users" element={<Navigate to="/settings/security/users" replace />} />
+          <Route path="/settings/users" element={<Navigate to="/settings/security/roles" replace />} />
           <Route path="/settings/features" element={<Navigate to="/settings/security/features" replace />} />
           <Route path="/settings/permissions" element={<Navigate to="/settings/security/permissions" replace />} />
           <Route path="/settings/sales" element={<SalesSettings />} />
@@ -940,8 +940,8 @@ export default function AppRoutes() {
           <Route path="accounting/sales-orders" element={<SalesOrders />} />
 
           {SharedCompanyRoutes({ prefix: "" })}
-          <Route path="workflows" element={<WorkflowManagementPage />} />
-          <Route path="workflows/approvals" element={<ApprovalRequestsPage />} />
+          <Route path="workflows" element={<ProtectedRoute module="WORKFLOW"><WorkflowManagementPage /></ProtectedRoute>} />
+          <Route path="workflows/approvals" element={<ProtectedRoute module="WORKFLOW_TASKS"><ApprovalRequestsPage /></ProtectedRoute>} />
           <Route path="workflow" element={<CompanyWorkflowRedirect />} />
           <Route path="workflow/approvals" element={<CompanyWorkflowApprovalsRedirect />} />
           <Route
@@ -950,16 +950,16 @@ export default function AppRoutes() {
           />
 
           {/* Admin-only sections */}
-          <Route path="admin" element={<AdminDashboard />} />
-          <Route path="admin/system-logs" element={<SystemLogsPage />} />
-          <Route path="users" element={<UserList />} />
-          <Route path="users/:id" element={<UserDetails />} />
-          <Route path="roles" element={<RoleList />} />
-          <Route path="portal-access" element={<PortalAccess />} />
-          <Route path="sessions" element={<SessionList />} />
-          <Route path="security/roles" element={<RolePermissionsSettings />} />
+          <Route path="admin" element={<ProtectedRoute module="SSO"><AdminDashboard /></ProtectedRoute>} />
+          <Route path="admin/system-logs" element={<ProtectedRoute module="SSO"><SystemLogsPage /></ProtectedRoute>} />
+          <Route path="users" element={<ProtectedRoute module="USER"><UserList /></ProtectedRoute>} />
+          <Route path="users/:id" element={<ProtectedRoute module="USER"><UserDetails /></ProtectedRoute>} />
+          <Route path="roles" element={<ProtectedRoute module="ROLE"><RoleList /></ProtectedRoute>} />
+          <Route path="portal-access" element={<ProtectedRoute module="PORTAL_ACCESS"><PortalAccess /></ProtectedRoute>} />
+          <Route path="sessions" element={<ProtectedRoute module="SESSION"><SessionList /></ProtectedRoute>} />
+          <Route path="security/roles" element={<ProtectedRoute module="ROLE"><RolePermissionsSettings /></ProtectedRoute>} />
           <Route path="roles/permissions" element={<RolePermissionsSettings />} />
-          <Route path="security/users" element={<UserPermissionsSettings />} />
+          <Route path="security/users" element={<Navigate to="/settings/security/roles" replace />} />
           <Route path="security/features" element={<FeatureList />} />
           <Route path="security/permissions" element={<PermissionList />} />
           <Route path="features" element={<FeatureList />} />
@@ -980,7 +980,7 @@ export default function AppRoutes() {
           <Route path="settings/security/permissions" element={<PermissionList />} />
           <Route path="settings/notifications" element={<NotificationsSettings />} />
           <Route path="settings/security/roles" element={<RolePermissionsSettings />} />
-          <Route path="settings/security/users" element={<UserPermissionsSettings />} />
+          <Route path="settings/security/users" element={<Navigate to="/settings/security/roles" replace />} />
           <Route path="settings/integrations" element={<IntegrationsSettings />} />
           <Route path="settings/audit-logs" element={<AuditLogsSettings />} />
           <Route path="settings/preferences" element={<PreferencesSettings />} />

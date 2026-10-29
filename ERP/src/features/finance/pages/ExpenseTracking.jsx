@@ -44,7 +44,7 @@ export default function ExpenseTracking({ forcedTab }) {
       resolvedTab = 'reimbursements';
     } else if (currentPath.includes('report') || currentPath.includes('analytics')) {
       resolvedTab = 'reports';
-    } else if (currentPath.endsWith('/expenses') || currentPath.endsWith('/expenses/expenses')) {
+    } else if (currentPath.endsWith('/expenses/expenses') || currentPath.endsWith('/expense-claims')) {
       resolvedTab = 'expenses';
     } else {
       resolvedTab = 'requests';
