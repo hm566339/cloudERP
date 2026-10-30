@@ -18,7 +18,8 @@ export function SettingsNavbar({
   onTabChange,
   className = '',
   showGroupSwitcher = true,
-  defaultGroup = 'all', // 'all' | 'general' | 'module'
+  defaultGroup = 'general', // Default to 'general' so the 8 General Settings tabs are immediately visible and open
+  align = 'right', // Align navigation tabs toward the right side
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -87,8 +88,9 @@ export function SettingsNavbar({
 
   // Selected Group State ('all', 'general', or 'module')
   const [selectedGroup, setSelectedGroup] = useState(() => {
-    if (defaultGroup !== 'all') return defaultGroup;
-    return computedActiveGroup || 'general';
+    if (computedActiveGroup) return computedActiveGroup;
+    if (defaultGroup && defaultGroup !== 'all') return defaultGroup;
+    return 'general';
   });
 
   // Sync group with active route when user navigates
@@ -115,6 +117,17 @@ export function SettingsNavbar({
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
   }, [generalItems, moduleItems, selectedGroup]);
+
+  // Scroll active tab into view on load and tab change without requiring extra arrow clicks
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const activeEl = scrollContainerRef.current.querySelector('[aria-selected="true"]');
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      }
+      checkScroll();
+    }
+  }, [controlledActiveTab, activeItem?.id, selectedGroup]);
 
   const scroll = (direction) => {
     if (!scrollContainerRef.current) return;
@@ -155,7 +168,7 @@ export function SettingsNavbar({
       aria-label="Settings Navigation"
       className={`w-full bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-2xl shadow-xs transition-all overflow-hidden ${className}`}
     >
-      {/* ── Top Bar: Group Switcher & Module Count ── */}
+      {/* ── Top Bar: Group Switcher & Active Section Summary ── */}
       {showGroupSwitcher && (
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/50">
           <div className="flex items-center gap-1.5 p-1 bg-zinc-200/60 dark:bg-[#161922] rounded-xl">
@@ -164,15 +177,15 @@ export function SettingsNavbar({
               onClick={() => setSelectedGroup('general')}
               className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 selectedGroup === 'general'
-                  ? 'bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] shadow-2xs'
+                  ? 'bg-white dark:bg-[#1D212C] text-blue-600 dark:text-[#4C8DFF] shadow-2xs'
                   : 'text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#222736]'
               }`}
             >
-              <Sliders size={13} className={selectedGroup === 'general' ? 'text-zinc-900 dark:text-[#E6E8EE]' : 'text-zinc-500 dark:text-[#A0A6B5]'} />
+              <Sliders size={13} className={selectedGroup === 'general' ? 'text-blue-600 dark:text-[#4C8DFF]' : 'text-zinc-500 dark:text-[#A0A6B5]'} />
               <span>General Settings</span>
               <span
                 className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  selectedGroup === 'general' ? 'bg-zinc-100 dark:bg-[#161922] text-zinc-800 dark:text-[#E6E8EE]' : 'bg-zinc-200 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5]'
+                  selectedGroup === 'general' ? 'bg-blue-50 dark:bg-[#161922] text-blue-700 dark:text-[#4C8DFF]' : 'bg-zinc-200 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5]'
                 }`}
               >
                 {generalItems.length}
@@ -184,15 +197,15 @@ export function SettingsNavbar({
               onClick={() => setSelectedGroup('module')}
               className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 selectedGroup === 'module'
-                  ? 'bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] shadow-2xs'
+                  ? 'bg-white dark:bg-[#1D212C] text-blue-600 dark:text-[#4C8DFF] shadow-2xs'
                   : 'text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#222736]'
               }`}
             >
-              <Layers size={13} className={selectedGroup === 'module' ? 'text-zinc-900 dark:text-[#E6E8EE]' : 'text-zinc-500 dark:text-[#A0A6B5]'} />
+              <Layers size={13} className={selectedGroup === 'module' ? 'text-blue-600 dark:text-[#4C8DFF]' : 'text-zinc-500 dark:text-[#A0A6B5]'} />
               <span>Module Settings</span>
               <span
                 className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  selectedGroup === 'module' ? 'bg-zinc-100 dark:bg-[#161922] text-zinc-800 dark:text-[#E6E8EE]' : 'bg-zinc-200 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5]'
+                  selectedGroup === 'module' ? 'bg-blue-50 dark:bg-[#161922] text-blue-700 dark:text-[#4C8DFF]' : 'bg-zinc-200 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5]'
                 }`}
               >
                 {moduleItems.length}
@@ -204,7 +217,7 @@ export function SettingsNavbar({
               onClick={() => setSelectedGroup('all')}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
                 selectedGroup === 'all'
-                  ? 'bg-white dark:bg-[#1D212C] text-zinc-900 dark:text-[#E6E8EE] shadow-2xs font-semibold'
+                  ? 'bg-white dark:bg-[#1D212C] text-blue-600 dark:text-[#4C8DFF] shadow-2xs font-semibold'
                   : 'text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#222736]'
               }`}
             >
@@ -213,17 +226,17 @@ export function SettingsNavbar({
           </div>
 
           {/* Active section summary indicator */}
-          <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-500 dark:text-[#A0A6B5]">
+          <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-[#A0A6B5]">
             <span className="font-medium">Active:</span>
-            <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] px-2.5 py-0.5 rounded-md border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">
+            <span className="font-semibold text-blue-600 dark:text-[#4C8DFF] bg-blue-50 dark:bg-[#1D212C] px-2.5 py-0.5 rounded-md border border-blue-200 dark:border-[#2A2F3D] shadow-2xs">
               {activeItem?.label || 'General Settings'}
             </span>
           </div>
         </div>
       )}
 
-      {/* ── Sub Navigation Tabs with Horizontal Scroll ── */}
-      <div className="flex items-center px-2 py-2 gap-1.5">
+      {/* ── Sub Navigation Tabs Aligned Toward Right Side with Horizontal Scroll ── */}
+      <div className={`flex items-center ${align === 'right' ? 'justify-end' : 'justify-start'} px-2 py-2 gap-1.5 w-full`}>
         {/* Scroll Left Button */}
         {canScrollLeft && (
           <button
@@ -236,14 +249,14 @@ export function SettingsNavbar({
           </button>
         )}
 
-        {/* Scrollable Tabs Container */}
+        {/* Scrollable Tabs Container - Aligned toward the right */}
         <div
           ref={scrollContainerRef}
           onScroll={checkScroll}
           tabIndex={0}
           role="tablist"
           aria-orientation="horizontal"
-          className="flex-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1 min-w-0"
+          className={`flex-1 flex items-center ${align === 'right' ? 'justify-start sm:justify-end' : 'justify-start'} gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1 min-w-0`}
         >
           {displayedItems.map((item, index) => {
             const Icon = item.icon;
@@ -265,7 +278,7 @@ export function SettingsNavbar({
                 onClick={() => onTabChange && onTabChange(item.id)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-[#4C8DFF] shrink-0 ${
                   isItemActive
-                    ? 'bg-zinc-900 text-white dark:bg-[#4C8DFF] dark:text-white shadow-xs border border-zinc-900 dark:border-[#4C8DFF]'
+                    ? 'bg-blue-600 text-white dark:bg-[#4C8DFF] dark:text-white shadow-xs border border-blue-600 dark:border-[#4C8DFF]'
                     : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/80 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:hover:bg-[#222736] border border-transparent'
                 }`}
               >
@@ -281,7 +294,7 @@ export function SettingsNavbar({
                 {item.category === 'module' && (
                   <span
                     className={`text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-mono ${
-                      isItemActive ? 'bg-zinc-800 text-zinc-300 dark:bg-white/20 dark:text-white' : 'bg-zinc-100 text-zinc-500 dark:bg-[#1D212C] dark:text-[#A0A6B5]'
+                      isItemActive ? 'bg-blue-700 text-white dark:bg-white/20 dark:text-white' : 'bg-zinc-100 text-zinc-500 dark:bg-[#1D212C] dark:text-[#A0A6B5]'
                     }`}
                   >
                     Module
@@ -309,4 +322,3 @@ export function SettingsNavbar({
 }
 
 export default SettingsNavbar;
-

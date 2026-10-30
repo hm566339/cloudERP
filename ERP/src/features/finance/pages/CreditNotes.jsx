@@ -658,54 +658,76 @@ export default function CreditNotes() {
     }
   ], []);
 
-  const advancedFiltersConfig = useMemo(() => [
+  const advancedFilters = useMemo(() => [
     {
-      key: 'customerId',
-      label: 'Customer',
-      type: 'select',
-      options: [
-        { label: 'All Customers', value: '' },
-        ...customers.map(c => ({ label: c.customerName, value: c.id }))
+      title: 'Customer & References',
+      fields: [
+        {
+          key: 'customerId',
+          label: 'Customer',
+          type: 'select',
+          options: [
+            { label: 'All Customers', value: '' },
+            ...customers.map(c => ({ label: c.customerName, value: c.id }))
+          ]
+        },
+        {
+          key: 'glPostingStatuses',
+          label: 'Posting Status',
+          type: 'select',
+          options: [
+            { label: 'All Statuses', value: '' },
+            { label: 'Draft / Unposted', value: 'DRAFT' },
+            { label: 'Posted', value: 'POSTED' },
+            { label: 'Failed', value: 'FAILED' },
+            { label: 'Reversed', value: 'REVERSED' },
+            { label: 'Cancelled', value: 'CANCELLED' }
+          ]
+        },
+        {
+          key: 'creditNoteNo',
+          label: 'Credit Note No.',
+          type: 'text',
+          placeholder: 'Credit Note #'
+        },
+        {
+          key: 'referenceNo',
+          label: 'Reference No.',
+          type: 'text',
+          placeholder: 'Reference #'
+        }
       ]
     },
     {
-      key: 'glPostingStatuses',
-      label: 'Posting Status',
-      type: 'select',
-      options: [
-        { label: 'All Statuses', value: '' },
-        { label: 'Draft / Unposted', value: 'DRAFT' },
-        { label: 'Posted', value: 'POSTED' },
-        { label: 'Failed', value: 'FAILED' },
-        { label: 'Reversed', value: 'REVERSED' },
-        { label: 'Cancelled', value: 'CANCELLED' }
+      title: 'Amount Range',
+      fields: [
+        {
+          key: 'minAmount',
+          label: 'Min Amount',
+          type: 'number',
+          placeholder: 'Min Amount'
+        },
+        {
+          key: 'maxAmount',
+          label: 'Max Amount',
+          type: 'number',
+          placeholder: 'Max Amount'
+        }
       ]
-    },
-    {
-      key: 'creditNoteNo',
-      label: 'Credit Note No.',
-      type: 'text',
-      placeholder: 'Credit Note #'
-    },
-    {
-      key: 'referenceNo',
-      label: 'Reference No.',
-      type: 'text',
-      placeholder: 'Reference #'
-    },
-    {
-      key: 'minAmount',
-      label: 'Min Amount',
-      type: 'number',
-      placeholder: 'Min Amount'
-    },
-    {
-      key: 'maxAmount',
-      label: 'Max Amount',
-      type: 'number',
-      placeholder: 'Max Amount'
     }
   ], [customers]);
+
+  const filterValues = useMemo(() => ({
+    statuses: filters.statuses || '',
+    noteDateFrom: filters.noteDateFrom || '',
+    noteDateTo: filters.noteDateTo || '',
+    customerId: filters.customerId || '',
+    glPostingStatuses: filters.glPostingStatuses || '',
+    creditNoteNo: filters.creditNoteNo || '',
+    referenceNo: filters.referenceNo || '',
+    minAmount: filters.minAmount || '',
+    maxAmount: filters.maxAmount || ''
+  }), [filters]);
 
   const getRowActions = (record) => {
     const workflowActions = getCreditNoteWorkflowActions(authState, record.status);
@@ -764,63 +786,74 @@ export default function CreditNotes() {
   }, [formData.salesInvoiceId, invoicesList]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] animate-in fade-in">
+      {/* Top Header */}
       <PageHeader
         icon={FileMinus}
         title="Credit Notes"
         description="Manage customer credit notes, sales returns, and revenue adjustments"
-        actions={
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsExportModalOpen(true)}
-              className="btn-secondary flex items-center gap-2 text-xs"
-            >
-              <Download size={15} /> Export
-            </button>
-            <RequirePermission module="CREDIT_NOTES" action="CREATE">
-              <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
-                <Plus size={16} />
-                New Credit Note
-              </button>
-            </RequirePermission>
-          </div>
-        }
-      />
+      >
+        <RequirePermission module="CREDIT_NOTES" action="CREATE">
+          <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
+            <Plus size={16} /> <span>New Credit Note</span>
+          </button>
+        </RequirePermission>
+      </PageHeader>
 
+      {/* ── Module Tabs ── */}
       <ModuleTabs tabs={accountingTabs} />
 
-      <div className="p-6">
+      {/* Main Content Area */}
+      <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
-          data={creditNotes}
-          columns={columns}
-          loading={isLoading || isFetching}
-          selectable={true}
+          selectable
+          rowKey="id"
           selectedRows={selectedCreditNotes}
           onSelectionChange={setSelectedCreditNotes}
-          rowKey="id"
-          pageIndexBase={0}
           bulkActions={[
             {
+              key: 'export',
               label: 'Export Selected',
-              icon: Download,
+              icon: <Download size={14} />,
               onClick: () => setIsExportModalOpen(true)
             }
           ]}
-          searchable={true}
+          columns={columns}
+          data={creditNotes}
+          loading={isLoading}
+          isRefreshing={isFetching}
+
+          // Search
+          searchable
           searchValue={search || ''}
-          onSearchChange={(val) => setSearch(val)}
           searchPlaceholder="Search credit notes by number or customer..."
-          basicFilters={basicFilters}
-          filterValues={filters}
-          onFilterChange={(key, val) => setFilter(key, val)}
-          advancedFilters={advancedFiltersConfig}
-          visibleColumns={visibleColumns}
-          onVisibleColumnsChange={updateVisibleColumns}
+          onSearchChange={(val) => { setSearch(val); setPage(0); }}
+
+          // Filters
+          filters={basicFilters}
+          filterValues={filterValues}
+          onFilterChange={(key, val) => { setFilter(key, val); setPage(0); }}
+
+          // Advanced Filters
+          advancedFilters={advancedFilters}
+
+          // Reset, Refresh, Export
           onReset={handleReset}
           onRefresh={refetch}
-          isRefreshing={isLoading || isFetching}
-          exportable={true}
           onExport={() => setIsExportModalOpen(true)}
+
+          // Column Visibility
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={updateVisibleColumns}
+
+          // Sorting
+          sort={{ key: sortBy, direction: sortOrder }}
+          onSortChange={({ key }) => handleColumnSort(key)}
+
+          // Row Actions
+          rowActions={getRowActions}
+
+          // Expandable Sub-rows
           expandedRowId={expandedRowId}
           onToggleExpand={(id) => setExpandedRowId(prev => prev === id ? null : id)}
           renderExpandedRow={(row) => (
@@ -829,22 +862,22 @@ export default function CreditNotes() {
               onViewDetails={(cn) => navigate(buildPath(`transactions/credit-notes/${cn.id}`))}
             />
           )}
-          rowActions={getRowActions}
+
+          // Pagination
           pagination={{
             page: page,
             pageSize: pageSize,
-            totalElements: pageInfo?.totalElements ?? creditNotes.length,
-            totalPages: pageInfo?.totalPages ?? 1
+            totalPages: (pageInfo?.totalPages ?? Math.ceil((pageInfo?.totalElements ?? creditNotes.length) / pageSize)) || 1,
+            totalElements: pageInfo?.totalElements ?? creditNotes.length
           }}
           pageIndexBase={0}
           onPageChange={setPage}
           onPageSizeChange={setPageSize}
-          sort={{
-            key: sortBy,
-            direction: sortOrder
-          }}
-          onSortChange={handleColumnSort}
-          itemName="items"
+          itemName="credit notes"
+
+          // Empty State
+          emptyMessage="No records found"
+          emptyDescription="Try adjusting your search or filters to find what you are looking for."
         />
       </div>
 

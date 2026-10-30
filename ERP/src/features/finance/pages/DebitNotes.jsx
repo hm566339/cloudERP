@@ -631,52 +631,74 @@ export default function DebitNotes() {
     }
   ], []);
 
-  const advancedFiltersConfig = useMemo(() => [
+  const advancedFilters = useMemo(() => [
     {
-      key: 'vendorId',
-      label: 'Vendor',
-      type: 'select',
-      options: [
-        { label: 'All Vendors', value: '' },
-        ...vendors.map(v => ({ label: v.vendorName, value: v.id }))
+      title: 'Vendor & References',
+      fields: [
+        {
+          key: 'vendorId',
+          label: 'Vendor',
+          type: 'select',
+          options: [
+            { label: 'All Vendors', value: '' },
+            ...vendors.map(v => ({ label: v.vendorName, value: v.id }))
+          ]
+        },
+        {
+          key: 'glPostingStatuses',
+          label: 'Posting Status',
+          type: 'select',
+          options: [
+            { label: 'All Statuses', value: '' },
+            { label: 'Unposted', value: 'UNPOSTED' },
+            { label: 'Posted', value: 'POSTED' },
+            { label: 'Reversed', value: 'REVERSED' }
+          ]
+        },
+        {
+          key: 'debitNoteNo',
+          label: 'Debit Note No.',
+          type: 'text',
+          placeholder: 'Debit Note #'
+        },
+        {
+          key: 'referenceNo',
+          label: 'Reference No.',
+          type: 'text',
+          placeholder: 'Reference #'
+        }
       ]
     },
     {
-      key: 'glPostingStatuses',
-      label: 'Posting Status',
-      type: 'select',
-      options: [
-        { label: 'All Statuses', value: '' },
-        { label: 'Unposted', value: 'UNPOSTED' },
-        { label: 'Posted', value: 'POSTED' },
-        { label: 'Reversed', value: 'REVERSED' }
+      title: 'Amount Range',
+      fields: [
+        {
+          key: 'minAmount',
+          label: 'Min Amount',
+          type: 'number',
+          placeholder: 'Min Amount'
+        },
+        {
+          key: 'maxAmount',
+          label: 'Max Amount',
+          type: 'number',
+          placeholder: 'Max Amount'
+        }
       ]
-    },
-    {
-      key: 'debitNoteNo',
-      label: 'Debit Note No.',
-      type: 'text',
-      placeholder: 'Debit Note #'
-    },
-    {
-      key: 'referenceNo',
-      label: 'Reference No.',
-      type: 'text',
-      placeholder: 'Reference #'
-    },
-    {
-      key: 'minAmount',
-      label: 'Min Amount',
-      type: 'number',
-      placeholder: 'Min Amount'
-    },
-    {
-      key: 'maxAmount',
-      label: 'Max Amount',
-      type: 'number',
-      placeholder: 'Max Amount'
     }
   ], [vendors]);
+
+  const filterValues = useMemo(() => ({
+    statuses: filters.statuses || '',
+    noteDateFrom: filters.noteDateFrom || '',
+    noteDateTo: filters.noteDateTo || '',
+    vendorId: filters.vendorId || '',
+    glPostingStatuses: filters.glPostingStatuses || '',
+    debitNoteNo: filters.debitNoteNo || '',
+    referenceNo: filters.referenceNo || '',
+    minAmount: filters.minAmount || '',
+    maxAmount: filters.maxAmount || ''
+  }), [filters]);
 
   const getRowActions = (record) => {
     const workflowActions = getDebitNoteWorkflowActions(authState, record.status);
@@ -729,81 +751,93 @@ export default function DebitNotes() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] animate-in fade-in">
+      {/* Top Header */}
       <PageHeader
         icon={FilePlus}
         title="Debit Notes"
         description="Manage vendor debit notes, purchase returns, and supplier adjustments"
-        actions={
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsExportModalOpen(true)}
-              className="btn-secondary flex items-center gap-2 text-xs"
-            >
-              <Download size={15} /> Export
-            </button>
-            <RequirePermission module="DEBIT_NOTES" action="CREATE">
-              <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
-                <Plus size={16} />
-                New Debit Note
-              </button>
-            </RequirePermission>
-          </div>
-        }
-      />
+      >
+        <RequirePermission module="DEBIT_NOTES" action="CREATE">
+          <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
+            <Plus size={16} /> <span>New Debit Note</span>
+          </button>
+        </RequirePermission>
+      </PageHeader>
 
+      {/* ── Module Tabs ── */}
       <ModuleTabs tabs={accountingTabs} />
 
-      <div className="p-6">
+      {/* Main Content Area */}
+      <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
-          data={debitNotes}
-          columns={columns}
-          loading={isLoading || isFetching}
-          selectable={true}
+          selectable
+          rowKey="id"
           selectedRows={selectedDebitNotes}
           onSelectionChange={setSelectedDebitNotes}
-          rowKey="id"
           bulkActions={[
             {
+              key: 'export',
               label: 'Export Selected',
-              icon: Download,
+              icon: <Download size={14} />,
               onClick: () => setIsExportModalOpen(true)
             }
           ]}
-          searchable={true}
+          columns={columns}
+          data={debitNotes}
+          loading={isLoading}
+          isRefreshing={isFetching}
+
+          // Search
+          searchable
           searchValue={search || ''}
-          onSearchChange={(val) => setSearch(val)}
           searchPlaceholder="Search Debit Notes..."
-          basicFilters={basicFilters}
-          filterValues={filters}
-          onFilterChange={(key, val) => setFilter(key, val)}
-          advancedFilters={advancedFiltersConfig}
-          visibleColumns={visibleColumns}
-          onVisibleColumnsChange={updateVisibleColumns}
+          onSearchChange={(val) => { setSearch(val); setPage(0); }}
+
+          // Filters
+          filters={basicFilters}
+          filterValues={filterValues}
+          onFilterChange={(key, val) => { setFilter(key, val); setPage(0); }}
+
+          // Advanced Filters
+          advancedFilters={advancedFilters}
+
+          // Reset, Refresh, Export
           onReset={handleReset}
           onRefresh={refetch}
-          isRefreshing={isLoading || isFetching}
-          exportable={true}
           onExport={() => setIsExportModalOpen(true)}
+
+          // Column Visibility
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={updateVisibleColumns}
+
+          // Sorting
+          sort={{ key: sortBy, direction: sortOrder }}
+          onSortChange={({ key }) => handleColumnSort(key)}
+
+          // Row Actions
+          rowActions={getRowActions}
+
+          // Expandable Sub-rows
           expandedRowId={expandedRowId}
           onToggleExpand={(id) => setExpandedRowId(prev => prev === id ? null : id)}
           renderExpandedRow={(row) => <DebitNoteOverview debitNote={row} />}
-          rowActions={getRowActions}
+
+          // Pagination
           pagination={{
             page: page,
             pageSize: pageSize,
-            totalElements: pageInfo?.totalElements ?? debitNotes.length,
-            totalPages: pageInfo?.totalPages ?? 1
+            totalPages: (pageInfo?.totalPages ?? Math.ceil((pageInfo?.totalElements ?? debitNotes.length) / pageSize)) || 1,
+            totalElements: pageInfo?.totalElements ?? debitNotes.length
           }}
           pageIndexBase={0}
           onPageChange={setPage}
           onPageSizeChange={setPageSize}
-          sort={{
-            key: sortBy,
-            direction: sortOrder
-          }}
-          onSortChange={handleColumnSort}
-          itemName="items"
+          itemName="debit notes"
+
+          // Empty State
+          emptyMessage="No records found"
+          emptyDescription="Try adjusting your search or filters to find what you are looking for."
         />
       </div>
 

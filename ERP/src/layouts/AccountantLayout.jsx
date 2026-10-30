@@ -21,6 +21,7 @@ import { hasPermission } from '../utils/rbacUtils'
 import { useAccessMode } from '../hooks/useAccessMode'
 import WorkspaceCard from '../features/account/components/WorkspaceCard'
 import CompanyDetailsPopup from '../features/account/components/CompanyDetailsPopup'
+import SwitchTenantPopup from '../features/account/components/SwitchTenantPopup'
 import MarkLogo from '../components/common/MarkLogo'
 import { fetchAccountCompanies, selectAccountCompanies, clearAccountCompany } from '../features/account/store/accountCompanySlice'
 import SearchAccount from '../components/common/SearchAccount'
@@ -76,6 +77,7 @@ export default function AccountantLayout() {
   } = useAccessMode();
 
   const [workspacePopupOpen, setWorkspacePopupOpen] = useState(false)
+  const [switchTenantPopupOpen, setSwitchTenantPopupOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false)
   const [activeSetting, setActiveSetting] = useState('general')
@@ -230,24 +232,27 @@ export default function AccountantLayout() {
       {selectedCompany && (
         <div className="shrink-0 px-3 py-3 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922]/50 backdrop-blur-sm">
           <div className="relative" ref={workspaceRef}>
-            <WorkspaceCard onClick={() => setWorkspacePopupOpen(prev => !prev)} isOpen={workspacePopupOpen} />
+            <WorkspaceCard onClick={() => { setSwitchTenantPopupOpen(false); setWorkspacePopupOpen(prev => !prev); }} isOpen={workspacePopupOpen} />
             <CompanyDetailsPopup open={workspacePopupOpen} />
           </div>
-          <div className="mt-3 flex flex-col gap-2">
-            {!(currentUser?.companyCode || currentUser?.companyId) && (
-              <button
-                onClick={handleSwitchCompany}
-                className="w-full flex items-center justify-center gap-2 text-[9.6px] font-semibold py-2 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154] text-zinc-600 dark:text-[#E6E8EE] transition-all duration-200 shadow-sm active:scale-[0.98]"
-              >
-                <ArrowLeftRight size={14} />
-                Switch Tenant
-              </button>
-            )}
+          <div className="mt-3 flex flex-col gap-2 relative">
+            <SwitchTenantPopup
+              open={switchTenantPopupOpen}
+              onClose={() => setSwitchTenantPopupOpen(false)}
+            />
+            <button
+              type="button"
+              onClick={() => { setWorkspacePopupOpen(false); setSwitchTenantPopupOpen(prev => !prev); }}
+              className="w-full flex items-center justify-center gap-2 text-[9.6px] font-semibold py-2 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154] text-zinc-600 dark:text-[#E6E8EE] transition-all duration-200 shadow-sm active:scale-[0.98] cursor-pointer"
+            >
+              <ArrowLeftRight size={14} />
+              Switch Tenant
+            </button>
           </div>
         </div>
       )}
     </>
-  ), [sidebarLinks, location, closeMobileSidebar, selectedCompany, workspacePopupOpen, currentUser, handleSwitchCompany]);
+  ), [sidebarLinks, location, closeMobileSidebar, selectedCompany, workspacePopupOpen, switchTenantPopupOpen, currentUser, handleSwitchCompany]);
 
   const isOwnerWorkspace = location.pathname.startsWith('/owner') || location.pathname.startsWith('/organization');
   if (isOwner && isOwnerWorkspace) {

@@ -38,6 +38,7 @@ import { buildDynamicSidebar } from './dynamicSidebarConfig'
 
 import WorkspaceCard from '../features/account/components/WorkspaceCard'
 import CompanyDetailsPopup from '../features/account/components/CompanyDetailsPopup'
+import SwitchTenantPopup from '../features/account/components/SwitchTenantPopup'
 import { fetchAccountCompanies, selectAccountCompanies, clearAccountCompany } from '../features/account/store/accountCompanySlice'
 import SearchAccount from '../components/common/SearchAccount'
 import { SettingsSidebar } from '../components/settings'
@@ -80,6 +81,7 @@ export default function CompanyLayout() {
 
   const [profileOpen, setProfileOpen] = useState(false)
   const [workspacePopupOpen, setWorkspacePopupOpen] = useState(false)
+  const [switchTenantPopupOpen, setSwitchTenantPopupOpen] = useState(false)
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false)
   const [activeSetting, setActiveSetting] = useState('general')
   const workspaceRef = useRef(null)
@@ -112,6 +114,13 @@ export default function CompanyLayout() {
   const rawRole = effectiveUser?.role || 'employee';
   const userRole = String(Array.isArray(rawRole) ? (rawRole[0]?.name || rawRole[0]) : (rawRole?.name || rawRole)).toLowerCase();
   const isOwnerUser = membership?.memberType === 'OWNER' || userRole === 'owner' || membership?.membershipType === 'OWNER';
+  const canSwitchTenant =
+    isOwnerUser ||
+    userRole === 'super_admin' ||
+    !effectiveUser?.isTenantLocked ||
+    (authContext?.companies && authContext.companies.length > 0) ||
+    accountCompanies.length > 0 ||
+    !(effectiveUser?.companyCode || effectiveUser?.companyId);
   const isSuperAdminGlobal = userRole === 'super_admin' && location.pathname.startsWith('/super-admin');
   const skipCompanyModules = isSuperAdminGlobal || !companyId || (userRole !== 'super_admin' && userRole !== 'company_admin' && !isOwnerUser);
   const {
@@ -296,14 +305,19 @@ export default function CompanyLayout() {
       {selectedCompany && !isSuperAdminGlobal && (
         <div className="shrink-0 px-3 py-3 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922] backdrop-blur-sm">
           <div className="relative" ref={workspaceRef}>
-            <WorkspaceCard onClick={() => setWorkspacePopupOpen(prev => !prev)} isOpen={workspacePopupOpen} />
+            <WorkspaceCard onClick={() => { setSwitchTenantPopupOpen(false); setWorkspacePopupOpen(prev => !prev); }} isOpen={workspacePopupOpen} />
             <CompanyDetailsPopup open={workspacePopupOpen} />
           </div>
-          <div className="mt-3 flex flex-col gap-2">
-            {!(effectiveUser?.companyCode || effectiveUser?.companyId) && (
+          <div className="mt-3 flex flex-col gap-2 relative">
+            <SwitchTenantPopup
+              open={switchTenantPopupOpen}
+              onClose={() => setSwitchTenantPopupOpen(false)}
+            />
+            {canSwitchTenant && (
               <button
-                onClick={handleSwitchCompany}
-                className="w-full flex items-center justify-center gap-2 text-[9.6px] font-semibold py-2 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154] text-zinc-600 dark:text-[#E6E8EE] transition-all duration-200 shadow-sm active:scale-[0.98]"
+                type="button"
+                onClick={() => { setWorkspacePopupOpen(false); setSwitchTenantPopupOpen(prev => !prev); }}
+                className="w-full flex items-center justify-center gap-2 text-[9.6px] font-semibold py-2 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154] text-zinc-600 dark:text-[#E6E8EE] transition-all duration-200 shadow-sm active:scale-[0.98] cursor-pointer"
               >
                 <ArrowLeftRight size={14} />
                 Switch Tenant
@@ -331,7 +345,7 @@ export default function CompanyLayout() {
         </div>
       )}
     </>
-  ), [selectedCompany, isSuperAdminGlobal, sidebarLinks, location, closeMobileSidebar, workspacePopupOpen, effectiveUser, handleSwitchCompany, userRole, isOwnerUser]);
+  ), [selectedCompany, isSuperAdminGlobal, sidebarLinks, location, closeMobileSidebar, workspacePopupOpen, switchTenantPopupOpen, canSwitchTenant, effectiveUser, handleSwitchCompany, userRole, isOwnerUser]);
 
   return (
     <div className="h-screen bg-transparent flex font-sans selection:bg-zinc-200 selection:text-zinc-900 dark:selection:bg-[#4C8DFF]/30 dark:selection:text-white overflow-hidden">
@@ -553,10 +567,11 @@ export default function CompanyLayout() {
                         </Link>
                       )}
 
-                      {selectedCompany && !(effectiveUser?.companyCode || effectiveUser?.companyId) && (
+                      {selectedCompany && canSwitchTenant && (
                         <button
-                          onClick={() => { setProfileOpen(false); handleSwitchCompany() }}
-                          className="w-[calc(100%-8px)] flex items-center gap-3 px-4 py-2 text-[10.4px] font-semibold text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-primary transition-colors text-left mx-1 rounded-lg"
+                          type="button"
+                          onClick={() => { setProfileOpen(false); setSwitchTenantPopupOpen(true); }}
+                          className="w-[calc(100%-8px)] flex items-center gap-3 px-4 py-2 text-[10.4px] font-semibold text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-primary transition-colors text-left mx-1 rounded-lg cursor-pointer"
                         >
                           <Building2 size={15} />
                           Switch Tenant
