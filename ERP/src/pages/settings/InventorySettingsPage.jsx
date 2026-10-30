@@ -63,15 +63,15 @@ export default function InventorySettingsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <Link
           to={`${prefix}/inventory/warehouses`}
-          className="p-3.5 bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-xs transition-all flex items-center justify-between group"
+          className="p-3.5 bg-[#F7F7F0] dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-xs transition-all flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center">
               <Warehouse size={16} />
             </div>
             <div>
-              <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Warehouses</p>
-              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Manage locations & bins</p>
+              <p className="text-xs font-bold text-[#2E3D28] dark:text-zinc-100">Warehouses</p>
+              <p className="text-[10px] text-[#485942] dark:text-zinc-400">Manage locations & bins</p>
             </div>
           </div>
           <ArrowRight size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all" />
@@ -79,15 +79,15 @@ export default function InventorySettingsPage() {
 
         <Link
           to={`${prefix}/inventory/unit-of-measures`}
-          className="p-3.5 bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-xs transition-all flex items-center justify-between group"
+          className="p-3.5 bg-[#F7F7F0] dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-xs transition-all flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
               <Ruler size={16} />
             </div>
             <div>
-              <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Units of Measure</p>
-              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Manage UOM conversions</p>
+              <p className="text-xs font-bold text-[#2E3D28] dark:text-zinc-100">Units of Measure</p>
+              <p className="text-[10px] text-[#485942] dark:text-zinc-400">Manage UOM conversions</p>
             </div>
           </div>
           <ArrowRight size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all" />
@@ -95,15 +95,15 @@ export default function InventorySettingsPage() {
 
         <Link
           to={`${prefix}/inventory/product-categories`}
-          className="p-3.5 bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-xl hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-xs transition-all flex items-center justify-between group"
+          className="p-3.5 bg-[#F7F7F0] dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-xs transition-all flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 flex items-center justify-center">
               <Tags size={16} />
             </div>
             <div>
-              <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Categories</p>
-              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Product classifications</p>
+              <p className="text-xs font-bold text-[#2E3D28] dark:text-zinc-100">Categories</p>
+              <p className="text-[10px] text-[#485942] dark:text-zinc-400">Product classifications</p>
             </div>
           </div>
           <ArrowRight size={14} className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all" />
@@ -144,28 +144,28 @@ export default function InventorySettingsPage() {
           />
         </div>
 
-        <div className="border-t border-zinc-100 my-4 pt-4 space-y-4">
+        <div className="border-t border-[#D5D8CA] my-4 pt-4 space-y-4">
           <SettingsToggle
             label="Allow Negative Stock"
             description="Permit invoice fulfillment even when on-hand stock count is zero or negative."
             checked={allowNegativeStock}
             onChange={setAllowNegativeStock}
           />
-          <div className="border-t border-zinc-100 my-2"></div>
+          <div className="border-t border-[#D5D8CA] my-2"></div>
           <SettingsToggle
             label="Batch / Lot Tracking"
             description="Require batch numbers and manufacturing dates during stock receipt and delivery."
             checked={enableBatchTracking}
             onChange={setEnableBatchTracking}
           />
-          <div className="border-t border-zinc-100 my-2"></div>
+          <div className="border-t border-[#D5D8CA] my-2"></div>
           <SettingsToggle
             label="Serial Number Tracking"
             description="Enable unique serial numbering for high-value traceable items."
             checked={enableSerialTracking}
             onChange={setEnableSerialTracking}
           />
-          <div className="border-t border-zinc-100 my-2"></div>
+          <div className="border-t border-[#D5D8CA] my-2"></div>
           <SettingsToggle
             label="Low Stock Reorder Notifications"
             description="Send automated notifications to inventory managers when stock drops below minimum threshold."

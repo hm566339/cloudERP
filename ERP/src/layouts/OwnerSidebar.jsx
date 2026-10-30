@@ -191,7 +191,7 @@ export default function OwnerSidebar({
   const renderHeader = (collapsedMode = false) => {
     if (collapsedMode) {
       return (
-        <div className="h-[56px] flex items-center justify-center border-b border-zinc-100/50 dark:border-[#2A2F3D] px-2 shrink-0">
+        <div className="h-[56px] flex items-center justify-center border-b border-[var(--color-border)] px-2 shrink-0">
           <Tooltip content={`${orgName} (${orgCode || 'OWNER'})`}>
             <button
               type="button"
@@ -207,14 +207,14 @@ export default function OwnerSidebar({
     }
 
     return (
-      <div className="h-[56px] px-6 flex items-center gap-3 shrink-0 bg-transparent border-b border-zinc-100/50 dark:border-[#2A2F3D]">
+      <div className="h-[56px] px-6 flex items-center gap-3 shrink-0 bg-transparent border-b border-[#D5D8CA] dark:border-[#2A2F3D]">
         <div
           className="w-24 h-10 flex items-center justify-start transform transition-transform hover:scale-105 cursor-pointer"
           onClick={() => navigate('/owner/dashboard')}
         >
           <MarkLogo variant="auto" className="w-full h-full object-contain object-left" />
         </div>
-        <span className="ml-auto text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-2 py-0.5 rounded border border-zinc-200/50 dark:border-zinc-700/50 uppercase tracking-wider shrink-0">
+        <span className="ml-auto text-[10px] font-bold bg-[var(--color-surface-2)] text-[var(--color-text-primary)] px-2 py-0.5 rounded border border-[var(--color-border)] uppercase tracking-wider shrink-0">
           Owner
         </span>
 
@@ -243,9 +243,9 @@ export default function OwnerSidebar({
             <div key={group.id} className="space-y-0.5">
               {group.title && (
                 collapsedMode ? (
-                  <div className="h-px bg-zinc-200/60 dark:bg-[#2A2F3D] my-2 mx-1" aria-hidden="true" />
+                  <div className="h-px bg-[var(--color-border)] my-2 mx-1" aria-hidden="true" />
                 ) : (
-                  <div className="px-3 pt-2 pb-1 text-[10px] font-bold tracking-wider text-zinc-400 dark:text-[#6B7184] uppercase select-none">
+                  <div className="px-3 pt-2 pb-1 text-[10px] font-bold tracking-wider text-[var(--color-text-muted)] uppercase select-none">
                     {group.title}
                   </div>
                 )
@@ -383,7 +383,7 @@ export default function OwnerSidebar({
                         <span
                           className={`inline-flex items-center gap-1 text-[9px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
                             active
-                              ? 'bg-zinc-800 text-emerald-400 border border-zinc-700'
+                              ? 'bg-black/25 text-white/90 border border-white/20'
                               : (item.badgeColor || 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-[#34C38F]/15 dark:text-[#34C38F] dark:border-[#34C38F]/30')
                           }`}
                         >
@@ -421,13 +421,13 @@ export default function OwnerSidebar({
    */
   const renderFooter = (collapsedMode = false) => {
     return (
-      <div className="shrink-0 p-3 border-t border-zinc-100 bg-zinc-50/50 dark:border-[#2A2F3D] dark:bg-[#161922] backdrop-blur-sm">
+      <div className="shrink-0 p-3 border-t border-[var(--color-border)] bg-transparent dark:bg-[#161922] backdrop-blur-sm">
         {onToggleCollapse && (
           <button
             type="button"
             onClick={onToggleCollapse}
             aria-label={collapsedMode ? 'Expand sidebar' : 'Collapse sidebar'}
-            className={`w-full flex items-center rounded-xl text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 hover:bg-white border border-zinc-200/80 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:hover:bg-[#222736] dark:border-[#2A2F3D] shadow-xs transition-all duration-200 ${
+            className={`w-full flex items-center rounded-xl text-[11px] font-semibold text-[var(--color-sidebar-text)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-sidebar-hover-bg)] border border-[var(--color-border)] shadow-xs transition-all duration-200 ${
               collapsedMode ? 'justify-center p-2.5' : 'px-3 py-2 justify-between'
             }`}
           >
@@ -436,7 +436,7 @@ export default function OwnerSidebar({
               {!collapsedMode && <span>Collapse Sidebar</span>}
             </div>
             {!collapsedMode && (
-              <span className="text-[10px] font-mono text-zinc-400 bg-zinc-100 dark:text-[#6B7184] dark:bg-[#1D212C] dark:border-[#2A2F3D] px-1.5 py-0.5 rounded border border-zinc-200/50">
+              <span className="text-[10px] font-mono text-[var(--color-sidebar-text)] bg-[var(--color-bg-base)] px-1.5 py-0.5 rounded border border-[var(--color-border)]">
                 ⌘B
               </span>
             )}
@@ -450,7 +450,7 @@ export default function OwnerSidebar({
     <>
       {/* ── DESKTOP SIDEBAR (Fixed left) ── */}
       <aside
-        className={`hidden lg:flex flex-col bg-[var(--color-sidebar-bg)] border-r border-black/[0.06] dark:border-[#2A2F3D] fixed top-0 bottom-0 left-0 z-20 transition-[width] duration-large ease-move overscroll-contain ${
+        className={`hidden lg:flex flex-col bg-[var(--color-sidebar-bg)] border-r border-[var(--color-border)] fixed top-0 bottom-0 left-0 z-20 transition-[width] duration-large ease-move overscroll-contain ${
           isCollapsed ? 'w-[72px]' : 'w-[260px]'
         }`}
         style={{ height: '100vh' }}
@@ -472,11 +472,11 @@ export default function OwnerSidebar({
 
           {/* Off-canvas sidebar */}
           <aside
-            className="relative flex flex-col w-[280px] max-w-[85vw] bg-[var(--color-sidebar-bg)] h-full shadow-2xl border-r border-[var(--color-border)] dark:border-[#2A2F3D] z-50 animate-slide-in-right overscroll-contain"
+            className="relative flex flex-col w-[280px] max-w-[85vw] bg-[var(--color-sidebar-bg)] h-full shadow-2xl border-r border-[#D5D8CA] dark:border-[#2A2F3D] z-50 animate-slide-in-right overscroll-contain"
           >
             {renderHeader(false)}
             {renderNav(false)}
-            <div className="p-3 border-t border-zinc-100 bg-zinc-50/50 dark:border-[#2A2F3D] dark:bg-[#161922] shrink-0">
+            <div className="p-3 border-t border-[#D5D8CA] bg-transparent dark:border-[#2A2F3D] dark:bg-[#161922] shrink-0">
               <button
                 type="button"
                 onClick={onMobileClose}

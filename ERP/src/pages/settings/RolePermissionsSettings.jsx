@@ -365,7 +365,7 @@ export default function RolePermissionsSettings() {
   const selectedRoleData = roles.find(r => r.id === selectedRoleId);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] relative">
+    <div className="flex flex-col h-full bg-[#E8E9DF] dark:bg-[#0F1117] relative">
       <PageHeader
         title="Role & Permissions"
         description="Configure module access and actions for each organizational role"

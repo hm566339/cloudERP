@@ -13,12 +13,12 @@ function NavigationCard({ items = [] }) {
           <Link
             key={nav.id || idx}
             to={nav.path || '#'}
-            className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-sm transition-all group active:scale-[0.98] min-w-0"
+            className="flex items-center gap-3 p-3 rounded-xl bg-[var(--color-surface)] dark:bg-[#161922] border border-[var(--color-border)] dark:border-[#2A2F3D] hover:border-[var(--color-border-hover)] dark:hover:border-zinc-600 hover:bg-[var(--color-surface-2)] dark:hover:bg-[#1D212C] hover:shadow-xs transition-all group active:scale-[0.98] min-w-0"
           >
-            <div className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-[#1D212C] border border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-center text-zinc-500 dark:text-[#A0A6B5] group-hover:bg-zinc-100 dark:group-hover:bg-[#222736] group-hover:text-zinc-900 dark:group-hover:text-[#E6E8EE] group-hover:border-zinc-200 dark:group-hover:border-[#2A2F3D] transition-colors shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-2)] dark:bg-[#1D212C] border border-[var(--color-border)] dark:border-[#2A2F3D] flex items-center justify-center text-[var(--color-text-primary)] dark:text-[#A0A6B5] group-hover:bg-[var(--color-sidebar-hover-bg)] group-hover:text-[var(--color-text-primary)] group-hover:border-[var(--color-border-hover)] transition-colors shrink-0">
               <Icon size={16} />
             </div>
-            <span className="text-sm font-semibold text-zinc-700 dark:text-[#E6E8EE] group-hover:text-zinc-900 dark:group-hover:text-white line-clamp-2">
+            <span className="text-sm font-semibold text-[var(--color-text-primary)] dark:text-[#E6E8EE] group-hover:text-[var(--color-text-primary)] dark:group-hover:text-white line-clamp-2">
               {nav.title}
             </span>
           </Link>

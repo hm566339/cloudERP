@@ -100,7 +100,7 @@ export default function DataTableBody({
   return (
     <div className={`flex-1 overflow-auto min-h-0 min-w-0 custom-scrollbar ${tableClassName}`}>
       <table className="w-full text-left text-sm whitespace-nowrap" aria-label="Data table">
-        <thead className="bg-zinc-50 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] font-medium sticky top-0 z-20">
+        <thead className="bg-[var(--color-table-header)] dark:bg-[#161922] border-b border-[var(--color-border)] dark:border-[#2A2F3D] text-[var(--color-text-primary)] dark:text-[#A0A6B5] font-semibold sticky top-0 z-20">
           <tr>
             {/* Selection Checkbox Header */}
             {selectable && (
@@ -169,7 +169,7 @@ export default function DataTableBody({
 
             {/* Actions Header */}
             {hasRowActions && (
-              <th scope="col" className="p-4 text-right sticky right-0 bg-zinc-50 dark:bg-[#161922] z-30 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-[#A0A6B5] select-none">
+              <th scope="col" className="p-4 text-right sticky right-0 bg-[var(--color-table-header)] dark:bg-[#161922] z-30 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] text-xs font-semibold uppercase tracking-wider text-[var(--color-text-primary)] dark:text-[#A0A6B5] select-none">
                 Actions
               </th>
             )}

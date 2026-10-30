@@ -103,12 +103,12 @@ export default function OrganizationSettingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-zinc-200/80 dark:border-[#2A2F3D]">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="p-2 rounded-xl bg-zinc-900 dark:bg-primary text-white shadow-sm">
+            <span className="p-2 rounded-xl bg-[#2E3D28] dark:bg-primary text-white shadow-sm">
               <Building2 size={20} />
             </span>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-[#E6E8EE]">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#2E3D28] dark:text-[#E6E8EE]">
                   Organization Settings
                 </h1>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
@@ -119,7 +119,7 @@ export default function OrganizationSettingsPage() {
                   {accessMode} ACCESS
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-zinc-500 dark:text-[#A0A6B5] mt-1">
+              <p className="text-xs sm:text-sm text-[#485942] dark:text-[#A0A6B5] mt-1">
                 Manage organization-wide profiles, defaults, security policies, and workspace parameters.
               </p>
             </div>
@@ -129,15 +129,15 @@ export default function OrganizationSettingsPage() {
         <div className="flex items-center gap-3">
           <Link
             to="/owner/companies"
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-zinc-600 transition-all shadow-xs"
+            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-zinc-600 transition-all shadow-xs"
           >
-            <Building2 size={14} className="text-zinc-500 dark:text-[#A0A6B5]" />
+            <Building2 size={14} className="text-[#485942] dark:text-[#A0A6B5]" />
             Manage Companies ({companies.length})
           </Link>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-zinc-900 dark:bg-primary hover:bg-zinc-800 dark:hover:bg-primary-600 rounded-xl shadow-sm hover:shadow transition-all disabled:opacity-50 active:scale-[0.98]"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-[#2E3D28] dark:bg-primary hover:bg-[#3C4E34] active:bg-[#243320] dark:hover:bg-primary-600 rounded-xl shadow-sm hover:shadow transition-all disabled:opacity-50 active:scale-[0.98]"
           >
             {isSaving ? (
               <>
@@ -160,14 +160,14 @@ export default function OrganizationSettingsPage() {
       </div>
 
       {/* ── Organization Info Card ── */}
-      <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-xs p-6 space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
+      <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-xs p-6 space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-[#D5D8CA] dark:border-[#2A2F3D]">
           <div>
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-2">
-              <Building2 size={18} className="text-zinc-600 dark:text-[#A0A6B5]" />
+            <h2 className="text-base font-semibold text-[#2E3D28] dark:text-[#E6E8EE] flex items-center gap-2">
+              <Building2 size={18} className="text-[#485942] dark:text-[#A0A6B5]" />
               Organization Profile
             </h2>
-            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+            <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-0.5">
               Primary identification and registration details for this organization entity.
             </p>
           </div>
@@ -175,7 +175,7 @@ export default function OrganizationSettingsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1.5">
+            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
               Organization Name
             </label>
             <input
@@ -188,7 +188,7 @@ export default function OrganizationSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1.5">
+            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
               Organization Code
             </label>
             <div className="flex items-center gap-2">
@@ -196,9 +196,9 @@ export default function OrganizationSettingsPage() {
                 type="text"
                 value={orgCode}
                 readOnly
-                className="w-full px-3.5 py-2 text-sm bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-zinc-700 dark:text-[#E6E8EE] font-mono font-semibold cursor-not-allowed select-all"
+                className="w-full px-3.5 py-2 text-sm bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-[#2E3D28] dark:text-[#E6E8EE] font-mono font-semibold cursor-not-allowed select-all"
               />
-              <span className="text-[11px] font-medium text-zinc-500 dark:text-[#A0A6B5] whitespace-nowrap px-2 py-1 bg-zinc-100 dark:bg-[#222736] rounded-lg border border-zinc-200/60 dark:border-[#2A2F3D]">
+              <span className="text-[11px] font-medium text-[#485942] dark:text-[#A0A6B5] whitespace-nowrap px-2 py-1 bg-zinc-100 dark:bg-[#222736] rounded-lg border border-zinc-200/60 dark:border-[#2A2F3D]">
                 Immutable
               </span>
             </div>
@@ -208,7 +208,7 @@ export default function OrganizationSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1.5">
+            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
               Primary Organization Email
             </label>
             <div className="relative">
@@ -224,7 +224,7 @@ export default function OrganizationSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1.5">
+            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
               Organization UUID
             </label>
             <div className="flex items-center gap-2">
@@ -232,12 +232,12 @@ export default function OrganizationSettingsPage() {
                 type="text"
                 value={orgId}
                 readOnly
-                className="w-full px-3.5 py-2 text-xs bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-zinc-600 dark:text-[#A0A6B5] font-mono select-all truncate"
+                className="w-full px-3.5 py-2 text-xs bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-[#485942] dark:text-[#A0A6B5] font-mono select-all truncate"
               />
               <button
                 type="button"
                 onClick={handleCopyId}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-zinc-600 rounded-xl text-zinc-700 dark:text-[#E6E8EE] transition-all shadow-2xs whitespace-nowrap active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-zinc-600 rounded-xl text-[#2E3D28] dark:text-[#E6E8EE] transition-all shadow-2xs whitespace-nowrap active:scale-95"
               >
                 {copiedId ? (
                   <>
@@ -246,7 +246,7 @@ export default function OrganizationSettingsPage() {
                   </>
                 ) : (
                   <>
-                    <Copy size={13} className="text-zinc-500 dark:text-[#A0A6B5]" />
+                    <Copy size={13} className="text-[#485942] dark:text-[#A0A6B5]" />
                     Copy
                   </>
                 )}
@@ -257,14 +257,14 @@ export default function OrganizationSettingsPage() {
       </div>
 
       {/* ── Organization Sign-in & Domain URL ── */}
-      <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-xs p-6 space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-[#2A2F3D]">
+      <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-xs p-6 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-[#D5D8CA] dark:border-[#2A2F3D]">
           <div>
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-2">
-              <Globe size={18} className="text-zinc-600 dark:text-[#A0A6B5]" />
+            <h2 className="text-base font-semibold text-[#2E3D28] dark:text-[#E6E8EE] flex items-center gap-2">
+              <Globe size={18} className="text-[#485942] dark:text-[#A0A6B5]" />
               Dedicated Organization Login Portal
             </h2>
-            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+            <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-0.5">
               Share this dedicated URL with team members to sign in directly to your organization workspace.
             </p>
           </div>
@@ -278,7 +278,7 @@ export default function OrganizationSettingsPage() {
             <button
               type="button"
               onClick={handleCopyLoginUrl}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg text-zinc-700 dark:text-[#E6E8EE] transition-all shadow-2xs active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg text-[#2E3D28] dark:text-[#E6E8EE] transition-all shadow-2xs active:scale-95"
             >
               {copiedUrl ? (
                 <>
@@ -287,7 +287,7 @@ export default function OrganizationSettingsPage() {
                 </>
               ) : (
                 <>
-                  <Copy size={13} className="text-zinc-500 dark:text-[#A0A6B5]" />
+                  <Copy size={13} className="text-[#485942] dark:text-[#A0A6B5]" />
                   Copy Link
                 </>
               )}
@@ -296,9 +296,9 @@ export default function OrganizationSettingsPage() {
               href={loginUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg text-zinc-700 dark:text-[#E6E8EE] transition-all shadow-2xs"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg text-[#2E3D28] dark:text-[#E6E8EE] transition-all shadow-2xs"
             >
-              <ExternalLink size={13} className="text-zinc-500 dark:text-[#A0A6B5]" />
+              <ExternalLink size={13} className="text-[#485942] dark:text-[#A0A6B5]" />
               Preview
             </a>
           </div>
@@ -306,14 +306,14 @@ export default function OrganizationSettingsPage() {
       </div>
 
       {/* ── Regional & Fiscal Defaults ── */}
-      <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-xs p-6 space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
+      <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-xs p-6 space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-[#D5D8CA] dark:border-[#2A2F3D]">
           <div>
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-2">
-              <SlidersHorizontal size={18} className="text-zinc-600 dark:text-[#A0A6B5]" />
+            <h2 className="text-base font-semibold text-[#2E3D28] dark:text-[#E6E8EE] flex items-center gap-2">
+              <SlidersHorizontal size={18} className="text-[#485942] dark:text-[#A0A6B5]" />
               Regional & Fiscal Defaults
             </h2>
-            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+            <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-0.5">
               Default formatting and calendar preferences inherited by new companies and branches.
             </p>
           </div>
@@ -321,7 +321,7 @@ export default function OrganizationSettingsPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1.5">
+            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
               Default Operating Currency
             </label>
             <select
@@ -338,7 +338,7 @@ export default function OrganizationSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1.5">
+            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
               Organization Timezone
             </label>
             <select
@@ -355,7 +355,7 @@ export default function OrganizationSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1.5">
+            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
               Fiscal Year Start Month
             </label>
             <select
@@ -371,7 +371,7 @@ export default function OrganizationSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1.5">
+            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
               Date Format
             </label>
             <select
@@ -386,7 +386,7 @@ export default function OrganizationSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] mb-1.5">
+            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
               Time Format
             </label>
             <select
@@ -402,14 +402,14 @@ export default function OrganizationSettingsPage() {
       </div>
 
       {/* ── Security & Authentication Policies ── */}
-      <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-xs p-6 space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-[#2A2F3D]">
+      <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-xs p-6 space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-[#D5D8CA] dark:border-[#2A2F3D]">
           <div>
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-2">
-              <ShieldCheck size={18} className="text-zinc-600 dark:text-[#A0A6B5]" />
+            <h2 className="text-base font-semibold text-[#2E3D28] dark:text-[#E6E8EE] flex items-center gap-2">
+              <ShieldCheck size={18} className="text-[#485942] dark:text-[#A0A6B5]" />
               Organization Security & Compliance
             </h2>
-            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+            <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-0.5">
               Enforce security baselines across all company workspaces in this organization.
             </p>
           </div>
@@ -418,10 +418,10 @@ export default function OrganizationSettingsPage() {
         <div className="space-y-4">
           <div className="flex items-start justify-between gap-4 p-4 rounded-xl bg-zinc-50/70 dark:bg-[#1D212C]/60 border border-zinc-200/70 dark:border-[#2A2F3D]">
             <div>
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE]">
+              <h3 className="text-sm font-semibold text-[#2E3D28] dark:text-[#E6E8EE]">
                 Enforce Multi-Factor Authentication (2FA)
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+              <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-0.5">
                 Require all organization members and company users to set up two-factor verification.
               </p>
             </div>
@@ -438,10 +438,10 @@ export default function OrganizationSettingsPage() {
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-zinc-50/70 dark:bg-[#1D212C]/60 border border-zinc-200/70 dark:border-[#2A2F3D]">
             <div>
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE]">
+              <h3 className="text-sm font-semibold text-[#2E3D28] dark:text-[#E6E8EE]">
                 Automatic Inactivity Session Timeout
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+              <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-0.5">
                 Automatically sign out idle users after a specified duration of inactivity.
               </p>
             </div>
@@ -462,26 +462,26 @@ export default function OrganizationSettingsPage() {
 
       {/* ── Organization Modules & Subscription Overview ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-xs p-6 flex flex-col justify-between">
+        <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-xs p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-2">
-                <CreditCard size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+              <h3 className="text-sm font-semibold text-[#2E3D28] dark:text-[#E6E8EE] flex items-center gap-2">
+                <CreditCard size={16} className="text-[#485942] dark:text-[#A0A6B5]" />
                 Subscription Plan
               </h3>
               <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                 {subscription?.planCode || 'Standard Plan'}
               </span>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mb-4">
+            <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mb-4">
               Your organization plan governs multi-company provisioning, storage limits, and module access.
             </p>
-            <div className="space-y-2 text-xs text-zinc-600 dark:text-[#A0A6B5]">
-              <div className="flex items-center justify-between py-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
+            <div className="space-y-2 text-xs text-[#485942] dark:text-[#A0A6B5]">
+              <div className="flex items-center justify-between py-1 border-b border-[#D5D8CA] dark:border-[#2A2F3D]">
                 <span>Active Companies</span>
                 <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{companies.length}</span>
               </div>
-              <div className="flex items-center justify-between py-1 border-b border-zinc-100 dark:border-[#2A2F3D]">
+              <div className="flex items-center justify-between py-1 border-b border-[#D5D8CA] dark:border-[#2A2F3D]">
                 <span>Status</span>
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400 capitalize">
                   {subscription?.trialing ? 'Trial Period' : 'Active'}
@@ -498,18 +498,18 @@ export default function OrganizationSettingsPage() {
           </Link>
         </div>
 
-        <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-xs p-6 flex flex-col justify-between">
+        <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-xs p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE] flex items-center gap-2">
-                <Sparkles size={16} className="text-zinc-600 dark:text-[#A0A6B5]" />
+              <h3 className="text-sm font-semibold text-[#2E3D28] dark:text-[#E6E8EE] flex items-center gap-2">
+                <Sparkles size={16} className="text-[#485942] dark:text-[#A0A6B5]" />
                 Entitled Modules
               </h3>
               <span className="text-xs font-bold text-zinc-700 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1D212C] px-2.5 py-0.5 rounded-full border border-zinc-200/60 dark:border-[#2A2F3D]">
                 {modules.length > 0 ? `${modules.length} Enabled` : 'All Standard'}
               </span>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mb-4">
+            <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mb-4">
               Business applications activated for your organization's companies.
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -517,7 +517,7 @@ export default function OrganizationSettingsPage() {
                 (m) => (
                   <span
                     key={m}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-zinc-50 dark:bg-[#1D212C] text-zinc-700 dark:text-[#E6E8EE] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-zinc-50 dark:bg-[#1D212C] text-[#2E3D28] dark:text-[#E6E8EE] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg"
                   >
                     <CheckCircle2 size={12} className="text-emerald-500" />
                     {m}

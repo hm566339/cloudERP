@@ -166,26 +166,26 @@ export function SettingsNavbar({
   return (
     <nav
       aria-label="Settings Navigation"
-      className={`w-full bg-white dark:bg-[#161922] border border-zinc-200/80 dark:border-[#2A2F3D] rounded-2xl shadow-xs transition-all overflow-hidden ${className}`}
+      className={`w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xs transition-all overflow-hidden ${className}`}
     >
       {/* ── Top Bar: Group Switcher & Active Section Summary ── */}
       {showGroupSwitcher && (
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/50">
-          <div className="flex items-center gap-1.5 p-1 bg-zinc-200/60 dark:bg-[#161922] rounded-xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-surface-2)]/60">
+          <div className="flex items-center gap-1.5 p-1 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)]">
             <button
               type="button"
               onClick={() => setSelectedGroup('general')}
               className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 selectedGroup === 'general'
-                  ? 'bg-white dark:bg-[#1D212C] text-blue-600 dark:text-[#4C8DFF] shadow-2xs'
-                  : 'text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#222736]'
+                  ? 'bg-[var(--color-primary)] text-white shadow-2xs'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-sidebar-hover-bg)]/50'
               }`}
             >
-              <Sliders size={13} className={selectedGroup === 'general' ? 'text-blue-600 dark:text-[#4C8DFF]' : 'text-zinc-500 dark:text-[#A0A6B5]'} />
+              <Sliders size={13} className={selectedGroup === 'general' ? 'text-white' : 'text-[var(--color-text-secondary)]'} />
               <span>General Settings</span>
               <span
                 className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  selectedGroup === 'general' ? 'bg-blue-50 dark:bg-[#161922] text-blue-700 dark:text-[#4C8DFF]' : 'bg-zinc-200 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5]'
+                  selectedGroup === 'general' ? 'bg-[var(--color-primary-hover)] text-white' : 'bg-[var(--color-surface-2)] text-[var(--color-text-secondary)]'
                 }`}
               >
                 {generalItems.length}
@@ -197,15 +197,15 @@ export function SettingsNavbar({
               onClick={() => setSelectedGroup('module')}
               className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 selectedGroup === 'module'
-                  ? 'bg-white dark:bg-[#1D212C] text-blue-600 dark:text-[#4C8DFF] shadow-2xs'
-                  : 'text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#222736]'
+                  ? 'bg-[var(--color-primary)] text-white shadow-2xs'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-sidebar-hover-bg)]/50'
               }`}
             >
-              <Layers size={13} className={selectedGroup === 'module' ? 'text-blue-600 dark:text-[#4C8DFF]' : 'text-zinc-500 dark:text-[#A0A6B5]'} />
+              <Layers size={13} className={selectedGroup === 'module' ? 'text-white' : 'text-[var(--color-text-secondary)]'} />
               <span>Module Settings</span>
               <span
                 className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  selectedGroup === 'module' ? 'bg-blue-50 dark:bg-[#161922] text-blue-700 dark:text-[#4C8DFF]' : 'bg-zinc-200 dark:bg-[#222736] text-zinc-600 dark:text-[#A0A6B5]'
+                  selectedGroup === 'module' ? 'bg-[var(--color-primary-hover)] text-white' : 'bg-[var(--color-surface-2)] text-[var(--color-text-secondary)]'
                 }`}
               >
                 {moduleItems.length}
@@ -217,8 +217,8 @@ export function SettingsNavbar({
               onClick={() => setSelectedGroup('all')}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
                 selectedGroup === 'all'
-                  ? 'bg-white dark:bg-[#1D212C] text-blue-600 dark:text-[#4C8DFF] shadow-2xs font-semibold'
-                  : 'text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-200/50 dark:hover:bg-[#222736]'
+                  ? 'bg-[#2E3D28] text-white dark:bg-[#1D212C] dark:text-[#4C8DFF] shadow-2xs font-semibold'
+                  : 'text-[#485942] dark:text-[#A0A6B5] hover:text-[#2E3D28] dark:hover:text-[#E6E8EE] hover:bg-[#DCE2CF]/50 dark:hover:bg-[#222736]'
               }`}
             >
               <span>All</span>
@@ -228,7 +228,7 @@ export function SettingsNavbar({
           {/* Active section summary indicator */}
           <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-[#A0A6B5]">
             <span className="font-medium">Active:</span>
-            <span className="font-semibold text-blue-600 dark:text-[#4C8DFF] bg-blue-50 dark:bg-[#1D212C] px-2.5 py-0.5 rounded-md border border-blue-200 dark:border-[#2A2F3D] shadow-2xs">
+            <span className="font-semibold text-[var(--color-text-primary)] bg-[var(--color-surface-2)] px-2.5 py-0.5 rounded-md border border-[var(--color-border)] shadow-2xs">
               {activeItem?.label || 'General Settings'}
             </span>
           </div>
@@ -243,7 +243,7 @@ export function SettingsNavbar({
             type="button"
             onClick={() => scroll('left')}
             aria-label="Scroll settings tabs left"
-            className="shrink-0 p-1.5 rounded-lg bg-white dark:bg-[#1D212C] border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all cursor-pointer"
+            className="shrink-0 p-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] shadow-2xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] transition-all cursor-pointer"
           >
             <ChevronLeft size={15} />
           </button>
@@ -276,17 +276,17 @@ export function SettingsNavbar({
                 title={item.description}
                 onKeyDown={(e) => handleKeyDown(e, item.fullPath, index, displayedItems)}
                 onClick={() => onTabChange && onTabChange(item.id)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-[#4C8DFF] shrink-0 ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] shrink-0 ${
                   isItemActive
-                    ? 'bg-blue-600 text-white dark:bg-[#4C8DFF] dark:text-white shadow-xs border border-blue-600 dark:border-[#4C8DFF]'
-                    : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/80 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] dark:hover:bg-[#222736] border border-transparent'
+                    ? 'bg-[var(--color-primary)] text-white shadow-xs border border-[var(--color-primary)]'
+                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-sidebar-hover-bg)]/60 border border-transparent'
                 }`}
               >
                 {Icon && (
                   <Icon
                     size={15}
                     className={`shrink-0 transition-colors ${
-                      isItemActive ? 'text-white' : 'text-zinc-500 dark:text-[#A0A6B5]'
+                      isItemActive ? 'text-white' : 'text-[var(--color-text-secondary)]'
                     }`}
                   />
                 )}
@@ -294,7 +294,7 @@ export function SettingsNavbar({
                 {item.category === 'module' && (
                   <span
                     className={`text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-mono ${
-                      isItemActive ? 'bg-blue-700 text-white dark:bg-white/20 dark:text-white' : 'bg-zinc-100 text-zinc-500 dark:bg-[#1D212C] dark:text-[#A0A6B5]'
+                      isItemActive ? 'bg-[var(--color-primary-hover)] text-white' : 'bg-[var(--color-surface-2)] text-[var(--color-text-secondary)]'
                     }`}
                   >
                     Module
@@ -311,7 +311,7 @@ export function SettingsNavbar({
             type="button"
             onClick={() => scroll('right')}
             aria-label="Scroll settings tabs right"
-            className="shrink-0 p-1.5 rounded-lg bg-white dark:bg-[#1D212C] border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs text-zinc-600 dark:text-[#A0A6B5] hover:text-zinc-900 dark:hover:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] transition-all cursor-pointer"
+            className="shrink-0 p-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] shadow-2xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] transition-all cursor-pointer"
           >
             <ChevronRight size={15} />
           </button>

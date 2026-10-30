@@ -123,21 +123,21 @@ export function SettingsSidebar({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`fixed top-0 right-0 bottom-0 z-50 flex flex-col bg-white dark:bg-zinc-900 rounded-l-2xl sm:rounded-l-3xl shadow-[-12px_0_35px_-8px_rgba(0,0,0,0.12)] border-l border-zinc-200/80 dark:border-zinc-800 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] w-[320px] max-w-[calc(100vw-24px)] ${
+        className={`fixed top-0 right-0 bottom-0 z-50 flex flex-col bg-[var(--color-surface)] rounded-l-2xl sm:rounded-l-3xl shadow-[-12px_0_35px_-8px_rgba(0,0,0,0.12)] border-l border-[var(--color-border)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] w-[320px] max-w-[calc(100vw-24px)] ${
           isOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
         } ${className}`}
       >
         {/* ── Drawer Header ── */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D]/90 dark:border-zinc-800 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)] shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 shadow-2xs">
+            <div className="w-8 h-8 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-primary)] shadow-2xs">
               <SettingsIcon size={16} className="transition-transform duration-500 hover:rotate-45 text-zinc-700 dark:text-zinc-300" />
             </div>
             <div>
-              <h2 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight leading-none">
+              <h2 className="text-[15px] font-bold text-[var(--color-text-primary)] tracking-tight leading-none">
                 {title}
               </h2>
-              <p className="text-[10.5px] font-medium text-zinc-400 dark:text-zinc-500 mt-0.5 leading-tight">
+              <p className="text-[10.5px] font-medium text-[var(--color-text-secondary)] mt-0.5 leading-tight">
                 System preferences & controls
               </p>
             </div>
@@ -147,18 +147,18 @@ export function SettingsSidebar({
             type="button"
             onClick={onClose}
             aria-label="Close settings"
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100/80 dark:hover:bg-zinc-800 active:bg-zinc-200/70 dark:active:bg-zinc-750 transition-all shadow-2xs border border-transparent hover:border-zinc-200/60 dark:hover:border-zinc-700"
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] transition-all shadow-2xs border border-transparent hover:border-[var(--color-border)]"
           >
             <X size={16} strokeWidth={2.2} />
           </button>
         </div>
 
         {/* ── Search Input ── */}
-        <div className="px-4 py-3 border-b border-zinc-100 dark:border-[#2A2F3D]/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-850/50 shrink-0">
+        <div className="px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-2)]/60 shrink-0">
           <div className="relative flex items-center">
             <Search
               size={15}
-              className="absolute left-3 text-zinc-400 dark:text-zinc-500 pointer-events-none"
+              className="absolute left-3 text-[var(--color-text-muted)] pointer-events-none"
             />
             <input
               ref={searchInputRef}
@@ -167,7 +167,7 @@ export function SettingsSidebar({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search settings..."
               aria-label="Search settings"
-              className="w-full pl-9 pr-8 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-medium text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 outline-none transition-all shadow-2xs focus:border-zinc-900 dark:focus:border-zinc-400 focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-zinc-400/10"
+              className="w-full pl-9 pr-8 py-2 bg-white dark:bg-zinc-800 border border-[var(--color-border)] rounded-xl text-xs font-medium text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] outline-none transition-all shadow-2xs focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/15 dark:focus:ring-zinc-400/10"
             />
             {searchQuery && (
               <button
@@ -206,8 +206,8 @@ export function SettingsSidebar({
                   onClick={() => handleItemClick(item)}
                   className={`w-full group text-left flex items-center justify-between p-2.5 rounded-xl transition-all duration-150 border ${
                     isActive
-                      ? 'bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-100 dark:border-zinc-100 dark:text-zinc-900 shadow-xs'
-                      : 'bg-white hover:bg-zinc-50/90 border-transparent hover:border-zinc-200/60 text-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800/90 dark:hover:border-zinc-700/60 dark:text-zinc-200 shadow-none'
+                      ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-xs'
+                      : 'bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] border-transparent hover:border-[var(--color-border)] text-[var(--color-text-secondary)] shadow-none'
                   }`}
                   aria-current={isActive ? 'true' : undefined}
                 >
@@ -216,8 +216,8 @@ export function SettingsSidebar({
                     <div
                       className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all duration-150 ${
                         isActive
-                          ? 'bg-zinc-800 text-white border border-zinc-700/60 dark:bg-zinc-200 dark:text-zinc-900 dark:border-zinc-300 shadow-xs'
-                          : 'bg-zinc-100 text-zinc-600 group-hover:bg-zinc-200/80 group-hover:text-zinc-900 dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-100'
+                          ? 'bg-[var(--color-primary-hover)] text-white border border-[var(--color-primary-active)] shadow-xs'
+                          : 'bg-[var(--color-surface-2)] text-[var(--color-text-primary)] border border-[var(--color-border)] group-hover:bg-[var(--color-sidebar-hover-bg)]'
                       }`}
                     >
                       {IconComponent && (
@@ -231,8 +231,8 @@ export function SettingsSidebar({
                         <span
                           className={`text-xs tracking-tight truncate ${
                             isActive
-                              ? 'text-white dark:text-zinc-900 font-bold'
-                              : 'text-zinc-800 group-hover:text-zinc-950 dark:text-zinc-200 dark:group-hover:text-white font-semibold'
+                              ? 'text-white font-bold'
+                              : 'text-[var(--color-text-primary)] group-hover:text-[var(--color-text-primary)] font-semibold'
                           }`}
                         >
                           {item.title}
@@ -252,8 +252,8 @@ export function SettingsSidebar({
                       <p
                         className={`text-[11px] leading-tight truncate mt-0.5 ${
                           isActive
-                            ? 'text-zinc-300 dark:text-zinc-700 font-normal'
-                            : 'text-zinc-500 group-hover:text-zinc-600 dark:text-zinc-400 dark:group-hover:text-zinc-300'
+                            ? 'text-white/85 font-normal'
+                            : 'text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]'
                         }`}
                       >
                         {item.description}
@@ -266,8 +266,8 @@ export function SettingsSidebar({
                     size={14}
                     className={`shrink-0 transition-transform duration-150 ${
                       isActive
-                        ? 'text-zinc-400 dark:text-zinc-600 translate-x-0.5'
-                        : 'text-zinc-300 group-hover:text-zinc-600 dark:text-zinc-600 dark:group-hover:text-zinc-300 group-hover:translate-x-0.5'
+                        ? 'text-white/80 dark:text-zinc-600 translate-x-0.5'
+                        : 'text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] group-hover:translate-x-0.5'
                     }`}
                   />
                 </button>
@@ -277,7 +277,7 @@ export function SettingsSidebar({
         </div>
 
         {/* ── Drawer Footer ── */}
-        <div className="p-3.5 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-850/70 shrink-0">
+        <div className="p-3.5 border-t border-[var(--color-border)] bg-[var(--color-surface-2)]/60 shrink-0">
           <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 px-1">
             <div className="flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500">
               <Sparkles size={13} className="text-zinc-400 dark:text-zinc-500" />

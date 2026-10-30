@@ -303,7 +303,7 @@ export default function CompanyLayout() {
 
       {/* Company context footer */}
       {selectedCompany && !isSuperAdminGlobal && (
-        <div className="shrink-0 px-3 py-3 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#161922] backdrop-blur-sm">
+        <div className="shrink-0 px-3 py-3 border-t border-[var(--color-border)] dark:border-[#2A2F3D] bg-[var(--color-surface-2)]/50 dark:bg-[#161922] backdrop-blur-sm">
           <div className="relative" ref={workspaceRef}>
             <WorkspaceCard onClick={() => { setSwitchTenantPopupOpen(false); setWorkspacePopupOpen(prev => !prev); }} isOpen={workspacePopupOpen} />
             <CompanyDetailsPopup open={workspacePopupOpen} />
@@ -317,7 +317,7 @@ export default function CompanyLayout() {
               <button
                 type="button"
                 onClick={() => { setWorkspacePopupOpen(false); setSwitchTenantPopupOpen(prev => !prev); }}
-                className="w-full flex items-center justify-center gap-2 text-[9.6px] font-semibold py-2 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154] text-zinc-600 dark:text-[#E6E8EE] transition-all duration-200 shadow-sm active:scale-[0.98] cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 text-[9.6px] font-semibold py-2 rounded-xl border border-[var(--color-border)] dark:border-[#2A2F3D] bg-[var(--color-surface)] dark:bg-[#1D212C] hover:bg-[var(--color-surface-2)] dark:hover:bg-[#222736] text-[var(--color-text-primary)] dark:text-[#E6E8EE] transition-all duration-200 shadow-sm active:scale-[0.98] cursor-pointer"
               >
                 <ArrowLeftRight size={14} />
                 Switch Tenant
@@ -388,7 +388,7 @@ export default function CompanyLayout() {
         <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden">
 
           {/* Top Header */}
-          <header className="h-[56px] flex-none bg-white/80 dark:bg-[#161922]/90 backdrop-blur-md border-b border-zinc-200/80 dark:border-[#2A2F3D] flex items-center justify-between px-3 sm:px-6 sticky top-0 z-50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]">
+          <header className="h-[56px] flex-none bg-[var(--color-surface)] dark:bg-[#161922]/90 backdrop-blur-md border-b border-[var(--color-border)] dark:border-[#2A2F3D] flex items-center justify-between px-3 sm:px-6 sticky top-0 z-50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]">
             <div className="flex items-center gap-4">
               <button
                 onClick={handleToggleSidebar}
@@ -402,7 +402,7 @@ export default function CompanyLayout() {
               <nav className="hidden sm:flex items-center gap-2 text-[10.4px] text-zinc-500 dark:text-[#A0A6B5] font-medium">
                 <Link
                   to={isSuperAdminGlobal ? '/super-admin/dashboard' : (selectedCompany ? buildPath('dashboard') : '/super-admin/dashboard')}
-                  className="hover:text-primary transition-colors flex items-center gap-1.5 bg-zinc-50 dark:bg-[#1D212C] px-2.5 py-1 rounded-md border border-zinc-200/60 dark:border-[#2A2F3D] shadow-sm"
+                  className="hover:text-primary transition-colors flex items-center gap-1.5 bg-[var(--color-surface-2)] dark:bg-[#1D212C] px-2.5 py-1 rounded-md border border-[var(--color-border)] dark:border-[#2A2F3D] text-[var(--color-text-primary)] dark:text-[#E6E8EE] shadow-2xs"
                 >
                   <LayoutDashboard size={14} className="text-zinc-400 dark:text-[#6B7184]" />
                   {isSuperAdminGlobal ? (
@@ -421,7 +421,7 @@ export default function CompanyLayout() {
                   <React.Fragment key={bc.url}>
                     <ChevronRight size={14} className="text-zinc-300 dark:text-zinc-600" />
                     {idx === breadcrumbs.length - 1 ? (
-                      <span className="text-zinc-900 dark:text-[#E6E8EE] font-bold bg-zinc-100/50 dark:bg-[#1D212C] px-2 py-1 rounded-md">{bc.label}</span>
+                      <span className="text-[var(--color-text-primary)] dark:text-[#E6E8EE] font-bold bg-[var(--color-surface-2)] dark:bg-[#1D212C] border border-[var(--color-border)] px-2 py-1 rounded-md">{bc.label}</span>
                     ) : (
                       <Link to={bc.url} className="hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-zinc-50 dark:hover:bg-[#222736] dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE]">
                         {bc.label}
@@ -513,7 +513,7 @@ export default function CompanyLayout() {
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-xl transition-all duration-200 border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D] hover:shadow-sm group"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-700 text-white font-bold flex items-center justify-center text-[10.4px] shadow-sm group-hover:shadow transition-all">
+                  <div className="w-8 h-8 rounded-xl bg-[var(--color-primary)] text-white font-bold flex items-center justify-center text-[10.4px] shadow-sm group-hover:shadow transition-all">
                     {effectiveUser?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
                   <div className="hidden md:block text-left">
@@ -526,7 +526,7 @@ export default function CompanyLayout() {
                 {profileOpen && (
                   <>
                     <div className="fixed inset-0 z-30" onClick={() => setProfileOpen(false)} />
-                    <div className="absolute right-0 top-[110%] w-72 bg-white/90 dark:bg-[#1D212C] backdrop-blur-xl border border-zinc-200/80 dark:border-[#2A2F3D] rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] py-2 z-40 animate-slide-up origin-top-right">
+                    <div className="absolute right-0 top-[110%] w-72 bg-[var(--color-surface)] dark:bg-[#1D212C] backdrop-blur-xl border border-[var(--color-border)] dark:border-[#2A2F3D] rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] py-2 z-40 animate-slide-up origin-top-right">
                       <div className="px-4 py-3.5 border-b border-zinc-100/80 dark:border-[#2A2F3D] mb-2 bg-zinc-50/50 dark:bg-[#161922] mx-2 rounded-xl space-y-1">
                         <p className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] truncate">{effectiveUser?.name || effectiveUser?.fullName || effectiveUser?.username || 'User'}</p>
                         <p className="text-[8.8px] font-semibold text-zinc-500 dark:text-[#A0A6B5] capitalize truncate">{userRole.replace(/_/g, ' ')}</p>

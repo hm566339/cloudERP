@@ -64,6 +64,14 @@ export const SETTINGS_MENU_ITEMS = [
     route: '/settings/preferences',
     category: 'Preferences',
   },
+  {
+    id: 'appearance_themes',
+    title: 'Appearance & Themes',
+    description: 'Theme studio, color palettes & display',
+    icon: Palette,
+    route: '/settings/appearance',
+    category: 'Preferences',
+  },
 ];
 
 export default SETTINGS_MENU_ITEMS;

@@ -11,7 +11,8 @@ import {
   Boxes,
   Workflow,
   Target,
-  Lock
+  Lock,
+  Palette
 } from 'lucide-react';
 import { normalizeModuleKey } from '../../utils/moduleAccess.js';
 
@@ -88,6 +89,16 @@ export const GENERAL_SETTINGS_NAV_ITEMS = [
     aliases: ['/settings/preferences', '/settings/localization'],
     icon: Globe,
     description: 'Currency, timezone, date formats, and language display',
+    category: 'general',
+  },
+  {
+    id: 'appearance_themes',
+    label: 'Appearance & Themes',
+    shortLabel: 'Appearance',
+    path: '/settings/appearance',
+    aliases: ['/settings/appearance', '/settings/themes', '/settings/appearance-themes'],
+    icon: Palette,
+    description: 'Theme studio, color palettes, appearance mode, typography, and layout customization',
     category: 'general',
   },
   {

@@ -30,7 +30,7 @@ export default function SecuritySettings() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] relative">
+    <div className="flex flex-col h-full bg-[#E8E9DF] dark:bg-[#0F1117] relative">
       <div className="flex-1 overflow-y-auto">
         <SettingsLayout activeTab="security">
           <SettingsPageHeader
@@ -45,7 +45,7 @@ export default function SecuritySettings() {
           checked={mfaEnabled}
           onChange={setMfaEnabled}
         />
-        <div className="border-t border-zinc-100 my-4"></div>
+        <div className="border-t border-[#D5D8CA] my-4"></div>
         <SettingsSelect
           id="session-timeout"
           label="Session Timeout"
@@ -67,7 +67,7 @@ export default function SecuritySettings() {
           checked={enforcePasswordPolicy}
           onChange={setEnforcePasswordPolicy}
         />
-        <div className="border-t border-zinc-100 my-4"></div>
+        <div className="border-t border-[#D5D8CA] my-4"></div>
         <SettingsSelect
           id="password-expiration"
           label="Password Expiration"
@@ -82,7 +82,7 @@ export default function SecuritySettings() {
 
       <SettingsCard title="Feature Management" description="Manage system features, action-level permissions and access controls.">
         <div className="flex items-center justify-between">
-          <div className="text-sm text-zinc-600">
+          <div className="text-sm text-[#485942]">
             Configure read, write, and delete permissions for application features.
           </div>
           <button
@@ -96,7 +96,7 @@ export default function SecuritySettings() {
 
       <SettingsCard title="Role & Permissions" description="Configure action-level permissions and access matrices for system roles.">
         <div className="flex items-center justify-between">
-          <div className="text-sm text-zinc-600">
+          <div className="text-sm text-[#485942]">
             Define role capabilities using granular READ, WRITE, and DELETE permissions.
           </div>
           <button
@@ -110,7 +110,7 @@ export default function SecuritySettings() {
 
       <SettingsCard title="User Permissions" description="Manage direct permission grants, overrides, and view effective user access.">
         <div className="flex items-center justify-between">
-          <div className="text-sm text-zinc-600">
+          <div className="text-sm text-[#485942]">
             Grant or revoke specific actions directly for individual users.
           </div>
           <button

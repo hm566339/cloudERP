@@ -2,6 +2,11 @@ import React, { useEffect } from 'react';
 import { useAppSelector } from '../../app/hooks';
 import { selectIsAuthenticated } from '../../features/auth/authSlice';
 import {
+  applyLandingSageTheme,
+  applyAppearance,
+  loadSavedAppearance,
+} from '../../features/theme/themePresets';
+import {
   LandingNavbar,
   LandingHero,
   LandingDemoPreview,
@@ -16,11 +21,26 @@ import {
 
 /**
  * Component-based Mark2 ERP Enterprise Landing Page
- * Designed according to Mark2 ERP theme (Dark slate/zinc surfaces, emerald accents, Inter & JetBrains Mono typography)
- * Showcases all project capabilities: Finance, Sales, Procurement, Inventory, GST, Workflows, Multi-Company Isolation
+ * Permanently locked to the approved Sage Nature brand identity:
+ * - 60% Dominant Canvas: #E8E9DF
+ * - 30% Secondary Surfaces & Accents: #A9B887
+ * - 10% Primary Forest Green Action & Headings: #2E3D28
+ *
+ * Fully separated from the ERP application Theme Studio and Dark Mode settings.
  */
 export default function LandingPage() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+
+  // Permanently enforce Sage Nature palette on public website & restore ERP theme on exit
+  useEffect(() => {
+    applyLandingSageTheme();
+
+    return () => {
+      // Re-apply the user's ERP theme when navigating away from the public Landing Page
+      const savedSettings = loadSavedAppearance();
+      applyAppearance(savedSettings);
+    };
+  }, []);
 
   // Set document title & meta tags for SEO
   useEffect(() => {
@@ -35,7 +55,15 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0F1117] font-sans text-zinc-900 dark:text-[#E6E8EE] selection:bg-emerald-500/20 selection:text-zinc-900 overflow-x-hidden">
+    <div
+      className="landing-page-root min-h-screen bg-[#E8E9DF] font-sans text-[#2E3D28] selection:bg-[#A9B887]/30 selection:text-[#2E3D28] overflow-x-hidden"
+      data-landing-page="true"
+      style={{
+        backgroundColor: '#E8E9DF',
+        color: '#2E3D28',
+        colorScheme: 'light',
+      }}
+    >
       {/* 1. Navigation Header with Announcement & Smooth-scroll Nav links */}
       <LandingNavbar isAuthenticated={isAuthenticated} />
 

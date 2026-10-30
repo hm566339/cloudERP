@@ -43,9 +43,9 @@ function DataTableRow({
     <>
       <tr
         onClick={hasClickAction ? handleRowClick : undefined}
-        className={`border-b border-zinc-100 dark:border-[#2A2F3D]/60 transition-colors duration-micro ease-enter ${
+        className={`border-b border-[var(--color-border)] dark:border-[#2A2F3D]/60 transition-colors duration-micro ease-enter ${
           hasClickAction ? 'cursor-pointer' : ''
-        } ${isSelected ? 'bg-zinc-50/90 dark:bg-[#222736]' : isExpanded ? 'bg-zinc-50/80 dark:bg-[#1D212C]' : 'hover:bg-zinc-50/70 dark:hover:bg-[#222736]/70'} ${customClass}`}
+        } ${isSelected ? 'bg-[var(--color-surface-2)] dark:bg-[#222736]' : isExpanded ? 'bg-[var(--color-surface-2)] dark:bg-[#1D212C]' : 'hover:bg-[var(--color-table-row-hover)] dark:hover:bg-[#222736]/70'} ${customClass}`}
       >
         {/* Selection Checkbox */}
         {selectable && (
@@ -109,10 +109,10 @@ function DataTableRow({
           <td
             className={`p-4 text-right sticky right-0 z-10 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)] transition-colors ${
               isSelected
-                ? 'bg-zinc-100 dark:bg-[#222736]'
+                ? 'bg-[var(--color-surface-2)] dark:bg-[#222736]'
                 : isExpanded
-                ? 'bg-zinc-50 dark:bg-[#1D212C]'
-                : 'bg-white dark:bg-[#161922] group-hover:bg-zinc-50/70 dark:group-hover:bg-[#222736]/70'
+                ? 'bg-[var(--color-surface-2)] dark:bg-[#1D212C]'
+                : 'bg-[var(--color-surface)] dark:bg-[#161922] group-hover:bg-[var(--color-table-row-hover)] dark:group-hover:bg-[#222736]/70'
             }`}
           >
             <DataTableActionMenu actions={resolvedActions} row={row} index={index} permissionFeature={permissionFeature} />

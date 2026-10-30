@@ -32,7 +32,7 @@ export default function DashboardLayout({
                 <div className="flex flex-col flex-1 h-full min-h-0 min-w-0 overflow-hidden">
                     {header}
                     {banner}
-                    <main className="flex-1 min-h-0 overflow-y-auto bg-zinc-50/30 dark:bg-[#0F1117]">
+                    <main className="flex-1 min-h-0 overflow-y-auto bg-[var(--color-bg-base)] dark:bg-[var(--color-bg-base)] text-[var(--color-text-primary)]">
                         <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 max-w-[2560px] 5xl:max-w-[3200px] mx-auto">
                             {children}
                         </div>

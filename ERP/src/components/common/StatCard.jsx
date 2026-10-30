@@ -45,7 +45,7 @@ function StatCard({
 
   if (loading) {
   return (
-  <div className="card p-4 border-l-[2.4px] border-l-zinc-200 dark:border-l-[#2A2F3D] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl">
+  <div className="card p-4 border-l-[2.4px] border-l-[#D5D8CA] dark:border-l-[#2A2F3D] bg-[#F7F7F0] dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl">
    <div className="flex items-start justify-between mb-3">
      <SkeletonBox className="w-8 h-8 rounded-xl" />
      <SkeletonBox className="w-16 h-5 rounded-lg" />
@@ -61,7 +61,7 @@ function StatCard({
  return (
  <div
  className={`
- card p-4 group cursor-default min-w-0 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl
+ card p-4 group cursor-default min-w-0 bg-[#F7F7F0] dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl
  border-l-[2.4px] ${styles.border}
  hover:shadow-sm
  transition-shadow duration-micro ease-enter
@@ -81,13 +81,13 @@ function StatCard({
  )}
  </div>
 
- <p className="text-xl font-bold text-zinc-900 dark:text-[#E6E8EE] leading-none mb-1 tracking-tight">
+ <p className="text-xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] leading-none mb-1 tracking-tight">
  {value}
  </p>
- <p className="text-xs font-medium text-zinc-500 dark:text-[#A0A6B5]">{label || title}</p>
+ <p className="text-xs font-medium text-[#485942] dark:text-[#A0A6B5]">{label || title}</p>
 
  {subtitle && (
- <p className="text-xs text-zinc-400 dark:text-[#6B7184] mt-1">{subtitle}</p>
+ <p className="text-xs text-[#7A8A6E] dark:text-[#6B7184] mt-1">{subtitle}</p>
  )}
  </div>
  )

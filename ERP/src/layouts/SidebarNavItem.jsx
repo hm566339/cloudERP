@@ -68,7 +68,7 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
       <button
         type="button"
         onClick={() => toggleMenu(item.id)}
-        className={`sidebar-item ${level > 0 ? 'sidebar-child-item' : ''} ${isParentActive ? (level === 0 ? 'text-zinc-900 font-bold bg-white border border-zinc-300 shadow-sm dark:text-[#E6E8EE] dark:bg-[#1D212C] dark:border-[#2A2F3D]' : 'text-zinc-900 dark:text-[#E6E8EE] font-medium') : (level > 0 ? 'sidebar-child-inactive' : 'sidebar-item-inactive')}`}
+        className={`sidebar-item ${level > 0 ? 'sidebar-child-item' : ''} ${isParentActive ? (level === 0 ? 'text-[var(--color-primary)] font-bold bg-[var(--color-sidebar-hover-bg)]/70 border border-[var(--color-border)] shadow-2xs' : 'text-[var(--color-text-primary)] font-medium') : (level > 0 ? 'sidebar-child-inactive' : 'sidebar-item-inactive')}`}
       >
         {Icon && <Icon size={level > 0 ? 16 : 18} className={`shrink-0 transition-colors ${isParentActive ? 'text-zinc-900 dark:text-[#E6E8EE]' : 'text-zinc-400 dark:text-[#6B7184]'}`} />}
         <span className="flex-1 text-left truncate">{item.label}</span>

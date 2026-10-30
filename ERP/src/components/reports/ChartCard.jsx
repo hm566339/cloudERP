@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { BarChart3 } from 'lucide-react';
 
-const DEFAULT_COLORS = ['#3b82f6', '#f97316', '#10b981', '#ef4444', '#8b5cf6'];
+const DEFAULT_COLORS = ['#2E3D28', '#A9B887', '#74865A', '#C66B62', '#5A6B4E'];
 const DEFAULT_DATA_KEYS = [];
 const DEFAULT_DATA = [];
 
@@ -121,14 +121,14 @@ function ChartCard({
     };
 
     const tooltipStyle = {
-      backgroundColor: 'var(--color-surface-elevated, #ffffff)',
-      borderColor: 'var(--color-border, #e4e4e7)',
-      color: 'var(--color-text-primary, #09090b)',
+      backgroundColor: 'var(--color-surface-elevated, #F7F7F0)',
+      borderColor: 'var(--color-border, #D5D8CA)',
+      color: 'var(--color-text-primary, #2E3D28)',
       borderRadius: '8px',
       boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
     };
-    const axisTick = { fontSize: 12, fill: 'var(--color-text-secondary, #71717a)' };
-    const gridStroke = 'var(--color-border, #e4e4e7)';
+    const axisTick = { fontSize: 12, fill: 'var(--color-text-secondary, #485942)' };
+    const gridStroke = 'var(--color-border, #D5D8CA)';
 
     switch (type) {
       case 'area':
@@ -146,7 +146,7 @@ function ChartCard({
             <XAxis dataKey={xAxisKey} tick={axisTick} stroke={gridStroke} />
             <YAxis tick={axisTick} stroke={gridStroke} />
             <Tooltip contentStyle={tooltipStyle} />
-            <Legend wrapperStyle={{ color: 'var(--color-text-secondary, #71717a)' }} />
+            <Legend wrapperStyle={{ color: 'var(--color-text-secondary, #485942)' }} />
             {dataKeys.map((key, i) => (
               <Area 
                 key={key} 
@@ -167,7 +167,7 @@ function ChartCard({
             <XAxis dataKey={xAxisKey} tick={axisTick} stroke={gridStroke} />
             <YAxis tick={axisTick} stroke={gridStroke} />
             <Tooltip contentStyle={tooltipStyle} />
-            <Legend wrapperStyle={{ color: 'var(--color-text-secondary, #71717a)' }} />
+            <Legend wrapperStyle={{ color: 'var(--color-text-secondary, #485942)' }} />
             {dataKeys.map((key, i) => (
               <Line 
                 key={key} 
@@ -190,7 +190,7 @@ function ChartCard({
             <XAxis dataKey={xAxisKey} tick={axisTick} stroke={gridStroke} />
             <YAxis tick={axisTick} stroke={gridStroke} />
             <Tooltip cursor={{ fill: 'transparent' }} contentStyle={tooltipStyle} />
-            <Legend wrapperStyle={{ color: 'var(--color-text-secondary, #71717a)' }} />
+            <Legend wrapperStyle={{ color: 'var(--color-text-secondary, #485942)' }} />
             {dataKeys.map((key, i) => (
               <Bar 
                 key={key} 
@@ -206,10 +206,10 @@ function ChartCard({
   };
 
   return (
-    <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-4 flex flex-col h-full min-w-0">
+    <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-sm p-4 flex flex-col h-full min-w-0">
       <div className="mb-3">
-        <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">{title}</h3>
-        {description && <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-1">{description}</p>}
+        <h3 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE]">{title}</h3>
+        {description && <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-1">{description}</p>}
       </div>
       <div 
         ref={containerRef}

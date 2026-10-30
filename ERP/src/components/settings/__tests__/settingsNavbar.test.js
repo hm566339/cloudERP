@@ -19,6 +19,7 @@ describe('SettingsNavbar & settingsNavigation Unit & Integration Tests', () => {
         'notifications',
         'localization',
         'subscription_billing',
+        'appearance_themes',
       ];
 
       const actualIds = GENERAL_SETTINGS_NAV_ITEMS.map((item) => item.id);
@@ -28,7 +29,7 @@ describe('SettingsNavbar & settingsNavigation Unit & Integration Tests', () => {
           `Missing expected General Settings ID: ${expectedId}`
         );
       });
-      assert.strictEqual(GENERAL_SETTINGS_NAV_ITEMS.length, 8);
+      assert.strictEqual(GENERAL_SETTINGS_NAV_ITEMS.length, 9);
     });
 
     it('contains all 5 genuine ERP Application Module settings (no demo modules as top-level)', () => {
@@ -81,7 +82,7 @@ describe('SettingsNavbar & settingsNavigation Unit & Integration Tests', () => {
         currentPath: '/settings/general',
       });
 
-      assert.strictEqual(nav.generalItems.length, 8);
+      assert.strictEqual(nav.generalItems.length, 9);
       assert.strictEqual(nav.moduleItems.length, 5);
 
       const accountModule = nav.moduleItems.find((m) => m.moduleKey === 'ACCOUNT');

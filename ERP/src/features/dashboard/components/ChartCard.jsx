@@ -54,8 +54,8 @@ function ChartCard({ title, data, colors }) {
   const hasData = data && data.some(d => d.value > 0);
 
   return (
-    <div className="card p-5 h-[240px] flex flex-col bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl shadow-sm">
-      <h3 className="text-sm font-bold text-zinc-700 dark:text-[#E6E8EE] mb-4">{title}</h3>
+    <div className="card p-5 h-[240px] flex flex-col bg-[#F7F7F0] dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl shadow-sm">
+      <h3 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE] mb-4">{title}</h3>
       <div 
         ref={containerRef}
         style={{ height: '160px', minHeight: '160px', minWidth: 0 }} 
@@ -81,14 +81,14 @@ function ChartCard({ title, data, colors }) {
               <Tooltip 
                 contentStyle={{ 
                   borderRadius: '8px', 
-                  border: '1px solid var(--color-border, #e4e4e7)', 
-                  backgroundColor: 'var(--color-surface-elevated, #ffffff)', 
-                  color: 'var(--color-text-primary, #09090b)', 
+                  border: '1px solid var(--color-border, #D5D8CA)', 
+                  backgroundColor: 'var(--color-surface-elevated, #F7F7F0)', 
+                  color: 'var(--color-text-primary, #2E3D28)', 
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
                 }}
                 itemStyle={{ fontWeight: 600 }}
               />
-              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary, #6B7184)' }} />
+              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary, #485942)' }} />
             </PieChart>
           </ResponsiveContainer>
         ) : (

@@ -24,6 +24,14 @@ export default {
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       colors: {
+        /* Brand Palette Aliases */
+        'stone-warm': '#E8E9DF',
+        'sage': '#A9B887',
+        'forest': '#2E3D28',
+        'forest-hover': '#3C4E34',
+        'card-light': '#F7F7F0',
+        'border-light': '#D5D8CA',
+        /* Dark Mode Surfaces */
         'page-dark': '#0F1117',
         'card-dark': '#161922',
         'surface-dark': '#1D212C',

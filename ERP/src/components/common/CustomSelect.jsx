@@ -595,7 +595,7 @@ const CustomSelect = React.forwardRef(({
             maxWidth: 'calc(100vw - 16px)',
             zIndex: 99999,
           }}
-          className={dropdownClassName || "bg-white dark:bg-[#1D212C] border border-zinc-200/90 dark:border-[#2A2F3D] rounded-xl shadow-xl dark:shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100 ring-1 ring-black/5 dark:ring-white/5"}
+          className={dropdownClassName || "bg-[#F7F7F0] dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl shadow-xl dark:shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-100 ring-1 ring-black/5 dark:ring-white/5"}
         >
           {/* In-Menu Search Input */}
           {isSearchable && !comboInput && (
@@ -689,7 +689,7 @@ const CustomSelect = React.forwardRef(({
                       ${isDisabled
                         ? 'opacity-40 cursor-not-allowed text-zinc-400 dark:text-[#6B7184] bg-transparent'
                         : isSelected
-                        ? 'bg-zinc-900/[0.06] dark:bg-[#4C8DFF]/15 text-zinc-900 dark:text-[#4C8DFF] font-semibold'
+                        ? 'bg-[var(--color-surface-2)] dark:bg-[#4C8DFF]/15 text-[var(--color-text-primary)] dark:text-[#4C8DFF] font-semibold'
                         : isFocused
                         ? 'bg-zinc-100 dark:bg-[#222736] text-zinc-900 dark:text-[#E6E8EE] ring-1 ring-zinc-200 dark:ring-[#2A2F3D]'
                         : 'text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-100/80 dark:hover:bg-[#222736] hover:text-zinc-900 dark:hover:text-[#E6E8EE]'}
@@ -714,7 +714,7 @@ const CustomSelect = React.forwardRef(({
                         </span>
                       )}
                       {isSelected && (
-                        <Check size={14} className="text-zinc-900 dark:text-[#4C8DFF] font-bold shrink-0" strokeWidth={2.5} />
+                        <Check size={14} className="text-[#2E3D28] dark:text-[#4C8DFF] font-bold shrink-0" strokeWidth={2.5} />
                       )}
                     </div>
                   </button>

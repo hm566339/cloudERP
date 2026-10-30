@@ -92,9 +92,9 @@ const MODULE_CATALOG_DETAILED = {
     shortName: 'Workflows',
     description: 'Multi-stage business process approvals, SLA monitoring, routing rules, and document lifecycle triggers.',
     icon: Workflow,
-    color: 'text-purple-600 dark:text-purple-400',
-    bgColor: 'bg-purple-50 dark:bg-purple-950/40',
-    borderColor: 'hover:border-purple-300 dark:hover:border-purple-600/60',
+    color: 'text-[#2E3D28] dark:text-[#8FA87B]',
+    bgColor: 'bg-[#DCE2CF]/40 dark:bg-[#202922]',
+    borderColor: 'hover:border-[#A9B887] dark:hover:border-[#3E5242]',
     path: (companyId) => (companyId ? `/company/${companyId}/workflows` : '/workflows'),
   },
   SSO: {
@@ -308,22 +308,22 @@ function OwnerDashboardContent() {
       <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 py-6 space-y-6 flex-1 min-w-0">
 
         {/* ── 1. Compact Page Header ── */}
-        <section className="bg-white dark:bg-[#161922] p-5 sm:p-6 rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <section className="bg-[#F7F7F0] dark:bg-[#161922] p-5 sm:p-6 rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider mb-1">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider mb-1">
               <ShieldCheck size={14} className="text-emerald-600 dark:text-emerald-400" />
               <span>Owner Workspace</span>
               {orgCode && (
                 <>
-                  <span className="text-zinc-300 dark:text-[#6B7184]">•</span>
-                  <span className="font-mono text-zinc-600 dark:text-[#E6E8EE] font-bold">{orgCode}</span>
+                  <span className="text-[#D5D8CA] dark:text-[#6B7184]">•</span>
+                  <span className="font-mono text-[#2E3D28] dark:text-[#E6E8EE] font-bold">{orgCode}</span>
                 </>
               )}
             </div>
-            <h1 className="text-2xl font-display font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
+            <h1 className="text-2xl font-display font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight">
               Owner Dashboard
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-500 dark:text-[#A0A6B5] mt-1">
+            <p className="text-xs sm:text-sm text-[#485942] dark:text-[#A0A6B5] mt-1">
               Organization overview, company access and business module management.
             </p>
           </div>
@@ -331,18 +331,18 @@ function OwnerDashboardContent() {
           <div className="flex items-center gap-2.5 shrink-0">
             <Link
               to="/subscription"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] text-zinc-700 dark:text-[#E6E8EE] text-xs font-semibold shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] text-[#2E3D28] dark:text-[#E6E8EE] text-xs font-semibold shadow-2xs transition-colors"
             >
-              <CreditCard size={14} className="text-zinc-500 dark:text-[#A0A6B5]" />
+              <CreditCard size={14} className="text-[#485942] dark:text-[#A0A6B5]" />
               <span>Manage Plan</span>
             </Link>
             <button
               type="button"
               onClick={() => window.location.reload()}
               title="Refresh metrics"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] text-zinc-700 dark:text-[#E6E8EE] text-xs font-semibold shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] text-[#2E3D28] dark:text-[#E6E8EE] text-xs font-semibold shadow-2xs transition-colors"
             >
-              <RefreshCw size={13} className="text-zinc-500 dark:text-[#A0A6B5]" />
+              <RefreshCw size={13} className="text-[#485942] dark:text-[#A0A6B5]" />
               <span>Refresh</span>
             </button>
           </div>
@@ -352,27 +352,27 @@ function OwnerDashboardContent() {
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 
           {/* Card 1: Total Companies */}
-          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs hover:border-zinc-300 dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
+          <div className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider">
                   Total Companies
                 </span>
                 <div className="w-7 h-7 rounded-lg bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100/60 dark:border-indigo-900/60 flex items-center justify-center shrink-0">
                   <Building2 size={15} />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight leading-none">
+              <p className="text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none">
                 {companies.length}
               </p>
             </div>
-            <div className="pt-2.5 mt-2.5 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
+            <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 <span>{companies.length > 0 ? `${companies.length} Active` : '0 Active'}</span>
               </span>
               <span
-                className="inline-flex items-center px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200/70 dark:border-[#2A2F3D] text-[10px] font-mono truncate max-w-[130px]"
+                className="inline-flex items-center px-1.5 py-0.5 rounded bg-[#EDEEE4] dark:bg-[#1D212C] text-[#485942] dark:text-[#A0A6B5] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[10px] font-mono truncate max-w-[130px]"
                 title={activeCompanyCode ? `Primary: ${activeCompanyCode}` : undefined}
               >
                 {activeCompanyName && activeCompanyName !== 'Primary Company' ? activeCompanyName : (activeCompanyCode ? `ID: ${activeCompanyCode.slice(0, 8)}…` : 'Default')}
@@ -381,10 +381,10 @@ function OwnerDashboardContent() {
           </div>
 
           {/* Card 2: Active Modules */}
-          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs hover:border-zinc-300 dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
+          <div className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider">
                   Active Modules
                 </span>
                 <div className="w-7 h-7 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100/60 dark:border-emerald-900/60 flex items-center justify-center shrink-0">
@@ -392,21 +392,21 @@ function OwnerDashboardContent() {
                 </div>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight leading-none">
+                <span className="text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none">
                   {entitledCount}
                 </span>
-                <span className="text-xs font-normal text-zinc-400 dark:text-[#6B7184]">
+                <span className="text-xs font-normal text-[#7A8A6E] dark:text-[#6B7184]">
                   / {availableModuleLaunchers.length}
                 </span>
               </div>
             </div>
-            <div className="pt-2.5 mt-2.5 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
+            <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 <span>{entitledCount} Provisioned</span>
               </span>
               {availableModuleLaunchers.length - entitledCount > 0 ? (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-[#1D212C] text-zinc-500 dark:text-[#6B7184] border border-zinc-200/70 dark:border-[#2A2F3D] text-[10px]">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-[#EDEEE4] dark:bg-[#1D212C] text-[#485942] dark:text-[#6B7184] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[10px]">
                   {availableModuleLaunchers.length - entitledCount} Locked
                 </span>
               ) : (
@@ -418,21 +418,21 @@ function OwnerDashboardContent() {
           </div>
 
           {/* Card 3: Subscription Status */}
-          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs hover:border-zinc-300 dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
+          <div className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider">
                   Subscription
                 </span>
                 <div className="w-7 h-7 rounded-lg bg-sky-50/80 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-100/60 dark:border-sky-900/60 flex items-center justify-center shrink-0">
                   <CreditCard size={15} />
                 </div>
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight leading-none truncate capitalize" title={planDisplay}>
+              <p className="text-xl sm:text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none truncate capitalize" title={planDisplay}>
                 {planDisplay}
               </p>
             </div>
-            <div className="pt-2.5 mt-2.5 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
+            <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium text-[11px] ${
                 isTrial
                   ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/70 dark:border-amber-900/60'
@@ -441,34 +441,34 @@ function OwnerDashboardContent() {
                 <Clock size={11} />
                 <span>{daysRemaining !== null ? `${daysRemaining} days left` : 'Active'}</span>
               </span>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200/70 dark:border-[#2A2F3D] text-[10px] font-mono uppercase">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-[#EDEEE4] dark:bg-[#1D212C] text-[#485942] dark:text-[#A0A6B5] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[10px] font-mono uppercase">
                 {authContext.accessMode || 'Full'}
               </span>
             </div>
           </div>
 
           {/* Card 4: Organization Owner Profile */}
-          <div className="bg-white dark:bg-[#161922] p-4 rounded-xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs hover:border-zinc-300 dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
+          <div className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider">
                   Owner Profile
                 </span>
-                <div className="w-7 h-7 rounded-lg bg-purple-50/80 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-100/60 dark:border-purple-900/60 flex items-center justify-center shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-[#DCE2CF]/60 dark:bg-[#202922] text-[#2E3D28] dark:text-[#8FA87B] border border-[#D5D8CA] dark:border-[#2E3D31] flex items-center justify-center shrink-0">
                   <ShieldCheck size={15} />
                 </div>
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight leading-none truncate" title={ownerName}>
+              <p className="text-xl sm:text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none truncate" title={ownerName}>
                 {ownerName}
               </p>
             </div>
-            <div className="pt-2.5 mt-2.5 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border border-purple-100 dark:border-purple-900/60 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+            <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#DCE2CF]/60 dark:bg-[#202922] text-[#2E3D28] dark:text-[#8FA87B] border border-[#D5D8CA] dark:border-[#2E3D31] font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#2E3D28] dark:bg-[#8FA87B]"></span>
                 <span>Verified</span>
               </span>
               <span
-                className="text-[10px] font-mono text-zinc-500 dark:text-[#A0A6B5] truncate max-w-[120px]"
+                className="text-[10px] font-mono text-[#485942] dark:text-[#A0A6B5] truncate max-w-[120px]"
                 title={ownerEmail}
               >
                 {ownerEmail}
@@ -479,32 +479,32 @@ function OwnerDashboardContent() {
         </section>
 
         {/* ── 3. Organization Overview Section (Balanced responsive grid without text overlap) ── */}
-        <section className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
-          <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between">
+        <section className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#D5D8CA] dark:border-[#2A2F3D] flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Organization Overview</h2>
-              <p className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] mt-0.5">Core organization identity, tenant parameters and billing currency</p>
+              <h2 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight">Organization Overview</h2>
+              <p className="text-[11px] text-[#485942] dark:text-[#A0A6B5] mt-0.5">Core organization identity, tenant parameters and billing currency</p>
             </div>
-            <span className="text-[10px] font-semibold text-zinc-500 dark:text-[#A0A6B5] bg-zinc-50 dark:bg-[#1D212C] px-2.5 py-0.5 rounded-md border border-zinc-200/60 dark:border-[#2A2F3D] uppercase tracking-wider">
+            <span className="text-[10px] font-semibold text-[#485942] dark:text-[#A0A6B5] bg-[#EDEEE4] dark:bg-[#1D212C] px-2.5 py-0.5 rounded-md border border-[#D5D8CA] dark:border-[#2A2F3D] uppercase tracking-wider">
               Organization
             </span>
           </div>
 
           <div className="p-5 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Organization Name</span>
-              <p className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] truncate" title={orgName}>{orgName}</p>
+              <span className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Organization Name</span>
+              <p className="text-xs font-bold text-[#2E3D28] dark:text-[#E6E8EE] truncate" title={orgName}>{orgName}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Organization Code</span>
-              <p className="text-xs font-mono font-bold text-zinc-800 dark:text-[#E6E8EE]">{orgCode || 'ORG'}</p>
+              <span className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Organization Code</span>
+              <p className="text-xs font-mono font-bold text-[#2E3D28] dark:text-[#E6E8EE]">{orgCode || 'ORG'}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Base Currency</span>
-              <p className="text-xs font-mono font-bold text-zinc-800 dark:text-[#E6E8EE]">{orgCurrency}</p>
+              <span className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Base Currency</span>
+              <p className="text-xs font-mono font-bold text-[#2E3D28] dark:text-[#E6E8EE]">{orgCurrency}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Organization Status</span>
+              <span className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Organization Status</span>
               <div>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -513,12 +513,12 @@ function OwnerDashboardContent() {
               </div>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Primary Company</span>
-              <p className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] truncate" title={activeCompanyName}>{activeCompanyName}</p>
+              <span className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Primary Company</span>
+              <p className="text-xs font-bold text-[#2E3D28] dark:text-[#E6E8EE] truncate" title={activeCompanyName}>{activeCompanyName}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Registered Workspaces</span>
-              <p className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE]">{companies.length} {companies.length === 1 ? 'Workspace' : 'Workspaces'}</p>
+              <span className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Registered Workspaces</span>
+              <p className="text-xs font-bold text-[#2E3D28] dark:text-[#E6E8EE]">{companies.length} {companies.length === 1 ? 'Workspace' : 'Workspaces'}</p>
             </div>
           </div>
         </section>
@@ -527,14 +527,14 @@ function OwnerDashboardContent() {
         <section className="space-y-3.5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
             <div>
-              <h2 className="text-base font-display font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
+              <h2 className="text-base font-display font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight">
                 Business Modules
               </h2>
-              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+              <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-0.5">
                 Manage and access business applications provisioned for your organization.
               </p>
             </div>
-            <span className="self-start sm:self-auto text-[11px] font-bold text-zinc-600 dark:text-[#A0A6B5] bg-white dark:bg-[#1D212C] px-2.5 py-1 rounded-lg border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs">
+            <span className="self-start sm:self-auto text-[11px] font-bold text-[#2E3D28] dark:text-[#A0A6B5] bg-[#F7F7F0] dark:bg-[#1D212C] px-2.5 py-1 rounded-lg border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs">
               {entitledCount} of {availableModuleLaunchers.length} Active
             </span>
           </div>
@@ -545,9 +545,9 @@ function OwnerDashboardContent() {
               return (
                 <div
                   key={mod.id}
-                  className={`bg-white dark:bg-[#161922] rounded-2xl p-5 border flex flex-col justify-between transition-all duration-200 shadow-2xs hover:shadow-md min-h-[240px] ${mod.isEntitled
-                      ? 'border-zinc-200/90 dark:border-[#2A2F3D] ' + mod.borderColor
-                      : 'border-zinc-200/70 dark:border-[#2A2F3D] bg-zinc-50/40 dark:bg-[#1D212C]/40 opacity-80 hover:opacity-100'
+                  className={`bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl p-5 border border-[#D5D8CA] dark:border-[#2A2F3D] flex flex-col justify-between transition-all duration-200 shadow-2xs hover:shadow-md min-h-[240px] ${mod.isEntitled
+                      ? mod.borderColor
+                      : 'opacity-80 hover:opacity-100 bg-[#EDEEE4]/50 dark:bg-[#1D212C]/40'
                     }`}
                 >
                   <div className="flex-1 flex flex-col">
@@ -563,8 +563,8 @@ function OwnerDashboardContent() {
                           <span>Active</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-medium text-zinc-500 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1D212C] px-2.5 py-0.5 rounded-full border border-zinc-200/80 dark:border-[#2A2F3D] shrink-0">
-                          <Lock size={11} className="text-zinc-400 dark:text-[#6B7184]" />
+                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-medium text-[#485942] dark:text-[#A0A6B5] bg-[#EDEEE4] dark:bg-[#1D212C] px-2.5 py-0.5 rounded-full border border-[#D5D8CA] dark:border-[#2A2F3D] shrink-0">
+                          <Lock size={11} className="text-[#7A8A6E] dark:text-[#6B7184]" />
                           <span>Not Provisioned</span>
                         </span>
                       )}
@@ -572,21 +572,21 @@ function OwnerDashboardContent() {
 
                     {/* Title & Description */}
                     <div className="flex-1 flex flex-col justify-start">
-                      <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight leading-snug">
+                      <h3 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-snug">
                         {mod.name}
                       </h3>
-                      <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] font-normal leading-relaxed mt-1.5 line-clamp-3" title={mod.description}>
+                      <p className="text-xs text-[#485942] dark:text-[#A0A6B5] font-normal leading-relaxed mt-1.5 line-clamp-3" title={mod.description}>
                         {mod.description}
                       </p>
                     </div>
                   </div>
 
                   {/* Bottom Action Button - ALWAYS anchored at bottom */}
-                  <div className="pt-4 mt-4 border-t border-zinc-100 dark:border-[#2A2F3D] shrink-0">
+                  <div className="pt-4 mt-4 border-t border-[#D5D8CA] dark:border-[#2A2F3D] shrink-0">
                     {mod.isEntitled ? (
                       <Link
                         to={mod.path}
-                        className="w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs bg-zinc-900 hover:bg-zinc-800 dark:bg-[#4C8DFF] dark:hover:bg-[#6AA1FF] text-white"
+                        className="w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-bold transition-all shadow-2xs bg-[#2E3D28] hover:bg-[#3C4E34] active:bg-[#243320] focus:ring-2 focus:ring-[#2E3D28]/15 dark:bg-[#4C8DFF] dark:hover:bg-[#6AA1FF] text-white"
                       >
                         <span>Open {mod.shortName || mod.name}</span>
                         <ArrowRight size={13} />
@@ -594,9 +594,9 @@ function OwnerDashboardContent() {
                     ) : (
                       <Link
                         to="/subscription"
-                        className="w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-200 dark:hover:bg-[#222736] transition-colors"
+                        className="w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-[#1D212C] text-[#485942] dark:text-[#A0A6B5] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] border border-[#D5D8CA] dark:border-[#2A2F3D] transition-colors"
                       >
-                        <Lock size={12} className="text-zinc-400 dark:text-[#6B7184]" />
+                        <Lock size={12} className="text-[#7A8A6E] dark:text-[#6B7184]" />
                         <span>Upgrade to Enable</span>
                       </Link>
                     )}
@@ -608,13 +608,13 @@ function OwnerDashboardContent() {
         </section>
 
         {/* ── 5. Company Management Section ("Your Companies") ── */}
-        <section className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
-          <div className="p-5 border-b border-zinc-100 dark:border-[#2A2F3D] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <section className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+          <div className="p-5 border-b border-[#D5D8CA] dark:border-[#2A2F3D] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-base font-display font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">
+              <h2 className="text-base font-display font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight">
                 Your Companies
               </h2>
-              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+              <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-0.5">
                 Overview of all registered companies and workspaces under {orgName}.
               </p>
             </div>
@@ -622,7 +622,7 @@ function OwnerDashboardContent() {
             <div className="flex items-center gap-2">
               <Link
                 to="/owner/companies"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] transition-colors shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] transition-colors shadow-2xs"
               >
                 <span>Company Directory</span>
                 <ChevronRight size={13} />
@@ -632,7 +632,7 @@ function OwnerDashboardContent() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs min-w-[640px]">
-              <thead className="bg-zinc-50/70 dark:bg-[#1D212C]/80 border-b border-zinc-100 dark:border-[#2A2F3D] text-zinc-400 dark:text-[#6B7184] font-bold uppercase tracking-wider text-[10px]">
+              <thead className="bg-[var(--color-table-header)] border-b border-[var(--color-border)] text-[var(--color-text-primary)] font-bold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="py-3 px-5">Company</th>
                   <th className="py-3 px-5">Code</th>
@@ -642,7 +642,7 @@ function OwnerDashboardContent() {
                   <th className="py-3 px-5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
+              <tbody className="divide-y divide-[#D5D8CA] dark:divide-[#2A2F3D]">
                 {companies.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-zinc-400 dark:text-[#6B7184]">
@@ -654,23 +654,23 @@ function OwnerDashboardContent() {
                     const isCurrent =
                       comp.id === activeCompanyId || comp.code === activeCompanyCode;
                     return (
-                      <tr key={comp.id || comp.code} className="hover:bg-zinc-50/60 dark:hover:bg-[#222736]/60 transition-colors">
+                      <tr key={comp.id || comp.code} className="hover:bg-[#EDEEE4] dark:hover:bg-[#222736]/60 transition-colors">
                         {/* Company Name */}
-                        <td className="py-3.5 px-5 font-bold text-zinc-900 dark:text-[#E6E8EE]">
+                        <td className="py-3.5 px-5 font-bold text-[#2E3D28] dark:text-[#E6E8EE]">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-[#1D212C] flex items-center justify-center text-zinc-600 dark:text-[#A0A6B5] shrink-0">
+                            <div className="w-7 h-7 rounded-lg bg-[#EDEEE4] dark:bg-[#1D212C] flex items-center justify-center text-[#2E3D28] dark:text-[#A0A6B5] border border-[#D5D8CA] dark:border-transparent shrink-0">
                               <Building2 size={14} />
                             </div>
                             <div>
                               <Link
                                 to={`/company/${comp.id}/dashboard`}
                                 onClick={() => handleSelectCompany(comp)}
-                                className="font-bold text-zinc-900 dark:text-[#E6E8EE] hover:text-zinc-700 dark:hover:text-[#4C8DFF] transition-colors"
+                                className="font-bold text-[#2E3D28] dark:text-[#E6E8EE] hover:text-[#3C4E34] dark:hover:text-[#4C8DFF] transition-colors"
                               >
                                 {comp.name || comp.legalName}
                               </Link>
                               {comp.legalName && comp.legalName !== comp.name && (
-                                <div className="text-[10px] text-zinc-400 dark:text-[#6B7184] font-normal">{comp.legalName}</div>
+                                <div className="text-[10px] text-[#485942] dark:text-[#6B7184] font-normal">{comp.legalName}</div>
                               )}
                             </div>
                           </div>
@@ -681,14 +681,14 @@ function OwnerDashboardContent() {
                           <Link
                             to={`/company/${comp.id}/dashboard`}
                             onClick={() => handleSelectCompany(comp)}
-                            className="font-mono text-zinc-700 dark:text-[#E6E8EE] font-bold uppercase text-[11px] bg-zinc-100 dark:bg-[#1D212C] hover:bg-zinc-200 dark:hover:bg-[#222736] px-2 py-0.5 rounded transition-colors inline-block"
+                            className="font-mono text-[#2E3D28] dark:text-[#E6E8EE] font-bold uppercase text-[11px] bg-[#EDEEE4] dark:bg-[#1D212C] hover:bg-[#DCE2CF] dark:hover:bg-[#222736] border border-[#D5D8CA] dark:border-transparent px-2 py-0.5 rounded transition-colors inline-block"
                           >
                             {comp.code || '—'}
                           </Link>
                         </td>
 
                         {/* Currency */}
-                        <td className="py-3.5 px-5 font-mono text-zinc-600 dark:text-[#A0A6B5] font-medium">
+                        <td className="py-3.5 px-5 font-mono text-[#485942] dark:text-[#A0A6B5] font-medium">
                           {comp.currency || orgCurrency}
                         </td>
 
@@ -708,7 +708,7 @@ function OwnerDashboardContent() {
                               <span>Current Active</span>
                             </span>
                           ) : (
-                            <span className="text-zinc-400 dark:text-[#6B7184] text-[11px]">Secondary</span>
+                            <span className="text-[#485942] dark:text-[#6B7184] text-[11px]">Secondary</span>
                           )}
                         </td>
 
@@ -718,14 +718,14 @@ function OwnerDashboardContent() {
                             <Link
                               to={`/company/${comp.id}/dashboard`}
                               onClick={() => handleSelectCompany(comp)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-900 dark:bg-[#4C8DFF] text-white text-[11px] font-semibold hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] transition-colors shadow-2xs"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#2E3D28] hover:bg-[#3C4E34] active:bg-[#243320] text-white dark:bg-[#4C8DFF] dark:hover:bg-[#6AA1FF] text-[11px] font-semibold transition-colors shadow-2xs focus:ring-2 focus:ring-[#2E3D28]/15"
                             >
                               <span>Open Workspace</span>
                               <ArrowRight size={11} />
                             </Link>
                             <Link
                               to={`/company/${comp.id}/settings`}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] text-[11px] font-semibold hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#D5D8CA] dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-[#2E3D28] dark:text-[#E6E8EE] text-[11px] font-semibold hover:bg-[#EDEEE4] dark:hover:bg-[#222736] transition-colors"
                             >
                               <span>Manage</span>
                             </Link>
@@ -741,14 +741,14 @@ function OwnerDashboardContent() {
         </section>
 
         {/* ── 6. Subscription Section (Compact enterprise license card) ── */}
-        <section className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <section className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="w-11 h-11 rounded-xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
               <CreditCard size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">
+                <h3 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE]">
                   {planDisplay}
                 </h3>
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${isTrial ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60' : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60'
@@ -757,7 +757,7 @@ function OwnerDashboardContent() {
                   <span>{isTrial ? 'Trial Active' : 'Subscribed'}</span>
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
+              <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-0.5">
                 {daysRemaining !== null
                   ? `${daysRemaining} days remaining in trial period. Access all enterprise modules with complete administrative control.`
                   : 'Active subscription tier with full organization privileges and workspace management.'}
@@ -768,7 +768,7 @@ function OwnerDashboardContent() {
           <div className="shrink-0">
             <Link
               to="/subscription"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-[#4C8DFF] dark:hover:bg-[#6AA1FF] text-white text-xs font-semibold transition-colors shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2E3D28] hover:bg-[#3C4E34] active:bg-[#243320] dark:bg-[#4C8DFF] dark:hover:bg-[#6AA1FF] text-white text-xs font-semibold transition-colors shadow-2xs focus:ring-2 focus:ring-[#2E3D28]/15"
             >
               <span>Manage Plan</span>
               <ArrowRight size={13} />
@@ -779,13 +779,13 @@ function OwnerDashboardContent() {
       </div>
 
       {/* ── Minimalist Clean Footer matching full content width ── */}
-      <footer className="border-t border-zinc-200/80 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] py-4 mt-8">
-        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400 dark:text-[#6B7184]">
+      <footer className="border-t border-[var(--color-border)] bg-[var(--color-surface)] py-4 mt-8">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
           <p>© {new Date().getFullYear()} Mark2 ERP. All rights reserved.</p>
           <div className="flex items-center gap-3">
-            <span>Organization: <strong className="text-zinc-600 dark:text-[#E6E8EE] font-mono">{orgCode || 'ORG'}</strong></span>
+            <span>Organization: <strong className="text-[var(--color-text-primary)] font-mono">{orgCode || 'ORG'}</strong></span>
             <span>•</span>
-            <Link to="/subscription" className="hover:text-zinc-600 dark:hover:text-[#E6E8EE] transition-colors">Subscription & Billing</Link>
+            <Link to="/subscription" className="hover:text-[var(--color-text-primary)] transition-colors">Subscription & Billing</Link>
           </div>
         </div>
       </footer>

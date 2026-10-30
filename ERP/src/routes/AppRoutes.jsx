@@ -428,6 +428,7 @@ const NotificationsSettings = lazy(() => import("../pages/settings/Notifications
 const IntegrationsSettings = lazy(() => import("../pages/settings/IntegrationsSettings"));
 const AuditLogsSettings = lazy(() => import("../pages/settings/AuditLogsSettings"));
 const PreferencesSettings = lazy(() => import("../pages/settings/PreferencesSettings"));
+const AppearanceSettings = lazy(() => import("../pages/settings/AppearanceSettings"));
 const SubscriptionPlansSettings = lazy(() => import("../pages/settings/SubscriptionPlansSettings"));
 const InventorySettingsPage = lazy(() => import("../pages/settings/InventorySettingsPage"));
 const WorkflowSettingsPage = lazy(() => import("../pages/settings/WorkflowSettingsPage"));
@@ -774,6 +775,8 @@ export default function AppRoutes() {
           <Route path="/owner/organization" element={<OrganizationSettingsPage />} />
           <Route path="/organization/settings" element={<OrganizationSettingsPage />} />
           <Route path="/owner/subscription" element={<SubscriptionPage />} />
+          <Route path="/owner/settings/appearance" element={<AppearanceSettings />} />
+          <Route path="/owner/appearance" element={<Navigate to="/settings/appearance" replace />} />
           <Route path="/owner/settings/subscription" element={<Navigate to="/subscription" replace />} />
           <Route path="/owner/profile" element={<Navigate to="/profile" replace />} />
           <Route path="/organization/dashboard" element={<Navigate to="/owner/dashboard" replace />} />
@@ -881,6 +884,9 @@ export default function AppRoutes() {
           <Route path="/settings/integrations" element={<IntegrationsSettings />} />
           <Route path="/settings/audit-logs" element={<AuditLogsSettings />} />
           <Route path="/settings/preferences" element={<PreferencesSettings />} />
+          <Route path="/settings/appearance" element={<AppearanceSettings />} />
+          <Route path="/settings/themes" element={<Navigate to="/settings/appearance" replace />} />
+          <Route path="/settings/appearance-themes" element={<Navigate to="/settings/appearance" replace />} />
           <Route path="/settings/plans" element={<SubscriptionPlansSettings />} />
           <Route path="/settings/roles" element={<Navigate to="/settings/security/roles" replace />} />
           <Route path="/settings/users" element={<Navigate to="/settings/security/roles" replace />} />
@@ -984,6 +990,9 @@ export default function AppRoutes() {
           <Route path="settings/integrations" element={<IntegrationsSettings />} />
           <Route path="settings/audit-logs" element={<AuditLogsSettings />} />
           <Route path="settings/preferences" element={<PreferencesSettings />} />
+          <Route path="settings/appearance" element={<AppearanceSettings />} />
+          <Route path="settings/themes" element={<Navigate to="settings/appearance" replace />} />
+          <Route path="settings/appearance-themes" element={<Navigate to="settings/appearance" replace />} />
           <Route path="settings/plans" element={<SubscriptionPlansSettings />} />
           <Route path="settings/sales" element={<SalesSettings />} />
           <Route path="settings/account" element={<SalesSettings />} />

@@ -36,9 +36,9 @@ export default function WorkspaceCard({ onClick, isOpen }) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D]/60 hover:border-zinc-300 dark:hover:border-[#3A4154] hover:shadow-xs transition-all duration-200 text-left active:scale-[0.98] cursor-pointer"
+      className="w-full flex items-center gap-3 p-2 rounded-xl bg-[var(--color-surface)] dark:bg-[#161922] border border-[var(--color-border)] dark:border-[#2A2F3D]/60 hover:border-[var(--color-border-hover)] dark:hover:border-[#3A4154] hover:shadow-xs transition-all duration-200 text-left active:scale-[0.98] cursor-pointer"
     >
-      <div className="w-9 h-9 bg-gradient-to-br from-zinc-100 to-zinc-50 dark:from-[#1D212C] dark:to-[#222736] border border-zinc-200/50 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] rounded-lg flex items-center justify-center font-bold text-sm shrink-0 shadow-inner overflow-hidden">
+      <div className="w-9 h-9 bg-[var(--color-surface-2)] dark:from-[#1D212C] dark:to-[#222736] border border-[var(--color-border)] dark:border-[#2A2F3D] text-[var(--color-text-primary)] dark:text-[#E6E8EE] rounded-lg flex items-center justify-center font-bold text-sm shrink-0 shadow-inner overflow-hidden">
         {logoUrl ? (
           <img src={logoUrl} alt={displayName} className="w-full h-full object-contain" />
         ) : (
@@ -46,8 +46,8 @@ export default function WorkspaceCard({ onClick, isOpen }) {
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10.4px] font-bold text-zinc-800 dark:text-[#E6E8EE] truncate">{displayName}</p>
-        <p className="text-[8.8px] font-medium text-zinc-400 dark:text-[#A0A6B5] truncate">ID: {displayCode}</p>
+        <p className="text-[10.4px] font-bold text-[var(--color-text-primary)] dark:text-[#E6E8EE] truncate">{displayName}</p>
+        <p className="text-[8.8px] font-medium text-[var(--color-text-secondary)] dark:text-[#A0A6B5] truncate">ID: {displayCode}</p>
       </div>
       <ChevronDown
         size={16}

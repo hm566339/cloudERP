@@ -265,7 +265,7 @@ export default function DataTable({
 
   return (
     <div
-      className={`bg-white dark:bg-[#161922] rounded-xl shadow-xs border border-zinc-200 dark:border-[#2A2F3D] flex flex-col flex-1 h-full overflow-hidden min-h-0 ${className}`}
+      className={`bg-[var(--color-surface)] dark:bg-[#161922] rounded-xl shadow-xs border border-[var(--color-border)] dark:border-[#2A2F3D] flex flex-col flex-1 h-full overflow-hidden min-h-0 ${className}`}
     >
       {/* 1. Header Toolbar */}
       {hasToolbar && (

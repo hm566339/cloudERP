@@ -24,7 +24,7 @@ import { resolveRolePermissions } from '../../../config/rbacConfig';
 import { useRoutePath } from '../../../hooks/useRoutePath';
 
 const CHART_DATA_KEYS = ['value'];
-const FINANCIAL_POSITION_COLORS = ['#3b82f6', '#f97316', '#10b981'];
+const FINANCIAL_POSITION_COLORS = ['#2E3D28', '#C66B62', '#A9B887'];
 const EMPTY_ARRAY = [];
 
 function FinanceDashboard() {
@@ -107,7 +107,7 @@ function FinanceDashboard() {
   if (!data) return null;
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+    <div className="flex flex-col h-full bg-[#E8E9DF] dark:bg-[#0F1117]">
       <PageHeader
         title="Finance Dashboard"
         description={`Role-based overview for ${roleLabel} • ${selectedCompany?.name || 'Company'}`}
@@ -127,28 +127,28 @@ function FinanceDashboard() {
         
         {/* Section 1: Personal Info & Security Status */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm md:col-span-2 overflow-hidden min-w-0">
-            <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C] flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-center text-zinc-600 dark:text-[#A0A6B5]">
+          <div className="bg-[var(--color-surface)] dark:bg-[#161922] rounded-xl border border-[var(--color-border)] dark:border-[#2A2F3D] shadow-sm md:col-span-2 overflow-hidden min-w-0">
+            <div className="px-5 py-4 border-b border-[var(--color-border)] dark:border-[#2A2F3D] bg-[var(--color-surface-2)]/50 dark:bg-[#1D212C] flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-2)] dark:bg-[#161922] border border-[var(--color-border)] dark:border-[#2A2F3D] flex items-center justify-center text-[var(--color-primary)] dark:text-[#A0A6B5]">
                 <User size={16} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">Personal Information</h3>
-                <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">Your profile details</p>
+                <h3 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE]">Personal Information</h3>
+                <p className="text-xs text-[#485942] dark:text-[#A0A6B5]">Your profile details</p>
               </div>
             </div>
             <div className="p-5">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Full Name</label>
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE] mt-1">{currentUser?.fullName || currentUser?.name || 'Unknown'}</p>
+                  <label className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Full Name</label>
+                  <p className="text-sm font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mt-1">{currentUser?.fullName || currentUser?.name || 'Unknown'}</p>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Email Address</label>
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE] mt-1 truncate">{currentUser?.email || 'N/A'}</p>
+                  <label className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Email Address</label>
+                  <p className="text-sm font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mt-1 truncate">{currentUser?.email || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Role</label>
+                  <label className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Role</label>
                   <div className="mt-1">
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 capitalize">
                       {roleLabel}
@@ -156,21 +156,21 @@ function FinanceDashboard() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Modules</label>
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE] mt-1">{rbac.modules.length} accessible</p>
+                  <label className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Modules</label>
+                  <p className="text-sm font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mt-1">{rbac.modules.length} accessible</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden min-w-0">
+          <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-sm overflow-hidden min-w-0">
             <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C] flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <Shield size={16} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">Security Status</h3>
-                <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">Account protection</p>
+                <h3 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE]">Security Status</h3>
+                <p className="text-xs text-[#485942] dark:text-[#A0A6B5]">Account protection</p>
               </div>
             </div>
             <div className="p-5">
@@ -180,17 +180,17 @@ function FinanceDashboard() {
               </div>
               <div className="flex flex-wrap gap-2 mb-5">
                 {rbac.permissions.slice(0, 3).map(p => (
-                  <span key={p} className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200 dark:border-[#2A2F3D]">
+                  <span key={p} className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-[#EDEEE4] dark:bg-[#1D212C] text-[#2E3D28] dark:text-[#A0A6B5] border border-[#D5D8CA] dark:border-[#2A2F3D]">
                     {p}
                   </span>
                 ))}
                 {rbac.permissions.length > 3 && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200 dark:border-[#2A2F3D]">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-[#EDEEE4] dark:bg-[#1D212C] text-[#2E3D28] dark:text-[#A0A6B5] border border-[#D5D8CA] dark:border-[#2A2F3D]">
                     +{rbac.permissions.length - 3} MORE
                   </span>
                 )}
               </div>
-              <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-zinc-300 dark:border-[#2A2F3D] shadow-sm text-sm font-medium rounded-md text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-900/10 transition-colors">
+              <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-sm text-sm font-medium rounded-md text-[#2E3D28] dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2E3D28]/15 transition-colors">
                 <Key size={14} className="mr-2 text-zinc-400 dark:text-[#6B7184]" />
                 Change Password
               </button>

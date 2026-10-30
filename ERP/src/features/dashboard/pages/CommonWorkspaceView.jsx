@@ -150,9 +150,9 @@ export default function CommonWorkspaceView() {
   const activeLaunchers = moduleCards.filter((m) => m.isEntitled);
 
   return (
-    <div className="min-h-screen bg-zinc-50/60 dark:bg-[#0F1117] flex flex-col font-sans text-zinc-900 dark:text-[#E6E8EE] selection:bg-zinc-900 selection:text-white">
+    <div className="min-h-screen bg-[#E8E9DF] dark:bg-[#0F1117] flex flex-col font-sans text-zinc-900 dark:text-[#E6E8EE] selection:bg-zinc-900 selection:text-white">
       {/* ── Top Bar / Global Header ── */}
-      <header className="sticky top-0 z-30 bg-white/95 dark:bg-card-dark/95 backdrop-blur-md border-b border-zinc-200/80 dark:border-border-dark shadow-xs transition-all">
+      <header className="sticky top-0 z-30 bg-[#F7F7F0]/95 dark:bg-card-dark/95 backdrop-blur-md border-b border-[#D5D8CA] dark:border-border-dark shadow-xs transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
           {/* Brand Logo & Organization Context */}
@@ -204,8 +204,8 @@ export default function CommonWorkspaceView() {
                 {companyDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setCompanyDropdownOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1.5 w-64 bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-2xl shadow-xl py-2 z-50 animate-scale-up origin-top-right">
-                      <div className="px-3 py-1.5 border-b border-zinc-100 dark:border-[#2A2F3D] text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="absolute right-0 top-full mt-1.5 w-64 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xl py-2 z-50 animate-scale-up origin-top-right">
+                      <div className="px-3 py-1.5 border-b border-[var(--color-border)] text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
                         Switch Company
                       </div>
                       <div className="max-h-60 overflow-y-auto py-1">
@@ -215,7 +215,7 @@ export default function CommonWorkspaceView() {
                             <button
                               key={comp.id || comp.code}
                               onClick={() => handleSelectCompany(comp)}
-                              className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-[#222736] transition-colors ${
+                              className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-[var(--color-surface-2)] transition-colors ${
                                 isCurrent ? 'font-bold text-zinc-900 bg-zinc-50/80' : 'text-zinc-600'
                               }`}
                             >

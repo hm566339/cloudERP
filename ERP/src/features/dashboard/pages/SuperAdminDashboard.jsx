@@ -402,14 +402,14 @@ export default function SuperAdminDashboard() {
         {/* Metric 2: Companies */}
         <Link
           to={buildPath('/super-admin/companies')}
-          className="group relative bg-white dark:bg-[#161922] rounded-2xl p-5 border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs hover:shadow-md hover:border-violet-200 dark:hover:border-[#3A4154] transition-all duration-200 flex flex-col justify-between"
+          className="group relative bg-white dark:bg-[#161922] rounded-2xl p-5 border border-zinc-200/80 dark:border-[#2A2F3D] shadow-2xs hover:shadow-md hover:border-emerald-300 dark:hover:border-[#3E5242] transition-all duration-200 flex flex-col justify-between"
         >
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+              <span className="text-[11px] font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-emerald-700 dark:group-hover:text-[#8FA87B] transition-colors">
                 Workspaces
               </span>
-              <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border border-violet-100/80 dark:border-violet-900/60 flex items-center justify-center group-hover:scale-105 group-hover:bg-violet-600 group-hover:text-white transition-all shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-[#202922] text-emerald-700 dark:text-[#8FA87B] border border-emerald-100/80 dark:border-[#2E3D31] flex items-center justify-center group-hover:scale-105 group-hover:bg-[#2E3D28] dark:group-hover:bg-[#8FA87B] group-hover:text-white dark:group-hover:text-[#101411] transition-all shadow-2xs">
                 <Briefcase size={18} />
               </div>
             </div>
@@ -425,11 +425,11 @@ export default function SuperAdminDashboard() {
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400 border border-violet-200/60 dark:border-violet-900/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-[#202922] text-emerald-700 dark:text-[#8FA87B] border border-emerald-200/60 dark:border-[#2E3D31]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-[#8FA87B]" />
               All Provisioned
             </span>
-            <span className="text-[11px] font-medium text-zinc-400 dark:text-[#6B7184] group-hover:text-violet-600 dark:group-hover:text-violet-400 flex items-center gap-0.5 transition-colors">
+            <span className="text-[11px] font-medium text-zinc-400 dark:text-[#6B7184] group-hover:text-emerald-700 dark:group-hover:text-[#8FA87B] flex items-center gap-0.5 transition-colors">
               Browse <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
             </span>
           </div>

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowRight, Menu, X } from 'lucide-react';
 import MarkLogo from '../../../components/common/MarkLogo';
-import ThemeToggle from '../../../components/common/ThemeToggle';
 import { scrollToSection } from './landingData';
 
 export default function LandingNavbar({ isAuthenticated }) {
@@ -37,85 +36,85 @@ export default function LandingNavbar({ isAuthenticated }) {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 w-full transition-all duration-standard ease-move">
+    <div className="fixed top-0 left-0 right-0 z-50 w-full transition-all duration-200">
       {/* ── Top Announcement Bar (Collapses smoothly on scroll) ── */}
       <div
-        className={`bg-zinc-950 text-white text-xs px-3 sm:px-4 text-center font-medium border-b border-zinc-800/80 flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-standard ease-move overflow-hidden ${
+        className={`bg-[#2E3D28] text-[#F7F7F0] text-xs px-3 sm:px-4 text-center font-medium border-b border-[#243320] flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200 overflow-hidden ${
           isScrolled ? 'max-h-0 py-0 opacity-0 pointer-events-none' : 'max-h-12 py-2 opacity-100'
         }`}
       >
-        <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full font-bold text-[9px] sm:text-[10px] uppercase tracking-wide shrink-0">
-          <Sparkles size={11} /> 30-Day Free Trial
+        <span className="inline-flex items-center gap-1 bg-[#A9B887]/25 text-[#DCE2CF] px-2.5 py-0.5 rounded-full font-bold text-[9px] sm:text-[10px] uppercase tracking-wide shrink-0">
+          <Sparkles size={11} className="text-[#A9B887]" /> 30-Day Free Trial
         </span>
-        <span className="text-zinc-300 truncate text-[11px] sm:text-xs">
+        <span className="text-[#E8E9DF] truncate text-[11px] sm:text-xs">
           Experience unified accounting, sales, procurement, and inventory for 30 days. No credit card required.
         </span>
         <Link
           to="/try-free"
-          className="text-white underline hover:text-emerald-400 font-semibold text-[11px] sm:text-xs shrink-0 ml-1 transition-colors"
+          className="text-white underline hover:text-[#A9B887] font-semibold text-[11px] sm:text-xs shrink-0 ml-1 transition-colors"
         >
           Start Trial &rarr;
         </Link>
       </div>
 
-      {/* ── Header / Navigation (Fixed on scroll with theme backdrop blur) ── */}
+      {/* ── Header / Navigation (Fixed on scroll with permanent Sage Nature backdrop) ── */}
       <header
-        className={`w-full transition-all duration-standard ease-move ${
+        className={`w-full transition-all duration-200 ${
           isScrolled
-            ? 'bg-white/95 dark:bg-[#0F1117]/95 backdrop-blur-md shadow-sm border-b border-zinc-200/90 dark:border-[#2A2F3D]'
-            : 'bg-white/90 dark:bg-[#0F1117]/90 backdrop-blur-md border-b border-zinc-200/70 dark:border-[#2A2F3D]/80'
+            ? 'bg-[#E8E9DF]/95 backdrop-blur-md shadow-xs border-b border-[#D5D8CA]'
+            : 'bg-[#E8E9DF]/90 backdrop-blur-md border-b border-[#D5D8CA]/80'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* LEFT: Mark2 ERP Logo & Enterprise Branding */}
           <Link to="/" className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <MarkLogo
-              variant="auto"
+              variant="dark"
               alt="Mark2 ERP Logo"
               className="h-8 sm:h-9 w-auto object-contain"
             />
             <div className="flex flex-col">
-              <span className="font-bold text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 tracking-tight leading-none">
+              <span className="font-bold text-xs sm:text-sm text-[#2E3D28] tracking-tight leading-none">
                 Mark2 ERP
               </span>
-              <span className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">Enterprise Cloud</span>
+              <span className="text-[9px] sm:text-[10px] text-[#485942] font-medium">Enterprise Cloud</span>
             </div>
           </Link>
 
           {/* CENTER: Desktop Navigation Links with Smooth Scrolling */}
-          <nav className="hidden lg:flex items-center gap-7 text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+          <nav className="hidden lg:flex items-center gap-7 text-xs font-semibold text-[#485942]">
             <a
               href="#overview"
               onClick={(e) => handleNavClick(e, 'overview')}
-              className="hover:text-zinc-900 dark:hover:text-white transition-colors py-1 cursor-pointer"
+              className="hover:text-[#2E3D28] transition-colors py-1 cursor-pointer"
             >
               Overview
             </a>
             <a
               href="#modules"
               onClick={(e) => handleNavClick(e, 'modules')}
-              className="hover:text-zinc-900 dark:hover:text-white transition-colors py-1 cursor-pointer"
+              className="hover:text-[#2E3D28] transition-colors py-1 cursor-pointer"
             >
               Modules
             </a>
             <a
               href="#workflows"
               onClick={(e) => handleNavClick(e, 'workflows')}
-              className="hover:text-zinc-900 dark:hover:text-white transition-colors py-1 cursor-pointer"
+              className="hover:text-[#2E3D28] transition-colors py-1 cursor-pointer"
             >
               Workflows
             </a>
             <a
               href="#security"
               onClick={(e) => handleNavClick(e, 'security')}
-              className="hover:text-zinc-900 dark:hover:text-white transition-colors py-1 cursor-pointer"
+              className="hover:text-[#2E3D28] transition-colors py-1 cursor-pointer"
             >
               Security
             </a>
             <a
               href="#pricing"
               onClick={(e) => handleNavClick(e, 'pricing')}
-              className="hover:text-zinc-900 dark:hover:text-white transition-colors py-1 cursor-pointer"
+              className="hover:text-[#2E3D28] transition-colors py-1 cursor-pointer"
             >
               Pricing/Trial
             </a>
@@ -123,12 +122,11 @@ export default function LandingNavbar({ isAuthenticated }) {
 
           {/* RIGHT: Header Action Buttons */}
           <div className="hidden sm:flex items-center gap-2 sm:gap-3">
-            <ThemeToggle size="sm" />
             {isAuthenticated ? (
               <button
                 type="button"
                 onClick={() => navigate('/company-select')}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 dark:bg-[#4C8DFF] text-white text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] transition-colors active:scale-[0.98] shadow-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2E3D28] text-white text-xs font-semibold hover:bg-[#3C4E34] active:bg-[#243320] transition-colors active:scale-[0.98] shadow-xs"
               >
                 <span>Go to Workspace</span>
                 <ArrowRight size={14} />
@@ -136,7 +134,7 @@ export default function LandingNavbar({ isAuthenticated }) {
             ) : (
               <Link
                 to="/try-free"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 dark:bg-[#4C8DFF] text-white text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] transition-colors active:scale-[0.98] shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2E3D28] text-white text-xs font-semibold hover:bg-[#3C4E34] active:bg-[#243320] transition-colors active:scale-[0.98] shadow-xs"
               >
                 <span>Start Free Trial</span>
                 <ArrowRight size={14} />
@@ -144,13 +142,12 @@ export default function LandingNavbar({ isAuthenticated }) {
             )}
           </div>
 
-          {/* Mobile Right: ThemeToggle + Mobile Menu Button */}
+          {/* Mobile Right: Menu Button */}
           <div className="lg:hidden flex items-center gap-1">
-            <ThemeToggle size="sm" />
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="w-11 h-11 flex items-center justify-center rounded-xl text-zinc-700 dark:text-[#E6E8EE] hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-[#1D212C] active:bg-zinc-200 dark:active:bg-[#222736] transition-colors"
+              className="w-11 h-11 flex items-center justify-center rounded-xl text-[#2E3D28] hover:bg-[#EDEEE4] active:bg-[#DCE2CF] transition-colors"
               aria-label="Toggle Navigation Menu"
               aria-expanded={mobileMenuOpen}
             >
@@ -161,55 +158,55 @@ export default function LandingNavbar({ isAuthenticated }) {
 
         {/* Mobile Dropdown Drawer with Backdrop Overlay */}
         {mobileMenuOpen && (
-          <div className="lg:hidden fixed inset-x-0 top-[64px] bottom-0 bg-zinc-900/40 backdrop-blur-sm z-40 animate-fade-in" onClick={() => setMobileMenuOpen(false)}>
+          <div className="lg:hidden fixed inset-x-0 top-[64px] bottom-0 bg-black/30 backdrop-blur-xs z-40" onClick={() => setMobileMenuOpen(false)}>
             <div
-              className="bg-white dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D] px-5 pt-4 pb-8 space-y-4 shadow-xl animate-slide-up"
+              className="bg-[#F7F7F0] border-b border-[#D5D8CA] px-5 pt-4 pb-8 space-y-4 shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="space-y-1">
                 <a
                   href="#overview"
                   onClick={(e) => handleNavClick(e, 'overview')}
-                  className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm font-semibold text-zinc-800 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1D212C] transition-colors cursor-pointer"
+                  className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm font-semibold text-[#2E3D28] hover:bg-[#EDEEE4] transition-colors cursor-pointer"
                 >
                   <span>Overview</span>
-                  <ArrowRight size={14} className="text-zinc-400 dark:text-[#6B7184]" />
+                  <ArrowRight size={14} className="text-[#485942]" />
                 </a>
                 <a
                   href="#modules"
                   onClick={(e) => handleNavClick(e, 'modules')}
-                  className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm font-semibold text-zinc-800 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1D212C] transition-colors cursor-pointer"
+                  className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm font-semibold text-[#2E3D28] hover:bg-[#EDEEE4] transition-colors cursor-pointer"
                 >
                   <span>Modules</span>
-                  <ArrowRight size={14} className="text-zinc-400 dark:text-[#6B7184]" />
+                  <ArrowRight size={14} className="text-[#485942]" />
                 </a>
                 <a
                   href="#workflows"
                   onClick={(e) => handleNavClick(e, 'workflows')}
-                  className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm font-semibold text-zinc-800 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1D212C] transition-colors cursor-pointer"
+                  className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm font-semibold text-[#2E3D28] hover:bg-[#EDEEE4] transition-colors cursor-pointer"
                 >
                   <span>Workflows</span>
-                  <ArrowRight size={14} className="text-zinc-400 dark:text-[#6B7184]" />
+                  <ArrowRight size={14} className="text-[#485942]" />
                 </a>
                 <a
                   href="#security"
                   onClick={(e) => handleNavClick(e, 'security')}
-                  className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm font-semibold text-zinc-800 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1D212C] transition-colors cursor-pointer"
+                  className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm font-semibold text-[#2E3D28] hover:bg-[#EDEEE4] transition-colors cursor-pointer"
                 >
                   <span>Security</span>
-                  <ArrowRight size={14} className="text-zinc-400 dark:text-[#6B7184]" />
+                  <ArrowRight size={14} className="text-[#485942]" />
                 </a>
                 <a
                   href="#pricing"
                   onClick={(e) => handleNavClick(e, 'pricing')}
-                  className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm font-semibold text-zinc-800 dark:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#1D212C] transition-colors cursor-pointer"
+                  className="flex items-center justify-between py-2.5 px-3 rounded-lg text-sm font-semibold text-[#2E3D28] hover:bg-[#EDEEE4] transition-colors cursor-pointer"
                 >
                   <span>Pricing / Trial</span>
-                  <ArrowRight size={14} className="text-zinc-400 dark:text-[#6B7184]" />
+                  <ArrowRight size={14} className="text-[#485942]" />
                 </a>
               </div>
 
-              <div className="pt-3 border-t border-zinc-100 dark:border-[#2A2F3D] flex flex-col gap-2.5">
+              <div className="pt-3 border-t border-[#D5D8CA] flex flex-col gap-2.5">
                 {isAuthenticated ? (
                   <button
                     type="button"
@@ -217,7 +214,7 @@ export default function LandingNavbar({ isAuthenticated }) {
                       setMobileMenuOpen(false);
                       navigate('/company-select');
                     }}
-                    className="w-full text-center py-3 rounded-xl bg-zinc-900 dark:bg-[#4C8DFF] text-white text-xs font-semibold shadow-sm"
+                    className="w-full text-center py-3 rounded-xl bg-[#2E3D28] text-white text-xs font-semibold hover:bg-[#3C4E34] transition-colors shadow-xs"
                   >
                     Go to Workspace
                   </button>
@@ -225,7 +222,7 @@ export default function LandingNavbar({ isAuthenticated }) {
                   <Link
                     to="/try-free"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-full text-center py-3 rounded-xl bg-zinc-900 dark:bg-[#4C8DFF] text-white text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-[#6AA1FF] transition-colors shadow-sm"
+                    className="w-full text-center py-3 rounded-xl bg-[#2E3D28] text-white text-xs font-semibold hover:bg-[#3C4E34] transition-colors shadow-xs"
                   >
                     Start Free Trial
                   </Link>

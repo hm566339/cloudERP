@@ -236,7 +236,7 @@ export default function UserPermissionsSettings() {
   ], [users]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] dark:bg-transparent relative">
+    <div className="flex flex-col h-full bg-[#E8E9DF] dark:bg-[#0F1117] dark:bg-transparent relative">
       <div className="px-4 sm:px-6 pt-4 shrink-0">
         <SettingsNavbar activeTab="users_permissions" />
       </div>

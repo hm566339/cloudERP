@@ -797,7 +797,7 @@ export default function QuotationsPage() {
   });
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117] animate-in fade-in">
+    <div className="flex flex-col h-full bg-[var(--color-bg-base)] dark:bg-[var(--color-bg-base)] animate-in fade-in">
       {/* Top Header */}
       <PageHeader
         title="Quotations"

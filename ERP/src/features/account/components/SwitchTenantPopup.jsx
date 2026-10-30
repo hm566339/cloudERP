@@ -456,19 +456,19 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="switch-tenant-title"
-      className={`absolute bottom-full left-0 right-0 mb-2 w-full min-w-[280px] sm:min-w-[320px] bg-white dark:bg-[#161922] border border-zinc-200/90 dark:border-[#2A2F3D] rounded-2xl shadow-2xl z-50 overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 ${className}`}
+      className={`absolute bottom-full left-0 right-0 mb-2 w-full min-w-[280px] sm:min-w-[320px] bg-[var(--color-surface)] dark:bg-[#161922] border border-[var(--color-border)] dark:border-[#2A2F3D] rounded-2xl shadow-2xl z-50 overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 ${className}`}
     >
       {/* ── Top Header ── */}
-      <div className="flex items-center justify-between px-3.5 py-3 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/70 dark:bg-[#1D212C]/60">
+      <div className="flex items-center justify-between px-3.5 py-3 border-b border-[var(--color-border)] dark:border-[#2A2F3D] bg-[var(--color-surface-2)]/70 dark:bg-[#1D212C]/60">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/50 flex items-center justify-center text-blue-600 dark:text-[#4C8DFF] shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-[var(--color-surface-2)] dark:bg-zinc-800 border border-[var(--color-border)] dark:border-zinc-700 flex items-center justify-center text-[var(--color-text-primary)] dark:text-[#A0A6B5] shrink-0">
             <Building2 size={15} />
           </div>
           <div className="min-w-0">
-            <h3 id="switch-tenant-title" className="text-xs font-bold text-zinc-900 dark:text-[#E6E8EE] truncate">
+            <h3 id="switch-tenant-title" className="text-xs font-bold text-[var(--color-text-primary)] dark:text-[#E6E8EE] truncate">
               Switch Tenant
             </h3>
-            <p className="text-[10px] text-zinc-400 dark:text-[#A0A6B5] truncate">
+            <p className="text-[10px] text-[var(--color-text-secondary)] dark:text-[#A0A6B5] truncate">
               {organizationName}
             </p>
           </div>
@@ -504,7 +504,7 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search companies..."
               disabled={isSwitching}
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] text-zinc-900 dark:text-[#E6E8EE] placeholder-zinc-400 dark:placeholder-[#6B7184] focus:outline-none focus:ring-1.5 focus:ring-blue-500 transition-all disabled:opacity-50"
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-[var(--color-surface)] dark:bg-[#1D212C] border border-[var(--color-border)] dark:border-[#2A2F3D] text-[var(--color-text-primary)] dark:text-[#E6E8EE] placeholder-[var(--color-text-muted)] dark:placeholder-[#6B7184] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/15 focus:border-[var(--color-primary)] transition-all disabled:opacity-50"
             />
           </div>
         </div>
@@ -538,8 +538,8 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
                 onClick={() => handleSelectCompany(comp)}
                 className={`w-full group flex items-center justify-between gap-3 p-2.5 rounded-xl border text-left transition-all duration-150 cursor-pointer select-none active:scale-[0.99] disabled:pointer-events-none ${
                   isCompActive
-                    ? 'bg-blue-50/70 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700/50 shadow-2xs'
-                    : 'bg-white dark:bg-[#1D212C]/60 hover:bg-zinc-50 dark:hover:bg-[#222736] border-zinc-200/80 dark:border-[#2A2F3D]'
+                    ? 'bg-[var(--color-surface-2)] dark:bg-zinc-800 border-[var(--color-border)] dark:border-zinc-700 shadow-2xs'
+                    : 'bg-[var(--color-surface)] dark:bg-[#1D212C]/60 hover:bg-[var(--color-surface-2)] dark:hover:bg-[#222736] border-[var(--color-border)] dark:border-[#2A2F3D]'
                 }`}
               >
                 {/* Logo / Initials */}
@@ -561,7 +561,7 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
                     <p
                       className={`text-xs font-semibold truncate ${
                         isCompActive
-                          ? 'text-blue-700 dark:text-[#4C8DFF]'
+                          ? 'text-[#2E3D28] dark:text-[#4C8DFF]'
                           : 'text-zinc-800 dark:text-[#E6E8EE] group-hover:text-zinc-900 dark:group-hover:text-white'
                       }`}
                     >
@@ -583,7 +583,7 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
                       Active
                     </span>
                   ) : (
-                    <span className="text-[10px] font-medium text-zinc-400 group-hover:text-blue-600 dark:group-hover:text-[#4C8DFF] flex items-center gap-0.5 transition-colors">
+                    <span className="text-[10px] font-medium text-zinc-400 group-hover:text-[#2E3D28] dark:group-hover:text-[#4C8DFF] flex items-center gap-0.5 transition-colors">
                       Switch
                       <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
                     </span>
@@ -596,7 +596,7 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
       </div>
 
       {/* ── Bottom Footer Summary ── */}
-      <div className="px-3.5 py-2 border-t border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/40 flex items-center justify-between text-[9.5px] text-zinc-400 dark:text-[#A0A6B5]">
+      <div className="px-3.5 py-2 border-t border-[#D5D8CA] dark:border-[#2A2F3D] bg-[#EDEEE4]/50 dark:bg-[#1D212C]/40 flex items-center justify-between text-[9.5px] text-zinc-400 dark:text-[#A0A6B5]">
         <span>{companyList.length} total {companyList.length === 1 ? 'company' : 'companies'}</span>
         {isSwitching ? (
           <span className="flex items-center gap-1.5 text-blue-600 dark:text-[#4C8DFF] font-medium">

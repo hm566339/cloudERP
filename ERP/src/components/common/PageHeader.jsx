@@ -45,13 +45,13 @@ function PageHeader({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2.5">
           {Icon && (
-            <span className="text-zinc-800 dark:text-[#E6E8EE] shrink-0 flex items-center justify-center">
+            <span className="text-[#2E3D28] dark:text-[#E6E8EE] shrink-0 flex items-center justify-center">
               {React.isValidElement(Icon) ? Icon : <Icon size={20} className="text-zinc-800 dark:text-[#E6E8EE]" />}
             </span>
           )}
           {title && (
             <h1
-              className={`text-lg sm:text-xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight truncate ${titleClassName}`}
+              className={`text-lg sm:text-xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight truncate ${titleClassName}`}
             >
               {title}
             </h1>
@@ -59,7 +59,7 @@ function PageHeader({
         </div>
         {(description || subtitle) && (
           <p
-            className={`text-xs sm:text-sm text-zinc-500 dark:text-[#A0A6B5] mt-0.5 leading-snug line-clamp-2 ${descriptionClassName}`}
+            className={`text-xs sm:text-sm text-[#485942] dark:text-[#A0A6B5] mt-0.5 leading-snug line-clamp-2 ${descriptionClassName}`}
           >
             {(description || subtitle)}
           </p>

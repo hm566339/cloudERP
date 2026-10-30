@@ -83,8 +83,10 @@ function getMappedPath(title, originalPath) {
 }
 
 const CHART_DATA_KEYS = ['value'];
-const EXPENSE_CHART_COLORS = ['#ef4444'];
-const DEFAULT_CHART_COLORS = ['#3b82f6'];
+const EXPENSE_CHART_COLORS = ['#C66B62'];
+const REVENUE_CHART_COLORS = ['#2E3D28'];
+const CASH_FLOW_COLORS = ['#A9B887'];
+const DEFAULT_CHART_COLORS = ['#2E3D28', '#A9B887', '#74865A'];
 
 // ══════════════════════════════════════════════════════════════════
 // MAIN DASHBOARD COMPONENT
@@ -235,7 +237,7 @@ function AccountDashboard() {
   }, [approvals]);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+    <div className="flex flex-col h-full bg-[#E8E9DF] dark:bg-[#0F1117]">
       {/* ────────── Page Header ────────── */}
       <PageHeader
         title={isSuperAdmin ? 'Super Admin Dashboard' : 'Account Dashboard'}
@@ -259,73 +261,73 @@ function AccountDashboard() {
       <div className="flex-1 overflow-auto space-y-4 p-4">
         {/* Profile + Security Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm md:col-span-2 overflow-hidden min-w-0">
-            <div className="px-4 py-3 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C] flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] flex items-center justify-center text-zinc-600 dark:text-[#A0A6B5] shrink-0">
+          <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-sm md:col-span-2 overflow-hidden min-w-0">
+            <div className="px-4 py-3 border-b border-[#D5D8CA] dark:border-[#2A2F3D] bg-[#EDEEE4]/50 dark:bg-[#1D212C] flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-2)] dark:bg-[#1D212C] border border-[var(--color-border)] dark:border-[#2A2F3D] flex items-center justify-center text-[var(--color-primary)] dark:text-[#A0A6B5] shrink-0">
                 <User size={16} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">Personal Information</h3>
-                <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">Your profile details</p>
+                <h3 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE]">Personal Information</h3>
+                <p className="text-xs text-[#485942] dark:text-[#A0A6B5]">Your profile details</p>
               </div>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Full Name</label>
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE] mt-1">
+                  <label className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Full Name</label>
+                  <p className="text-sm font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mt-1">
                     {currentUser?.fullName || currentUser?.name || currentUser?.displayName || (currentUser?.firstName || currentUser?.lastName ? `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() : null) || currentUser?.username || 'Unknown'}
                   </p>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Email Address</label>
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE] mt-1 truncate">{currentUser?.email || 'N/A'}</p>
+                  <label className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Email Address</label>
+                  <p className="text-sm font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mt-1 truncate">{currentUser?.email || 'N/A'}</p>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Role</label>
+                  <label className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Role</label>
                   <div className="mt-1">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${isSuperAdmin ? 'bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-300' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'}`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${'bg-[var(--color-surface-2)] text-[var(--color-text-primary)] border border-[var(--color-border)] dark:bg-zinc-800 dark:text-zinc-200'}`}>
                       {roleLabel}
                     </span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider">Modules</label>
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-[#E6E8EE] mt-1">{rbac.modules.length} accessible</p>
+                  <label className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Modules</label>
+                  <p className="text-sm font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mt-1">{rbac.modules.length} accessible</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm overflow-hidden min-w-0">
+          <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-sm overflow-hidden min-w-0">
             <div className="px-4 py-3 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50 dark:bg-[#1D212C] flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
                 <Shield size={16} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE]">Security Status</h3>
-                <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">Account protection</p>
+                <h3 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE]">Security Status</h3>
+                <p className="text-xs text-[#485942] dark:text-[#A0A6B5]">Account protection</p>
               </div>
             </div>
             <div className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
-                <span className="text-sm font-semibold text-zinc-800">Account is secure</span>
+                <span className="text-sm font-semibold text-[#2E3D28] dark:text-zinc-100">Account is secure</span>
               </div>
               <div className="flex flex-wrap gap-2 mb-5">
                 {rbac.permissions.slice(0, 3).map(p => (
-                  <span key={p} className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200 dark:border-[#2A2F3D]">
+                  <span key={p} className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-[var(--color-surface-2)] dark:bg-[#1D212C] text-[var(--color-text-primary)] dark:text-[#A0A6B5] border border-[var(--color-border)] dark:border-[#2A2F3D]">
                     {p}
                   </span>
                 ))}
                 {rbac.permissions.length > 3 && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200 dark:border-[#2A2F3D]">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-[var(--color-surface-2)] dark:bg-[#1D212C] text-[var(--color-text-primary)] dark:text-[#A0A6B5] border border-[var(--color-border)] dark:border-[#2A2F3D]">
                     +{rbac.permissions.length - 3} MORE
                   </span>
                 )}
               </div>
-              <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-zinc-300 dark:border-[#2A2F3D] shadow-sm text-sm font-medium rounded-md text-zinc-700 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] hover:bg-zinc-50 dark:hover:bg-[#222736] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-900/10 transition-colors">
-                <Key size={14} className="mr-2 text-zinc-400" />
+              <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-[var(--color-border)] dark:border-[#2A2F3D] shadow-sm text-sm font-medium rounded-md text-[var(--color-text-primary)] dark:text-[#E6E8EE] bg-[var(--color-surface)] dark:bg-[#1D212C] hover:bg-[var(--color-surface-2)] dark:hover:bg-[#222736] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-primary)]/15 transition-colors">
+                <Key size={14} className="mr-2 text-[var(--color-primary)]" />
                 Change Password
               </button>
             </div>
@@ -368,9 +370,9 @@ function AccountDashboard() {
                   })}
                 </div>
               ) : (
-                <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-sm p-8 text-center flex flex-col items-center justify-center">
+                <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-sm p-8 text-center flex flex-col items-center justify-center">
                   <BarChart3 className="mx-auto text-zinc-300 mb-2" size={32} />
-                  <p className="text-sm text-zinc-500 font-medium">No metric cards available for your role.</p>
+                  <p className="text-sm text-[#485942] font-medium">No metric cards available for your role.</p>
                 </div>
               )}
             </DashboardSection>
@@ -410,7 +412,14 @@ function AccountDashboard() {
                         data={Array.isArray(chart.data) ? chart.data : []}
                         dataKeys={CHART_DATA_KEYS}
                         xAxisKey="label"
-                        colors={isExpense ? EXPENSE_CHART_COLORS : DEFAULT_CHART_COLORS}
+                        colors={(() => {
+                        const titleLower = (chart.title || chart.id || '').toLowerCase();
+                        if (titleLower.includes('expense') || titleLower.includes('payable')) return EXPENSE_CHART_COLORS;
+                        if (titleLower.includes('revenue') || titleLower.includes('sales')) return REVENUE_CHART_COLORS;
+                        if (titleLower.includes('cash')) return CASH_FLOW_COLORS;
+                        if (titleLower.includes('receivable')) return ['#2E3D28', '#74865A'];
+                        return DEFAULT_CHART_COLORS;
+                      })()}
                       />
                     );
                   })}

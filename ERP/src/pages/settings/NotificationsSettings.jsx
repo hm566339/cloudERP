@@ -46,14 +46,14 @@ export default function NotificationsSettings() {
           checked={state.emailAlerts}
           onChange={handleChange('emailAlerts')}
         />
-        <div className="border-t border-zinc-100 dark:border-[#2A2F3D] my-2"></div>
+        <div className="border-t border-[#D5D8CA] dark:border-[#2A2F3D] my-2"></div>
         <SettingsToggle 
           label="Account Activity"
           description="Get notified about logins, password changes, and security events."
           checked={state.accountActivity}
           onChange={handleChange('accountActivity')}
         />
-        <div className="border-t border-zinc-100 dark:border-[#2A2F3D] my-2"></div>
+        <div className="border-t border-[#D5D8CA] dark:border-[#2A2F3D] my-2"></div>
         <SettingsToggle 
           label="Product Updates"
           description="Receive news, updates, and marketing emails."
@@ -69,7 +69,7 @@ export default function NotificationsSettings() {
           checked={state.systemAlerts}
           onChange={handleChange('systemAlerts')}
         />
-        <div className="border-t border-zinc-100 dark:border-[#2A2F3D] my-2"></div>
+        <div className="border-t border-[#D5D8CA] dark:border-[#2A2F3D] my-2"></div>
         <SettingsToggle 
           label="Transaction Notifications"
           description="Show alerts when large transactions or anomalies occur."

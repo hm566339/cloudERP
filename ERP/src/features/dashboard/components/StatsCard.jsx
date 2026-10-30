@@ -19,16 +19,16 @@ export default function StatsCard({
   bgClass = 'bg-indigo-50' 
 }) {
   return (
-    <div className="card p-5 group hover:shadow-md transition-shadow relative overflow-hidden bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl">
+    <div className="card p-5 group hover:shadow-md transition-shadow relative overflow-hidden bg-[#F7F7F0] dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl">
       <div className="flex items-center justify-between mb-4 relative z-10">
-        <span className="text-xs font-bold text-zinc-500 dark:text-[#A0A6B5] uppercase tracking-wider">{title}</span>
+        <span className="text-xs font-bold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider">{title}</span>
         <div className={`p-2 rounded-lg ${bgClass} ${colorClass}`}>
           <Icon size={20} />
         </div>
       </div>
       
       <div className="relative z-10">
-        <p className="text-3xl font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">{total || 0}</p>
+        <p className="text-3xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight">{total || 0}</p>
         
         <div className="mt-4 flex flex-wrap gap-2">
           {active !== undefined && (
@@ -38,7 +38,7 @@ export default function StatsCard({
             </div>
           )}
           {inactive !== undefined && (
-            <div className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-[#1D212C] text-zinc-600 dark:text-[#A0A6B5] border border-zinc-200 dark:border-[#2A2F3D]">
+            <div className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-[#EDEEE4] dark:bg-[#1D212C] text-[#485942] dark:text-[#A0A6B5] border border-[#D5D8CA] dark:border-[#2A2F3D]">
               <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 dark:bg-zinc-500"></span>
               {inactive} {inactiveLabel}
             </div>
@@ -62,8 +62,8 @@ export default function StatsCard({
             </div>
           )}
           {used !== undefined && (
-            <div className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-800/80">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+            <div className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-[#202922] text-zinc-700 dark:text-[#A3B5A5] border border-zinc-200 dark:border-[#2E3D31]">
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 dark:bg-[#708573]"></span>
               {used} Used
             </div>
           )}

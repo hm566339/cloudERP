@@ -64,7 +64,7 @@ export default function DataTablePagination({
   }, [displayPage, totalPages]);
 
   return (
-    <div className="w-full px-4 py-3 sm:px-6 border-t border-zinc-200/80 dark:border-[#2A2F3D] bg-white dark:bg-[#161922]">
+    <div className="w-full px-4 py-3 sm:px-6 border-t border-[var(--color-border)] dark:border-[#2A2F3D] bg-[var(--color-surface)] dark:bg-[#161922]">
       {/* Mobile view (< sm) */}
       <div className="flex sm:hidden items-center justify-between gap-2">
         <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] truncate">
@@ -153,8 +153,8 @@ export default function DataTablePagination({
                 onClick={() => p !== displayPage && handlePageClick(p)}
                 className={`h-8 min-w-8 px-2 flex items-center justify-center rounded-lg text-xs font-semibold transition-all active:scale-95 ${
                   p === displayPage
-                    ? 'bg-zinc-900 text-white dark:bg-[#4C8DFF] dark:text-white border border-zinc-900 dark:border-[#4C8DFF] shadow-xs'
-                    : 'border border-zinc-200 dark:border-[#2A2F3D] text-zinc-600 dark:text-[#A0A6B5] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-[#3A4154]'
+                    ? 'bg-[var(--color-primary)] text-white dark:bg-[#4C8DFF] dark:text-white border border-[var(--color-primary)] dark:border-[#4C8DFF] shadow-xs'
+                    : 'border border-[var(--color-border)] dark:border-[#2A2F3D] text-[var(--color-text-secondary)] dark:text-[#A0A6B5] hover:bg-[var(--color-surface-2)] dark:hover:bg-[#222736] hover:border-[var(--color-border-hover)] dark:hover:border-[#3A4154] hover:text-[var(--color-text-primary)]'
                 }`}
               >
                 {p}

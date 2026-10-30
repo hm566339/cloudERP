@@ -562,7 +562,7 @@ function SubscriptionContent() {
             </div>
             <div className="w-full bg-zinc-200/80 dark:bg-[#2A2F3D] rounded-full h-1.5 overflow-hidden">
               <div
-                className="bg-zinc-900 dark:bg-[#4C8DFF] h-1.5 rounded-full transition-all duration-300"
+                className="bg-[#2E3D28] dark:bg-[#4C8DFF] h-1.5 rounded-full transition-all duration-300"
                 style={{ width: `${maxAllowedCompanies ? Math.min(100, (companies.length / maxAllowedCompanies) * 100) : 100}%` }}
               />
             </div>
@@ -808,7 +808,7 @@ function SubscriptionContent() {
                           <Check size={10} className="stroke-[3]" /> Current Plan
                         </span>
                       ) : isPopular ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-zinc-900 text-white dark:bg-[#4C8DFF] dark:text-white">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9.5px] font-bold uppercase tracking-wider bg-[#2E3D28] text-white dark:bg-[#4C8DFF] dark:text-white">
                           <Sparkles size={10} className="text-amber-300" /> Recommended
                         </span>
                       ) : p.isTrial ? (
@@ -899,7 +899,7 @@ function SubscriptionContent() {
                           type="button"
                           disabled={!canBuy}
                           onClick={() => handleOpenUpgrade(p)}
-                          className={`btn-primary w-full py-2.5 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-[#4C8DFF] dark:hover:bg-[#3B7AE8] dark:text-white transition-all flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs ${
+                          className={`btn-primary w-full py-2.5 rounded-lg text-xs font-semibold bg-[#2E3D28] hover:bg-[#3C4E34] active:bg-[#243320] text-white dark:bg-[#4C8DFF] dark:hover:bg-[#3B7AE8] dark:text-white transition-all flex items-center justify-center gap-1.5 shadow-2xs hover:shadow-xs ${
                             !canBuy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                           }`}
                           title={!canBuy ? buyDisabledReason : (p.isTrial ? 'Choose Trial' : `Upgrade to ${p.name}`)}

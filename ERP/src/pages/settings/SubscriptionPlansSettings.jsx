@@ -279,7 +279,7 @@ export default function SubscriptionPlansSettings() {
   const maxUsersQuota = effectiveActiveSub?.maxUsersPerCompany ?? effectiveActiveSub?.plan?.maxUsersPerCompany ?? 10;
 
   return (
-    <div className="flex-1 bg-zinc-50/50 dark:bg-[#0F1117] min-h-screen">
+    <div className="flex-1 bg-[#E8E9DF] dark:bg-[#0F1117] min-h-screen">
       <div className="w-full p-4 sm:p-6 space-y-6 animate-fade-in">
         {/* Settings Navigation Bar */}
         <div className="shrink-0">
@@ -287,7 +287,7 @@ export default function SubscriptionPlansSettings() {
         </div>
 
         {/* Page Header */}
-        <div className="bg-white dark:bg-[#161922] rounded-2xl border border-zinc-200/80 dark:border-[#2A2F3D] p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
               <CreditCard size={14} className="text-zinc-700 dark:text-zinc-300" />
