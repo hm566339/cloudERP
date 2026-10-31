@@ -21,6 +21,10 @@ public interface OrganizationMemberRepository extends JpaRepository<Organization
 
     long countByOrganization_Id(UUID organizationId);
 
+    long countByOrganization_IdAndMembershipStatus(UUID organizationId, MembershipStatus status);
+
+    Optional<OrganizationMember> findFirstByOrganization_IdAndMembershipStatus(UUID organizationId, MembershipStatus status);
+
     @Query("""
             select m from OrganizationMember m
             join fetch m.user u

@@ -150,12 +150,13 @@ public class SystemAdminBootstrap implements CommandLineRunner {
                                                                 .moduleStatus(true)
                                                                 .build()));
 
-                ModuleRoute moduleRoute = moduleRouteRepository.findByModule_Id(adminModule.getId())
-                                .orElseGet(() -> ModuleRoute.builder()
-                                                .module(adminModule)
-                                                .apiPattern("/api/sso/**")
-                                                .routeOrder(0)
-                                                .build());
+                ModuleRoute moduleRoute = moduleRouteRepository.findByApiPattern("/api/sso/**")
+                                .orElseGet(() -> moduleRouteRepository.findByModule_IdAndApiPatternIgnoreCase(adminModule.getId(), "/api/sso/**")
+                                                .orElseGet(() -> ModuleRoute.builder()
+                                                                .module(adminModule)
+                                                                .apiPattern("/api/sso/**")
+                                                                .routeOrder(0)
+                                                                .build()));
 
                 moduleRoute.setModule(adminModule);
                 moduleRoute.setApiPattern("/api/sso/**");

@@ -32,6 +32,9 @@ public class Organization {
     @Column(name = "display_name", nullable = false, length = 255)
     private String displayName;
 
+    @Column(name = "primary_email", length = 255)
+    private String primaryEmail;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     @Builder.Default

@@ -42,6 +42,7 @@ sso:
 
       ORGANIZATION:
         - "/api/sso/organization/**"
+        - "/api/organization/**"
         - "/api/settings/**"
         - "/api/sso/settings/**"
 

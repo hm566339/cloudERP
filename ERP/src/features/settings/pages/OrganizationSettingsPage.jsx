@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Building2,
@@ -19,49 +19,180 @@ import {
   Hash,
   Activity,
   CheckCircle2,
+  RefreshCw,
 } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../../app/hooks';
 import { selectAuthContext } from '../../../features/auth/authSlice';
 import { addAlert } from '../../../features/notifications/notificationSlice';
 import SettingsNavbar from '../../../components/settings/SettingsNavbar';
+import {
+  getOrganizationProfile,
+  updateOrganizationProfile,
+  getLoginPortal,
+  getRegionalSettings,
+  updateRegionalSettings,
+  getSecuritySettings,
+  updateSecuritySettings,
+  getOrganizationCompanies,
+  getOrganizationSubscription,
+  getOrganizationModules,
+} from '../../../api/sso/organizationSettings.api.js';
 
 export default function OrganizationSettingsPage() {
   const dispatch = useAppDispatch();
   const authContext = useAppSelector(selectAuthContext);
 
   const {
-    organization,
-    user,
-    companies = [],
-    subscription,
-    modules = [],
+    organization: authOrg,
+    user: authUser,
+    companies: authCompanies = [],
+    subscription: authSubscription,
+    modules: authModules = [],
   } = authContext || {};
 
-  const orgName = organization?.name || organization?.code || 'My Organization';
-  const orgCode = (organization?.code || '').toUpperCase();
-  const orgId = organization?.id || '';
-  const accessMode = organization?.accessMode || 'FULL';
-  const status = organization?.status || 'ACTIVE';
+  // Form & Settings States
+  const [name, setName] = useState(authOrg?.name || authOrg?.code || 'My Organization');
+  const [contactEmail, setContactEmail] = useState(authUser?.email || authOrg?.email || '');
+  const [orgCode, setOrgCode] = useState((authOrg?.code || '').toUpperCase());
+  const [orgId, setOrgId] = useState(authOrg?.id || '');
+  const [accessMode, setAccessMode] = useState(authOrg?.accessMode || 'FULL');
+  const [status, setStatus] = useState(authOrg?.status || 'ACTIVE');
 
-  // Form states
-  const [name, setName] = useState(orgName);
-  const [contactEmail, setContactEmail] = useState(user?.email || organization?.email || '');
+  // Regional & Fiscal Defaults
   const [currency, setCurrency] = useState('INR');
   const [timezone, setTimezone] = useState('Asia/Kolkata (IST)');
   const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
   const [timeFormat, setTimeFormat] = useState('12h');
   const [fiscalYearStart, setFiscalYearStart] = useState('April');
+
+  // Security Policies
   const [twoFactorRequired, setTwoFactorRequired] = useState(false);
   const [sessionTimeout, setSessionTimeout] = useState('60');
 
-  const [copiedId, setCopiedId] = useState(false);
-  const [copiedUrl, setCopiedUrl] = useState(false);
+  // Multi-Company, Subscription & Modules
+  const [companiesCount, setCompaniesCount] = useState(authCompanies.length);
+  const [subscriptionPlanName, setSubscriptionPlanName] = useState(authSubscription?.planCode || 'Standard Plan');
+  const [isTrial, setIsTrial] = useState(Boolean(authSubscription?.trialing));
+  const [enabledModules, setEnabledModules] = useState([
+    'Finance & Accounts',
+    'Inventory',
+    'Sales & CRM',
+    'Purchasing',
+    'Workflow Automation',
+    'SSO Admin',
+  ]);
+
+  // UI Interactive States
+  const [loginUrl, setLoginUrl] = useState(() => {
+    const code = (authOrg?.code || '').toLowerCase();
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/erp/o/${code}/login`;
+    }
+    return `https://app.mark2erp.com/erp/o/${code}/login`;
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
-  const loginUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/erp/o/${orgCode.toLowerCase()}/login`
-    : `https://app.mark2erp.com/erp/o/${orgCode.toLowerCase()}/login`;
+  // ───────────────────────────────────────────────────────────────────────────
+  // Fetch Saved Settings From Backend
+  // ───────────────────────────────────────────────────────────────────────────
+
+  const loadSettingsData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const results = await Promise.allSettled([
+        getOrganizationProfile(),
+        getLoginPortal(),
+        getRegionalSettings(),
+        getSecuritySettings(),
+        getOrganizationCompanies(),
+        getOrganizationSubscription(),
+        getOrganizationModules(),
+      ]);
+
+      // 1. Profile
+      if (results[0].status === 'fulfilled' && results[0].value) {
+        const p = results[0].value;
+        if (p.name) setName(p.name);
+        if (p.primaryEmail) setContactEmail(p.primaryEmail);
+        if (p.code) setOrgCode(p.code.toUpperCase());
+        if (p.id) setOrgId(p.id);
+        if (p.status) setStatus(p.status);
+        if (p.accessMode) setAccessMode(p.accessMode);
+      }
+
+      // 2. Login Portal
+      if (results[1].status === 'fulfilled' && results[1].value) {
+        const portal = results[1].value;
+        if (portal.loginUrl) setLoginUrl(portal.loginUrl);
+        if (portal.organizationCode) setOrgCode(portal.organizationCode.toUpperCase());
+      }
+
+      // 3. Regional Settings
+      if (results[2].status === 'fulfilled' && results[2].value) {
+        const reg = results[2].value;
+        if (reg.currency) setCurrency(reg.currency);
+        if (reg.timezone) setTimezone(reg.timezone);
+        if (reg.fiscalYearStartMonth) setFiscalYearStart(reg.fiscalYearStartMonth);
+        if (reg.dateFormat) setDateFormat(reg.dateFormat);
+        if (reg.timeFormat) setTimeFormat(reg.timeFormat);
+      }
+
+      // 4. Security Settings
+      if (results[3].status === 'fulfilled' && results[3].value) {
+        const sec = results[3].value;
+        if (sec.enforce2FA !== undefined) setTwoFactorRequired(Boolean(sec.enforce2FA));
+        if (sec.sessionTimeoutMinutes) setSessionTimeout(String(sec.sessionTimeoutMinutes));
+      }
+
+      // 5. Companies Count
+      if (results[4].status === 'fulfilled' && results[4].value) {
+        const comps = results[4].value;
+        if (typeof comps.activeCount === 'number') {
+          setCompaniesCount(comps.activeCount);
+        } else if (Array.isArray(comps.companies)) {
+          setCompaniesCount(comps.companies.length);
+        } else if (Array.isArray(comps)) {
+          setCompaniesCount(comps.length);
+        }
+      }
+
+      // 6. Subscription
+      if (results[5].status === 'fulfilled' && results[5].value) {
+        const sub = results[5].value;
+        if (sub.planName) setSubscriptionPlanName(sub.planName);
+        else if (sub.planCode) setSubscriptionPlanName(sub.planCode);
+        if (sub.trialPeriod !== undefined) setIsTrial(Boolean(sub.trialPeriod));
+      }
+
+      // 7. Entitled Modules
+      if (results[6].status === 'fulfilled' && results[6].value) {
+        const modData = results[6].value;
+        if (Array.isArray(modData.modules)) {
+          const names = modData.modules
+            .filter((m) => m.enabled)
+            .map((m) => m.name || m.key);
+          if (names.length > 0) setEnabledModules(names);
+        }
+      }
+    } catch (err) {
+      console.warn('Organization settings initial load notice:', err?.message || err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSettingsData();
+  }, [loadSettingsData]);
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Clipboard Actions
+  // ───────────────────────────────────────────────────────────────────────────
 
   const handleCopyId = () => {
     if (!orgId) return;
@@ -71,25 +202,87 @@ export default function OrganizationSettingsPage() {
   };
 
   const handleCopyLoginUrl = () => {
+    if (!loginUrl) return;
     navigator.clipboard.writeText(loginUrl);
     setCopiedUrl(true);
     setTimeout(() => setCopiedUrl(false), 2000);
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
+  // ───────────────────────────────────────────────────────────────────────────
+  // Save Settings Handlers
+  // ───────────────────────────────────────────────────────────────────────────
+
+  const handleSave = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+
+    if (!name || !name.trim()) {
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: 'Organization name cannot be blank.',
+        })
+      );
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!contactEmail || !emailRegex.test(contactEmail.trim())) {
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: 'Please provide a valid primary organization email address.',
+        })
+      );
+      return;
+    }
+
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      // 1. Update Profile
+      await updateOrganizationProfile({
+        name: name.trim(),
+        primaryEmail: contactEmail.trim(),
+      });
+
+      // 2. Update Regional & Fiscal Defaults
+      await updateRegionalSettings({
+        currency,
+        timezone,
+        fiscalYearStartMonth: fiscalYearStart,
+        dateFormat,
+        timeFormat,
+      });
+
+      // 3. Update Security & Compliance
+      await updateSecuritySettings({
+        enforce2FA: twoFactorRequired,
+        sessionTimeoutMinutes: parseInt(sessionTimeout, 10) || 60,
+      });
+
       setSavedSuccess(true);
       dispatch(
         addAlert({
           type: 'success',
-          message: 'Organization settings and preferences updated successfully.',
+          message: 'Organization profile, regional defaults, and security policies updated successfully.',
         })
       );
+
       setTimeout(() => setSavedSuccess(false), 3000);
-    }, 600);
+      loadSettingsData();
+    } catch (err) {
+      const errMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to update organization settings. Please verify inputs and permissions.';
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: errMsg,
+        })
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -132,11 +325,11 @@ export default function OrganizationSettingsPage() {
             className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-zinc-600 transition-all shadow-xs"
           >
             <Building2 size={14} className="text-[#485942] dark:text-[#A0A6B5]" />
-            Manage Companies ({companies.length})
+            Manage Companies ({companiesCount})
           </Link>
           <button
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || isLoading}
             className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-[#2E3D28] dark:bg-primary hover:bg-[#3C4E34] active:bg-[#243320] dark:hover:bg-primary-600 rounded-xl shadow-sm hover:shadow transition-all disabled:opacity-50 active:scale-[0.98]"
           >
             {isSaving ? (
@@ -470,7 +663,7 @@ export default function OrganizationSettingsPage() {
                 Subscription Plan
               </h3>
               <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                {subscription?.planCode || 'Standard Plan'}
+                {subscriptionPlanName}
               </span>
             </div>
             <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mb-4">
@@ -479,12 +672,12 @@ export default function OrganizationSettingsPage() {
             <div className="space-y-2 text-xs text-[#485942] dark:text-[#A0A6B5]">
               <div className="flex items-center justify-between py-1 border-b border-[#D5D8CA] dark:border-[#2A2F3D]">
                 <span>Active Companies</span>
-                <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{companies.length}</span>
+                <span className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{companiesCount}</span>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-[#D5D8CA] dark:border-[#2A2F3D]">
                 <span>Status</span>
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400 capitalize">
-                  {subscription?.trialing ? 'Trial Period' : 'Active'}
+                  {isTrial ? 'Trial Period' : 'Active'}
                 </span>
               </div>
             </div>
@@ -506,24 +699,22 @@ export default function OrganizationSettingsPage() {
                 Entitled Modules
               </h3>
               <span className="text-xs font-bold text-zinc-700 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#1D212C] px-2.5 py-0.5 rounded-full border border-zinc-200/60 dark:border-[#2A2F3D]">
-                {modules.length > 0 ? `${modules.length} Enabled` : 'All Standard'}
+                {enabledModules.length > 0 ? `${enabledModules.length} Enabled` : 'All Standard'}
               </span>
             </div>
             <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mb-4">
               Business applications activated for your organization's companies.
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {['Finance & Accounts', 'Inventory', 'Sales & CRM', 'Purchasing', 'Workflow Automation', 'SSO Admin'].map(
-                (m) => (
-                  <span
-                    key={m}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-zinc-50 dark:bg-[#1D212C] text-[#2E3D28] dark:text-[#E6E8EE] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg"
-                  >
-                    <CheckCircle2 size={12} className="text-emerald-500" />
-                    {m}
-                  </span>
-                )
-              )}
+              {enabledModules.map((m) => (
+                <span
+                  key={m}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-zinc-50 dark:bg-[#1D212C] text-[#2E3D28] dark:text-[#E6E8EE] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg"
+                >
+                  <CheckCircle2 size={12} className="text-emerald-500" />
+                  {m}
+                </span>
+              ))}
             </div>
           </div>
           <Link

@@ -21,13 +21,14 @@ public class LoginResponse {
     private String accessToken;
     private String refreshToken;
 
-    private  String message;
+    private String message;
 
     private UserDto user;
 
     private String redirectUrl;
 
     private Boolean requiresCompanySelection;
+    private Boolean requires2FA;
     private OrganizationContext organization;
     private List<CompanyChoice> companies;
 

@@ -11,6 +11,10 @@ public interface OrganizationRepository extends JpaRepository<Organization, UUID
     Optional<Organization> findByOrganizationCodeIgnoreCaseAndStatusNot(String code, OrganizationStatus status);
     boolean existsByOrganizationCodeIgnoreCase(String code);
 
+    boolean existsByPrimaryEmailIgnoreCaseAndIdNot(String email, UUID id);
+    boolean existsByPrimaryEmailIgnoreCase(String email);
+    Optional<Organization> findByPrimaryEmailIgnoreCase(String email);
+
     long countByStatus(OrganizationStatus status);
     long countByAccessMode(com.erp.auth_service.utility.AccessMode accessMode);
 }

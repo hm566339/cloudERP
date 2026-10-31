@@ -83,6 +83,8 @@ public class ModuleBootstrap implements CommandLineRunner {
                                 "http://manufacturing-service:8085");
                 bootstrapRouteIfMissing("SYSTEM_ADMIN", "/api/settings/**",
                                 INTERNAL_BASE_URL);
+                bootstrapRouteIfMissing("SYSTEM_ADMIN", "/api/organization/**",
+                                INTERNAL_BASE_URL);
         }
 
         private void bootstrapRouteIfMissing(String moduleName, String routePattern, String serviceUrl) {

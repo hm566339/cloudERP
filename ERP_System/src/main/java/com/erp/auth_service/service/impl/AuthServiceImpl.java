@@ -65,6 +65,8 @@ public class AuthServiceImpl implements AuthService {
         private final SubscriptionRepository subscriptionRepository;
         private final RefreshTokenRecordRepository refreshTokenRecordRepository;
         private final OrganizationModuleRepository organizationModuleRepository;
+        @org.springframework.beans.factory.annotation.Autowired(required = false)
+        private com.erp.auth_service.repository.OrganizationSecuritySettingsRepository organizationSecuritySettingsRepository;
 
         private static final int ACCESS_TOKEN_MINUTES = 15;
         private static final int REFRESH_TOKEN_DAYS = 7;
@@ -633,6 +635,9 @@ public class AuthServiceImpl implements AuthService {
                                         .companies(companies)
                                         .redirectUrl("/erp/owner/dashboard");
 
+                        if (organizationSecuritySettingsRepository != null && organizationSecuritySettingsRepository.findByOrganization_Id(organization.getId()).map(com.erp.auth_service.model.OrganizationSecuritySettings::getEnforce2FA).orElse(false)) {
+                                respBuilder.requires2FA(true);
+                        }
                         tryCreateOwnerSessionAndTokens(user, organization, ip, userAgent, respBuilder);
 
                         return respBuilder.build();
@@ -731,7 +736,10 @@ public class AuthServiceImpl implements AuthService {
                                                 .code(organization.getOrganizationCode()).build())
                                 .redirectUrl(redirectUrl);
 
-                tryCreateSessionAndTokens(user, company, organization, module, ip, userAgent, respBuilder);
+                if (organizationSecuritySettingsRepository != null && organizationSecuritySettingsRepository.findByOrganization_Id(organization.getId()).map(com.erp.auth_service.model.OrganizationSecuritySettings::getEnforce2FA).orElse(false)) {
+                                respBuilder.requires2FA(true);
+                        }
+                        tryCreateSessionAndTokens(user, company, organization, module, ip, userAgent, respBuilder);
 
                 return respBuilder.build();
         }
@@ -759,7 +767,7 @@ public class AuthServiceImpl implements AuthService {
                                                 .module(null)
                                                 .accessToken(accessToken)
                                                 .accessTokenValidTill(
-                                                                LocalDateTime.now().plusMinutes(ACCESS_TOKEN_MINUTES))
+                                                                LocalDateTime.now().plusMinutes(resolveSessionTimeoutMinutes(organization != null ? organization.getId() : null)))
                                                 .refreshTokenValidTill(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
                                                 .ipAddress(ip)
                                                 .userAgent(userAgent)
@@ -840,7 +848,7 @@ public class AuthServiceImpl implements AuthService {
                                                 .module(module)
                                                 .accessToken(accessToken)
                                                 .accessTokenValidTill(
-                                                                LocalDateTime.now().plusMinutes(ACCESS_TOKEN_MINUTES))
+                                                                LocalDateTime.now().plusMinutes(resolveSessionTimeoutMinutes(organization != null ? organization.getId() : (company != null && company.getOrganization() != null ? company.getOrganization().getId() : null))))
                                                 .refreshTokenValidTill(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
                                                 .ipAddress(ip)
                                                 .userAgent(userAgent)
@@ -3421,4 +3429,13 @@ public class AuthServiceImpl implements AuthService {
                                                 "WRITE"));
         }
 
+        private int resolveSessionTimeoutMinutes(UUID orgId) {
+                if (organizationSecuritySettingsRepository != null && orgId != null) {
+                        return organizationSecuritySettingsRepository.findByOrganization_Id(orgId)
+                                        .map(com.erp.auth_service.model.OrganizationSecuritySettings::getSessionTimeoutMinutes)
+                                        .filter(m -> m != null && m > 0)
+                                        .orElse(ACCESS_TOKEN_MINUTES);
+                }
+                return ACCESS_TOKEN_MINUTES;
+        }
 }
