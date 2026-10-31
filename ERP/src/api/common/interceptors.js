@@ -326,7 +326,10 @@ export const attachRequestInterceptor = (instance) => {
               config.url = config.url.replace(/\/company\/[^/?#]+/g, `/company/${activeCompanyId}`);
             } else if (
               (config.url.startsWith('/api/settings/') || config.url.includes('/api/settings/')) &&
-              !config.url.includes('/api/account/')
+              !config.url.includes('/api/account/') &&
+              !config.url.includes('/api/settings/organization') &&
+              !config.url.includes('/api/settings/localization') &&
+              !config.url.includes('/api/settings/general')
             ) {
               config.url = config.url.replace(/\/api\/settings\/[^/?#]+/g, `/api/settings/${activeCompanyId}`);
             }

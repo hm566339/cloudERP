@@ -31,6 +31,7 @@ public class DatabaseSchemaBootstrap implements CommandLineRunner {
         migrateRefreshTokenRecordCascadeForeignKeySafely();
         ensureCaseInsensitiveUserIndexesSafely();
         ensureOrganizationAppearanceTableSafely();
+        ensureGeneralSettingsTablesSafely();
     }
 
     private void dropColumnNotNullSafely(String tableName, String columnName) {
@@ -182,6 +183,44 @@ public class DatabaseSchemaBootstrap implements CommandLineRunner {
             }
         } catch (Exception ex) {
             log.warn("Could not verify/create case-insensitive indexes on 'user': {}", ex.getMessage());
+        }
+    }
+
+    private void ensureGeneralSettingsTablesSafely() {
+        try {
+            log.info("Ensuring organization_settings and localization_settings tables exist...");
+            jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS organization_settings (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    organization_id UUID NOT NULL UNIQUE REFERENCES organization(id) ON DELETE CASCADE,
+                    company_name VARCHAR(255) NOT NULL,
+                    contact_email VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            """);
+            jdbcTemplate.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS uk_org_settings_organization ON organization_settings (organization_id)"
+            );
+
+            jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS localization_settings (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    organization_id UUID NOT NULL UNIQUE REFERENCES organization(id) ON DELETE CASCADE,
+                    default_currency VARCHAR(10) NOT NULL DEFAULT 'INR',
+                    timezone VARCHAR(80) NOT NULL DEFAULT 'IST',
+                    date_format VARCHAR(20) NOT NULL DEFAULT 'DD/MM/YYYY',
+                    time_format VARCHAR(20) NOT NULL DEFAULT '12h',
+                    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            """);
+            jdbcTemplate.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS uk_localization_settings_organization ON localization_settings (organization_id)"
+            );
+            log.info("Successfully verified/created general settings tables.");
+        } catch (Exception ex) {
+            log.warn("Could not ensure general settings tables: {}", ex.getMessage());
         }
     }
 

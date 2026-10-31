@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectSelectedCompany } from '../../features/company-management/companySlice';
 import { selectCurrentUser } from '../../features/auth/authSlice';
@@ -11,11 +11,18 @@ import {
   SettingsSelect,
   SettingsSaveButton,
 } from '../../components/settings/shared';
+import {
+  useGetGeneralSettingsQuery,
+  useUpdateGeneralSettingsMutation,
+} from '../../features/settings/services/generalSettingsApi';
 
 export default function GeneralSettings() {
   const dispatch = useAppDispatch();
   const selectedCompany = useAppSelector(selectSelectedCompany);
   const currentUser = useAppSelector(selectCurrentUser);
+
+  const { data: generalSettings, isLoading: isFetching, error: fetchError } = useGetGeneralSettingsQuery();
+  const [updateGeneralSettingsMutation, { isLoading: isUpdating }] = useUpdateGeneralSettingsMutation();
 
   const [companyName, setCompanyName] = useState(selectedCompany?.name || 'Acme Corporation');
   const [contactEmail, setContactEmail] = useState(currentUser?.email || 'admin@acmecorp.com');
@@ -24,13 +31,60 @@ export default function GeneralSettings() {
   const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
   const [timeFormat, setTimeFormat] = useState('12h');
 
-  const [isSaving, setIsSaving] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  const handleSave = () => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+  // Synchronize local form state when backend settings are retrieved
+  useEffect(() => {
+    if (generalSettings && !hasInitialized) {
+      if (generalSettings.companyName) setCompanyName(generalSettings.companyName);
+      if (generalSettings.contactEmail) setContactEmail(generalSettings.contactEmail);
+      if (generalSettings.defaultCurrency) setDefaultCurrency(generalSettings.defaultCurrency);
+      if (generalSettings.timezone) setTimezone(generalSettings.timezone);
+      if (generalSettings.dateFormat) setDateFormat(generalSettings.dateFormat);
+      if (generalSettings.timeFormat) setTimeFormat(generalSettings.timeFormat);
+      setHasInitialized(true);
+    }
+  }, [generalSettings, hasInitialized]);
+
+  // Handle Save
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    if (isUpdating) return;
+
+    // Simple frontend validation
+    if (!companyName || companyName.trim().length < 2) {
+      dispatch(addAlert({ type: 'error', message: 'Company name must be at least 2 characters' }));
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!contactEmail || !emailRegex.test(contactEmail.trim())) {
+      dispatch(addAlert({ type: 'error', message: 'Please enter a valid contact email address' }));
+      return;
+    }
+
+    try {
+      const payload = {
+        companyName: companyName.trim(),
+        contactEmail: contactEmail.trim().toLowerCase(),
+        defaultCurrency: defaultCurrency.trim().toUpperCase(),
+        timezone: timezone.trim(),
+        dateFormat: dateFormat.trim(),
+        timeFormat: timeFormat.trim(),
+      };
+
+      const result = await updateGeneralSettingsMutation(payload).unwrap();
+
+      // Ensure local state matches server response
+      if (result) {
+        if (result.companyName) setCompanyName(result.companyName);
+        if (result.contactEmail) setContactEmail(result.contactEmail);
+        if (result.defaultCurrency) setDefaultCurrency(result.defaultCurrency);
+        if (result.timezone) setTimezone(result.timezone);
+        if (result.dateFormat) setDateFormat(result.dateFormat);
+        if (result.timeFormat) setTimeFormat(result.timeFormat);
+      }
+
       setIsSuccess(true);
       dispatch(
         addAlert({
@@ -38,8 +92,19 @@ export default function GeneralSettings() {
           message: 'General settings saved successfully',
         })
       );
-      setTimeout(() => setIsSuccess(false), 2000);
-    }, 600);
+      setTimeout(() => setIsSuccess(false), 2500);
+    } catch (err) {
+      const errorMsg =
+        err?.data?.message ||
+        err?.message ||
+        'Failed to save general settings. Please try again.';
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: errorMsg,
+        })
+      );
+    }
   };
 
   return (
@@ -55,6 +120,7 @@ export default function GeneralSettings() {
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
           placeholder="e.g. Acme Corporation"
+          disabled={isFetching || isUpdating}
         />
         <SettingsInput
           id="contact-email"
@@ -63,6 +129,7 @@ export default function GeneralSettings() {
           value={contactEmail}
           onChange={(e) => setContactEmail(e.target.value)}
           placeholder="e.g. admin@acmecorp.com"
+          disabled={isFetching || isUpdating}
         />
       </SettingsCard>
 
@@ -73,11 +140,16 @@ export default function GeneralSettings() {
             label="Default Currency"
             value={defaultCurrency}
             onChange={(e) => setDefaultCurrency(e.target.value)}
+            disabled={isFetching || isUpdating}
             options={[
               { label: 'INR - Indian Rupee (₹)', value: 'INR' },
               { label: 'USD - US Dollar ($)', value: 'USD' },
               { label: 'EUR - Euro (€)', value: 'EUR' },
               { label: 'GBP - British Pound (£)', value: 'GBP' },
+              { label: 'AED - UAE Dirham (د.إ)', value: 'AED' },
+              { label: 'CAD - Canadian Dollar (CA$)', value: 'CAD' },
+              { label: 'AUD - Australian Dollar (A$)', value: 'AUD' },
+              { label: 'SGD - Singapore Dollar (S$)', value: 'SGD' },
             ]}
           />
           <SettingsSelect
@@ -85,11 +157,17 @@ export default function GeneralSettings() {
             label="Timezone"
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
+            disabled={isFetching || isUpdating}
             options={[
-              { label: 'IST (Indian Standard Time)', value: 'IST' },
-              { label: 'UTC (Coordinated Universal Time)', value: 'UTC' },
-              { label: 'EST (Eastern Standard Time)', value: 'EST' },
-              { label: 'PST (Pacific Standard Time)', value: 'PST' },
+              { label: 'IST - Indian Standard Time (Asia/Kolkata)', value: 'IST' },
+              { label: 'UTC - Coordinated Universal Time', value: 'UTC' },
+              { label: 'EST - Eastern Standard Time (America/New_York)', value: 'EST' },
+              { label: 'PST - Pacific Standard Time (America/Los_Angeles)', value: 'PST' },
+              { label: 'CST - Central Standard Time (America/Chicago)', value: 'CST' },
+              { label: 'GMT - Greenwich Mean Time (Europe/London)', value: 'GMT' },
+              { label: 'CET - Central European Time (Europe/Paris)', value: 'CET' },
+              { label: 'GST - Gulf Standard Time (Asia/Dubai)', value: 'Asia/Dubai' },
+              { label: 'SGT - Singapore Time (Asia/Singapore)', value: 'Asia/Singapore' },
             ]}
           />
           <SettingsSelect
@@ -97,6 +175,7 @@ export default function GeneralSettings() {
             label="Date Format"
             value={dateFormat}
             onChange={(e) => setDateFormat(e.target.value)}
+            disabled={isFetching || isUpdating}
             options={[
               { label: 'DD/MM/YYYY (e.g. 17/10/2026)', value: 'DD/MM/YYYY' },
               { label: 'MM/DD/YYYY (e.g. 10/17/2026)', value: 'MM/DD/YYYY' },
@@ -108,6 +187,7 @@ export default function GeneralSettings() {
             label="Time Format"
             value={timeFormat}
             onChange={(e) => setTimeFormat(e.target.value)}
+            disabled={isFetching || isUpdating}
             options={[
               { label: '12-hour (AM/PM)', value: '12h' },
               { label: '24-hour', value: '24h' },
@@ -118,8 +198,9 @@ export default function GeneralSettings() {
 
       <SettingsSaveButton
         onClick={handleSave}
-        isSaving={isSaving}
+        isSaving={isUpdating}
         isSuccess={isSuccess}
+        disabled={isFetching || isUpdating}
       />
     </SettingsLayout>
   );
