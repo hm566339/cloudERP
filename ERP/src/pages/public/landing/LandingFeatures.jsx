@@ -24,17 +24,20 @@ const BENEFIT_ICONS = [
 
 export default function LandingFeatures() {
   return (
-    <section id="features" className="scroll-mt-24 py-20 sm:py-28 bg-[#E8E9DF] border-t border-[#D5D8CA]">
+    <section
+      id="features"
+      className="scroll-mt-24 py-20 sm:py-28 bg-[#E8E9DF] dark:bg-[#101411] border-t border-[#D5D8CA] dark:border-[#263328] transition-colors duration-300"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#DCE2CF] border border-[#D5D8CA] text-[#2E3D28] text-xs font-bold uppercase tracking-wider mb-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#DCE2CF] dark:bg-[#18221A] border border-[#D5D8CA] dark:border-[#2E3D31] text-[#2E3D28] dark:text-[#34D399] text-xs font-bold uppercase tracking-wider mb-3">
             Core Architecture Benefits
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-black text-[#2E3D28] tracking-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-black text-[#2E3D28] dark:text-white tracking-tight">
             Engineered for Modern Enterprise Scale
           </h2>
-          <p className="text-sm sm:text-base text-[#485942] mt-4 leading-relaxed">
+          <p className="text-sm sm:text-base text-[#485942] dark:text-[#A3B5A5] mt-4 leading-relaxed">
             Eliminate fragile third-party connectors and manual reconciliations.
             Mark2 ERP delivers instant financial consensus across all business branches.
           </p>
@@ -47,23 +50,23 @@ export default function LandingFeatures() {
             return (
               <div
                 key={i}
-                className="group p-6 rounded-3xl border border-[#D5D8CA] bg-[#F7F7F0] hover:bg-[#FFFFFF] hover:border-[#A9B887] hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
+                className="group p-6 rounded-3xl border border-[#D5D8CA] dark:border-[#263328] bg-[#F7F7F0] dark:bg-[#161D17] hover:bg-[#FFFFFF] dark:hover:bg-[#1C261E] hover:border-[#A9B887] dark:hover:border-[#34D399]/60 hover:shadow-lg dark:hover:shadow-[0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
-                  <div className="w-10 h-10 rounded-2xl bg-[#2E3D28] text-white flex items-center justify-center font-bold text-xs mb-4 transition-colors">
+                  <div className="w-10 h-10 rounded-2xl bg-[#2E3D28] dark:bg-[#1F2C21] text-white dark:text-[#34D399] border dark:border-[#2E3D31] flex items-center justify-center font-bold text-xs mb-4 transition-colors">
                     <Icon size={20} />
                   </div>
-                  <h3 className="text-base font-bold text-[#2E3D28] mb-2 group-hover:text-[#243320] transition-colors">
+                  <h3 className="text-base font-bold text-[#2E3D28] dark:text-[#ECF2EC] mb-2 group-hover:text-[#243320] dark:group-hover:text-white transition-colors">
                     {benefit.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-[#485942] leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[#485942] dark:text-[#A3B5A5] leading-relaxed">
                     {benefit.desc}
                   </p>
                 </div>
 
-                <div className="pt-4 mt-4 border-t border-[#D5D8CA] flex items-center justify-between text-[11px] font-mono text-[#7A8A6E]">
+                <div className="pt-4 mt-4 border-t border-[#D5D8CA] dark:border-[#263328] flex items-center justify-between text-[11px] font-mono text-[#7A8A6E] dark:text-[#889B89]">
                   <span>Advantage #{i + 1}</span>
-                  <span className="text-[#2E3D28] font-semibold">Included</span>
+                  <span className="text-[#2E3D28] dark:text-[#34D399] font-semibold">Included</span>
                 </div>
               </div>
             );

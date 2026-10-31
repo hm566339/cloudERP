@@ -418,54 +418,64 @@ export function isPublicLandingPath(pathname = typeof window !== 'undefined' ? w
 }
 
 /**
- * Permanently locks the root variables to the original Sage Nature palette for the public Landing Page.
+ * Applies the official Mark2 ERP Sage Nature palette for the public Landing Page,
+ * supporting both Light Mode (warm cream, forest green) and Dark Mode (near-black, emerald).
  */
-export function applyLandingSageTheme() {
+export function applyLandingSageTheme(overrideMode = 'light') {
   if (typeof document === 'undefined') return;
 
   const root = document.documentElement;
+  const isDark = overrideMode === 'dark';
 
-  // 1. Force light mode on documentElement for the public website
-  root.classList.remove('dark');
-  root.style.colorScheme = 'light';
+  const sagePreset = THEME_PRESETS[0]; // Sage Nature
+  const palette = isDark ? sagePreset.dark : sagePreset.light;
 
-  // 2. Set immutable brand tokens
-  root.style.setProperty('--color-bg-base', LANDING_PAGE_COLORS.background);
-  root.style.setProperty('--bg', LANDING_PAGE_COLORS.background);
-  root.style.setProperty('--color-surface', LANDING_PAGE_COLORS.surface);
-  root.style.setProperty('--surface', LANDING_PAGE_COLORS.surface);
-  root.style.setProperty('--color-surface-2', LANDING_PAGE_COLORS.surface2);
-  root.style.setProperty('--surface-2', LANDING_PAGE_COLORS.surface2);
-  root.style.setProperty('--color-surface-3', LANDING_PAGE_COLORS.surface3);
-  root.style.setProperty('--color-border', LANDING_PAGE_COLORS.border);
-  root.style.setProperty('--border', LANDING_PAGE_COLORS.border);
-  root.style.setProperty('--color-border-hover', LANDING_PAGE_COLORS.borderHover);
-  root.style.setProperty('--color-primary', LANDING_PAGE_COLORS.primary);
-  root.style.setProperty('--primary', LANDING_PAGE_COLORS.primary);
-  root.style.setProperty('--color-primary-hover', LANDING_PAGE_COLORS.primaryHover);
-  root.style.setProperty('--primary-hover', LANDING_PAGE_COLORS.primaryHover);
-  root.style.setProperty('--color-primary-active', LANDING_PAGE_COLORS.primaryActive);
-  root.style.setProperty('--color-primary-light', 'rgba(169, 184, 135, 0.22)');
-  root.style.setProperty('--color-text-primary', LANDING_PAGE_COLORS.textPrimary);
-  root.style.setProperty('--text', LANDING_PAGE_COLORS.textPrimary);
-  root.style.setProperty('--color-text-secondary', LANDING_PAGE_COLORS.textSecondary);
-  root.style.setProperty('--color-text-muted', LANDING_PAGE_COLORS.textMuted);
-  root.style.setProperty('--color-sidebar-bg', LANDING_PAGE_COLORS.sidebarBg);
-  root.style.setProperty('--color-sidebar-hover-bg', LANDING_PAGE_COLORS.sidebarHover);
-  root.style.setProperty('--color-sidebar-active-bg', LANDING_PAGE_COLORS.primary);
-  root.style.setProperty('--color-sidebar-active-text', '#FFFFFF');
-  root.style.setProperty('--color-sidebar-text', LANDING_PAGE_COLORS.textSecondary);
-  root.style.setProperty('--ring', 'rgba(46, 61, 40, 0.18)');
-  root.style.setProperty('--color-input-bg', '#FFFFFF');
-  root.style.setProperty('--input-bg', '#FFFFFF');
-  root.style.setProperty('--color-input-border', LANDING_PAGE_COLORS.border);
-  root.style.setProperty('--color-table-header', LANDING_PAGE_COLORS.tableHeaderBg);
-  root.style.setProperty('--color-table-row-hover', LANDING_PAGE_COLORS.surface3);
-  root.style.setProperty('--color-navbar-bg', LANDING_PAGE_COLORS.surface);
-  root.style.setProperty('--color-navbar-border', LANDING_PAGE_COLORS.border);
-  root.style.setProperty('--color-footer-bg', LANDING_PAGE_COLORS.sidebarBg);
-  root.style.setProperty('--color-modal-bg', LANDING_PAGE_COLORS.surface);
-  root.style.setProperty('--color-dropdown-bg', LANDING_PAGE_COLORS.surface);
+  // 1. Sync Dark Mode class & color scheme on documentElement
+  if (isDark) {
+    root.classList.add('dark');
+    root.style.colorScheme = 'dark';
+  } else {
+    root.classList.remove('dark');
+    root.style.colorScheme = 'light';
+  }
+
+  // 2. Set theme tokens
+  root.style.setProperty('--color-bg-base', palette.background);
+  root.style.setProperty('--bg', palette.background);
+  root.style.setProperty('--color-surface', palette.surface);
+  root.style.setProperty('--surface', palette.surface);
+  root.style.setProperty('--color-surface-2', palette.surface2);
+  root.style.setProperty('--surface-2', palette.surface2);
+  root.style.setProperty('--color-surface-3', palette.surface3);
+  root.style.setProperty('--color-border', palette.border);
+  root.style.setProperty('--border', palette.border);
+  root.style.setProperty('--color-border-hover', palette.borderHover);
+  root.style.setProperty('--color-primary', palette.primary);
+  root.style.setProperty('--primary', palette.primary);
+  root.style.setProperty('--color-primary-hover', palette.primaryHover);
+  root.style.setProperty('--primary-hover', palette.primaryHover);
+  root.style.setProperty('--color-primary-active', palette.primaryActive);
+  root.style.setProperty('--color-primary-light', palette.primaryLight || 'rgba(169, 184, 135, 0.22)');
+  root.style.setProperty('--color-text-primary', palette.textPrimary);
+  root.style.setProperty('--text', palette.textPrimary);
+  root.style.setProperty('--color-text-secondary', palette.textSecondary);
+  root.style.setProperty('--color-text-muted', palette.textMuted);
+  root.style.setProperty('--color-sidebar-bg', palette.sidebarBg);
+  root.style.setProperty('--color-sidebar-hover-bg', palette.sidebarHover);
+  root.style.setProperty('--color-sidebar-active-bg', palette.sidebarActiveBg || palette.primary);
+  root.style.setProperty('--color-sidebar-active-text', palette.sidebarActiveText || '#FFFFFF');
+  root.style.setProperty('--color-sidebar-text', palette.textSecondary);
+  root.style.setProperty('--ring', palette.focusRing || 'rgba(46, 61, 40, 0.18)');
+  root.style.setProperty('--color-input-bg', isDark ? palette.surface2 : '#FFFFFF');
+  root.style.setProperty('--input-bg', isDark ? palette.surface2 : '#FFFFFF');
+  root.style.setProperty('--color-input-border', palette.border);
+  root.style.setProperty('--color-table-header', palette.tableHeaderBg);
+  root.style.setProperty('--color-table-row-hover', palette.surface3);
+  root.style.setProperty('--color-navbar-bg', palette.surface);
+  root.style.setProperty('--color-navbar-border', palette.border);
+  root.style.setProperty('--color-footer-bg', palette.sidebarBg);
+  root.style.setProperty('--color-modal-bg', palette.surface);
+  root.style.setProperty('--color-dropdown-bg', palette.surface);
 
   root.setAttribute('data-theme', 'sage');
 }
@@ -496,9 +506,10 @@ export function applyAppearance(settings, orgId = null) {
 
   if (typeof document === 'undefined') return;
 
-  // If the browser is currently viewing the public Landing Page, keep Sage Nature locked
+  // If the browser is currently viewing the public Landing Page, apply Sage Nature with selected mode
   if (isPublicLandingPath()) {
-    applyLandingSageTheme();
+    const effectiveMode = resolveEffectiveMode(settings.mode);
+    applyLandingSageTheme(effectiveMode);
     return;
   }
 

@@ -1886,3 +1886,296 @@ html {
   padding-left: 1.5rem !important;
   padding-right: 1.5rem !important;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ENTERPRISE SAAS MOTION & LANDING PAGE ANIMATIONS
+   GPU-Accelerated, Lightweight, Strict prefers-reduced-motion Compliant
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes floatCard1 {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(0.4deg);
+  }
+}
+
+@keyframes floatCard2 {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(5px) rotate(-0.4deg);
+  }
+}
+
+@keyframes liveRadarPulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.3);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes streamDashes {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+@keyframes streamDashesReverse {
+  to {
+    stroke-dashoffset: 32;
+  }
+}
+
+@keyframes ambientGlowPulse {
+  0%, 100% {
+    transform: scale(1) translate3d(0, 0, 0);
+    opacity: 0.28;
+  }
+  50% {
+    transform: scale(1.1) translate3d(12px, -8px, 0);
+    opacity: 0.52;
+  }
+}
+
+@keyframes liveTickerSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float-gentle {
+  animation: floatGentle 7s ease-in-out infinite;
+}
+
+.animate-float-card-1 {
+  animation: floatCard1 5.5s ease-in-out infinite;
+}
+
+.animate-float-card-2 {
+  animation: floatCard2 6.5s ease-in-out infinite 1s;
+}
+
+.animate-radar-pulse {
+  animation: liveRadarPulse 2.4s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+}
+
+.animate-stream-dashes {
+  stroke-dasharray: 6 6;
+  animation: streamDashes 1.6s linear infinite;
+}
+
+.animate-stream-dashes-reverse {
+  stroke-dasharray: 6 6;
+  animation: streamDashesReverse 1.6s linear infinite;
+}
+
+.animate-ambient-glow {
+  animation: ambientGlowPulse 10s ease-in-out infinite alternate;
+}
+
+.animate-live-ticker {
+  animation: liveTickerSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Background Subtle Grid Pattern */
+.landing-grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(46, 61, 40, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(46, 61, 40, 0.04) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+/* Accessibility: Strict prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-gentle,
+  .animate-float-card-1,
+  .animate-float-card-2,
+  .animate-radar-pulse,
+  .animate-stream-dashes,
+  .animate-stream-dashes-reverse,
+  .animate-ambient-glow,
+  .animate-live-ticker {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+  
+  .landing-grid-bg {
+    background-image: none !important;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CINEMATIC EMERALD HERO LIGHTING & MOTION
+   Inspired by Enterprise Cinematic SaaS (Full-Width Forest, Emerald Beam, Rays)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes lightBeamSweep {
+  0%, 100% {
+    opacity: 0.75;
+    transform: translateX(-50%) scaleX(1);
+    filter: blur(40px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scaleX(1.2);
+    filter: blur(30px);
+  }
+}
+
+@keyframes lightRayLeft {
+  0%, 100% {
+    transform: rotate(-18deg) scaleY(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: rotate(-14deg) scaleY(1.12);
+    opacity: 0.75;
+  }
+}
+
+@keyframes lightRayRight {
+  0%, 100% {
+    transform: rotate(18deg) scaleY(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: rotate(14deg) scaleY(1.12);
+    opacity: 0.75;
+  }
+}
+
+@keyframes dotGridDrift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 30px 30px;
+  }
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.8);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  75% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-80px) translateX(20px) scale(1.1);
+    opacity: 0;
+  }
+}
+
+@keyframes ctaGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 22px rgba(16, 185, 129, 0.45), 0 0 45px rgba(6, 182, 212, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 38px rgba(52, 211, 153, 0.75), 0 0 65px rgba(16, 185, 129, 0.35);
+  }
+}
+
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-light-beam {
+  animation: lightBeamSweep 7.5s ease-in-out infinite;
+}
+
+.animate-light-ray-left {
+  animation: lightRayLeft 9s ease-in-out infinite alternate;
+}
+
+.animate-light-ray-right {
+  animation: lightRayRight 9s ease-in-out infinite alternate 1s;
+}
+
+.animate-cta-glow {
+  animation: ctaGlowPulse 3s ease-in-out infinite;
+}
+
+.animate-hero-fade-up {
+  animation: heroFadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-dot-grid {
+  background-image: radial-gradient(rgba(52, 211, 153, 0.22) 1.25px, transparent 1.25px);
+  background-size: 30px 30px;
+  animation: dotGridDrift 30s linear infinite;
+}
+
+/* Accessibility: Strict prefers-reduced-motion for Cinematic Hero */
+@media (prefers-reduced-motion: reduce) {
+  .animate-light-beam,
+  .animate-light-ray-left,
+  .animate-light-ray-right,
+  .animate-cta-glow,
+  .animate-hero-fade-up,
+  .hero-dot-grid {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+
+@keyframes beamFlarePulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+}
+
+.animate-beam-flare {
+  animation: beamFlarePulse 4.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-beam-flare {
+    animation: none !important;
+  }
+}
