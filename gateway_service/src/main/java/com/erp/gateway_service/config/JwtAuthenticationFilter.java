@@ -137,6 +137,16 @@ public class JwtAuthenticationFilter
 
                 for (String pattern : PUBLIC_PATTERNS) {
                         if (PATH_MATCHER.match(pattern, path) || PATH_MATCHER.match(pattern, normalizedPath)) {
+                                // Organization lookup is public ONLY for GET on organization code, NOT for appearance or members
+                                if (pattern.contains("/organization/")) {
+                                        if (!"GET".equalsIgnoreCase(method)) {
+                                                return false;
+                                        }
+                                        String segment = normalizedPath.substring(normalizedPath.lastIndexOf('/') + 1);
+                                        if ("appearance".equalsIgnoreCase(segment) || "members".equalsIgnoreCase(segment)) {
+                                                return false;
+                                        }
+                                }
                                 return true;
                         }
                 }

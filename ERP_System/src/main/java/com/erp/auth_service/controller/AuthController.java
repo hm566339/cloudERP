@@ -54,7 +54,7 @@ public class AuthController {
         return ResponseEntity.ok(ResponseWrapper.success(organizationService.signup(request)));
     }
 
-    @GetMapping("/organization/{organizationCode}")
+    @GetMapping("/organization/{organizationCode:^(?!appearance$).+}")
     public ResponseEntity<ResponseWrapper<OrganizationLookupResponse>> organization(
             @PathVariable String organizationCode) {
         return ResponseEntity.ok(ResponseWrapper.success(organizationService.lookup(organizationCode)));

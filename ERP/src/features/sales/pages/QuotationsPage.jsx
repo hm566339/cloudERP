@@ -18,17 +18,52 @@ import ModuleTabs, { salesTabs } from '../../../components/module-tabs';
 import DataTable from '../../../components/data-table';
 import AuditLogHover from '../../../components/common/AuditLogHover';
 import PermissionGuard from '../../../components/common/PermissionGuard';
+import {
+  formatDate,
+  formatCurrency,
+  getItemTaxRate,
+  getQuotationOutstanding,
+  calculateQuotationSummary
+} from '../utils/quotationDataMapping';
 
-const QuotationOverview = ({ quote }) => {
-  const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+export { formatDate, formatCurrency, getItemTaxRate, getQuotationOutstanding, calculateQuotationSummary };
+
+export const renderStatusBadge = (status) => {
+  const s = (status || 'DRAFT').toUpperCase();
+  if (s === 'ACCEPTED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">{s}</span>;
+  if (s === 'SENT') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-[#4C8DFF] dark:border-blue-500/20">{s}</span>;
+  if (s === 'EXPIRED' || s === 'REJECTED' || s === 'CANCELLED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-[#F0616D] dark:border-red-500/20">{s}</span>;
+  if (s === 'DRAFT') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-[#F5B544] dark:border-amber-500/20">{s}</span>;
+  return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]">{s}</span>;
+};
+
+export const QuotationOverview = ({ quote }) => {
   const curr = quote.quotationCurrency || quote.currency || 'INR';
   const cust = quote.customerInformation || quote.customer || {};
-  const lineItems = quote.lineItems || quote.items || [];
-  const taxSummary = quote.taxSummary || {};
-  const amtSummary = quote.amountSummary || {};
-  const terms = quote.termsAndConditions || {};
-  const stats = quote.statistics || {};
+  const lineItems = quote.items || quote.lineItems || [];
+  const terms = typeof quote.termsAndConditions === 'object' && quote.termsAndConditions !== null
+    ? quote.termsAndConditions
+    : {};
   const audit = quote.audit || {};
+
+  const {
+    subtotal,
+    discountAmount,
+    taxableAmount,
+    cgst,
+    sgst,
+    igst,
+    totalTax,
+    otherCharges,
+    roundOff,
+    totalAmount,
+    paidAmount,
+    outstandingAmount,
+    paymentPercentage,
+    itemCount,
+    daysOutstandingText,
+    agingBucket: agingBucketText
+  } = calculateQuotationSummary(quote);
 
   return (
     <div className="p-5 bg-white dark:bg-[#1D212C] border border-zinc-100 dark:border-[#2A2F3D] rounded-xl shadow-sm m-4 mb-2 animate-in fade-in slide-in-from-top-2 cursor-default" onClick={(e) => e.stopPropagation()}>
@@ -38,40 +73,38 @@ const QuotationOverview = ({ quote }) => {
             {quote.quotationNumber || quote.quoteNo || '—'}
           </span>
           <div>
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">{cust.customerName || cust.companyName || quote.customerName || '—'} {cust.customerCode ? <span className="text-sm font-medium text-zinc-500 dark:text-[#6B7184]">({cust.customerCode})</span> : ''}</h3>
-            <p className="text-xs text-zinc-500 dark:text-[#6B7184] mt-0.5">Date: {quote.quotationDate ? new Date(quote.quotationDate).toLocaleDateString() : '—'} | Valid Until: {quote.validUntil ? new Date(quote.validUntil).toLocaleDateString() : '—'}</p>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">{cust.customerName || cust.companyName || quote.customerName || '—'} {(cust.customerCode || quote.customerCode) ? <span className="text-sm font-medium text-zinc-500 dark:text-[#6B7184]">({cust.customerCode || quote.customerCode})</span> : ''}</h3>
+            <p className="text-xs text-zinc-500 dark:text-[#6B7184] mt-0.5">Date: {formatDate(quote.quotationDate)} | Valid Until: {formatDate(quote.validUntil)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md border bg-zinc-50 dark:bg-[#161922] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200 dark:border-[#2A2F3D]`}>
-            {quote.status || 'DRAFT'}
-          </span>
+          {renderStatusBadge(quote.status)}
         </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-4 sm:gap-6 mb-6">
         <div>
           <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Grand Total</p>
-          <p className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">{curr} {fmt(amtSummary.totalAmount)}</p>
+          <p className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">{formatCurrency(totalAmount, curr)}</p>
         </div>
         <div>
           <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Outstanding</p>
-          <p className="text-sm font-bold text-amber-600 dark:text-amber-400 mt-1">{curr} {fmt(amtSummary.outstandingAmount || 0)}</p>
+          <p className="text-sm font-bold text-amber-600 dark:text-amber-400 mt-1">{formatCurrency(outstandingAmount, curr)}</p>
         </div>
         <div>
           <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Payment %</p>
-          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1">{stats.paymentPercentage ?? '—'}{stats.paymentPercentage != null ? '%' : ''}</p>
+          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1">{paymentPercentage}</p>
         </div>
         <div>
           <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Item Count</p>
-          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{stats.itemCount ?? lineItems.length}</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{itemCount}</p>
         </div>
         <div>
           <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Days Outstanding</p>
-          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{stats.daysOutstanding != null ? `${stats.daysOutstanding} days` : '—'}</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{daysOutstandingText}</p>
         </div>
         <div>
           <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Aging Bucket</p>
-          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{stats.agingBucket || '—'}</p>
+          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] mt-1">{agingBucketText}</p>
         </div>
         <div>
           <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184]">Currency</p>
@@ -86,6 +119,7 @@ const QuotationOverview = ({ quote }) => {
             <thead className="bg-zinc-50 dark:bg-[#161922] border-b border-zinc-200 dark:border-[#2A2F3D]">
               <tr>
                 <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184]">Item/Product</th>
+                <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184]">HSN Code</th>
                 <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184]">Description</th>
                 <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184] text-right">Qty</th>
                 <th className="px-4 py-2 font-medium text-zinc-500 dark:text-[#6B7184]">Unit</th>
@@ -100,17 +134,18 @@ const QuotationOverview = ({ quote }) => {
               {lineItems.length > 0 ? lineItems.map((it, i) => (
                 <tr key={i} className="hover:bg-zinc-50/50 dark:hover:bg-[#222736]">
                   <td className="px-4 py-2 font-medium text-zinc-900 dark:text-[#E6E8EE]">{it.itemName || it.productName || it.name || '—'}</td>
-                  <td className="px-4 py-2 text-zinc-500 dark:text-[#6B7184] truncate max-w-[120px]">{it.description || '—'}</td>
-                  <td className="px-4 py-2 text-right text-zinc-900 dark:text-[#E6E8EE]">{it.quantity || 0}</td>
-                  <td className="px-4 py-2 text-zinc-700 dark:text-[#A0A6B5]">{it.uom || it.unit || '—'}</td>
-                  <td className="px-4 py-2 text-right text-zinc-900 dark:text-[#E6E8EE]">{fmt(it.unitPrice || it.rate || 0)}</td>
-                  <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{fmt(it.discountAmount || 0)}</td>
-                  <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{fmt(it.taxAmount || 0)}</td>
-                  <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{it.taxRate != null ? `${it.taxRate}%` : (it.gstRate != null ? `${it.gstRate}%` : '—')}</td>
-                  <td className="px-4 py-2 text-right font-medium text-zinc-900 dark:text-[#E6E8EE]">{fmt(it.totalAmount || it.lineTotal || 0)}</td>
+                  <td className="px-4 py-2 font-mono text-xs text-zinc-600 dark:text-[#A0A6B5]">{it.hsnSacMaster?.code || it.hsnSacCode || it.hsnCode || '—'}</td>
+                  <td className="px-4 py-2 text-zinc-500 dark:text-[#6B7184] truncate max-w-[120px]">{it.description || it.hsnSacMaster?.description || '—'}</td>
+                  <td className="px-4 py-2 text-right text-zinc-900 dark:text-[#E6E8EE]">{it.quantity ?? 0}</td>
+                  <td className="px-4 py-2 text-zinc-700 dark:text-[#A0A6B5]">{it.unit || it.uom || '—'}</td>
+                  <td className="px-4 py-2 text-right text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(it.unitPrice || it.rate || 0, curr)}</td>
+                  <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{formatCurrency(it.discountAmount || 0, curr)}</td>
+                  <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{formatCurrency(it.taxAmount || 0, curr)}</td>
+                  <td className="px-4 py-2 text-right text-zinc-700 dark:text-[#A0A6B5]">{getItemTaxRate(it)}</td>
+                  <td className="px-4 py-2 text-right font-medium text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(it.totalAmount || it.lineTotal || 0, curr)}</td>
                 </tr>
               )) : (
-                <tr><td colSpan={9} className="px-4 py-4 text-center text-zinc-400 dark:text-[#6B7184]">No items available</td></tr>
+                <tr><td colSpan={10} className="px-4 py-4 text-center text-zinc-400 dark:text-[#6B7184]">No items available</td></tr>
               )}
             </tbody>
           </table>
@@ -121,38 +156,56 @@ const QuotationOverview = ({ quote }) => {
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-3">Additional Details</h4>
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Payment Terms</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{terms.paymentTerms || '—'}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Delivery Terms</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{terms.deliveryTerms || '—'}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Created By</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{audit.created?.by?.username || audit.createdBy || quote.createdByName || '—'}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Created Date</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{audit.created?.at ? new Date(audit.created.at).toLocaleString() : (quote.createdAt ? new Date(quote.createdAt).toLocaleString() : '—')}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Updated Date</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{audit.updated?.at ? new Date(audit.updated.at).toLocaleString() : (quote.updatedAt ? new Date(quote.updatedAt).toLocaleString() : '—')}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Payment Terms</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{quote.paymentTerms || terms.paymentTerms || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Delivery Terms</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{quote.deliveryTerms || terms.deliveryTerms || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Warranty Terms</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{quote.warrantyTerms || terms.warrantyTerms || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Created By</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{audit.created?.by?.username || audit.createdBy || quote.createdByName || (typeof quote.createdBy === 'string' ? quote.createdBy : '—')}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Created Date</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{formatDate(audit.created?.at || quote.createdAt)}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Updated Date</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE] text-right">{formatDate(audit.updated?.at || quote.updatedAt)}</span></div>
             <div>
               <span className="text-zinc-500 dark:text-[#6B7184] block mb-1">Notes</span>
-              <p className="text-zinc-800 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#161922] p-2 rounded border border-zinc-100 dark:border-[#2A2F3D] text-xs min-h-[32px] whitespace-pre-wrap">{terms.notes || quote.notes || '—'}</p>
+              <p className="text-zinc-800 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#161922] p-2 rounded border border-zinc-100 dark:border-[#2A2F3D] text-xs min-h-[32px] whitespace-pre-wrap">{quote.notes || (typeof quote.termsAndConditions === 'string' ? '' : terms.notes) || '—'}</p>
             </div>
             <div>
               <span className="text-zinc-500 dark:text-[#6B7184] block mb-1">Terms & Conditions</span>
-              <p className="text-zinc-800 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#161922] p-2 rounded border border-zinc-100 dark:border-[#2A2F3D] text-xs min-h-[32px] whitespace-pre-wrap">{terms.termsAndConditions || quote.termsAndConditions || '—'}</p>
+              <p className="text-zinc-800 dark:text-[#E6E8EE] bg-zinc-50 dark:bg-[#161922] p-2 rounded border border-zinc-100 dark:border-[#2A2F3D] text-xs min-h-[32px] whitespace-pre-wrap">{typeof quote.termsAndConditions === 'string' ? quote.termsAndConditions : (terms.termsAndConditions || '—')}</p>
             </div>
           </div>
         </div>
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-[#6B7184] mb-3">Amount Summary</h4>
           <div className="space-y-2 text-sm bg-zinc-50 dark:bg-[#161922] p-4 rounded-lg border border-zinc-200 dark:border-[#2A2F3D]">
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Subtotal</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(amtSummary.subtotal || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Discount</span><span className="font-medium text-red-600 dark:text-red-400">{amtSummary.discountAmount ? `-${curr} ${fmt(amtSummary.discountAmount)}` : '—'}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Taxable Amount</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(taxSummary.taxableAmount || amtSummary.subtotal || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">CGST</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(taxSummary.cgst || taxSummary.cgstAmount || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">SGST</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(taxSummary.sgst || taxSummary.sgstAmount || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">IGST</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(taxSummary.igst || taxSummary.igstAmount || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Other Charges</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(amtSummary.otherCharges || 0)}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Round Off</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(amtSummary.roundOff || 0)}</span></div>
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Subtotal</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(subtotal, curr)}</span></div>
+            {discountAmount > 0 && (
+              <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Discount</span><span className="font-medium text-red-600 dark:text-red-400">-{formatCurrency(discountAmount, curr)}</span></div>
+            )}
+            <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Taxable Amount</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(taxableAmount, curr)}</span></div>
+            {cgst > 0 && (
+              <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">CGST</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(cgst, curr)}</span></div>
+            )}
+            {sgst > 0 && (
+              <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">SGST</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(sgst, curr)}</span></div>
+            )}
+            {igst > 0 && (
+              <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">IGST</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(igst, curr)}</span></div>
+            )}
+            {cgst === 0 && sgst === 0 && igst === 0 && totalTax > 0 && (
+              <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Tax</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(totalTax, curr)}</span></div>
+            )}
+            {otherCharges > 0 && (
+              <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Other Charges</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(otherCharges, curr)}</span></div>
+            )}
+            {roundOff !== 0 && (
+              <div className="flex justify-between"><span className="text-zinc-500 dark:text-[#6B7184]">Round Off</span><span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(roundOff, curr)}</span></div>
+            )}
             <div className="pt-2 mt-2 border-t border-zinc-200 dark:border-[#2A2F3D] flex justify-between items-center">
               <span className="font-bold text-zinc-900 dark:text-[#E6E8EE]">Grand Total</span>
-              <span className="font-bold text-lg text-zinc-900 dark:text-[#E6E8EE]">{curr} {fmt(amtSummary.totalAmount || 0)}</span>
+              <span className="font-bold text-lg text-zinc-900 dark:text-[#E6E8EE]">{formatCurrency(totalAmount, curr)}</span>
             </div>
-            <div className="flex justify-between mt-1"><span className="text-zinc-500 dark:text-[#6B7184]">Paid Amount</span><span className="font-medium text-emerald-600 dark:text-emerald-400">{curr} {fmt(amtSummary.paidAmount || amtSummary.receivedAmount || 0)}</span></div>
-            <div className="flex justify-between mt-1"><span className="text-zinc-500 dark:text-[#6B7184] font-bold">Outstanding Amount</span><span className="font-bold text-amber-600 dark:text-amber-400">{curr} {fmt(amtSummary.outstandingAmount || 0)}</span></div>
+            {paidAmount > 0 && (
+              <div className="flex justify-between mt-1"><span className="text-zinc-500 dark:text-[#6B7184]">Paid Amount</span><span className="font-medium text-emerald-600 dark:text-emerald-400">{formatCurrency(paidAmount, curr)}</span></div>
+            )}
+            <div className="flex justify-between mt-1"><span className="text-zinc-500 dark:text-[#6B7184] font-bold">Outstanding Amount</span><span className="font-bold text-amber-600 dark:text-amber-400">{formatCurrency(outstandingAmount, curr)}</span></div>
           </div>
         </div>
       </div>
@@ -207,10 +260,12 @@ export default function QuotationsPage() {
     setExpandedRowId(prev => prev === id ? null : id);
   };
 
-  const quotes = Array.isArray(apiResponse) ? apiResponse : (apiResponse?.data || apiResponse?.content || []);
-  const serverPagination = apiResponse?.pagination || apiResponse?.page || {};
-  const totalElements = serverPagination.totalElements || serverPagination.totalCount || quotes.length;
-  const totalPages = serverPagination.totalPages || Math.max(1, Math.ceil(quotes.length / (pageSize || 10)));
+  const quotes = Array.isArray(apiResponse)
+    ? apiResponse
+    : (apiResponse?.data?.content || apiResponse?.content || (Array.isArray(apiResponse?.data) ? apiResponse.data : []));
+  const serverPagination = apiResponse?.pagination || apiResponse?.page || (apiResponse?.data && !Array.isArray(apiResponse.data) ? apiResponse.data : {});
+  const totalElements = apiResponse?.data?.totalElements ?? apiResponse?.totalElements ?? serverPagination.totalElements ?? serverPagination.totalCount ?? quotes.length;
+  const totalPages = apiResponse?.data?.totalPages ?? apiResponse?.totalPages ?? serverPagination.totalPages ?? Math.max(1, Math.ceil(totalElements / (pageSize || 10)));
 
   const finalFilterBarProps = {
     ...filterBarProps,
@@ -499,20 +554,6 @@ export default function QuotationsPage() {
     }
   };
 
-  // Custom badge renderer to match Sales Invoices style strictly
-  const renderStatusBadge = (status) => {
-    const s = (status || 'DRAFT').toUpperCase();
-    if (s === 'ACCEPTED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">{s}</span>;
-    if (s === 'SENT') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-[#4C8DFF] dark:border-blue-500/20">{s}</span>;
-    if (s === 'EXPIRED' || s === 'REJECTED' || s === 'CANCELLED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-[#F0616D] dark:border-red-500/20">{s}</span>;
-    if (s === 'DRAFT') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-[#F5B544] dark:border-amber-500/20">{s}</span>;
-    return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]">{s}</span>;
-  };
-
-  const formatCurrency = (amount, currency = 'INR') => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(amount || 0);
-  };
-
   const columns = useMemo(() => [
     {
       key: 'quotationNumber',
@@ -521,7 +562,7 @@ export default function QuotationsPage() {
       render: (val, row) => (
         <div className="flex items-center gap-2">
           <FileText size={14} className="text-zinc-400" />
-          <span className="font-mono text-xs font-semibold text-primary">{row.quotationNumber || '—'}</span>
+          <span className="font-mono text-xs font-semibold text-primary">{row.quotationNumber || row.quoteNo || '—'}</span>
         </div>
       )
     },
@@ -531,9 +572,9 @@ export default function QuotationsPage() {
       sortable: true,
       render: (val, row) => (
         <div>
-          <div className="font-semibold text-zinc-900">{row.customer?.customerName || row.customerName || '—'}</div>
+          <div className="font-semibold text-zinc-900 dark:text-[#E6E8EE]">{row.customer?.customerName || row.customerName || '—'}</div>
           {(row.customer?.customerCode || row.customerCode) && (
-            <div className="text-[8.8px] text-zinc-500 mt-0.5">{row.customer?.customerCode || row.customerCode}</div>
+            <div className="text-[8.8px] text-zinc-500 dark:text-[#6B7184] mt-0.5">{row.customer?.customerCode || row.customerCode}</div>
           )}
         </div>
       )
@@ -542,12 +583,12 @@ export default function QuotationsPage() {
       key: 'quotationDate',
       label: 'DATE',
       sortable: true,
-      render: (val) => val ? new Date(val).toLocaleDateString() : '—'
+      render: (val, row) => formatDate(row.quotationDate || val)
     },
     {
       key: 'validUntil',
       label: 'VALID UNTIL',
-      render: (val) => val ? new Date(val).toLocaleDateString() : '—'
+      render: (val, row) => formatDate(row.validUntil || val)
     },
     {
       key: 'totalAmount',
@@ -555,7 +596,7 @@ export default function QuotationsPage() {
       sortable: true,
       align: 'right',
       render: (val, row) => (
-        <span className="font-medium text-zinc-800">{formatCurrency(row.totalAmount, row.quotationCurrency)}</span>
+        <span className="font-medium text-zinc-800 dark:text-[#E6E8EE]">{formatCurrency(row.totalAmount ?? val, row.quotationCurrency || row.currency)}</span>
       )
     },
     {
@@ -563,7 +604,7 @@ export default function QuotationsPage() {
       label: 'OUTSTANDING',
       align: 'right',
       render: (val, row) => (
-        <span className="font-medium text-amber-600">{formatCurrency(row.outstandingAmount, row.quotationCurrency)}</span>
+        <span className="font-medium text-amber-600 dark:text-amber-400">{formatCurrency(getQuotationOutstanding(row), row.quotationCurrency || row.currency)}</span>
       )
     },
     {
@@ -571,7 +612,7 @@ export default function QuotationsPage() {
       label: 'STATUS',
       sortable: true,
       align: 'center',
-      render: (val) => renderStatusBadge(val)
+      render: (val, row) => renderStatusBadge(row.status || val)
     }
   ], []);
 

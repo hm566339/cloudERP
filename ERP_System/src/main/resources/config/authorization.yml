@@ -85,5 +85,6 @@ sso:
       "/confirm": POST
       "/verify": UPDATE
       "/export": EXPORT
+      "/reset": WRITE
 
     feature-groups: {}

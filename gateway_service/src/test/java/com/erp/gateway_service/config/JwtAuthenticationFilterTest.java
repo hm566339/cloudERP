@@ -60,6 +60,9 @@ class JwtAuthenticationFilterTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "/api/sso/organization/appearance",
+            "/api/sso/organization/appearance/",
+            "/api/sso/organization/appearance/reset",
             "/api/sso/organization/members/companies",
             "/api/sso/organization/members/123/companies",
             "/api/account/invoices",
@@ -72,5 +75,13 @@ class JwtAuthenticationFilterTest {
     @DisplayName("Protected and microservice endpoints must NOT be recognized as public")
     void testProtectedEndpointsRequireAuthentication(String path) {
         assertFalse(JwtAuthenticationFilter.isPublicEndpoint("GET", path));
+    }
+
+    @Test
+    @DisplayName("Organization appearance PUT and POST must require authentication")
+    void testOrganizationAppearanceMutationsRequireAuth() {
+        assertFalse(JwtAuthenticationFilter.isPublicEndpoint("PUT", "/api/sso/organization/appearance"));
+        assertFalse(JwtAuthenticationFilter.isPublicEndpoint("PUT", "/api/sso/organization/appearance/"));
+        assertFalse(JwtAuthenticationFilter.isPublicEndpoint("POST", "/api/sso/organization/appearance/reset"));
     }
 }

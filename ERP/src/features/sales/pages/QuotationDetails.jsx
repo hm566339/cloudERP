@@ -23,6 +23,11 @@ import { useRBAC } from '../../../utils/rbac';
 
 import PIConversionFormModal from '../components/PIConversionFormModal';
 import WorkflowActionButtons from '../../workflows/components/WorkflowActionButtons';
+import {
+  formatDate,
+  getItemTaxRate,
+  calculateQuotationSummary
+} from '../utils/quotationDataMapping';
 
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
@@ -134,21 +139,32 @@ export default function QuotationDetails() {
     );
   }
 
-  const curr = quotation.currency || quotation.quotationCurrency || 'INR';
+  const curr = quotation.quotationCurrency || quotation.currency || 'INR';
   const c = quotation.companyInformation || quotation.company || {};
   const cust = quotation.customerInformation || quotation.customer || {};
-  const lineItems = quotation.lineItems || quotation.items || [];
+  const lineItems = quotation.items || quotation.lineItems || [];
   const taxSummary = quotation.taxSummary || {};
   const amtSummary = quotation.amountSummary || {};
-  const terms = quotation.termsAndConditions || {};
+  const terms = typeof quotation.termsAndConditions === 'object' && quotation.termsAndConditions !== null
+    ? quotation.termsAndConditions
+    : {};
   const approval = quotation.approvalWorkflow || {};
   const stats = quotation.statistics || {};
   const deliveryInfo = quotation.deliveryInformation || {};
   const billingInfo = quotation.billingInformation || {};
 
-  const totalAmount = amtSummary.totalAmount ?? 0;
-  const taxableAmount = taxSummary.taxableAmount ?? amtSummary.subtotal ?? 0;
-  const totalTax = taxSummary.totalTax ?? 0;
+  const {
+    subtotal,
+    discountAmount,
+    taxableAmount,
+    cgst,
+    sgst,
+    igst,
+    totalTax,
+    otherCharges,
+    roundOff,
+    totalAmount
+  } = calculateQuotationSummary(quotation);
   
   // Calculate days validity
   let validityDays = 0;
@@ -194,7 +210,7 @@ export default function QuotationDetails() {
                 {cust.customerName || cust.companyName}
               </span>
               <span className="text-xs sm:text-sm text-zinc-400 dark:text-[#6B7184]">
-                ({quotation.quotationDate} &mdash; Valid Until: {quotation.validUntil})
+                ({formatDate(quotation.quotationDate)} &mdash; Valid Until: {formatDate(quotation.validUntil)})
               </span>
             </div>
           </div>
@@ -406,8 +422,8 @@ export default function QuotationDetails() {
                   <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {[
                       ['Quotation Number', quotation.quotationNumber],
-                      ['Quotation Date', quotation.quotationDate],
-                      ['Valid Until', quotation.validUntil],
+                      ['Quotation Date', formatDate(quotation.quotationDate)],
+                      ['Valid Until', formatDate(quotation.validUntil)],
                       ['Status', <StatusBadge key="sb1" status={quotation.status} />],
                       ['Currency', curr],
                       ['Exchange Rate', quotation.exchangeRate || 1],
@@ -467,7 +483,7 @@ export default function QuotationDetails() {
                   </div>
                 </div>
 
-                {(terms.paymentTerms || terms.deliveryTerms || terms.warrantyTerms || terms.termsAndConditions || terms.notes) && (
+                {(quotation.paymentTerms || quotation.deliveryTerms || quotation.warrantyTerms || quotation.termsAndConditions || quotation.notes || terms.paymentTerms || terms.deliveryTerms || terms.warrantyTerms || terms.termsAndConditions || terms.notes) && (
                   <div className="bg-white dark:bg-[#161922] rounded-xl shadow-sm border border-zinc-200 dark:border-[#2A2F3D] overflow-hidden">
                     <div className="px-5 py-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C] flex items-center justify-between">
                       <h3 className="text-[10.4px] font-bold text-zinc-800 dark:text-[#E6E8EE] uppercase tracking-wider flex items-center gap-2">
@@ -475,34 +491,34 @@ export default function QuotationDetails() {
                       </h3>
                     </div>
                     <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {terms.paymentTerms && (
+                      {(quotation.paymentTerms || terms.paymentTerms) && (
                         <div className="flex flex-col gap-1">
                           <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Payment Terms</p>
-                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(terms.paymentTerms)}</p>
+                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(quotation.paymentTerms || terms.paymentTerms)}</p>
                         </div>
                       )}
-                      {terms.deliveryTerms && (
+                      {(quotation.deliveryTerms || terms.deliveryTerms) && (
                         <div className="flex flex-col gap-1">
                           <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Delivery Terms</p>
-                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(terms.deliveryTerms)}</p>
+                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(quotation.deliveryTerms || terms.deliveryTerms)}</p>
                         </div>
                       )}
-                      {terms.warrantyTerms && (
+                      {(quotation.warrantyTerms || terms.warrantyTerms) && (
                         <div className="flex flex-col gap-1">
                           <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Warranty Terms</p>
-                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(terms.warrantyTerms)}</p>
+                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(quotation.warrantyTerms || terms.warrantyTerms)}</p>
                         </div>
                       )}
-                      {terms.termsAndConditions && (
+                      {(quotation.termsAndConditions || terms.termsAndConditions) && (
                         <div className="flex flex-col gap-1 md:col-span-2">
                           <p className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider">Other Terms</p>
-                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(terms.termsAndConditions)}</p>
+                          <p className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE] whitespace-pre-wrap">{renderOptionalText(quotation.termsAndConditions || terms.termsAndConditions)}</p>
                         </div>
                       )}
-                      {terms.notes && (
+                      {(quotation.notes || terms.notes) && (
                         <div className="flex flex-col gap-1 md:col-span-2 bg-amber-50 dark:bg-amber-950/20 p-4 rounded-lg border border-transparent dark:border-amber-900/30">
                           <p className="text-[8.8px] font-bold text-amber-700 dark:text-[#F5B544] uppercase tracking-wider">Notes</p>
-                          <p className="text-sm font-medium text-amber-900 dark:text-[#F5B544] whitespace-pre-wrap">{renderOptionalText(terms.notes)}</p>
+                          <p className="text-sm font-medium text-amber-900 dark:text-[#F5B544] whitespace-pre-wrap">{renderOptionalText(quotation.notes || terms.notes)}</p>
                         </div>
                       )}
                     </div>
@@ -557,13 +573,13 @@ export default function QuotationDetails() {
                                 <td className="p-4 hidden sm:table-cell font-mono text-xs font-semibold text-zinc-700 dark:text-[#A0A6B5]">
                                   {item.itemCode || item.code || '-'}
                                 </td>
-                                <td className="p-4 hidden lg:table-cell text-zinc-500 dark:text-[#6B7184] font-mono text-xs">{item.hsnSacCode || item.hsnSac || '-'}</td>
-                                <td className="p-4 hidden lg:table-cell text-zinc-600 dark:text-[#A0A6B5]">{item.gstSlab || `${item.gstRate || 0}%`}</td>
+                                <td className="p-4 hidden lg:table-cell text-zinc-500 dark:text-[#6B7184] font-mono text-xs">{item.hsnSacMaster?.code || item.hsnSacCode || item.hsnSac || '-'}</td>
+                                <td className="p-4 hidden lg:table-cell text-zinc-600 dark:text-[#A0A6B5]">{getItemTaxRate(item)}</td>
                                 <td className="p-4 text-right font-bold text-zinc-900 dark:text-[#E6E8EE]">{item.quantity}</td>
                                 <td className="p-4 hidden sm:table-cell text-zinc-500 dark:text-[#6B7184]">{item.unit || 'PCS'}</td>
-                                <td className="p-4 text-right font-mono text-zinc-800 dark:text-[#E6E8EE]">₹{fmt(item.unitPrice || item.price)}</td>
+                                <td className="p-4 text-right font-mono text-zinc-800 dark:text-[#E6E8EE]">₹{fmt(item.unitPrice || item.price || item.rate || 0)}</td>
                                 <td className="p-4 text-right hidden sm:table-cell text-zinc-500 dark:text-[#6B7184]">
-                                  {item.discountPercentage || item.discount || 0}%
+                                  {item.discountPercentage ?? item.discountPercent ?? item.discount ?? 0}%
                                 </td>
                               </tr>
 
@@ -587,7 +603,7 @@ export default function QuotationDetails() {
                                               </div>
                                               <div>
                                                 <dt className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">HSN/SAC</dt>
-                                                <dd className="text-sm font-mono text-zinc-700 dark:text-[#A0A6B5]">{item.hsnSacCode || item.hsnSac || 'N/A'}</dd>
+                                                <dd className="text-sm font-mono text-zinc-700 dark:text-[#A0A6B5]">{item.hsnSacMaster?.code || item.hsnSacCode || item.hsnSac || 'N/A'}</dd>
                                               </div>
                                               <div className="col-span-2">
                                                 <dt className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">Description</dt>
@@ -595,7 +611,7 @@ export default function QuotationDetails() {
                                               </div>
                                               <div>
                                                 <dt className="text-[8.8px] font-bold text-zinc-500 dark:text-[#6B7184] uppercase tracking-wider mb-1">GST Slab</dt>
-                                                <dd className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{item.gstSlab || `${item.gstRate || 0}%`}</dd>
+                                                <dd className="text-sm font-medium text-zinc-900 dark:text-[#E6E8EE]">{getItemTaxRate(item)}</dd>
                                               </div>
                                             </dl>
                                           </div>
@@ -608,38 +624,38 @@ export default function QuotationDetails() {
                                               <dl className="space-y-2">
                                                 <div className="flex justify-between items-center text-sm">
                                                   <dt className="text-zinc-500 dark:text-[#6B7184]">Unit Price</dt>
-                                                  <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(item.unitPrice)}</dd>
+                                                  <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(item.unitPrice || item.price || item.rate || 0)}</dd>
                                                 </div>
                                                 <div className="flex justify-between items-center text-sm">
                                                   <dt className="text-zinc-500 dark:text-[#6B7184]">Quantity</dt>
                                                   <dd className="font-medium text-zinc-900 dark:text-[#E6E8EE]">{item.quantity} {item.unit}</dd>
                                                 </div>
-                                                {item.discountAmount > 0 && (
+                                                {(item.discountAmount > 0 || (item.discountPercentage ?? item.discountPercent) > 0) && (
                                                   <div className="flex justify-between items-center text-sm text-emerald-600 dark:text-emerald-400">
-                                                    <dt>Discount ({item.discountPercentage}%)</dt>
-                                                    <dd className="font-medium">-₹{fmt(item.discountAmount)}</dd>
+                                                    <dt>Discount ({item.discountPercentage ?? item.discountPercent ?? 0}%)</dt>
+                                                    <dd className="font-medium">-₹{fmt(item.discountAmount || 0)}</dd>
                                                   </div>
                                                 )}
                                                 <div className="flex justify-between items-center text-sm font-medium border-t border-zinc-100 dark:border-[#2A2F3D] pt-2 mt-2">
                                                   <dt className="text-zinc-700 dark:text-[#A0A6B5]">Taxable Amount</dt>
                                                   <dd className="text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(item.taxableAmount)}</dd>
                                                 </div>
-                                                {item.cgst > 0 && (
+                                                {(item.cgstAmount > 0 || item.cgst > 0) && (
                                                   <div className="flex justify-between items-center text-sm">
                                                     <dt className="text-zinc-500 dark:text-[#6B7184]">CGST</dt>
-                                                    <dd className="font-medium text-zinc-600 dark:text-[#A0A6B5]">₹{fmt(item.cgst)}</dd>
+                                                    <dd className="font-medium text-zinc-600 dark:text-[#A0A6B5]">₹{fmt(item.cgstAmount || item.cgst)}</dd>
                                                   </div>
                                                 )}
-                                                {item.sgst > 0 && (
+                                                {(item.sgstAmount > 0 || item.sgst > 0) && (
                                                   <div className="flex justify-between items-center text-sm">
                                                     <dt className="text-zinc-500 dark:text-[#6B7184]">SGST</dt>
-                                                    <dd className="font-medium text-zinc-600 dark:text-[#A0A6B5]">₹{fmt(item.sgst)}</dd>
+                                                    <dd className="font-medium text-zinc-600 dark:text-[#A0A6B5]">₹{fmt(item.sgstAmount || item.sgst)}</dd>
                                                   </div>
                                                 )}
-                                                {item.igst > 0 && (
+                                                {(item.igstAmount > 0 || item.igst > 0) && (
                                                   <div className="flex justify-between items-center text-sm">
                                                     <dt className="text-zinc-500 dark:text-[#6B7184]">IGST</dt>
-                                                    <dd className="font-medium text-zinc-600 dark:text-[#A0A6B5]">₹{fmt(item.igst)}</dd>
+                                                    <dd className="font-medium text-zinc-600 dark:text-[#A0A6B5]">₹{fmt(item.igstAmount || item.igst)}</dd>
                                                   </div>
                                                 )}
                                                 <div className="flex justify-between items-center text-base font-bold border-t-2 border-zinc-900 dark:border-[#2A2F3D] pt-2 mt-2">
@@ -675,19 +691,19 @@ export default function QuotationDetails() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     <div className="bg-zinc-50 dark:bg-[#1D212C] rounded-lg p-4 border border-zinc-100 dark:border-[#2A2F3D]">
                       <p className="text-xs font-bold text-zinc-500 dark:text-[#6B7184] uppercase">Taxable Amount</p>
-                      <p className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">₹{fmt(taxSummary.taxableAmount)}</p>
+                      <p className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">₹{fmt(taxableAmount)}</p>
                     </div>
                     <div className="bg-zinc-50 dark:bg-[#1D212C] rounded-lg p-4 border border-zinc-100 dark:border-[#2A2F3D]">
                       <p className="text-xs font-bold text-zinc-500 dark:text-[#6B7184] uppercase">CGST / SGST</p>
-                      <p className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">₹{fmt(taxSummary.cgst)} / ₹{fmt(taxSummary.sgst)}</p>
+                      <p className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">₹{fmt(cgst)} / ₹{fmt(sgst)}</p>
                     </div>
                     <div className="bg-zinc-50 dark:bg-[#1D212C] rounded-lg p-4 border border-zinc-100 dark:border-[#2A2F3D]">
                       <p className="text-xs font-bold text-zinc-500 dark:text-[#6B7184] uppercase">IGST</p>
-                      <p className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">₹{fmt(taxSummary.igst)}</p>
+                      <p className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE] mt-1">₹{fmt(igst)}</p>
                     </div>
                     <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4 border border-blue-100 dark:border-blue-900/30">
                       <p className="text-xs font-bold text-blue-600 dark:text-[#4C8DFF] uppercase">Total Tax</p>
-                      <p className="text-lg font-bold text-blue-900 dark:text-[#4C8DFF] mt-1">₹{fmt(taxSummary.totalTax)}</p>
+                      <p className="text-lg font-bold text-blue-900 dark:text-[#4C8DFF] mt-1">₹{fmt(totalTax)}</p>
                     </div>
                   </div>
                   
@@ -695,23 +711,57 @@ export default function QuotationDetails() {
                   <div className="max-w-sm space-y-2 border border-zinc-200 dark:border-[#2A2F3D] rounded-lg p-4 bg-white dark:bg-[#1D212C]">
                      <div className="flex justify-between text-sm">
                        <span className="text-zinc-500 dark:text-[#6B7184]">Subtotal</span>
-                       <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(amtSummary.subtotal)}</span>
+                       <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(subtotal)}</span>
                      </div>
-                     <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
-                       <span>Discount</span>
-                       <span className="font-medium">-₹{fmt(amtSummary.discountAmount)}</span>
-                     </div>
+                     {discountAmount > 0 && (
+                       <div className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400">
+                         <span>Discount</span>
+                         <span className="font-medium">-₹{fmt(discountAmount)}</span>
+                       </div>
+                     )}
                      <div className="flex justify-between text-sm">
-                       <span className="text-zinc-500 dark:text-[#6B7184]">Tax</span>
-                       <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(taxSummary.totalTax)}</span>
+                       <span className="text-zinc-500 dark:text-[#6B7184]">Taxable Amount</span>
+                       <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(taxableAmount)}</span>
                      </div>
-                     <div className="flex justify-between text-sm">
-                       <span className="text-zinc-500 dark:text-[#6B7184]">Round Off</span>
-                       <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(amtSummary.roundOff)}</span>
-                     </div>
+                     {cgst > 0 && (
+                       <div className="flex justify-between text-sm">
+                         <span className="text-zinc-500 dark:text-[#6B7184]">CGST</span>
+                         <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(cgst)}</span>
+                       </div>
+                     )}
+                     {sgst > 0 && (
+                       <div className="flex justify-between text-sm">
+                         <span className="text-zinc-500 dark:text-[#6B7184]">SGST</span>
+                         <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(sgst)}</span>
+                       </div>
+                     )}
+                     {igst > 0 && (
+                       <div className="flex justify-between text-sm">
+                         <span className="text-zinc-500 dark:text-[#6B7184]">IGST</span>
+                         <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(igst)}</span>
+                       </div>
+                     )}
+                     {cgst === 0 && sgst === 0 && igst === 0 && totalTax > 0 && (
+                       <div className="flex justify-between text-sm">
+                         <span className="text-zinc-500 dark:text-[#6B7184]">Tax</span>
+                         <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(totalTax)}</span>
+                       </div>
+                     )}
+                     {otherCharges > 0 && (
+                       <div className="flex justify-between text-sm">
+                         <span className="text-zinc-500 dark:text-[#6B7184]">Other Charges</span>
+                         <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(otherCharges)}</span>
+                       </div>
+                     )}
+                     {roundOff !== 0 && (
+                       <div className="flex justify-between text-sm">
+                         <span className="text-zinc-500 dark:text-[#6B7184]">Round Off</span>
+                         <span className="font-medium text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(roundOff)}</span>
+                       </div>
+                     )}
                      <div className="flex justify-between text-base font-bold pt-2 border-t border-zinc-200 dark:border-[#2A2F3D]">
                        <span className="text-zinc-900 dark:text-[#E6E8EE]">Total Amount</span>
-                       <span className="text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(amtSummary.totalAmount)}</span>
+                       <span className="text-zinc-900 dark:text-[#E6E8EE]">₹{fmt(totalAmount)}</span>
                      </div>
                   </div>
                 </div>

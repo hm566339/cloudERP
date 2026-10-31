@@ -8,8 +8,13 @@ import {
   LANDING_PAGE_COLORS,
   isPublicLandingPath,
   applyLandingSageTheme,
+  getStorageKey,
+  setActiveOrgId,
+  getActiveOrgId,
+  applyAppearance,
 } from '../themePresets.js';
 import themeReducer, {
+  setOrganizationId,
   setThemeMode,
   setThemePreset,
   setLayoutSettings,
@@ -290,6 +295,178 @@ describe('Global Appearance & Themes Theme Studio Test Suite', () => {
       assert.doesNotThrow(() => {
         applyLandingSageTheme();
       });
+    });
+  });
+
+  describe('5. Organization-Wise Theme Isolation (Multi-Tenant ERP)', () => {
+    it('generates tenant-scoped storage keys correctly', () => {
+      assert.strictEqual(getStorageKey('org-alpha-123'), 'erp_appearance_settings_org-alpha-123');
+      assert.strictEqual(getStorageKey('org-beta-456'), 'erp_appearance_settings_org-beta-456');
+      assert.strictEqual(getStorageKey(null), 'erp_appearance_settings');
+      assert.strictEqual(getStorageKey(''), 'erp_appearance_settings');
+    });
+
+    it('isolates appearance settings across different organizations in client storage', () => {
+      // Mock localStorage in Node.js test environment if absent
+      const storage = {};
+      const mockLocalStorage = {
+        getItem: (k) => storage[k] || null,
+        setItem: (k, v) => { storage[k] = String(v); },
+        removeItem: (k) => { delete storage[k]; },
+      };
+      globalThis.localStorage = mockLocalStorage;
+
+      const orgA = 'org-tenant-a';
+      const orgB = 'org-tenant-b';
+
+      // Org A configures Ocean Blue
+      const settingsA = {
+        ...DEFAULT_APPEARANCE_SETTINGS,
+        themePreset: 'ocean',
+        mode: 'light',
+      };
+      applyAppearance(settingsA, orgA);
+
+      // Org B configures Lavender
+      const settingsB = {
+        ...DEFAULT_APPEARANCE_SETTINGS,
+        themePreset: 'lavender',
+        mode: 'dark',
+      };
+      applyAppearance(settingsB, orgB);
+
+      // Verify Org A storage retains Ocean Blue
+      const loadedA = loadSavedAppearance(orgA);
+      assert.strictEqual(loadedA.themePreset, 'ocean');
+      assert.strictEqual(loadedA.mode, 'light');
+
+      // Verify Org B storage retains Lavender
+      const loadedB = loadSavedAppearance(orgB);
+      assert.strictEqual(loadedB.themePreset, 'lavender');
+      assert.strictEqual(loadedB.mode, 'dark');
+
+      // Verify complete independence: changing Org A does not mutate Org B
+      applyAppearance({ ...settingsA, themePreset: 'terracotta' }, orgA);
+      assert.strictEqual(loadSavedAppearance(orgA).themePreset, 'terracotta');
+      assert.strictEqual(loadSavedAppearance(orgB).themePreset, 'lavender');
+    });
+
+    it('manages organization theme switching in Redux themeSlice', () => {
+      const storage = {};
+      globalThis.localStorage = {
+        getItem: (k) => storage[k] || null,
+        setItem: (k, v) => { storage[k] = String(v); },
+        removeItem: (k) => { delete storage[k]; },
+      };
+
+      const org1Id = 'uuid-org-1';
+      const org2Id = 'uuid-org-2';
+
+      // Pre-save settings for Org 2
+      storage[`erp_appearance_settings_${org2Id}`] = JSON.stringify({
+        themePreset: 'slate',
+        mode: 'dark',
+      });
+
+      let state = themeReducer(undefined, { type: '@@INIT' });
+
+      // Switch to Org 1 (unconfigured -> default Sage)
+      state = themeReducer(state, setOrganizationId(org1Id));
+      assert.strictEqual(state.organizationId, org1Id);
+      assert.strictEqual(state.themePreset, 'sage');
+
+      // Update Org 1 to Ocean
+      state = themeReducer(state, setThemePreset('ocean'));
+      assert.strictEqual(state.themePreset, 'ocean');
+
+      // Switch to Org 2 (should load pre-saved Slate)
+      state = themeReducer(state, setOrganizationId(org2Id));
+      assert.strictEqual(state.organizationId, org2Id);
+      assert.strictEqual(state.themePreset, 'slate');
+      assert.strictEqual(state.mode, 'dark');
+
+      // Switch back to Org 1 (should load Ocean)
+      state = themeReducer(state, setOrganizationId(org1Id));
+      assert.strictEqual(state.organizationId, org1Id);
+      assert.strictEqual(state.themePreset, 'ocean');
+    });
+
+    it('applies backend appearance response payload via applyAllAppearanceSettings', () => {
+      let state = themeReducer(undefined, { type: '@@INIT' });
+
+      const backendResponse = {
+        organizationId: 'org-backend-uuid',
+        organizationCode: 'CORP_B',
+        activeTheme: 'lavender',
+        appearanceMode: 'dark',
+        layoutDensity: 'compact',
+        fontFamily: 'default',
+      };
+
+      state = themeReducer(state, applyAllAppearanceSettings(backendResponse));
+
+      assert.strictEqual(state.organizationId, 'org-backend-uuid');
+      assert.strictEqual(state.themePreset, 'lavender');
+      assert.strictEqual(state.mode, 'dark');
+      assert.strictEqual(state.resolvedTheme, 'dark');
+      assert.strictEqual(state.layout.density, 'compact');
+    });
+
+    it('ensures public landing page remains permanently immune to tenant themes', () => {
+      // Mock DOM element for documentElement
+      const styles = {};
+      const classList = new Set();
+      const attributes = {};
+
+      globalThis.document = {
+        documentElement: {
+          style: {
+            setProperty: (k, v) => { styles[k] = v; },
+            getPropertyValue: (k) => styles[k] || '',
+          },
+          classList: {
+            add: (c) => classList.add(c),
+            remove: (c) => classList.delete(c),
+            contains: (c) => classList.has(c),
+          },
+          setAttribute: (k, v) => { attributes[k] = v; },
+          removeAttribute: (k) => { delete attributes[k]; },
+        },
+      };
+
+      // Call landing page lock
+      applyLandingSageTheme();
+
+      // Brand background must be #E8E9DF
+      assert.strictEqual(styles['--color-bg-base'].toUpperCase(), '#E8E9DF');
+      // Primary accent must be Forest Green #2E3D28
+      assert.strictEqual(styles['--color-primary'].toUpperCase(), '#2E3D28');
+      // Data theme must be locked to sage
+      assert.strictEqual(attributes['data-theme'], 'sage');
+      // Dark mode class must be absent
+      assert.strictEqual(classList.has('dark'), false);
+    });
+
+    it('validates themeApi endpoint contracts for GET, PUT, and POST /reset', async () => {
+      const { themeApi } = await import('../services/themeApi.js');
+      assert.ok(themeApi.endpoints.getOrganizationAppearance);
+      assert.ok(themeApi.endpoints.updateOrganizationAppearance);
+      assert.ok(themeApi.endpoints.resetOrganizationAppearance);
+
+      // Verify endpoint definitions
+      const getDef = themeApi.endpoints.getOrganizationAppearance.initiate();
+      assert.ok(getDef);
+
+      const updateDef = themeApi.endpoints.updateOrganizationAppearance.initiate({
+        activeTheme: 'ocean',
+        appearanceMode: 'dark',
+        layoutDensity: 'compact',
+        fontFamily: 'default',
+      });
+      assert.ok(updateDef);
+
+      const resetDef = themeApi.endpoints.resetOrganizationAppearance.initiate();
+      assert.ok(resetDef);
     });
   });
 });

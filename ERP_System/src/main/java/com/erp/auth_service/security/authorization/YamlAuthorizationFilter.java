@@ -35,6 +35,12 @@ public class YamlAuthorizationFilter extends OncePerRequestFilter {
         // 2. Skip configured public endpoints
         for (String publicPattern : SsoPublicEndpoints.PUBLIC_ENDPOINTS) {
             if (pathMatcher.match(publicPattern, path)) {
+                // Organization lookup is public ONLY for GET on organization code, NOT for appearance or members
+                if (publicPattern.contains("/organization/")) {
+                    if (!"GET".equalsIgnoreCase(method) || path.contains("/appearance") || path.contains("/members")) {
+                        continue;
+                    }
+                }
                 return true;
             }
         }

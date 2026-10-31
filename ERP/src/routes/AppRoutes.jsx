@@ -16,9 +16,12 @@ import { useRBAC, parseJwt, extractRoleFromToken } from "../utils/rbac";
 import { getCookie } from "../utils/cookieHelper";
 import { useAppSelector, useAppDispatch } from "../app/hooks";
 import { selectIsRehydrated } from "../features/hydration/hydrationSlice";
-import { selectIsAuthenticated, selectCurrentUser, selectSessionStatus, selectAuthContext, setCredentials, setSessionStatus } from "../features/auth/authSlice";
+import { selectIsAuthenticated, selectCurrentUser, selectSessionStatus, selectAuthContext, setCredentials, setSessionStatus, selectOrganization } from "../features/auth/authSlice";
 import { setSelectedCompany } from "../features/company-management/companySlice";
 import { useGetMeQuery, useSsoGetMeQuery } from "../features/auth/services/authApi";
+import { useGetOrganizationAppearanceQuery } from "../features/theme/services/themeApi";
+import { setOrganizationId, applyAllAppearanceSettings } from "../features/theme/themeSlice";
+import { applyLandingSageTheme, isPublicLandingPath } from "../features/theme/themePresets";
 import WorkspaceLandingRedirect from "./WorkspaceLandingRedirect";
 import AccountRedirectHandler from "./AccountRedirectHandler";
 import RouteLoading from "./RouteLoading";
@@ -535,6 +538,27 @@ export default function AppRoutes() {
   const { isLoading: isSsoLoading, isFetching: isSsoFetching } = useSsoGetMeQuery(undefined, {
     skip: shouldSkipSso,
   });
+
+  // Global Organization Appearance Synchronization (Multi-Tenant Theme Isolation)
+  const currentOrg = useAppSelector(selectOrganization);
+  const activeOrgId = currentOrg?.id;
+
+  const shouldSkipAppearance = !activeOrgId || isPublicPage;
+  const { data: orgAppearance } = useGetOrganizationAppearanceQuery(undefined, {
+    skip: shouldSkipAppearance,
+  });
+
+  React.useEffect(() => {
+    if (activeOrgId && !isPublicPage) {
+      if (orgAppearance) {
+        dispatch(applyAllAppearanceSettings({ ...orgAppearance, orgId: activeOrgId }));
+      } else {
+        dispatch(setOrganizationId(activeOrgId));
+      }
+    } else if (isPublicPage && isPublicLandingPath(currentPath)) {
+      applyLandingSageTheme();
+    }
+  }, [activeOrgId, isPublicPage, currentPath, orgAppearance, dispatch]);
 
   const [authTimedOut, setAuthTimedOut] = React.useState(false);
 

@@ -30,6 +30,7 @@ public class DatabaseSchemaBootstrap implements CommandLineRunner {
         addColumnIfMissingSafely("\"user\"", "notes", "TEXT");
         migrateRefreshTokenRecordCascadeForeignKeySafely();
         ensureCaseInsensitiveUserIndexesSafely();
+        ensureOrganizationAppearanceTableSafely();
     }
 
     private void dropColumnNotNullSafely(String tableName, String columnName) {
@@ -181,6 +182,30 @@ public class DatabaseSchemaBootstrap implements CommandLineRunner {
             }
         } catch (Exception ex) {
             log.warn("Could not verify/create case-insensitive indexes on 'user': {}", ex.getMessage());
+        }
+    }
+
+    private void ensureOrganizationAppearanceTableSafely() {
+        try {
+            log.info("Ensuring organization_appearance table and constraints exist...");
+            jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS organization_appearance (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    organization_id UUID NOT NULL UNIQUE REFERENCES organization(id) ON DELETE CASCADE,
+                    active_theme VARCHAR(50) NOT NULL DEFAULT 'sage',
+                    appearance_mode VARCHAR(20) NOT NULL DEFAULT 'system',
+                    layout_density VARCHAR(20) NOT NULL DEFAULT 'comfortable',
+                    font_family VARCHAR(50) NOT NULL DEFAULT 'default',
+                    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            """);
+            jdbcTemplate.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS uk_org_appearance_organization ON organization_appearance (organization_id)"
+            );
+            log.info("Successfully verified/created organization_appearance table.");
+        } catch (Exception ex) {
+            log.warn("Could not ensure organization_appearance table: {}", ex.getMessage());
         }
     }
 }

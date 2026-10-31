@@ -42,6 +42,15 @@ import {
   DEFAULT_APPEARANCE_SETTINGS,
   resolveEffectiveMode,
 } from '../../features/theme/themePresets';
+import {
+  useUpdateOrganizationAppearanceMutation,
+  useResetOrganizationAppearanceMutation,
+} from '../../features/theme/services/themeApi';
+import {
+  selectOrganization,
+  selectMembership,
+  selectCurrentUser,
+} from '../../features/auth/authSlice';
 import { useSidebar } from '../../layouts/SidebarContext';
 import {
   SettingsLayout,
@@ -53,6 +62,19 @@ import {
 export default function AppearanceSettings() {
   const dispatch = useAppDispatch();
   const themeState = useAppSelector((state) => state.theme);
+  const activeOrg = useAppSelector(selectOrganization);
+  const membership = useAppSelector(selectMembership);
+  const currentUser = useAppSelector(selectCurrentUser);
+
+  const [updateAppearanceMutation] = useUpdateOrganizationAppearanceMutation();
+  const [resetAppearanceMutation] = useResetOrganizationAppearanceMutation();
+
+  const isOrgAdminOrOwner = useMemo(() => {
+    if (!membership && !currentUser) return true; // Default fallback for dev/preview
+    const memberType = membership?.memberType?.toUpperCase?.() || '';
+    const userRole = (currentUser?.role || currentUser?.userType || '').toUpperCase();
+    return memberType === 'OWNER' || memberType === 'ADMIN' || userRole === 'OWNER' || userRole === 'ADMIN' || Boolean(currentUser?.isSuperAdmin);
+  }, [membership, currentUser]);
   const sidebarContext = useSidebar();
 
   // Local draft state for real-time live preview before final apply
@@ -154,9 +176,11 @@ export default function AppearanceSettings() {
   };
 
   // Apply Changes globally
-  const handleApplyAll = () => {
+  const handleApplyAll = async () => {
     setIsSaving(true);
     const fullPayload = {
+      orgId: activeOrg?.id,
+      organizationId: activeOrg?.id,
       themePreset: draftPreset,
       mode: draftMode,
       layout: draftLayout,
@@ -170,6 +194,19 @@ export default function AppearanceSettings() {
       sidebarContext.setCollapsed(draftLayout.sidebarCollapsed);
     }
 
+    if (activeOrg?.id && isOrgAdminOrOwner) {
+      try {
+        await updateAppearanceMutation({
+          activeTheme: draftPreset,
+          appearanceMode: draftMode,
+          layoutDensity: draftLayout?.density,
+          fontFamily: draftTypography?.fontFamily,
+        }).unwrap();
+      } catch (err) {
+        console.warn('Could not persist appearance settings to organization backend:', err);
+      }
+    }
+
     setTimeout(() => {
       setIsSaving(false);
       setSaveSuccess(true);
@@ -178,8 +215,16 @@ export default function AppearanceSettings() {
   };
 
   // Reset to Defaults
-  const handleReset = () => {
-    dispatch(resetAppearanceDefaults());
+  const handleReset = async () => {
+    if (activeOrg?.id && isOrgAdminOrOwner) {
+      try {
+        await resetAppearanceMutation().unwrap();
+      } catch (err) {
+        console.warn('Could not reset appearance settings on organization backend:', err);
+      }
+    }
+
+    dispatch(resetAppearanceDefaults({ orgId: activeOrg?.id }));
     setDraftMode(DEFAULT_APPEARANCE_SETTINGS.mode);
     setDraftPreset(DEFAULT_APPEARANCE_SETTINGS.themePreset);
     setDraftLayout(DEFAULT_APPEARANCE_SETTINGS.layout);
@@ -220,6 +265,36 @@ export default function AppearanceSettings() {
           </div>
         }
       />
+
+      {/* ── Organization Theme Isolation Banner ── */}
+      {activeOrg && (
+        <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-primary)]">
+              <Building2 size={18} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  {activeOrg.displayName || activeOrg.legalName || 'Organization'}
+                </span>
+                <span className="px-2 py-0.5 text-2xs font-semibold rounded-full bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
+                  Tenant-Isolated Theme
+                </span>
+              </div>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                {isOrgAdminOrOwner
+                  ? 'Theme customizations apply globally to this organization and all its companies.'
+                  : 'Viewing organization theme. Only Organization Owners and Admins can save changes.'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)] font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+            <span>Org Code: <strong>{activeOrg.organizationCode || activeOrg.code || 'ACTIVE'}</strong></span>
+          </div>
+        </div>
+      )}
 
       {/* ── Main Two-Column View: Controls (Left) + Live Preview (Right) ── */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">

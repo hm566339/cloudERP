@@ -66,7 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.equals("/api/sso/auth/admin-login")
                 || path.equals("/api/sso/auth/register")
                 || path.equals("/api/sso/signup")
-                || path.matches("/api/sso/organization/[^/]+")
+                || ("GET".equalsIgnoreCase(request.getMethod()) && path.matches("/api/sso/organization/(?!appearance$|members$)[^/]+/?"))
                 || path.equals("/api/sso/authorize")
                 || path.equals("/api/sso/token/exchange")
                 || path.equals("/api/sso/token/refresh")

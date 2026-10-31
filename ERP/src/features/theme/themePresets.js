@@ -279,14 +279,68 @@ export const DEFAULT_APPEARANCE_SETTINGS = {
   customColors: null, // null or { primary, secondary, accent, background }
 };
 
-const STORAGE_KEY = 'erp_appearance_settings';
+export const STORAGE_KEY = 'erp_appearance_settings';
+export const ACTIVE_ORG_KEY = 'erp_active_org_id';
+
+/**
+ * Returns tenant-scoped storage key for multi-tenant theme isolation.
+ */
+export function getStorageKey(orgId) {
+  if (orgId && typeof orgId === 'string' && orgId.trim()) {
+    return `erp_appearance_settings_${orgId.trim()}`;
+  }
+  return STORAGE_KEY;
+}
+
+/**
+ * Sets the active organization ID in client storage.
+ */
+export function setActiveOrgId(orgId) {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    if (orgId) {
+      localStorage.setItem(ACTIVE_ORG_KEY, String(orgId));
+    } else {
+      localStorage.removeItem(ACTIVE_ORG_KEY);
+    }
+  } catch (err) {
+    console.warn('Failed to persist active organization ID:', err);
+  }
+}
+
+/**
+ * Gets the current active organization ID from client storage.
+ */
+export function getActiveOrgId() {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    return localStorage.getItem(ACTIVE_ORG_KEY);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Loads saved appearance preferences from localStorage.
+ * Prioritizes tenant-scoped settings if orgId is provided or active.
  */
-export function loadSavedAppearance() {
+export function loadSavedAppearance(orgId = null) {
   if (typeof localStorage === 'undefined') return DEFAULT_APPEARANCE_SETTINGS;
   try {
+    const effectiveOrgId = orgId || getActiveOrgId();
+    if (effectiveOrgId) {
+      const tenantRaw = localStorage.getItem(getStorageKey(effectiveOrgId));
+      if (tenantRaw) {
+        const parsed = JSON.parse(tenantRaw);
+        return {
+          ...DEFAULT_APPEARANCE_SETTINGS,
+          ...parsed,
+          layout: { ...DEFAULT_APPEARANCE_SETTINGS.layout, ...(parsed.layout || {}) },
+          typography: { ...DEFAULT_APPEARANCE_SETTINGS.typography, ...(parsed.typography || {}) },
+        };
+      }
+    }
+
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
@@ -418,13 +472,19 @@ export function applyLandingSageTheme() {
 
 /**
  * Applies all appearance settings (CSS Variables, DOM attributes, HTML classes) globally.
+ * Persists settings scoped to the organization for multi-tenant isolation.
  */
-export function applyAppearance(settings) {
-  if (typeof document === 'undefined') return;
+export function applyAppearance(settings, orgId = null) {
+  const effectiveOrgId = orgId || settings?.organizationId || getActiveOrgId();
 
   // Always persist appearance settings for the ERP application
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    const serialized = JSON.stringify(settings);
+    if (effectiveOrgId) {
+      localStorage.setItem(getStorageKey(effectiveOrgId), serialized);
+      setActiveOrgId(effectiveOrgId);
+    }
+    localStorage.setItem(STORAGE_KEY, serialized);
     localStorage.setItem('theme_mode', settings.mode);
     if (settings.layout?.sidebarCollapsed !== undefined) {
       localStorage.setItem('erp_sidebar_collapsed', String(settings.layout.sidebarCollapsed));
@@ -433,6 +493,8 @@ export function applyAppearance(settings) {
   } catch (err) {
     console.warn('Failed to persist appearance settings:', err);
   }
+
+  if (typeof document === 'undefined') return;
 
   // If the browser is currently viewing the public Landing Page, keep Sage Nature locked
   if (isPublicLandingPath()) {
@@ -516,6 +578,11 @@ export function applyAppearance(settings) {
 
   // 3. Set Global Data Attributes for Layout & Typography
   root.setAttribute('data-theme', settings.themePreset || 'sage');
+  if (effectiveOrgId) {
+    root.setAttribute('data-org-id', effectiveOrgId);
+  } else {
+    root.removeAttribute('data-org-id');
+  }
   root.setAttribute('data-density', settings.layout?.density || 'comfortable');
   root.setAttribute('data-content-width', settings.layout?.contentWidth || 'standard');
   root.setAttribute('data-border-radius', settings.layout?.borderRadius || 'medium');
@@ -549,9 +616,14 @@ export function applyAppearance(settings) {
   };
   root.style.setProperty('--font-family-base', fontFamMap[settings.typography?.fontFamily] || fontFamMap.default);
 
-  // 7. Save to localStorage
+  // 7. Save to localStorage (scoped to organization)
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    const serialized = JSON.stringify(settings);
+    if (effectiveOrgId) {
+      localStorage.setItem(getStorageKey(effectiveOrgId), serialized);
+      setActiveOrgId(effectiveOrgId);
+    }
+    localStorage.setItem(STORAGE_KEY, serialized);
     localStorage.setItem('theme_mode', settings.mode);
     if (settings.layout?.sidebarCollapsed !== undefined) {
       localStorage.setItem('erp_sidebar_collapsed', String(settings.layout.sidebarCollapsed));
