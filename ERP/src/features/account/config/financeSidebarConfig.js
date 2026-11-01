@@ -110,8 +110,8 @@ export const FINANCE_SIDEBAR = [
     label: 'Tax',
     icon: Percent,
     children: [
-      { id: 'tax-gst-state', label: 'GST State Master', path: '/accounts/tax/gst-state-master', module: 'GST_MASTER' },
-      { id: 'tax-gst-reg', label: 'GST Registrations', path: '/accounts/tax/gst-registrations', module: 'GST_MASTER' },
+      { id: 'tax-gst-master', label: 'GST Master', path: '/accounts/tax/gst-master', module: 'GST_MASTER' },
+
       { id: 'tax-gst', label: 'GST Slabs', path: '/accounts/masters/gst-slabs', module: 'GST_SLABS' },
       { id: 'tax-hsn', label: 'HSN / SAC', path: '/accounts/masters/hsn-sac', module: 'HSN_SAC' },
     ],

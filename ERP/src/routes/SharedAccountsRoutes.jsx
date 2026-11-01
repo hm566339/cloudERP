@@ -97,6 +97,7 @@ const ExportReportsPage = lazy(() => import("../features/gst-reports/pages/Expor
 const Gstr2bHistoryPage = lazy(() => import("../features/gst-reports/pages/Gstr2bHistoryPage"));
 
 
+const GstMaster = lazy(() => import("../features/finance/pages/GstMaster"));
 const GstStateMaster = lazy(() => import("../features/finance/pages/GstStateMaster"));
 const GstStateMasterDetails = lazy(() => import("../features/finance/pages/GstStateMasterDetails"));
 const GstRegistrations = lazy(() => import("../features/finance/pages/GstRegistrations"));
@@ -1088,10 +1089,11 @@ export const SharedAccountsRoutes = ({ prefix = '' }) => {
 
 
       {/* Tax */}
-      <Route path={`${prefix}tax/gst-state-master`} element={<ProtectedRoute module="FINANCE"><GstStateMaster /></ProtectedRoute>} />
-      <Route path={`${prefix}tax/gst-state-master/:id`} element={<ProtectedRoute module="FINANCE"><GstStateMasterDetails /></ProtectedRoute>} />
-      <Route path={`${prefix}tax/gst-registrations`} element={<ProtectedRoute module="FINANCE"><GstRegistrations /></ProtectedRoute>} />
-      <Route path={`${prefix}tax/gst-registrations/:id`} element={<ProtectedRoute module="FINANCE"><GstRegistrationsDetails /></ProtectedRoute>} />
+      <Route path={`${prefix}tax/gst-master`} element={<ProtectedRoute module="GST_MASTER"><GstMaster /></ProtectedRoute>} />
+      <Route path={`${prefix}tax/gst-state-master`} element={<ProtectedRoute module="GST_MASTER"><GstStateMaster /></ProtectedRoute>} />
+      <Route path={`${prefix}tax/gst-state-master/:id`} element={<ProtectedRoute module="GST_MASTER"><GstStateMasterDetails /></ProtectedRoute>} />
+      <Route path={`${prefix}tax/gst-registrations`} element={<ProtectedRoute module="GST_MASTER"><GstRegistrations /></ProtectedRoute>} />
+      <Route path={`${prefix}tax/gst-registrations/:id`} element={<ProtectedRoute module="GST_MASTER"><GstRegistrationsDetails /></ProtectedRoute>} />
 
       {/* Budget */}
       <Route path={`${prefix}budget`} element={<ProtectedRoute module="BUDGET_HEADERS"><BudgetManagement /></ProtectedRoute>} />

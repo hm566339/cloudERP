@@ -256,7 +256,7 @@ export default function GstStateMaster() {
       key: 'edit',
       label: 'Edit',
       icon: Edit2,
-      permission: { module: 'TAX_SETTINGS', action: 'UPDATE' },
+      permission: { module: 'GST_MASTER', action: 'UPDATE' },
       onClick: (row) => handleEdit(row),
       tooltip: 'Edit State',
       className: 'hover:text-emerald-600 hover:bg-emerald-50'
@@ -266,7 +266,7 @@ export default function GstStateMaster() {
       label: 'Delete',
       icon: Trash2,
       danger: true,
-      permission: { module: 'TAX_SETTINGS', action: 'DELETE' },
+      permission: { module: 'GST_MASTER', action: 'DELETE' },
       onClick: (row) => handleDelete(row.id || row.stateCode, row.stateName),
       tooltip: 'Delete State'
     }
@@ -282,7 +282,7 @@ export default function GstStateMaster() {
           <Printer size={14} />
           <span>Print</span>
         </button>
-        <RequirePermission module="TAX_SETTINGS" action="CREATE">
+        <RequirePermission module="GST_MASTER" action="CREATE">
           <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
             <Plus size={16} />
             <span>New State</span>

@@ -245,7 +245,7 @@ export default function GstRegistrations() {
       key: 'edit',
       label: 'Edit',
       icon: Edit2,
-      permission: { module: 'TAX_SETTINGS', action: 'UPDATE' },
+      permission: { module: 'GST_MASTER', action: 'UPDATE' },
       onClick: (row) => handleEdit(row),
       tooltip: 'Edit Registration',
       className: 'hover:text-emerald-600 hover:bg-emerald-50'
@@ -255,7 +255,7 @@ export default function GstRegistrations() {
       label: 'Delete',
       icon: Trash2,
       danger: true,
-      permission: { module: 'TAX_SETTINGS', action: 'DELETE' },
+      permission: { module: 'GST_MASTER', action: 'DELETE' },
       onClick: (row) => handleDelete(row.id, row.gstin),
       tooltip: 'Delete Registration'
     }
@@ -267,7 +267,7 @@ export default function GstRegistrations() {
         title="GST Registrations"
         description="Manage GST registrations for your company and branches."
       >
-        <RequirePermission module="TAX_SETTINGS" action="CREATE">
+        <RequirePermission module="GST_MASTER" action="CREATE">
           <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
             <Plus size={16} />
             <span>New Registration</span>

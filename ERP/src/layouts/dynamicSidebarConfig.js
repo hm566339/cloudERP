@@ -243,8 +243,7 @@ function getRawModuleNavigationBlueprint(moduleName, base, authContext) {
           label: 'Tax',
           icon: BadgeCheck,
           children: [
-            { id: 'acc-tax-gst-state', label: 'GST State Master', path: `${base}/accounts/tax/gst-state-master`, icon: Tag, featureCode: 'GST_STATE_MASTER', action: 'READ' },
-            { id: 'acc-tax-gst-reg', label: 'GST Registrations', path: `${base}/accounts/tax/gst-registrations`, icon: Tag, featureCode: 'GST_REGISTRATIONS', action: 'READ' },
+            { id: 'acc-tax-gst-master', label: 'GST Master', path: `${base}/accounts/tax/gst-master`, icon: Tag, featureCode: 'GST_MASTER', action: 'READ' },
             { id: 'acc-tax-gst', label: 'GST Slabs', path: `${base}/accounts/masters/gst-slabs`, icon: BadgeCheck, featureCode: 'GST_SLABS', action: 'READ' },
             { id: 'acc-tax-hsn', label: 'HSN / SAC', path: `${base}/accounts/masters/hsn-sac`, icon: Tag, featureCode: 'HSN_SAC', action: 'READ' },
           ],
