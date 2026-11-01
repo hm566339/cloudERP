@@ -184,10 +184,18 @@ public class PermissionServiceImpl implements PermissionService {
             String action = normalizeAction(item.getAction());
             String featureCode = item.getFeatureCode().trim().toUpperCase();
 
-            FeaturePermission permission = featurePermissionRepository
-                    .findByFeature_CodeIgnoreCaseAndActionIgnoreCase(featureCode, action)
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Permission not found for feature [" + featureCode + "] and action [" + action + "]"));
+            Optional<FeaturePermission> permissionOpt = featurePermissionRepository
+                    .findByFeature_CodeIgnoreCaseAndActionIgnoreCase(featureCode, action);
+
+            if (permissionOpt.isEmpty()) {
+                if (item.isEnabled()) {
+                    throw new ResourceNotFoundException(
+                            "Permission not found for feature [" + featureCode + "] and action [" + action + "]");
+                }
+                continue;
+            }
+
+            FeaturePermission permission = permissionOpt.get();
 
             Optional<UserPermission> existing = userPermissionRepository
                     .findByUser_IdAndPermission_Id(targetUserId, permission.getId());
@@ -257,10 +265,16 @@ public class PermissionServiceImpl implements PermissionService {
             boolean readExplicitlyFalse = Boolean.FALSE.equals(actions.get("READ"));
 
             if (writeEnabled || deleteEnabled) {
-                actions.put("READ", true);
+                if (actions.containsKey("READ")) {
+                    actions.put("READ", true);
+                }
             } else if (readExplicitlyFalse) {
-                actions.put("WRITE", false);
-                actions.put("DELETE", false);
+                if (actions.containsKey("WRITE")) {
+                    actions.put("WRITE", false);
+                }
+                if (actions.containsKey("DELETE")) {
+                    actions.put("DELETE", false);
+                }
             }
         }
 
@@ -270,10 +284,18 @@ public class PermissionServiceImpl implements PermissionService {
                 String action = actionEntry.getKey();
                 boolean isEnabled = Boolean.TRUE.equals(actionEntry.getValue());
 
-                FeaturePermission permission = featurePermissionRepository
-                        .findByFeature_CodeIgnoreCaseAndActionIgnoreCase(featureCode, action)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Permission not found for feature [" + featureCode + "] and action [" + action + "]"));
+                Optional<FeaturePermission> permissionOpt = featurePermissionRepository
+                        .findByFeature_CodeIgnoreCaseAndActionIgnoreCase(featureCode, action);
+
+                if (permissionOpt.isEmpty()) {
+                    if (isEnabled) {
+                        throw new ResourceNotFoundException(
+                                "Permission not found for feature [" + featureCode + "] and action [" + action + "]");
+                    }
+                    continue;
+                }
+
+                FeaturePermission permission = permissionOpt.get();
 
                 Optional<RolePermission> existing = rolePermissionRepository.findById(
                         new com.erp.auth_service.utility.RolePermissionId(role.getId(), permission.getId())
