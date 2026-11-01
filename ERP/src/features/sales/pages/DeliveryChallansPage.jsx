@@ -550,7 +550,11 @@ export default function DeliveryChallansPage() {
       placeholder: 'Select an option',
       options: [
         { label: 'Draft', value: 'DRAFT' },
+        { label: 'Pending Approval', value: 'PENDING_APPROVAL' },
+        { label: 'Approved', value: 'APPROVED' },
+        { label: 'Changes Requested', value: 'CHANGES_REQUESTED' },
         { label: 'Confirmed', value: 'CONFIRMED' },
+        { label: 'Rejected', value: 'REJECTED' },
         { label: 'Cancelled', value: 'CANCELLED' }
       ]
     },
@@ -615,7 +619,7 @@ export default function DeliveryChallansPage() {
       });
     }
 
-    if (isConfirmed) {
+    if (isConfirmed || String(row.status || '').toUpperCase() === 'APPROVED') {
       actions.push({
         key: 'generate-invoice',
         label: 'Generate Sales Invoice',

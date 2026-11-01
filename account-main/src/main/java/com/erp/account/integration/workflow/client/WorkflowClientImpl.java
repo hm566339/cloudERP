@@ -30,13 +30,20 @@ public class WorkflowClientImpl implements WorkflowClient {
         if (documentType == null) return "ACCOUNT";
         switch (documentType.toUpperCase()) {
             case "QUOTATION":
+            case "PROFORMA_INVOICE":
             case "SALES_ORDER":
+            case "DELIVERY_CHALLAN":
             case "SALES_INVOICE":
             case "SALES":
                 return "SALES";
             case "PURCHASE_ORDER":
             case "PURCHASE":
             case "AP_INVOICE":
+            case "PURCHASE_REQUISITION":
+            case "RFQ":
+            case "SUPPLIER_QUOTATION":
+            case "GOODS_RECEIPT":
+            case "AP_PAYMENT":
                 return "PURCHASE";
             case "EXPENSE_REQUEST":
             case "EXPENSE":
@@ -52,6 +59,10 @@ public class WorkflowClientImpl implements WorkflowClient {
                 return "ACCOUNT";
             case "INVENTORY":
             case "STOCK_ADJUSTMENT":
+            case "STOCK_TRANSFER":
+            case "STOCK_MOVEMENT":
+            case "OPENING_STOCK":
+            case "STOCK_RESERVATION":
                 return "INVENTORY";
             default:
                 return "ACCOUNT";
@@ -60,6 +71,11 @@ public class WorkflowClientImpl implements WorkflowClient {
 
     @Override
     public WorkflowTransactionDto submitWorkflow(UUID companyId, String documentType, UUID documentId, String documentNumber, String comments) {
+        return submitWorkflow(companyId, documentType, documentId, documentNumber, comments, null, null, null);
+    }
+
+    @Override
+    public WorkflowTransactionDto submitWorkflow(UUID companyId, String documentType, UUID documentId, String documentNumber, String comments, java.math.BigDecimal amount, UUID customerId, java.util.Map<String, Object> metadata) {
         UUID effectiveCompanyId = companyId != null ? companyId : TenantUtils.getCurrentCompanyId();
         UUID userId = CurrentUserContext.getUserId();
         String username = CurrentUserContext.getUsername();
@@ -76,6 +92,9 @@ public class WorkflowClientImpl implements WorkflowClient {
                 .initiatedBy(userId)
                 .initiatedByName(username)
                 .comments(comments)
+                .amount(amount)
+                .customerId(customerId)
+                .metadata(metadata)
                 .build();
 
         ApiResponse<WorkflowTransactionDto> response = feignClient.submitWorkflow(new ApiRequest<>(payload));

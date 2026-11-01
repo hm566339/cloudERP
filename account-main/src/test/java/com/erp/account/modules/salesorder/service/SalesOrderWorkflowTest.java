@@ -102,6 +102,7 @@ class SalesOrderWorkflowTest {
         mockResponse.setId(soId);
         mockResponse.setSoNumber("SO-2026-001");
         mockResponse.setStatus(SalesOrderStatus.DRAFT);
+        when(salesOrderRepository.save(any(SalesOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(salesOrderMapper.toResponse(salesOrder)).thenReturn(mockResponse);
 
         SalesOrderResponse response = salesOrderService.submitForApproval(companyId, soId, "Review required");
@@ -113,7 +114,10 @@ class SalesOrderWorkflowTest {
                 eq("SALES_ORDER"),
                 eq(soId),
                 eq("SO-2026-001"),
-                eq("Review required")
+                eq("Review required"),
+                any(),
+                any(),
+                any()
         );
     }
 
@@ -126,8 +130,8 @@ class SalesOrderWorkflowTest {
         BadRequestException ex = assertThrows(BadRequestException.class, () ->
                 salesOrderService.submitForApproval(companyId, soId, "Review required"));
 
-        assertTrue(ex.getMessage().contains("Only DRAFT sales orders can be submitted for approval"));
-        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any());
+        assertTrue(ex.getMessage().contains("can be submitted for approval"));
+        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -146,7 +150,7 @@ class SalesOrderWorkflowTest {
                 salesOrderService.submitForApproval(companyId, soId, "Review required"));
 
         assertTrue(ex.getMessage().contains("already submitted for approval"));
-        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any());
+        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -203,19 +207,19 @@ class SalesOrderWorkflowTest {
 
         // 1. Submitted
         doc.onWorkflowSubmitted();
-        assertEquals(SalesOrderStatus.DRAFT, salesOrder.getStatus());
+        assertEquals(SalesOrderStatus.PENDING_APPROVAL, salesOrder.getStatus());
 
         // 2. Approved
         doc.onWorkflowApproved();
-        assertEquals(SalesOrderStatus.CONFIRMED, salesOrder.getStatus());
+        assertEquals(SalesOrderStatus.APPROVED, salesOrder.getStatus());
 
         // 3. Rejected
         doc.onWorkflowRejected();
-        assertEquals(SalesOrderStatus.CANCELLED, salesOrder.getStatus());
+        assertEquals(SalesOrderStatus.REJECTED, salesOrder.getStatus());
 
         // 4. Returned
         doc.onWorkflowReturned();
-        assertEquals(SalesOrderStatus.DRAFT, salesOrder.getStatus());
+        assertEquals(SalesOrderStatus.CHANGES_REQUESTED, salesOrder.getStatus());
 
         // 5. Cancelled
         doc.onWorkflowCancelled();
@@ -232,7 +236,7 @@ class SalesOrderWorkflowTest {
                 .thenReturn(null);
         doThrow(new RuntimeException("Workflow service unreachable"))
                 .when(workflowClient)
-                .submitWorkflow(any(), any(), any(), any(), any());
+                .submitWorkflow(any(), any(), any(), any(), any(), any(), any(), any());
 
         BadRequestException ex = assertThrows(BadRequestException.class, () ->
                 salesOrderService.submitForApproval(companyId, soId, "Review required"));

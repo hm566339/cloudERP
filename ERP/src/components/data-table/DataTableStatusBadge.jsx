@@ -75,6 +75,54 @@ export default function DataTableStatusBadge({
       icon: CheckCircle,
       defaultLabel: 'Approved'
     },
+    PENDING_APPROVAL: {
+      bg: 'bg-amber-50 dark:bg-[#F5B544]/15',
+      text: 'text-amber-700 dark:text-[#F5B544]',
+      border: 'border-amber-200 dark:border-[#F5B544]/30',
+      dot: 'bg-amber-500 dark:bg-[#F5B544]',
+      icon: Clock,
+      defaultLabel: 'Pending Approval'
+    },
+    CHANGES_REQUESTED: {
+      bg: 'bg-orange-50 dark:bg-orange-500/15',
+      text: 'text-orange-700 dark:text-orange-400',
+      border: 'border-orange-200 dark:border-orange-500/30',
+      dot: 'bg-orange-500 dark:bg-orange-400',
+      icon: AlertCircle,
+      defaultLabel: 'Changes Requested'
+    },
+    CUSTOMER_ACCEPTED: {
+      bg: 'bg-emerald-50 dark:bg-[#34C38F]/15',
+      text: 'text-emerald-700 dark:text-[#34C38F]',
+      border: 'border-emerald-200 dark:border-[#34C38F]/30',
+      dot: 'bg-emerald-500 dark:bg-[#34C38F]',
+      icon: CheckCircle,
+      defaultLabel: 'Customer Accepted'
+    },
+    ACCEPTED: {
+      bg: 'bg-emerald-50 dark:bg-[#34C38F]/15',
+      text: 'text-emerald-700 dark:text-[#34C38F]',
+      border: 'border-emerald-200 dark:border-[#34C38F]/30',
+      dot: 'bg-emerald-500 dark:bg-[#34C38F]',
+      icon: CheckCircle,
+      defaultLabel: 'Accepted'
+    },
+    SENT: {
+      bg: 'bg-blue-50 dark:bg-[#38BDF8]/15',
+      text: 'text-blue-700 dark:text-[#38BDF8]',
+      border: 'border-blue-200 dark:border-[#38BDF8]/30',
+      dot: 'bg-blue-500 dark:bg-[#38BDF8]',
+      icon: CheckCircle,
+      defaultLabel: 'Sent'
+    },
+    CONVERTED: {
+      bg: 'bg-indigo-50 dark:bg-indigo-500/15',
+      text: 'text-indigo-700 dark:text-indigo-400',
+      border: 'border-indigo-200 dark:border-indigo-500/30',
+      dot: 'bg-indigo-500 dark:bg-indigo-400',
+      icon: CheckCircle,
+      defaultLabel: 'Converted'
+    },
     REVERSED: {
       bg: 'bg-rose-50 dark:bg-[#F0616D]/15',
       text: 'text-rose-700 dark:text-[#F0616D]',

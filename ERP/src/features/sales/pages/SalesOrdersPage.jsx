@@ -183,8 +183,12 @@ export default function SalesOrdersPage() {
       placeholder: 'Select an option',
       options: [
         { label: 'Draft', value: 'DRAFT' },
+        { label: 'Pending Approval', value: 'PENDING_APPROVAL' },
+        { label: 'Approved', value: 'APPROVED' },
+        { label: 'Changes Requested', value: 'CHANGES_REQUESTED' },
         { label: 'Confirmed', value: 'CONFIRMED' },
         { label: 'Completed', value: 'COMPLETED' },
+        { label: 'Rejected', value: 'REJECTED' },
         { label: 'Cancelled', value: 'CANCELLED' }
       ]
     },
@@ -257,7 +261,7 @@ export default function SalesOrdersPage() {
         className: 'text-red-600 hover:text-red-700'
       }
     ] : []),
-    ...(o.status === 'CONFIRMED' ? [
+    ...((o.status === 'CONFIRMED' || o.status === 'APPROVED') ? [
       {
         key: 'create-dc',
         label: 'Generate Delivery Challan',

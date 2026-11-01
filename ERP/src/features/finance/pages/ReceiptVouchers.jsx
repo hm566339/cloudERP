@@ -392,8 +392,10 @@ export default function ReceiptVouchers() {
       placeholder: 'Select an option',
       options: [
         { label: 'Draft', value: 'DRAFT' },
+        { label: 'Pending Approval', value: 'PENDING_APPROVAL' },
         { label: 'Submitted', value: 'SUBMITTED' },
         { label: 'Approved', value: 'APPROVED' },
+        { label: 'Changes Requested', value: 'CHANGES_REQUESTED' },
         { label: 'Posted', value: 'POSTED' },
         { label: 'Rejected', value: 'REJECTED' },
         { label: 'Reversed', value: 'REVERSED' },

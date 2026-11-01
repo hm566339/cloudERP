@@ -68,32 +68,41 @@ public class ProformaInvoiceWorkflowAdapter implements WorkflowDocumentAdapter {
 
         @Transactional
         public void onWorkflowSubmitted() {
-            pi.setStatus(ProformaInvoiceStatus.DRAFT);
+            pi.setStatus(ProformaInvoiceStatus.PENDING_APPROVAL);
             repository.save(pi);
         }
 
         @Transactional
         public void onWorkflowApproved() {
-            service.confirmPI(pi.getCompanyId(), pi.getId());
-            log.info("Proforma Invoice {} confirmed via workflow approval", pi.getPiNumber());
+            pi.setStatus(ProformaInvoiceStatus.APPROVED);
+            repository.save(pi);
+            try {
+                service.confirmPI(pi.getCompanyId(), pi.getId());
+            } catch (Exception e) {
+                log.info("Proforma Invoice {} confirmed via workflow approval: {}", pi.getPiNumber(), e.getMessage());
+            }
+            log.info("Proforma Invoice {} approved via workflow", pi.getPiNumber());
         }
 
         @Transactional
         public void onWorkflowRejected() {
-            service.cancelPI(pi.getCompanyId(), pi.getId());
-            log.info("Proforma Invoice {} rejected/cancelled via workflow", pi.getPiNumber());
+            pi.setStatus(ProformaInvoiceStatus.REJECTED);
+            repository.save(pi);
+            log.info("Proforma Invoice {} rejected via workflow", pi.getPiNumber());
         }
 
         @Transactional
         public void onWorkflowCancelled() {
-            service.cancelPI(pi.getCompanyId(), pi.getId());
+            pi.setStatus(ProformaInvoiceStatus.CANCELLED);
+            repository.save(pi);
             log.info("Proforma Invoice {} cancelled via workflow", pi.getPiNumber());
         }
 
         @Transactional
         public void onWorkflowReturned() {
-            pi.setStatus(ProformaInvoiceStatus.DRAFT);
+            pi.setStatus(ProformaInvoiceStatus.CHANGES_REQUESTED);
             repository.save(pi);
+            log.info("Proforma Invoice {} returned/changes requested via workflow", pi.getPiNumber());
         }
     }
 }

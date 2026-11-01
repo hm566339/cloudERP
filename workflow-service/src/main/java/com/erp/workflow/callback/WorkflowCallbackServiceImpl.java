@@ -40,7 +40,7 @@ public class WorkflowCallbackServiceImpl implements WorkflowCallbackService {
     private final ObjectMapper objectMapper;
     private final Optional<MeterRegistry> meterRegistry;
 
-    private RestClient restClient = RestClient.builder().build();
+    private RestClient restClient = RestClient.builder().requestFactory(new org.springframework.http.client.SimpleClientHttpRequestFactory()).build();
 
     @Value("${workflow.callback.retry-enabled:true}")
     private boolean retryEnabled;

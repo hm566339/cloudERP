@@ -26,7 +26,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/account/v1/proforma-invoices")
+@RequestMapping({"/api/account/v1/proforma-invoices", "/api/account/sales/proforma-invoices"})
 @RequiredArgsConstructor
 @Tag(name = "Proforma Invoice API", description = "Proforma Invoice management with strict lifecycle rules")
 public class ProformaInvoiceController {
@@ -133,6 +133,25 @@ public class ProformaInvoiceController {
         PIUpdateRequest request = requestWrapper.unwrap();
         ProformaInvoiceResponse response = proformaInvoiceService.updateProformaInvoice(companyId, id, request);
         return ResponseEntity.ok(ApiResponse.success(response, "Proforma Invoice updated successfully"));
+    }
+
+    @Operation(summary = "Submit Proforma Invoice for approval", description = "Submits proforma invoice to workflow engine.")
+    @PostMapping({"/{id}/submit-approval", "/{id}/submit"})
+    public ResponseEntity<ApiResponse<ProformaInvoiceResponse>> submitForApproval(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) String comments) {
+        ProformaInvoiceResponse response = proformaInvoiceService.submitForApproval(companyId, id, comments);
+        return ResponseEntity.ok(ApiResponse.success(response, "Proforma Invoice submitted for approval"));
+    }
+
+    @Operation(summary = "Approve Proforma Invoice", description = "Approves proforma invoice.")
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<ProformaInvoiceResponse>> approvePI(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID companyId) {
+        ProformaInvoiceResponse response = proformaInvoiceService.approveProformaInvoice(companyId, id);
+        return ResponseEntity.ok(ApiResponse.success(response, "Proforma Invoice approved successfully"));
     }
 
     @Operation(summary = "Send Proforma Invoice", description = "Transitions DRAFT to ISSUED.")

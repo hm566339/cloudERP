@@ -110,9 +110,10 @@ public class SalesOrderServiceImpl implements SalesOrderService {
                 .orElseThrow(() -> new BadRequestException("Proforma Invoice not found"));
 
         if (pi.getStatus() != ProformaInvoiceStatus.CONFIRMED 
+                && pi.getStatus() != ProformaInvoiceStatus.APPROVED
                 && pi.getStatus() != ProformaInvoiceStatus.PARTIALLY_PAID 
                 && pi.getStatus() != ProformaInvoiceStatus.PAID) {
-            throw new BadRequestException("Only CONFIRMED Proforma Invoices can be converted to Sales Orders");
+            throw new BadRequestException("Only CONFIRMED or APPROVED Proforma Invoices can be converted to Sales Orders");
         }
 
         if (pi.getAdvanceRequired() != null && pi.getAdvanceRequired()) {
@@ -275,6 +276,18 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         so.setTotalAmount(grandTotal);
 
         SalesOrder saved = salesOrderRepository.save(so);
+
+        try {
+            if (pi.getItems() != null && !pi.getItems().isEmpty()) {
+                boolean allConverted = pi.getItems().stream()
+                        .allMatch(item -> item.getRemainingQuantity() == null || item.getRemainingQuantity().compareTo(BigDecimal.ZERO) <= 0);
+                pi.setStatus(allConverted ? ProformaInvoiceStatus.FULLY_CONVERTED : ProformaInvoiceStatus.PARTIALLY_CONVERTED);
+                proformaInvoiceRepository.save(pi);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to update PI conversion status for PI {}: {}", pi.getId(), e.getMessage());
+        }
+
         return salesOrderMapper.toResponse(saved);
     }
 
@@ -286,8 +299,8 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         Quotation quotation = quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(quotationId, resolvedCompanyId)
                 .orElseThrow(() -> new BadRequestException("Quotation not found"));
 
-        if (quotation.getStatus() != QuotationStatus.ACCEPTED) {
-            throw new BadRequestException("Only ACCEPTED quotations can be converted into a Sales Order.");
+        if (quotation.getStatus() != QuotationStatus.ACCEPTED && quotation.getStatus() != QuotationStatus.CUSTOMER_ACCEPTED) {
+            throw new BadRequestException("Only ACCEPTED or CUSTOMER_ACCEPTED quotations can be converted into a Sales Order.");
         }
 
         long paidInvoicesCount = salesInvoiceRepository.countFullyPaidInvoicesByCustomer(resolvedCompanyId,
@@ -423,6 +436,14 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         so.setTotalAmount(grandTotal);
 
         SalesOrder saved = salesOrderRepository.save(so);
+
+        try {
+            quotation.setStatus(QuotationStatus.CONVERTED);
+            quotationRepository.save(quotation);
+        } catch (Exception e) {
+            log.warn("Failed to mark quotation as CONVERTED for quotation {}: {}", quotation.getId(), e.getMessage());
+        }
+
         return salesOrderMapper.toResponse(saved);
     }
 
@@ -815,7 +836,27 @@ public class SalesOrderServiceImpl implements SalesOrderService {
 
         switch (current) {
             case DRAFT:
-                if (newStatus == SalesOrderStatus.CONFIRMED || newStatus == SalesOrderStatus.CANCELLED) {
+                if (newStatus == SalesOrderStatus.PENDING_APPROVAL || newStatus == SalesOrderStatus.APPROVED
+                        || newStatus == SalesOrderStatus.CONFIRMED || newStatus == SalesOrderStatus.CANCELLED) {
+                    valid = true;
+                }
+                break;
+            case PENDING_APPROVAL:
+                if (newStatus == SalesOrderStatus.APPROVED || newStatus == SalesOrderStatus.CONFIRMED
+                        || newStatus == SalesOrderStatus.REJECTED || newStatus == SalesOrderStatus.CHANGES_REQUESTED
+                        || newStatus == SalesOrderStatus.CANCELLED) {
+                    valid = true;
+                }
+                break;
+            case CHANGES_REQUESTED:
+                if (newStatus == SalesOrderStatus.PENDING_APPROVAL || newStatus == SalesOrderStatus.DRAFT
+                        || newStatus == SalesOrderStatus.CANCELLED) {
+                    valid = true;
+                }
+                break;
+            case APPROVED:
+                if (newStatus == SalesOrderStatus.CONFIRMED || newStatus == SalesOrderStatus.COMPLETED
+                        || newStatus == SalesOrderStatus.CANCELLED) {
                     valid = true;
                 }
                 break;
@@ -825,6 +866,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
                 }
                 break;
             case COMPLETED:
+            case REJECTED:
             case CANCELLED:
                 break;
         }
@@ -866,8 +908,8 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         SalesOrder so = salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sales Order not found with ID: " + id));
 
-        if (so.getStatus() != SalesOrderStatus.DRAFT) {
-            throw new BadRequestException("Only DRAFT sales orders can be submitted for approval. Current status: " + so.getStatus());
+        if (so.getStatus() != SalesOrderStatus.DRAFT && so.getStatus() != SalesOrderStatus.CHANGES_REQUESTED) {
+            throw new BadRequestException("Only DRAFT or CHANGES_REQUESTED sales orders can be submitted for approval. Current status: " + so.getStatus());
         }
 
         // Prevent duplicate workflow submission
@@ -883,14 +925,25 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         }
 
         try {
-            workflowClient.submitWorkflow(
+            UUID custId = so.getCustomer() != null ? so.getCustomer().getId() : null;
+            WorkflowTransactionDto tx = workflowClient.submitWorkflow(
                     resolvedCompanyId,
                     "SALES_ORDER",
                     so.getId(),
                     so.getSoNumber(),
-                    comments != null ? comments : "Submitted sales order for approval"
+                    comments != null ? comments : "Submitted sales order for approval",
+                    so.getTotalAmount(),
+                    custId,
+                    java.util.Map.of("amount", so.getTotalAmount() != null ? so.getTotalAmount() : java.math.BigDecimal.ZERO)
             );
-            log.info("Sales Order {} submitted for approval to workflow-service", so.getSoNumber());
+            if (tx != null && "APPROVED".equalsIgnoreCase(tx.getStatus())) {
+                so.setStatus(SalesOrderStatus.APPROVED);
+                log.info("Sales Order {} auto-approved by workflow engine, status updated to APPROVED", so.getSoNumber());
+            } else {
+                so.setStatus(SalesOrderStatus.PENDING_APPROVAL);
+                log.info("Sales Order {} submitted for approval to workflow-service, status updated to PENDING_APPROVAL", so.getSoNumber());
+            }
+            so = salesOrderRepository.save(so);
         } catch (BadRequestException e) {
             throw e;
         } catch (Exception e) {
@@ -919,6 +972,24 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         }
 
         return changeStatus(companyId, id, SalesOrderStatus.CONFIRMED);
+    }
+
+    @Override
+    @Transactional
+    public SalesOrderResponse approveSO(UUID companyId, UUID id) {
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        SalesOrder so = salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)
+                .orElseThrow(() -> new BadRequestException("Sales Order not found"));
+
+        if (so.getStatus() != SalesOrderStatus.DRAFT && so.getStatus() != SalesOrderStatus.PENDING_APPROVAL) {
+            throw new BadRequestException("Only DRAFT or PENDING_APPROVAL sales orders can be approved");
+        }
+
+        so.setStatus(SalesOrderStatus.APPROVED);
+        so.setUpdatedBy(TenantUtils.getCurrentUserId());
+        SalesOrder saved = salesOrderRepository.save(so);
+        log.info("Sales Order {} marked APPROVED", so.getSoNumber());
+        return salesOrderMapper.toResponse(saved);
     }
 
     @Override
@@ -1068,8 +1139,8 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         SalesOrder so = salesOrderRepository.findByIdAndCompanyIdAndIsDeletedFalse(salesOrderId, resolvedCompanyId)
                 .orElseThrow(() -> new BadRequestException("Sales Order not found"));
 
-        if (so.getStatus() != SalesOrderStatus.CONFIRMED && so.getStatus() != SalesOrderStatus.COMPLETED) {
-            throw new BadRequestException("Only CONFIRMED or COMPLETED Sales Orders can be invoiced");
+        if (so.getStatus() != SalesOrderStatus.CONFIRMED && so.getStatus() != SalesOrderStatus.APPROVED && so.getStatus() != SalesOrderStatus.COMPLETED) {
+            throw new BadRequestException("Only CONFIRMED, APPROVED, or COMPLETED Sales Orders can be invoiced");
         }
 
         if (salesInvoiceRepository.existsBySourceSalesOrderIdAndCompanyIdAndIsDeletedFalse(salesOrderId,

@@ -38,6 +38,7 @@ import com.erp.account.modules.salesorder.entity.SalesOrderStatus;
 import com.erp.account.modules.salesorder.repository.SalesOrderRepository;
 import com.erp.account.modules.vouchersequence.service.VoucherSequenceService;
 import com.erp.account.modules.integration.inventory.service.InventoryIntegrationService;
+import com.erp.account.integration.workflow.dto.WorkflowTransactionDto;
 import com.erp.account.util.TenantUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +71,7 @@ public class DeliveryChallanServiceImpl implements DeliveryChallanService {
     private final SalesInvoiceRepository salesInvoiceRepository;
     private final ReceiptAllocationRepository receiptAllocationRepository;
     private final ReceiptVoucherRepository receiptVoucherRepository;
+    private final com.erp.account.integration.workflow.client.WorkflowClient workflowClient;
 
     /**
      * Delivery Challan statuses that count against the Sales Order open quantity.
@@ -79,6 +81,8 @@ public class DeliveryChallanServiceImpl implements DeliveryChallanService {
      */
     private static final Set<DeliveryChallanStatus> ACTIVE_DISPATCH_STATUSES = Set.of(
             DeliveryChallanStatus.CONFIRMED,
+            DeliveryChallanStatus.APPROVED,
+            DeliveryChallanStatus.PENDING_APPROVAL,
             DeliveryChallanStatus.DRAFT
     );
 
@@ -151,8 +155,8 @@ public class DeliveryChallanServiceImpl implements DeliveryChallanService {
         }
 
         // 2. Validate Sales Order status
-        if (so.getStatus() != SalesOrderStatus.CONFIRMED) {
-            throw new BadRequestException("Sales Order must be in CONFIRMED status to create a Delivery Challan. Current status: " + so.getStatus());
+        if (so.getStatus() != SalesOrderStatus.CONFIRMED && so.getStatus() != SalesOrderStatus.APPROVED) {
+            throw new BadRequestException("Sales Order must be in CONFIRMED or APPROVED status to create a Delivery Challan. Current status: " + so.getStatus());
         }
 
         // 3. Validate Sales Order contains items
@@ -741,6 +745,69 @@ public class DeliveryChallanServiceImpl implements DeliveryChallanService {
 
     @Override
     @Transactional
+    public DeliveryChallanResponse submitForApproval(UUID companyId, UUID id, String comments) {
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        DeliveryChallan dc = deliveryChallanRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Delivery Challan not found"));
+
+        if (dc.getStatus() != DeliveryChallanStatus.DRAFT && dc.getStatus() != DeliveryChallanStatus.CHANGES_REQUESTED) {
+            throw new BadRequestException("Only DRAFT or CHANGES_REQUESTED delivery challans can be submitted for approval. Current status: " + dc.getStatus());
+        }
+
+        try {
+            com.erp.account.integration.workflow.dto.WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "DELIVERY_CHALLAN", dc.getId());
+            if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
+                throw new BadRequestException("Delivery Challan is already submitted for approval with transaction: " + existingTx.getId());
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("No existing workflow transaction found for delivery challan {}", id);
+        }
+
+        UUID custId = dc.getCustomer() != null ? dc.getCustomer().getId() : null;
+        WorkflowTransactionDto tx = workflowClient.submitWorkflow(
+                resolvedCompanyId,
+                "DELIVERY_CHALLAN",
+                dc.getId(),
+                dc.getDcNumber(),
+                comments != null ? comments : "Submitted delivery challan for approval",
+                BigDecimal.ZERO,
+                custId,
+                Map.of("dcNumber", dc.getDcNumber() != null ? dc.getDcNumber() : "")
+        );
+
+        if (tx != null && "APPROVED".equalsIgnoreCase(tx.getStatus())) {
+            dc.setStatus(DeliveryChallanStatus.APPROVED);
+            log.info("Delivery Challan {} auto-approved by workflow engine, status updated to APPROVED", dc.getDcNumber());
+        } else {
+            dc.setStatus(DeliveryChallanStatus.PENDING_APPROVAL);
+            log.info("Delivery Challan {} submitted for approval to workflow-service, status updated to PENDING_APPROVAL", dc.getDcNumber());
+        }
+        dc.setUpdatedBy(TenantUtils.getCurrentUserId());
+        DeliveryChallan saved = deliveryChallanRepository.save(dc);
+        return deliveryChallanMapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public void approveDeliveryChallan(UUID companyId, UUID id) {
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        DeliveryChallan dc = deliveryChallanRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Delivery Challan not found"));
+
+        if (dc.getStatus() != DeliveryChallanStatus.DRAFT && dc.getStatus() != DeliveryChallanStatus.PENDING_APPROVAL) {
+            throw new BadRequestException("Only DRAFT or PENDING_APPROVAL delivery challans can be approved");
+        }
+
+        dc.setStatus(DeliveryChallanStatus.APPROVED);
+        dc.setUpdatedBy(TenantUtils.getCurrentUserId());
+        deliveryChallanRepository.save(dc);
+        log.info("Delivery Challan {} marked APPROVED", dc.getDcNumber());
+    }
+
+    @Override
+    @Transactional
     public void confirmDeliveryChallan(UUID companyId, UUID id) {
         UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
 
@@ -758,8 +825,8 @@ public class DeliveryChallanServiceImpl implements DeliveryChallanService {
         log.info("DELIVERY CONFIRM START - DC Number: {}, Company ID: {}, Delivery Challan ID: {}",
                 dc.getDcNumber(), resolvedCompanyId, id);
 
-        if (dc.getStatus() != DeliveryChallanStatus.DRAFT) {
-            throw new BadRequestException("Delivery Challan is not in DRAFT status.");
+        if (dc.getStatus() != DeliveryChallanStatus.DRAFT && dc.getStatus() != DeliveryChallanStatus.APPROVED) {
+            throw new BadRequestException("Delivery Challan is not in DRAFT or APPROVED status.");
         }
 
         // Execute Inventory Stock OUT integration in the same transaction
@@ -793,8 +860,8 @@ public class DeliveryChallanServiceImpl implements DeliveryChallanService {
 
         DeliveryChallan dc = getDeliveryChallanOrThrow(resolvedCompanyId, deliveryChallanId);
 
-        if (dc.getStatus() != DeliveryChallanStatus.CONFIRMED) {
-            throw new BadRequestException("Only CONFIRMED Delivery Challans can be invoiced");
+        if (dc.getStatus() != DeliveryChallanStatus.CONFIRMED && dc.getStatus() != DeliveryChallanStatus.APPROVED) {
+            throw new BadRequestException("Only CONFIRMED or APPROVED Delivery Challans can be invoiced");
         }
 
         if (salesInvoiceRepository.existsBySourceDeliveryChallanIdAndCompanyIdAndIsDeletedFalse(deliveryChallanId,

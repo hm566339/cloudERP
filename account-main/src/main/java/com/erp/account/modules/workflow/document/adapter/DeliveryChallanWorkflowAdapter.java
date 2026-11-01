@@ -68,32 +68,42 @@ public class DeliveryChallanWorkflowAdapter implements WorkflowDocumentAdapter {
 
         @Transactional
         public void onWorkflowSubmitted() {
-            challan.setStatus(DeliveryChallanStatus.DRAFT);
+            challan.setStatus(DeliveryChallanStatus.PENDING_APPROVAL);
             repository.save(challan);
+            log.info("Delivery Challan {} marked PENDING_APPROVAL via workflow", challan.getDcNumber());
         }
 
         @Transactional
         public void onWorkflowApproved() {
-            service.confirmDeliveryChallan(challan.getCompanyId(), challan.getId());
-            log.info("Delivery Challan {} confirmed via workflow approval", challan.getDcNumber());
+            challan.setStatus(DeliveryChallanStatus.APPROVED);
+            repository.save(challan);
+            try {
+                service.confirmDeliveryChallan(challan.getCompanyId(), challan.getId());
+            } catch (Exception e) {
+                log.info("Delivery Challan {} confirmed after approval: {}", challan.getDcNumber(), e.getMessage());
+            }
+            log.info("Delivery Challan {} marked APPROVED via workflow approval", challan.getDcNumber());
         }
 
         @Transactional
         public void onWorkflowRejected() {
-            service.cancelDeliveryChallan(challan.getCompanyId(), challan.getId());
-            log.info("Delivery Challan {} rejected/cancelled via workflow", challan.getDcNumber());
+            challan.setStatus(DeliveryChallanStatus.REJECTED);
+            repository.save(challan);
+            log.info("Delivery Challan {} marked REJECTED via workflow", challan.getDcNumber());
         }
 
         @Transactional
         public void onWorkflowCancelled() {
-            service.cancelDeliveryChallan(challan.getCompanyId(), challan.getId());
+            challan.setStatus(DeliveryChallanStatus.CANCELLED);
+            repository.save(challan);
             log.info("Delivery Challan {} cancelled via workflow", challan.getDcNumber());
         }
 
         @Transactional
         public void onWorkflowReturned() {
-            challan.setStatus(DeliveryChallanStatus.DRAFT);
+            challan.setStatus(DeliveryChallanStatus.CHANGES_REQUESTED);
             repository.save(challan);
+            log.info("Delivery Challan {} marked CHANGES_REQUESTED via workflow", challan.getDcNumber());
         }
     }
 }

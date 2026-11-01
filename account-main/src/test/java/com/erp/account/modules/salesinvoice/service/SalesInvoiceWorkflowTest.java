@@ -133,7 +133,10 @@ class SalesInvoiceWorkflowTest {
                 eq("SALES_INVOICE"),
                 eq(invoiceId),
                 eq("INV-2026-0001"),
-                eq("Please review invoice")
+                eq("Please review invoice"),
+                any(),
+                any(),
+                any()
         );
         verify(salesInvoiceRepository).save(invoice);
     }
@@ -148,7 +151,7 @@ class SalesInvoiceWorkflowTest {
                 salesInvoiceService.submitForApproval(companyId, invoiceId, "Please review"));
 
         assertTrue(ex.getMessage().contains("Only DRAFT invoices can be submitted for approval"));
-        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any());
+        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -167,7 +170,7 @@ class SalesInvoiceWorkflowTest {
                 salesInvoiceService.submitForApproval(companyId, invoiceId, "Please review"));
 
         assertTrue(ex.getMessage().contains("already submitted for approval"));
-        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any());
+        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -293,7 +296,7 @@ class SalesInvoiceWorkflowTest {
                 .thenReturn(null);
         doThrow(new RuntimeException("Workflow service unavailable"))
                 .when(workflowClient)
-                .submitWorkflow(any(), any(), any(), any(), any());
+                .submitWorkflow(any(), any(), any(), any(), any(), any(), any(), any());
 
         BadRequestException ex = assertThrows(BadRequestException.class, () ->
                 salesInvoiceService.submitForApproval(companyId, invoiceId, "Please review"));

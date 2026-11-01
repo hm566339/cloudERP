@@ -178,7 +178,7 @@ class QuotationWorkflowTest {
             quotationService.submitForApproval(companyId, quotationId, "Please review quote");
 
             Mockito.verify(workflowClient, Mockito.times(1)).submitWorkflow(
-                    companyId, "QUOTATION", quotationId, "QT-2026-001", "Please review quote");
+                    org.mockito.ArgumentMatchers.eq(companyId), org.mockito.ArgumentMatchers.eq("QUOTATION"), org.mockito.ArgumentMatchers.eq(quotationId), org.mockito.ArgumentMatchers.eq("QT-2026-001"), org.mockito.ArgumentMatchers.eq("Please review quote"), any(), any(), any());
         }
     }
 
@@ -235,7 +235,7 @@ class QuotationWorkflowTest {
             when(quotationRepository.save(any())).thenReturn(quotation);
 
             assertDoesNotThrow(() -> quotationService.approveQuotation(companyId, quotationId));
-            assertEquals(QuotationStatus.SENT, quotation.getStatus());
+            assertEquals(QuotationStatus.APPROVED, quotation.getStatus());
         }
     }
 

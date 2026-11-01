@@ -13,6 +13,7 @@ import { addAlert } from '../../notifications/notificationSlice';
 import { useRBAC } from '../../../utils/rbac';
 import ProformaInvoiceFormModal from '../components/ProformaInvoiceFormModal';
 import SalesOrderFromPiModal from '../components/SalesOrderFromPiModal';
+import WorkflowActionButtons from '../../workflows/components/WorkflowActionButtons';
 
 // Detail Components
 import ProformaInvoiceHeader from '../components/proforma-invoice-details/ProformaInvoiceHeader';
@@ -109,8 +110,21 @@ export default function ProformaInvoiceDetails() {
       />
 
       <div className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-4">
           
+          <WorkflowActionButtons
+            module="SALES"
+            documentType="PROFORMA_INVOICE"
+            documentId={piId}
+            documentStatus={pi.status}
+            onActionComplete={refetch}
+            onConvert={(t) => {
+              if (t.targetDocumentType === 'SALES_ORDER') {
+                setShowSoModal(true);
+              }
+            }}
+          />
+
           <ProformaInvoiceSummary pi={pi} />
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

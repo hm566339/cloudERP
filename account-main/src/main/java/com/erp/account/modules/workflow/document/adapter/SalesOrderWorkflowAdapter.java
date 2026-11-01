@@ -1,18 +1,21 @@
 package com.erp.account.modules.workflow.document.adapter;
 
 import com.erp.account.modules.salesorder.entity.SalesOrder;
+import com.erp.account.modules.salesorder.entity.SalesOrderStatus;
 import com.erp.account.modules.salesorder.repository.SalesOrderRepository;
 import com.erp.account.modules.salesorder.service.SalesOrderService;
 import com.erp.account.modules.workflow.document.WorkflowDocument;
 import com.erp.account.modules.workflow.document.WorkflowDocumentAdapter;
-import com.erp.account.modules.salesorder.entity.SalesOrderStatus;
 import com.erp.account.security.CurrentUserContext;
-import java.math.BigDecimal;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class SalesOrderWorkflowAdapter implements WorkflowDocumentAdapter {
@@ -42,22 +45,25 @@ public class SalesOrderWorkflowAdapter implements WorkflowDocumentAdapter {
 
         @Transactional
         public void onWorkflowSubmitted() {
-            order.setStatus(SalesOrderStatus.DRAFT);
+            order.setStatus(SalesOrderStatus.PENDING_APPROVAL);
             repository.save(order);
+            log.info("Sales Order {} submitted for workflow approval", order.getSoNumber());
         }
 
         @Transactional
         public void onWorkflowApproved() {
-            order.setStatus(SalesOrderStatus.CONFIRMED);
+            order.setStatus(SalesOrderStatus.APPROVED);
             order.setUpdatedBy(CurrentUserContext.getUserId());
             repository.save(order);
+            log.info("Sales Order {} marked APPROVED via workflow approval", order.getSoNumber());
         }
 
         @Transactional
         public void onWorkflowRejected() {
-            order.setStatus(SalesOrderStatus.CANCELLED);
+            order.setStatus(SalesOrderStatus.REJECTED);
             order.setUpdatedBy(CurrentUserContext.getUserId());
             repository.save(order);
+            log.info("Sales Order {} marked REJECTED via workflow", order.getSoNumber());
         }
 
         @Transactional
@@ -65,13 +71,15 @@ public class SalesOrderWorkflowAdapter implements WorkflowDocumentAdapter {
             order.setStatus(SalesOrderStatus.CANCELLED);
             order.setUpdatedBy(CurrentUserContext.getUserId());
             repository.save(order);
+            log.info("Sales Order {} marked CANCELLED via workflow", order.getSoNumber());
         }
 
         @Transactional
         public void onWorkflowReturned() {
-            order.setStatus(SalesOrderStatus.DRAFT);
+            order.setStatus(SalesOrderStatus.CHANGES_REQUESTED);
             order.setUpdatedBy(CurrentUserContext.getUserId());
             repository.save(order);
+            log.info("Sales Order {} marked CHANGES_REQUESTED via workflow", order.getSoNumber());
         }
     }
 }

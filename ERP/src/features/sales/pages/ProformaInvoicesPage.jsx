@@ -504,6 +504,9 @@ export default function ProformaInvoicesPage() {
         { label: 'All Statuses', value: '' },
         ...((filterBarProps.filters || []).find(f => f.key === 'status')?.options || [
           { label: 'Draft', value: 'DRAFT' },
+          { label: 'Pending Approval', value: 'PENDING_APPROVAL' },
+          { label: 'Approved', value: 'APPROVED' },
+          { label: 'Changes Requested', value: 'CHANGES_REQUESTED' },
           { label: 'Issued', value: 'ISSUED' },
           { label: 'Partially Paid', value: 'PARTIALLY_PAID' },
           { label: 'Paid', value: 'PAID' },
@@ -637,7 +640,7 @@ export default function ProformaInvoicesPage() {
           className: 'text-red-600 hover:text-red-700'
         }
       ] : []),
-      ...(rowStatus === 'CONFIRMED' ? [
+      ...((rowStatus === 'CONFIRMED' || rowStatus === 'APPROVED') ? [
         {
           key: 'convert-so',
           label: 'Create Sales Order',
@@ -648,7 +651,7 @@ export default function ProformaInvoicesPage() {
           className: 'text-zinc-900 hover:text-zinc-700'
         }
       ] : []),
-      ...(rowStatus === 'CONFIRMED' && pi.advanceRequired ? [
+      ...((rowStatus === 'CONFIRMED' || rowStatus === 'APPROVED') && pi.advanceRequired ? [
         {
           key: 'advance-payment',
           label: 'Record Advance Payment',

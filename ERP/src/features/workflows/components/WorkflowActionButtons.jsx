@@ -55,9 +55,12 @@ export default function WorkflowActionButtons({
     loadData();
   }, [loadData]);
 
-  const permittedActions = uiState?.permittedActions?.availableActions || [];
+  const statusUpper = String(documentStatus || '').toUpperCase();
+  const rawPermittedActions = uiState?.permittedActions?.availableActions || [];
+  const canSubmitFallback = !uiState?.transaction && (statusUpper === 'DRAFT' || statusUpper === 'CHANGES_REQUESTED');
+  const permittedActions = [...new Set([...rawPermittedActions, ...(canSubmitFallback ? ['SUBMIT'] : [])])];
   const taskId = uiState?.tasks?.[0]?.id;
-  const isDocApproved = documentStatus === 'APPROVED' || uiState?.transaction?.status === 'APPROVED';
+  const isDocApproved = statusUpper === 'APPROVED' || statusUpper === 'ACCEPTED' || statusUpper === 'CUSTOMER_ACCEPTED' || uiState?.transaction?.status === 'APPROVED';
 
   // Handle Workflow Actions (Submit, Approve, Reject, Return, Cancel)
   const handleConfirmAction = async () => {
@@ -67,15 +70,42 @@ export default function WorkflowActionButtons({
 
     try {
       if (activeModal === 'SUBMIT') {
-        // Submit document to workflow
-        await apiClient.post('/api/v1/workflow/transactions/submit', {
-          data: {
-            documentType,
-            documentId,
-            moduleName: module,
-            comments: commentText || 'Submitted for workflow approval'
-          }
-        });
+        const comment = commentText || 'Submitted for workflow approval';
+        if (documentType === 'QUOTATION') {
+          await apiClient.post(`/api/account/sales/quotations/${documentId}/submit-approval`, { comments: comment })
+            .catch(() => apiClient.post('/api/v1/workflow/transactions/submit', {
+              data: { documentType, documentId, moduleName: module, comments: comment }
+            }));
+        } else if (documentType === 'PROFORMA_INVOICE') {
+          await apiClient.post(`/api/account/v1/proforma-invoices/${documentId}/submit-approval`, null, { params: { comments: comment } })
+            .catch(() => apiClient.post('/api/v1/workflow/transactions/submit', {
+              data: { documentType, documentId, moduleName: module, comments: comment }
+            }));
+        } else if (documentType === 'SALES_ORDER') {
+          await apiClient.post(`/api/account/v1/sales-orders/${documentId}/submit-approval`, null, { params: { comments: comment } })
+            .catch(() => apiClient.post('/api/v1/workflow/transactions/submit', {
+              data: { documentType, documentId, moduleName: module, comments: comment }
+            }));
+        } else if (documentType === 'DELIVERY_CHALLAN') {
+          await apiClient.post(`/api/account/v1/delivery-challans/${documentId}/submit-approval`, null, { params: { comments: comment } })
+            .catch(() => apiClient.post('/api/v1/workflow/transactions/submit', {
+              data: { documentType, documentId, moduleName: module, comments: comment }
+            }));
+        } else if (documentType === 'SALES_INVOICE') {
+          await apiClient.post(`/api/account/v1/sales-invoices/${documentId}/submit-approval`, { comments: comment })
+            .catch(() => apiClient.post('/api/v1/workflow/transactions/submit', {
+              data: { documentType, documentId, moduleName: module, comments: comment }
+            }));
+        } else {
+          await apiClient.post('/api/v1/workflow/transactions/submit', {
+            data: {
+              documentType,
+              documentId,
+              moduleName: module,
+              comments: comment
+            }
+          });
+        }
       } else if (activeModal === 'APPROVE' && taskId) {
         await apiClient.post(`/api/v1/workflow/tasks/${taskId}/approve`, {
           data: { comment: commentText }
@@ -95,12 +125,11 @@ export default function WorkflowActionButtons({
       } else if (activeModal === 'ACCEPT_BY_CUSTOMER') {
         // Customer Acceptance simulation/call
         if (documentType === 'QUOTATION') {
-          await apiClient.post(`/api/account/sales/quotations/${documentId}/customer-accept`, {
+          await apiClient.post(`/api/account/sales/quotations/${documentId}/accept`, {
             remarks: commentText || 'Accepted by customer'
           }).catch(() => {
-            // Fallback to quotation status update if endpoint alias differs
-            return apiClient.patch(`/api/account/sales/quotations/${documentId}/status`, {
-              status: 'ACCEPTED'
+            return apiClient.post(`/api/account/sales/quotations/${documentId}/customer-accept`, {
+              remarks: commentText || 'Accepted by customer'
             });
           });
         }
@@ -139,7 +168,13 @@ export default function WorkflowActionButtons({
       } else if (documentType === 'PROFORMA_INVOICE' && targetType === 'SALES_ORDER') {
         await apiClient.post(`/api/account/sales/orders/from-proforma-invoice/${documentId}`);
       } else if (documentType === 'SALES_ORDER' && targetType === 'DELIVERY_CHALLAN') {
-        await apiClient.post('/api/account/delivery-challans/from-sales-order', { salesOrderId: documentId });
+        await apiClient.post('/api/account/v1/delivery-challans/from-sales-order', {
+          sourceSalesOrderId: documentId,
+          salesOrderId: documentId
+        }).catch(() => apiClient.post('/api/account/delivery-challans/from-sales-order', {
+          sourceSalesOrderId: documentId,
+          salesOrderId: documentId
+        }));
       } else if (documentType === 'SALES_ORDER' && targetType === 'SALES_INVOICE') {
         await apiClient.post(`/api/account/sales/orders/${documentId}/generate-invoice`);
       } else if (documentType === 'PURCHASE_ORDER' && targetType === 'GOODS_RECEIPT') {

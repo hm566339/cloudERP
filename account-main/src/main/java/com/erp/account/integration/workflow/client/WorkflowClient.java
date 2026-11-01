@@ -3,11 +3,15 @@ package com.erp.account.integration.workflow.client;
 import com.erp.account.integration.workflow.dto.WorkflowTaskDto;
 import com.erp.account.integration.workflow.dto.WorkflowTransactionDto;
 
+import java.math.BigDecimal;
+import java.util.Map;
 import java.util.UUID;
 
 public interface WorkflowClient {
 
     WorkflowTransactionDto submitWorkflow(UUID companyId, String documentType, UUID documentId, String documentNumber, String comments);
+
+    WorkflowTransactionDto submitWorkflow(UUID companyId, String documentType, UUID documentId, String documentNumber, String comments, BigDecimal amount, UUID customerId, Map<String, Object> metadata);
 
     WorkflowTransactionDto getWorkflow(UUID transactionId);
 

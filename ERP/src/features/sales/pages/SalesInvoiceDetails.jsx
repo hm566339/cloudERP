@@ -18,6 +18,7 @@ import { confirmDialog } from '../../../utils/confirmDialog';
 import PartialPaymentModal from '../components/PartialPaymentModal';
 import { useRoutePath } from "../../../hooks/useRoutePath";
 import StatusBadge from '../../../components/common/StatusBadge';
+import WorkflowActionButtons from '../../workflows/components/WorkflowActionButtons';
 import SalesInvoiceOverviewTab from '../components/sales-invoice-details/SalesInvoiceOverviewTab';
 import SalesInvoiceItemsTab from '../components/sales-invoice-details/SalesInvoiceItemsTab';
 import SalesInvoiceEditModal from '../components/sales-invoice-details/SalesInvoiceEditModal';
@@ -367,6 +368,17 @@ export default function SalesInvoiceDetails() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Workflow Action Bar */}
+      <div className="px-6 pt-4">
+        <WorkflowActionButtons
+          module="SALES"
+          documentType="SALES_INVOICE"
+          documentId={invoiceId}
+          documentStatus={inv.status}
+          onActionComplete={refetch}
+        />
       </div>
 
       {/* Top 8 KPI Cards (Color Coded: Paid -> Green, Outstanding -> Red, Draft -> Orange) */}

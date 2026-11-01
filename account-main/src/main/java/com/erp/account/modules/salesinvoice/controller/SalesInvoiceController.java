@@ -35,7 +35,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/account/sales/invoices")
+@RequestMapping({"/api/account/sales/invoices", "/api/account/v1/sales-invoices"})
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Sales Invoices", description = "Sales Invoice Management APIs")
 public class SalesInvoiceController {

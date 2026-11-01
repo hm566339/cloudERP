@@ -25,6 +25,10 @@ public interface DeliveryChallanService {
 
     DeliveryChallanResponse updateDeliveryChallan(UUID companyId, UUID id, DeliveryChallanUpdateRequest request);
 
+    DeliveryChallanResponse submitForApproval(UUID companyId, UUID id, String comments);
+
+    void approveDeliveryChallan(UUID companyId, UUID id);
+
     void confirmDeliveryChallan(UUID companyId, UUID id);
 
     void cancelDeliveryChallan(UUID companyId, UUID id);

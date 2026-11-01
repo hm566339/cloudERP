@@ -72,6 +72,15 @@ export const salesApiSlice = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Sales"],
     }),
+    submitQuotationForApproval: builder.mutation({
+      query: ({ id, companyId, comments }) => ({
+        url: `/api/account/v1/quotations/${id}/submit-approval`,
+        method: "POST",
+        params: { companyId },
+        data: { comments },
+      }),
+      invalidatesTags: ["Sales"],
+    }),
     approveQuotation: builder.mutation({
       query: ({ id, companyId }) => ({
         url: `/api/account/v1/quotations/${id}/approve`,
@@ -237,6 +246,23 @@ export const salesApiSlice = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Sales"],
     }),
+    submitProformaInvoiceForApproval: builder.mutation({
+      query: ({ id, companyId, comments }) => ({
+        url: `/api/account/sales/proforma-invoices/${id}/submit-approval`,
+        method: "POST",
+        params: { companyId },
+        data: { comments },
+      }),
+      invalidatesTags: ["Sales"],
+    }),
+    approveProformaInvoice: builder.mutation({
+      query: ({ id, companyId }) => ({
+        url: `/api/account/sales/proforma-invoices/${id}/approve`,
+        method: "POST",
+        params: { companyId },
+      }),
+      invalidatesTags: ["Sales"],
+    }),
     confirmProformaInvoice: builder.mutation({
       query: ({ id, companyId }) => ({
         url: `/api/account/v1/proforma-invoices/${id}/confirm`,
@@ -319,6 +345,23 @@ export const salesApiSlice = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Sales", "DeliveryChallans"],
     }),
+    submitDeliveryChallanForApproval: builder.mutation({
+      query: ({ id, companyId, comments }) => ({
+        url: `/api/account/sales/delivery-challans/${id}/submit-approval`,
+        method: "POST",
+        params: { companyId },
+        data: { comments },
+      }),
+      invalidatesTags: ["Sales", "DeliveryChallans"],
+    }),
+    approveDeliveryChallan: builder.mutation({
+      query: ({ id, companyId }) => ({
+        url: `/api/account/sales/delivery-challans/${id}/approve`,
+        method: "POST",
+        params: { companyId },
+      }),
+      invalidatesTags: ["Sales", "DeliveryChallans"],
+    }),
     confirmDeliveryChallan: builder.mutation({
       query: ({ id, companyId }) => ({
         url: `/api/account/v1/delivery-challans/${id}/confirm`,
@@ -385,6 +428,23 @@ export const salesApiSlice = baseApi.injectEndpoints({
         data,
       }),
       invalidatesTags: ["Sales"],
+    }),
+    submitSalesOrderForApproval: builder.mutation({
+      query: ({ id, companyId, comments }) => ({
+        url: `/api/account/v1/sales-orders/${id}/submit-approval`,
+        method: "POST",
+        params: { companyId },
+        data: { comments },
+      }),
+      invalidatesTags: ["Sales", "SalesOrders"],
+    }),
+    approveSalesOrder: builder.mutation({
+      query: ({ id, companyId }) => ({
+        url: `/api/account/v1/sales-orders/${id}/approve`,
+        method: "POST",
+        params: { companyId },
+      }),
+      invalidatesTags: ["Sales", "SalesOrders"],
     }),
     confirmSalesOrder: builder.mutation({
       query: ({ id, companyId }) => ({
@@ -659,6 +719,7 @@ export const {
   useUpdateQuotationMutation,
   useUpdateQuotationStatusMutation,
   useDeleteQuotationMutation,
+  useSubmitQuotationForApprovalMutation,
   useApproveQuotationMutation,
   useSendQuotationMutation,
   useSendQuotationEmailMutation,
@@ -673,6 +734,8 @@ export const {
   useCreateDirectProformaInvoiceMutation,
   useUpdateProformaInvoiceMutation,
   useDeleteProformaInvoiceMutation,
+  useSubmitProformaInvoiceForApprovalMutation,
+  useApproveProformaInvoiceMutation,
   useSendProformaInvoiceMutation,
   useConfirmProformaInvoiceMutation,
   useCancelProformaInvoiceMutation,
@@ -684,11 +747,15 @@ export const {
   useCreateDeliveryChallanFromSoMutation,
   useCreateDeliveryChallanFromReceiptMutation,
   useUpdateDeliveryChallanMutation,
+  useSubmitDeliveryChallanForApprovalMutation,
+  useApproveDeliveryChallanMutation,
   useConfirmDeliveryChallanMutation,
   useCancelDeliveryChallanMutation,
   useGetSalesOrdersQuery,
   useGetSalesOrderByIdQuery,
   useGetSalesOrderV2ByIdQuery,
+  useSubmitSalesOrderForApprovalMutation,
+  useApproveSalesOrderMutation,
   useConfirmSalesOrderMutation,
   useCancelSalesOrderMutation,
   useCreateSalesOrderMutation,

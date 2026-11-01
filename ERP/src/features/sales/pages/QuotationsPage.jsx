@@ -30,11 +30,15 @@ export { formatDate, formatCurrency, getItemTaxRate, getQuotationOutstanding, ca
 
 export const renderStatusBadge = (status) => {
   const s = (status || 'DRAFT').toUpperCase();
-  if (s === 'ACCEPTED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">{s}</span>;
+  if (s === 'ACCEPTED' || s === 'CUSTOMER_ACCEPTED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">{s.replace(/_/g, ' ')}</span>;
+  if (s === 'APPROVED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">APPROVED</span>;
+  if (s === 'PENDING_APPROVAL') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-[#F5B544] dark:border-amber-500/20">PENDING APPROVAL</span>;
+  if (s === 'CHANGES_REQUESTED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20">CHANGES REQUESTED</span>;
+  if (s === 'CONVERTED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20">CONVERTED</span>;
   if (s === 'SENT') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-[#4C8DFF] dark:border-blue-500/20">{s}</span>;
   if (s === 'EXPIRED' || s === 'REJECTED' || s === 'CANCELLED') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-[#F0616D] dark:border-red-500/20">{s}</span>;
   if (s === 'DRAFT') return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-[#F5B544] dark:border-amber-500/20">{s}</span>;
-  return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]">{s}</span>;
+  return <span className="px-2.5 py-1 text-xs font-semibold rounded-md border bg-zinc-50 text-zinc-700 border-zinc-200 dark:bg-[#1D212C] dark:text-[#A0A6B5] dark:border-[#2A2F3D]">{s.replace(/_/g, ' ')}</span>;
 };
 
 export const QuotationOverview = ({ quote }) => {
@@ -363,7 +367,7 @@ export default function QuotationsPage() {
 
   // Fetch PIs and SOs to determine which ACCEPTED quotations already have a PI or SO.
   const acceptedQuotationIds = useMemo(() =>
-    quotes.filter(q => q.status === 'ACCEPTED').map(q => q.id),
+    quotes.filter(q => q.status === 'ACCEPTED' || q.status === 'CUSTOMER_ACCEPTED').map(q => q.id),
     [quotes]
   );
 
@@ -625,8 +629,13 @@ export default function QuotationsPage() {
       options: ((finalFilterBarProps.filters || []).find(f => f.key === 'status')?.options || [
         { label: 'All Statuses', value: '' },
         { label: 'Draft', value: 'DRAFT' },
+        { label: 'Pending Approval', value: 'PENDING_APPROVAL' },
+        { label: 'Approved', value: 'APPROVED' },
+        { label: 'Changes Requested', value: 'CHANGES_REQUESTED' },
+        { label: 'Customer Accepted', value: 'CUSTOMER_ACCEPTED' },
         { label: 'Sent', value: 'SENT' },
         { label: 'Accepted', value: 'ACCEPTED' },
+        { label: 'Converted', value: 'CONVERTED' },
         { label: 'Rejected', value: 'REJECTED' },
         { label: 'Expired', value: 'EXPIRED' },
         { label: 'Cancelled', value: 'CANCELLED' }
@@ -769,7 +778,7 @@ export default function QuotationsPage() {
         className: 'text-red-600 hover:text-red-700'
       }
     ] : []),
-    ...(q.status === 'ACCEPTED' ? [
+    ...((q.status === 'ACCEPTED' || q.status === 'CUSTOMER_ACCEPTED') ? [
       {
         key: 'convert-pi',
         label: 'Create PI',

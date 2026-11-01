@@ -188,13 +188,26 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
         }
 
         try {
-            workflowClient.submitWorkflow(
+            UUID custId = voucher.getCustomer() != null ? voucher.getCustomer().getId() : null;
+            WorkflowTransactionDto tx = workflowClient.submitWorkflow(
                     companyId,
                     "RECEIPT_VOUCHER",
                     voucher.getId(),
                     voucher.getReceiptNo(),
-                    comments != null ? comments : "Submitted receipt voucher for approval"
+                    comments != null ? comments : "Submitted receipt voucher for approval",
+                    voucher.getReceiptAmount(),
+                    custId,
+                    java.util.Map.of("amount", voucher.getReceiptAmount() != null ? voucher.getReceiptAmount() : BigDecimal.ZERO)
             );
+            if (tx != null && "APPROVED".equalsIgnoreCase(tx.getStatus())) {
+                transition(voucher, ReceiptVoucherStatus.APPROVED, "APPROVE");
+                voucher.setApprovedBy(TenantUtils.getCurrentUserId());
+                voucher.setApprovedDate(LocalDateTime.now());
+                receiptVoucherRepository.save(voucher);
+                postReceipt(voucher.getId());
+                log.info("Receipt Voucher {} auto-approved by workflow engine and posted", voucher.getReceiptNo());
+                return;
+            }
             log.info("Receipt Voucher {} submitted for approval to workflow-service", voucher.getReceiptNo());
         } catch (BadRequestException e) {
             throw e;

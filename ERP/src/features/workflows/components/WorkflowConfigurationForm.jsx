@@ -234,7 +234,7 @@ export default function WorkflowConfigurationForm({
               onChange={(e, val) => update('approverRole', val !== undefined ? val : e.target.value)}
               options={roles.map((r) => ({ value: r.id, label: r.name }))}
               size="sm"
-              className="w-40 sm:w-52"
+              className="w-48 sm:w-64"
             />
             {rolesError && onRetryRoles && (
               <button

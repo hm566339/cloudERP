@@ -7,6 +7,7 @@ import { useGetDeliveryChallanByIdQuery } from '../../../api/sales-crm/sales.api
 
 import { useAppDispatch } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
+import WorkflowActionButtons from '../../workflows/components/WorkflowActionButtons';
 
 function isUuid(val) {
   if (typeof val !== 'string') return false;
@@ -97,17 +98,31 @@ export default function ViewDeliveryChallanModal({
 
   const renderStatusBadge = (status) => {
     const s = String(status || '').toUpperCase();
-    if (s === 'CONFIRMED') {
+    if (s === 'CONFIRMED' || s === 'APPROVED') {
       return (
         <span className="badge badge-success inline-flex items-center gap-1">
-          <CheckCircle size={12} /> Confirmed
+          <CheckCircle size={12} /> {s === 'APPROVED' ? 'Approved' : 'Confirmed'}
         </span>
       );
     }
-    if (s === 'CANCELLED') {
+    if (s === 'PENDING_APPROVAL') {
+      return (
+        <span className="badge badge-warning inline-flex items-center gap-1 text-amber-700 bg-amber-50">
+          <Clock size={12} /> Pending Approval
+        </span>
+      );
+    }
+    if (s === 'CHANGES_REQUESTED') {
+      return (
+        <span className="badge badge-warning inline-flex items-center gap-1 text-orange-700 bg-orange-50">
+          <Clock size={12} /> Changes Requested
+        </span>
+      );
+    }
+    if (s === 'CANCELLED' || s === 'REJECTED') {
       return (
         <span className="badge badge-error inline-flex items-center gap-1">
-          <X size={12} /> Cancelled
+          <X size={12} /> {s === 'REJECTED' ? 'Rejected' : 'Cancelled'}
         </span>
       );
     }
@@ -167,6 +182,15 @@ export default function ViewDeliveryChallanModal({
             </div>
           ) : (
             <>
+              {/* Workflow Action Bar */}
+              <WorkflowActionButtons
+                module="SALES"
+                documentType="DELIVERY_CHALLAN"
+                documentId={deliveryChallanId}
+                documentStatus={challan.status}
+                onActionComplete={refetch}
+              />
+
               {/* Primary Info Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div className="bg-white dark:bg-[#161922] p-3 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs">

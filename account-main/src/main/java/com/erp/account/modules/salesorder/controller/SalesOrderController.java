@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/account/v1/sales-orders")
+@RequestMapping({"/api/account/v1/sales-orders", "/api/account/sales/orders", "/api/sales/sales-orders"})
 @RequiredArgsConstructor
 @Tag(name = "Sales Order API", description = "Sales Order management with support for both:\n1. Proforma Invoice → Sales Order\n2. Direct ACCEPTED Quotation → Sales Order for eligible customers")
 public class SalesOrderController {
@@ -86,6 +86,16 @@ public class SalesOrderController {
         String effectiveComments = comments != null ? comments : (body != null ? body.get("comments") : null);
         SalesOrderResponse response = salesOrderService.submitForApproval(companyId, id, effectiveComments);
         return ResponseEntity.ok(ApiResponse.success(response, "Sales Order submitted for approval successfully"));
+    }
+
+    @Operation(summary = "Approve Sales Order", description = "Approve a DRAFT or PENDING_APPROVAL Sales Order.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Return the complete Sales Order response.")
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<SalesOrderResponse>> approveSO(
+            @Parameter(description = "Sales Order ID", required = true) @PathVariable UUID id,
+            @Parameter(description = "Company ID") @RequestParam(required = false) UUID companyId) {
+        SalesOrderResponse response = salesOrderService.approveSO(companyId, id);
+        return ResponseEntity.ok(ApiResponse.success(response, "Sales Order approved successfully"));
     }
 
     @Operation(summary = "Confirm Sales Order", description = "Confirm a DRAFT Sales Order.")

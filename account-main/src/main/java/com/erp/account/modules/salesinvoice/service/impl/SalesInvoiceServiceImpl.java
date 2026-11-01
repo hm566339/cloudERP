@@ -971,14 +971,23 @@ public class SalesInvoiceServiceImpl implements SalesInvoiceService {
         }
 
         try {
-            workflowClient.submitWorkflow(
+            WorkflowTransactionDto tx = workflowClient.submitWorkflow(
                     resolvedCompanyId,
                     "SALES_INVOICE",
                     invoice.getId(),
                     invoice.getInvoiceNumber(),
-                    comments != null ? comments : "Submitted sales invoice for approval"
+                    comments != null ? comments : "Submitted sales invoice for approval",
+                    invoice.getTotalAmount(),
+                    invoice.getCustomer() != null ? invoice.getCustomer().getId() : null,
+                    java.util.Map.of("amount", invoice.getTotalAmount() != null ? invoice.getTotalAmount() : java.math.BigDecimal.ZERO)
             );
-            log.info("Sales Invoice {} submitted for approval to workflow-service", invoice.getInvoiceNumber());
+            if (tx != null && "APPROVED".equalsIgnoreCase(tx.getStatus())) {
+                invoice.setStatus(InvoiceStatus.APPROVED);
+                log.info("Sales Invoice {} auto-approved by workflow engine, status updated to APPROVED", invoice.getInvoiceNumber());
+            } else {
+                invoice.setStatus(InvoiceStatus.PENDING_APPROVAL);
+                log.info("Sales Invoice {} submitted for approval to workflow-service, status updated to PENDING_APPROVAL", invoice.getInvoiceNumber());
+            }
         } catch (BadRequestException e) {
             throw e;
         } catch (Exception e) {
@@ -986,9 +995,7 @@ public class SalesInvoiceServiceImpl implements SalesInvoiceService {
             throw new BadRequestException("Failed to submit sales invoice for workflow approval: " + e.getMessage());
         }
 
-        invoice.setStatus(InvoiceStatus.PENDING_APPROVAL);
         SalesInvoice saved = salesInvoiceRepository.save(invoice);
-        log.info("Sales Invoice {} submitted for approval to workflow-service", saved.getInvoiceNumber());
         return enrichAndReturnResponse(salesInvoiceMapper.entityToResponse(saved), saved);
     }
 

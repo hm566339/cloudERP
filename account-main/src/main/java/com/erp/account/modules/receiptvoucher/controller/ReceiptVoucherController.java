@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/account/receipts")
+@RequestMapping({"/api/account/receipts", "/api/account/receipt-vouchers", "/api/account/v1/receipts"})
 @RequiredArgsConstructor
 public class ReceiptVoucherController {
 

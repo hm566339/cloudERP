@@ -159,6 +159,12 @@ export default function ReceiptVoucherDetails() {
         </div>
 
         <div className="flex items-center gap-2">
+          <ReceiptWorkflowActions
+            receiptId={id}
+            receiptStatus={receipt.receiptStatus}
+            onActionComplete={refetch}
+            variant="header"
+          />
 
           {/* More Actions Dropdown */}
           <div className="relative group">

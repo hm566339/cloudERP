@@ -881,10 +881,26 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     @Override
     @Transactional(readOnly = true)
     public WorkflowUiDetailsResponse getUiDetailsByDocument(UUID companyId, String documentType, UUID documentId, UUID currentUserId, List<String> roles) {
-        WorkflowTransaction txn = transactionRepository.findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(
-                companyId, documentType, documentId)
-                .orElseThrow(() -> new ResourceNotFoundException("WorkflowTransaction for document " + documentType + " (" + documentId + ")"));
-        return buildUiDetails(txn, currentUserId, roles);
+        Optional<WorkflowTransaction> txnOpt = transactionRepository.findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(
+                companyId, documentType, documentId);
+
+        if (txnOpt.isEmpty()) {
+            WorkflowPermittedActions permittedActions = WorkflowPermittedActions.builder()
+                    .canSubmit(true)
+                    .availableActions(List.of("SUBMIT"))
+                    .build();
+
+            return WorkflowUiDetailsResponse.builder()
+                    .permittedActions(permittedActions)
+                    .tasks(Collections.emptyList())
+                    .comments(Collections.emptyList())
+                    .attachments(Collections.emptyList())
+                    .availableTransitions(Collections.emptyList())
+                    .auditTrail(Collections.emptyList())
+                    .build();
+        }
+
+        return buildUiDetails(txnOpt.get(), currentUserId, roles);
     }
 
     private WorkflowUiDetailsResponse buildUiDetails(WorkflowTransaction txn, UUID currentUserId, List<String> roles) {

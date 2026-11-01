@@ -70,7 +70,7 @@ public class QuotationWorkflowAdapter implements WorkflowDocumentAdapter {
 
         @Transactional
         public void onWorkflowSubmitted() {
-            quotation.setStatus(com.erp.account.modules.quotation.entity.QuotationStatus.DRAFT);
+            quotation.setStatus(com.erp.account.modules.quotation.entity.QuotationStatus.PENDING_APPROVAL);
             repository.save(quotation);
         }
 
@@ -85,14 +85,17 @@ public class QuotationWorkflowAdapter implements WorkflowDocumentAdapter {
             boolean customerAcceptance = metadata != null && Boolean.TRUE.equals(metadata.get("customerAcceptance"));
             boolean autoCreateOrder = metadata != null && Boolean.TRUE.equals(metadata.get("autoCreateOrder"));
 
+            quotation.setApprovedAt(java.time.LocalDateTime.now());
             if (customerAcceptance) {
-                // Internal approval only; quotation moves to SENT waiting for customer acceptance
-                service.approveQuotation(quotation.getCompanyId(), quotation.getId());
+                // Internal approval only; quotation moves to APPROVED waiting for customer acceptance
+                quotation.setStatus(com.erp.account.modules.quotation.entity.QuotationStatus.APPROVED);
+                repository.save(quotation);
                 log.info("Quotation {} approved internally via workflow, awaiting customer acceptance", quotation.getQuotationNumber());
             } else {
-                // Customer acceptance NOT required; quotation is directly ACCEPTED
-                service.acceptQuotation(quotation.getCompanyId(), quotation.getId());
-                log.info("Quotation {} marked ACCEPTED via workflow", quotation.getQuotationNumber());
+                // Customer acceptance NOT required; quotation is directly CUSTOMER_ACCEPTED
+                quotation.setStatus(com.erp.account.modules.quotation.entity.QuotationStatus.CUSTOMER_ACCEPTED);
+                repository.save(quotation);
+                log.info("Quotation {} marked CUSTOMER_ACCEPTED via workflow", quotation.getQuotationNumber());
 
                 if (autoCreateOrder) {
                     try {
@@ -107,17 +110,19 @@ public class QuotationWorkflowAdapter implements WorkflowDocumentAdapter {
 
         @Transactional
         public void onWorkflowRejected() {
-            service.rejectQuotation(quotation.getCompanyId(), quotation.getId());
+            quotation.setStatus(com.erp.account.modules.quotation.entity.QuotationStatus.REJECTED);
+            repository.save(quotation);
         }
 
         @Transactional
         public void onWorkflowCancelled() {
-            service.cancelQuotation(quotation.getCompanyId(), quotation.getId());
+            quotation.setStatus(com.erp.account.modules.quotation.entity.QuotationStatus.CANCELLED);
+            repository.save(quotation);
         }
 
         @Transactional
         public void onWorkflowReturned() {
-            quotation.setStatus(com.erp.account.modules.quotation.entity.QuotationStatus.DRAFT);
+            quotation.setStatus(com.erp.account.modules.quotation.entity.QuotationStatus.CHANGES_REQUESTED);
             repository.save(quotation);
         }
     }

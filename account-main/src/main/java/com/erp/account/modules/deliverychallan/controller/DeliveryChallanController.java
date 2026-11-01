@@ -29,7 +29,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/account/v1/delivery-challans")
+@RequestMapping({"/api/account/v1/delivery-challans", "/api/account/sales/delivery-challans"})
 @RequiredArgsConstructor
 @Tag(name = "Delivery Challan API", description = "Endpoints for managing Delivery Challans")
 public class DeliveryChallanController {
@@ -100,6 +100,25 @@ public class DeliveryChallanController {
         DeliveryChallanResponse response = deliveryChallanService.updateDeliveryChallan(companyId, id,
                 request.getData());
         return ResponseEntity.ok(ApiResponse.success(response, "Delivery Challan updated successfully"));
+    }
+
+    @Operation(summary = "Submit Delivery Challan for approval", description = "Submits a Delivery Challan to the workflow engine.")
+    @PostMapping({"/{id}/submit-approval", "/{id}/submit"})
+    public ResponseEntity<ApiResponse<DeliveryChallanResponse>> submitForApproval(
+            @Parameter(description = "Delivery Challan ID", required = true) @PathVariable UUID id,
+            @Parameter(description = "Company ID") @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) String comments) {
+        DeliveryChallanResponse response = deliveryChallanService.submitForApproval(companyId, id, comments);
+        return ResponseEntity.ok(ApiResponse.success(response, "Delivery Challan submitted for approval"));
+    }
+
+    @Operation(summary = "Approve Delivery Challan", description = "Approves a Delivery Challan.")
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<Void>> approveDeliveryChallan(
+            @Parameter(description = "Delivery Challan ID", required = true) @PathVariable UUID id,
+            @Parameter(description = "Company ID") @RequestParam(required = false) UUID companyId) {
+        deliveryChallanService.approveDeliveryChallan(companyId, id);
+        return ResponseEntity.ok(ApiResponse.success(null, "Delivery Challan approved successfully"));
     }
 
     @Operation(summary = "Confirm Delivery Challan", description = "Transitions a Delivery Challan from DRAFT to CONFIRMED status.")

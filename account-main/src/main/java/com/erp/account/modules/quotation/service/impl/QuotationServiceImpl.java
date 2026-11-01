@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.erp.account.common.exception.BadRequestException;
@@ -252,18 +253,46 @@ public class QuotationServiceImpl implements QuotationService {
 
         switch (current) {
             case DRAFT:
-                if (newStatus == QuotationStatus.SENT || newStatus == QuotationStatus.CANCELLED
+                if (newStatus == QuotationStatus.PENDING_APPROVAL || newStatus == QuotationStatus.APPROVED
+                        || newStatus == QuotationStatus.SENT || newStatus == QuotationStatus.CANCELLED
                         || newStatus == QuotationStatus.EXPIRED) {
                     validTransition = true;
                 }
                 break;
-            case SENT:
-                if (newStatus == QuotationStatus.ACCEPTED || newStatus == QuotationStatus.REJECTED ||
-                        newStatus == QuotationStatus.EXPIRED || newStatus == QuotationStatus.CANCELLED) {
+            case PENDING_APPROVAL:
+                if (newStatus == QuotationStatus.APPROVED || newStatus == QuotationStatus.REJECTED
+                        || newStatus == QuotationStatus.CHANGES_REQUESTED || newStatus == QuotationStatus.CUSTOMER_ACCEPTED
+                        || newStatus == QuotationStatus.ACCEPTED || newStatus == QuotationStatus.CANCELLED) {
                     validTransition = true;
                 }
                 break;
+            case CHANGES_REQUESTED:
+                if (newStatus == QuotationStatus.PENDING_APPROVAL || newStatus == QuotationStatus.DRAFT
+                        || newStatus == QuotationStatus.CANCELLED) {
+                    validTransition = true;
+                }
+                break;
+            case APPROVED:
+                if (newStatus == QuotationStatus.SENT || newStatus == QuotationStatus.CUSTOMER_ACCEPTED
+                        || newStatus == QuotationStatus.ACCEPTED || newStatus == QuotationStatus.REJECTED
+                        || newStatus == QuotationStatus.CONVERTED || newStatus == QuotationStatus.CANCELLED) {
+                    validTransition = true;
+                }
+                break;
+            case SENT:
+                if (newStatus == QuotationStatus.CUSTOMER_ACCEPTED || newStatus == QuotationStatus.ACCEPTED
+                        || newStatus == QuotationStatus.REJECTED || newStatus == QuotationStatus.EXPIRED
+                        || newStatus == QuotationStatus.CONVERTED || newStatus == QuotationStatus.CANCELLED) {
+                    validTransition = true;
+                }
+                break;
+            case CUSTOMER_ACCEPTED:
             case ACCEPTED:
+                if (newStatus == QuotationStatus.CONVERTED || newStatus == QuotationStatus.CANCELLED) {
+                    validTransition = true;
+                }
+                break;
+            case CONVERTED:
             case REJECTED:
             case EXPIRED:
             case CANCELLED:
@@ -287,8 +316,8 @@ public class QuotationServiceImpl implements QuotationService {
         Quotation quotation = quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)
                 .orElseThrow(() -> new QuotationNotFoundException(id));
 
-        if (quotation.getStatus() != QuotationStatus.DRAFT) {
-            throw new BadRequestException("Only DRAFT quotations can be approved");
+        if (quotation.getStatus() != QuotationStatus.DRAFT && quotation.getStatus() != QuotationStatus.PENDING_APPROVAL) {
+            throw new BadRequestException("Only DRAFT or PENDING_APPROVAL quotations can be approved");
         }
 
         // Prevent bypassing active pending workflow
@@ -303,7 +332,7 @@ public class QuotationServiceImpl implements QuotationService {
             log.debug("Workflow check skipped or completed for quotation {}: {}", id, e.getMessage());
         }
 
-        quotation.setStatus(QuotationStatus.SENT);
+        quotation.setStatus(QuotationStatus.APPROVED);
         quotation.setApprovedBy(TenantUtils.getCurrentUserId());
         quotation.setApprovedAt(LocalDateTime.now());
         quotation.setUpdatedBy(TenantUtils.getCurrentUserId());
@@ -319,8 +348,8 @@ public class QuotationServiceImpl implements QuotationService {
         Quotation quotation = quotationRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)
                 .orElseThrow(() -> new QuotationNotFoundException(id));
 
-        if (quotation.getStatus() != QuotationStatus.DRAFT) {
-            throw new BadRequestException("Only DRAFT quotations can be submitted for approval. Current status: " + quotation.getStatus());
+        if (quotation.getStatus() != QuotationStatus.DRAFT && quotation.getStatus() != QuotationStatus.CHANGES_REQUESTED) {
+            throw new BadRequestException("Only DRAFT or CHANGES_REQUESTED quotations can be submitted for approval. Current status: " + quotation.getStatus());
         }
 
         // Prevent duplicate workflow submission
@@ -335,16 +364,27 @@ public class QuotationServiceImpl implements QuotationService {
             log.debug("No existing workflow transaction found for quotation {}", id);
         }
 
-        workflowClient.submitWorkflow(
+        UUID custId = quotation.getCustomer() != null ? quotation.getCustomer().getId() : null;
+        WorkflowTransactionDto tx = workflowClient.submitWorkflow(
                 resolvedCompanyId,
                 "QUOTATION",
                 quotation.getId(),
                 quotation.getQuotationNumber(),
-                comments != null ? comments : "Submitted quotation for approval"
+                comments != null ? comments : "Submitted quotation for approval",
+                quotation.getTotalAmount(),
+                custId,
+                Map.of("amount", quotation.getTotalAmount() != null ? quotation.getTotalAmount() : BigDecimal.ZERO)
         );
 
-        log.info("Quotation {} submitted for approval to workflow-service", quotation.getQuotationNumber());
-        return quotationMapper.toResponse(quotation);
+        if (tx != null && "APPROVED".equalsIgnoreCase(tx.getStatus())) {
+            quotation.setStatus(QuotationStatus.APPROVED);
+            log.info("Quotation {} auto-approved by workflow engine, status updated to APPROVED", quotation.getQuotationNumber());
+        } else {
+            quotation.setStatus(QuotationStatus.PENDING_APPROVAL);
+            log.info("Quotation {} submitted for approval to workflow-service, status updated to PENDING_APPROVAL", quotation.getQuotationNumber());
+        }
+        Quotation saved = quotationRepository.save(quotation);
+        return quotationMapper.toResponse(saved);
     }
 
     @Override
@@ -388,18 +428,7 @@ public class QuotationServiceImpl implements QuotationService {
     @Override
     @Transactional
     public QuotationResponse acceptQuotation(UUID companyId, UUID id) {
-        QuotationResponse response = changeStatus(companyId, id, QuotationStatus.ACCEPTED);
-
-        // PIConversionRequest piRequest = new PIConversionRequest();
-
-        // piRequest.setPiDate(LocalDate.now());
-        // piRequest.setPiValidTill(LocalDate.now().plusDays(30));
-        // piRequest.setAdvanceRequired(false);
-        // piRequest.setAdvanceAmount(BigDecimal.ZERO);
-        // piRequest.setBankAccountId(null);
-        // piRequest.setPaymentCondition(response.getPaymentTerms());
-
-        return response;
+        return changeStatus(companyId, id, QuotationStatus.CUSTOMER_ACCEPTED);
     }
 
     @Override

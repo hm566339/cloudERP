@@ -25,6 +25,8 @@ public interface SalesOrderService {
 
     SalesOrderResponse confirmSO(UUID companyId, UUID id);
 
+    SalesOrderResponse approveSO(UUID companyId, UUID id);
+
     SalesOrderResponse cancelSO(UUID companyId, UUID id);
 
     org.springframework.data.domain.Page<SalesOrderResponse> getAllSalesOrders(

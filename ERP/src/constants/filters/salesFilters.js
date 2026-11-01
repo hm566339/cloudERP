@@ -17,7 +17,7 @@ import {
   DocumentStatus,
   PostingStatus,
   InvoiceStatus,
-} from '../accountingEnums';
+} from '../accountingEnums.js';
 
 // ─── Pagination Presets ──────────────────────────────────────────────
 const SPRING_PAGEABLE = { pageParam: 'page', sizeParam: 'size', sortStyle: 'spring', sortParam: 'sort' };
@@ -141,8 +141,13 @@ export const salesFilters = {
         options: [
           { label: 'All Statuses', value: '' },
           { label: 'Draft', value: 'DRAFT' },
+          { label: 'Pending Approval', value: 'PENDING_APPROVAL' },
+          { label: 'Approved', value: 'APPROVED' },
+          { label: 'Changes Requested', value: 'CHANGES_REQUESTED' },
+          { label: 'Customer Accepted', value: 'CUSTOMER_ACCEPTED' },
           { label: 'Sent', value: 'SENT' },
           { label: 'Accepted', value: 'ACCEPTED' },
+          { label: 'Converted', value: 'CONVERTED' },
           { label: 'Rejected', value: 'REJECTED' },
           { label: 'Expired', value: 'EXPIRED' },
           { label: 'Cancelled', value: 'CANCELLED' }

@@ -26,5 +26,7 @@ public class WorkflowSubmitRequestDto {
     private UUID initiatedBy;
     private String initiatedByName;
     private String comments;
+    private java.math.BigDecimal amount;
+    private UUID customerId;
     private Map<String, Object> metadata;
 }

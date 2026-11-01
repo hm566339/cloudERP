@@ -20,6 +20,10 @@ public interface ProformaInvoiceService {
 
     ProformaInvoiceResponse sendPI(UUID companyId, UUID id);
 
+    ProformaInvoiceResponse submitForApproval(UUID companyId, UUID id, String comments);
+
+    ProformaInvoiceResponse approveProformaInvoice(UUID companyId, UUID id);
+
     ProformaInvoiceResponse confirmPI(UUID companyId, UUID id);
 
     ProformaInvoiceResponse cancelPI(UUID companyId, UUID id);

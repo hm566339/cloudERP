@@ -74,6 +74,9 @@ class DeliveryChallanFromReceiptTest {
     @Mock
     private InventoryIntegrationService inventoryIntegrationService;
 
+    @Mock
+    private com.erp.account.integration.workflow.client.WorkflowClient workflowClient;
+
     @InjectMocks
     private DeliveryChallanServiceImpl deliveryChallanService;
 

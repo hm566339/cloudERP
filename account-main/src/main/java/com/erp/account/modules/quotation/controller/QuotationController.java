@@ -115,7 +115,7 @@ public class QuotationController {
     }
 
     @Operation(summary = "Accept Quotation", description = "Customer accepts quotation. Transitions SENT to ACCEPTED. Locks quotation from edits.")
-    @PostMapping("/{id}/accept")
+    @PostMapping({"/{id}/accept", "/{id}/customer-accept"})
     public ResponseEntity<QuotationResponse> acceptQuotation(
             @PathVariable UUID id,
             @RequestParam(required = false) UUID companyId) {

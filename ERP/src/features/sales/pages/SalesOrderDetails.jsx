@@ -9,6 +9,7 @@ import {
 import DeliveryChallanFromSoModal from '../components/DeliveryChallanFromSoModal';
 import AuditLogHover from '../../../components/common/AuditLogHover';
 import StatusBadge from '../../../components/common/StatusBadge';
+import WorkflowActionButtons from '../../workflows/components/WorkflowActionButtons';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const fmt = (n) => (n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -168,6 +169,22 @@ export default function SalesOrderDetails() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Workflow Action Bar */}
+      <div className="mb-6">
+        <WorkflowActionButtons
+          module="SALES"
+          documentType="SALES_ORDER"
+          documentId={id}
+          documentStatus={order.status}
+          onActionComplete={refetch}
+          onConvert={(t) => {
+            if (t.targetDocumentType === 'DELIVERY_CHALLAN') {
+              setDcOpen(true);
+            }
+          }}
+        />
       </div>
 
       {/* Summary Row */}

@@ -59,7 +59,10 @@ class DeliveryChallanStockOutTest {
         @Mock
         private com.erp.account.modules.receiptvoucher.repository.ReceiptVoucherRepository receiptVoucherRepository;
 
-        @InjectMocks
+        @Mock
+    private com.erp.account.integration.workflow.client.WorkflowClient workflowClient;
+
+    @InjectMocks
         private DeliveryChallanServiceImpl deliveryChallanService;
 
         private MockedStatic<TenantUtils> tenantUtilsMock;
@@ -143,7 +146,7 @@ class DeliveryChallanStockOutTest {
                 BadRequestException ex = assertThrows(BadRequestException.class,
                                 () -> deliveryChallanService.confirmDeliveryChallan(companyId, dcId));
 
-                assertEquals("Delivery Challan is not in DRAFT status.", ex.getMessage());
+                assertEquals("Delivery Challan is not in DRAFT or APPROVED status.", ex.getMessage());
                 verify(inventoryIntegrationService, never()).processDeliveryChallanStockOut(any(), any());
                 verify(deliveryChallanRepository, never()).save(any());
         }

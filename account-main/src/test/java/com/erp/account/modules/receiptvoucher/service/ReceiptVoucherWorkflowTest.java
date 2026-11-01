@@ -155,7 +155,10 @@ class ReceiptVoucherWorkflowTest {
                 eq("RECEIPT_VOUCHER"),
                 eq(voucherId),
                 eq("RV-2026-001"),
-                eq("Please approve voucher")
+                eq("Please approve voucher"),
+                any(),
+                any(),
+                any()
         );
         assertEquals(ReceiptVoucherStatus.SUBMITTED, voucher.getReceiptStatus());
         verify(receiptVoucherRepository, times(1)).save(voucher);
@@ -180,7 +183,7 @@ class ReceiptVoucherWorkflowTest {
                 receiptVoucherService.submitForApproval(voucherId, "Duplicate attempt"));
 
         assertTrue(ex.getMessage().contains("already submitted for approval"));
-        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any());
+        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -193,7 +196,7 @@ class ReceiptVoucherWorkflowTest {
                 receiptVoucherService.submitForApproval(voucherId, null));
 
         assertTrue(ex.getMessage().contains("Only DRAFT"));
-        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any());
+        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -203,7 +206,7 @@ class ReceiptVoucherWorkflowTest {
         when(workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", voucherId))
                 .thenReturn(null);
         doThrow(new RuntimeException("Workflow engine unreachable"))
-                .when(workflowClient).submitWorkflow(any(), any(), any(), any(), any());
+                .when(workflowClient).submitWorkflow(any(), any(), any(), any(), any(), any(), any(), any());
 
         BadRequestException ex = assertThrows(BadRequestException.class, () ->
                 receiptVoucherService.submitForApproval(voucherId, "Please approve"));

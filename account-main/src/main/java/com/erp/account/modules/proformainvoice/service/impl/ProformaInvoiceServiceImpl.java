@@ -69,6 +69,7 @@ public class ProformaInvoiceServiceImpl implements ProformaInvoiceService {
     private final ReceiptVoucherService receiptVoucherService;
     private final com.erp.account.modules.receiptvoucher.repository.ReceiptVoucherRepository receiptVoucherRepository;
     private final com.erp.account.modules.proformainvoice.validator.ProformaInvoiceLifecycleValidator lifecycleValidator;
+    private final com.erp.account.integration.workflow.client.WorkflowClient workflowClient;
 
     @Override
     @Transactional
@@ -86,10 +87,10 @@ public class ProformaInvoiceServiceImpl implements ProformaInvoiceService {
         log.info("[PI-CREATE] STEP 3 - QUOTATION LOADED: quotationNumber={}, status={}, customerId={}",
                 quotation.getQuotationNumber(), quotation.getStatus(), quotation.getCustomerId());
 
-        if (quotation.getStatus() != QuotationStatus.ACCEPTED) {
-            throw new BadRequestException("Only ACCEPTED quotations can be converted into a Proforma Invoice");
+        if (quotation.getStatus() != QuotationStatus.ACCEPTED && quotation.getStatus() != QuotationStatus.CUSTOMER_ACCEPTED) {
+            throw new BadRequestException("Only ACCEPTED or CUSTOMER_ACCEPTED quotations can be converted into a Proforma Invoice");
         }
-        log.info("[PI-CREATE] STEP 4 - QUOTATION STATUS VERIFIED: ACCEPTED");
+        log.info("[PI-CREATE] STEP 4 - QUOTATION STATUS VERIFIED: {}", quotation.getStatus());
 
         java.util.List<ProformaInvoice> existingPIs = proformaInvoiceRepository
                 .findBySourceQuotationIdAndCompanyId(quotationId, resolvedCompanyId);
@@ -186,6 +187,14 @@ public class ProformaInvoiceServiceImpl implements ProformaInvoiceService {
 
                 receiptVoucherService.createReceipt(resolvedCompanyId, RequestWrapper.of(rvRequest));
                 log.info("[PI-CREATE] STEP 15 - AUTO RECEIPT CREATED for PI id={}", saved.getId());
+            }
+
+            try {
+                quotation.setStatus(QuotationStatus.CONVERTED);
+                quotationRepository.save(quotation);
+                log.info("[PI-CREATE] STEP 16 - QUOTATION MARKED CONVERTED: id={}", quotation.getId());
+            } catch (Exception e) {
+                log.warn("Failed to mark source quotation as CONVERTED: {}", e.getMessage());
             }
 
             return toResponseWithQuotation(saved, resolvedCompanyId);
@@ -369,6 +378,70 @@ public class ProformaInvoiceServiceImpl implements ProformaInvoiceService {
     @Transactional
     public ProformaInvoiceResponse sendPI(UUID companyId, UUID id) {
         return changeStatus(companyId, id, ProformaInvoiceStatus.ISSUED);
+    }
+
+    @Override
+    @Transactional
+    public ProformaInvoiceResponse submitForApproval(UUID companyId, UUID id, String comments) {
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        ProformaInvoice pi = proformaInvoiceRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)
+                .orElseThrow(() -> new BadRequestException("Proforma Invoice not found"));
+
+        if (pi.getStatus() != ProformaInvoiceStatus.DRAFT && pi.getStatus() != ProformaInvoiceStatus.CHANGES_REQUESTED) {
+            throw new BadRequestException("Only DRAFT or CHANGES_REQUESTED proforma invoices can be submitted for approval. Current status: " + pi.getStatus());
+        }
+
+        try {
+            com.erp.account.integration.workflow.dto.WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(resolvedCompanyId, "PROFORMA_INVOICE", pi.getId());
+            if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
+                throw new BadRequestException("Proforma Invoice is already submitted for approval with transaction: " + existingTx.getId());
+            }
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            log.debug("No existing workflow transaction found for proforma invoice {}", id);
+        }
+
+        UUID custId = pi.getCustomer() != null ? pi.getCustomer().getId() : null;
+        com.erp.account.integration.workflow.dto.WorkflowTransactionDto tx = workflowClient.submitWorkflow(
+                resolvedCompanyId,
+                "PROFORMA_INVOICE",
+                pi.getId(),
+                pi.getPiNumber(),
+                comments != null ? comments : "Submitted proforma invoice for approval",
+                pi.getTotalAmount(),
+                custId,
+                Map.of("amount", pi.getTotalAmount() != null ? pi.getTotalAmount() : BigDecimal.ZERO)
+        );
+
+        if (tx != null && "APPROVED".equalsIgnoreCase(tx.getStatus())) {
+            pi.setStatus(ProformaInvoiceStatus.APPROVED);
+            log.info("Proforma Invoice {} auto-approved by workflow engine, status updated to APPROVED", pi.getPiNumber());
+        } else {
+            pi.setStatus(ProformaInvoiceStatus.PENDING_APPROVAL);
+            log.info("Proforma Invoice {} submitted for approval to workflow-service, status updated to PENDING_APPROVAL", pi.getPiNumber());
+        }
+        pi.setUpdatedBy(TenantUtils.getCurrentUserId());
+        ProformaInvoice saved = proformaInvoiceRepository.save(pi);
+        return toResponseWithQuotation(saved, resolvedCompanyId);
+    }
+
+    @Override
+    @Transactional
+    public ProformaInvoiceResponse approveProformaInvoice(UUID companyId, UUID id) {
+        UUID resolvedCompanyId = TenantUtils.resolveCompanyId(companyId);
+        ProformaInvoice pi = proformaInvoiceRepository.findByIdAndCompanyIdAndIsDeletedFalse(id, resolvedCompanyId)
+                .orElseThrow(() -> new BadRequestException("Proforma Invoice not found"));
+
+        if (pi.getStatus() != ProformaInvoiceStatus.DRAFT && pi.getStatus() != ProformaInvoiceStatus.PENDING_APPROVAL) {
+            throw new BadRequestException("Only DRAFT or PENDING_APPROVAL proforma invoices can be approved");
+        }
+
+        pi.setStatus(ProformaInvoiceStatus.APPROVED);
+        pi.setUpdatedBy(TenantUtils.getCurrentUserId());
+        ProformaInvoice saved = proformaInvoiceRepository.save(pi);
+        log.info("Proforma Invoice {} marked APPROVED", pi.getPiNumber());
+        return toResponseWithQuotation(saved, resolvedCompanyId);
     }
 
     @Override
