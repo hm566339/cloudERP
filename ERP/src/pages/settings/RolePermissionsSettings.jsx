@@ -16,9 +16,19 @@ import ModuleTabs, { userTabs } from '../../components/module-tabs';
 import Modal from '../../components/common/Modal';
 
 const ACTIONS = [
-  { label: 'View', value: 'READ' },
+  { label: 'Read', value: 'READ' },
+  { label: 'Create', value: 'CREATE' },
+  { label: 'Update', value: 'UPDATE' },
   { label: 'Write', value: 'WRITE' },
-  { label: 'Delete', value: 'DELETE' }
+  { label: 'Delete', value: 'DELETE' },
+  { label: 'Approve', value: 'APPROVE' },
+  { label: 'Reject', value: 'REJECT' },
+  { label: 'Return', value: 'RETURN' },
+  { label: 'Delegate', value: 'DELEGATE' },
+  { label: 'Cancel', value: 'CANCEL' },
+  { label: 'Activate', value: 'ACTIVATE' },
+  { label: 'Deactivate', value: 'DEACTIVATE' },
+  { label: 'Export', value: 'EXPORT' }
 ];
 
 const PermissionCheckbox = ({ checked, indeterminate, disabled, onChange }) => {
@@ -113,15 +123,12 @@ export default function RolePermissionsSettings() {
         const permsList = Array.isArray(perms) ? perms : perms?.permissions || perms?.content || perms?.data || [];
         const newSet = new Set();
         permsList.forEach(p => {
+          if (!p.featureCode || !p.action) return;
           if (p.active !== false && p.enabled !== false && p.allowed !== false) {
-            const action = p.action?.toUpperCase()?.trim();
-            if (action === 'WRITE' || action === 'CREATE' || action === 'UPDATE') {
-              newSet.add(`${p.featureCode}:WRITE`);
-            } else if (action === 'READ' || action === 'VIEW') {
-              newSet.add(`${p.featureCode}:READ`);
-            } else if (action === 'DELETE') {
-              newSet.add(`${p.featureCode}:DELETE`);
-            }
+            const featureCode = p.featureCode.toUpperCase().trim();
+            let action = p.action.toUpperCase().trim();
+            if (action === 'VIEW') action = 'READ';
+            newSet.add(`${featureCode}:${action}`);
           }
         });
         setSelectedPerms(newSet);
@@ -133,6 +140,41 @@ export default function RolePermissionsSettings() {
     };
     fetchPermissions();
   }, [selectedRoleId, dispatch]);
+
+  // Supported feature actions derived from permissions catalog
+  const supportedFeatureActions = useMemo(() => {
+    const map = new Map();
+    (availablePermissions || []).forEach(p => {
+      if (!p.featureCode || !p.action) return;
+      const fCode = p.featureCode.toUpperCase().trim();
+      const act = p.action.toUpperCase().trim();
+      if (!map.has(fCode)) {
+        map.set(fCode, new Set());
+      }
+      map.get(fCode).add(act);
+    });
+    return map;
+  }, [availablePermissions]);
+
+  const getFeatureSupportedActions = (featureCode) => {
+    if (!featureCode) return new Set();
+    const fCode = featureCode.toUpperCase().trim();
+    const actions = new Set(supportedFeatureActions.get(fCode) || []);
+    // Also include any permission the role currently has enabled
+    ACTIONS.forEach(a => {
+      if (selectedPerms.has(`${fCode}:${a.value}`)) {
+        actions.add(a.value);
+      }
+    });
+    return actions;
+  };
+
+  const isActionSupported = (featureCode, action) => {
+    if (!featureCode || !action) return false;
+    const fCode = featureCode.toUpperCase().trim();
+    const act = action.toUpperCase().trim();
+    return getFeatureSupportedActions(fCode).has(act);
+  };
 
   const handleSave = async () => {
     if (!selectedRoleId) return;
@@ -149,58 +191,41 @@ export default function RolePermissionsSettings() {
         }
       }
 
-      // Collect all unique feature codes from features, catalog, and selected permissions
-      const featureCodes = new Set();
-      features.forEach(f => {
-        if (f.code) featureCodes.add(f.code);
-      });
-      (catalog || []).forEach(ap => {
-        if (ap.featureCode) featureCodes.add(ap.featureCode);
-      });
-      selectedPerms.forEach(permKey => {
-        const [featCode] = permKey.split(':');
-        if (featCode) featureCodes.add(featCode);
-      });
+      // Collect all unique feature permissions from catalog and currently assigned role permissions
+      const permissionMap = new Map();
 
-      const payload = [];
-      const seen = new Set();
-
-      featureCodes.forEach(featureCode => {
-        // Backend expects exactly 3 actions: READ, WRITE, and DELETE
-        const backendActions = [
-          {
-            action: 'READ',
-            enabled: selectedPerms.has(`${featureCode}:READ`)
-          },
-          {
-            action: 'WRITE',
-            enabled: selectedPerms.has(`${featureCode}:WRITE`) || selectedPerms.has(`${featureCode}:CREATE`) || selectedPerms.has(`${featureCode}:UPDATE`)
-          },
-          {
-            action: 'DELETE',
-            enabled: selectedPerms.has(`${featureCode}:DELETE`)
-          }
-        ];
-
-        backendActions.forEach(({ action, enabled }) => {
-          const key = `${featureCode}:${action}`;
-          if (!seen.has(key)) {
-            seen.add(key);
-            payload.push({
-              featureCode,
-              action,
-              enabled: Boolean(enabled)
-            });
-          }
+      (catalog || []).forEach(p => {
+        if (!p.featureCode || !p.action) return;
+        const featureCode = p.featureCode.toUpperCase().trim();
+        const action = p.action.toUpperCase().trim();
+        const key = `${featureCode}:${action}`;
+        permissionMap.set(key, {
+          featureCode,
+          action,
+          enabled: selectedPerms.has(key)
         });
       });
 
-      // Pre-flight check: strictly filter out virtual UI actions ('CREATE', 'UPDATE') and only allow valid backend actions
-      const sanitizedPayload = payload.filter(p => 
-        p.action !== 'CREATE' && p.action !== 'UPDATE' && ['READ', 'WRITE', 'DELETE'].includes(p.action)
-      );
+      // Include any currently active role permissions not already in catalog map
+      selectedPerms.forEach(permKey => {
+        const [featCode, act] = permKey.split(':');
+        if (featCode && act) {
+          const featureCode = featCode.toUpperCase().trim();
+          const action = act.toUpperCase().trim();
+          const key = `${featureCode}:${action}`;
+          if (!permissionMap.has(key)) {
+            permissionMap.set(key, {
+              featureCode,
+              action,
+              enabled: true
+            });
+          }
+        }
+      });
 
-      await syncRolePermissions(selectedRoleId, sanitizedPayload);
+      const payload = Array.from(permissionMap.values());
+
+      await syncRolePermissions(selectedRoleId, payload);
       dispatch(addAlert({ type: 'success', message: 'Permissions saved successfully.' }));
     } catch (error) {
       dispatch(addAlert({ type: 'error', message: error?.response?.data?.message || 'Failed to save permissions.' }));
@@ -263,48 +288,63 @@ export default function RolePermissionsSettings() {
   // ----- Selection Helpers -----
   
   const toggleFeatureAction = (featureCode, action) => {
-    const key = `${featureCode}:${action}`;
+    const fCode = featureCode.toUpperCase().trim();
+    const act = action.toUpperCase().trim();
+    const key = `${fCode}:${act}`;
     const newSet = new Set(selectedPerms);
     if (newSet.has(key)) {
       newSet.delete(key);
-      if (action === 'READ') {
-        newSet.delete(`${featureCode}:WRITE`);
-        newSet.delete(`${featureCode}:DELETE`);
+      if (act === 'READ') {
+        newSet.delete(`${fCode}:WRITE`);
+        newSet.delete(`${fCode}:DELETE`);
       }
     } else {
       newSet.add(key);
-      if (action === 'WRITE' || action === 'DELETE') {
-        newSet.add(`${featureCode}:READ`);
+      if (act === 'WRITE' || act === 'DELETE') {
+        if (isActionSupported(fCode, 'READ')) {
+          newSet.add(`${fCode}:READ`);
+        }
       }
     }
     setSelectedPerms(newSet);
   };
 
   const toggleFeatureAll = (featureCode, isChecked) => {
+    const fCode = featureCode.toUpperCase().trim();
+    const supportedActions = getFeatureSupportedActions(fCode);
     const newSet = new Set(selectedPerms);
-    ACTIONS.forEach(a => {
-      const key = `${featureCode}:${a.value}`;
-      if (isChecked) newSet.add(key);
-      else newSet.delete(key);
+    supportedActions.forEach(act => {
+      const key = `${fCode}:${act}`;
+      if (isChecked) {
+        newSet.add(key);
+      } else {
+        newSet.delete(key);
+      }
     });
     setSelectedPerms(newSet);
   };
 
   const toggleModuleAction = (moduleName, action, isChecked) => {
+    const act = action.toUpperCase().trim();
     const newSet = new Set(selectedPerms);
     const modFeatures = features.filter(f => f.moduleName === moduleName);
     modFeatures.forEach(f => {
-      const key = `${f.code}:${action}`;
-      if (isChecked) {
-        newSet.add(key);
-        if (action === 'WRITE' || action === 'DELETE') {
-          newSet.add(`${f.code}:READ`);
-        }
-      } else {
-        newSet.delete(key);
-        if (action === 'READ') {
-          newSet.delete(`${f.code}:WRITE`);
-          newSet.delete(`${f.code}:DELETE`);
+      const fCode = f.code.toUpperCase().trim();
+      if (isActionSupported(fCode, act)) {
+        const key = `${fCode}:${act}`;
+        if (isChecked) {
+          newSet.add(key);
+          if (act === 'WRITE' || act === 'DELETE') {
+            if (isActionSupported(fCode, 'READ')) {
+              newSet.add(`${fCode}:READ`);
+            }
+          }
+        } else {
+          newSet.delete(key);
+          if (act === 'READ') {
+            newSet.delete(`${fCode}:WRITE`);
+            newSet.delete(`${fCode}:DELETE`);
+          }
         }
       }
     });
@@ -315,10 +355,15 @@ export default function RolePermissionsSettings() {
     const newSet = new Set(selectedPerms);
     const modFeatures = features.filter(f => f.moduleName === moduleName);
     modFeatures.forEach(f => {
-      ACTIONS.forEach(a => {
-        const key = `${f.code}:${a.value}`;
-        if (isChecked) newSet.add(key);
-        else newSet.delete(key);
+      const fCode = f.code.toUpperCase().trim();
+      const supportedActions = getFeatureSupportedActions(fCode);
+      supportedActions.forEach(act => {
+        const key = `${fCode}:${act}`;
+        if (isChecked) {
+          newSet.add(key);
+        } else {
+          newSet.delete(key);
+        }
       });
     });
     setSelectedPerms(newSet);
@@ -327,38 +372,59 @@ export default function RolePermissionsSettings() {
   // ----- State Calculators -----
   
   const getFeatureState = (featureCode) => {
-    const avail = ACTIONS;
-    const checkedCount = avail.filter(a => selectedPerms.has(`${featureCode}:${a.value}`)).length;
+    const fCode = featureCode.toUpperCase().trim();
+    const supportedActions = getFeatureSupportedActions(fCode);
+    if (supportedActions.size === 0) {
+      return { checked: false, indeterminate: false, disabled: true };
+    }
+    let checkedCount = 0;
+    supportedActions.forEach(act => {
+      if (selectedPerms.has(`${fCode}:${act}`)) {
+        checkedCount++;
+      }
+    });
     return {
-      checked: checkedCount === avail.length && avail.length > 0,
-      indeterminate: checkedCount > 0 && checkedCount < avail.length,
+      checked: checkedCount === supportedActions.size && supportedActions.size > 0,
+      indeterminate: checkedCount > 0 && checkedCount < supportedActions.size,
       disabled: false
     };
   };
 
   const getModuleActionState = (moduleName, action) => {
+    const act = action.toUpperCase().trim();
     const modFeatures = features.filter(f => f.moduleName === moduleName);
-    const checkedCount = modFeatures.filter(f => selectedPerms.has(`${f.code}:${action}`)).length;
+    const applicableFeatures = modFeatures.filter(f => isActionSupported(f.code, act));
+    if (applicableFeatures.length === 0) {
+      return { checked: false, indeterminate: false, disabled: true };
+    }
+    const checkedCount = applicableFeatures.filter(f => 
+      selectedPerms.has(`${f.code.toUpperCase().trim()}:${act}`)
+    ).length;
     return {
-      checked: checkedCount === modFeatures.length && modFeatures.length > 0,
-      indeterminate: checkedCount > 0 && checkedCount < modFeatures.length,
-      disabled: modFeatures.length === 0
+      checked: checkedCount === applicableFeatures.length,
+      indeterminate: checkedCount > 0 && checkedCount < applicableFeatures.length,
+      disabled: false
     };
   };
 
   const getModuleAllState = (moduleName) => {
     const modFeatures = features.filter(f => f.moduleName === moduleName);
-    const totalAvail = modFeatures.length * ACTIONS.length;
+    let totalSupported = 0;
     let totalChecked = 0;
     modFeatures.forEach(f => {
-      ACTIONS.forEach(a => {
-        if (selectedPerms.has(`${f.code}:${a.value}`)) totalChecked++;
+      const fCode = f.code.toUpperCase().trim();
+      const supportedActions = getFeatureSupportedActions(fCode);
+      totalSupported += supportedActions.size;
+      supportedActions.forEach(act => {
+        if (selectedPerms.has(`${fCode}:${act}`)) {
+          totalChecked++;
+        }
       });
     });
     return {
-      checked: totalChecked === totalAvail && totalAvail > 0,
-      indeterminate: totalChecked > 0 && totalChecked < totalAvail,
-      disabled: totalAvail === 0
+      checked: totalChecked === totalSupported && totalSupported > 0,
+      indeterminate: totalChecked > 0 && totalChecked < totalSupported,
+      disabled: totalSupported === 0
     };
   };
 
@@ -498,17 +564,17 @@ export default function RolePermissionsSettings() {
                 {isLoadingMatrix ? (
                   <div className="p-12 flex justify-center text-zinc-400"><Loader2 className="animate-spin w-8 h-8" /></div>
                 ) : (
-                  <table className="w-full text-left border-collapse min-w-[800px]" aria-label="Role Permissions Matrix">
+                  <table className="w-full text-left border-collapse min-w-[1200px]" aria-label="Role Permissions Matrix">
                     <thead className="sticky top-0 bg-zinc-50 dark:bg-[#1D212C] z-20 border-b border-zinc-200 dark:border-[#2A2F3D]">
                       <tr>
-                        <th scope="col" className="py-3 px-6 text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-[#2A2F3D]">
+                        <th scope="col" className="py-3 px-6 text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider border-b border-zinc-200 dark:border-[#2A2F3D] min-w-[220px]">
                           Feature
                         </th>
-                        <th scope="col" className="py-3 px-4 text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider text-center border-b border-zinc-200 dark:border-[#2A2F3D] w-24">
+                        <th scope="col" className="py-3 px-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider text-center border-b border-zinc-200 dark:border-[#2A2F3D] w-20">
                           Select all
                         </th>
                         {ACTIONS.map(action => (
-                          <th key={action.value} scope="col" className="py-3 px-4 text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider text-center border-b border-zinc-200 dark:border-[#2A2F3D] w-24">
+                          <th key={action.value} scope="col" className="py-3 px-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider text-center border-b border-zinc-200 dark:border-[#2A2F3D] w-16 min-w-[64px]">
                             {action.label}
                           </th>
                         ))}
@@ -522,7 +588,7 @@ export default function RolePermissionsSettings() {
                           <React.Fragment key={mod.name}>
                             {/* Module Row */}
                             <tr className={`group transition-colors ${isExpanded ? 'bg-zinc-50/50 dark:bg-[#1D212C]/60' : 'bg-white dark:bg-[#161922] hover:bg-zinc-50 dark:hover:bg-[#1D212C]'}`}>
-                              <td className="py-3 px-6">
+                              <td className="py-3 px-6 min-w-[220px]">
                                 <button 
                                   onClick={() => toggleModuleExpanded(mod.name)}
                                   className="flex items-center gap-2.5 w-full text-left font-bold text-zinc-800 dark:text-zinc-200 text-sm"
@@ -534,7 +600,7 @@ export default function RolePermissionsSettings() {
                                   {mod.name}
                                 </button>
                               </td>
-                              <td className="py-3 px-4">
+                              <td className="py-3 px-2 text-center">
                                 <PermissionCheckbox 
                                   checked={modAllState.checked}
                                   indeterminate={modAllState.indeterminate}
@@ -545,13 +611,17 @@ export default function RolePermissionsSettings() {
                               {ACTIONS.map(action => {
                                 const modActionState = getModuleActionState(mod.name, action.value);
                                 return (
-                                  <td key={action.value} className="py-3 px-4">
-                                    <PermissionCheckbox 
-                                      checked={modActionState.checked}
-                                      indeterminate={modActionState.indeterminate}
-                                      disabled={modActionState.disabled}
-                                      onChange={(checked) => toggleModuleAction(mod.name, action.value, checked)}
-                                    />
+                                  <td key={action.value} className="py-3 px-2 text-center">
+                                    {modActionState.disabled ? (
+                                      <span className="text-zinc-300 dark:text-zinc-600 text-xs font-medium select-none" title="Unsupported in module">—</span>
+                                    ) : (
+                                      <PermissionCheckbox 
+                                        checked={modActionState.checked}
+                                        indeterminate={modActionState.indeterminate}
+                                        disabled={false}
+                                        onChange={(checked) => toggleModuleAction(mod.name, action.value, checked)}
+                                      />
+                                    )}
                                   </td>
                                 );
                               })}
@@ -562,10 +632,10 @@ export default function RolePermissionsSettings() {
                               const featAllState = getFeatureState(feature.code);
                               return (
                                 <tr key={feature.code} className="bg-white dark:bg-[#161922] hover:bg-zinc-50/50 dark:hover:bg-[#1D212C]/50 transition-colors">
-                                  <td className="py-2.5 px-6 pl-14">
+                                  <td className="py-2.5 px-6 pl-14 min-w-[220px]">
                                     <div className="text-sm font-medium text-zinc-600 dark:text-zinc-300">{feature.name}</div>
                                   </td>
-                                  <td className="py-2.5 px-4 bg-zinc-50/30 dark:bg-[#1D212C]/30">
+                                  <td className="py-2.5 px-2 bg-zinc-50/30 dark:bg-[#1D212C]/30 text-center">
                                     <PermissionCheckbox 
                                       checked={featAllState.checked}
                                       indeterminate={featAllState.indeterminate}
@@ -574,9 +644,17 @@ export default function RolePermissionsSettings() {
                                     />
                                   </td>
                                   {ACTIONS.map(action => {
-                                    const isChecked = selectedPerms.has(`${feature.code}:${action.value}`);
+                                    const supported = isActionSupported(feature.code, action.value);
+                                    if (!supported) {
+                                      return (
+                                        <td key={action.value} className="py-2.5 px-2 text-center">
+                                          <span className="text-zinc-300 dark:text-zinc-600 text-xs font-medium select-none" title="Not supported">—</span>
+                                        </td>
+                                      );
+                                    }
+                                    const isChecked = selectedPerms.has(`${feature.code.toUpperCase().trim()}:${action.value}`);
                                     return (
-                                      <td key={action.value} className="py-2.5 px-4">
+                                      <td key={action.value} className="py-2.5 px-2 text-center">
                                         <PermissionCheckbox 
                                           checked={isChecked}
                                           disabled={false}
