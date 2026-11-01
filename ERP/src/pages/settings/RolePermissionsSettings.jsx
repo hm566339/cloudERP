@@ -193,11 +193,15 @@ export default function RolePermissionsSettings() {
 
       // Collect all unique feature permissions from catalog and currently assigned role permissions
       const permissionMap = new Map();
+      const validActionSet = new Set(ACTIONS.map(a => a.value));
 
       (catalog || []).forEach(p => {
         if (!p.featureCode || !p.action) return;
         const featureCode = p.featureCode.toUpperCase().trim();
         const action = p.action.toUpperCase().trim();
+        // Filter out non-canonical actions that violate backend validation (e.g. SUBMIT, RELEASE, etc.)
+        if (!validActionSet.has(action)) return;
+
         const key = `${featureCode}:${action}`;
         permissionMap.set(key, {
           featureCode,
@@ -212,6 +216,8 @@ export default function RolePermissionsSettings() {
         if (featCode && act) {
           const featureCode = featCode.toUpperCase().trim();
           const action = act.toUpperCase().trim();
+          if (!validActionSet.has(action)) return;
+
           const key = `${featureCode}:${action}`;
           if (!permissionMap.has(key)) {
             permissionMap.set(key, {

@@ -47,6 +47,8 @@ describe('RolePermissionsSettings Granular Action Permissions Suite', () => {
     return map;
   }
 
+  const validActionSet = new Set(CANONICAL_ACTIONS.map(a => a.value));
+
   function buildSavePayload(catalog, selectedPerms) {
     const permissionMap = new Map();
 
@@ -54,6 +56,8 @@ describe('RolePermissionsSettings Granular Action Permissions Suite', () => {
       if (!p.featureCode || !p.action) return;
       const featureCode = p.featureCode.toUpperCase().trim();
       const action = p.action.toUpperCase().trim();
+      if (!validActionSet.has(action)) return;
+
       const key = `${featureCode}:${action}`;
       permissionMap.set(key, {
         featureCode,
@@ -67,6 +71,8 @@ describe('RolePermissionsSettings Granular Action Permissions Suite', () => {
       if (featCode && act) {
         const featureCode = featCode.toUpperCase().trim();
         const action = act.toUpperCase().trim();
+        if (!validActionSet.has(action)) return;
+
         const key = `${featureCode}:${action}`;
         if (!permissionMap.has(key)) {
           permissionMap.set(key, {
@@ -214,6 +220,30 @@ describe('RolePermissionsSettings Granular Action Permissions Suite', () => {
       // Verify no invalid permissions are invented
       const invented = payload.filter(p => p.featureCode === 'REPORTS' && p.action === 'APPROVE');
       assert.strictEqual(invented.length, 0);
+    });
+
+    it('filters out non-canonical actions (SUBMIT, RELEASE, COMPLETE, CONSUME, RESERVE) to prevent validation errors', () => {
+      const catalogWithLegacy = [
+        { featureCode: 'MANUFACTURING', action: 'READ' },
+        { featureCode: 'MANUFACTURING', action: 'WRITE' },
+        { featureCode: 'MANUFACTURING', action: 'SUBMIT' },
+        { featureCode: 'MANUFACTURING', action: 'RELEASE' },
+        { featureCode: 'MFG_PRODUCTION', action: 'COMPLETE' },
+        { featureCode: 'MFG_OPERATIONS', action: 'CONSUME' },
+        { featureCode: 'MFG_OPERATIONS', action: 'RESERVE' }
+      ];
+
+      const selected = new Set(['MANUFACTURING:READ', 'MANUFACTURING:SUBMIT']);
+      const payload = buildSavePayload(catalogWithLegacy, selected);
+
+      const actionsInPayload = payload.map(p => p.action);
+      assert.ok(actionsInPayload.includes('READ'), 'Canonical action READ must be in payload');
+      assert.ok(actionsInPayload.includes('WRITE'), 'Canonical action WRITE must be in payload');
+      assert.ok(!actionsInPayload.includes('SUBMIT'), 'Non-canonical SUBMIT must NOT be in payload');
+      assert.ok(!actionsInPayload.includes('RELEASE'), 'Non-canonical RELEASE must NOT be in payload');
+      assert.ok(!actionsInPayload.includes('COMPLETE'), 'Non-canonical COMPLETE must NOT be in payload');
+      assert.ok(!actionsInPayload.includes('CONSUME'), 'Non-canonical CONSUME must NOT be in payload');
+      assert.ok(!actionsInPayload.includes('RESERVE'), 'Non-canonical RESERVE must NOT be in payload');
     });
   });
 

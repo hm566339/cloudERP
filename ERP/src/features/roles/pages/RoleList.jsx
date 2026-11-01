@@ -305,12 +305,19 @@ export default function RoleList() {
     if (!selectedRole?.id) return
     setIsSavingPermissions(true)
     try {
-      // Build the full permission sync payload from the catalog
-      const permissionsPayload = allPermissions.map(p => ({
-        featureCode: p.featureCode,
-        action: p.action,
-        enabled: rolePermissions.has(`${p.featureCode}::${p.action}`)
-      }))
+      // Build the full permission sync payload from the catalog (filter canonical actions only)
+      const validActions = new Set([
+        'READ', 'CREATE', 'UPDATE', 'WRITE', 'DELETE',
+        'APPROVE', 'REJECT', 'RETURN', 'DELEGATE', 'CANCEL',
+        'ACTIVATE', 'DEACTIVATE', 'EXPORT'
+      ]);
+      const permissionsPayload = allPermissions
+        .filter(p => p.featureCode && p.action && validActions.has(String(p.action).toUpperCase().trim()))
+        .map(p => ({
+          featureCode: String(p.featureCode).toUpperCase().trim(),
+          action: String(p.action).toUpperCase().trim(),
+          enabled: rolePermissions.has(`${p.featureCode}::${p.action}`)
+        }));
       await syncRolePermissions(selectedRole.id, permissionsPayload)
       setInitialRolePermissions(new Set(rolePermissions))
       dispatch(addAlert({
