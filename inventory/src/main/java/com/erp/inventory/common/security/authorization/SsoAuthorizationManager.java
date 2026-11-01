@@ -158,6 +158,41 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
                 }
             }
 
+            if (!granted && "CONFIRM".equalsIgnoreCase(action)) {
+                if (principal instanceof AuthenticatedUser authenticatedUser) {
+                    granted = authenticatedUser.hasPermission(requestedModule, "CONFIRM")
+                            || authenticatedUser.hasPermission(requestedModule, "WRITE")
+                            || authenticatedUser.hasPermission(requestedModule, "UPDATE")
+                            || authenticatedUser.hasPermission(requestedModule, "APPROVE");
+                }
+                if (!granted) {
+                    granted = SsoAuthorities.hasModuleAction(authorities, requestedModule, "CONFIRM")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "CONFIRM")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "UPDATE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "UPDATE")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "APPROVE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "APPROVE");
+                }
+            }
+
+            if (!granted && "REVERSE".equalsIgnoreCase(action)) {
+                if (principal instanceof AuthenticatedUser authenticatedUser) {
+                    granted = authenticatedUser.hasPermission(requestedModule, "REVERSE")
+                            || authenticatedUser.hasPermission(requestedModule, "WRITE")
+                            || authenticatedUser.hasPermission(requestedModule, "UPDATE");
+                }
+                if (!granted) {
+                    granted = SsoAuthorities.hasModuleAction(authorities, requestedModule, "REVERSE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "REVERSE")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "UPDATE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "UPDATE");
+                }
+            }
+
             log.debug("Matching SSO permission for module [{}] action [{}]: {}", requestedModule, action, granted);
             if (granted) {
                 log.debug("Access granted for URI: {} to module: {} with action: {}", uri, requestedModule, action);
@@ -186,6 +221,15 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
             return "/";
         }
 
+        int queryIndex = uri.indexOf('?');
+        if (queryIndex >= 0) {
+            uri = uri.substring(0, queryIndex);
+        }
+        int fragmentIndex = uri.indexOf('#');
+        if (fragmentIndex >= 0) {
+            uri = uri.substring(0, fragmentIndex);
+        }
+
         if (uri.length() > 1 && uri.endsWith("/")) {
             uri = uri.substring(0, uri.length() - 1);
         }
@@ -203,6 +247,27 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
         String suffixAction = properties.actionForSuffix(uri);
         if (suffixAction != null && !suffixAction.isBlank()) {
             actions.add(suffixAction.toUpperCase());
+            if ("SEND".equalsIgnoreCase(suffixAction)) {
+                actions.add("WRITE");
+                actions.add("UPDATE");
+            }
+            if ("CONFIRM".equalsIgnoreCase(suffixAction)) {
+                actions.add("WRITE");
+                actions.add("UPDATE");
+                actions.add("APPROVE");
+            }
+            if ("POST".equalsIgnoreCase(suffixAction)) {
+                actions.add("WRITE");
+                actions.add("UPDATE");
+            }
+            if ("CANCEL".equalsIgnoreCase(suffixAction)) {
+                actions.add("WRITE");
+                actions.add("DELETE");
+            }
+            if ("REVERSE".equalsIgnoreCase(suffixAction)) {
+                actions.add("WRITE");
+                actions.add("UPDATE");
+            }
         } else {
             actions.addAll(properties.actionsForMethod(method));
         }

@@ -6,6 +6,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.erp.account.common.exception.ForbiddenException;
 import com.erp.account.common.exception.UnauthorizedException;
 import com.erp.account.common.exception.ValidationException;
+import com.erp.account.security.authorization.AuthenticatedUser;
 
 /**
  * Centralized security context holder for multi-tenant ERP applications.
@@ -248,7 +249,13 @@ public class CurrentUserContext {
      */
     public static boolean isSystemAdmin() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getAuthorities() == null) {
+        if (authentication == null) {
+            return false;
+        }
+        if (authentication.getPrincipal() instanceof AuthenticatedUser user && user.isSystemAdmin()) {
+            return true;
+        }
+        if (authentication.getAuthorities() == null) {
             return false;
         }
 
@@ -268,7 +275,13 @@ public class CurrentUserContext {
             return true;
         }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getAuthorities() == null) {
+        if (authentication == null) {
+            return false;
+        }
+        if (authentication.getPrincipal() instanceof AuthenticatedUser user && user.hasActiveRole("OWNER")) {
+            return true;
+        }
+        if (authentication.getAuthorities() == null) {
             return false;
         }
         return authentication.getAuthorities().stream()

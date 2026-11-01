@@ -31,11 +31,15 @@ sso:
         - "/api/account/v1/vendors/**"
       SALES_INVOICES:
         - "/api/account/sales/invoices/**"
+        - "/api/account/v1/sales-invoices/**"
       SALES_ORDERS:
         - "/api/account/v1/sales-orders/**"
         - "/api/account/v2/sales-orders/**"
+        - "/api/account/sales/orders/**"
+        - "/api/sales/sales-orders/**"
       DELIVERY_CHALLANS:
         - "/api/account/v1/delivery-challans/**"
+        - "/api/account/sales/delivery-challans/**"
       QUOTATIONS:
         - "/api/account/sales/quotations/**"
         - "/api/account/v1/quotations/**"
@@ -92,6 +96,7 @@ sso:
       RECEIPTS:
         - "/api/account/receipt-vouchers/**"
         - "/api/account/receipts/**"
+        - "/api/account/v1/receipts/**"
       CREDIT_NOTES:
         - "/api/account/credit-notes/**"
       DEBIT_NOTES:
@@ -201,7 +206,7 @@ sso:
       "/reverse": "REVERSE"
       "/close": "CLOSE"
       "/post": "POST"
-      "/confirm": "POST"
+      "/confirm": "CONFIRM"
       "/verify": "UPDATE"
       "/export": "EXPORT"
       "/summary": "READ"

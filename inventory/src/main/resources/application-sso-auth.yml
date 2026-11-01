@@ -93,7 +93,7 @@ sso:
       "/reverse": "REVERSE"
       "/close": "CLOSE"
       "/post": "POST"
-      "/confirm": "POST"
+      "/confirm": "CONFIRM"
       "/verify": "UPDATE"
       "/export": "EXPORT"
 

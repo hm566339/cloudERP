@@ -136,6 +136,19 @@ public class SsoAuthorizationService {
                     String action = entry.getValue().toUpperCase(Locale.ROOT);
                     List<String> actions = new ArrayList<>();
                     actions.add(action);
+                    if ("CONFIRM".equals(action)) {
+                        actions.add("WRITE");
+                        actions.add("UPDATE");
+                        actions.add("APPROVE");
+                    }
+                    if ("SEND".equals(action) || "POST".equals(action) || "REVERSE".equals(action)) {
+                        actions.add("WRITE");
+                        actions.add("UPDATE");
+                    }
+                    if ("CANCEL".equals(action)) {
+                        actions.add("WRITE");
+                        actions.add("DELETE");
+                    }
                     if (authorizationProperties.isWriteImpliesCreateUpdate()
                             && ("CREATE".equals(action) || "UPDATE".equals(action))) {
                         actions.add("WRITE");

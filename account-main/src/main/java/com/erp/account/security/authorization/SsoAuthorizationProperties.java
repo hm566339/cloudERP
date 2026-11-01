@@ -88,7 +88,7 @@ public class SsoAuthorizationProperties {
         map.put("/reverse", "REVERSE");
         map.put("/close", "CLOSE");
         map.put("/post", "POST");
-        map.put("/confirm", "POST");
+        map.put("/confirm", "CONFIRM");
         map.put("/verify", "UPDATE");
         map.put("/export", "EXPORT");
         map.put("/summary", "READ");
@@ -112,7 +112,19 @@ public class SsoAuthorizationProperties {
         if (uri == null) {
             return null;
         }
-        String lower = uri.toLowerCase();
+        String cleanUri = uri;
+        int queryIndex = cleanUri.indexOf('?');
+        if (queryIndex >= 0) {
+            cleanUri = cleanUri.substring(0, queryIndex);
+        }
+        int fragmentIndex = cleanUri.indexOf('#');
+        if (fragmentIndex >= 0) {
+            cleanUri = cleanUri.substring(0, fragmentIndex);
+        }
+        while (cleanUri.length() > 1 && cleanUri.endsWith("/")) {
+            cleanUri = cleanUri.substring(0, cleanUri.length() - 1);
+        }
+        String lower = cleanUri.toLowerCase();
         for (Map.Entry<String, String> entry : customActionSuffixes.entrySet()) {
             String suffix = entry.getKey().toLowerCase();
             boolean matched = "/export".equals(suffix)

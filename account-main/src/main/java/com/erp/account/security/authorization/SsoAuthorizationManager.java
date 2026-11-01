@@ -203,6 +203,77 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
                 }
             }
 
+            // Suffix action fallback: confirming a document mutates/locks state, so WRITE, UPDATE, or APPROVE satisfies CONFIRM
+            if (!granted && "CONFIRM".equalsIgnoreCase(action)) {
+                if (authenticatedUser != null) {
+                    granted = authenticatedUser.hasPermission(requestedModule, "CONFIRM")
+                            || authenticatedUser.hasPermission(requestedModule, "WRITE")
+                            || authenticatedUser.hasPermission(requestedModule, "UPDATE")
+                            || authenticatedUser.hasPermission(requestedModule, "APPROVE");
+                }
+                if (!granted) {
+                    granted = SsoAuthorities.hasModuleAction(authorities, requestedModule, "CONFIRM")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "CONFIRM")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "UPDATE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "UPDATE")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "APPROVE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "APPROVE");
+                }
+            }
+
+            // Suffix action fallback: posting a document to GL mutates state, so WRITE or UPDATE satisfies POST
+            if (!granted && "POST".equalsIgnoreCase(action)) {
+                if (authenticatedUser != null) {
+                    granted = authenticatedUser.hasPermission(requestedModule, "POST")
+                            || authenticatedUser.hasPermission(requestedModule, "WRITE")
+                            || authenticatedUser.hasPermission(requestedModule, "UPDATE");
+                }
+                if (!granted) {
+                    granted = SsoAuthorities.hasModuleAction(authorities, requestedModule, "POST")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "POST")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "UPDATE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "UPDATE");
+                }
+            }
+
+            // Suffix action fallback: cancelling a document mutates state, so WRITE or DELETE satisfies CANCEL
+            if (!granted && "CANCEL".equalsIgnoreCase(action)) {
+                if (authenticatedUser != null) {
+                    granted = authenticatedUser.hasPermission(requestedModule, "CANCEL")
+                            || authenticatedUser.hasPermission(requestedModule, "WRITE")
+                            || authenticatedUser.hasPermission(requestedModule, "DELETE");
+                }
+                if (!granted) {
+                    granted = SsoAuthorities.hasModuleAction(authorities, requestedModule, "CANCEL")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "CANCEL")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "DELETE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "DELETE");
+                }
+            }
+
+            // Suffix action fallback: reversing a document mutates state, so WRITE or UPDATE satisfies REVERSE
+            if (!granted && "REVERSE".equalsIgnoreCase(action)) {
+                if (authenticatedUser != null) {
+                    granted = authenticatedUser.hasPermission(requestedModule, "REVERSE")
+                            || authenticatedUser.hasPermission(requestedModule, "WRITE")
+                            || authenticatedUser.hasPermission(requestedModule, "UPDATE");
+                }
+                if (!granted) {
+                    granted = SsoAuthorities.hasModuleAction(authorities, requestedModule, "REVERSE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "REVERSE")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "WRITE")
+                            || SsoAuthorities.hasModuleAction(authorities, requestedModule, "UPDATE")
+                            || SsoAuthorities.hasFeatureAction(authorities, requestedModule, "UPDATE");
+                }
+            }
+
             log.debug("Matching SSO permission for module [{}] action [{}]: {}", requestedModule, action, granted);
             if (granted) {
                 log.debug("Access granted for URI: {} to module: {} with action: {}", uri, requestedModule, action);
@@ -227,6 +298,15 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
             return "/";
         }
 
+        int queryIndex = uri.indexOf('?');
+        if (queryIndex >= 0) {
+            uri = uri.substring(0, queryIndex);
+        }
+        int fragmentIndex = uri.indexOf('#');
+        if (fragmentIndex >= 0) {
+            uri = uri.substring(0, fragmentIndex);
+        }
+
         if (uri.length() > 1 && uri.endsWith("/")) {
             uri = uri.substring(0, uri.length() - 1);
         }
@@ -245,6 +325,23 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
         if (suffixAction != null && !suffixAction.isBlank()) {
             actions.add(suffixAction.toUpperCase());
             if ("SEND".equalsIgnoreCase(suffixAction)) {
+                actions.add("WRITE");
+                actions.add("UPDATE");
+            }
+            if ("CONFIRM".equalsIgnoreCase(suffixAction)) {
+                actions.add("WRITE");
+                actions.add("UPDATE");
+                actions.add("APPROVE");
+            }
+            if ("POST".equalsIgnoreCase(suffixAction)) {
+                actions.add("WRITE");
+                actions.add("UPDATE");
+            }
+            if ("CANCEL".equalsIgnoreCase(suffixAction)) {
+                actions.add("WRITE");
+                actions.add("DELETE");
+            }
+            if ("REVERSE".equalsIgnoreCase(suffixAction)) {
                 actions.add("WRITE");
                 actions.add("UPDATE");
             }
