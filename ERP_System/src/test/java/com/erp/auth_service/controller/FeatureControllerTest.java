@@ -77,6 +77,20 @@ class FeatureControllerTest {
     }
 
     @Test
+    @DisplayName("GET /api/sso/features/actions returns all 13 supported actions")
+    void testGetSupportedActions_ReturnsAll13Actions() throws Exception {
+        mockMvc.perform(get("/api/sso/features/actions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.length()").value(13))
+                .andExpect(jsonPath("$.data").value(org.hamcrest.Matchers.hasItems(
+                        "READ", "CREATE", "UPDATE", "WRITE", "DELETE",
+                        "APPROVE", "REJECT", "RETURN", "DELEGATE", "CANCEL",
+                        "ACTIVATE", "DEACTIVATE", "EXPORT"
+                )));
+    }
+
+    @Test
     @DisplayName("POST /api/sso/features by SYSTEM_ADMIN creates global feature record")
     void testCreateFeature_SystemAdmin_ReturnsOk() throws Exception {
         org.springframework.security.authentication.UsernamePasswordAuthenticationToken sysAdminAuth =

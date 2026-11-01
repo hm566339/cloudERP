@@ -312,4 +312,82 @@ class FeatureServiceImplTest {
         // Verify auto-provisioning of READ, WRITE, and DELETE permissions
         verify(featurePermissionRepository, times(3)).save(any(com.erp.auth_service.model.FeaturePermission.class));
     }
+
+    @Test
+    @DisplayName("createFeature should create global feature with specified dynamic actions")
+    void testCreateFeature_Success_WithCustomDynamicActions() {
+        when(featureRepository.findByCodeIgnoreCase("INVOICES")).thenReturn(Optional.empty());
+        when(featureRepository.save(any(Feature.class))).thenAnswer(invocation -> {
+            Feature f = invocation.getArgument(0);
+            f.setId(UUID.randomUUID());
+            return f;
+        });
+        when(featurePermissionRepository.findByPermissionCodeIgnoreCase(anyString())).thenReturn(Optional.empty());
+
+        com.erp.auth_service.dto.request.CreateFeatureRequest request = com.erp.auth_service.dto.request.CreateFeatureRequest.builder()
+                .code("INVOICES")
+                .name("Invoice Management")
+                .moduleName("ACCOUNT")
+                .active(true)
+                .actions(List.of("READ", "WRITE", "DELETE", "APPROVE", "EXPORT"))
+                .build();
+
+        FeatureResponse response = featureService.createFeature(request);
+
+        assertNotNull(response);
+        assertEquals("INVOICES", response.getCode());
+        verify(featureRepository, times(1)).save(any(Feature.class));
+        verify(featurePermissionRepository, times(5)).save(any(com.erp.auth_service.model.FeaturePermission.class));
+    }
+
+    @Test
+    @DisplayName("updateFeature should dynamically add new actions and soft-deactivate removed actions")
+    void testUpdateFeature_DynamicActionsUpdate() {
+        UUID featureId = paymentsFeature.getId();
+        when(featureRepository.findById(featureId)).thenReturn(Optional.of(paymentsFeature));
+        when(featureRepository.save(any(Feature.class))).thenReturn(paymentsFeature);
+
+        com.erp.auth_service.model.FeaturePermission readPerm = com.erp.auth_service.model.FeaturePermission.builder()
+                .id(UUID.randomUUID())
+                .feature(paymentsFeature)
+                .action("READ")
+                .permissionCode("PAYMENTS:READ")
+                .active(true)
+                .build();
+
+        com.erp.auth_service.model.FeaturePermission writePerm = com.erp.auth_service.model.FeaturePermission.builder()
+                .id(UUID.randomUUID())
+                .feature(paymentsFeature)
+                .action("WRITE")
+                .permissionCode("PAYMENTS:WRITE")
+                .active(true)
+                .build();
+
+        com.erp.auth_service.model.FeaturePermission deletePerm = com.erp.auth_service.model.FeaturePermission.builder()
+                .id(UUID.randomUUID())
+                .feature(paymentsFeature)
+                .action("DELETE")
+                .permissionCode("PAYMENTS:DELETE")
+                .active(true)
+                .build();
+
+        when(featurePermissionRepository.findByFeature_Id(featureId))
+                .thenReturn(List.of(readPerm, writePerm, deletePerm));
+
+        // Desired target actions: READ, APPROVE (WRITE and DELETE removed, APPROVE added)
+        com.erp.auth_service.dto.request.UpdateFeatureRequest updateRequest = com.erp.auth_service.dto.request.UpdateFeatureRequest.builder()
+                .name("Payment Operations Updated")
+                .actions(List.of("READ", "APPROVE"))
+                .build();
+
+        FeatureResponse response = featureService.updateFeature(featureId, updateRequest);
+
+        assertNotNull(response);
+        // APPROVE should be created
+        verify(featurePermissionRepository, times(1)).save(argThat(fp -> "APPROVE".equalsIgnoreCase(fp.getAction()) && fp.isActive()));
+        // WRITE and DELETE should be soft-deactivated (active=false)
+        assertFalse(writePerm.isActive());
+        assertFalse(deletePerm.isActive());
+        assertTrue(readPerm.isActive());
+    }
 }

@@ -13,7 +13,7 @@ import PageHeader from '../../../components/common/PageHeader';
 import ModuleTabs, { securityTabs, userTabs } from '../../../components/module-tabs';
 import DataTable, { DataTableStatusBadge } from '../../../components/data-table';
 import ExportModal from '../../../components/common/ExportModal';
-import FeatureFormModal from '../components/FeatureFormModal';
+import FeatureFormModal, { ACTION_COLOR_MAP } from '../components/FeatureFormModal';
 import PermissionGuard from '../../../components/common/PermissionGuard';
 
 const DEFAULT_COLUMNS = [
@@ -64,14 +64,9 @@ const formatDate = (value) => {
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
 };
 
-// Standard action set the SSO permission model expects for each feature.
-// Used by role/user permission sync (see PermissionFormModal / RolePermissionsSettings).
-const STANDARD_FEATURE_ACTIONS = ['READ', 'WRITE', 'DELETE'];
-
-// Provision the standard permission records for a feature so role/user permission
-// sync does not fail with "Permission not found for feature [X] and action [Y]".
-// Only creates records that are missing from the permission catalog (idempotent).
-const grantFeaturePermissions = async (featureCode) => {
+// Provision the action-level permission records for a feature so role/user permission
+// sync does not fail. Only creates records that are missing from the permission catalog (idempotent).
+const grantFeaturePermissions = async (featureCode, actions = ['READ', 'WRITE', 'DELETE']) => {
   if (!featureCode) return 0;
 
   const existing = await getAllPermissions();
@@ -84,12 +79,12 @@ const grantFeaturePermissions = async (featureCode) => {
   );
 
   let created = 0;
-  for (const action of STANDARD_FEATURE_ACTIONS) {
+  for (const action of actions) {
     if (existingActions.has(action)) continue;
     await createPermission({
       featureCode,
       action,
-      description: `Standard ${action} permission for feature ${featureCode}`,
+      description: `${action} permission for feature ${featureCode}`,
       active: true
     });
     created += 1;
@@ -344,16 +339,17 @@ export default function FeatureList() {
       } else {
         const created = await createMutation.mutateAsync(payload);
         const createdCode = created?.code || payload.code;
+        const targetActions = payload.actions || ['READ', 'WRITE', 'DELETE'];
 
         try {
-          const provisioned = await grantFeaturePermissions(createdCode);
+          const provisioned = await grantFeaturePermissions(createdCode, targetActions);
           dispatch(
             addAlert({
               type: 'success',
               message:
                 provisioned > 0
-                  ? `Feature "${payload.name}" created and ${provisioned} standard permission record(s) provisioned.`
-                  : `Feature "${payload.name}" created successfully (permissions already present).`
+                  ? `Feature "${payload.name}" created and ${provisioned} action permission(s) provisioned.`
+                  : `Feature "${payload.name}" created successfully.`
             })
           );
         } catch (permError) {
@@ -361,7 +357,7 @@ export default function FeatureList() {
           dispatch(
             addAlert({
               type: 'warning',
-              message: `Feature "${payload.name}" was created, but its standard permissions could not be provisioned. Role permission sync may fail until permissions are created manually.`
+              message: `Feature "${payload.name}" was created, but some permissions could not be provisioned automatically.`
             })
           );
         }
@@ -428,19 +424,38 @@ export default function FeatureList() {
         id: 'actions',
         label: 'Actions',
         sortable: false,
-        render: () => (
-          <div className="flex items-center gap-1 flex-wrap">
-            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40">
-              READ
-            </span>
-            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40">
-              WRITE
-            </span>
-            <span className="px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/40">
-              DELETE
-            </span>
-          </div>
-        )
+        render: (val, row) => {
+          const rowActions = Array.isArray(row.actions) && row.actions.length > 0
+            ? row.actions
+            : ['READ', 'WRITE', 'DELETE'];
+          const maxVisible = 4;
+          const visible = rowActions.slice(0, maxVisible);
+          const hiddenCount = rowActions.length - maxVisible;
+
+          return (
+            <div className="flex items-center gap-1 flex-wrap max-w-xs">
+              {visible.map((action) => (
+                <span
+                  key={action}
+                  className={`px-1.5 py-0.5 text-[10px] font-semibold tracking-wide rounded border ${
+                    ACTION_COLOR_MAP[action] ||
+                    'bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
+                  }`}
+                >
+                  {action}
+                </span>
+              ))}
+              {hiddenCount > 0 && (
+                <span
+                  className="px-1.5 py-0.5 text-[10px] font-bold tracking-wide rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700"
+                  title={rowActions.slice(maxVisible).join(', ')}
+                >
+                  +{hiddenCount}
+                </span>
+              )}
+            </div>
+          );
+        }
       },
       {
         id: 'status',
@@ -565,6 +580,27 @@ export default function FeatureList() {
         <p className="text-sm font-medium text-zinc-700">
           {feature.description || 'No description provided.'}
         </p>
+      </div>
+      <div className="space-y-1 col-span-2 md:col-span-4 lg:col-span-5">
+        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-[#A0A6B5]">
+          Supported Actions
+        </span>
+        <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+          {(Array.isArray(feature.actions) && feature.actions.length > 0
+            ? feature.actions
+            : ['READ', 'WRITE', 'DELETE']
+          ).map((action) => (
+            <span
+              key={action}
+              className={`px-2 py-0.5 text-[11px] font-semibold rounded border ${
+                ACTION_COLOR_MAP[action] ||
+                'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
+              }`}
+            >
+              {action}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );

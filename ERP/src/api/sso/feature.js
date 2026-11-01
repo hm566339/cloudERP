@@ -11,7 +11,7 @@ const logger = createLogger('FEATURE_API');
 /**
  * Fetch all system feature definitions
  * Endpoint: GET /api/sso/features
- * @returns {Promise<Array<{ id: string|number, code: string, name: string, description: string, moduleName: string, active: boolean }>>}
+ * @returns {Promise<Array<{ id: string|number, code: string, name: string, description: string, moduleName: string, active: boolean, actions?: string[] }>>}
  */
 export const getAllFeatures = async () => {
   const response = await apiClient.get('/api/sso/features');
@@ -32,7 +32,7 @@ export const getFeatureById = async (id) => {
 /**
  * Create a new system feature definition
  * Endpoint: POST /api/sso/features
- * @param {{ code: string, name: string, description?: string, moduleName?: string, active?: boolean }} payload
+ * @param {{ code: string, name: string, description?: string, moduleName?: string, active?: boolean, actions?: string[] }} payload
  */
 export const createFeature = async (payload) => {
   const cleanData = {
@@ -42,6 +42,9 @@ export const createFeature = async (payload) => {
     moduleName: payload.moduleName?.trim() || '',
     active: payload.active !== false
   };
+  if (Array.isArray(payload.actions)) {
+    cleanData.actions = payload.actions;
+  }
   const response = await apiClient.post('/api/sso/features', { data: cleanData });
   return response.data?.data || response.data;
 };
@@ -85,9 +88,31 @@ export const updateFeature = async (idOrPayload, payload) => {
   if (data.active !== undefined && data.active !== null) {
     cleanData.active = Boolean(data.active);
   }
+  if (data.actions !== undefined && Array.isArray(data.actions)) {
+    cleanData.actions = data.actions;
+  }
 
   const response = await apiClient.put(`/api/sso/features/${id}`, { data: cleanData });
   return response.data?.data || response.data;
+};
+
+/**
+ * Fetch all supported canonical feature actions
+ * Endpoint: GET /api/sso/features/actions
+ * @returns {Promise<string[]>}
+ */
+export const getSupportedActions = async () => {
+  try {
+    const response = await apiClient.get('/api/sso/features/actions');
+    return response.data?.data || response.data || [];
+  } catch (err) {
+    logger.warn('[FeatureAPI] Could not fetch dynamic actions, using defaults', err);
+    return [
+      'READ', 'CREATE', 'UPDATE', 'WRITE', 'DELETE',
+      'APPROVE', 'REJECT', 'RETURN', 'DELEGATE', 'CANCEL',
+      'ACTIVATE', 'DEACTIVATE', 'EXPORT'
+    ];
+  }
 };
 
 /**
@@ -113,7 +138,8 @@ export const featuresApi = {
   getById: getFeatureById,
   create: createFeature,
   update: updateFeature,
-  delete: deleteFeature
+  delete: deleteFeature,
+  getSupportedActions: getSupportedActions
 };
 
 /**

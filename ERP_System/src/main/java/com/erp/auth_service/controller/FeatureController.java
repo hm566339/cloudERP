@@ -43,6 +43,19 @@ public class FeatureController {
     }
 
     /**
+     * GET /api/sso/features/actions
+     * List all supported system actions for dynamic feature management.
+     */
+    @GetMapping("/actions")
+    public ResponseEntity<ResponseWrapper<List<String>>> getSupportedActions() {
+        return ResponseEntity.ok(ResponseWrapper.success(
+                java.util.Arrays.stream(com.erp.auth_service.utility.PermissionAction.values())
+                        .map(Enum::name)
+                        .toList()
+        ));
+    }
+
+    /**
      * GET /api/sso/features/{id}
      * Get a catalog feature by ID.
      */

@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, AlertTriangle, Box, ShieldCheck, Globe } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { X, Save, AlertTriangle, ShieldCheck, Globe, Plus, ChevronDown } from 'lucide-react';
+import { CANONICAL_ACTIONS, ACTION_COLOR_MAP } from '../constants/featureActions';
+
+export { CANONICAL_ACTIONS, ACTION_COLOR_MAP };
 
 export default function FeatureFormModal({
   isOpen,
@@ -15,22 +18,29 @@ export default function FeatureFormModal({
     name: '',
     description: '',
     moduleName: '',
-    active: true
+    active: true,
+    actions: ['READ', 'WRITE', 'DELETE']
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
+        const loadedActions = Array.isArray(initialData.actions) && initialData.actions.length > 0
+          ? initialData.actions
+          : ['READ', 'WRITE', 'DELETE'];
         setFormData({
           code: initialData.code || '',
           name: initialData.name || '',
           description: initialData.description || '',
           moduleName: initialData.moduleName || '',
-          active: initialData.active !== false
+          active: initialData.active !== false,
+          actions: [...loadedActions]
         });
       } else {
         setFormData({
@@ -38,13 +48,60 @@ export default function FeatureFormModal({
           name: '',
           description: '',
           moduleName: availableModules[0] || '',
-          active: true
+          active: true,
+          actions: ['READ', 'WRITE', 'DELETE']
         });
       }
       setErrors({});
       setSubmitError(null);
+      setIsDropdownOpen(false);
     }
   }, [isOpen, initialData, availableModules]);
+
+  // Handle outside clicks to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  const availableActions = useMemo(() => {
+    const currentSet = new Set((formData.actions || []).map((a) => String(a).toUpperCase()));
+    return CANONICAL_ACTIONS.filter((act) => !currentSet.has(act));
+  }, [formData.actions]);
+
+  const handleAddAction = (actionToAdd) => {
+    if (!actionToAdd) return;
+    const upper = actionToAdd.toUpperCase();
+    setFormData((prev) => {
+      if ((prev.actions || []).includes(upper)) return prev;
+      return {
+        ...prev,
+        actions: [...(prev.actions || []), upper]
+      };
+    });
+    if (errors.actions) {
+      setErrors((prev) => ({ ...prev, actions: undefined }));
+    }
+  };
+
+  const handleRemoveAction = (actionToRemove) => {
+    setFormData((prev) => ({
+      ...prev,
+      actions: (prev.actions || []).filter((a) => a !== actionToRemove)
+    }));
+    if (errors.actions) {
+      setErrors((prev) => ({ ...prev, actions: undefined }));
+    }
+  };
 
   const validate = () => {
     const newErrors = {};
@@ -64,6 +121,10 @@ export default function FeatureFormModal({
       newErrors.code = 'Feature Code is required';
     } else if (!/^[A-Za-z0-9_]+$/.test(trimmedCode)) {
       newErrors.code = 'Code must contain only letters, numbers, and underscores (e.g. PAYMENTS)';
+    }
+
+    if (!formData.actions || formData.actions.length === 0) {
+      newErrors.actions = 'At least one action is required for this feature';
     }
 
     setErrors(newErrors);
@@ -100,7 +161,8 @@ export default function FeatureFormModal({
         name: formData.name.trim(),
         description: formData.description.trim(),
         moduleName: formData.moduleName.trim(),
-        active: Boolean(formData.active)
+        active: Boolean(formData.active),
+        actions: formData.actions
       };
 
       if (isEditMode) {
@@ -134,7 +196,7 @@ export default function FeatureFormModal({
             </h2>
             <p className="text-xs text-zinc-500 dark:text-[#A0A6B5] mt-0.5">
               {isEditMode
-                ? 'Update global feature definition and catalog properties.'
+                ? 'Update global feature definition, supported actions, and catalog properties.'
                 : 'Define a platform-level feature accessible across all tenants.'}
             </p>
           </div>
@@ -258,25 +320,110 @@ export default function FeatureFormModal({
             ) : null}
           </div>
 
-          {/* Defined Actions */}
+          {/* Dynamic Actions Management */}
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider mb-1.5">
-              Actions
-            </label>
-            <div className="flex items-center gap-2 p-2.5 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg">
-              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900/40">
-                READ
-              </span>
-              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40">
-                WRITE
-              </span>
-              <span className="px-2 py-0.5 text-xs font-semibold rounded bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40">
-                DELETE
-              </span>
-              <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5] ml-auto">
-                Standard platform actions
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] uppercase tracking-wider">
+                Actions <span className="text-rose-500">*</span>
+              </label>
+              <span className="text-[11px] text-zinc-500 dark:text-[#A0A6B5]">
+                {formData.actions.length} action{formData.actions.length !== 1 ? 's' : ''} assigned
               </span>
             </div>
+
+            <div className="p-3 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg space-y-2.5">
+              {/* Selected Action Badges with Remove (X) */}
+              <div className="flex flex-wrap items-center gap-2">
+                {formData.actions.length === 0 ? (
+                  <span className="text-xs text-zinc-400 dark:text-zinc-500 italic py-1">
+                    No actions assigned. Click "+ Add Action" below to add supported actions.
+                  </span>
+                ) : (
+                  formData.actions.map((action) => (
+                    <span
+                      key={action}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md border shadow-sm transition-all ${
+                        ACTION_COLOR_MAP[action] ||
+                        'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700'
+                      }`}
+                    >
+                      <span>{action}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAction(action)}
+                        className="p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-current transition-colors"
+                        title={`Remove ${action}`}
+                        aria-label={`Remove ${action}`}
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))
+                )}
+              </div>
+
+              {/* Add Action (+) Dropdown and Controls */}
+              <div className="pt-2 border-t border-zinc-200/60 dark:border-[#2A2F3D] flex items-center justify-between gap-2">
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsDropdownOpen((prev) => !prev)}
+                    disabled={availableActions.length === 0}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                      availableActions.length === 0
+                        ? 'opacity-50 cursor-not-allowed bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-700'
+                        : 'bg-white dark:bg-[#161922] text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/60 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:border-indigo-300 shadow-sm'
+                    }`}
+                  >
+                    <Plus size={14} className="shrink-0" />
+                    <span>Add Action (+)</span>
+                    <ChevronDown
+                      size={13}
+                      className={`transition-transform duration-150 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {isDropdownOpen && availableActions.length > 0 && (
+                    <div className="absolute left-0 bottom-full mb-1 w-52 max-h-60 overflow-y-auto rounded-lg bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] shadow-2xl z-30 py-1 divide-y divide-zinc-100 dark:divide-zinc-800">
+                      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-[#A0A6B5] bg-zinc-50 dark:bg-[#161922]">
+                        Available Actions ({availableActions.length})
+                      </div>
+                      <div className="py-1">
+                        {availableActions.map((action) => (
+                          <button
+                            key={action}
+                            type="button"
+                            onClick={() => {
+                              handleAddAction(action);
+                              setIsDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-[#E6E8EE] hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-300 flex items-center justify-between transition-colors"
+                          >
+                            <span>{action}</span>
+                            <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-medium">
+                              + Add
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <span className="text-[11px] text-zinc-400 dark:text-[#6B7184]">
+                  {availableActions.length === 0
+                    ? 'All 13 actions assigned'
+                    : `${availableActions.length} more action${availableActions.length !== 1 ? 's' : ''} available`}
+                </span>
+              </div>
+            </div>
+
+            {errors.actions && (
+              <p className="mt-1 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                <AlertTriangle size={12} /> {errors.actions}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -288,7 +435,7 @@ export default function FeatureFormModal({
               name="description"
               value={formData.description}
               onChange={handleChange}
-              rows={3}
+              rows={2}
               placeholder="Provide context or purpose for this system feature..."
               className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-[#2A2F3D] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-none text-zinc-800 dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] placeholder:text-zinc-400 dark:placeholder:text-[#6B7184]"
             />
@@ -317,18 +464,15 @@ export default function FeatureFormModal({
             </label>
           </div>
 
-          {/* Auto-provision note (create only) */}
-          {!isEditMode && (
-            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-lg flex items-start gap-2.5 text-xs text-indigo-700 dark:text-indigo-300">
-              <ShieldCheck size={15} className="shrink-0 mt-0.5" />
-              <span>
-                On create, the standard permissions (<span className="font-semibold">READ</span>,{' '}
-                <span className="font-semibold">WRITE</span>,{' '}
-                <span className="font-semibold">DELETE</span>) are auto-provisioned for this feature so
-                role and user permission sync remains compatible.
-              </span>
-            </div>
-          )}
+          {/* Info note */}
+          <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-lg flex items-start gap-2.5 text-xs text-indigo-700 dark:text-indigo-300">
+            <ShieldCheck size={15} className="shrink-0 mt-0.5" />
+            <span>
+              {isEditMode
+                ? 'Assigned actions determine the granular permissions available for role and user assignments. Newly added actions will be provisioned automatically.'
+                : 'Selected actions are auto-provisioned as feature permissions so role and user access can be configured immediately.'}
+            </span>
+          </div>
 
           {/* Form Actions */}
           <div className="pt-4 border-t border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-end gap-3">

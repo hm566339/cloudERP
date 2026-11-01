@@ -74,12 +74,29 @@ public class FeatureServiceImpl implements FeatureService {
 
         Feature saved = featureRepository.save(feature);
 
-        // Auto-provision standard READ, WRITE, and DELETE permissions in global catalog
+        List<String> requestedActions = request.getActions() != null && !request.getActions().isEmpty()
+                ? request.getActions().stream()
+                        .filter(Objects::nonNull)
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(String::toUpperCase)
+                        .filter(com.erp.auth_service.utility.PermissionAction::isValid)
+                        .distinct()
+                        .toList()
+                : List.of("READ", "WRITE", "DELETE");
+
         if (featurePermissionRepository != null) {
-            for (String action : List.of("READ", "WRITE", "DELETE")) {
+            for (String action : requestedActions) {
                 String permCode = saved.getCode() + ":" + action;
-                if (featurePermissionRepository.findByPermissionCodeIgnoreCase(permCode).isEmpty()) {
-                    com.erp.auth_service.model.FeaturePermission fp = com.erp.auth_service.model.FeaturePermission.builder()
+                Optional<FeaturePermission> existingFp = featurePermissionRepository.findByPermissionCodeIgnoreCase(permCode);
+                if (existingFp.isPresent()) {
+                    FeaturePermission fp = existingFp.get();
+                    if (!fp.isActive()) {
+                        fp.setActive(true);
+                        featurePermissionRepository.save(fp);
+                    }
+                } else {
+                    FeaturePermission fp = FeaturePermission.builder()
                             .feature(saved)
                             .action(action)
                             .permissionCode(permCode)
@@ -87,7 +104,7 @@ public class FeatureServiceImpl implements FeatureService {
                             .active(true)
                             .build();
                     featurePermissionRepository.save(fp);
-                    log.info("Auto-registered standard Feature Permission: [{}]", permCode);
+                    log.info("Registered Feature Permission: [{}]", permCode);
                 }
             }
         }
@@ -135,6 +152,60 @@ public class FeatureServiceImpl implements FeatureService {
         }
 
         Feature saved = featureRepository.save(feature);
+
+        if (request.getActions() != null && featurePermissionRepository != null) {
+            Set<String> targetActions = request.getActions().stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(String::toUpperCase)
+                    .filter(com.erp.auth_service.utility.PermissionAction::isValid)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+
+            List<FeaturePermission> existingPerms = featurePermissionRepository.findByFeature_Id(saved.getId());
+            Map<String, FeaturePermission> existingByAction = new HashMap<>();
+            for (FeaturePermission fp : existingPerms) {
+                if (fp.getAction() != null) {
+                    existingByAction.put(fp.getAction().toUpperCase(), fp);
+                }
+            }
+
+            // Enable or create requested actions
+            for (String action : targetActions) {
+                FeaturePermission existing = existingByAction.get(action);
+                if (existing != null) {
+                    if (!existing.isActive()) {
+                        existing.setActive(true);
+                        featurePermissionRepository.save(existing);
+                        log.info("Re-activated Feature Permission: [{}]", existing.getPermissionCode());
+                    }
+                } else {
+                    String permCode = saved.getCode() + ":" + action;
+                    FeaturePermission newFp = FeaturePermission.builder()
+                            .feature(saved)
+                            .action(action)
+                            .permissionCode(permCode)
+                            .description(action + " access for feature " + saved.getName())
+                            .active(true)
+                            .build();
+                    featurePermissionRepository.save(newFp);
+                    log.info("Created new Feature Permission on update: [{}]", permCode);
+                }
+            }
+
+            // Soft-deactivate removed actions to preserve audit history and prevent silent deletion
+            for (Map.Entry<String, FeaturePermission> entry : existingByAction.entrySet()) {
+                if (!targetActions.contains(entry.getKey())) {
+                    FeaturePermission toDeactivate = entry.getValue();
+                    if (toDeactivate.isActive()) {
+                        toDeactivate.setActive(false);
+                        featurePermissionRepository.save(toDeactivate);
+                        log.info("Soft-deactivated removed Feature Permission: [{}]", toDeactivate.getPermissionCode());
+                    }
+                }
+            }
+        }
+
         return mapToFeatureResponse(saved);
     }
 
@@ -346,6 +417,24 @@ public class FeatureServiceImpl implements FeatureService {
     }
 
     private FeatureResponse mapToFeatureResponse(Feature feature) {
+        List<String> actions = Collections.emptyList();
+        if (featurePermissionRepository != null && feature.getId() != null) {
+            actions = featurePermissionRepository.findByFeature_Id(feature.getId()).stream()
+                    .filter(FeaturePermission::isActive)
+                    .map(FeaturePermission::getAction)
+                    .filter(Objects::nonNull)
+                    .map(String::toUpperCase)
+                    .distinct()
+                    .toList();
+        } else if (feature.getPermissions() != null && !feature.getPermissions().isEmpty()) {
+            actions = feature.getPermissions().stream()
+                    .filter(FeaturePermission::isActive)
+                    .map(FeaturePermission::getAction)
+                    .filter(Objects::nonNull)
+                    .map(String::toUpperCase)
+                    .distinct()
+                    .toList();
+        }
         return FeatureResponse.builder()
                 .id(feature.getId())
                 .code(feature.getCode())
@@ -353,6 +442,7 @@ public class FeatureServiceImpl implements FeatureService {
                 .description(feature.getDescription())
                 .moduleName(feature.getModuleName())
                 .active(feature.isActive())
+                .actions(actions)
                 .createdAt(feature.getCreatedAt())
                 .updatedAt(feature.getUpdatedAt())
                 .build();

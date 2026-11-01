@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -20,6 +21,7 @@ public class FeatureResponse {
     private String description;
     private String moduleName;
     private boolean active;
+    private List<String> actions;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
