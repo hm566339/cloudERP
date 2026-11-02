@@ -60,6 +60,7 @@ export const DOCUMENT_TYPES_BY_MODULE = Object.freeze({
     { value: 'DELIVERY_CHALLAN', label: 'Delivery Challan (DELIVERY_CHALLAN)' },
     { value: 'SALES_INVOICE', label: 'Sales Invoice (SALES_INVOICE)' },
     { value: 'SALES', label: 'General Sales (SALES)' },
+    { value: 'RECEIPT_VOUCHER', label: 'Receipt Voucher' },
   ],
   Purchase: [
     { value: 'PURCHASE_REQUISITION', label: 'Purchase Requisition (PURCHASE_REQUISITION)' },
@@ -98,7 +99,7 @@ export const DOCUMENT_TYPES_BY_MODULE = Object.freeze({
     { value: 'REIMBURSEMENT', label: 'Reimbursement Request (REIMBURSEMENT)' },
   ],
   Others: [
-    { value: 'RECEIPT_VOUCHER', label: 'Receipt Voucher (RECEIPT_VOUCHER)' },
+    { value: 'RECEIPT_VOUCHER', label: 'Receipt Voucher' },
     { value: 'PAYMENT_VOUCHER', label: 'Payment Voucher (PAYMENT_VOUCHER)' },
     { value: 'JOURNAL_ENTRY', label: 'Journal Entry (JOURNAL_ENTRY)' },
     { value: 'CREDIT_NOTE', label: 'Credit Note (CREDIT_NOTE)' },
@@ -318,7 +319,7 @@ const normalizeModuleName = (moduleName = 'GENERAL') => {
     REIMBURSEMENT: 'Reimbursements',
     REIMBURSEMENTS: 'Reimbursements',
 
-    RECEIPT_VOUCHER: 'Others',
+    RECEIPT_VOUCHER: 'Sales',
     PAYMENT_VOUCHER: 'Others',
     JOURNAL_ENTRY: 'Others',
     CREDIT_NOTE: 'Others',

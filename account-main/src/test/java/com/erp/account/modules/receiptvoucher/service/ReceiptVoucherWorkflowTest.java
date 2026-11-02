@@ -137,6 +137,7 @@ class ReceiptVoucherWorkflowTest {
         lenient().when(TenantUtils.getCurrentUserId()).thenReturn(userId);
         lenient().when(TenantUtils.isSystemAdmin()).thenReturn(false);
         lenient().when(CurrentUserContext.getUserId()).thenReturn(userId);
+        lenient().when(workflowClient.hasActiveWorkflow(companyId, "RECEIPT_VOUCHER")).thenReturn(true);
 
         adapter = new ReceiptVoucherWorkflowAdapter(receiptVoucherRepository, receiptVoucherService);
     }
@@ -214,6 +215,42 @@ class ReceiptVoucherWorkflowTest {
         assertTrue(ex.getMessage().contains("Failed to submit receipt voucher for workflow approval"));
         assertEquals(ReceiptVoucherStatus.DRAFT, voucher.getReceiptStatus());
         verify(receiptVoucherRepository, never()).save(voucher);
+    }
+
+    @Test
+    void testSubmitForApproval_ApprovalDisabled_SubmitsThroughNormalAccountingFlow() {
+        when(receiptVoucherRepository.findByIdAndCompanyIdAndIsDeletedFalse(voucherId, companyId))
+                .thenReturn(Optional.of(voucher));
+        when(workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", voucherId))
+                .thenReturn(null);
+        when(workflowClient.hasActiveWorkflow(companyId, "RECEIPT_VOUCHER"))
+                .thenReturn(false);
+
+        receiptVoucherService.submitForApproval(voucherId, "Submit without workflow");
+
+        verify(workflowClient, never()).submitWorkflow(any(), any(), any(), any(), any(), any(), any(), any());
+        assertEquals(ReceiptVoucherStatus.SUBMITTED, voucher.getReceiptStatus());
+        verify(receiptVoucherRepository, times(1)).save(voucher);
+    }
+
+    @Test
+    void testSubmitForApproval_ApprovalDisabled_CanBeApprovedDirectly() {
+        voucher.setReceiptStatus(ReceiptVoucherStatus.DRAFT);
+        when(receiptVoucherRepository.findByIdAndCompanyIdAndIsDeletedFalse(voucherId, companyId))
+                .thenReturn(Optional.of(voucher));
+        when(workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", voucherId))
+                .thenReturn(null);
+        when(workflowClient.hasActiveWorkflow(companyId, "RECEIPT_VOUCHER"))
+                .thenReturn(false);
+
+        // Step 1: Submit through normal accounting flow
+        receiptVoucherService.submitForApproval(voucherId, "Submit");
+        assertEquals(ReceiptVoucherStatus.SUBMITTED, voucher.getReceiptStatus());
+
+        // Step 2: Direct approval in normal flow without workflow pending
+        receiptVoucherService.approveReceipt(voucherId);
+        assertEquals(ReceiptVoucherStatus.APPROVED, voucher.getReceiptStatus());
+        verify(receiptVoucherRepository, atLeastOnce()).save(argThat(v -> v.getReceiptStatus() == ReceiptVoucherStatus.APPROVED));
     }
 
     @Test

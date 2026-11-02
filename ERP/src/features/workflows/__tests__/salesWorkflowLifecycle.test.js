@@ -12,14 +12,16 @@ describe('End-to-End Sales Workflow System Test Suite', () => {
         'SALES_ORDER',
         'DELIVERY_CHALLAN',
         'SALES_INVOICE',
-        'SALES'
+        'SALES',
+        'RECEIPT_VOUCHER'
       ];
-      assert.strictEqual(salesDocumentTypes.length, 6);
+      assert.strictEqual(salesDocumentTypes.length, 7);
       assert.ok(salesDocumentTypes.includes('QUOTATION'));
       assert.ok(salesDocumentTypes.includes('PROFORMA_INVOICE'));
       assert.ok(salesDocumentTypes.includes('SALES_ORDER'));
       assert.ok(salesDocumentTypes.includes('DELIVERY_CHALLAN'));
       assert.ok(salesDocumentTypes.includes('SALES_INVOICE'));
+      assert.ok(salesDocumentTypes.includes('RECEIPT_VOUCHER'));
     });
 
     it('validates workflow configuration parameters contract', () => {

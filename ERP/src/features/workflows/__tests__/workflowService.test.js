@@ -674,6 +674,9 @@ describe('Workflow Definitions API Routing & Service Verification', () => {
       const salesValues = DOCUMENT_TYPES_BY_MODULE.Sales.map((d) => d.value);
       assert.ok(salesValues.includes('PROFORMA_INVOICE'));
       assert.ok(salesValues.includes('DELIVERY_CHALLAN'));
+      assert.ok(salesValues.includes('RECEIPT_VOUCHER'));
+      const rvOption = DOCUMENT_TYPES_BY_MODULE.Sales.find((d) => d.value === 'RECEIPT_VOUCHER');
+      assert.strictEqual(rvOption.label, 'Receipt Voucher');
 
       const inventoryValues = DOCUMENT_TYPES_BY_MODULE.Inventory.map((d) => d.value);
       assert.ok(inventoryValues.includes('STOCK_MOVEMENT'));

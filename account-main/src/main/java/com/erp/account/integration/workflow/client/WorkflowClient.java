@@ -17,6 +17,8 @@ public interface WorkflowClient {
 
     WorkflowTransactionDto getWorkflowByDocument(UUID companyId, String documentType, UUID documentId);
 
+    boolean hasActiveWorkflow(UUID companyId, String documentType);
+
     WorkflowTaskDto approveTask(UUID taskId, String comments);
 
     WorkflowTaskDto rejectTask(UUID taskId, String comments);

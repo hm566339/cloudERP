@@ -35,6 +35,7 @@ public class WorkflowClientImpl implements WorkflowClient {
             case "DELIVERY_CHALLAN":
             case "SALES_INVOICE":
             case "SALES":
+            case "RECEIPT_VOUCHER":
                 return "SALES";
             case "PURCHASE_ORDER":
             case "PURCHASE":
@@ -52,7 +53,6 @@ public class WorkflowClientImpl implements WorkflowClient {
             case "REIMBURSEMENT":
             case "REIMBURSEMENTS":
                 return "REIMBURSEMENTS";
-            case "RECEIPT_VOUCHER":
             case "PAYMENT_VOUCHER":
             case "JOURNAL_ENTRY":
             case "FISCAL_YEAR":
@@ -118,6 +118,24 @@ public class WorkflowClientImpl implements WorkflowClient {
         UUID effectiveCompanyId = companyId != null ? companyId : TenantUtils.getCurrentCompanyId();
         ApiResponse<WorkflowTransactionDto> response = feignClient.getTransactionByDocument(effectiveCompanyId, documentType, documentId);
         return response != null ? response.getData() : null;
+    }
+
+    @Override
+    public boolean hasActiveWorkflow(UUID companyId, String documentType) {
+        try {
+            UUID effectiveCompanyId = companyId != null ? companyId : TenantUtils.getCurrentCompanyId();
+            ApiResponse<com.erp.account.integration.workflow.dto.WorkflowDefinitionDto> response =
+                    feignClient.getActiveDefinition(effectiveCompanyId, resolveModuleName(documentType), documentType);
+            if (response != null && response.isSuccess() && response.getData() != null && Boolean.TRUE.equals(response.getData().getIsActive())) {
+                return true;
+            }
+            // Fallback check without explicit module name constraint
+            response = feignClient.getActiveDefinition(effectiveCompanyId, null, documentType);
+            return response != null && response.isSuccess() && response.getData() != null && Boolean.TRUE.equals(response.getData().getIsActive());
+        } catch (Exception e) {
+            log.debug("No active workflow definition for documentType {} in company {}: {}", documentType, companyId, e.getMessage());
+            return false;
+        }
     }
 
     @Override

@@ -187,33 +187,49 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
             log.debug("No existing workflow transaction found for receipt voucher {}", id);
         }
 
+        // Check if an active workflow approval definition exists for this company
+        boolean workflowEnabled = false;
         try {
-            UUID custId = voucher.getCustomer() != null ? voucher.getCustomer().getId() : null;
-            WorkflowTransactionDto tx = workflowClient.submitWorkflow(
-                    companyId,
-                    "RECEIPT_VOUCHER",
-                    voucher.getId(),
-                    voucher.getReceiptNo(),
-                    comments != null ? comments : "Submitted receipt voucher for approval",
-                    voucher.getReceiptAmount(),
-                    custId,
-                    java.util.Map.of("amount", voucher.getReceiptAmount() != null ? voucher.getReceiptAmount() : BigDecimal.ZERO)
-            );
-            if (tx != null && "APPROVED".equalsIgnoreCase(tx.getStatus())) {
-                transition(voucher, ReceiptVoucherStatus.APPROVED, "APPROVE");
-                voucher.setApprovedBy(TenantUtils.getCurrentUserId());
-                voucher.setApprovedDate(LocalDateTime.now());
-                receiptVoucherRepository.save(voucher);
-                postReceipt(voucher.getId());
-                log.info("Receipt Voucher {} auto-approved by workflow engine and posted", voucher.getReceiptNo());
-                return;
-            }
-            log.info("Receipt Voucher {} submitted for approval to workflow-service", voucher.getReceiptNo());
-        } catch (BadRequestException e) {
-            throw e;
+            workflowEnabled = workflowClient.hasActiveWorkflow(companyId, "RECEIPT_VOUCHER");
         } catch (Exception e) {
-            log.error("Workflow engine submission failed for receipt voucher {}. Error: {}", id, e.getMessage());
-            throw new BadRequestException("Failed to submit receipt voucher for workflow approval: " + e.getMessage());
+            log.debug("Workflow active check skipped/failed for receipt voucher {}: {}", id, e.getMessage());
+        }
+
+        if (workflowEnabled) {
+            try {
+                UUID custId = voucher.getCustomer() != null ? voucher.getCustomer().getId() : null;
+                WorkflowTransactionDto tx = workflowClient.submitWorkflow(
+                        companyId,
+                        "RECEIPT_VOUCHER",
+                        voucher.getId(),
+                        voucher.getReceiptNo(),
+                        comments != null ? comments : "Submitted receipt voucher for approval",
+                        voucher.getReceiptAmount(),
+                        custId,
+                        java.util.Map.of("amount", voucher.getReceiptAmount() != null ? voucher.getReceiptAmount() : BigDecimal.ZERO)
+                );
+                if (tx != null && "APPROVED".equalsIgnoreCase(tx.getStatus())) {
+                    transition(voucher, ReceiptVoucherStatus.APPROVED, "APPROVE");
+                    voucher.setApprovedBy(TenantUtils.getCurrentUserId());
+                    voucher.setApprovedDate(LocalDateTime.now());
+                    receiptVoucherRepository.save(voucher);
+                    postReceipt(voucher.getId());
+                    log.info("Receipt Voucher {} auto-approved by workflow engine and posted", voucher.getReceiptNo());
+                    return;
+                }
+                log.info("Receipt Voucher {} submitted for approval to workflow-service", voucher.getReceiptNo());
+            } catch (BadRequestException e) {
+                if (e.getMessage() != null && e.getMessage().toLowerCase().contains("no active workflowdefinition")) {
+                    log.info("No active workflow definition active at submission time for receipt voucher {}. Falling back to standard flow.", id);
+                } else {
+                    throw e;
+                }
+            } catch (Exception e) {
+                log.error("Workflow engine submission failed for receipt voucher {}. Error: {}", id, e.getMessage());
+                throw new BadRequestException("Failed to submit receipt voucher for workflow approval: " + e.getMessage());
+            }
+        } else {
+            log.info("Workflow approval disabled/not configured for RECEIPT_VOUCHER in company {}. Submitting receipt voucher {} through normal accounting flow.", companyId, voucher.getReceiptNo());
         }
 
         transition(voucher, ReceiptVoucherStatus.SUBMITTED, "SUBMIT");

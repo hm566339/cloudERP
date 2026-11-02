@@ -402,7 +402,7 @@ public class DocumentTypeRegistry {
                 .documentType("RECEIPT_VOUCHER")
                 .displayName("Receipt Voucher")
                 .primaryModule("ACCOUNT")
-                .compatibleModules(List.of("ACCOUNT"))
+                .compatibleModules(List.of("ACCOUNT", "SALES"))
                 .supportsWorkflowDefinition(true)
                 .supportsSubmission(true)
                 .supportsApproval(true)

@@ -81,6 +81,9 @@ class DocumentFlowAndRegistryTest {
         assertTrue(DocumentTypeRegistry.isCompatible("SALES", "SALES", "SALES_ORDER"));
         assertTrue(DocumentTypeRegistry.isCompatible("SALES", "SALES", "DELIVERY_CHALLAN"));
         assertTrue(DocumentTypeRegistry.isCompatible("SALES", "SALES", "SALES_INVOICE"));
+        assertTrue(DocumentTypeRegistry.isCompatible("SALES", "SALES", "RECEIPT_VOUCHER"));
+        assertTrue(DocumentTypeRegistry.isCompatible("ACCOUNT", "SALES", "RECEIPT_VOUCHER"));
+        assertTrue(DocumentTypeRegistry.isCompatible("SALES", "ACCOUNT", "RECEIPT_VOUCHER"));
 
         // Purchase documents
         assertTrue(DocumentTypeRegistry.isCompatible("PURCHASE", "PURCHASE", "PURCHASE_REQUISITION"));
