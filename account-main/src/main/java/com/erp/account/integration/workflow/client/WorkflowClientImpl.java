@@ -27,7 +27,8 @@ public class WorkflowClientImpl implements WorkflowClient {
     private String callbackBaseUrl;
 
     private String resolveModuleName(String documentType) {
-        if (documentType == null) return "ACCOUNT";
+        if (documentType == null)
+            return "ACCOUNT";
         switch (documentType.toUpperCase()) {
             case "QUOTATION":
             case "PROFORMA_INVOICE":
@@ -70,12 +71,15 @@ public class WorkflowClientImpl implements WorkflowClient {
     }
 
     @Override
-    public WorkflowTransactionDto submitWorkflow(UUID companyId, String documentType, UUID documentId, String documentNumber, String comments) {
+    public WorkflowTransactionDto submitWorkflow(UUID companyId, String documentType, UUID documentId,
+            String documentNumber, String comments) {
         return submitWorkflow(companyId, documentType, documentId, documentNumber, comments, null, null, null);
     }
 
     @Override
-    public WorkflowTransactionDto submitWorkflow(UUID companyId, String documentType, UUID documentId, String documentNumber, String comments, java.math.BigDecimal amount, UUID customerId, java.util.Map<String, Object> metadata) {
+    public WorkflowTransactionDto submitWorkflow(UUID companyId, String documentType, UUID documentId,
+            String documentNumber, String comments, java.math.BigDecimal amount, UUID customerId,
+            java.util.Map<String, Object> metadata) {
         UUID effectiveCompanyId = companyId != null ? companyId : TenantUtils.getCurrentCompanyId();
         UUID userId = CurrentUserContext.getUserId();
         String username = CurrentUserContext.getUsername();
@@ -116,7 +120,8 @@ public class WorkflowClientImpl implements WorkflowClient {
     @Override
     public WorkflowTransactionDto getWorkflowByDocument(UUID companyId, String documentType, UUID documentId) {
         UUID effectiveCompanyId = companyId != null ? companyId : TenantUtils.getCurrentCompanyId();
-        ApiResponse<WorkflowTransactionDto> response = feignClient.getTransactionByDocument(effectiveCompanyId, documentType, documentId);
+        ApiResponse<WorkflowTransactionDto> response = feignClient.getTransactionByDocument(effectiveCompanyId,
+                documentType, documentId);
         return response != null ? response.getData() : null;
     }
 
@@ -124,16 +129,19 @@ public class WorkflowClientImpl implements WorkflowClient {
     public boolean hasActiveWorkflow(UUID companyId, String documentType) {
         try {
             UUID effectiveCompanyId = companyId != null ? companyId : TenantUtils.getCurrentCompanyId();
-            ApiResponse<com.erp.account.integration.workflow.dto.WorkflowDefinitionDto> response =
-                    feignClient.getActiveDefinition(effectiveCompanyId, resolveModuleName(documentType), documentType);
-            if (response != null && response.isSuccess() && response.getData() != null && Boolean.TRUE.equals(response.getData().getIsActive())) {
+            ApiResponse<com.erp.account.integration.workflow.dto.WorkflowDefinitionDto> response = feignClient
+                    .getActiveDefinition(effectiveCompanyId, resolveModuleName(documentType), documentType);
+            if (response != null && response.isSuccess() && response.getData() != null
+                    && Boolean.TRUE.equals(response.getData().getIsActive())) {
                 return true;
             }
             // Fallback check without explicit module name constraint
             response = feignClient.getActiveDefinition(effectiveCompanyId, null, documentType);
-            return response != null && response.isSuccess() && response.getData() != null && Boolean.TRUE.equals(response.getData().getIsActive());
+            return response != null && response.isSuccess() && response.getData() != null
+                    && Boolean.TRUE.equals(response.getData().getIsActive());
         } catch (Exception e) {
-            log.debug("No active workflow definition for documentType {} in company {}: {}", documentType, companyId, e.getMessage());
+            log.debug("No active workflow definition for documentType {} in company {}: {}", documentType, companyId,
+                    e.getMessage());
             return false;
         }
     }
@@ -147,7 +155,8 @@ public class WorkflowClientImpl implements WorkflowClient {
 
         ApiResponse<WorkflowTaskDto> response = feignClient.approveTask(taskId, new ApiRequest<>(payload));
         if (response == null || !response.isSuccess()) {
-            throw new BadRequestException("Failed to approve task: " + (response != null ? response.getMessage() : "error"));
+            throw new BadRequestException(
+                    "Failed to approve task: " + (response != null ? response.getMessage() : "error"));
         }
         return response.getData();
     }
@@ -162,7 +171,8 @@ public class WorkflowClientImpl implements WorkflowClient {
 
         ApiResponse<WorkflowTaskDto> response = feignClient.rejectTask(taskId, new ApiRequest<>(payload));
         if (response == null || !response.isSuccess()) {
-            throw new BadRequestException("Failed to reject task: " + (response != null ? response.getMessage() : "error"));
+            throw new BadRequestException(
+                    "Failed to reject task: " + (response != null ? response.getMessage() : "error"));
         }
         return response.getData();
     }
@@ -177,7 +187,8 @@ public class WorkflowClientImpl implements WorkflowClient {
 
         ApiResponse<WorkflowTaskDto> response = feignClient.returnTask(taskId, new ApiRequest<>(payload));
         if (response == null || !response.isSuccess()) {
-            throw new BadRequestException("Failed to return task: " + (response != null ? response.getMessage() : "error"));
+            throw new BadRequestException(
+                    "Failed to return task: " + (response != null ? response.getMessage() : "error"));
         }
         return response.getData();
     }
@@ -192,7 +203,8 @@ public class WorkflowClientImpl implements WorkflowClient {
 
         ApiResponse<WorkflowTaskDto> response = feignClient.delegateTask(taskId, new ApiRequest<>(payload));
         if (response == null || !response.isSuccess()) {
-            throw new BadRequestException("Failed to delegate task: " + (response != null ? response.getMessage() : "error"));
+            throw new BadRequestException(
+                    "Failed to delegate task: " + (response != null ? response.getMessage() : "error"));
         }
         return response.getData();
     }
@@ -203,9 +215,11 @@ public class WorkflowClientImpl implements WorkflowClient {
                 .reason(reason)
                 .build();
 
-        ApiResponse<WorkflowTransactionDto> response = feignClient.cancelWorkflow(transactionId, new ApiRequest<>(payload));
+        ApiResponse<WorkflowTransactionDto> response = feignClient.cancelWorkflow(transactionId,
+                new ApiRequest<>(payload));
         if (response == null || !response.isSuccess()) {
-            throw new BadRequestException("Failed to cancel workflow: " + (response != null ? response.getMessage() : "error"));
+            throw new BadRequestException(
+                    "Failed to cancel workflow: " + (response != null ? response.getMessage() : "error"));
         }
         return response.getData();
     }
