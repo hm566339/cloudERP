@@ -426,32 +426,32 @@ const normalizeWorkflowDefinition = (item = {}, companyId) => {
       ? item.steps
       : Array.isArray(item.stages) && item.stages.length
         ? item.stages.map((stage, idx) => {
-            const extraSteps = Array.isArray(extra.steps) ? extra.steps : [];
-            const extraStep = extraSteps.find((s) => s.id === stage.id || s.stageCode === stage.stageCode || s.sequenceNo === stage.sequenceNo);
-            const roleVal = stage.approvers?.[0]?.roleId || stage.approvers?.[0]?.roleName || stage.approvers?.[0]?.userName || extraStep?.role || '';
-            return {
-              id: stage.id || extraStep?.id || `stage-${idx + 1}`,
-              stageCode: stage.stageCode || extraStep?.stageCode || `STAGE_${idx + 1}`,
-              title: stage.stageName || extraStep?.title || `Stage ${idx + 1}`,
-              stageName: stage.stageName || extraStep?.stageName || `Stage ${idx + 1}`,
-              role: roleVal,
-              roleId: stage.approvers?.[0]?.roleId || extraStep?.roleId,
-              roleName: stage.approvers?.[0]?.roleName || extraStep?.roleName,
-              approvers: stage.approvers,
-              sla: stage.sla,
-              executionType: stage.executionType || 'SEQUENTIAL',
-              minimumApprovalsRequired: stage.minimumApprovalsRequired || 1,
-              rejectionAction: stage.rejectionAction || 'REJECT_DOCUMENT',
-              isMandatory: stage.isMandatory !== false,
-              type: extraStep?.type || 'approval',
-              approvalRule: extraStep?.approvalRule || (stage.minimumApprovalsRequired > 1 ? 'MINIMUM_REQUIRED' : (stage.executionType === 'PARALLEL' ? 'ALL_MUST_APPROVE' : 'ANY_ONE')),
-              ruleExpression: extraStep?.ruleExpression || stage.approvers?.[0]?.ruleExpression || '',
-              notificationChannel: extraStep?.notificationChannel || 'IN_APP',
-              notificationMessage: extraStep?.notificationMessage || '',
-              sequenceNo: stage.sequenceNo || idx + 1,
-              active: stage.isActive !== false,
-            };
-          })
+          const extraSteps = Array.isArray(extra.steps) ? extra.steps : [];
+          const extraStep = extraSteps.find((s) => s.id === stage.id || s.stageCode === stage.stageCode || s.sequenceNo === stage.sequenceNo);
+          const roleVal = stage.approvers?.[0]?.roleId || stage.approvers?.[0]?.roleName || stage.approvers?.[0]?.userName || extraStep?.role || '';
+          return {
+            id: stage.id || extraStep?.id || `stage-${idx + 1}`,
+            stageCode: stage.stageCode || extraStep?.stageCode || `STAGE_${idx + 1}`,
+            title: stage.stageName || extraStep?.title || `Stage ${idx + 1}`,
+            stageName: stage.stageName || extraStep?.stageName || `Stage ${idx + 1}`,
+            role: roleVal,
+            roleId: stage.approvers?.[0]?.roleId || extraStep?.roleId,
+            roleName: stage.approvers?.[0]?.roleName || extraStep?.roleName,
+            approvers: stage.approvers,
+            sla: stage.sla,
+            executionType: stage.executionType || 'SEQUENTIAL',
+            minimumApprovalsRequired: stage.minimumApprovalsRequired || 1,
+            rejectionAction: stage.rejectionAction || 'REJECT_DOCUMENT',
+            isMandatory: stage.isMandatory !== false,
+            type: extraStep?.type || 'approval',
+            approvalRule: extraStep?.approvalRule || (stage.minimumApprovalsRequired > 1 ? 'MINIMUM_REQUIRED' : (stage.executionType === 'PARALLEL' ? 'ALL_MUST_APPROVE' : 'ANY_ONE')),
+            ruleExpression: extraStep?.ruleExpression || stage.approvers?.[0]?.ruleExpression || '',
+            notificationChannel: extraStep?.notificationChannel || 'IN_APP',
+            notificationMessage: extraStep?.notificationMessage || '',
+            sequenceNo: stage.sequenceNo || idx + 1,
+            active: stage.isActive !== false,
+          };
+        })
         : (Array.isArray(extra.steps) && extra.steps.length ? extra.steps : []),
   };
 };

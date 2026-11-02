@@ -1,6 +1,5 @@
 package com.erp.account.modules.receiptvoucher.service.impl;
 
-
 import com.erp.account.modules.vouchersequence.service.VoucherSequenceService;
 import com.erp.account.modules.receiptvoucher.dto.response.profile.*;
 import com.erp.account.common.dto.request.RequestWrapper;
@@ -69,7 +68,6 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     private final ReceiptAllocationRepository receiptAllocationRepository;
     private final WorkflowClient workflowClient;
 
-
     @Override
     public ReceiptVoucherResponse createReceipt(UUID companyId, RequestWrapper<ReceiptVoucherRequest> reqWrapper) {
         UUID effectiveCompanyId = TenantUtils.resolveCompanyId(companyId);
@@ -77,12 +75,14 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
         validationService.validateForCreation(request, effectiveCompanyId);
 
         ReceiptVoucher voucher = mapper.requestToEntity(request);
-        
+
         // Auto-generate or validate receiptNo
         if (request.getReceiptNo() == null || request.getReceiptNo().trim().isEmpty()) {
-            voucher.setReceiptNo(voucherSequenceService.generateNextReceiptNumber(effectiveCompanyId, request.getReceiptDate()));
+            voucher.setReceiptNo(
+                    voucherSequenceService.generateNextReceiptNumber(effectiveCompanyId, request.getReceiptDate()));
         } else {
-            if (receiptVoucherRepository.existsByCompanyIdAndReceiptNoAndIsDeletedFalse(effectiveCompanyId, request.getReceiptNo())) {
+            if (receiptVoucherRepository.existsByCompanyIdAndReceiptNoAndIsDeletedFalse(effectiveCompanyId,
+                    request.getReceiptNo())) {
                 throw new com.erp.account.common.exception.PaymentValidationException("Receipt Number already exists.");
             }
             voucher.setReceiptNo(request.getReceiptNo());
@@ -91,8 +91,10 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
         voucher.setCompany(initCompany(effectiveCompanyId));
         voucher.setCustomer(validationService.validateCustomer(request.getCustomerId(), effectiveCompanyId));
         voucher.setBankAccount(validationService.validateBank(request.getBankAccountId(), effectiveCompanyId));
-        voucher.setReceivableAccount(validationService.validateAccount(request.getReceivableAccountId(), effectiveCompanyId, "Receivable"));
-        voucher.setReceiptAccount(validationService.validateAccount(request.getReceiptAccountId(), effectiveCompanyId, "Receipt"));
+        voucher.setReceivableAccount(
+                validationService.validateAccount(request.getReceivableAccountId(), effectiveCompanyId, "Receivable"));
+        voucher.setReceiptAccount(
+                validationService.validateAccount(request.getReceiptAccountId(), effectiveCompanyId, "Receipt"));
         voucher.setReceiptStatus(ReceiptVoucherStatus.DRAFT);
         voucher.setGlPostingStatus(PostingStatus.DRAFT);
         voucher.setIsDeleted(false);
@@ -101,7 +103,8 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
         // Save voucher first to generate ID
         ReceiptVoucher saved = receiptVoucherRepository.save(voucher);
 
-        java.util.List<ReceiptAllocation> allocations = buildAllocations(saved, request.getAllocations(), effectiveCompanyId);
+        java.util.List<ReceiptAllocation> allocations = buildAllocations(saved, request.getAllocations(),
+                effectiveCompanyId);
         for (ReceiptAllocation alloc : allocations) {
             saved.addAllocation(alloc);
         }
@@ -123,11 +126,13 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
         mapper.updateEntityFromRequest(request, voucher);
         voucher.setCustomer(validationService.validateCustomer(request.getCustomerId(), companyId));
         voucher.setBankAccount(validationService.validateBank(request.getBankAccountId(), companyId));
-        voucher.setReceivableAccount(validationService.validateAccount(request.getReceivableAccountId(), companyId, "Receivable"));
-        voucher.setReceiptAccount(validationService.validateAccount(request.getReceiptAccountId(), companyId, "Receipt"));
+        voucher.setReceivableAccount(
+                validationService.validateAccount(request.getReceivableAccountId(), companyId, "Receivable"));
+        voucher.setReceiptAccount(
+                validationService.validateAccount(request.getReceiptAccountId(), companyId, "Receipt"));
         voucher.setTotalAllocatedAmount(sumAllocatedAmount(request.getAllocations()));
         voucher.getAllocations().clear();
-        
+
         java.util.List<ReceiptAllocation> allocations = buildAllocations(voucher, request.getAllocations(), companyId);
         for (ReceiptAllocation alloc : allocations) {
             voucher.addAllocation(alloc);
@@ -169,17 +174,22 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     @Override
     public void submitForApproval(UUID id, String comments) {
         ReceiptVoucher voucher = getReceiptVoucher(id);
-        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId()
+                : TenantUtils.getCurrentCompanyId();
 
         if (voucher.getReceiptStatus() != ReceiptVoucherStatus.DRAFT) {
-            throw new BadRequestException("Only DRAFT receipt vouchers can be submitted for approval. Current status: " + voucher.getReceiptStatus());
+            throw new BadRequestException("Only DRAFT receipt vouchers can be submitted for approval. Current status: "
+                    + voucher.getReceiptStatus());
         }
 
         // Prevent duplicate workflow submission
         try {
-            WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", voucher.getId());
-            if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
-                throw new BadRequestException("Receipt Voucher is already submitted for approval with transaction: " + existingTx.getId());
+            WorkflowTransactionDto existingTx = workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER",
+                    voucher.getId());
+            if (existingTx != null && ("PENDING".equalsIgnoreCase(existingTx.getStatus())
+                    || "IN_PROGRESS".equalsIgnoreCase(existingTx.getStatus()))) {
+                throw new BadRequestException(
+                        "Receipt Voucher is already submitted for approval with transaction: " + existingTx.getId());
             }
         } catch (BadRequestException e) {
             throw e;
@@ -206,8 +216,8 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
                         comments != null ? comments : "Submitted receipt voucher for approval",
                         voucher.getReceiptAmount(),
                         custId,
-                        java.util.Map.of("amount", voucher.getReceiptAmount() != null ? voucher.getReceiptAmount() : BigDecimal.ZERO)
-                );
+                        java.util.Map.of("amount",
+                                voucher.getReceiptAmount() != null ? voucher.getReceiptAmount() : BigDecimal.ZERO));
                 if (tx != null && "APPROVED".equalsIgnoreCase(tx.getStatus())) {
                     transition(voucher, ReceiptVoucherStatus.APPROVED, "APPROVE");
                     voucher.setApprovedBy(TenantUtils.getCurrentUserId());
@@ -220,16 +230,21 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
                 log.info("Receipt Voucher {} submitted for approval to workflow-service", voucher.getReceiptNo());
             } catch (BadRequestException e) {
                 if (e.getMessage() != null && e.getMessage().toLowerCase().contains("no active workflowdefinition")) {
-                    log.info("No active workflow definition active at submission time for receipt voucher {}. Falling back to standard flow.", id);
+                    log.info(
+                            "No active workflow definition active at submission time for receipt voucher {}. Falling back to standard flow.",
+                            id);
                 } else {
                     throw e;
                 }
             } catch (Exception e) {
                 log.error("Workflow engine submission failed for receipt voucher {}. Error: {}", id, e.getMessage());
-                throw new BadRequestException("Failed to submit receipt voucher for workflow approval: " + e.getMessage());
+                throw new BadRequestException(
+                        "Failed to submit receipt voucher for workflow approval: " + e.getMessage());
             }
         } else {
-            log.info("Workflow approval disabled/not configured for RECEIPT_VOUCHER in company {}. Submitting receipt voucher {} through normal accounting flow.", companyId, voucher.getReceiptNo());
+            log.info(
+                    "Workflow approval disabled/not configured for RECEIPT_VOUCHER in company {}. Submitting receipt voucher {} through normal accounting flow.",
+                    companyId, voucher.getReceiptNo());
         }
 
         transition(voucher, ReceiptVoucherStatus.SUBMITTED, "SUBMIT");
@@ -239,13 +254,16 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     @Override
     public void approveReceipt(UUID id) {
         ReceiptVoucher voucher = getReceiptVoucher(id);
-        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId()
+                : TenantUtils.getCurrentCompanyId();
 
         // Prevent direct approval if active workflow is pending
         try {
             WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", id);
-            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
-                throw new BadRequestException("Receipt Voucher cannot be approved directly while workflow approval is pending. Please approve via the workflow.");
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus())
+                    || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException(
+                        "Receipt Voucher cannot be approved directly while workflow approval is pending. Please approve via the workflow.");
             }
         } catch (BadRequestException e) {
             throw e;
@@ -253,8 +271,9 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
             log.debug("Workflow check skipped for receipt voucher approval {}: {}", id, e.getMessage());
         }
 
-        // if (voucher.getCreatedBy() != null && voucher.getCreatedBy().equals(TenantUtils.getCurrentUserId())) {
-        //     throw new SecurityException("Creator cannot approve their own document.");
+        // if (voucher.getCreatedBy() != null &&
+        // voucher.getCreatedBy().equals(TenantUtils.getCurrentUserId())) {
+        // throw new SecurityException("Creator cannot approve their own document.");
         // }
 
         validationService.validateApprove(voucher);
@@ -267,13 +286,16 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     @Override
     public void rejectReceipt(UUID id) {
         ReceiptVoucher voucher = getReceiptVoucher(id);
-        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId()
+                : TenantUtils.getCurrentCompanyId();
 
         // Prevent direct rejection if active workflow is pending
         try {
             WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", id);
-            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
-                throw new BadRequestException("Receipt Voucher cannot be rejected directly while workflow approval is pending. Please reject via the workflow.");
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus())
+                    || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException(
+                        "Receipt Voucher cannot be rejected directly while workflow approval is pending. Please reject via the workflow.");
             }
         } catch (BadRequestException e) {
             throw e;
@@ -289,13 +311,16 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     @Override
     public void postReceipt(UUID id) {
         ReceiptVoucher voucher = getReceiptVoucher(id);
-        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId()
+                : TenantUtils.getCurrentCompanyId();
 
         // Prevent direct posting if active workflow is pending
         try {
             WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", id);
-            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
-                throw new BadRequestException("Receipt Voucher cannot be posted directly while workflow approval is pending. Please approve via the workflow.");
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus())
+                    || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException(
+                        "Receipt Voucher cannot be posted directly while workflow approval is pending. Please approve via the workflow.");
             }
         } catch (BadRequestException e) {
             throw e;
@@ -303,8 +328,9 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
             log.debug("Workflow check skipped for receipt voucher posting {}: {}", id, e.getMessage());
         }
 
-        // if (voucher.getCreatedBy() != null && voucher.getCreatedBy().equals(TenantUtils.getCurrentUserId())) {
-        //     throw new SecurityException("Creator cannot post their own document.");
+        // if (voucher.getCreatedBy() != null &&
+        // voucher.getCreatedBy().equals(TenantUtils.getCurrentUserId())) {
+        // throw new SecurityException("Creator cannot post their own document.");
         // }
 
         validationService.validatePostingRules(voucher);
@@ -326,13 +352,16 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
         if (voucher.getGlPostingStatus() == PostingStatus.POSTED) {
             throw new PaymentValidationException("POSTED receipts are immutable and cannot be cancelled directly.");
         }
-        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId() : TenantUtils.getCurrentCompanyId();
+        UUID companyId = voucher.getCompany() != null ? voucher.getCompany().getId()
+                : TenantUtils.getCurrentCompanyId();
 
         // Prevent direct cancellation if active workflow is pending
         try {
             WorkflowTransactionDto activeTx = workflowClient.getWorkflowByDocument(companyId, "RECEIPT_VOUCHER", id);
-            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus()) || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
-                throw new BadRequestException("Receipt Voucher cannot be cancelled directly while workflow approval is pending. Please cancel via the workflow.");
+            if (activeTx != null && ("PENDING".equalsIgnoreCase(activeTx.getStatus())
+                    || "IN_PROGRESS".equalsIgnoreCase(activeTx.getStatus()))) {
+                throw new BadRequestException(
+                        "Receipt Voucher cannot be cancelled directly while workflow approval is pending. Please cancel via the workflow.");
             }
         } catch (BadRequestException e) {
             throw e;
@@ -352,10 +381,12 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
         for (ReceiptVoucherAllocationRequest request : allocationRequests) {
             if (request.getProformaInvoiceId() != null) {
                 UUID piId = request.getProformaInvoiceId();
-                ProformaInvoice proformaInvoice = proformaInvoiceRepository.findByIdAndCompanyIdAndIsDeletedFalse(piId, companyId)
+                ProformaInvoice proformaInvoice = proformaInvoiceRepository
+                        .findByIdAndCompanyIdAndIsDeletedFalse(piId, companyId)
                         .orElseThrow(() -> new PaymentValidationException("Proforma invoice not found: " + piId));
 
-                validationService.validateProformaInvoiceAllocation(proformaInvoice, voucher.getCustomer(), request.getAllocatedAmount(), voucher.getId());
+                validationService.validateProformaInvoiceAllocation(proformaInvoice, voucher.getCustomer(),
+                        request.getAllocatedAmount(), voucher.getId());
 
                 allocations.add(ReceiptAllocation.builder()
                         .receiptVoucher(voucher)
@@ -404,7 +435,8 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
 
     }
 
-    private void recordAudit(ReceiptVoucher voucher, String action, ReceiptVoucherStatus previous, ReceiptVoucherStatus target, String remarks) {
+    private void recordAudit(ReceiptVoucher voucher, String action, ReceiptVoucherStatus previous,
+            ReceiptVoucherStatus target, String remarks) {
         AuditLog audit = AuditLog.builder()
                 .company(voucher.getCompany())
                 .moduleName("RECEIPT_VOUCHER")
@@ -419,7 +451,8 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
 
     private ReceiptVoucherResponse toResponse(ReceiptVoucher voucher) {
         ReceiptVoucherResponse response = mapper.entityToResponse(voucher);
-        response.setRemainingBalance(defaultAmount(voucher.getReceiptAmount()).subtract(defaultAmount(voucher.getTotalAllocatedAmount())));
+        response.setRemainingBalance(
+                defaultAmount(voucher.getReceiptAmount()).subtract(defaultAmount(voucher.getTotalAllocatedAmount())));
         response.setAllocations(voucher.getAllocations().stream().map(this::toAllocationResponse).toList());
         if (voucher.getGlJournalEntryId() != null) {
             glJournalEntryRepository.findById(voucher.getGlJournalEntryId())
@@ -431,10 +464,14 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     private ReceiptAllocationResponse toAllocationResponse(ReceiptAllocation allocation) {
         return ReceiptAllocationResponse.builder()
                 .id(allocation.getId())
-                .salesInvoiceId(allocation.getSalesInvoice() != null ? allocation.getSalesInvoice().getId() : allocation.getSalesInvoiceId())
-                .invoiceNumber(allocation.getSalesInvoice() != null ? allocation.getSalesInvoice().getInvoiceNumber() : null)
-                .proformaInvoiceId(allocation.getProformaInvoice() != null ? allocation.getProformaInvoice().getId() : allocation.getProformaInvoiceId())
-                .proformaInvoiceNumber(allocation.getProformaInvoice() != null ? allocation.getProformaInvoice().getPiNumber() : null)
+                .salesInvoiceId(allocation.getSalesInvoice() != null ? allocation.getSalesInvoice().getId()
+                        : allocation.getSalesInvoiceId())
+                .invoiceNumber(
+                        allocation.getSalesInvoice() != null ? allocation.getSalesInvoice().getInvoiceNumber() : null)
+                .proformaInvoiceId(allocation.getProformaInvoice() != null ? allocation.getProformaInvoice().getId()
+                        : allocation.getProformaInvoiceId())
+                .proformaInvoiceNumber(
+                        allocation.getProformaInvoice() != null ? allocation.getProformaInvoice().getPiNumber() : null)
                 .allocatedAmount(allocation.getAllocatedAmount())
                 .build();
     }
@@ -455,13 +492,14 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
         return company;
     }
 
-    // TODO: Consider a shared AbstractVoucherWorkflowService for AP/AR vouchers once Payment Voucher adopts module-specific statuses.
+    // TODO: Consider a shared AbstractVoucherWorkflowService for AP/AR vouchers
+    // once Payment Voucher adopts module-specific statuses.
 
     @Override
     @Transactional(readOnly = true)
     public ReceiptVoucherProfileResponse getReceiptProfile(UUID companyId, UUID id) {
         ReceiptVoucher voucher = getReceiptVoucherProfileEntity(id);
-        
+
         return ReceiptVoucherProfileResponse.builder()
                 .id(voucher.getId())
                 .receiptNo(voucher.getReceiptNo())
@@ -473,7 +511,7 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
                 .remarks(voucher.getRemarks())
                 .receiptStatus(voucher.getReceiptStatus() != null ? voucher.getReceiptStatus().name() : null)
                 .glPostingStatus(voucher.getGlPostingStatus() != null ? voucher.getGlPostingStatus().name() : null)
-                
+
                 .companyInformation(mapCompanyInfo(voucher.getCompany()))
                 .customerInformation(mapCustomerInfo(voucher.getCustomer()))
                 .bankAccountInformation(mapBankInfo(voucher.getBankAccount()))
@@ -502,7 +540,8 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     }
 
     private RvCompanyInfoDto mapCompanyInfo(Company company) {
-        if (company == null) return null;
+        if (company == null)
+            return null;
         return RvCompanyInfoDto.builder()
                 .companyId(company.getId())
                 .companyName(company.getCompanyName())
@@ -513,7 +552,8 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     }
 
     private RvCustomerInfoDto mapCustomerInfo(com.erp.account.modules.customer.entity.Customer customer) {
-        if (customer == null) return null;
+        if (customer == null)
+            return null;
         return RvCustomerInfoDto.builder()
                 .customerId(customer.getId())
                 .customerCode(customer.getCustomerCode())
@@ -523,7 +563,8 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
                 .email(customer.getEmail())
                 .phone(customer.getPhone())
                 .billingAddress(CustomerAddressUtils.getDefaultAddress(customer) != null
-                    ? CustomerAddressUtils.getDefaultAddress(customer).getAddressLine1() : null)
+                        ? CustomerAddressUtils.getDefaultAddress(customer).getAddressLine1()
+                        : null)
                 .shippingAddress(null)
                 .creditLimit(customer.getCreditLimit())
                 .outstandingBalance(null)
@@ -533,10 +574,11 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     }
 
     private RvBankInfoDto mapBankInfo(com.erp.account.modules.bankaccount.entity.BankAccount bank) {
-        if (bank == null) return null;
-        String maskedAccount = bank.getAccountNumber() != null && bank.getAccountNumber().length() > 4 
-            ? "****" + bank.getAccountNumber().substring(bank.getAccountNumber().length() - 4)
-            : bank.getAccountNumber();
+        if (bank == null)
+            return null;
+        String maskedAccount = bank.getAccountNumber() != null && bank.getAccountNumber().length() > 4
+                ? "****" + bank.getAccountNumber().substring(bank.getAccountNumber().length() - 4)
+                : bank.getAccountNumber();
         return RvBankInfoDto.builder()
                 .bankAccountId(bank.getId())
                 .bankName(bank.getBankName())
@@ -558,16 +600,22 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     }
 
     private java.util.List<RvAllocationDto> mapAllocations(java.util.List<ReceiptAllocation> allocations) {
-        if (allocations == null) return new ArrayList<>();
+        if (allocations == null)
+            return new ArrayList<>();
         return allocations.stream().map(a -> RvAllocationDto.builder()
                 .allocationId(a.getId())
                 .salesInvoiceId(a.getSalesInvoice() != null ? a.getSalesInvoice().getId() : a.getSalesInvoiceId())
-                .invoiceNumber(a.getSalesInvoice() != null ? a.getSalesInvoice().getInvoiceNumber() : (a.getProformaInvoice() != null ? a.getProformaInvoice().getPiNumber() : null))
-                .invoiceDate(a.getSalesInvoice() != null ? a.getSalesInvoice().getInvoiceDate() : (a.getProformaInvoice() != null ? a.getProformaInvoice().getPiDate() : null))
-                .dueDate(a.getSalesInvoice() != null ? a.getSalesInvoice().getDueDate() : (a.getProformaInvoice() != null ? a.getProformaInvoice().getPiValidTill() : null))
-                .invoiceAmount(a.getSalesInvoice() != null ? a.getSalesInvoice().getTotalAmount() : (a.getProformaInvoice() != null ? a.getProformaInvoice().getTotalAmount() : null))
+                .invoiceNumber(a.getSalesInvoice() != null ? a.getSalesInvoice().getInvoiceNumber()
+                        : (a.getProformaInvoice() != null ? a.getProformaInvoice().getPiNumber() : null))
+                .invoiceDate(a.getSalesInvoice() != null ? a.getSalesInvoice().getInvoiceDate()
+                        : (a.getProformaInvoice() != null ? a.getProformaInvoice().getPiDate() : null))
+                .dueDate(a.getSalesInvoice() != null ? a.getSalesInvoice().getDueDate()
+                        : (a.getProformaInvoice() != null ? a.getProformaInvoice().getPiValidTill() : null))
+                .invoiceAmount(a.getSalesInvoice() != null ? a.getSalesInvoice().getTotalAmount()
+                        : (a.getProformaInvoice() != null ? a.getProformaInvoice().getTotalAmount() : null))
                 .allocatedAmount(a.getAllocatedAmount())
-                .proformaInvoiceId(a.getProformaInvoice() != null ? a.getProformaInvoice().getId() : a.getProformaInvoiceId())
+                .proformaInvoiceId(
+                        a.getProformaInvoice() != null ? a.getProformaInvoice().getId() : a.getProformaInvoiceId())
                 .proformaInvoiceNumber(a.getProformaInvoice() != null ? a.getProformaInvoice().getPiNumber() : null)
                 .build()).toList();
     }
@@ -577,8 +625,9 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     }
 
     private RvJournalEntryDto mapGlPosting(ReceiptVoucher voucher) {
-        if (voucher.getGlJournalEntryId() == null) return null;
-        
+        if (voucher.getGlJournalEntryId() == null)
+            return null;
+
         RvJournalEntryDto.RvJournalEntryDtoBuilder builder = RvJournalEntryDto.builder()
                 .journalEntryId(voucher.getGlJournalEntryId())
                 .postingStatus(voucher.getGlPostingStatus() != null ? voucher.getGlPostingStatus().name() : null)
@@ -586,10 +635,10 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
                 .postedBy(voucher.getPostedBy() != null ? voucher.getPostedBy().toString() : null)
                 .debitEntries(new ArrayList<>())
                 .creditEntries(new ArrayList<>());
-                
+
         glJournalEntryRepository.findById(voucher.getGlJournalEntryId())
-            .ifPresent(journal -> builder.journalNumber(journal.getVoucherNo()));
-            
+                .ifPresent(journal -> builder.journalNumber(journal.getVoucherNo()));
+
         return builder.build();
     }
 
@@ -617,7 +666,9 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
                         .map(a -> a.getSalesInvoice().getInvoiceNumber()).toList() : new ArrayList<>())
                 .creditNotes(new ArrayList<>())
                 .debitNotes(new ArrayList<>())
-                .journalEntries(voucher.getGlJournalEntryId() != null ? java.util.List.of(voucher.getGlJournalEntryId().toString()) : new ArrayList<>())
+                .journalEntries(voucher.getGlJournalEntryId() != null
+                        ? java.util.List.of(voucher.getGlJournalEntryId().toString())
+                        : new ArrayList<>())
                 .bankStatementReferences(new ArrayList<>())
                 .build();
     }
@@ -629,10 +680,11 @@ public class ReceiptVoucherServiceImpl implements ReceiptVoucherService {
     }
 
     private RvStatisticsDto mapStatistics(ReceiptVoucher voucher) {
-        BigDecimal totalAllocated = voucher.getTotalAllocatedAmount() != null ? voucher.getTotalAllocatedAmount() : BigDecimal.ZERO;
+        BigDecimal totalAllocated = voucher.getTotalAllocatedAmount() != null ? voucher.getTotalAllocatedAmount()
+                : BigDecimal.ZERO;
         BigDecimal receiptAmt = voucher.getReceiptAmount() != null ? voucher.getReceiptAmount() : BigDecimal.ZERO;
         int allocCount = voucher.getAllocations() != null ? voucher.getAllocations().size() : 0;
-        
+
         return RvStatisticsDto.builder()
                 .totalAllocatedAmount(totalAllocated)
                 .remainingBalance(receiptAmt.subtract(totalAllocated))
