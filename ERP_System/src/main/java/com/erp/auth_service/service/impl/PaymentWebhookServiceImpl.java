@@ -7,6 +7,7 @@ import com.erp.auth_service.model.*;
 import com.erp.auth_service.repository.*;
 import com.erp.auth_service.service.PaymentWebhookService;
 import com.erp.auth_service.utility.AccessMode;
+import com.erp.auth_service.utility.OrganizationStatus;
 import com.erp.auth_service.utility.SubscriptionStatus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,22 +26,26 @@ import java.util.*;
  * CRITICAL DESIGN PRINCIPLES enforced here:
  * ------------------------------------------
  * 1. One Razorpay payment → One ERP Payment record.
- *    Idempotency is enforced at TWO levels:
- *      a) PaymentEvent table: event_id uniqueness (database constraint).
- *      b) Payment table: (provider, provider_payment_id) uniqueness (database constraint).
+ * Idempotency is enforced at TWO levels:
+ * a) PaymentEvent table: event_id uniqueness (database constraint).
+ * b) Payment table: (provider, provider_payment_id) uniqueness (database
+ * constraint).
  *
  * 2. subscription.charged is the AUTHORITATIVE billing event for:
- *    - Creating the Payment record.
- *    - Extending nextBillingDate / current period.
- *    - Activating subscription.
- *    payment.captured is treated as a SUPPLEMENTAL confirmation only.
- *    If payment.captured arrives first, it activates the subscription but does NOT
- *    extend the billing period. subscription.charged always wins for period extension.
+ * - Creating the Payment record.
+ * - Extending nextBillingDate / current period.
+ * - Activating subscription.
+ * payment.captured is treated as a SUPPLEMENTAL confirmation only.
+ * If payment.captured arrives first, it activates the subscription but does NOT
+ * extend the billing period. subscription.charged always wins for period
+ * extension.
  *
- * 3. Out-of-order webhook protection: no event can downgrade a terminal/active state
- *    to an older pending state.
+ * 3. Out-of-order webhook protection: no event can downgrade a terminal/active
+ * state
+ * to an older pending state.
  *
- * 4. NEVER log: key secrets, webhook secrets, raw payment tokens, full card data.
+ * 4. NEVER log: key secrets, webhook secrets, raw payment tokens, full card
+ * data.
  */
 @Service
 @Slf4j
@@ -57,12 +62,12 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
     @Autowired
     public PaymentWebhookServiceImpl(PaymentEventRepository paymentEventRepository,
-                                    PaymentRepository paymentRepository,
-                                    InvoiceRepository invoiceRepository,
-                                    SubscriptionRepository subscriptionRepository,
-                                    OrganizationRepository organizationRepository,
-                                    ObjectMapper objectMapper,
-                                    List<PaymentProvider> paymentProviders) {
+            PaymentRepository paymentRepository,
+            InvoiceRepository invoiceRepository,
+            SubscriptionRepository subscriptionRepository,
+            OrganizationRepository organizationRepository,
+            ObjectMapper objectMapper,
+            List<PaymentProvider> paymentProviders) {
         this.paymentEventRepository = paymentEventRepository;
         this.paymentRepository = paymentRepository;
         this.invoiceRepository = invoiceRepository;
@@ -86,11 +91,11 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
     // Backward-compatible constructor for existing tests
     public PaymentWebhookServiceImpl(PaymentEventRepository paymentEventRepository,
-                                    PaymentRepository paymentRepository,
-                                    InvoiceRepository invoiceRepository,
-                                    SubscriptionRepository subscriptionRepository,
-                                    ObjectMapper objectMapper,
-                                    PaymentProvider paymentProvider) {
+            PaymentRepository paymentRepository,
+            InvoiceRepository invoiceRepository,
+            SubscriptionRepository subscriptionRepository,
+            ObjectMapper objectMapper,
+            PaymentProvider paymentProvider) {
         this.paymentEventRepository = paymentEventRepository;
         this.paymentRepository = paymentRepository;
         this.invoiceRepository = invoiceRepository;
@@ -112,9 +117,11 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         if (providerName != null) {
             String key = providerName.trim().toLowerCase(Locale.ROOT);
             PaymentProvider p = providers.get(key);
-            if (p != null) return p;
+            if (p != null)
+                return p;
         }
-        if (defaultProvider != null) return defaultProvider;
+        if (defaultProvider != null)
+            return defaultProvider;
         throw new BadRequestException("No payment provider configured for: " + providerName);
     }
 
@@ -139,7 +146,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
             }
 
             // 2. Event-level idempotency check (database-backed)
-            Optional<PaymentEvent> existingEventOpt = paymentEventRepository.findByProviderAndProviderEventId(provider, eventId);
+            Optional<PaymentEvent> existingEventOpt = paymentEventRepository.findByProviderAndProviderEventId(provider,
+                    eventId);
             if (existingEventOpt.isPresent() && "PROCESSED".equals(existingEventOpt.get().getProcessingStatus())) {
                 log.info("Idempotent skip: webhook event already processed — provider={}, eventId={}, type={}",
                         provider, eventId, eventType);
@@ -169,12 +177,14 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
             // 4. Route to correct handler based on event type
             switch (normalizedEventType) {
 
-                // --- AUTHORITATIVE billing event (creates Payment + extends period + activates) ---
+                // --- AUTHORITATIVE billing event (creates Payment + extends period +
+                // activates) ---
                 case "subscription.charged":
                     handleSubscriptionCharged(provider, paymentProvider, root, event);
                     break;
 
-                // --- Supplemental activation (activates subscription, does NOT extend period) ---
+                // --- Supplemental activation (activates subscription, does NOT extend period)
+                // ---
                 case "order.paid":
                     handleOrderPaid(provider, paymentProvider, root, event);
                     break;
@@ -224,9 +234,11 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         } catch (BadRequestException exception) {
             throw exception;
         } catch (org.springframework.dao.DataIntegrityViolationException dive) {
-            log.warn("Database unique constraint triggered during webhook processing (concurrent duplicate): provider={}, error={}",
+            log.warn(
+                    "Database unique constraint triggered during webhook processing (concurrent duplicate): provider={}, error={}",
                     provider, dive.getMessage());
-            // Idempotent recovery: return gracefully (HTTP 200) to stop provider webhook retries
+            // Idempotent recovery: return gracefully (HTTP 200) to stop provider webhook
+            // retries
             return;
         } catch (Exception exception) {
             log.error("Failed to parse or process webhook payload: provider={}", provider, exception);
@@ -239,7 +251,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
     // Creates ONE Payment record, extends billing period, activates subscription.
     // This is the SINGLE source of truth for recurring revenue.
     // ========================================================================================
-    private void handleSubscriptionCharged(String provider, PaymentProvider paymentProvider, JsonNode root, PaymentEvent event) {
+    private void handleSubscriptionCharged(String provider, PaymentProvider paymentProvider, JsonNode root,
+            PaymentEvent event) {
         Subscription subscription = resolveSubscription(paymentProvider, root);
         String paymentId = paymentProvider.extractPaymentId(root);
 
@@ -262,9 +275,11 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
         // ---- Extract billing period from subscription entity ----
         LocalDateTime periodStart = paymentProvider.extractPeriodStart(root);
-        if (periodStart == null) periodStart = LocalDateTime.now();
+        if (periodStart == null)
+            periodStart = LocalDateTime.now();
         LocalDateTime periodEnd = paymentProvider.extractPeriodEnd(root);
-        if (periodEnd == null) periodEnd = periodStart.plusMonths(1);
+        if (periodEnd == null)
+            periodEnd = periodStart.plusMonths(1);
 
         // ---- Extract amount: prefer plan's stored price for immutability ----
         BigDecimal amount = paymentProvider.extractAmount(root);
@@ -276,7 +291,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         }
 
         String currency = paymentProvider.extractCurrency(root);
-        if (currency == null) currency = (subscription.getCurrency() != null ? subscription.getCurrency() : "INR");
+        if (currency == null)
+            currency = (subscription.getCurrency() != null ? subscription.getCurrency() : "INR");
 
         // ---- Update Subscription: ACTIVE + period extension ----
         // Out-of-order guard: do not regress from CANCELLED/EXPIRED
@@ -297,6 +313,9 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
         if (subscription.getOrganization() != null && !isTerminalStatus(subscription.getStatus())) {
             subscription.getOrganization().setAccessMode(AccessMode.FULL);
+            if (subscription.getOrganization().getStatus() != OrganizationStatus.ACTIVE) {
+                subscription.getOrganization().setStatus(OrganizationStatus.ACTIVE);
+            }
             if (organizationRepository != null) {
                 organizationRepository.save(subscription.getOrganization());
             }
@@ -347,7 +366,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
     // ========================================================================================
     // SUPPLEMENTAL ACTIVATION: payment.captured / payment.authorized / order.paid
     // ========================================================================================
-    private void handlePaymentCaptured(String provider, PaymentProvider paymentProvider, JsonNode root, PaymentEvent event) {
+    private void handlePaymentCaptured(String provider, PaymentProvider paymentProvider, JsonNode root,
+            PaymentEvent event) {
         String rawSubId = paymentProvider.extractSubscriptionId(root);
         String orderId = (paymentProvider instanceof RazorpayPaymentProvider rzp) ? rzp.extractOrderId(root) : null;
         if ((rawSubId == null || rawSubId.isBlank()) && orderId != null && !orderId.isBlank()) {
@@ -379,7 +399,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
             return;
         }
 
-        // subscription.charged not yet processed — do partial activation only (no period extension)
+        // subscription.charged not yet processed — do partial activation only (no
+        // period extension)
         // Only activate if not in a terminal or better state
         if (!isTerminalStatus(subscription.getStatus()) && subscription.getStatus() != SubscriptionStatus.ACTIVE) {
             subscription.setStatus(SubscriptionStatus.ACTIVE);
@@ -387,6 +408,9 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
             if (subscription.getOrganization() != null) {
                 subscription.getOrganization().setAccessMode(AccessMode.FULL);
+                if (subscription.getOrganization().getStatus() != OrganizationStatus.ACTIVE) {
+                    subscription.getOrganization().setStatus(OrganizationStatus.ACTIVE);
+                }
                 if (organizationRepository != null) {
                     organizationRepository.save(subscription.getOrganization());
                 }
@@ -412,10 +436,12 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
         // 1. Idempotency check: if payment already recorded and SUCCEEDED
         if (paymentId != null && paymentRepository.existsByProviderAndProviderPaymentId(provider, paymentId)) {
-            Optional<Payment> existingPayment = paymentRepository.findByProviderAndProviderPaymentId(provider, paymentId);
+            Optional<Payment> existingPayment = paymentRepository.findByProviderAndProviderPaymentId(provider,
+                    paymentId);
             if (existingPayment.isPresent() && ("SUCCEEDED".equalsIgnoreCase(existingPayment.get().getStatus())
                     || "SUCCESS".equalsIgnoreCase(existingPayment.get().getStatus()))) {
-                log.info("Payment already recorded and succeeded for paymentId={} — idempotent skip (order.paid)", paymentId);
+                log.info("Payment already recorded and succeeded for paymentId={} — idempotent skip (order.paid)",
+                        paymentId);
                 markEventProcessed(event);
                 return;
             }
@@ -491,23 +517,28 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
         // 5. Calculate validity and update subscription
         LocalDateTime now = LocalDateTime.now();
-        int durationDays = (subscription.getPlan() != null && subscription.getPlan().getDurationDays() != null && subscription.getPlan().getDurationDays() > 0)
-                ? subscription.getPlan().getDurationDays() : 30;
+        int durationDays = (subscription.getPlan() != null && subscription.getPlan().getDurationDays() != null
+                && subscription.getPlan().getDurationDays() > 0)
+                        ? subscription.getPlan().getDurationDays()
+                        : 30;
 
         LocalDateTime newStart;
         LocalDateTime newEnd;
 
-        // If subscription is currently ACTIVE and period has not expired, extend validity
+        // If subscription is currently ACTIVE and period has not expired, extend
+        // validity
         if (subscription.getStatus() == SubscriptionStatus.ACTIVE
                 && subscription.getCurrentPeriodEnd() != null
                 && subscription.getCurrentPeriodEnd().isAfter(now)) {
             newStart = subscription.getCurrentPeriodStart() != null ? subscription.getCurrentPeriodStart() : now;
             newEnd = subscription.getCurrentPeriodEnd().plusDays(durationDays);
-            log.info("handleOrderPaid: Extending active period for erpSubId={}, newEnd={}", subscription.getId(), newEnd);
+            log.info("handleOrderPaid: Extending active period for erpSubId={}, newEnd={}", subscription.getId(),
+                    newEnd);
         } else {
             newStart = now;
             newEnd = now.plusDays(durationDays);
-            log.info("handleOrderPaid: Fresh period for erpSubId={}, start={}, end={}", subscription.getId(), newStart, newEnd);
+            log.info("handleOrderPaid: Fresh period for erpSubId={}, start={}, end={}", subscription.getId(), newStart,
+                    newEnd);
         }
 
         subscription.setStatus(SubscriptionStatus.ACTIVE);
@@ -521,9 +552,12 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         }
         subscriptionRepository.save(subscription);
 
-        // Update organization access mode
+        // Update organization access mode and status
         if (subscription.getOrganization() != null) {
             subscription.getOrganization().setAccessMode(AccessMode.FULL);
+            if (subscription.getOrganization().getStatus() != OrganizationStatus.ACTIVE) {
+                subscription.getOrganization().setStatus(OrganizationStatus.ACTIVE);
+            }
             if (organizationRepository != null) {
                 organizationRepository.save(subscription.getOrganization());
             }
@@ -557,7 +591,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
     // Records failure, moves subscription to PAST_DUE where appropriate.
     // Protects against stale out-of-order failures following a successful retry.
     // ========================================================================================
-    private void handlePaymentFailed(String provider, PaymentProvider paymentProvider, JsonNode root, PaymentEvent event) {
+    private void handlePaymentFailed(String provider, PaymentProvider paymentProvider, JsonNode root,
+            PaymentEvent event) {
         Subscription subscription = resolveSubscription(paymentProvider, root);
         String paymentId = paymentProvider.extractPaymentId(root);
 
@@ -573,8 +608,10 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         }
 
         // Out-of-order guard for retried payments:
-        // If the subscription is ACTIVE and already has an active billing period extending into the future,
-        // check if this failure attempt was created BEFORE the current period started (i.e. stale prior attempt).
+        // If the subscription is ACTIVE and already has an active billing period
+        // extending into the future,
+        // check if this failure attempt was created BEFORE the current period started
+        // (i.e. stale prior attempt).
         boolean isStaleFailure = false;
         if (subscription.getStatus() == SubscriptionStatus.ACTIVE && subscription.getCurrentPeriodStart() != null) {
             long paymentCreatedAtEpoch = 0;
@@ -594,7 +631,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         }
 
         if (isStaleFailure) {
-            log.warn("payment.failed ignored: subscription erpSubId={} is ACTIVE and failure attempt is older than currentPeriodStart ({}) — stale out-of-order event",
+            log.warn(
+                    "payment.failed ignored: subscription erpSubId={} is ACTIVE and failure attempt is older than currentPeriodStart ({}) — stale out-of-order event",
                     subscription.getId(), subscription.getCurrentPeriodStart());
             markEventProcessed(event);
             return;
@@ -604,17 +642,21 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         subscription.setStatus(SubscriptionStatus.PAST_DUE);
         subscriptionRepository.save(subscription);
 
-        // Record or update failed payment without overwriting an already confirmed successful payment
+        // Record or update failed payment without overwriting an already confirmed
+        // successful payment
         if (paymentId != null) {
-            Optional<Payment> existingPaymentOpt = paymentRepository.findByProviderAndProviderPaymentId(provider, paymentId);
-            boolean exists = existingPaymentOpt.isPresent() || paymentRepository.existsByProviderAndProviderPaymentId(provider, paymentId);
+            Optional<Payment> existingPaymentOpt = paymentRepository.findByProviderAndProviderPaymentId(provider,
+                    paymentId);
+            boolean exists = existingPaymentOpt.isPresent()
+                    || paymentRepository.existsByProviderAndProviderPaymentId(provider, paymentId);
             if (exists) {
                 if (existingPaymentOpt.isPresent()) {
                     Payment existingPayment = existingPaymentOpt.get();
                     if ("SUCCESS".equalsIgnoreCase(existingPayment.getStatus())
                             || "SUCCEEDED".equalsIgnoreCase(existingPayment.getStatus())
                             || "PAID".equalsIgnoreCase(existingPayment.getStatus())) {
-                        log.warn("payment.failed received for already successful paymentId={} — not overwriting status", paymentId);
+                        log.warn("payment.failed received for already successful paymentId={} — not overwriting status",
+                                paymentId);
                     } else {
                         existingPayment.setStatus("FAILED");
                         paymentRepository.save(existingPayment);
@@ -629,7 +671,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
                             : (subscription.getPrice() != null ? subscription.getPrice() : BigDecimal.ZERO);
                 }
                 String currency = paymentProvider.extractCurrency(root);
-                if (currency == null) currency = (subscription.getCurrency() != null ? subscription.getCurrency() : "INR");
+                if (currency == null)
+                    currency = (subscription.getCurrency() != null ? subscription.getCurrency() : "INR");
 
                 Payment failedPayment = Payment.builder()
                         .subscription(subscription)
@@ -653,7 +696,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
     private void handleSubscriptionCancelled(PaymentProvider paymentProvider, JsonNode root, PaymentEvent event) {
         Subscription subscription = resolveSubscription(paymentProvider, root);
-        log.info("subscription.cancelled: erpSubId={}, currentStatus={}", subscription.getId(), subscription.getStatus());
+        log.info("subscription.cancelled: erpSubId={}, currentStatus={}", subscription.getId(),
+                subscription.getStatus());
 
         if (subscription.getStatus() != SubscriptionStatus.CANCELLED) {
             subscription.setStatus(SubscriptionStatus.CANCELLED);
@@ -670,7 +714,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
         log.info("subscription.expired/completed/halted: erpSubId={}, currentStatus={}",
                 subscription.getId(), subscription.getStatus());
 
-        if (subscription.getStatus() != SubscriptionStatus.EXPIRED && subscription.getStatus() != SubscriptionStatus.CANCELLED) {
+        if (subscription.getStatus() != SubscriptionStatus.EXPIRED
+                && subscription.getStatus() != SubscriptionStatus.CANCELLED) {
             subscription.setStatus(SubscriptionStatus.EXPIRED);
             subscription.setAccessMode(AccessMode.READ_ONLY);
 
@@ -709,6 +754,9 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
 
             if (subscription.getOrganization() != null) {
                 subscription.getOrganization().setAccessMode(AccessMode.FULL);
+                if (subscription.getOrganization().getStatus() != OrganizationStatus.ACTIVE) {
+                    subscription.getOrganization().setStatus(OrganizationStatus.ACTIVE);
+                }
                 if (organizationRepository != null) {
                     organizationRepository.save(subscription.getOrganization());
                 }
@@ -760,7 +808,8 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
                 if (byUuid.isPresent()) {
                     return byUuid.get();
                 }
-            } catch (IllegalArgumentException ignored) {}
+            } catch (IllegalArgumentException ignored) {
+            }
         }
 
         // 3. Try via order ID
@@ -782,13 +831,15 @@ public class PaymentWebhookServiceImpl implements PaymentWebhookService {
             if (orgIdStr != null && !orgIdStr.isBlank()) {
                 try {
                     UUID orgUuid = UUID.fromString(orgIdStr);
-                    Optional<Subscription> byOrg = subscriptionRepository.findTopByOrganization_IdOrderByCreatedAtDesc(orgUuid);
+                    Optional<Subscription> byOrg = subscriptionRepository
+                            .findTopByOrganization_IdOrderByCreatedAtDesc(orgUuid);
                     if (byOrg.isPresent()) {
                         log.warn("Resolved subscription via organization fallback: orgId={}, erpSubId={}",
                                 orgIdStr, byOrg.get().getId());
                         return byOrg.get();
                     }
-                } catch (IllegalArgumentException ignored) {}
+                } catch (IllegalArgumentException ignored) {
+                }
             }
         }
 

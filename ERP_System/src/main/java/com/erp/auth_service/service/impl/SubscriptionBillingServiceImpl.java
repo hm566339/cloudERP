@@ -28,6 +28,7 @@ import com.erp.auth_service.service.razorpay.RazorpayService;
 import com.erp.auth_service.utility.AccessMode;
 import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
+import com.erp.auth_service.utility.OrganizationStatus;
 import com.erp.auth_service.utility.SubscriptionStatus;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
@@ -60,13 +61,13 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
 
     @Autowired
     public SubscriptionBillingServiceImpl(OrganizationRepository organizationRepository,
-                                         OrganizationMemberRepository organizationMemberRepository,
-                                         SubscriptionPlanRepository subscriptionPlanRepository,
-                                         SubscriptionRepository subscriptionRepository,
-                                         PaymentRepository paymentRepository,
-                                         InvoiceRepository invoiceRepository,
-                                         RazorpayService razorpayService,
-                                         RazorpayProperties razorpayProperties) {
+            OrganizationMemberRepository organizationMemberRepository,
+            SubscriptionPlanRepository subscriptionPlanRepository,
+            SubscriptionRepository subscriptionRepository,
+            PaymentRepository paymentRepository,
+            InvoiceRepository invoiceRepository,
+            RazorpayService razorpayService,
+            RazorpayProperties razorpayProperties) {
         this.organizationRepository = organizationRepository;
         this.organizationMemberRepository = organizationMemberRepository;
         this.subscriptionPlanRepository = subscriptionPlanRepository;
@@ -78,49 +79,56 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
     }
 
     public SubscriptionBillingServiceImpl(OrganizationRepository organizationRepository,
-                                         OrganizationMemberRepository organizationMemberRepository,
-                                         SubscriptionPlanRepository subscriptionPlanRepository,
-                                         SubscriptionRepository subscriptionRepository,
-                                         PaymentRepository paymentRepository,
-                                         RazorpayService razorpayService,
-                                         RazorpayProperties razorpayProperties) {
+            OrganizationMemberRepository organizationMemberRepository,
+            SubscriptionPlanRepository subscriptionPlanRepository,
+            SubscriptionRepository subscriptionRepository,
+            PaymentRepository paymentRepository,
+            RazorpayService razorpayService,
+            RazorpayProperties razorpayProperties) {
         this(organizationRepository,
-             organizationMemberRepository,
-             subscriptionPlanRepository,
-             subscriptionRepository,
-             paymentRepository,
-             null,
-             razorpayService,
-             razorpayProperties);
+                organizationMemberRepository,
+                subscriptionPlanRepository,
+                subscriptionRepository,
+                paymentRepository,
+                null,
+                razorpayService,
+                razorpayProperties);
     }
 
     // Backward-compatible constructor for existing tests
     public SubscriptionBillingServiceImpl(OrganizationRepository organizationRepository,
-                                         OrganizationMemberRepository organizationMemberRepository,
-                                         SubscriptionPlanRepository subscriptionPlanRepository,
-                                         SubscriptionRepository subscriptionRepository,
-                                         RazorpayService razorpayService,
-                                         RazorpayProperties razorpayProperties) {
+            OrganizationMemberRepository organizationMemberRepository,
+            SubscriptionPlanRepository subscriptionPlanRepository,
+            SubscriptionRepository subscriptionRepository,
+            RazorpayService razorpayService,
+            RazorpayProperties razorpayProperties) {
         this(organizationRepository,
-             organizationMemberRepository,
-             subscriptionPlanRepository,
-             subscriptionRepository,
-             null,
-             null,
-             razorpayService,
-             razorpayProperties);
+                organizationMemberRepository,
+                subscriptionPlanRepository,
+                subscriptionRepository,
+                null,
+                null,
+                razorpayService,
+                razorpayProperties);
     }
 
     private final java.util.concurrent.ConcurrentHashMap<UUID, Object> orgCheckoutLocks = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private Organization resolveOrganization(UUID organizationOrSubId) {
+        return organizationRepository.findById(organizationOrSubId)
+                .or(() -> subscriptionRepository.findById(organizationOrSubId).map(Subscription::getOrganization))
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Organization not found with id: " + organizationOrSubId));
+    }
 
     @Override
     public RazorpayCheckoutResponse createCheckout(UUID organizationId, SubscriptionCheckoutRequest request) {
         log.info("Creating one-time order checkout: organizationId={}, planId={}", organizationId, request.getPlanId());
 
-        Organization organization = organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Organization not found with id: " + organizationId));
+        Organization organization = resolveOrganization(organizationId);
+        UUID resolvedOrgId = organization.getId();
 
-        assertOrganizationManagementAccess(organizationId);
+        assertOrganizationManagementAccess(resolvedOrgId);
 
         // Retrieve plan by ID or code — NEVER trust amount from client
         SubscriptionPlan plan = resolvePlan(request.getPlanId());
@@ -135,10 +143,10 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         BigDecimal priceAtSubscription = plan.getPrice();
 
         // ---- CONCURRENT CHECKOUT PROTECTION ----
-        Object orgLock = orgCheckoutLocks.computeIfAbsent(organizationId, k -> new Object());
+        Object orgLock = orgCheckoutLocks.computeIfAbsent(resolvedOrgId, k -> new Object());
         synchronized (orgLock) {
             // Check for ACTIVE subscription (business duplicate guard)
-            Optional<Subscription> activeSubOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.ACTIVE);
+            Optional<Subscription> activeSubOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(resolvedOrgId, SubscriptionStatus.ACTIVE);
             if (activeSubOpt.isPresent()) {
                 Subscription activeSub = activeSubOpt.get();
                 if (activeSub.getPlan() != null && activeSub.getPlan().getId().equals(plan.getId())) {
@@ -147,14 +155,14 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
             }
 
             // Check for PENDING order checkout with matching plan to avoid duplicate orders
-            Optional<Subscription> pendingSubOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.PENDING);
+            Optional<Subscription> pendingSubOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(resolvedOrgId, SubscriptionStatus.PENDING);
             if (pendingSubOpt.isPresent()) {
                 Subscription pendingSub = pendingSubOpt.get();
                 if (pendingSub.getRazorpayOrderId() != null
                         && pendingSub.getPlan() != null
                         && pendingSub.getPlan().getId().equals(plan.getId())) {
                     log.info("Reusing existing PENDING order checkout for organizationId={}, rzpOrderId={}",
-                            organizationId, pendingSub.getRazorpayOrderId());
+                            resolvedOrgId, pendingSub.getRazorpayOrderId());
                     long paise = priceAtSubscription.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
                     return RazorpayCheckoutResponse.builder()
                             .keyId(razorpayProperties.getKeyId())
@@ -250,7 +258,8 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                         .organization(organization)
                         .build());
 
-        // Check if organization has an ongoing active trial or historical trial to preserve
+        // Check if organization has an ongoing active trial or historical trial to
+        // preserve
         Optional<Subscription> existingTrialOpt = subscriptionRepository
                 .findTopByOrganization_IdAndStatus(organization.getId(), SubscriptionStatus.TRIALING);
 
@@ -271,11 +280,14 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                 subscription.setTrialEndsAt(anyWithTrial.get().getTrialEndsAt());
             } else if (Boolean.TRUE.equals(plan.getIsTrial())) {
                 LocalDateTime start = LocalDateTime.now();
-                int durationDays = (plan.getDurationDays() != null && plan.getDurationDays() > 0) ? plan.getDurationDays() : 30;
+                int durationDays = (plan.getDurationDays() != null && plan.getDurationDays() > 0)
+                        ? plan.getDurationDays()
+                        : 30;
                 subscription.setTrialStartedAt(start);
                 subscription.setTrialEndsAt(start.plusDays(durationDays));
             } else {
-                // For a paid plan checkout with no prior trial, do NOT set identical timestamps!
+                // For a paid plan checkout with no prior trial, do NOT set identical
+                // timestamps!
                 if (subscription.getTrialStartedAt() == null || subscription.getTrialEndsAt() == null
                         || !subscription.getTrialEndsAt().isAfter(subscription.getTrialStartedAt())) {
                     subscription.setTrialStartedAt(null);
@@ -314,11 +326,16 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         String paymentId = request.getPaymentId();
         String signature = request.getSignature();
 
+        Organization resolvedOrg = organizationRepository.findById(organizationId)
+                .or(() -> subscriptionRepository.findById(organizationId).map(Subscription::getOrganization))
+                .orElse(null);
+        UUID resolvedOrgId = resolvedOrg != null ? resolvedOrg.getId() : organizationId;
+
         log.info("Verifying one-time payment: organizationId={}, orderId={}, paymentId={}",
-                organizationId, orderId, paymentId);
+                resolvedOrgId, orderId, paymentId);
 
         // 1. Authorization check: caller must have OWNER/ADMIN access to organization
-        assertOrganizationManagementAccess(organizationId);
+        assertOrganizationManagementAccess(resolvedOrgId);
 
         // 2. Cryptographic signature check
         boolean isValidSignature = razorpayService.verifyPaymentSignature(orderId, paymentId, signature);
@@ -333,9 +350,9 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
                         .orElseThrow(() -> new ResourceNotFoundException("No payment record found for order: " + orderId)));
 
         // 4. Verify organization ownership
-        if (payment.getOrganization() == null || !payment.getOrganization().getId().equals(organizationId)) {
+        if (payment.getOrganization() == null || !payment.getOrganization().getId().equals(resolvedOrgId)) {
             log.warn("Security violation: Payment order {} belongs to org {}, not {}",
-                    orderId, payment.getOrganization() != null ? payment.getOrganization().getId() : null, organizationId);
+                    orderId, payment.getOrganization() != null ? payment.getOrganization().getId() : null, resolvedOrgId);
             throw new ForbiddenException("Payment order does not belong to the authenticated organization.");
         }
 
@@ -421,15 +438,18 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         subscription.setCancelledAt(null);
         subscriptionRepository.save(subscription);
 
-        // Update organization access mode
+        // Update organization access mode and active status
         Organization organization = subscription.getOrganization();
         if (organization != null) {
             organization.setAccessMode(AccessMode.FULL);
+            if (organization.getStatus() != OrganizationStatus.ACTIVE) {
+                organization.setStatus(OrganizationStatus.ACTIVE);
+            }
             organizationRepository.save(organization);
         }
 
         log.info("Successfully activated plan [{}] for organization [{}] until {}",
-                plan.getCode(), organizationId, newEnd);
+                plan.getCode(), resolvedOrgId, newEnd);
 
         return subscription;
     }
@@ -465,12 +485,11 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
     @Override
     @Transactional
     public void cancelPendingCheckout(UUID organizationId, String orderId) {
-        if (!organizationRepository.existsById(organizationId)) {
-            throw new ResourceNotFoundException("Organization not found: " + organizationId);
-        }
-        assertOrganizationManagementAccess(organizationId);
+        Organization organization = resolveOrganization(organizationId);
+        UUID resolvedOrgId = organization.getId();
+        assertOrganizationManagementAccess(resolvedOrgId);
 
-        List<Subscription> pendings = subscriptionRepository.findAllByOrganization_IdOrderByCreatedAtDesc(organizationId)
+        List<Subscription> pendings = subscriptionRepository.findAllByOrganization_IdOrderByCreatedAtDesc(resolvedOrgId)
                 .stream()
                 .filter(s -> s.getStatus() == SubscriptionStatus.PENDING)
                 .filter(s -> orderId == null || orderId.isBlank() || orderId.equals(s.getRazorpayOrderId()))
@@ -497,12 +516,12 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
     @Override
     @Transactional
     public Subscription activateTrial(UUID organizationId, String planIdOrCode) {
-        Organization organization = organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Organization not found: " + organizationId));
-        assertOrganizationManagementAccess(organizationId);
+        Organization organization = resolveOrganization(organizationId);
+        UUID resolvedOrgId = organization.getId();
+        assertOrganizationManagementAccess(resolvedOrgId);
 
         // Check if organization already has an active paid subscription
-        Optional<Subscription> activeOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.ACTIVE);
+        Optional<Subscription> activeOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(resolvedOrgId, SubscriptionStatus.ACTIVE);
         if (activeOpt.isPresent()) {
             Subscription active = activeOpt.get();
             if (active.getCurrentPeriodEnd() == null || active.getCurrentPeriodEnd().isAfter(LocalDateTime.now())) {
@@ -511,17 +530,17 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         }
 
         // Check if organization already has an active trial
-        Optional<Subscription> trialingOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(organizationId, SubscriptionStatus.TRIALING);
+        Optional<Subscription> trialingOpt = subscriptionRepository.findTopByOrganization_IdAndStatus(resolvedOrgId, SubscriptionStatus.TRIALING);
         if (trialingOpt.isPresent()) {
             Subscription existingTrial = trialingOpt.get();
             if (existingTrial.getTrialEndsAt() != null && existingTrial.getTrialEndsAt().isAfter(LocalDateTime.now())) {
-                log.info("Organization [{}] already has an active trial until {}", organizationId, existingTrial.getTrialEndsAt());
+                log.info("Organization [{}] already has an active trial until {}", resolvedOrgId, existingTrial.getTrialEndsAt());
                 return existingTrial;
             }
         }
 
         // Check if organization already completed or expired their free trial
-        boolean hadExpiredTrial = subscriptionRepository.findAllByOrganization_IdOrderByCreatedAtDesc(organizationId).stream()
+        boolean hadExpiredTrial = subscriptionRepository.findAllByOrganization_IdOrderByCreatedAtDesc(resolvedOrgId).stream()
                 .anyMatch(s -> s.getStatus() == SubscriptionStatus.EXPIRED ||
                         (s.getStatus() == SubscriptionStatus.TRIALING && s.getTrialEndsAt() != null && !s.getTrialEndsAt().isAfter(LocalDateTime.now())));
         if (hadExpiredTrial) {
@@ -562,20 +581,22 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         Subscription saved = subscriptionRepository.save(trialSubscription);
 
         organization.setAccessMode(AccessMode.FULL);
+        if (organization.getStatus() != OrganizationStatus.ACTIVE) {
+            organization.setStatus(OrganizationStatus.ACTIVE);
+        }
         organizationRepository.save(organization);
 
-        log.info("Activated free trial for organization [{}] until {}", organizationId, trialEndsAt);
+        log.info("Activated free trial for organization [{}] until {}", resolvedOrgId, trialEndsAt);
         return saved;
     }
 
     @Override
     @Transactional
     public Subscription getOrganizationSubscription(UUID organizationId) {
-        if (!organizationRepository.existsById(organizationId)) {
-            throw new ResourceNotFoundException("Organization not found: " + organizationId);
-        }
-        assertOrganizationManagementAccess(organizationId);
-        Subscription subscription = subscriptionRepository.findEffectiveByOrganizationId(organizationId)
+        Organization organization = resolveOrganization(organizationId);
+        UUID resolvedOrgId = organization.getId();
+        assertOrganizationManagementAccess(resolvedOrgId);
+        Subscription subscription = subscriptionRepository.findEffectiveByOrganizationId(resolvedOrgId)
                 .orElseThrow(() -> new ResourceNotFoundException("No subscription found for organization: " + organizationId));
 
         LocalDateTime now = LocalDateTime.now();
@@ -586,11 +607,11 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
             subscription.setStatus(SubscriptionStatus.EXPIRED);
             subscription.setAccessMode(AccessMode.READ_ONLY);
             subscription = subscriptionRepository.save(subscription);
-            organizationRepository.findById(organizationId).ifPresent(org -> {
+            organizationRepository.findById(resolvedOrgId).ifPresent(org -> {
                 org.setAccessMode(AccessMode.READ_ONLY);
                 organizationRepository.save(org);
             });
-            log.info("Lazy trial expiration applied for organization [{}]", organizationId);
+            log.info("Lazy trial expiration applied for organization [{}]", resolvedOrgId);
         }
 
         return subscription;
@@ -599,27 +620,25 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
     @Override
     @Transactional(readOnly = true)
     public List<Payment> getOrganizationPayments(UUID organizationId) {
-        if (!organizationRepository.existsById(organizationId)) {
-            throw new ResourceNotFoundException("Organization not found: " + organizationId);
-        }
-        assertOrganizationManagementAccess(organizationId);
+        Organization organization = resolveOrganization(organizationId);
+        UUID resolvedOrgId = organization.getId();
+        assertOrganizationManagementAccess(resolvedOrgId);
         if (paymentRepository == null) {
             return List.of();
         }
-        return paymentRepository.findBySubscription_Organization_IdOrderByCreatedAtDesc(organizationId);
+        return paymentRepository.findBySubscription_Organization_IdOrderByCreatedAtDesc(resolvedOrgId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Invoice> getOrganizationInvoices(UUID organizationId) {
-        if (!organizationRepository.existsById(organizationId)) {
-            throw new ResourceNotFoundException("Organization not found: " + organizationId);
-        }
-        assertOrganizationManagementAccess(organizationId);
+        Organization organization = resolveOrganization(organizationId);
+        UUID resolvedOrgId = organization.getId();
+        assertOrganizationManagementAccess(resolvedOrgId);
         if (invoiceRepository == null) {
             return List.of();
         }
-        return invoiceRepository.findBySubscription_Organization_IdOrderByCreatedAtDesc(organizationId);
+        return invoiceRepository.findBySubscription_Organization_IdOrderByCreatedAtDesc(resolvedOrgId);
     }
 
     private SubscriptionPlan resolvePlan(String planIdOrCode) {
@@ -632,10 +651,12 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
             if (planOpt.isPresent()) {
                 return planOpt.get();
             }
-        } catch (IllegalArgumentException ignored) {}
+        } catch (IllegalArgumentException ignored) {
+        }
 
         return subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue(planIdOrCode.trim())
-                .orElseThrow(() -> new ResourceNotFoundException("Active subscription plan not found: " + planIdOrCode));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Active subscription plan not found: " + planIdOrCode));
     }
 
     @Override
@@ -654,7 +675,8 @@ public class SubscriptionBillingServiceImpl implements SubscriptionBillingServic
         }
 
         Optional<OrganizationMember> memberOpt = organizationMemberRepository
-                .findByOrganization_IdAndUser_IdAndMembershipStatus(targetOrgId, context.userId(), MembershipStatus.ACTIVE);
+                .findByOrganization_IdAndUser_IdAndMembershipStatus(targetOrgId, context.userId(),
+                        MembershipStatus.ACTIVE);
 
         if (memberOpt.isEmpty()) {
             throw new ForbiddenException("Access denied: You are not a member of organization: " + targetOrgId);

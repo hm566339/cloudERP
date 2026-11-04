@@ -66,7 +66,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.equals("/api/sso/auth/admin-login")
                 || path.equals("/api/sso/auth/register")
                 || path.equals("/api/sso/signup")
-                || ("GET".equalsIgnoreCase(request.getMethod()) && path.matches("/api/sso/organization/(?!appearance$|members$)[^/]+/?"))
+                || ("GET".equalsIgnoreCase(request.getMethod())
+                        && path.matches("/api/sso/organization/(?!appearance$|members$)[^/]+/?"))
                 || path.equals("/api/sso/authorize")
                 || path.equals("/api/sso/token/exchange")
                 || path.equals("/api/sso/token/refresh")
@@ -480,14 +481,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isBusinessWrite(HttpServletRequest request) {
         String path = request.getServletPath();
-        if (path.startsWith("/api/billing/") || path.startsWith("/api/sso/auth/")
-                || path.startsWith("/api/sso/token/") || path.startsWith("/api/sso/session/")) {
+        String uri = request.getRequestURI();
+        if (isExemptFromReadOnly(path) || isExemptFromReadOnly(uri)) {
             return false;
         }
         return HttpMethod.POST.matches(request.getMethod())
                 || HttpMethod.PUT.matches(request.getMethod())
                 || HttpMethod.PATCH.matches(request.getMethod())
                 || HttpMethod.DELETE.matches(request.getMethod());
+    }
+
+    private boolean isExemptFromReadOnly(String path) {
+        if (path == null) {
+            return false;
+        }
+        String cleanPath = path;
+        int qIdx = cleanPath.indexOf('?');
+        if (qIdx >= 0) {
+            cleanPath = cleanPath.substring(0, qIdx);
+        }
+        return cleanPath.startsWith("/api/sso/subscriptions")
+                || cleanPath.startsWith("/api/subscriptions")
+                || cleanPath.startsWith("/api/sso/billing")
+                || cleanPath.startsWith("/api/billing")
+                || cleanPath.startsWith("/api/sso/company-subscriptions")
+                || cleanPath.startsWith("/api/company-subscriptions")
+                || cleanPath.startsWith("/api/sso/webhooks")
+                || cleanPath.startsWith("/api/webhooks")
+                || cleanPath.startsWith("/api/sso/auth")
+                || cleanPath.startsWith("/api/auth")
+                || cleanPath.startsWith("/api/sso/token")
+                || cleanPath.startsWith("/api/token")
+                || cleanPath.startsWith("/api/sso/session")
+                || cleanPath.startsWith("/api/session");
     }
 
     private String extractToken(HttpServletRequest request) {
