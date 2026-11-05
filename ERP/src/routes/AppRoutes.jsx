@@ -588,492 +588,495 @@ export default function AppRoutes() {
       <ScrollToTop />
       <SidebarProvider>
         <Routes>
-        {/* ── PUBLIC SAAS LANDING & TRIAL SIGNUP ── */}
-        <Route path="/" element={<RootIndexHandler />} />
-        <Route path="/landing" element={<LandingPage />} />
-        <Route path="/try-free" element={<TrialSignupPage />} />
+          {/* ── PUBLIC SAAS LANDING & TRIAL SIGNUP ── */}
+          <Route path="/" element={<RootIndexHandler />} />
+          <Route path="/landing" element={<LandingPage />} />
+          <Route path="/try-free" element={<TrialSignupPage />} />
 
-        {/* ── PUBLIC (Auth Layout) ── */}
-        <Route element={<AuthLayout />}>
-          <Route path="/o/:organizationCode/login" element={<Login />} />
-          <Route path="/o/:organizationCode" element={<OrgRedirect />} />
-          <Route path="/c/:companyCode/login" element={<Login />} />
-          <Route path="/c/:companyCode" element={<CompanyRedirect />} />
-          <Route path="/login" element={<Navigate to="/" replace />} />
-          <Route path="/modules" element={<Navigate to="/" replace />} />
-          <Route path="/:moduleCode/login" element={<Navigate to="/" replace />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/account/callback" element={<AuthCallback />} />
-          <Route path="/accounts/callback" element={<AuthCallback />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/forgot-password/:token" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/set-password" element={<ResetPassword />} />
-          <Route path="/set-password/:token" element={<ResetPassword />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/quotation/accept/:token" element={<QuotationAcceptancePage />} />
-          <Route path="/403" element={<NotAuthorized />} />
-        </Route>
+          {/* ── PUBLIC (Auth Layout) ── */}
+          <Route element={<AuthLayout />}>
+            <Route path="/o/:organizationCode/login" element={<Login />} />
+            <Route path="/o/:organizationCode" element={<OrgRedirect />} />
+            <Route path="/c/:companyCode/login" element={<Login />} />
+            <Route path="/c/:companyCode" element={<CompanyRedirect />} />
+            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route path="/modules" element={<Navigate to="/" replace />} />
+            <Route path="/:moduleCode/login" element={<Navigate to="/" replace />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/account/callback" element={<AuthCallback />} />
+            <Route path="/accounts/callback" element={<AuthCallback />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/forgot-password/:token" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/set-password" element={<ResetPassword />} />
+            <Route path="/set-password/:token" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/quotation/accept/:token" element={<QuotationAcceptancePage />} />
+            <Route path="/403" element={<NotAuthorized />} />
+          </Route>
 
-        {/* ── STANDALONE FULL-SCREEN: New Purchase Requisition (no app shell) ── */}
-        <Route
-          path="/purchase-requisitions/new"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <PurchaseRequisitionStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/accounts/transactions/purchase-requisitions/new"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <PurchaseRequisitionStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/accounts/purchase-requisitions/new"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <PurchaseRequisitionStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/transactions/purchase-requisitions/new"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <PurchaseRequisitionStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/purchases/purchase-requisitions/new"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <PurchaseRequisitionStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/company/:companyId/accounts/transactions/purchase-requisitions/new"
-          element={
-            <ProtectedRoute requireCompany={true}>
-              <PurchaseRequisitionStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/company/:companyId/accounts/purchase-requisitions/new"
-          element={
-            <ProtectedRoute requireCompany={true}>
-              <PurchaseRequisitionStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/company/:companyId/purchases/purchase-requisitions/new"
-          element={
-            <ProtectedRoute requireCompany={true}>
-              <PurchaseRequisitionStandalone />
-            </ProtectedRoute>
-          }
-        />
+          {/* ── STANDALONE FULL-SCREEN: New Purchase Requisition (no app shell) ── */}
+          <Route
+            path="/purchase-requisitions/new"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <PurchaseRequisitionStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/accounts/transactions/purchase-requisitions/new"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <PurchaseRequisitionStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/accounts/purchase-requisitions/new"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <PurchaseRequisitionStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transactions/purchase-requisitions/new"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <PurchaseRequisitionStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/purchases/purchase-requisitions/new"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <PurchaseRequisitionStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/:companyId/accounts/transactions/purchase-requisitions/new"
+            element={
+              <ProtectedRoute requireCompany={true}>
+                <PurchaseRequisitionStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/:companyId/accounts/purchase-requisitions/new"
+            element={
+              <ProtectedRoute requireCompany={true}>
+                <PurchaseRequisitionStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/:companyId/purchases/purchase-requisitions/new"
+            element={
+              <ProtectedRoute requireCompany={true}>
+                <PurchaseRequisitionStandalone />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* ── STANDALONE FULL-SCREEN: New Supplier Quotation (no app shell) ── */}
-        <Route
-          path="/supplier-quotations/new"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <SupplierQuotationStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/accounts/transactions/supplier-quotations/new"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <SupplierQuotationStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/accounts/supplier-quotations/new"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <SupplierQuotationStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/transactions/supplier-quotations/new"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <SupplierQuotationStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/purchases/supplier-quotations/new"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <SupplierQuotationStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/company/:companyId/accounts/transactions/supplier-quotations/new"
-          element={
-            <ProtectedRoute requireCompany={true}>
-              <SupplierQuotationStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/company/:companyId/accounts/supplier-quotations/new"
-          element={
-            <ProtectedRoute requireCompany={true}>
-              <SupplierQuotationStandalone />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/company/:companyId/purchases/supplier-quotations/new"
-          element={
-            <ProtectedRoute requireCompany={true}>
-              <SupplierQuotationStandalone />
-            </ProtectedRoute>
-          }
-        />
+          {/* ── STANDALONE FULL-SCREEN: New Supplier Quotation (no app shell) ── */}
+          <Route
+            path="/supplier-quotations/new"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <SupplierQuotationStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/accounts/transactions/supplier-quotations/new"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <SupplierQuotationStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/accounts/supplier-quotations/new"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <SupplierQuotationStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transactions/supplier-quotations/new"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <SupplierQuotationStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/purchases/supplier-quotations/new"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <SupplierQuotationStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/:companyId/accounts/transactions/supplier-quotations/new"
+            element={
+              <ProtectedRoute requireCompany={true}>
+                <SupplierQuotationStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/:companyId/accounts/supplier-quotations/new"
+            element={
+              <ProtectedRoute requireCompany={true}>
+                <SupplierQuotationStandalone />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/company/:companyId/purchases/supplier-quotations/new"
+            element={
+              <ProtectedRoute requireCompany={true}>
+                <SupplierQuotationStandalone />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* ── COMPANY SELECTION ── */}
-        <Route
-          path="/company-select"
-          element={
-            <CompanySelect />
-          }
-        />
+          {/* ── COMPANY SELECTION ── */}
+          <Route
+            path="/company-select"
+            element={
+              <CompanySelect />
+            }
+          />
 
-        {/* ── WORKSPACE (Common ERP Shell) ─────────────────────────────────
+          {/* ── WORKSPACE (Common ERP Shell) ─────────────────────────────────
             Landing route dynamically derived from SSO /me authorization context.
             If 0 modules: NoModuleAccessView.
             If 1 module: direct open inside shell.
             If multiple modules: primary authorized module inside shell.
         ── */}
-        <Route
-          path="/workspace"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <WorkspaceLandingRedirect />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/workspace"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <WorkspaceLandingRedirect />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* ── UNIFIED APP SHELL ROUTES (Persistent Layout: Owner / Accountant / Tenant) ── */}
-        <Route
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <AppShellLayout />
-            </ProtectedRoute>
-          }
-        >
-          {/* Owner workspace routes */}
-          <Route path="/owner" element={<Navigate to="/owner/dashboard" replace />} />
-          <Route path="/owner/dashboard" element={<OwnerDashboard />} />
-          <Route path="/owner/companies" element={<CompanyList />} />
-          <Route path="/owner/companies/:id" element={<CompanyDetails />} />
-          <Route path="/owner/users" element={<Navigate to="/users" replace />} />
-          <Route path="/owner/modules" element={<Navigate to="/owner/dashboard" replace />} />
-          <Route path="/owner/modules/finance" element={<Navigate to="/accounts/dashboard" replace />} />
-          <Route path="/owner/modules/inventory" element={<Navigate to="/inventory/dashboard" replace />} />
-          <Route path="/owner/modules/sales" element={<Navigate to="/crm/dashboard" replace />} />
-          <Route path="/owner/modules/purchasing" element={<Navigate to="/purchase-requisitions" replace />} />
-          <Route path="/owner/workflows" element={<Navigate to="/workflows" replace />} />
-          <Route path="/owner/workflow" element={<Navigate to="/workflows" replace />} />
-          <Route path="/owner/settings" element={<OrganizationSettingsPage />} />
-          <Route path="/owner/settings/organization" element={<OrganizationSettingsPage />} />
-          <Route path="/owner/organization" element={<OrganizationSettingsPage />} />
-          <Route path="/organization/settings" element={<OrganizationSettingsPage />} />
-          <Route path="/owner/subscription" element={<SubscriptionPage />} />
-          <Route path="/owner/settings/appearance" element={<AppearanceSettings />} />
-          <Route path="/owner/appearance" element={<Navigate to="/settings/appearance" replace />} />
-          <Route path="/owner/settings/subscription" element={<Navigate to="/subscription" replace />} />
-          <Route path="/owner/profile" element={<Navigate to="/profile" replace />} />
-          <Route path="/organization/dashboard" element={<Navigate to="/owner/dashboard" replace />} />
+          {/* ── UNIFIED APP SHELL ROUTES (Persistent Layout: Owner / Accountant / Tenant) ── */}
+          <Route
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <AppShellLayout />
+              </ProtectedRoute>
+            }
+          >
+            {/* Owner workspace routes */}
+            <Route path="/owner" element={<Navigate to="/owner/dashboard" replace />} />
+            <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+            <Route path="/owner/companies" element={<CompanyList />} />
+            <Route path="/owner/companies/:id" element={<CompanyDetails />} />
+            <Route path="/owner/users" element={<Navigate to="/users" replace />} />
+            <Route path="/owner/modules" element={<Navigate to="/owner/dashboard" replace />} />
+            <Route path="/owner/modules/finance" element={<Navigate to="/accounts/dashboard" replace />} />
+            <Route path="/owner/modules/inventory" element={<Navigate to="/inventory/dashboard" replace />} />
+            <Route path="/owner/modules/sales" element={<Navigate to="/crm/dashboard" replace />} />
+            <Route path="/owner/modules/purchasing" element={<Navigate to="/purchase-requisitions" replace />} />
+            <Route path="/owner/workflows" element={<Navigate to="/workflows" replace />} />
+            <Route path="/owner/workflow" element={<Navigate to="/workflows" replace />} />
+            <Route path="/owner/settings" element={<OrganizationSettingsPage />} />
+            <Route path="/owner/settings/:section" element={<OrganizationSettingsPage />} />
+            <Route path="/owner/settings/organization" element={<OrganizationSettingsPage />} />
+            <Route path="/owner/organization" element={<OrganizationSettingsPage />} />
+            <Route path="/organization/settings" element={<OrganizationSettingsPage />} />
+            <Route path="/owner/subscription" element={<SubscriptionPage />} />
+            <Route path="/owner/settings/appearance" element={<OrganizationSettingsPage />} />
+            <Route path="/owner/appearance" element={<Navigate to="/owner/settings/appearance" replace />} />
+            <Route path="/owner/settings/subscription" element={<Navigate to="/subscription" replace />} />
+            <Route path="/owner/profile" element={<Navigate to="/profile" replace />} />
+            <Route path="/organization/dashboard" element={<Navigate to="/owner/dashboard" replace />} />
 
-          {/* Accounts & Finance */}
-          <Route path="/accounts" element={<Navigate to="/accounts/dashboard" replace />} />
-          <Route path="/accounts/dashboard" element={<ProtectedRoute module="ACCOUNTS"><AccountDashboard /></ProtectedRoute>} />
-          {SharedAccountsRoutes({ prefix: "accounts/" })}
-          {SharedAccountsRoutes({ prefix: "" })}
-          <Route path="/accounts/profile" element={<ProfilePage />} />
-          <Route path="/accounts/settings" element={<SettingsPage />} />
-          <Route path="/account/*" element={<AccountRedirectHandler />} />
-          <Route path="/account" element={<Navigate to="/accounts/dashboard" replace />} />
+            {/* Accounts & Finance */}
+            <Route path="/accounts" element={<Navigate to="/accounts/dashboard" replace />} />
+            <Route path="/accounts/dashboard" element={<ProtectedRoute module="ACCOUNTS"><AccountDashboard /></ProtectedRoute>} />
+            {SharedAccountsRoutes({ prefix: "accounts/" })}
+            {SharedAccountsRoutes({ prefix: "" })}
+            <Route path="/accounts/profile" element={<ProfilePage />} />
+            <Route path="/accounts/settings" element={<SettingsPage />} />
+            <Route path="/account/*" element={<AccountRedirectHandler />} />
+            <Route path="/account" element={<Navigate to="/accounts/dashboard" replace />} />
 
-          {/* Inventory */}
-          <Route path="/inventory" element={<Navigate to="/inventory/dashboard" replace />} />
-          {SharedInventoryRoutes({ prefix: "" })}
-          {SharedInventoryRoutes({ prefix: "inventory/" })}
+            {/* Inventory */}
+            <Route path="/inventory" element={<Navigate to="/inventory/dashboard" replace />} />
+            {SharedInventoryRoutes({ prefix: "" })}
+            {SharedInventoryRoutes({ prefix: "inventory/" })}
 
-          {/* CRM & Sales */}
-          <Route path="/crm" element={<Navigate to="/crm/dashboard" replace />} />
-          <Route path="/crm/dashboard" element={<ProtectedRoute module="CRM"><SalesCRMDashboard /></ProtectedRoute>} />
-          <Route path="/crm/customers" element={<ProtectedRoute module="CUSTOMERS"><CustomerManagement /></ProtectedRoute>} />
-          <Route path="/crm/customers/:id" element={<ProtectedRoute module="CUSTOMERS"><CustomerDetails /></ProtectedRoute>} />
-          <Route path="/crm/leads" element={<ProtectedRoute module="LEADS"><LeadTracking /></ProtectedRoute>} />
-          <Route path="/crm/quotations" element={<ProtectedRoute module="QUOTATIONS"><QuotationsPage /></ProtectedRoute>} />
-          <Route path="/crm/quotations/:id" element={<ProtectedRoute module="QUOTATIONS"><QuotationDetails /></ProtectedRoute>} />
-          <Route path="/crm/orders" element={<ProtectedRoute module="SALES_ORDERS"><SalesOrders /></ProtectedRoute>} />
-          <Route path="/crm/communication" element={<ProtectedRoute module="COMMUNICATION"><CustomerCommunication /></ProtectedRoute>} />
-          <Route path="/crm/analytics" element={<ProtectedRoute module="ANALYTICS"><SalesAnalytics /></ProtectedRoute>} />
-          <Route path="/crm/invoices" element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoices /></ProtectedRoute>} />
-          <Route path="/crm/invoices/:id" element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoiceDetails /></ProtectedRoute>} />
-          <Route path="/crm/audit" element={<ProtectedRoute module="AUDIT_LOGS"><AuditLogsPage /></ProtectedRoute>} />
-          <Route path="/sales-crm/*" element={<Navigate to="/crm" replace />} />
-          <Route path="/sales-crm" element={<Navigate to="/crm/dashboard" replace />} />
+            {/* CRM & Sales */}
+            <Route path="/crm" element={<Navigate to="/crm/dashboard" replace />} />
+            <Route path="/crm/dashboard" element={<ProtectedRoute module="CRM"><SalesCRMDashboard /></ProtectedRoute>} />
+            <Route path="/crm/customers" element={<ProtectedRoute module="CUSTOMERS"><CustomerManagement /></ProtectedRoute>} />
+            <Route path="/crm/customers/:id" element={<ProtectedRoute module="CUSTOMERS"><CustomerDetails /></ProtectedRoute>} />
+            <Route path="/crm/leads" element={<ProtectedRoute module="LEADS"><LeadTracking /></ProtectedRoute>} />
+            <Route path="/crm/quotations" element={<ProtectedRoute module="QUOTATIONS"><QuotationsPage /></ProtectedRoute>} />
+            <Route path="/crm/quotations/:id" element={<ProtectedRoute module="QUOTATIONS"><QuotationDetails /></ProtectedRoute>} />
+            <Route path="/crm/orders" element={<ProtectedRoute module="SALES_ORDERS"><SalesOrders /></ProtectedRoute>} />
+            <Route path="/crm/communication" element={<ProtectedRoute module="COMMUNICATION"><CustomerCommunication /></ProtectedRoute>} />
+            <Route path="/crm/analytics" element={<ProtectedRoute module="ANALYTICS"><SalesAnalytics /></ProtectedRoute>} />
+            <Route path="/crm/invoices" element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoices /></ProtectedRoute>} />
+            <Route path="/crm/invoices/:id" element={<ProtectedRoute module="SALES_INVOICES"><SalesInvoiceDetails /></ProtectedRoute>} />
+            <Route path="/crm/audit" element={<ProtectedRoute module="AUDIT_LOGS"><AuditLogsPage /></ProtectedRoute>} />
+            <Route path="/sales-crm/*" element={<Navigate to="/crm" replace />} />
+            <Route path="/sales-crm" element={<Navigate to="/crm/dashboard" replace />} />
 
-          {/* Direct Procurement Routes */}
-          <Route element={<PurchaseModuleLayout />}>
-            <Route path="/purchase-requisitions" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequests /></ProtectedRoute>} />
-            <Route path="/purchase-requisitions/new" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequisitionForm /></ProtectedRoute>} />
-            <Route path="/purchase-requisitions/:id" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequisitionDetail /></ProtectedRoute>} />
-            <Route path="/purchase-requisitions/:id/edit" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequisitionForm /></ProtectedRoute>} />
-            <Route path="/rfqs" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQs /></ProtectedRoute>} />
-            <Route path="/rfqs/new" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQForm /></ProtectedRoute>} />
-            <Route path="/rfqs/:id" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQDetail /></ProtectedRoute>} />
-            <Route path="/rfqs/:id/edit" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQForm /></ProtectedRoute>} />
-            <Route path="/supplier-quotes" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotations /></ProtectedRoute>} />
-            <Route path="/purchase-quotations" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotations /></ProtectedRoute>} />
-            <Route path="/supplier-quotations" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotations /></ProtectedRoute>} />
-            <Route path="/supplier-quotations/new" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotationForm /></ProtectedRoute>} />
-            <Route path="/supplier-quotations/:id" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotationDetail /></ProtectedRoute>} />
-            <Route path="/supplier-quotations/:id/edit" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotationForm /></ProtectedRoute>} />
-            <Route path="/supplier-quotations/compare/:rfqId" element={<ProtectedRoute module="PURCHASE_ORDERS"><QuotationComparison /></ProtectedRoute>} />
-            <Route path="/purchase-orders" element={<ProtectedRoute module="PURCHASE_ORDERS"><PurchaseOrders /></ProtectedRoute>} />
-            <Route path="/purchase-orders/new" element={<ProtectedRoute module="PURCHASE_ORDERS"><PurchaseOrderCreate /></ProtectedRoute>} />
-            <Route path="/purchase-orders/:id" element={<ProtectedRoute module="PURCHASE_ORDERS"><PurchaseOrderDetails /></ProtectedRoute>} />
-            <Route path="/goods-receipts" element={<ProtectedRoute module="GOODS_RECEIPTS"><GoodsReceipts /></ProtectedRoute>} />
-            <Route path="/purchase-invoices" element={<ProtectedRoute module="PURCHASE_INVOICES"><APInvoices /></ProtectedRoute>} />
-            <Route path="/purchase-invoices/:id" element={<ProtectedRoute module="PURCHASE_INVOICES"><APInvoiceDetails /></ProtectedRoute>} />
-            <Route path="/payments" element={<ProtectedRoute module="PAYMENT_VOUCHERS"><APPayments /></ProtectedRoute>} />
+            {/* Direct Procurement Routes */}
+            <Route element={<PurchaseModuleLayout />}>
+              <Route path="/purchase-requisitions" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequests /></ProtectedRoute>} />
+              <Route path="/purchase-requisitions/new" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequisitionForm /></ProtectedRoute>} />
+              <Route path="/purchase-requisitions/:id" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequisitionDetail /></ProtectedRoute>} />
+              <Route path="/purchase-requisitions/:id/edit" element={<ProtectedRoute module="PURCHASE_REQUISITIONS"><PurchaseRequisitionForm /></ProtectedRoute>} />
+              <Route path="/rfqs" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQs /></ProtectedRoute>} />
+              <Route path="/rfqs/new" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQForm /></ProtectedRoute>} />
+              <Route path="/rfqs/:id" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQDetail /></ProtectedRoute>} />
+              <Route path="/rfqs/:id/edit" element={<ProtectedRoute module="PURCHASE_ORDERS"><RFQForm /></ProtectedRoute>} />
+              <Route path="/supplier-quotes" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotations /></ProtectedRoute>} />
+              <Route path="/purchase-quotations" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotations /></ProtectedRoute>} />
+              <Route path="/supplier-quotations" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotations /></ProtectedRoute>} />
+              <Route path="/supplier-quotations/new" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotationForm /></ProtectedRoute>} />
+              <Route path="/supplier-quotations/:id" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotationDetail /></ProtectedRoute>} />
+              <Route path="/supplier-quotations/:id/edit" element={<ProtectedRoute module="PURCHASE_ORDERS"><SupplierQuotationForm /></ProtectedRoute>} />
+              <Route path="/supplier-quotations/compare/:rfqId" element={<ProtectedRoute module="PURCHASE_ORDERS"><QuotationComparison /></ProtectedRoute>} />
+              <Route path="/purchase-orders" element={<ProtectedRoute module="PURCHASE_ORDERS"><PurchaseOrders /></ProtectedRoute>} />
+              <Route path="/purchase-orders/new" element={<ProtectedRoute module="PURCHASE_ORDERS"><PurchaseOrderCreate /></ProtectedRoute>} />
+              <Route path="/purchase-orders/:id" element={<ProtectedRoute module="PURCHASE_ORDERS"><PurchaseOrderDetails /></ProtectedRoute>} />
+              <Route path="/goods-receipts" element={<ProtectedRoute module="GOODS_RECEIPTS"><GoodsReceipts /></ProtectedRoute>} />
+              <Route path="/purchase-invoices" element={<ProtectedRoute module="PURCHASE_INVOICES"><APInvoices /></ProtectedRoute>} />
+              <Route path="/purchase-invoices/:id" element={<ProtectedRoute module="PURCHASE_INVOICES"><APInvoiceDetails /></ProtectedRoute>} />
+              <Route path="/payments" element={<ProtectedRoute module="PAYMENT_VOUCHERS"><APPayments /></ProtectedRoute>} />
+            </Route>
+
+            {/* Direct Workflow & Approvals Routes */}
+            <Route path="/workflows" element={<ProtectedRoute module="WORKFLOW"><WorkflowManagementPage /></ProtectedRoute>} />
+            <Route path="/workflows/approvals" element={<ProtectedRoute module="APPROVAL_REQUESTS"><ApprovalRequestsPage /></ProtectedRoute>} />
+            <Route path="/workflows/transactions/:transactionId" element={<ProtectedRoute module="WORKFLOW"><DynamicWorkflowPage /></ProtectedRoute>} />
+            <Route path="/workflows/document/:documentType/:documentId" element={<ProtectedRoute module="WORKFLOW"><DynamicWorkflowPage /></ProtectedRoute>} />
+            <Route path="/workflow" element={<Navigate to="/workflows" replace />} />
+            <Route path="/workflow/approvals" element={<Navigate to="/workflows/approvals" replace />} />
+
+            {/* Tenant Core Pages */}
+            <Route path="/modules" element={<CompanyModules />} />
+            <Route path="/modules/:id" element={<ModuleDetails />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/company-dashboard" element={<CompanyDashboard />} />
+            <Route path="/subscription" element={<SubscriptionPage />} />
+
+            {/* All other shared company routes (HR, Manufacturing, etc.) */}
+            {SharedCompanyRoutes({ prefix: "" })}
+
+            {/* SSO & Administration */}
+            <Route path="/admin" element={<ProtectedRoute module="SSO"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/system-logs" element={<ProtectedRoute module="SSO"><SystemLogsPage /></ProtectedRoute>} />
+            <Route path="/users" element={<ProtectedRoute module="USER"><UserList /></ProtectedRoute>} />
+            <Route path="/users/:id" element={<ProtectedRoute module="USER"><UserDetails /></ProtectedRoute>} />
+            <Route path="/roles" element={<ProtectedRoute module="ROLE"><RoleList /></ProtectedRoute>} />
+            <Route path="/portal-access" element={<ProtectedRoute module="PORTAL_ACCESS"><PortalAccess /></ProtectedRoute>} />
+            <Route path="/sessions" element={<ProtectedRoute module="SESSION"><SessionList /></ProtectedRoute>} />
+            <Route path="/security/roles" element={<ProtectedRoute module="ROLE"><RolePermissionsSettings /></ProtectedRoute>} />
+            <Route path="/roles/permissions" element={<ProtectedRoute module="ROLE"><RolePermissionsSettings /></ProtectedRoute>} />
+            <Route path="/security/users" element={<ProtectedRoute module="USER"><Navigate to="/settings/security/roles" replace /></ProtectedRoute>} />
+            <Route path="/security/features" element={<ProtectedRoute module="FEATURE"><FeatureList /></ProtectedRoute>} />
+            <Route path="/security/permissions" element={<ProtectedRoute module="PERMISSION"><PermissionList /></ProtectedRoute>} />
+            <Route path="/features" element={<ProtectedRoute module="FEATURE"><FeatureList /></ProtectedRoute>} />
+
+            {/* Settings */}
+            <Route path="/settings" element={<Navigate to="/settings/general" replace />} />
+            <Route path="/settings/general" element={<GeneralSettings />} />
+            <Route path="/settings/security" element={<SecuritySettings />} />
+            <Route path="/settings/security/features" element={<FeatureList />} />
+            <Route path="/settings/security/permissions" element={<PermissionList />} />
+            <Route path="/settings/security/roles" element={<RolePermissionsSettings />} />
+            <Route path="/settings/security/users" element={<Navigate to="/settings/security/roles" replace />} />
+            <Route path="/settings/notifications" element={<NotificationsSettings />} />
+            <Route path="/settings/integrations" element={<IntegrationsSettings />} />
+            <Route path="/settings/audit-logs" element={<AuditLogsSettings />} />
+            <Route path="/settings/preferences" element={<PreferencesSettings />} />
+            <Route path="/settings/appearance" element={<AppearanceSettings />} />
+            <Route path="/settings/themes" element={<Navigate to="/settings/appearance" replace />} />
+            <Route path="/settings/appearance-themes" element={<Navigate to="/settings/appearance" replace />} />
+            <Route path="/settings/plans" element={<SubscriptionPlansSettings />} />
+            <Route path="/settings/roles" element={<Navigate to="/settings/security/roles" replace />} />
+            <Route path="/settings/users" element={<Navigate to="/settings/security/roles" replace />} />
+            <Route path="/settings/features" element={<Navigate to="/settings/security/features" replace />} />
+            <Route path="/settings/permissions" element={<Navigate to="/settings/security/permissions" replace />} />
+            <Route path="/settings/sales" element={<SalesSettings />} />
+            <Route path="/settings/account" element={<SalesSettings />} />
+            <Route path="/settings/inventory" element={<InventorySettingsPage />} />
+            <Route path="/settings/workflow" element={<WorkflowSettingsPage />} />
+            <Route path="/settings/crm" element={<CrmSettingsPage />} />
+            <Route path="/settings/organization" element={<OrganizationSettingsPage />} />
+            <Route path="/settings/organization/:section" element={<OrganizationSettingsPage />} />
+            <Route path="/settings/my-account" element={<Navigate to="/profile" replace />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
-          {/* Direct Workflow & Approvals Routes */}
-          <Route path="/workflows" element={<ProtectedRoute module="WORKFLOW"><WorkflowManagementPage /></ProtectedRoute>} />
-          <Route path="/workflows/approvals" element={<ProtectedRoute module="APPROVAL_REQUESTS"><ApprovalRequestsPage /></ProtectedRoute>} />
-          <Route path="/workflows/transactions/:transactionId" element={<ProtectedRoute module="WORKFLOW"><DynamicWorkflowPage /></ProtectedRoute>} />
-          <Route path="/workflows/document/:documentType/:documentId" element={<ProtectedRoute module="WORKFLOW"><DynamicWorkflowPage /></ProtectedRoute>} />
-          <Route path="/workflow" element={<Navigate to="/workflows" replace />} />
-          <Route path="/workflow/approvals" element={<Navigate to="/workflows/approvals" replace />} />
-
-          {/* Tenant Core Pages */}
-          <Route path="/modules" element={<CompanyModules />} />
-          <Route path="/modules/:id" element={<ModuleDetails />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/company-dashboard" element={<CompanyDashboard />} />
-          <Route path="/subscription" element={<SubscriptionPage />} />
-
-          {/* All other shared company routes (HR, Manufacturing, etc.) */}
-          {SharedCompanyRoutes({ prefix: "" })}
-
-          {/* SSO & Administration */}
-          <Route path="/admin" element={<ProtectedRoute module="SSO"><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/admin/system-logs" element={<ProtectedRoute module="SSO"><SystemLogsPage /></ProtectedRoute>} />
-          <Route path="/users" element={<ProtectedRoute module="USER"><UserList /></ProtectedRoute>} />
-          <Route path="/users/:id" element={<ProtectedRoute module="USER"><UserDetails /></ProtectedRoute>} />
-          <Route path="/roles" element={<ProtectedRoute module="ROLE"><RoleList /></ProtectedRoute>} />
-          <Route path="/portal-access" element={<ProtectedRoute module="PORTAL_ACCESS"><PortalAccess /></ProtectedRoute>} />
-          <Route path="/sessions" element={<ProtectedRoute module="SESSION"><SessionList /></ProtectedRoute>} />
-          <Route path="/security/roles" element={<ProtectedRoute module="ROLE"><RolePermissionsSettings /></ProtectedRoute>} />
-          <Route path="/roles/permissions" element={<ProtectedRoute module="ROLE"><RolePermissionsSettings /></ProtectedRoute>} />
-          <Route path="/security/users" element={<ProtectedRoute module="USER"><Navigate to="/settings/security/roles" replace /></ProtectedRoute>} />
-          <Route path="/security/features" element={<ProtectedRoute module="FEATURE"><FeatureList /></ProtectedRoute>} />
-          <Route path="/security/permissions" element={<ProtectedRoute module="PERMISSION"><PermissionList /></ProtectedRoute>} />
-          <Route path="/features" element={<ProtectedRoute module="FEATURE"><FeatureList /></ProtectedRoute>} />
-
-          {/* Settings */}
-          <Route path="/settings" element={<Navigate to="/settings/general" replace />} />
-          <Route path="/settings/general" element={<GeneralSettings />} />
-          <Route path="/settings/security" element={<SecuritySettings />} />
-          <Route path="/settings/security/features" element={<FeatureList />} />
-          <Route path="/settings/security/permissions" element={<PermissionList />} />
-          <Route path="/settings/security/roles" element={<RolePermissionsSettings />} />
-          <Route path="/settings/security/users" element={<Navigate to="/settings/security/roles" replace />} />
-          <Route path="/settings/notifications" element={<NotificationsSettings />} />
-          <Route path="/settings/integrations" element={<IntegrationsSettings />} />
-          <Route path="/settings/audit-logs" element={<AuditLogsSettings />} />
-          <Route path="/settings/preferences" element={<PreferencesSettings />} />
-          <Route path="/settings/appearance" element={<AppearanceSettings />} />
-          <Route path="/settings/themes" element={<Navigate to="/settings/appearance" replace />} />
-          <Route path="/settings/appearance-themes" element={<Navigate to="/settings/appearance" replace />} />
-          <Route path="/settings/plans" element={<SubscriptionPlansSettings />} />
-          <Route path="/settings/roles" element={<Navigate to="/settings/security/roles" replace />} />
-          <Route path="/settings/users" element={<Navigate to="/settings/security/roles" replace />} />
-          <Route path="/settings/features" element={<Navigate to="/settings/security/features" replace />} />
-          <Route path="/settings/permissions" element={<Navigate to="/settings/security/permissions" replace />} />
-          <Route path="/settings/sales" element={<SalesSettings />} />
-          <Route path="/settings/account" element={<SalesSettings />} />
-          <Route path="/settings/inventory" element={<InventorySettingsPage />} />
-          <Route path="/settings/workflow" element={<WorkflowSettingsPage />} />
-          <Route path="/settings/crm" element={<CrmSettingsPage />} />
-          <Route path="/settings/organization" element={<OrganizationSettingsPage />} />
-          <Route path="/settings/my-account" element={<Navigate to="/profile" replace />} />
-          <Route path="/profile" element={<ProfilePage />} />
-        </Route>
-
-        {/* ── SUPERADMIN COMPANY ROUTES ── */}
-        <Route
-          path="/company/:companyId"
-          element={
-            <ProtectedRoute requireCompany={true}>
-              <CompanyLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<CompanyEntryRedirect />} />
-          <Route path="modules" element={<CompanyModules />} />
-          <Route path="modules/:id" element={<ModuleDetails />} />
-          <Route path="dashboard" element={<Dashboard />} />
-
-          <Route path="company-dashboard" element={<CompanyDashboard />} />
-          <Route path="subscription" element={<SubscriptionPage />} />
-          <Route path="gst-reports/*" element={<CompanyGstRedirect />} />
-
-          {/* Finance & Accounts Module (Replacing Legacy Finance/Accounting) */}
-          {SharedAccountsRoutes({ prefix: "accounts/" })}
-
-          {/* Accounts Masters */}
-          {/* Accounts Reports */}
-          {/* Legacy Links (To prevent breaking bookmarks / external references) */}
-          <Route path="finance/expenses" element={<ExpenseTracking />} />
+          {/* ── SUPERADMIN COMPANY ROUTES ── */}
           <Route
-            path="finance/journal-lines"
+            path="/company/:companyId"
             element={
-              <ProtectedRoute module="GL_JOURNALS">
-                <JournalLines />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="finance/budget-lines"
-            element={
-              <ProtectedRoute module="BUDGET_HEADERS">
-                <BudgetLines />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="accounting/sales-orders" element={<SalesOrders />} />
-
-          {SharedCompanyRoutes({ prefix: "" })}
-          <Route path="workflows" element={<ProtectedRoute module="WORKFLOW"><WorkflowManagementPage /></ProtectedRoute>} />
-          <Route path="workflows/approvals" element={<ProtectedRoute module="WORKFLOW_TASKS"><ApprovalRequestsPage /></ProtectedRoute>} />
-          <Route path="workflow" element={<CompanyWorkflowRedirect />} />
-          <Route path="workflow/approvals" element={<CompanyWorkflowApprovalsRedirect />} />
-          <Route
-            path="manufacturing/audit"
-            element={<AuditLogsPage moduleFilter="Manufacturing" />}
-          />
-
-          {/* Admin-only sections */}
-          <Route path="admin" element={<ProtectedRoute module="SSO"><AdminDashboard /></ProtectedRoute>} />
-          <Route path="admin/system-logs" element={<ProtectedRoute module="SSO"><SystemLogsPage /></ProtectedRoute>} />
-          <Route path="users" element={<ProtectedRoute module="USER"><UserList /></ProtectedRoute>} />
-          <Route path="users/:id" element={<ProtectedRoute module="USER"><UserDetails /></ProtectedRoute>} />
-          <Route path="roles" element={<ProtectedRoute module="ROLE"><RoleList /></ProtectedRoute>} />
-          <Route path="portal-access" element={<ProtectedRoute module="PORTAL_ACCESS"><PortalAccess /></ProtectedRoute>} />
-          <Route path="sessions" element={<ProtectedRoute module="SESSION"><SessionList /></ProtectedRoute>} />
-          <Route path="security/roles" element={<ProtectedRoute module="ROLE"><RolePermissionsSettings /></ProtectedRoute>} />
-          <Route path="roles/permissions" element={<RolePermissionsSettings />} />
-          <Route path="security/users" element={<Navigate to="/settings/security/roles" replace />} />
-          <Route path="security/features" element={<FeatureList />} />
-          <Route path="security/permissions" element={<PermissionList />} />
-          <Route path="features" element={<FeatureList />} />
-
-          {/* Reports */}
-          <Route path="reports" element={<FinancialReports />} />
-          <Route path="reports/receivables" element={<ReceivablesReport />} />
-          <Route path="reports/payables" element={<PayablesReport />} />
-          <Route path="reports/tb" element={<TrialBalance />} />
-          <Route path="reports/pl" element={<ProfitLoss />} />
-          <Route path="reports/bs" element={<BalanceSheet />} />
-
-          {/* Utility */}
-          <Route path="settings" element={<Navigate to="general" replace />} />
-          <Route path="settings/general" element={<GeneralSettings />} />
-          <Route path="settings/security" element={<SecuritySettings />} />
-          <Route path="settings/security/features" element={<FeatureList />} />
-          <Route path="settings/security/permissions" element={<PermissionList />} />
-          <Route path="settings/notifications" element={<NotificationsSettings />} />
-          <Route path="settings/security/roles" element={<RolePermissionsSettings />} />
-          <Route path="settings/security/users" element={<Navigate to="/settings/security/roles" replace />} />
-          <Route path="settings/integrations" element={<IntegrationsSettings />} />
-          <Route path="settings/audit-logs" element={<AuditLogsSettings />} />
-          <Route path="settings/preferences" element={<PreferencesSettings />} />
-          <Route path="settings/appearance" element={<AppearanceSettings />} />
-          <Route path="settings/themes" element={<Navigate to="settings/appearance" replace />} />
-          <Route path="settings/appearance-themes" element={<Navigate to="settings/appearance" replace />} />
-          <Route path="settings/plans" element={<SubscriptionPlansSettings />} />
-          <Route path="settings/sales" element={<SalesSettings />} />
-          <Route path="settings/account" element={<SalesSettings />} />
-          <Route path="settings/inventory" element={<InventorySettingsPage />} />
-          <Route path="settings/workflow" element={<WorkflowSettingsPage />} />
-          <Route path="settings/crm" element={<CrmSettingsPage />} />
-          <Route path="settings/organization" element={<OrganizationSettingsPage />} />
-          <Route path="settings/my-account" element={<CompanyProfileRedirect />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="*" element={<CompanyEntryRedirect />} />
-        </Route>
-
-        {/* 🏢 SUPER ADMIN ROUTES 🏢 */}
-        <Route
-          path="/super-admin"
-          element={
-            <ProtectedRoute requireCompany={false}>
-              <RoleRoute allowedRoles={["super_admin"]}>
+              <ProtectedRoute requireCompany={true}>
                 <CompanyLayout />
-              </RoleRoute>
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/super-admin/dashboard" replace />} />
-          <Route path="dashboard" element={<SuperAdminDashboard />} />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<CompanyEntryRedirect />} />
+            <Route path="modules" element={<CompanyModules />} />
+            <Route path="modules/:id" element={<ModuleDetails />} />
+            <Route path="dashboard" element={<Dashboard />} />
 
-          {/* ── Organization Routes (Organization-first architecture) ── */}
-          <Route path="organizations" element={<OrganizationList />} />
-          <Route path="organizations/provision" element={<ProvisionOrganization />} />
-          <Route path="organizations/:organizationId" element={<OrganizationDetails />} />
-          {/* Companies nested under organization (org-scoped view) */}
-          <Route path="organizations/:organizationId/companies" element={<CompanyList />} />
-          <Route path="organizations/:organizationId/companies/:id" element={<CompanyDetails />} />
+            <Route path="company-dashboard" element={<CompanyDashboard />} />
+            <Route path="subscription" element={<SubscriptionPage />} />
+            <Route path="gst-reports/*" element={<CompanyGstRedirect />} />
 
-          {/* ── Legacy Company Routes (preserved for backward compatibility) ── */}
-          <Route path="companies" element={<CompanyList />} />
-          <Route path="companies/:id" element={<CompanyDetails />} />
-          <Route path="company-modules" element={<CompanyModuleManagement />} />
-          <Route path="company-modules/:id" element={<CompanyModuleDetailsPage />} />
+            {/* Finance & Accounts Module (Replacing Legacy Finance/Accounting) */}
+            {SharedAccountsRoutes({ prefix: "accounts/" })}
 
-          {/* ── Users / Roles / Modules ── */}
-          <Route path="users" element={<UserList />} />
-          <Route path="users/:id" element={<UserDetails />} />
-          <Route path="roles" element={<RoleList />} />
-          <Route path="modules" element={<ModuleList />} />
-          <Route path="modules/:id" element={<ModuleDetails />} />
-          <Route path="module-routes" element={<ModuleRoutesList />} />
+            {/* Accounts Masters */}
+            {/* Accounts Reports */}
+            {/* Legacy Links (To prevent breaking bookmarks / external references) */}
+            <Route path="finance/expenses" element={<ExpenseTracking />} />
+            <Route
+              path="finance/journal-lines"
+              element={
+                <ProtectedRoute module="GL_JOURNALS">
+                  <JournalLines />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="finance/budget-lines"
+              element={
+                <ProtectedRoute module="BUDGET_HEADERS">
+                  <BudgetLines />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="accounting/sales-orders" element={<SalesOrders />} />
 
-          <Route path="reports" element={<FinancialReports />} />
-          <Route path="audit-logs" element={<AuditLogsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-        </Route>
+            {SharedCompanyRoutes({ prefix: "" })}
+            <Route path="workflows" element={<ProtectedRoute module="WORKFLOW"><WorkflowManagementPage /></ProtectedRoute>} />
+            <Route path="workflows/approvals" element={<ProtectedRoute module="WORKFLOW_TASKS"><ApprovalRequestsPage /></ProtectedRoute>} />
+            <Route path="workflow" element={<CompanyWorkflowRedirect />} />
+            <Route path="workflow/approvals" element={<CompanyWorkflowApprovalsRedirect />} />
+            <Route
+              path="manufacturing/audit"
+              element={<AuditLogsPage moduleFilter="Manufacturing" />}
+            />
 
-        {/* ── Catch-all 404 Route ── */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+            {/* Admin-only sections */}
+            <Route path="admin" element={<ProtectedRoute module="SSO"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="admin/system-logs" element={<ProtectedRoute module="SSO"><SystemLogsPage /></ProtectedRoute>} />
+            <Route path="users" element={<ProtectedRoute module="USER"><UserList /></ProtectedRoute>} />
+            <Route path="users/:id" element={<ProtectedRoute module="USER"><UserDetails /></ProtectedRoute>} />
+            <Route path="roles" element={<ProtectedRoute module="ROLE"><RoleList /></ProtectedRoute>} />
+            <Route path="portal-access" element={<ProtectedRoute module="PORTAL_ACCESS"><PortalAccess /></ProtectedRoute>} />
+            <Route path="sessions" element={<ProtectedRoute module="SESSION"><SessionList /></ProtectedRoute>} />
+            <Route path="security/roles" element={<ProtectedRoute module="ROLE"><RolePermissionsSettings /></ProtectedRoute>} />
+            <Route path="roles/permissions" element={<RolePermissionsSettings />} />
+            <Route path="security/users" element={<Navigate to="/settings/security/roles" replace />} />
+            <Route path="security/features" element={<FeatureList />} />
+            <Route path="security/permissions" element={<PermissionList />} />
+            <Route path="features" element={<FeatureList />} />
+
+            {/* Reports */}
+            <Route path="reports" element={<FinancialReports />} />
+            <Route path="reports/receivables" element={<ReceivablesReport />} />
+            <Route path="reports/payables" element={<PayablesReport />} />
+            <Route path="reports/tb" element={<TrialBalance />} />
+            <Route path="reports/pl" element={<ProfitLoss />} />
+            <Route path="reports/bs" element={<BalanceSheet />} />
+
+            {/* Utility */}
+            <Route path="settings" element={<Navigate to="general" replace />} />
+            <Route path="settings/general" element={<GeneralSettings />} />
+            <Route path="settings/security" element={<SecuritySettings />} />
+            <Route path="settings/security/features" element={<FeatureList />} />
+            <Route path="settings/security/permissions" element={<PermissionList />} />
+            <Route path="settings/notifications" element={<NotificationsSettings />} />
+            <Route path="settings/security/roles" element={<RolePermissionsSettings />} />
+            <Route path="settings/security/users" element={<Navigate to="/settings/security/roles" replace />} />
+            <Route path="settings/integrations" element={<IntegrationsSettings />} />
+            <Route path="settings/audit-logs" element={<AuditLogsSettings />} />
+            <Route path="settings/preferences" element={<PreferencesSettings />} />
+            <Route path="settings/appearance" element={<AppearanceSettings />} />
+            <Route path="settings/themes" element={<Navigate to="settings/appearance" replace />} />
+            <Route path="settings/appearance-themes" element={<Navigate to="settings/appearance" replace />} />
+            <Route path="settings/plans" element={<SubscriptionPlansSettings />} />
+            <Route path="settings/sales" element={<SalesSettings />} />
+            <Route path="settings/account" element={<SalesSettings />} />
+            <Route path="settings/inventory" element={<InventorySettingsPage />} />
+            <Route path="settings/workflow" element={<WorkflowSettingsPage />} />
+            <Route path="settings/crm" element={<CrmSettingsPage />} />
+            <Route path="settings/organization" element={<OrganizationSettingsPage />} />
+            <Route path="settings/organization/:section" element={<OrganizationSettingsPage />} />
+            <Route path="settings/my-account" element={<CompanyProfileRedirect />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="*" element={<CompanyEntryRedirect />} />
+          </Route>
+
+          {/* 🏢 SUPER ADMIN ROUTES 🏢 */}
+          <Route
+            path="/super-admin"
+            element={
+              <ProtectedRoute requireCompany={false}>
+                <RoleRoute allowedRoles={["super_admin"]}>
+                  <CompanyLayout />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/super-admin/dashboard" replace />} />
+            <Route path="dashboard" element={<SuperAdminDashboard />} />
+
+            {/* ── Organization Routes (Organization-first architecture) ── */}
+            <Route path="organizations" element={<OrganizationList />} />
+            <Route path="organizations/provision" element={<ProvisionOrganization />} />
+            <Route path="organizations/:organizationId" element={<OrganizationDetails />} />
+            {/* Companies nested under organization (org-scoped view) */}
+            <Route path="organizations/:organizationId/companies" element={<CompanyList />} />
+            <Route path="organizations/:organizationId/companies/:id" element={<CompanyDetails />} />
+
+            {/* ── Legacy Company Routes (preserved for backward compatibility) ── */}
+            <Route path="companies" element={<CompanyList />} />
+            <Route path="companies/:id" element={<CompanyDetails />} />
+            <Route path="company-modules" element={<CompanyModuleManagement />} />
+            <Route path="company-modules/:id" element={<CompanyModuleDetailsPage />} />
+
+            {/* ── Users / Roles / Modules ── */}
+            <Route path="users" element={<UserList />} />
+            <Route path="users/:id" element={<UserDetails />} />
+            <Route path="roles" element={<RoleList />} />
+            <Route path="modules" element={<ModuleList />} />
+            <Route path="modules/:id" element={<ModuleDetails />} />
+            <Route path="module-routes" element={<ModuleRoutesList />} />
+
+            <Route path="reports" element={<FinancialReports />} />
+            <Route path="audit-logs" element={<AuditLogsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+          </Route>
+
+          {/* ── Catch-all 404 Route ── */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </SidebarProvider>
     </Suspense>
   );
