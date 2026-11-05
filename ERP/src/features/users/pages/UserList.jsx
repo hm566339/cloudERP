@@ -6,7 +6,7 @@ import { useAppSelector } from "../../../app/hooks";
 import { selectCurrentUser } from "../../../features/auth/authSlice";
 import {
   Search, UserPlus, Key, Edit, Edit2, Trash2, CheckCircle, AlertCircle, Eye, ShieldAlert,
-  Users, Building2, Layers, UserCog, RotateCcw, RefreshCw, ChevronDown, X, Mail
+  Users, Building2, Layers, UserCog, RotateCcw, RefreshCw, ChevronDown, X, Mail, ShieldCheck, UserCheck
 } from "lucide-react";
 import { useAppDispatch } from "../../../app/hooks";
 import { addAlert } from "../../notifications/notificationSlice";
@@ -20,6 +20,7 @@ import {
 import { getCompanies, getCompanyByCode } from '../../../api/sso/company';
 import { getRoles } from '../../../api/sso/role';
 import { getCompanyModulesByCompany } from '../../../api/sso/companyModules';
+import { useGetOrgMembersQuery } from '../../../api/sso/organization.api';
 import Pagination from "../../../components/common/Pagination";
 import { FILTER_CONFIGS } from "../../../constants/filterConfigs";
 import useApiFilters from "../../../hooks/useApiFilters";
@@ -34,6 +35,7 @@ import UserCreateEditModal from '../components/UserCreateEditModal';
 import UserChangePasswordModal from '../components/UserChangePasswordModal';
 import UserAssignRoleModal from '../components/UserAssignRoleModal';
 import UserModuleAccessModal from '../components/UserModuleAccessModal';
+import UserCompanyAccessModal from '../components/UserCompanyAccessModal';
 import CustomSelect from '../../../components/common/CustomSelect';
 import PageHeader from '../../../components/common/PageHeader';
 import ModuleTabs, { userTabs } from '../../../components/module-tabs';
@@ -46,7 +48,7 @@ export default function UserList() {
   const paramsCompanyId = useParams().companyId;
   const storageCompanyId = JSON.parse(localStorage.getItem("selected_company"))?.id || JSON.parse(localStorage.getItem("auth_user"))?.companyId;
   const [resolvedCompanyId, setResolvedCompanyId] = useState(paramsCompanyId || storageCompanyId);
-  const [visibleColumns, setVisibleColumns] = useState(['name', 'role', 'username', 'empId', 'active', 'emailStatus']);
+  const [visibleColumns, setVisibleColumns] = useState(['name', 'role', 'companyAccess', 'username', 'empId', 'active', 'emailStatus']);
   const [expandedRowId, setExpandedRowId] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -97,7 +99,7 @@ export default function UserList() {
         ...apiParams,
         companyId: activeCompanyId,
       };
-      
+
       // Remove sort parameter entirely since the backend doesn't support it
       delete queryParams.sort;
 
@@ -106,7 +108,7 @@ export default function UserList() {
         queryParams.pageSize = queryParams.size;
         delete queryParams.size;
       }
-      
+
       const res = await getUsers(activeCompanyId, queryParams);
 
       let usersArray = [];
@@ -139,36 +141,34 @@ export default function UserList() {
   }, [activeCompanyId, apiParams, skipFetch, dispatch]);
 
   const fetchDependencies = useCallback(async () => {
-    if (isSuperAdminGlobal) {
       try {
         const cRes = await getCompanies({ page: 0, pageSize: 200 });
         const rawComps = Array.isArray(cRes) ? cRes : (cRes?.companies || cRes?.content || cRes?.data?.content || cRes?.data || []);
         const mappedComps = (Array.isArray(rawComps) ? rawComps : []).map(c => ({ ...c, id: c.id || c.companyId, name: c.companyName || c.name || c.code || 'Unnamed Company' }));
         setCompanies(mappedComps);
-        if (!activeCompanyId && mappedComps.length > 0) setResolvedCompanyId(mappedComps[0].id);
+        if (isSuperAdminGlobal && !activeCompanyId && mappedComps.length > 0) setResolvedCompanyId(mappedComps[0].id);
       } catch (err) {
         console.error("Failed to fetch companies", err);
       }
-    }
 
-    if (!skipFetch) {
-      try {
-        const rRes = await getRoles({ companyId: activeCompanyId, page: 0, pageSize: 200 });
-        const rawRoles = Array.isArray(rRes) ? rRes : (rRes?.roles || rRes?.content || rRes?.data?.content || rRes?.data || []);
-        setAvailableRoles(Array.isArray(rawRoles) ? rawRoles : []);
-      } catch (err) {
-        console.error("Failed to fetch roles", err);
-      }
+      if (!skipFetch) {
+        try {
+          const rRes = await getRoles({ companyId: activeCompanyId, page: 0, pageSize: 200 });
+          const rawRoles = Array.isArray(rRes) ? rRes : (rRes?.roles || rRes?.content || rRes?.data?.content || rRes?.data || []);
+          setAvailableRoles(Array.isArray(rawRoles) ? rawRoles : []);
+        } catch (err) {
+          console.error("Failed to fetch roles", err);
+        }
 
-      try {
-        const cmRes = await getCompanyModulesByCompany(activeCompanyId);
-        const rawMods = Array.isArray(cmRes) ? cmRes : (cmRes?.companyModuleResponse || cmRes?.content || cmRes?.data?.content || cmRes?.data || []);
-        setRawCompanyModules(Array.isArray(rawMods) ? rawMods : []);
-      } catch (err) {
-        console.error("Failed to fetch company modules", err);
+        try {
+          const cmRes = await getCompanyModulesByCompany(activeCompanyId);
+          const rawMods = Array.isArray(cmRes) ? cmRes : (cmRes?.companyModuleResponse || cmRes?.content || cmRes?.data?.content || cmRes?.data || []);
+          setRawCompanyModules(Array.isArray(rawMods) ? rawMods : []);
+        } catch (err) {
+          console.error("Failed to fetch company modules", err);
+        }
       }
-    }
-  }, [activeCompanyId, isSuperAdminGlobal, skipFetch]);
+    }, [activeCompanyId, isSuperAdminGlobal, skipFetch]);
 
   useEffect(() => {
     fetchUsers();
@@ -238,6 +238,14 @@ export default function UserList() {
 
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [roleTargetUser, setRoleTargetUser] = useState(null);
+
+  const [showCompanyAccessModal, setShowCompanyAccessModal] = useState(false);
+  const [companyAccessTargetUser, setCompanyAccessTargetUser] = useState(null);
+
+  const openCompanyAccessModal = (user) => {
+    setCompanyAccessTargetUser(user);
+    setShowCompanyAccessModal(true);
+  };
 
   const canAssignModules = loggedInUser?.role === "super_admin" || loggedInUser?.role === "company_admin" || canEdit();
 
@@ -460,19 +468,91 @@ export default function UserList() {
         const color = safeRole === 'company_admin' || safeRole === 'Admin' || safeRole === 'super_admin'
           ? 'indigo'
           : safeRole === 'Manager' || safeRole === 'FINANCE_MANAGER'
-          ? 'purple'
-          : safeRole === 'ACCOUNTANT' || safeRole === 'Accountant'
-          ? 'emerald'
-          : 'zinc';
+            ? 'purple'
+            : safeRole === 'ACCOUNTANT' || safeRole === 'Accountant'
+              ? 'emerald'
+              : 'zinc';
         const displayRole = safeRole === 'company_admin'
           ? 'Company Admin'
           : safeRole === 'employee'
-          ? 'Employee'
-          : safeRole.replace(/_/g, ' ');
+            ? 'Employee'
+            : safeRole.replace(/_/g, ' ');
         return (
           <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-1 rounded-md border bg-${color}-50 text-${color}-700 border-${color}-200/60 uppercase`}>
-             {displayRole}
+            {displayRole}
           </span>
+        );
+      }
+    },
+    {
+      id: 'companyAccess',
+      label: 'Multi-Company Access',
+      sortable: false,
+      render: (val, row) => {
+        const accessList = row.companyAccess || [];
+        if (!accessList || accessList.length === 0) {
+          return (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openCompanyAccessModal(row);
+              }}
+              className="inline-flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 font-medium py-1 px-2.5 rounded-lg hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40 border border-dashed border-indigo-200 dark:border-indigo-800/60 transition-colors"
+            >
+              <Building2 size={13} />
+              <span>Assign Companies</span>
+            </button>
+          );
+        }
+
+        const activeAccess = accessList.filter(a => a.active);
+        const displayLimit = 2;
+        const visibleAccess = activeAccess.slice(0, displayLimit);
+        const remainingCount = activeAccess.length - displayLimit;
+
+        return (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {visibleAccess.map((acc) => (
+              <span
+                key={acc.companyId}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 shadow-2xs"
+                title={`${acc.companyName || acc.companyCode} (${acc.roleName || 'No role'})`}
+              >
+                <Building2 size={11} className="text-zinc-500 shrink-0" />
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100">{acc.companyName || acc.companyCode}</span>
+                {acc.roleName && (
+                  <span className="text-[10px] uppercase font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-1 py-0.2 rounded border border-indigo-200/50 dark:border-indigo-800/50">
+                    {acc.roleName}
+                  </span>
+                )}
+              </span>
+            ))}
+            {remainingCount > 0 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openCompanyAccessModal(row);
+                }}
+                className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 border border-zinc-200 dark:border-zinc-700 px-1.5 py-0.5 rounded transition-colors"
+                title="View all assigned companies"
+              >
+                +{remainingCount} more
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openCompanyAccessModal(row);
+              }}
+              className="p-1 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded transition-colors"
+              title="Manage Multi-Company Access & Roles"
+            >
+              <Building2 size={13} />
+            </button>
+          </div>
         );
       }
     },
@@ -583,6 +663,14 @@ export default function UserList() {
       className: 'hover:text-amber-600 hover:bg-amber-50'
     },
     ...(canEdit() ? [
+      {
+        key: 'manage-company-access',
+        label: 'Manage Company Access',
+        icon: Building2,
+        onClick: (row) => openCompanyAccessModal(row),
+        tooltip: 'Manage Multi-Company Access & Roles',
+        className: 'hover:text-indigo-600 hover:bg-indigo-50'
+      },
       {
         key: 'assign-role',
         label: 'Assign Role',
@@ -724,7 +812,7 @@ export default function UserList() {
         </PermissionGuard>
       </PageHeader>
       <ModuleTabs tabs={userTabs} activeKey="users" />
-      
+
       <div className="flex-1 p-6 overflow-hidden flex flex-col">
         <DataTable
           permissionFeature="USER"
@@ -737,7 +825,7 @@ export default function UserList() {
           loading={isLoading}
           emptyMessage={!activeCompanyId ? "Please Select a Company" : "No users found"}
           emptyDescription={!activeCompanyId ? "Select a company from the filter above to view its users." : "No users match your filters."}
-          
+
           // Search
           searchable
           searchValue={searchTerm || ''}
@@ -748,8 +836,8 @@ export default function UserList() {
             label: (val) => `Provision "${val}"`,
             description: 'Provision a new user account',
             onCreate: (term) => {
-               // Open modal optionally pre-filled if logic supported
-               openCreateModal();
+              // Open modal optionally pre-filled if logic supported
+              openCreateModal();
             }
           }}
 
@@ -800,8 +888,8 @@ export default function UserList() {
           // Empty State
           emptyMessage={skipFetch ? 'No Company Selected' : 'No users found'}
           emptyDescription={
-            skipFetch 
-              ? 'Please select a company from the dropdown to view its users.' 
+            skipFetch
+              ? 'Please select a company from the dropdown to view its users.'
               : 'Try adjusting your search keywords or filter criteria to find users.'
           }
         />
@@ -873,6 +961,17 @@ export default function UserList() {
         user={roleTargetUser}
         availableRoles={availableRoles}
         assignUserRoleMutation={assignRole}
+      />
+
+      <UserCompanyAccessModal
+        isOpen={showCompanyAccessModal}
+        onClose={() => {
+          setShowCompanyAccessModal(false);
+          setCompanyAccessTargetUser(null);
+        }}
+        onUpdated={fetchUsers}
+        user={companyAccessTargetUser}
+        allCompanies={companies}
       />
 
     </div>

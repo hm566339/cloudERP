@@ -24,5 +24,6 @@ public class PlatformMemberSummaryResponse {
     private MembershipStatus membershipStatus;
     private List<String> authorizedCompanies;
     private List<UUID> authorizedCompanyIds;
+    private List<MemberCompanyRoleDto> companyAccess;
     private LocalDateTime createdAt;
 }

@@ -1,4 +1,5 @@
 import { baseApi } from '../common/baseApi';
+import apiClient from '../common/client';
 
 /**
  * Organization API Slice
@@ -500,6 +501,62 @@ export const organizationApiSlice = baseApi.injectEndpoints({
         const data = response?.data || response || [];
         return Array.isArray(data) ? data : [];
       },
+      providesTags: ['OrganizationMembers'],
+    }),
+
+    // GET /api/sso/organization/members/{memberId}/companies/access
+    getMemberCompanyAccess: builder.query({
+      query: (memberId) => ({
+        url: `/api/sso/organization/members/${memberId}/companies/access`,
+        method: 'GET',
+      }),
+      transformResponse: (response) => {
+        const data = response?.data || response || [];
+        return Array.isArray(data) ? data : [];
+      },
+      providesTags: (result, error, memberId) => [{ type: 'OrganizationMembers', id: memberId }],
+    }),
+
+    // GET /api/sso/organization/members/user/{userId}/companies/access
+    getUserCompanyAccess: builder.query({
+      query: (userId) => ({
+        url: `/api/sso/organization/members/user/${userId}/companies/access`,
+        method: 'GET',
+      }),
+      transformResponse: (response) => {
+        const data = response?.data || response || [];
+        return Array.isArray(data) ? data : [];
+      },
+      providesTags: (result, error, userId) => [{ type: 'OrganizationMembers', id: userId }],
+    }),
+
+    // POST /api/sso/organization/members/{memberId}/companies
+    grantMemberCompanyAccess: builder.mutation({
+      query: ({ memberId, companyId, roleId }) => ({
+        url: `/api/sso/organization/members/${memberId}/companies`,
+        method: 'POST',
+        body: { companyId, roleId },
+      }),
+      invalidatesTags: ['OrganizationMembers', 'Organization', 'User'],
+    }),
+
+    // PUT /api/sso/organization/members/{memberId}/companies/{companyId}/role
+    updateMemberCompanyRole: builder.mutation({
+      query: ({ memberId, companyId, roleId }) => ({
+        url: `/api/sso/organization/members/${memberId}/companies/${companyId}/role`,
+        method: 'PUT',
+        body: { data: { roleId } },
+      }),
+      invalidatesTags: ['OrganizationMembers', 'Organization', 'User'],
+    }),
+
+    // DELETE /api/sso/organization/members/{memberId}/companies/{companyId}
+    revokeMemberCompanyAccess: builder.mutation({
+      query: ({ memberId, companyId }) => ({
+        url: `/api/sso/organization/members/${memberId}/companies/${companyId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['OrganizationMembers', 'Organization', 'User'],
     }),
 
   }),
@@ -533,4 +590,43 @@ export const {
   useAddOrganizationMemberMutation,
   useAssignModuleToOrganizationMutation,
   useGetOrgMembersQuery,
+  useGetMemberCompanyAccessQuery,
+  useGetUserCompanyAccessQuery,
+  useGrantMemberCompanyAccessMutation,
+  useUpdateMemberCompanyRoleMutation,
+  useRevokeMemberCompanyAccessMutation,
 } = organizationApiSlice;
+
+export const grantMemberCompanyAccess = async (targetId, companyId, roleId, isUserId = false) => {
+  const path = isUserId
+    ? `/api/sso/organization/members/user/${targetId}/companies`
+    : `/api/sso/organization/members/${targetId}/companies`;
+  const res = await apiClient.post(path, { companyId, roleId });
+  return res.data;
+};
+
+export const updateMemberCompanyRole = async (targetId, companyId, roleId, isUserId = false) => {
+  const path = isUserId
+    ? `/api/sso/organization/members/user/${targetId}/companies/${companyId}/role`
+    : `/api/sso/organization/members/${targetId}/companies/${companyId}/role`;
+  const res = await apiClient.put(path, { data: { roleId } });
+  return res.data;
+};
+
+export const revokeMemberCompanyAccess = async (targetId, companyId, isUserId = false) => {
+  const path = isUserId
+    ? `/api/sso/organization/members/user/${targetId}/companies/${companyId}`
+    : `/api/sso/organization/members/${targetId}/companies/${companyId}`;
+  const res = await apiClient.delete(path);
+  return res.data;
+};
+
+export const getUserCompanyAccess = async (userId) => {
+  const res = await apiClient.get(`/api/sso/organization/members/user/${userId}/companies/access`);
+  return res.data?.data || res.data || [];
+};
+
+export const getMemberCompanyAccess = async (memberId) => {
+  const res = await apiClient.get(`/api/sso/organization/members/${memberId}/companies/access`);
+  return res.data?.data || res.data || [];
+};

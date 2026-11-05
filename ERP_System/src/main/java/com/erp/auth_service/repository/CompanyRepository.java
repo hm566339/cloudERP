@@ -92,4 +92,6 @@ public interface CompanyRepository
     long countByOrganization_Id(UUID organizationId);
 
     java.util.List<Company> findByOrganization_Id(UUID organizationId);
+
+    java.util.List<Company> findByOrganization_IdAndActiveTrue(UUID organizationId);
 }

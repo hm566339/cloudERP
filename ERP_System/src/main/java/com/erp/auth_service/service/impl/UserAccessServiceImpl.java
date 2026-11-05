@@ -24,6 +24,7 @@ import com.erp.auth_service.repository.UserRoleRepository;
 import com.erp.auth_service.security.PlatformSecurityUtil;
 import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.service.UserAccessService;
+import com.erp.auth_service.utility.MemberType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -65,12 +66,27 @@ public class UserAccessServiceImpl implements UserAccessService {
                 RequestContext.Context context = RequestContext.get();
                 if (context != null) {
                         if (context.organizationId() != null) {
-                                if (company.getOrganization() == null || !company.getOrganization().getId().equals(context.organizationId())) {
-                                        throw new ForbiddenException("Access denied: Company does not belong to authorized organization");
+                                if (company.getOrganization() == null || !company.getOrganization().getId()
+                                                .equals(context.organizationId())) {
+                                        throw new ForbiddenException(
+                                                        "Access denied: Company does not belong to authorized organization");
                                 }
                         }
                         if (context.companyId() != null && !context.companyId().equals(company.getId())) {
-                                throw new ForbiddenException("Access denied: Company does not match authorized company context");
+                                boolean isOrgAdmin = false;
+                                if (context.organizationId() != null && context.userId() != null
+                                                && organizationMemberRepository != null) {
+                                        isOrgAdmin = Boolean.TRUE.equals(organizationMemberRepository
+                                                        .findByOrganization_IdAndUser_Id(context.organizationId(),
+                                                                        context.userId())
+                                                        .map(m -> m.getMemberType() == MemberType.OWNER
+                                                                        || m.getMemberType() == MemberType.ADMIN)
+                                                        .orElse(false));
+                                }
+                                if (!isOrgAdmin && !PlatformSecurityUtil.isOwnerOrAdmin()) {
+                                        throw new ForbiddenException(
+                                                        "Access denied: Company does not match authorized company context");
+                                }
                         }
                 }
         }
@@ -82,10 +98,14 @@ public class UserAccessServiceImpl implements UserAccessService {
                 if (user.getCompany() != null && user.getCompany().getId().equals(company.getId())) {
                         return;
                 }
-                if (company.getOrganization() != null && organizationMemberRepository != null && memberCompanyAccessRepository != null) {
+                if (company.getOrganization() != null && organizationMemberRepository != null
+                                && memberCompanyAccessRepository != null) {
                         boolean hasAccess = organizationMemberRepository
-                                        .findByOrganization_IdAndUser_Id(company.getOrganization().getId(), user.getId())
-                                        .map(mem -> memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(mem.getId(), company.getId()))
+                                        .findByOrganization_IdAndUser_Id(company.getOrganization().getId(),
+                                                        user.getId())
+                                        .map(mem -> memberCompanyAccessRepository
+                                                        .existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(
+                                                                        mem.getId(), company.getId()))
                                         .orElse(false);
                         if (hasAccess) {
                                 return;
@@ -116,7 +136,8 @@ public class UserAccessServiceImpl implements UserAccessService {
                         assertUserHasAccessToCompany(user, targetCompany);
 
                         // If user already has an existing role in targetCompany, replace it
-                        List<UserRole> existingRoles = userRoleRepository.findAllByUser_IdAndRole_Company_Id(userId, targetCompany.getId());
+                        List<UserRole> existingRoles = userRoleRepository.findAllByUser_IdAndRole_Company_Id(userId,
+                                        targetCompany.getId());
                         for (UserRole er : existingRoles) {
                                 if (!er.getRole().getId().equals(roleId)) {
                                         userRoleRepository.delete(er);
@@ -287,8 +308,10 @@ public class UserAccessServiceImpl implements UserAccessService {
                         Boolean status) {
 
                 RequestContext.Context context = RequestContext.get();
-                if (!PlatformSecurityUtil.isElevatedAdmin() && context != null && context.companyId() != null && !context.companyId().equals(companyId)) {
-                        throw new ForbiddenException("Access denied: Company does not match authorized company context");
+                if (!PlatformSecurityUtil.isElevatedAdmin() && context != null && context.companyId() != null
+                                && !context.companyId().equals(companyId)) {
+                        throw new ForbiddenException(
+                                        "Access denied: Company does not match authorized company context");
                 }
 
                 Pageable pageable = PageRequest.of(

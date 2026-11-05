@@ -7,4 +7,5 @@ import java.util.UUID;
 @Data
 public class CompanyAccessRequest {
     @NotNull private UUID companyId;
+    private UUID roleId;
 }

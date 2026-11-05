@@ -35,5 +35,9 @@ public class UserResponse {
     private List<SsoSessionResponse> session;
     private List<UserFeatureDto> features;
     private List<UserPermissionDetailDto> permissions;
+    private UUID memberId;
+    private List<com.erp.auth_service.dto.platform.MemberCompanyRoleDto> companyAccess;
+    private List<String> authorizedCompanies;
+    private List<UUID> authorizedCompanyIds;
 
 }

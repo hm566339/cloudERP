@@ -161,10 +161,10 @@ public class UserServiceImpl implements UserService {
             UserPortalAccessRepository userPortalAccessRepository,
             com.erp.auth_service.service.PermissionService permissionService) {
         this(userRepository, userMapper, passwordEncoder, userTokenRepository, emailService,
-             jwtService, sessionRepository, companyRepository, moduleRepository, jwtDecoder,
-             organizationMemberRepository, memberCompanyAccessRepository, subscriptionRepository,
-             organizationModuleRepository, companyModuleRepository, userPortalAccessRepository,
-             null, null, null, null, permissionService);
+                jwtService, sessionRepository, companyRepository, moduleRepository, jwtDecoder,
+                organizationMemberRepository, memberCompanyAccessRepository, subscriptionRepository,
+                organizationModuleRepository, companyModuleRepository, userPortalAccessRepository,
+                null, null, null, null, permissionService);
     }
 
     @Value("${api.frontend}")
@@ -173,11 +173,11 @@ public class UserServiceImpl implements UserService {
     @Value("${sso.password-setup.expiration-hours:24}")
     private int setupExpirationHours = 24;
 
-    public static final String ONBOARDING_NOTES =
-            "Account created. The user must set their password using the password-setup link sent to their registered email address. After setting the password, the user must log in through their assigned company's login URL. Do not use another company's login URL. If the setup link expires, contact the company administrator to request a new link.";
+    public static final String ONBOARDING_NOTES = "Account created. The user must set their password using the password-setup link sent to their registered email address. After setting the password, the user must log in through their assigned company's login URL. Do not use another company's login URL. If the setup link expires, contact the company administrator to request a new link.";
 
     private String hashToken(String rawToken) {
-        if (rawToken == null) return null;
+        if (rawToken == null)
+            return null;
         try {
             byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
                     .digest(rawToken.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -205,7 +205,17 @@ public class UserServiceImpl implements UserService {
                 }
             }
             if (context.companyId() != null && !context.companyId().equals(company.getId())) {
-                throw new ForbiddenException("Access denied: Company does not match authorized company context");
+                boolean isOrgAdmin = false;
+                if (context.organizationId() != null && context.userId() != null
+                        && organizationMemberRepository != null) {
+                    isOrgAdmin = Boolean.TRUE.equals(organizationMemberRepository
+                            .findByOrganization_IdAndUser_Id(context.organizationId(), context.userId())
+                            .map(m -> m.getMemberType() == MemberType.OWNER || m.getMemberType() == MemberType.ADMIN)
+                            .orElse(false));
+                }
+                if (!isOrgAdmin && !PlatformSecurityUtil.isOwnerOrAdmin()) {
+                    throw new ForbiddenException("Access denied: Company does not match authorized company context");
+                }
             }
         }
     }
@@ -234,7 +244,9 @@ public class UserServiceImpl implements UserService {
                     && organizationMemberRepository != null && memberCompanyAccessRepository != null) {
                 matchesMemberAccess = organizationMemberRepository
                         .findByOrganization_IdAndUser_Id(user.getCompany().getOrganization().getId(), user.getId())
-                        .map(mem -> memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(mem.getId(), context.companyId()))
+                        .map(mem -> memberCompanyAccessRepository
+                                .existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(mem.getId(),
+                                        context.companyId()))
                         .orElse(false);
             }
             if (!matchesPrimary && !matchesMemberAccess) {
@@ -290,8 +302,7 @@ public class UserServiceImpl implements UserService {
                                             .membershipStatus(MembershipStatus.ACTIVE)
                                             .memberType(MemberType.MEMBER)
                                             .joinedAt(LocalDateTime.now())
-                                            .build()
-                            );
+                                            .build());
                             existingMemberOpt = Optional.of(backfilled);
                         }
                         break;
@@ -304,7 +315,8 @@ public class UserServiceImpl implements UserService {
                 User existingUser = member.getUser();
 
                 boolean alreadyInCompany = memberCompanyAccessRepository != null
-                        && memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(member.getId(), companyId);
+                        && memberCompanyAccessRepository
+                                .existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(member.getId(), companyId);
                 if (alreadyInCompany) {
                     throw new BadRequestException("User is already a member of this company");
                 }
@@ -318,7 +330,8 @@ public class UserServiceImpl implements UserService {
                     if (maxUsersPerCompany != null && memberCompanyAccessRepository != null) {
                         long currentUsers = memberCompanyAccessRepository.countByCompany_IdAndActiveTrue(companyId);
                         if (currentUsers >= maxUsersPerCompany) {
-                            throw new BadRequestException("Maximum users limit per company (" + maxUsersPerCompany + ") reached for plan");
+                            throw new BadRequestException(
+                                    "Maximum users limit per company (" + maxUsersPerCompany + ") reached for plan");
                         }
                     }
                 }
@@ -338,28 +351,28 @@ public class UserServiceImpl implements UserService {
                                         .organization(organization)
                                         .company(company)
                                         .active(true)
-                                        .build()
-                        );
+                                        .build());
                     }
                 }
 
                 // Grant portal access for module if not already granted
                 companyModuleRepository.findByCompany_IdAndModule_Id(company.getId(), module.getId())
                         .ifPresent(cm -> {
-                            if (!userPortalAccessRepository.existsByUser_IdAndCompanyModule_Id(existingUser.getId(), cm.getId())) {
+                            if (!userPortalAccessRepository.existsByUser_IdAndCompanyModule_Id(existingUser.getId(),
+                                    cm.getId())) {
                                 userPortalAccessRepository.save(
                                         UserPortalAccess.builder()
                                                 .user(existingUser)
                                                 .companyModule(cm)
                                                 .status(true)
-                                                .build()
-                                );
+                                                .build());
                             }
                         });
 
                 savedUser = existingUser;
                 isExistingOrgMember = true;
-                log.info("Assigned existing organization user {} ({}) to company {}", existingUser.getId(), email, company.getId());
+                log.info("Assigned existing organization user {} ({}) to company {}", existingUser.getId(), email,
+                        company.getId());
 
                 if (existingUser.getAccountStatus() == AccountStatus.ACTIVE) {
                     UserResponse response = userMapper.toResponse(savedUser);
@@ -380,8 +393,10 @@ public class UserServiceImpl implements UserService {
             // Graceful retry handling for pending/unverified user provisioning
             if (existingByEmail.isPresent() || existingByUsername.isPresent()) {
                 User existing = existingByEmail.orElseGet(() -> existingByUsername.orElse(null));
-                if (existing.getAccountStatus() == AccountStatus.INACTIVE && existing.getEmailStatus() == Status.UNVERIFIED) {
-                    log.info("Reprovisioning pending user | userId={} | companyId={} | email={}", existing.getId(), companyId, email);
+                if (existing.getAccountStatus() == AccountStatus.INACTIVE
+                        && existing.getEmailStatus() == Status.UNVERIFIED) {
+                    log.info("Reprovisioning pending user | userId={} | companyId={} | email={}", existing.getId(),
+                            companyId, email);
                     existing.setFullName(request.getFullName().trim());
                     existing.setEmpId(request.getEmpId().trim());
                     existing.setUsername(username);
@@ -407,13 +422,15 @@ public class UserServiceImpl implements UserService {
                                     ? memberCompanyAccessRepository.countByCompany_IdAndActiveTrue(companyId)
                                     : userRepository.countByCompanyId(companyId);
                             if (currentUsers >= maxUsersPerCompany) {
-                                throw new BadRequestException("Maximum users limit per company (" + maxUsersPerCompany + ") reached for plan");
+                                throw new BadRequestException("Maximum users limit per company (" + maxUsersPerCompany
+                                        + ") reached for plan");
                             }
                         }
                     }
                 }
 
-                // Secure unguessable random placeholder, account remains INACTIVE until user sets password
+                // Secure unguessable random placeholder, account remains INACTIVE until user
+                // sets password
                 String randomSecureSecret = JwtService.generateRandomToken();
                 User user = User.builder()
                         .empId(request.getEmpId().trim())
@@ -447,8 +464,10 @@ public class UserServiceImpl implements UserService {
                     }
                 });
 
-        // Ensure OrganizationMember and MemberCompanyAccess exist when company belongs to an organization
-        if (company.getOrganization() != null && organizationMemberRepository != null && memberCompanyAccessRepository != null) {
+        // Ensure OrganizationMember and MemberCompanyAccess exist when company belongs
+        // to an organization
+        if (company.getOrganization() != null && organizationMemberRepository != null
+                && memberCompanyAccessRepository != null) {
             Organization organization = company.getOrganization();
             OrganizationMember member = organizationMemberRepository
                     .findByOrganization_IdAndUser_Id(organization.getId(), finalUser.getId())
@@ -465,15 +484,15 @@ public class UserServiceImpl implements UserService {
                     });
 
             if (member != null && member.getId() != null) {
-                if (memberCompanyAccessRepository.findByOrganizationMember_IdAndCompany_Id(member.getId(), company.getId()).isEmpty()) {
+                if (memberCompanyAccessRepository
+                        .findByOrganizationMember_IdAndCompany_Id(member.getId(), company.getId()).isEmpty()) {
                     memberCompanyAccessRepository.save(
                             MemberCompanyAccess.builder()
                                     .organizationMember(member)
                                     .organization(organization)
                                     .company(company)
                                     .active(true)
-                                    .build()
-                    );
+                                    .build());
                 }
             }
         }
@@ -481,8 +500,7 @@ public class UserServiceImpl implements UserService {
         // Invalidate previous unused setup/verification tokens for this user
         List<UserToken> previousTokens = userTokenRepository.findByUser_IdAndTokenTypeInAndUsedFalse(
                 savedUser.getId(),
-                List.of(TokenType.PASSWORD_SETUP, TokenType.PASSWORD_RESET, TokenType.EMAIL_VERIFICATION)
-        );
+                List.of(TokenType.PASSWORD_SETUP, TokenType.PASSWORD_RESET, TokenType.EMAIL_VERIFICATION));
         for (UserToken pt : previousTokens) {
             pt.setUsed(true);
         }
@@ -510,7 +528,8 @@ public class UserServiceImpl implements UserService {
                 ? emailBaseUrl.replaceAll("/$", "")
                 : "https://www.mark2.in/erp";
         String passwordSetupLink = base + "/set-password?token=" + rawToken;
-        String companyLoginUrl = base + "/c/" + company.getCompanyCode().trim().toLowerCase(java.util.Locale.ROOT) + "/login";
+        String companyLoginUrl = base + "/c/" + company.getCompanyCode().trim().toLowerCase(java.util.Locale.ROOT)
+                + "/login";
 
         boolean emailSent = false;
         String emailError = null;
@@ -529,15 +548,16 @@ public class UserServiceImpl implements UserService {
                         passwordSetupLink,
                         companyLoginUrl,
                         setupExpirationHours,
-                        idempotencyKey
-                );
+                        idempotencyKey);
                 if (dispatchedViaCommService) {
                     emailSent = true;
-                    log.info("Provisioning email accepted by central Communication Service | userId={} | email={} | companyCode={}",
+                    log.info(
+                            "Provisioning email accepted by central Communication Service | userId={} | email={} | companyCode={}",
                             savedUser.getId(), savedUser.getEmail(), company.getCompanyCode());
                 }
             } catch (Exception commEx) {
-                log.warn("Central Communication Service call failed; falling back to local mailer | error={}", commEx.getMessage());
+                log.warn("Central Communication Service call failed; falling back to local mailer | error={}",
+                        commEx.getMessage());
             }
         }
 
@@ -551,8 +571,7 @@ public class UserServiceImpl implements UserService {
                         savedUser.getUsername(),
                         passwordSetupLink,
                         companyLoginUrl,
-                        setupExpirationHours
-                );
+                        setupExpirationHours);
                 emailSent = true;
                 log.info("Provisioning email accepted by local email service | userId={} | email={} | companyCode={}",
                         savedUser.getId(), savedUser.getEmail(), company.getCompanyCode());
@@ -589,8 +608,7 @@ public class UserServiceImpl implements UserService {
         // Invalidate prior unused tokens
         List<UserToken> previousTokens = userTokenRepository.findByUser_IdAndTokenTypeInAndUsedFalse(
                 user.getId(),
-                List.of(TokenType.PASSWORD_SETUP, TokenType.PASSWORD_RESET, TokenType.EMAIL_VERIFICATION)
-        );
+                List.of(TokenType.PASSWORD_SETUP, TokenType.PASSWORD_RESET, TokenType.EMAIL_VERIFICATION));
         for (UserToken pt : previousTokens) {
             pt.setUsed(true);
         }
@@ -622,7 +640,8 @@ public class UserServiceImpl implements UserService {
                 ? emailBaseUrl.replaceAll("/$", "")
                 : "https://www.mark2.in/erp";
         String passwordSetupLink = base + "/set-password?token=" + rawToken;
-        String companyLoginUrl = base + "/c/" + company.getCompanyCode().trim().toLowerCase(java.util.Locale.ROOT) + "/login";
+        String companyLoginUrl = base + "/c/" + company.getCompanyCode().trim().toLowerCase(java.util.Locale.ROOT)
+                + "/login";
 
         boolean emailSent = false;
         String emailError = null;
@@ -641,15 +660,16 @@ public class UserServiceImpl implements UserService {
                         passwordSetupLink,
                         companyLoginUrl,
                         setupExpirationHours,
-                        idempotencyKey
-                );
+                        idempotencyKey);
                 if (dispatchedViaCommService) {
                     emailSent = true;
-                    log.info("Setup email re-sent successfully via central Communication Service | userId={} | email={}",
+                    log.info(
+                            "Setup email re-sent successfully via central Communication Service | userId={} | email={}",
                             user.getId(), user.getEmail());
                 }
             } catch (Exception commEx) {
-                log.warn("Central Communication Service call failed on resend; falling back to local mailer | error={}", commEx.getMessage());
+                log.warn("Central Communication Service call failed on resend; falling back to local mailer | error={}",
+                        commEx.getMessage());
             }
         }
 
@@ -663,10 +683,10 @@ public class UserServiceImpl implements UserService {
                         user.getUsername(),
                         passwordSetupLink,
                         companyLoginUrl,
-                        setupExpirationHours
-                );
+                        setupExpirationHours);
                 emailSent = true;
-                log.info("Setup email re-sent successfully via local email service | userId={} | email={}", user.getId(), user.getEmail());
+                log.info("Setup email re-sent successfully via local email service | userId={} | email={}",
+                        user.getId(), user.getEmail());
             } catch (Exception ex) {
                 log.error("Failed to re-send setup email | userId={} | error={}", user.getId(), ex.getMessage(), ex);
                 emailError = ex.getMessage();
@@ -696,7 +716,8 @@ public class UserServiceImpl implements UserService {
         if (effectiveCompanyId != null) {
             response.setCompanyId(effectiveCompanyId);
             if (companyRepository != null) {
-                companyRepository.findById(effectiveCompanyId).ifPresent(c -> response.setCompanyCode(c.getCompanyCode()));
+                companyRepository.findById(effectiveCompanyId)
+                        .ifPresent(c -> response.setCompanyCode(c.getCompanyCode()));
             }
 
             List<com.erp.auth_service.dto.response.RoleResponse> scopedRoles = new ArrayList<>();
@@ -714,7 +735,8 @@ public class UserServiceImpl implements UserService {
             }
             if (scopedRoles.isEmpty() && userRoleRepository != null) {
                 try {
-                    List<UserRole> dbRoles = userRoleRepository.findAllByUser_IdAndCompany_Id(user.getId(), effectiveCompanyId);
+                    List<UserRole> dbRoles = userRoleRepository.findAllByUser_IdAndCompany_Id(user.getId(),
+                            effectiveCompanyId);
                     if (dbRoles != null) {
                         for (UserRole ur : dbRoles) {
                             if (ur.getRole() != null && ur.getRole().isStatus()) {
@@ -733,7 +755,52 @@ public class UserServiceImpl implements UserService {
         response.setFeatures(effective.getFeatures());
         response.setPermissions(effective.getPermissions());
 
+        UUID orgId = (context != null && context.organizationId() != null)
+                ? context.organizationId()
+                : (user.getCompany() != null && user.getCompany().getOrganization() != null
+                        ? user.getCompany().getOrganization().getId()
+                        : null);
+        attachCompanyAccessDetails(response, user, orgId);
+
         return response;
+    }
+
+    private void attachCompanyAccessDetails(UserResponse ur, User u, UUID organizationId) {
+        if (organizationId != null && organizationMemberRepository != null && memberCompanyAccessRepository != null) {
+            organizationMemberRepository.findByOrganization_IdAndUser_Id(organizationId, u.getId())
+                    .ifPresent(m -> {
+                        var accesses = memberCompanyAccessRepository.findActiveForMember(m.getId(), organizationId);
+                        List<String> compNames = new ArrayList<>();
+                        List<UUID> compIds = new ArrayList<>();
+                        List<com.erp.auth_service.dto.platform.MemberCompanyRoleDto> compAccess = new ArrayList<>();
+                        for (var acc : accesses) {
+                            Company c = acc.getCompany();
+                            compNames.add(c.getCompanyName());
+                            compIds.add(c.getId());
+                            UUID rId = null;
+                            String rName = null;
+                            if (userRoleRepository != null) {
+                                var roles = userRoleRepository.findAllByUser_IdAndRole_Company_Id(u.getId(), c.getId());
+                                if (roles != null && !roles.isEmpty() && roles.get(0).getRole() != null) {
+                                    rId = roles.get(0).getRole().getId();
+                                    rName = roles.get(0).getRole().getName();
+                                }
+                            }
+                            compAccess.add(com.erp.auth_service.dto.platform.MemberCompanyRoleDto.builder()
+                                    .companyId(c.getId())
+                                    .companyName(c.getCompanyName())
+                                    .companyCode(c.getCompanyCode())
+                                    .roleId(rId)
+                                    .roleName(rName)
+                                    .active(acc.getActive())
+                                    .build());
+                        }
+                        ur.setAuthorizedCompanies(compNames);
+                        ur.setAuthorizedCompanyIds(compIds);
+                        ur.setCompanyAccess(compAccess);
+                        ur.setMemberId(m.getId());
+                    });
+        }
     }
 
     @Override
@@ -831,6 +898,8 @@ public class UserServiceImpl implements UserService {
                 }
             }
             ur.setRole(scopedRoles);
+            attachCompanyAccessDetails(ur, u,
+                    company.getOrganization() != null ? company.getOrganization().getId() : null);
             userResponses.add(ur);
         }
 
@@ -928,7 +997,8 @@ public class UserServiceImpl implements UserService {
         RequestContext.Context context = RequestContext.get();
         UUID companyContextId = context != null ? context.companyId() : null;
 
-        // If called within a company context, check if user belongs to multiple companies
+        // If called within a company context, check if user belongs to multiple
+        // companies
         if (companyContextId != null && user.getCompany() != null && user.getCompany().getOrganization() != null) {
             UUID orgId = user.getCompany().getOrganization().getId();
             Optional<OrganizationMember> memberOpt = organizationMemberRepository
@@ -940,9 +1010,11 @@ public class UserServiceImpl implements UserService {
                         .findByOrganizationMember_IdAndActiveTrue(member.getId());
 
                 // If user has access to multiple companies, revoke access only for this company
-                if (activeAccesses.size() > 1 || activeAccesses.stream().anyMatch(a -> !a.getCompany().getId().equals(companyContextId))) {
+                if (activeAccesses.size() > 1
+                        || activeAccesses.stream().anyMatch(a -> !a.getCompany().getId().equals(companyContextId))) {
                     // Revoke MemberCompanyAccess for this company
-                    memberCompanyAccessRepository.findByOrganizationMember_IdAndCompany_Id(member.getId(), companyContextId)
+                    memberCompanyAccessRepository
+                            .findByOrganizationMember_IdAndCompany_Id(member.getId(), companyContextId)
                             .ifPresent(mca -> {
                                 mca.setActive(false);
                                 memberCompanyAccessRepository.save(mca);
@@ -950,7 +1022,8 @@ public class UserServiceImpl implements UserService {
 
                     // Remove roles for this company
                     if (userRoleRepository != null) {
-                        List<UserRole> companyRoles = userRoleRepository.findAllByUser_IdAndRole_Company_Id(userId, companyContextId);
+                        List<UserRole> companyRoles = userRoleRepository.findAllByUser_IdAndRole_Company_Id(userId,
+                                companyContextId);
                         if (companyRoles != null && !companyRoles.isEmpty()) {
                             userRoleRepository.deleteAll(companyRoles);
                         }
@@ -958,7 +1031,8 @@ public class UserServiceImpl implements UserService {
 
                     // Remove portal access for this company
                     if (userPortalAccessRepository != null) {
-                        List<UserPortalAccess> portalAccesses = userPortalAccessRepository.findAllByUser_IdAndCompanyModule_Company_Id(userId, companyContextId);
+                        List<UserPortalAccess> portalAccesses = userPortalAccessRepository
+                                .findAllByUser_IdAndCompanyModule_Company_Id(userId, companyContextId);
                         if (portalAccesses != null && !portalAccesses.isEmpty()) {
                             userPortalAccessRepository.deleteAll(portalAccesses);
                         }
@@ -967,10 +1041,12 @@ public class UserServiceImpl implements UserService {
                     // Invalidate sessions for this user in this company
                     sessionRepository.deleteByUser_IdAndCompany_Id(userId, companyContextId);
 
-                    // If user's primary company was this company, reassign to another active company
+                    // If user's primary company was this company, reassign to another active
+                    // company
                     if (user.getCompany().getId().equals(companyContextId)) {
                         activeAccesses.stream()
-                                .filter(a -> !a.getCompany().getId().equals(companyContextId) && Boolean.TRUE.equals(a.getActive()))
+                                .filter(a -> !a.getCompany().getId().equals(companyContextId)
+                                        && Boolean.TRUE.equals(a.getActive()))
                                 .findFirst()
                                 .ifPresent(nextAccess -> {
                                     user.setCompany(nextAccess.getCompany());
@@ -978,7 +1054,8 @@ public class UserServiceImpl implements UserService {
                                 });
                     }
 
-                    log.info("User {} removed from company {}, remaining active in other companies", userId, companyContextId);
+                    log.info("User {} removed from company {}, remaining active in other companies", userId,
+                            companyContextId);
                     return;
                 }
             }
@@ -1424,8 +1501,11 @@ public class UserServiceImpl implements UserService {
                 Company candidate = reqCompOpt.get();
                 boolean orgMatches = (organization == null || candidate.getOrganization() == null
                         || candidate.getOrganization().getId().equals(organization.getId()));
-                boolean isOwnerOrAdmin = (membershipCtx != null && (membershipCtx.getMemberType() == MemberType.OWNER || membershipCtx.getMemberType() == MemberType.ADMIN))
-                        || (user.getUserRoles() != null && user.getUserRoles().stream().anyMatch(ur -> ur.getRole() != null && ("OWNER".equalsIgnoreCase(ur.getRole().getName()) || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
+                boolean isOwnerOrAdmin = (membershipCtx != null && (membershipCtx.getMemberType() == MemberType.OWNER
+                        || membershipCtx.getMemberType() == MemberType.ADMIN))
+                        || (user.getUserRoles() != null && user.getUserRoles().stream().anyMatch(
+                                ur -> ur.getRole() != null && ("OWNER".equalsIgnoreCase(ur.getRole().getName())
+                                        || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
                 boolean hasAccess = isOwnerOrAdmin
                         || accessibleCompanies.stream().anyMatch(c -> c.getId().equals(candidate.getId()))
                         || (user.getCompany() != null && user.getCompany().getId().equals(candidate.getId()))
@@ -1456,7 +1536,8 @@ public class UserServiceImpl implements UserService {
             organization = currentCompany.getOrganization();
         }
 
-        if (currentCompany != null && session != null && (session.getCompany() == null || !currentCompany.getId().equals(session.getCompany().getId()))) {
+        if (currentCompany != null && session != null
+                && (session.getCompany() == null || !currentCompany.getId().equals(session.getCompany().getId()))) {
             session.setCompany(currentCompany);
             sessionRepository.save(session);
         }
@@ -1492,13 +1573,15 @@ public class UserServiceImpl implements UserService {
                 long daysRemaining = 0L;
                 if (compSub.getEndAt() != null) {
                     daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), compSub.getEndAt());
-                    if (daysRemaining < 0) daysRemaining = 0L;
+                    if (daysRemaining < 0)
+                        daysRemaining = 0L;
                 }
 
                 subscriptionCtx = SsoMeResponse.SubscriptionContext.builder()
                         .id(compSub.getId())
                         .planCode(compSub.getPlan() != null ? compSub.getPlan().getCode() : "CUSTOM")
-                        .status(isTrialing ? SubscriptionStatus.TRIALING : (isExpired ? SubscriptionStatus.EXPIRED : SubscriptionStatus.ACTIVE))
+                        .status(isTrialing ? SubscriptionStatus.TRIALING
+                                : (isExpired ? SubscriptionStatus.EXPIRED : SubscriptionStatus.ACTIVE))
                         .accessMode(isExpired ? AccessMode.READ_ONLY : AccessMode.FULL)
                         .trialStartedAt(compSub.getStartAt())
                         .trialEndsAt(isTrialing ? compSub.getEndAt() : null)
@@ -1529,11 +1612,13 @@ public class UserServiceImpl implements UserService {
                 if (isTrialing && orgSub.getTrialEndsAt() != null) {
                     daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
                             LocalDateTime.now(), orgSub.getTrialEndsAt());
-                    if (daysRemaining < 0) daysRemaining = 0L;
+                    if (daysRemaining < 0)
+                        daysRemaining = 0L;
                 } else if (orgSub.getStatus() == SubscriptionStatus.ACTIVE && orgSub.getCurrentPeriodEnd() != null) {
                     daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
                             LocalDateTime.now(), orgSub.getCurrentPeriodEnd());
-                    if (daysRemaining < 0) daysRemaining = 0L;
+                    if (daysRemaining < 0)
+                        daysRemaining = 0L;
                 }
 
                 if (subscriptionCtx == null) {
@@ -1564,7 +1649,8 @@ public class UserServiceImpl implements UserService {
                     }
                 }
 
-                // Grant plan entitlements ONLY if ACTIVE or legitimately TRIALING (NEVER for PENDING unconfirmed)
+                // Grant plan entitlements ONLY if ACTIVE or legitimately TRIALING (NEVER for
+                // PENDING unconfirmed)
                 boolean isValidPaidOrTrial = orgSub.getStatus() == SubscriptionStatus.ACTIVE
                         || (orgSub.getStatus() == SubscriptionStatus.TRIALING && isTrialing);
 
@@ -1572,7 +1658,8 @@ public class UserServiceImpl implements UserService {
                     if (orgSub.getPlan() != null) {
                         effectivePlan = orgSub.getPlan();
                     } else if (orgSub.getPlanCode() != null && subscriptionPlanRepository != null) {
-                        effectivePlan = subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue(orgSub.getPlanCode())
+                        effectivePlan = subscriptionPlanRepository
+                                .findByCodeIgnoreCaseAndActiveTrue(orgSub.getPlanCode())
                                 .or(() -> subscriptionPlanRepository.findByCodeIgnoreCase(orgSub.getPlanCode()))
                                 .orElse(null);
                     }
@@ -1584,7 +1671,8 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        // 3. Fallback to default trial plan if still null (ONLY if access mode permits and not expired/read-only)
+        // 3. Fallback to default trial plan if still null (ONLY if access mode permits
+        // and not expired/read-only)
         if (effectivePlan == null && subscriptionPlanRepository != null
                 && effectiveAccessMode != AccessMode.BLOCKED && effectiveAccessMode != AccessMode.READ_ONLY) {
             effectivePlan = subscriptionPlanRepository.findByCodeIgnoreCaseAndActiveTrue("30_DAY_FREE_TRIAL")
@@ -1596,19 +1684,23 @@ public class UserServiceImpl implements UserService {
         List<Module> planActiveModules = new java.util.ArrayList<>();
         if (effectivePlan != null && Boolean.TRUE.equals(effectivePlan.getActive())
                 && subscriptionPlanModuleRepository != null) {
-            List<SubscriptionPlanModule> spms = subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(effectivePlan.getId());
+            List<SubscriptionPlanModule> spms = subscriptionPlanModuleRepository
+                    .findByPlan_IdAndActiveTrue(effectivePlan.getId());
             for (SubscriptionPlanModule spm : spms) {
                 Module m = spm.getModule();
-                if (m != null && Boolean.TRUE.equals(m.getModuleStatus()) && !"SYSTEM_ADMIN".equalsIgnoreCase(m.getName())) {
+                if (m != null && Boolean.TRUE.equals(m.getModuleStatus())
+                        && !"SYSTEM_ADMIN".equalsIgnoreCase(m.getName())) {
                     planActiveModules.add(m);
                 }
             }
         }
 
-        // Provision/sync CompanyModule records for currentCompany for all planActiveModules
+        // Provision/sync CompanyModule records for currentCompany for all
+        // planActiveModules
         if (effectiveCompany != null && companyModuleRepository != null && !planActiveModules.isEmpty()) {
             for (Module m : planActiveModules) {
-                java.util.Optional<CompanyModule> cmOpt = companyModuleRepository.findByCompany_IdAndModule_Id(effectiveCompanyId, m.getId());
+                java.util.Optional<CompanyModule> cmOpt = companyModuleRepository
+                        .findByCompany_IdAndModule_Id(effectiveCompanyId, m.getId());
                 if (cmOpt.isEmpty()) {
                     companyModuleRepository.save(CompanyModule.builder()
                             .company(effectiveCompany)
@@ -1627,8 +1719,11 @@ public class UserServiceImpl implements UserService {
         List<SsoMeResponse.ModuleContext> authorizedModules = new java.util.ArrayList<>();
 
         if (effectiveCompany != null) {
-            boolean isOwner = (membershipCtx != null && (membershipCtx.getMemberType() == MemberType.OWNER || membershipCtx.getMemberType() == MemberType.ADMIN))
-                    || (user.getUserRoles() != null && user.getUserRoles().stream().anyMatch(ur -> ur.getRole() != null && ("OWNER".equalsIgnoreCase(ur.getRole().getName()) || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
+            boolean isOwner = (membershipCtx != null && (membershipCtx.getMemberType() == MemberType.OWNER
+                    || membershipCtx.getMemberType() == MemberType.ADMIN))
+                    || (user.getUserRoles() != null && user.getUserRoles().stream()
+                            .anyMatch(ur -> ur.getRole() != null && ("OWNER".equalsIgnoreCase(ur.getRole().getName())
+                                    || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
 
             if (isOwner) {
                 // Owner gets ALL active modules from the company's active subscription plan
@@ -1638,7 +1733,8 @@ public class UserServiceImpl implements UserService {
                                 SsoMeResponse.ModuleContext.builder()
                                         .id(m.getId())
                                         .name(m.getName())
-                                        .code(m.getName().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "_"))
+                                        .code(m.getName().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+",
+                                                "_"))
                                         .host(m.getHost())
                                         .active(true)
                                         .build());
@@ -1646,7 +1742,8 @@ public class UserServiceImpl implements UserService {
 
                     // Ensure Owner role has permissions for all plan modules
                     if (roleRepository != null && permissionService != null) {
-                        java.util.Optional<Role> ownerRoleOpt = roleRepository.findByCompany_IdAndNameIgnoreCase(effectiveCompanyId, "OWNER");
+                        java.util.Optional<Role> ownerRoleOpt = roleRepository
+                                .findByCompany_IdAndNameIgnoreCase(effectiveCompanyId, "OWNER");
                         if (ownerRoleOpt.isPresent()) {
                             List<String> modNames = planActiveModules.stream().map(Module::getName).toList();
                             permissionService.assignOwnerRolePermissions(ownerRoleOpt.get(), modNames, userId);
@@ -1662,7 +1759,8 @@ public class UserServiceImpl implements UserService {
                                     SsoMeResponse.ModuleContext.builder()
                                             .id(cm.getModule().getId())
                                             .name(cm.getModule().getName())
-                                            .code(cm.getModule().getName().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "_"))
+                                            .code(cm.getModule().getName().toLowerCase(java.util.Locale.ROOT)
+                                                    .replaceAll("[^a-z0-9]+", "_"))
                                             .host(cm.getModule().getHost())
                                             .active(Boolean.TRUE.equals(cm.getActive()))
                                             .build()));
@@ -1686,8 +1784,12 @@ public class UserServiceImpl implements UserService {
 
                 if (companyModuleRepository != null) {
                     companyModuleRepository.findByCompany_IdAndActiveTrue(effectiveCompanyId).stream()
-                            .filter(cm -> planModuleIds.isEmpty() || planModuleIds.contains(cm.getModule().getId())) // must be in plan!
-                            .filter(cm -> allowedCompanyModuleIds.isEmpty() || allowedCompanyModuleIds.contains(cm.getId())) // must be granted to user!
+                            .filter(cm -> planModuleIds.isEmpty() || planModuleIds.contains(cm.getModule().getId())) // must
+                                                                                                                     // be
+                                                                                                                     // in
+                                                                                                                     // plan!
+                            .filter(cm -> allowedCompanyModuleIds.isEmpty()
+                                    || allowedCompanyModuleIds.contains(cm.getId())) // must be granted to user!
                             .filter(cm -> cm.getModule() != null
                                     && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
                                     && !"SYSTEM_ADMIN".equalsIgnoreCase(cm.getModule().getName()))
@@ -1695,14 +1797,16 @@ public class UserServiceImpl implements UserService {
                                     SsoMeResponse.ModuleContext.builder()
                                             .id(cm.getModule().getId())
                                             .name(cm.getModule().getName())
-                                            .code(cm.getModule().getName().toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "_"))
+                                            .code(cm.getModule().getName().toLowerCase(java.util.Locale.ROOT)
+                                                    .replaceAll("[^a-z0-9]+", "_"))
                                             .host(cm.getModule().getHost())
                                             .active(Boolean.TRUE.equals(cm.getActive()))
                                             .build()));
                 }
             }
         } else if (membershipCtx != null && membershipCtx.getMemberType() == MemberType.OWNER) {
-            // Owner organization session: gets entitled modules from active subscription plan
+            // Owner organization session: gets entitled modules from active subscription
+            // plan
             for (Module m : planActiveModules) {
                 authorizedModules.add(
                         SsoMeResponse.ModuleContext.builder()
