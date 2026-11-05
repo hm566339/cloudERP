@@ -65,9 +65,22 @@ public class UserSpecification {
                 return cb.conjunction();
             }
 
-            return cb.equal(
+            query.distinct(true);
+
+            var primaryCompanyMatch = cb.equal(
                     root.get("company").get("id"),
                     companyId);
+
+            var subquery = query.subquery(UUID.class);
+            var mcaRoot = subquery.from(com.erp.auth_service.model.MemberCompanyAccess.class);
+            subquery.select(mcaRoot.get("organizationMember").get("user").get("id"))
+                    .where(
+                            cb.equal(mcaRoot.get("company").get("id"), companyId),
+                            cb.isTrue(mcaRoot.get("active")));
+
+            var memberAccessMatch = cb.in(root.get("id")).value(subquery);
+
+            return cb.or(primaryCompanyMatch, memberAccessMatch);
         };
     }
 }

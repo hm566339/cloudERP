@@ -45,6 +45,14 @@ public interface UserPortalAccessRepository
         Optional<UserPortalAccess> findFirstByUser_IdAndStatusTrueOrderByCreatedAtAsc(
                         UUID userId);
 
+        Optional<UserPortalAccess> findFirstByUser_IdAndCompanyModule_Company_IdAndStatusTrueOrderByCreatedAtAsc(
+                        UUID userId,
+                        UUID companyId);
+
+        List<UserPortalAccess> findAllByUser_IdAndCompanyModule_Company_Id(
+                        UUID userId,
+                        UUID companyId);
+
         /*
          * FETCH USER + COMPANY MODULE + MODULE
          */

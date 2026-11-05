@@ -45,6 +45,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -210,8 +211,35 @@ public class UserServiceImpl implements UserService {
     }
 
     private void assertUserAccess(User user) {
-        if (user != null && user.getCompany() != null) {
-            assertCompanyOwnership(user.getCompany());
+        if (user == null || PlatformSecurityUtil.isElevatedAdmin()) {
+            return;
+        }
+        RequestContext.Context context = RequestContext.get();
+        if (context == null) {
+            if (user.getCompany() != null) {
+                assertCompanyOwnership(user.getCompany());
+            }
+            return;
+        }
+        if (context.organizationId() != null) {
+            if (user.getCompany() != null && user.getCompany().getOrganization() != null
+                    && !user.getCompany().getOrganization().getId().equals(context.organizationId())) {
+                throw new ForbiddenException("Access denied: User does not belong to authorized organization");
+            }
+        }
+        if (context.companyId() != null) {
+            boolean matchesPrimary = user.getCompany() != null && context.companyId().equals(user.getCompany().getId());
+            boolean matchesMemberAccess = false;
+            if (!matchesPrimary && user.getCompany() != null && user.getCompany().getOrganization() != null
+                    && organizationMemberRepository != null && memberCompanyAccessRepository != null) {
+                matchesMemberAccess = organizationMemberRepository
+                        .findByOrganization_IdAndUser_Id(user.getCompany().getOrganization().getId(), user.getId())
+                        .map(mem -> memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(mem.getId(), context.companyId()))
+                        .orElse(false);
+            }
+            if (!matchesPrimary && !matchesMemberAccess) {
+                throw new ForbiddenException("Access denied: User does not belong to authorized company context");
+            }
         }
     }
 
@@ -235,70 +263,183 @@ public class UserServiceImpl implements UserService {
         String username = request.getUsername().trim();
         String email = request.getEmail().trim().toLowerCase(java.util.Locale.ROOT);
 
-        // Check if an existing user matches in this company
-        Optional<User> existingByUsername = userRepository.findByCompany_IdAndUsernameIgnoreCase(companyId, username);
-        Optional<User> existingByEmail = userRepository.findByCompany_IdAndEmailIgnoreCase(companyId, email);
+        // 1. Check if user already exists in this organization across other companies
+        User savedUser = null;
+        boolean isExistingOrgMember = false;
 
-        User savedUser;
-
-        // Graceful retry handling for pending/unverified user provisioning
-        if (existingByEmail.isPresent() || existingByUsername.isPresent()) {
-            User existing = existingByEmail.orElseGet(() -> existingByUsername.orElse(null));
-            if (existing.getAccountStatus() == AccountStatus.INACTIVE && existing.getEmailStatus() == Status.UNVERIFIED) {
-                log.info("Reprovisioning pending user | userId={} | companyId={} | email={}", existing.getId(), companyId, email);
-                existing.setFullName(request.getFullName().trim());
-                existing.setEmpId(request.getEmpId().trim());
-                existing.setUsername(username);
-                existing.setEmail(email);
-                existing.setNotes(ONBOARDING_NOTES);
-                savedUser = userRepository.save(existing);
-            } else {
-                if (existingByUsername.isPresent()) {
-                    throw new BadRequestException("Username already exists");
-                }
-                throw new BadRequestException("Email already exists");
+        if (company.getOrganization() != null && organizationMemberRepository != null) {
+            Organization organization = company.getOrganization();
+            Optional<OrganizationMember> existingMemberOpt = organizationMemberRepository
+                    .findActiveByOrganizationAndEmail(organization.getId(), email, MembershipStatus.ACTIVE);
+            if (existingMemberOpt.isEmpty()) {
+                existingMemberOpt = organizationMemberRepository
+                        .findActiveByOrganizationAndEmail(organization.getId(), username, MembershipStatus.ACTIVE);
             }
-        } else {
-            // Check plan user limits only for new user creation
-            if (company.getOrganization() != null) {
+            if (existingMemberOpt.isEmpty()) {
+                List<User> orgCandidates = userRepository.findAllByUsernameIgnoreCaseOrEmailIgnoreCase(username, email);
+                for (User cand : orgCandidates) {
+                    if (cand.getCompany() != null && cand.getCompany().getOrganization() != null
+                            && cand.getCompany().getOrganization().getId().equals(organization.getId())) {
+                        existingMemberOpt = organizationMemberRepository
+                                .findByOrganization_IdAndUser_Id(organization.getId(), cand.getId());
+                        if (existingMemberOpt.isEmpty()) {
+                            OrganizationMember backfilled = organizationMemberRepository.save(
+                                    OrganizationMember.builder()
+                                            .organization(organization)
+                                            .user(cand)
+                                            .membershipStatus(MembershipStatus.ACTIVE)
+                                            .memberType(MemberType.MEMBER)
+                                            .joinedAt(LocalDateTime.now())
+                                            .build()
+                            );
+                            existingMemberOpt = Optional.of(backfilled);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (existingMemberOpt.isPresent()) {
+                OrganizationMember member = existingMemberOpt.get();
+                User existingUser = member.getUser();
+
+                boolean alreadyInCompany = memberCompanyAccessRepository != null
+                        && memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(member.getId(), companyId);
+                if (alreadyInCompany) {
+                    throw new BadRequestException("User is already a member of this company");
+                }
+
+                // Check plan limits for company
                 Subscription subscription = subscriptionRepository
-                        .findTopByOrganization_IdOrderByCreatedAtDesc(company.getOrganization().getId())
+                        .findTopByOrganization_IdOrderByCreatedAtDesc(organization.getId())
                         .orElse(null);
                 if (subscription != null && subscription.getPlan() != null) {
                     Integer maxUsersPerCompany = subscription.getPlan().getMaxUsersPerCompany();
-                    if (maxUsersPerCompany != null) {
-                        long currentUsers = userRepository.countByCompanyId(companyId);
+                    if (maxUsersPerCompany != null && memberCompanyAccessRepository != null) {
+                        long currentUsers = memberCompanyAccessRepository.countByCompany_IdAndActiveTrue(companyId);
                         if (currentUsers >= maxUsersPerCompany) {
                             throw new BadRequestException("Maximum users limit per company (" + maxUsersPerCompany + ") reached for plan");
                         }
                     }
                 }
+
+                // Grant MemberCompanyAccess
+                if (memberCompanyAccessRepository != null) {
+                    Optional<MemberCompanyAccess> existingAccess = memberCompanyAccessRepository
+                            .findByOrganizationMember_IdAndCompany_Id(member.getId(), company.getId());
+                    if (existingAccess.isPresent()) {
+                        MemberCompanyAccess mca = existingAccess.get();
+                        mca.setActive(true);
+                        memberCompanyAccessRepository.save(mca);
+                    } else {
+                        memberCompanyAccessRepository.save(
+                                MemberCompanyAccess.builder()
+                                        .organizationMember(member)
+                                        .organization(organization)
+                                        .company(company)
+                                        .active(true)
+                                        .build()
+                        );
+                    }
+                }
+
+                // Grant portal access for module if not already granted
+                companyModuleRepository.findByCompany_IdAndModule_Id(company.getId(), module.getId())
+                        .ifPresent(cm -> {
+                            if (!userPortalAccessRepository.existsByUser_IdAndCompanyModule_Id(existingUser.getId(), cm.getId())) {
+                                userPortalAccessRepository.save(
+                                        UserPortalAccess.builder()
+                                                .user(existingUser)
+                                                .companyModule(cm)
+                                                .status(true)
+                                                .build()
+                                );
+                            }
+                        });
+
+                savedUser = existingUser;
+                isExistingOrgMember = true;
+                log.info("Assigned existing organization user {} ({}) to company {}", existingUser.getId(), email, company.getId());
+
+                if (existingUser.getAccountStatus() == AccountStatus.ACTIVE) {
+                    UserResponse response = userMapper.toResponse(savedUser);
+                    response.setCompanyId(company.getId());
+                    response.setCompanyCode(company.getCompanyCode());
+                    response.setRole(java.util.Collections.emptyList());
+                    response.setEmailSent(true);
+                    return response;
+                }
             }
-
-            // Secure unguessable random placeholder, account remains INACTIVE until user sets password
-            String randomSecureSecret = JwtService.generateRandomToken();
-            User user = User.builder()
-                    .empId(request.getEmpId().trim())
-                    .username(username)
-                    .fullName(request.getFullName().trim())
-                    .email(email)
-                    .password(passwordEncoder.encode(randomSecureSecret))
-                    .company(company)
-                    .accountStatus(AccountStatus.INACTIVE)
-                    .emailStatus(Status.UNVERIFIED)
-                    .failedLoginCount(0)
-                    .notes(ONBOARDING_NOTES)
-                    .build();
-
-            savedUser = userRepository.save(user);
         }
+
+        // 2. Check if an existing user matches in this company
+        Optional<User> existingByUsername = userRepository.findByCompany_IdAndUsernameIgnoreCase(companyId, username);
+        Optional<User> existingByEmail = userRepository.findByCompany_IdAndEmailIgnoreCase(companyId, email);
+
+        if (!isExistingOrgMember) {
+            // Graceful retry handling for pending/unverified user provisioning
+            if (existingByEmail.isPresent() || existingByUsername.isPresent()) {
+                User existing = existingByEmail.orElseGet(() -> existingByUsername.orElse(null));
+                if (existing.getAccountStatus() == AccountStatus.INACTIVE && existing.getEmailStatus() == Status.UNVERIFIED) {
+                    log.info("Reprovisioning pending user | userId={} | companyId={} | email={}", existing.getId(), companyId, email);
+                    existing.setFullName(request.getFullName().trim());
+                    existing.setEmpId(request.getEmpId().trim());
+                    existing.setUsername(username);
+                    existing.setEmail(email);
+                    existing.setNotes(ONBOARDING_NOTES);
+                    savedUser = userRepository.save(existing);
+                } else {
+                    if (existingByUsername.isPresent()) {
+                        throw new BadRequestException("Username already exists");
+                    }
+                    throw new BadRequestException("Email already exists");
+                }
+            } else {
+                // Check plan user limits only for new user creation
+                if (company.getOrganization() != null) {
+                    Subscription subscription = subscriptionRepository
+                            .findTopByOrganization_IdOrderByCreatedAtDesc(company.getOrganization().getId())
+                            .orElse(null);
+                    if (subscription != null && subscription.getPlan() != null) {
+                        Integer maxUsersPerCompany = subscription.getPlan().getMaxUsersPerCompany();
+                        if (maxUsersPerCompany != null) {
+                            long currentUsers = memberCompanyAccessRepository != null
+                                    ? memberCompanyAccessRepository.countByCompany_IdAndActiveTrue(companyId)
+                                    : userRepository.countByCompanyId(companyId);
+                            if (currentUsers >= maxUsersPerCompany) {
+                                throw new BadRequestException("Maximum users limit per company (" + maxUsersPerCompany + ") reached for plan");
+                            }
+                        }
+                    }
+                }
+
+                // Secure unguessable random placeholder, account remains INACTIVE until user sets password
+                String randomSecureSecret = JwtService.generateRandomToken();
+                User user = User.builder()
+                        .empId(request.getEmpId().trim())
+                        .username(username)
+                        .fullName(request.getFullName().trim())
+                        .email(email)
+                        .password(passwordEncoder.encode(randomSecureSecret))
+                        .company(company)
+                        .accountStatus(AccountStatus.INACTIVE)
+                        .emailStatus(Status.UNVERIFIED)
+                        .failedLoginCount(0)
+                        .notes(ONBOARDING_NOTES)
+                        .build();
+
+                savedUser = userRepository.save(user);
+            }
+        }
+
+        final User finalUser = savedUser;
 
         // Grant initial portal access for module if not already granted
         companyModuleRepository.findByCompany_IdAndModule_Id(company.getId(), module.getId())
                 .ifPresent(cm -> {
-                    if (!userPortalAccessRepository.existsByUser_IdAndCompanyModule_Id(savedUser.getId(), cm.getId())) {
+                    if (!userPortalAccessRepository.existsByUser_IdAndCompanyModule_Id(finalUser.getId(), cm.getId())) {
                         UserPortalAccess access = UserPortalAccess.builder()
-                                .user(savedUser)
+                                .user(finalUser)
                                 .companyModule(cm)
                                 .status(true)
                                 .build();
@@ -310,11 +451,11 @@ public class UserServiceImpl implements UserService {
         if (company.getOrganization() != null && organizationMemberRepository != null && memberCompanyAccessRepository != null) {
             Organization organization = company.getOrganization();
             OrganizationMember member = organizationMemberRepository
-                    .findByOrganization_IdAndUser_Id(organization.getId(), savedUser.getId())
+                    .findByOrganization_IdAndUser_Id(organization.getId(), finalUser.getId())
                     .orElseGet(() -> {
                         OrganizationMember newMem = OrganizationMember.builder()
                                 .organization(organization)
-                                .user(savedUser)
+                                .user(finalUser)
                                 .membershipStatus(MembershipStatus.ACTIVE)
                                 .memberType(MemberType.MEMBER)
                                 .joinedAt(LocalDateTime.now())
@@ -547,8 +688,48 @@ public class UserServiceImpl implements UserService {
         assertUserAccess(user);
 
         UserResponse response = userMapper.toResponse(user);
+        RequestContext.Context context = RequestContext.get();
+        UUID effectiveCompanyId = (context != null && context.companyId() != null)
+                ? context.companyId()
+                : (user.getCompany() != null ? user.getCompany().getId() : null);
+
+        if (effectiveCompanyId != null) {
+            response.setCompanyId(effectiveCompanyId);
+            if (companyRepository != null) {
+                companyRepository.findById(effectiveCompanyId).ifPresent(c -> response.setCompanyCode(c.getCompanyCode()));
+            }
+
+            List<com.erp.auth_service.dto.response.RoleResponse> scopedRoles = new ArrayList<>();
+            if (user.getUserRoles() != null) {
+                for (UserRole ur : user.getUserRoles()) {
+                    if (ur.getRole() != null && ur.getRole().isStatus()) {
+                        if (ur.getRole().getCompany() == null
+                                || effectiveCompanyId.equals(ur.getRole().getCompany().getId())
+                                || "SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
+                                || "OWNER".equalsIgnoreCase(ur.getRole().getName())) {
+                            scopedRoles.add(userMapper.toRoleResponse(ur));
+                        }
+                    }
+                }
+            }
+            if (scopedRoles.isEmpty() && userRoleRepository != null) {
+                try {
+                    List<UserRole> dbRoles = userRoleRepository.findAllByUser_IdAndCompany_Id(user.getId(), effectiveCompanyId);
+                    if (dbRoles != null) {
+                        for (UserRole ur : dbRoles) {
+                            if (ur.getRole() != null && ur.getRole().isStatus()) {
+                                scopedRoles.add(userMapper.toRoleResponse(ur));
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            response.setRole(scopedRoles);
+        }
+
         com.erp.auth_service.dto.response.EffectivePermissionsResponse effective = permissionService
-                .getEffectivePermissions(userId);
+                .getEffectivePermissions(userId, effectiveCompanyId);
         response.setFeatures(effective.getFeatures());
         response.setPermissions(effective.getPermissions());
 
@@ -617,11 +798,45 @@ public class UserServiceImpl implements UserService {
                 specification,
                 pageable);
 
+        List<UserResponse> userResponses = new ArrayList<>();
+        for (User u : userPage.getContent()) {
+            UserResponse ur = userMapper.toResponse(u);
+            ur.setCompanyId(companyId);
+            ur.setCompanyCode(company.getCompanyCode());
+
+            List<com.erp.auth_service.dto.response.RoleResponse> scopedRoles = new ArrayList<>();
+            if (u.getUserRoles() != null) {
+                for (UserRole r : u.getUserRoles()) {
+                    if (r.getRole() != null && r.getRole().isStatus()) {
+                        if (r.getRole().getCompany() == null
+                                || companyId.equals(r.getRole().getCompany().getId())
+                                || "SYSTEM_ADMIN".equalsIgnoreCase(r.getRole().getName())
+                                || "OWNER".equalsIgnoreCase(r.getRole().getName())) {
+                            scopedRoles.add(userMapper.toRoleResponse(r));
+                        }
+                    }
+                }
+            }
+            if (scopedRoles.isEmpty() && userRoleRepository != null) {
+                try {
+                    List<UserRole> dbRoles = userRoleRepository.findAllByUser_IdAndCompany_Id(u.getId(), companyId);
+                    if (dbRoles != null) {
+                        for (UserRole r : dbRoles) {
+                            if (r.getRole() != null && r.getRole().isStatus()) {
+                                scopedRoles.add(userMapper.toRoleResponse(r));
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            ur.setRole(scopedRoles);
+            userResponses.add(ur);
+        }
+
         return UserListResponse.builder()
 
-                .users(
-                        userMapper.toResponseList(
-                                userPage.getContent()))
+                .users(userResponses)
 
                 .pagination(
                         PaginationResponse.builder()
@@ -708,6 +923,65 @@ public class UserServiceImpl implements UserService {
 
         if ("System001".equalsIgnoreCase(user.getUsername())) {
             throw new BadRequestException("You can't delete this user");
+        }
+
+        RequestContext.Context context = RequestContext.get();
+        UUID companyContextId = context != null ? context.companyId() : null;
+
+        // If called within a company context, check if user belongs to multiple companies
+        if (companyContextId != null && user.getCompany() != null && user.getCompany().getOrganization() != null) {
+            UUID orgId = user.getCompany().getOrganization().getId();
+            Optional<OrganizationMember> memberOpt = organizationMemberRepository
+                    .findByOrganization_IdAndUser_Id(orgId, userId);
+
+            if (memberOpt.isPresent()) {
+                OrganizationMember member = memberOpt.get();
+                List<MemberCompanyAccess> activeAccesses = memberCompanyAccessRepository
+                        .findByOrganizationMember_IdAndActiveTrue(member.getId());
+
+                // If user has access to multiple companies, revoke access only for this company
+                if (activeAccesses.size() > 1 || activeAccesses.stream().anyMatch(a -> !a.getCompany().getId().equals(companyContextId))) {
+                    // Revoke MemberCompanyAccess for this company
+                    memberCompanyAccessRepository.findByOrganizationMember_IdAndCompany_Id(member.getId(), companyContextId)
+                            .ifPresent(mca -> {
+                                mca.setActive(false);
+                                memberCompanyAccessRepository.save(mca);
+                            });
+
+                    // Remove roles for this company
+                    if (userRoleRepository != null) {
+                        List<UserRole> companyRoles = userRoleRepository.findAllByUser_IdAndRole_Company_Id(userId, companyContextId);
+                        if (companyRoles != null && !companyRoles.isEmpty()) {
+                            userRoleRepository.deleteAll(companyRoles);
+                        }
+                    }
+
+                    // Remove portal access for this company
+                    if (userPortalAccessRepository != null) {
+                        List<UserPortalAccess> portalAccesses = userPortalAccessRepository.findAllByUser_IdAndCompanyModule_Company_Id(userId, companyContextId);
+                        if (portalAccesses != null && !portalAccesses.isEmpty()) {
+                            userPortalAccessRepository.deleteAll(portalAccesses);
+                        }
+                    }
+
+                    // Invalidate sessions for this user in this company
+                    sessionRepository.deleteByUser_IdAndCompany_Id(userId, companyContextId);
+
+                    // If user's primary company was this company, reassign to another active company
+                    if (user.getCompany().getId().equals(companyContextId)) {
+                        activeAccesses.stream()
+                                .filter(a -> !a.getCompany().getId().equals(companyContextId) && Boolean.TRUE.equals(a.getActive()))
+                                .findFirst()
+                                .ifPresent(nextAccess -> {
+                                    user.setCompany(nextAccess.getCompany());
+                                    userRepository.save(user);
+                                });
+                    }
+
+                    log.info("User {} removed from company {}, remaining active in other companies", userId, companyContextId);
+                    return;
+                }
+            }
         }
 
         List<Session> sessions = sessionRepository.findAllByUser_Id(userId);
@@ -1182,6 +1456,11 @@ public class UserServiceImpl implements UserService {
             organization = currentCompany.getOrganization();
         }
 
+        if (currentCompany != null && session != null && (session.getCompany() == null || !currentCompany.getId().equals(session.getCompany().getId()))) {
+            session.setCompany(currentCompany);
+            sessionRepository.save(session);
+        }
+
         final Company effectiveCompany = currentCompany;
         final UUID effectiveCompanyId = effectiveCompany != null ? effectiveCompany.getId() : null;
 
@@ -1449,6 +1728,24 @@ public class UserServiceImpl implements UserService {
                                 .status(ur.getRole().isStatus())
                                 .build())
                         .collect(java.util.stream.Collectors.toList());
+
+        if (roles.isEmpty() && userRoleRepository != null && effectiveCompanyId != null) {
+            try {
+                List<UserRole> dbRoles = userRoleRepository.findAllByUser_IdAndCompany_Id(userId, effectiveCompanyId);
+                if (dbRoles != null) {
+                    for (UserRole ur : dbRoles) {
+                        if (ur.getRole() != null && ur.getRole().isStatus()) {
+                            roles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
+                                    .id(ur.getRole().getId())
+                                    .name(ur.getRole().getName())
+                                    .status(ur.getRole().isStatus())
+                                    .build());
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
 
         if (membershipCtx != null && membershipCtx.getMemberType() == MemberType.OWNER) {
             boolean hasOwnerRole = roles.stream().anyMatch(r -> "OWNER".equalsIgnoreCase(r.getName()));

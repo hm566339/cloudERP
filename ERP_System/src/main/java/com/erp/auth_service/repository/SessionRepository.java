@@ -50,6 +50,10 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
         @Query("DELETE FROM Session s WHERE s.user.id = :userId")
         void deleteByUser_Id(@Param("userId") UUID userId);
 
+        @Modifying
+        @Query("DELETE FROM Session s WHERE s.user.id = :userId AND s.company.id = :companyId")
+        void deleteByUser_IdAndCompany_Id(@Param("userId") UUID userId, @Param("companyId") UUID companyId);
+
         // ================= DASHBOARD =================
 
         @Query("""

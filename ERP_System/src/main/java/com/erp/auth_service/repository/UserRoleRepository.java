@@ -28,6 +28,24 @@ public interface UserRoleRepository
          */
         List<UserRole> findAllByUser_Id(UUID userId);
 
+        @Query("""
+                        SELECT ur FROM UserRole ur
+                        WHERE ur.user.id = :userId
+                          AND (ur.role.company.id = :companyId OR ur.role.company IS NULL)
+                        """)
+        List<UserRole> findAllByUser_IdAndCompany_Id(
+                        @Param("userId") UUID userId,
+                        @Param("companyId") UUID companyId);
+
+        @Query("""
+                        SELECT ur FROM UserRole ur
+                        WHERE ur.user.id = :userId
+                          AND ur.role.company.id = :companyId
+                        """)
+        List<UserRole> findAllByUser_IdAndRole_Company_Id(
+                        @Param("userId") UUID userId,
+                        @Param("companyId") UUID companyId);
+
         /*
          * SAFE EXISTS CHECK
          * (Hibernate 7 compatible)

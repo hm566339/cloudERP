@@ -130,7 +130,15 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
                         JOIN FETCH u.company
                         LEFT JOIN FETCH u.userRoles ur
                         LEFT JOIN FETCH ur.role
-                        WHERE u.company.id = :companyId
+                        WHERE (
+                            u.company.id = :companyId
+                            OR u.id IN (
+                                SELECT mca.organizationMember.user.id
+                                FROM MemberCompanyAccess mca
+                                WHERE mca.company.id = :companyId
+                                  AND mca.active = true
+                            )
+                        )
                         AND (
                             LOWER(u.username) = LOWER(:input)
                             OR LOWER(u.email) = LOWER(:input)

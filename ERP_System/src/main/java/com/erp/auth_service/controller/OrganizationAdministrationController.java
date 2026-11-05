@@ -30,6 +30,12 @@ public class OrganizationAdministrationController {
         return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Company access revoked")));
     }
 
+    @GetMapping
+    public ResponseEntity<ResponseWrapper<List<com.erp.auth_service.dto.platform.PlatformMemberSummaryResponse>>> members() {
+        RequestContext.Context context = RequestContext.get();
+        return ResponseEntity.ok(ResponseWrapper.success(administrationService.organizationMembers(context.organizationId())));
+    }
+
     @GetMapping("/companies")
     public ResponseEntity<ResponseWrapper<List<AccessibleCompanyResponse>>> companies() {
         RequestContext.Context context = RequestContext.get();

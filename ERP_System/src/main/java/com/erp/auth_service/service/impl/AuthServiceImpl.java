@@ -505,8 +505,11 @@ public class AuthServiceImpl implements AuthService {
                 } else {
 
                         UserPortalAccess portalAccess = userPortalAccessRepository
-                                        .findFirstByUser_IdAndStatusTrueOrderByCreatedAtAsc(
-                                                        user.getId())
+                                        .findFirstByUser_IdAndCompanyModule_Company_IdAndStatusTrueOrderByCreatedAtAsc(
+                                                        user.getId(), company.getId())
+                                        .or(() -> userPortalAccessRepository
+                                                        .findFirstByUser_IdAndStatusTrueOrderByCreatedAtAsc(
+                                                                        user.getId()))
                                         .orElseThrow(() -> {
                                                 log.warn("Login failed - no active portal access found | userId={}",
                                                                 user.getId());
@@ -2444,19 +2447,43 @@ public class AuthServiceImpl implements AuthService {
                                 module != null ? module.getName() : "ERP_WORKSPACE");
 
                 List<String> roleNames = new ArrayList<>();
-                if (user.getUserRoles() != null && !user.getUserRoles().isEmpty()) {
+                UUID activeCompanyId = company != null ? company.getId() : null;
+
+                if (activeCompanyId != null && userRoleRepository != null) {
+                        try {
+                                List<UserRole> companyRoles = userRoleRepository.findAllByUser_IdAndCompany_Id(user.getId(), activeCompanyId);
+                                if (companyRoles != null && !companyRoles.isEmpty()) {
+                                        roleNames.addAll(companyRoles.stream()
+                                                        .filter(r -> r != null && r.getRole() != null && r.getRole().isStatus())
+                                                        .map(r -> r.getRole().getName())
+                                                        .filter(name -> name != null && !name.isBlank())
+                                                        .toList());
+                                }
+                        } catch (Exception ignored) {
+                        }
+                }
+
+                if (roleNames.isEmpty() && user.getUserRoles() != null && !user.getUserRoles().isEmpty()) {
                         roleNames.addAll(user.getUserRoles().stream()
-                                        .filter(r -> r != null && r.getRole() != null)
+                                        .filter(r -> r != null && r.getRole() != null && r.getRole().isStatus() && (
+                                                activeCompanyId == null
+                                                || r.getRole().getCompany() == null
+                                                || activeCompanyId.equals(r.getRole().getCompany().getId())
+                                                || "SYSTEM_ADMIN".equalsIgnoreCase(r.getRole().getName())
+                                                || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(r.getRole().getName())
+                                                || "OWNER".equalsIgnoreCase(r.getRole().getName())
+                                                || "ROLE_OWNER".equalsIgnoreCase(r.getRole().getName())
+                                        ))
                                         .map(r -> r.getRole().getName())
                                         .filter(name -> name != null && !name.isBlank())
                                         .toList());
                 }
-                if (roleNames.isEmpty() && userRoleRepository != null) {
+                if (roleNames.isEmpty() && userRoleRepository != null && activeCompanyId == null) {
                         try {
                                 List<UserRole> dbRoles = userRoleRepository.findAllByUser_Id(user.getId());
                                 if (dbRoles != null && !dbRoles.isEmpty()) {
                                         roleNames.addAll(dbRoles.stream()
-                                                        .filter(r -> r != null && r.getRole() != null)
+                                                        .filter(r -> r != null && r.getRole() != null && r.getRole().isStatus())
                                                         .map(r -> r.getRole().getName())
                                                         .filter(name -> name != null && !name.isBlank())
                                                         .toList());
@@ -2737,8 +2764,9 @@ public class AuthServiceImpl implements AuthService {
                         if (company != null) {
                                 userResponse.setCompanyId(company.getId());
                                 userResponse.setCompanyCode(company.getCompanyCode());
+                                List<com.erp.auth_service.dto.response.RoleResponse> scopedRoles = new ArrayList<>();
                                 if (user.getUserRoles() != null) {
-                                        List<com.erp.auth_service.dto.response.RoleResponse> scopedRoles = user
+                                        scopedRoles.addAll(user
                                                         .getUserRoles().stream()
                                                         .filter(ur -> ur.getRole() != null
                                                                         && (ur.getRole().getCompany() == null
@@ -2759,9 +2787,21 @@ public class AuthServiceImpl implements AuthService {
                                                                                                         .equalsIgnoreCase(
                                                                                                                         ur.getRole().getName())))
                                                         .map(userMapper::toRoleResponse)
-                                                        .toList();
-                                        userResponse.setRole(scopedRoles);
+                                                        .toList());
                                 }
+                                if (scopedRoles.isEmpty() && userRoleRepository != null) {
+                                        try {
+                                                List<UserRole> dbRoles = userRoleRepository.findAllByUser_IdAndCompany_Id(user.getId(), company.getId());
+                                                if (dbRoles != null && !dbRoles.isEmpty()) {
+                                                        scopedRoles.addAll(dbRoles.stream()
+                                                                        .filter(ur -> ur.getRole() != null)
+                                                                        .map(userMapper::toRoleResponse)
+                                                                        .toList());
+                                                }
+                                        } catch (Exception ignored) {
+                                        }
+                                }
+                                userResponse.setRole(scopedRoles);
                         } else if (isOwner) {
                                 List<com.erp.auth_service.dto.response.RoleResponse> ownerRoles = new ArrayList<>();
                                 ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder().name("OWNER").status(true)

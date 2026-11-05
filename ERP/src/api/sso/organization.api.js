@@ -490,6 +490,18 @@ export const organizationApiSlice = baseApi.injectEndpoints({
       ],
     }),
 
+    // GET /api/sso/organization/members
+    getOrgMembers: builder.query({
+      query: () => ({
+        url: `/api/sso/organization/members`,
+        method: 'GET',
+      }),
+      transformResponse: (response) => {
+        const data = response?.data || response || [];
+        return Array.isArray(data) ? data : [];
+      },
+    }),
+
   }),
 });
 
@@ -520,4 +532,5 @@ export const {
   useMutateSupportSessionMutation,
   useAddOrganizationMemberMutation,
   useAssignModuleToOrganizationMutation,
+  useGetOrgMembersQuery,
 } = organizationApiSlice;

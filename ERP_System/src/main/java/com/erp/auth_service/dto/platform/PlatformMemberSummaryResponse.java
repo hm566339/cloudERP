@@ -23,5 +23,6 @@ public class PlatformMemberSummaryResponse {
     private MemberType memberType;
     private MembershipStatus membershipStatus;
     private List<String> authorizedCompanies;
+    private List<UUID> authorizedCompanyIds;
     private LocalDateTime createdAt;
 }

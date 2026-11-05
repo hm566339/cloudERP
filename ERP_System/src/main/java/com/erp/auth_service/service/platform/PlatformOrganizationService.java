@@ -108,10 +108,14 @@ public class PlatformOrganizationService {
 
         List<OrganizationMember> members = organizationMemberRepository.findByOrganization_Id(organizationId);
         return members.stream().map(m -> {
-            List<String> authorizedCompanies = memberCompanyAccessRepository.findByOrganizationMember_IdAndActiveTrue(m.getId())
-                    .stream()
+            List<MemberCompanyAccess> activeAccesses = memberCompanyAccessRepository.findByOrganizationMember_IdAndActiveTrue(m.getId());
+            List<String> authorizedCompanies = activeAccesses.stream()
                     .map(a -> a.getCompany() != null ? a.getCompany().getCompanyName() : null)
-                    .filter(Objects::nonNull)
+                    .filter(name -> name != null)
+                    .toList();
+            List<UUID> authorizedCompanyIds = activeAccesses.stream()
+                    .map(a -> a.getCompany() != null ? a.getCompany().getId() : null)
+                    .filter(id -> id != null)
                     .toList();
 
             User user = m.getUser();
@@ -124,6 +128,7 @@ public class PlatformOrganizationService {
                     .memberType(m.getMemberType())
                     .membershipStatus(m.getMembershipStatus())
                     .authorizedCompanies(authorizedCompanies)
+                    .authorizedCompanyIds(authorizedCompanyIds)
                     .createdAt(m.getCreatedAt())
                     .build();
         }).toList();

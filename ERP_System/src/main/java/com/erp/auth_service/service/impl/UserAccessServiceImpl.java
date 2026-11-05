@@ -14,6 +14,8 @@ import com.erp.auth_service.model.User;
 import com.erp.auth_service.model.UserPortalAccess;
 import com.erp.auth_service.model.UserRole;
 import com.erp.auth_service.repository.CompanyModuleRepository;
+import com.erp.auth_service.repository.MemberCompanyAccessRepository;
+import com.erp.auth_service.repository.OrganizationMemberRepository;
 import com.erp.auth_service.repository.RoleRepository;
 import com.erp.auth_service.repository.SessionRepository;
 import com.erp.auth_service.repository.UserPortalAccessRepository;
@@ -52,8 +54,12 @@ public class UserAccessServiceImpl implements UserAccessService {
 
         private final UserPortalAccessMapper userPortalAccessMapper;
 
+        private final OrganizationMemberRepository organizationMemberRepository;
+
+        private final MemberCompanyAccessRepository memberCompanyAccessRepository;
+
         private void assertCompanyOwnership(Company company) {
-                if (PlatformSecurityUtil.isElevatedAdmin()) {
+                if (company == null || PlatformSecurityUtil.isElevatedAdmin()) {
                         return;
                 }
                 RequestContext.Context context = RequestContext.get();
@@ -69,6 +75,25 @@ public class UserAccessServiceImpl implements UserAccessService {
                 }
         }
 
+        private void assertUserHasAccessToCompany(User user, Company company) {
+                if (company == null || PlatformSecurityUtil.isElevatedAdmin()) {
+                        return;
+                }
+                if (user.getCompany() != null && user.getCompany().getId().equals(company.getId())) {
+                        return;
+                }
+                if (company.getOrganization() != null && organizationMemberRepository != null && memberCompanyAccessRepository != null) {
+                        boolean hasAccess = organizationMemberRepository
+                                        .findByOrganization_IdAndUser_Id(company.getOrganization().getId(), user.getId())
+                                        .map(mem -> memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(mem.getId(), company.getId()))
+                                        .orElse(false);
+                        if (hasAccess) {
+                                return;
+                        }
+                }
+                throw new InvalidOperationException("User does not have access to company " + company.getCompanyName());
+        }
+
         /*
          * ASSIGN ROLE
          */
@@ -80,21 +105,23 @@ public class UserAccessServiceImpl implements UserAccessService {
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "User not found"));
-                assertCompanyOwnership(user.getCompany());
 
                 Role role = roleRepository.findById(roleId)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Role not found"));
 
-                /*
-                 * COMPANY VALIDATION
-                 */
-                if (!user.getCompany()
-                                .getId()
-                                .equals(role.getCompany().getId())) {
+                Company targetCompany = role.getCompany();
+                if (targetCompany != null) {
+                        assertCompanyOwnership(targetCompany);
+                        assertUserHasAccessToCompany(user, targetCompany);
 
-                        throw new InvalidOperationException(
-                                        "User and role company mismatch");
+                        // If user already has an existing role in targetCompany, replace it
+                        List<UserRole> existingRoles = userRoleRepository.findAllByUser_IdAndRole_Company_Id(userId, targetCompany.getId());
+                        for (UserRole er : existingRoles) {
+                                if (!er.getRole().getId().equals(roleId)) {
+                                        userRoleRepository.delete(er);
+                                }
+                        }
                 }
 
                 if (userRoleRepository
@@ -102,8 +129,14 @@ public class UserAccessServiceImpl implements UserAccessService {
                                                 userId,
                                                 roleId)) {
 
-                        throw new DuplicateResourceException(
-                                        "Role already assigned to user");
+                        UserRole existing = userRoleRepository.findByUser_IdAndRole_Id(userId, roleId).orElse(null);
+                        if (existing != null) {
+                                return UserRoleAssignmentResponse.builder()
+                                                .userId(existing.getUser().getId())
+                                                .roleId(existing.getRole().getId())
+                                                .assignedAt(existing.getAssignedAt())
+                                                .build();
+                        }
                 }
 
                 UserRole userRole = UserRole.builder()
@@ -134,7 +167,9 @@ public class UserAccessServiceImpl implements UserAccessService {
                                                 roleId)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Role assignment not found"));
-                assertCompanyOwnership(userRole.getUser().getCompany());
+                if (userRole.getRole().getCompany() != null) {
+                        assertCompanyOwnership(userRole.getRole().getCompany());
+                }
 
                 if ("SYSTEM_ADMIN".equalsIgnoreCase(
                                 userRole.getRole().getName())) {
@@ -154,39 +189,16 @@ public class UserAccessServiceImpl implements UserAccessService {
                         UUID userId,
                         UUID companyModuleId) {
 
-                if (userPortalAccessRepository
-                                .existsByUser_IdAndCompanyModule_Id(
-                                                userId,
-                                                companyModuleId)) {
-
-                        throw new DuplicateResourceException(
-                                        "Portal access already granted to user");
-                }
-
-                User user = userRepository.findById(userId)
-                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                "User not found"));
-                assertCompanyOwnership(user.getCompany());
-
                 CompanyModule companyModule = companyModuleRepository.findById(
                                 companyModuleId)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Company module not found"));
                 assertCompanyOwnership(companyModule.getCompany());
 
-                /*
-                 * COMPANY VALIDATION
-                 */
-                if (!user.getCompany()
-                                .getId()
-                                .equals(
-                                                companyModule
-                                                                .getCompany()
-                                                                .getId())) {
-
-                        throw new InvalidOperationException(
-                                        "User and company module mismatch");
-                }
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "User not found"));
+                assertUserHasAccessToCompany(user, companyModule.getCompany());
 
                 UserPortalAccess access = userPortalAccessRepository
                                 .findByUser_IdAndCompanyModule_Id(
@@ -203,7 +215,10 @@ public class UserAccessServiceImpl implements UserAccessService {
                                         .build();
 
                 } else {
-
+                        if (access.isStatus()) {
+                                throw new DuplicateResourceException(
+                                                "Portal access already granted to user");
+                        }
                         access.setStatus(true);
                 }
 
@@ -234,7 +249,7 @@ public class UserAccessServiceImpl implements UserAccessService {
                                                 companyModuleId)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Portal access not found"));
-                assertCompanyOwnership(access.getUser().getCompany());
+                assertCompanyOwnership(access.getCompanyModule().getCompany());
 
                 if (!access.isStatus()) {
 
@@ -254,27 +269,8 @@ public class UserAccessServiceImpl implements UserAccessService {
                                 access.getCompanyModule().getCompany().getId(),
                                 access.getCompanyModule().getModule().getId());
 
-                for (Session session : sessions) {
-
-                        if (session.getCompany() != null
-                                        && session.getModule() != null
-
-                                        && session.getCompany()
-                                                        .getId()
-                                                        .equals(
-                                                                        access.getCompanyModule()
-                                                                                        .getCompany()
-                                                                                        .getId())
-
-                                        && session.getModule()
-                                                        .getId()
-                                                        .equals(
-                                                                        access.getCompanyModule()
-                                                                                        .getModule()
-                                                                                        .getId())) {
-
-                                sessionRepository.delete(session);
-                        }
+                if (!sessions.isEmpty()) {
+                        sessionRepository.deleteAll(sessions);
                 }
         }
 
@@ -334,7 +330,7 @@ public class UserAccessServiceImpl implements UserAccessService {
                                                 companyModuleId)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Portal access not found"));
-                assertCompanyOwnership(access.getUser().getCompany());
+                assertCompanyOwnership(access.getCompanyModule().getCompany());
 
                 /*
                  * TOGGLE STATUS
