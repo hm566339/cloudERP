@@ -42,31 +42,49 @@ public class OrganizationPermissionController {
         return ResponseEntity.ok(ResponseWrapper.success(matrix));
     }
 
-
     private UUID resolveOrgId(UUID explicitOrgId, UUID headerOrgId) {
+        UUID orgId = null;
         if (explicitOrgId != null) {
-            return explicitOrgId;
-        }
-        if (headerOrgId != null) {
-            return headerOrgId;
-        }
-        RequestContext.Context ctx = RequestContext.get();
-        if (ctx != null && ctx.organizationId() != null) {
-            return ctx.organizationId();
-        }
-        if (ctx != null && ctx.companyId() != null && companyRepository != null) {
-            var compOpt = companyRepository.findById(ctx.companyId());
-            if (compOpt.isPresent() && compOpt.get().getOrganization() != null) {
-                return compOpt.get().getOrganization().getId();
+            orgId = explicitOrgId;
+        } else if (headerOrgId != null) {
+            orgId = headerOrgId;
+        } else {
+            RequestContext.Context ctx = RequestContext.get();
+            if (ctx != null && ctx.organizationId() != null) {
+                orgId = ctx.organizationId();
+            } else if (ctx != null && ctx.companyId() != null && companyRepository != null) {
+                var compOpt = companyRepository.findById(ctx.companyId());
+                if (compOpt.isPresent() && compOpt.get().getOrganization() != null) {
+                    orgId = compOpt.get().getOrganization().getId();
+                }
+            } else if (ctx != null && ctx.userId() != null && organizationMemberRepository != null) {
+                var activeMembers = organizationMemberRepository.findByUser_IdAndMembershipStatus(
+                        ctx.userId(), com.erp.auth_service.utility.MembershipStatus.ACTIVE);
+                if (activeMembers.size() == 1) {
+                    orgId = activeMembers.get(0).getOrganization().getId();
+                }
             }
         }
-        if (ctx != null && ctx.userId() != null && organizationMemberRepository != null) {
-            var memberOpt = organizationMemberRepository.findFirstByUser_IdAndMembershipStatus(
-                    ctx.userId(), com.erp.auth_service.utility.MembershipStatus.ACTIVE);
-            if (memberOpt.isPresent()) {
-                return memberOpt.get().getOrganization().getId();
+
+        if (orgId == null) {
+            throw new ForbiddenException("Organization context required");
+        }
+
+        RequestContext.Context current = RequestContext.get();
+        UUID userId = current != null ? current.userId() : null;
+        if (userId != null && organizationMemberRepository != null) {
+            boolean isMember = organizationMemberRepository
+                    .findByOrganization_IdAndUser_IdAndMembershipStatus(orgId, userId, com.erp.auth_service.utility.MembershipStatus.ACTIVE)
+                    .isPresent();
+            if (!isMember) {
+                throw new ForbiddenException("Active organization membership required");
             }
         }
-        throw new ForbiddenException("Organization context is required");
+
+        if (current != null && (current.organizationId() == null || !current.organizationId().equals(orgId))) {
+            RequestContext.set(current.userId(), orgId, current.companyId(), current.clientId(), current.accessMode());
+        }
+
+        return orgId;
     }
 }

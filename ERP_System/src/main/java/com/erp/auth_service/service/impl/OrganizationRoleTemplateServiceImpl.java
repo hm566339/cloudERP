@@ -39,14 +39,15 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     @Override
     @Transactional
     public List<OrganizationRoleTemplateDto> getTemplates(UUID organizationId) {
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         if (templateRepository.countByOrganization_Id(organizationId) == 0) {
             seedDefaultTemplates(actor.getOrganization());
         }
 
-        List<OrganizationRoleTemplate> templates = templateRepository.findAllWithPermissionsByOrganizationId(organizationId);
+        List<OrganizationRoleTemplate> templates = templateRepository
+                .findAllWithPermissionsByOrganizationId(organizationId);
         List<Company> companies = companyRepository.findByOrganization_Id(organizationId);
 
         return templates.stream()
@@ -57,7 +58,7 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     @Override
     @Transactional(readOnly = true)
     public OrganizationRoleTemplateDto getTemplateById(UUID organizationId, UUID templateId) {
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         OrganizationRoleTemplate template = templateRepository.findByIdWithPermissions(organizationId, templateId)
@@ -71,7 +72,7 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     @Transactional
     public OrganizationRoleTemplateDto createTemplate(UUID organizationId, CreateRoleTemplateRequest request) {
         authorizationService.requireWriteAccess();
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         String trimmedName = request.getName().trim();
@@ -99,9 +100,10 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
 
     @Override
     @Transactional
-    public OrganizationRoleTemplateDto updateTemplate(UUID organizationId, UUID templateId, UpdateRoleTemplateRequest request) {
+    public OrganizationRoleTemplateDto updateTemplate(UUID organizationId, UUID templateId,
+            UpdateRoleTemplateRequest request) {
         authorizationService.requireWriteAccess();
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         OrganizationRoleTemplate template = templateRepository.findByOrganization_IdAndId(organizationId, templateId)
@@ -141,7 +143,7 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     @Transactional
     public OrganizationRoleTemplateDto duplicateTemplate(UUID organizationId, UUID templateId, String newName) {
         authorizationService.requireWriteAccess();
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         OrganizationRoleTemplate existing = templateRepository.findByIdWithPermissions(organizationId, templateId)
@@ -155,7 +157,8 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
         OrganizationRoleTemplate duplicate = OrganizationRoleTemplate.builder()
                 .organization(actor.getOrganization())
                 .name(targetName)
-                .description(existing.getDescription() != null ? existing.getDescription() : "Duplicated from " + existing.getName())
+                .description(existing.getDescription() != null ? existing.getDescription()
+                        : "Duplicated from " + existing.getName())
                 .isSystem(false)
                 .status(true)
                 .build();
@@ -175,7 +178,7 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     @Transactional
     public OrganizationRoleTemplateDto updateTemplateStatus(UUID organizationId, UUID templateId, boolean status) {
         authorizationService.requireWriteAccess();
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         OrganizationRoleTemplate template = templateRepository.findByOrganization_IdAndId(organizationId, templateId)
@@ -191,7 +194,7 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     @Transactional
     public void deleteTemplate(UUID organizationId, UUID templateId) {
         authorizationService.requireWriteAccess();
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         OrganizationRoleTemplate template = templateRepository.findByOrganization_IdAndId(organizationId, templateId)
@@ -215,7 +218,7 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     @Override
     @Transactional(readOnly = true)
     public TemplateApplyPreviewDto previewApply(UUID organizationId, UUID templateId, ApplyTemplateRequest request) {
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         OrganizationRoleTemplate template = templateRepository.findByIdWithPermissions(organizationId, templateId)
@@ -231,7 +234,8 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
             Company company = companyRepository.findByIdAndOrganization_IdAndActiveTrue(companyId, organizationId)
                     .orElseThrow(() -> new ResourceNotFoundException("Company not found or inactive: " + companyId));
 
-            Optional<Role> existingRoleOpt = roleRepository.findByCompany_IdAndNameIgnoreCase(companyId, template.getName());
+            Optional<Role> existingRoleOpt = roleRepository.findByCompany_IdAndNameIgnoreCase(companyId,
+                    template.getName());
 
             if (existingRoleOpt.isPresent()) {
                 Role existingRole = existingRoleOpt.get();
@@ -293,7 +297,7 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     @Transactional
     public ApplyTemplateResultDto applyTemplate(UUID organizationId, UUID templateId, ApplyTemplateRequest request) {
         authorizationService.requireWriteAccess();
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         OrganizationRoleTemplate template = templateRepository.findByIdWithPermissions(organizationId, templateId)
@@ -308,7 +312,8 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
             Company company = companyRepository.findByIdAndOrganization_IdAndActiveTrue(companyId, organizationId)
                     .orElseThrow(() -> new ResourceNotFoundException("Company not found or inactive: " + companyId));
 
-            Optional<Role> existingRoleOpt = roleRepository.findByCompany_IdAndNameIgnoreCase(companyId, template.getName());
+            Optional<Role> existingRoleOpt = roleRepository.findByCompany_IdAndNameIgnoreCase(companyId,
+                    template.getName());
 
             if (existingRoleOpt.isPresent()) {
                 Role existingRole = existingRoleOpt.get();
@@ -345,7 +350,8 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
                             .companyId(company.getId())
                             .companyName(company.getCompanyName())
                             .action("UPDATED")
-                            .message("Role permissions updated from template (" + template.getPermissions().size() + " permissions)")
+                            .message("Role permissions updated from template (" + template.getPermissions().size()
+                                    + " permissions)")
                             .userAssignmentsPreserved((int) userCount)
                             .permissionCount(template.getPermissions().size())
                             .build());
@@ -394,11 +400,12 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     @Override
     @Transactional(readOnly = true)
     public RoleComparisonDto compareRoleAcrossCompanies(UUID organizationId, String roleName) {
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         List<Company> companies = companyRepository.findByOrganization_Id(organizationId);
-        Optional<OrganizationRoleTemplate> templateOpt = templateRepository.findByOrganization_IdAndNameIgnoreCase(organizationId, roleName);
+        Optional<OrganizationRoleTemplate> templateOpt = templateRepository
+                .findByOrganization_IdAndNameIgnoreCase(organizationId, roleName);
 
         Set<String> templatePermCodes = new HashSet<>();
         if (templateOpt.isPresent()) {
@@ -482,9 +489,10 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
 
     @Override
     @Transactional
-    public OrganizationRoleTemplateDto importCompanyRoleAsTemplate(UUID organizationId, UUID companyId, UUID roleId, String templateName, String description) {
+    public OrganizationRoleTemplateDto importCompanyRoleAsTemplate(UUID organizationId, UUID companyId, UUID roleId,
+            String templateName, String description) {
         authorizationService.requireWriteAccess();
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         Company company = companyRepository.findByIdAndOrganization_IdAndActiveTrue(companyId, organizationId)
@@ -497,15 +505,18 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
             throw new BadRequestException("Role does not belong to the specified company");
         }
 
-        String finalName = (templateName != null && !templateName.isBlank()) ? templateName.trim() : role.getName().trim();
+        String finalName = (templateName != null && !templateName.isBlank()) ? templateName.trim()
+                : role.getName().trim();
         if (templateRepository.existsByOrganization_IdAndNameIgnoreCase(organizationId, finalName)) {
-            throw new BadRequestException("A template with name '" + finalName + "' already exists in this organization");
+            throw new BadRequestException(
+                    "A template with name '" + finalName + "' already exists in this organization");
         }
 
         OrganizationRoleTemplate template = OrganizationRoleTemplate.builder()
                 .organization(actor.getOrganization())
                 .name(finalName)
-                .description(description != null && !description.isBlank() ? description : "Imported from " + role.getName() + " in " + company.getCompanyName())
+                .description(description != null && !description.isBlank() ? description
+                        : "Imported from " + role.getName() + " in " + company.getCompanyName())
                 .isSystem(false)
                 .status(true)
                 .build();
@@ -535,7 +546,7 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     @Override
     @Transactional(readOnly = true)
     public PermissionCatalogDto getPermissionCatalog(UUID organizationId) {
-        OrganizationMember actor = actor();
+        OrganizationMember actor = actor(organizationId);
         validateOrgMatch(actor, organizationId);
 
         List<FeaturePermission> activePermissions = featurePermissionRepository.findByActiveTrue();
@@ -544,9 +555,11 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
 
         for (FeaturePermission fp : activePermissions) {
             String moduleName = (fp.getFeature() != null && fp.getFeature().getModuleName() != null)
-                    ? fp.getFeature().getModuleName() : "GENERAL";
+                    ? fp.getFeature().getModuleName()
+                    : "GENERAL";
             String featureCode = (fp.getFeature() != null && fp.getFeature().getCode() != null)
-                    ? fp.getFeature().getCode() : "GENERAL";
+                    ? fp.getFeature().getCode()
+                    : "GENERAL";
 
             grouped.computeIfAbsent(moduleName, k -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER))
                     .computeIfAbsent(featureCode, k -> new ArrayList<>())
@@ -603,8 +616,11 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
                 "Organization-level administrator with access to organization settings, audit, and overall administration",
                 allPermissions,
                 fp -> {
-                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null ? fp.getFeature().getModuleName().toUpperCase() : "";
-                    return mod.contains("SSO") || mod.contains("ADMIN") || mod.contains("ORGANIZATION") || mod.contains("SETTING");
+                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null
+                            ? fp.getFeature().getModuleName().toUpperCase()
+                            : "";
+                    return mod.contains("SSO") || mod.contains("ADMIN") || mod.contains("ORGANIZATION")
+                            || mod.contains("SETTING");
                 });
 
         createSeedTemplate(organization, "Company Admin",
@@ -626,8 +642,12 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
                 "Financial operations including chart of accounts, vouchers, journal entries, payments, and tax reporting",
                 allPermissions,
                 fp -> {
-                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null ? fp.getFeature().getModuleName().toUpperCase() : "";
-                    String feat = fp.getFeature() != null && fp.getFeature().getCode() != null ? fp.getFeature().getCode().toUpperCase() : "";
+                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null
+                            ? fp.getFeature().getModuleName().toUpperCase()
+                            : "";
+                    String feat = fp.getFeature() != null && fp.getFeature().getCode() != null
+                            ? fp.getFeature().getCode().toUpperCase()
+                            : "";
                     return mod.contains("ACCOUNT") || mod.contains("FINANCE") || feat.contains("HSN") ||
                             feat.contains("REPORT") || feat.contains("INVOICE") || feat.contains("PAYMENT") ||
                             feat.contains("TAX") || feat.contains("LEDGER") || feat.contains("VOUCHER");
@@ -637,8 +657,12 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
                 "Sales operations including customer management, quotations, sales orders, and invoices",
                 allPermissions,
                 fp -> {
-                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null ? fp.getFeature().getModuleName().toUpperCase() : "";
-                    String feat = fp.getFeature() != null && fp.getFeature().getCode() != null ? fp.getFeature().getCode().toUpperCase() : "";
+                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null
+                            ? fp.getFeature().getModuleName().toUpperCase()
+                            : "";
+                    String feat = fp.getFeature() != null && fp.getFeature().getCode() != null
+                            ? fp.getFeature().getCode().toUpperCase()
+                            : "";
                     return mod.contains("SALE") || mod.contains("CRM") || feat.contains("CUSTOMER") ||
                             feat.contains("ORDER") || feat.contains("QUOTE") || feat.contains("INVOICE");
                 });
@@ -647,8 +671,12 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
                 "Inventory control including stock management, item masters, warehouses, and transfers",
                 allPermissions,
                 fp -> {
-                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null ? fp.getFeature().getModuleName().toUpperCase() : "";
-                    String feat = fp.getFeature() != null && fp.getFeature().getCode() != null ? fp.getFeature().getCode().toUpperCase() : "";
+                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null
+                            ? fp.getFeature().getModuleName().toUpperCase()
+                            : "";
+                    String feat = fp.getFeature() != null && fp.getFeature().getCode() != null
+                            ? fp.getFeature().getCode().toUpperCase()
+                            : "";
                     return mod.contains("INVENTORY") || mod.contains("STOCK") || feat.contains("ITEM") ||
                             feat.contains("WAREHOUSE") || feat.contains("PRODUCT") || feat.contains("TRANSFER");
                 });
@@ -657,8 +685,12 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
                 "Procurement operations including purchase orders, vendor management, and bills",
                 allPermissions,
                 fp -> {
-                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null ? fp.getFeature().getModuleName().toUpperCase() : "";
-                    String feat = fp.getFeature() != null && fp.getFeature().getCode() != null ? fp.getFeature().getCode().toUpperCase() : "";
+                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null
+                            ? fp.getFeature().getModuleName().toUpperCase()
+                            : "";
+                    String feat = fp.getFeature() != null && fp.getFeature().getCode() != null
+                            ? fp.getFeature().getCode().toUpperCase()
+                            : "";
                     return mod.contains("PURCHASE") || mod.contains("PROCUREMENT") || feat.contains("VENDOR") ||
                             feat.contains("PO") || feat.contains("BILL");
                 });
@@ -667,8 +699,12 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
                 "Human resource management including employee profiles, payroll, and attendance",
                 allPermissions,
                 fp -> {
-                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null ? fp.getFeature().getModuleName().toUpperCase() : "";
-                    String feat = fp.getFeature() != null && fp.getFeature().getCode() != null ? fp.getFeature().getCode().toUpperCase() : "";
+                    String mod = fp.getFeature() != null && fp.getFeature().getModuleName() != null
+                            ? fp.getFeature().getModuleName().toUpperCase()
+                            : "";
+                    String feat = fp.getFeature() != null && fp.getFeature().getCode() != null
+                            ? fp.getFeature().getCode().toUpperCase()
+                            : "";
                     return mod.contains("HR") || mod.contains("EMPLOYEE") || feat.contains("PAYROLL") ||
                             feat.contains("ATTENDANCE") || feat.contains("LEAVE");
                 });
@@ -683,8 +719,8 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     }
 
     private void createSeedTemplate(Organization org, String name, String description,
-                                    List<FeaturePermission> allPermissions,
-                                    java.util.function.Predicate<FeaturePermission> predicate) {
+            List<FeaturePermission> allPermissions,
+            java.util.function.Predicate<FeaturePermission> predicate) {
         OrganizationRoleTemplate template = OrganizationRoleTemplate.builder()
                 .organization(org)
                 .name(name)
@@ -712,7 +748,8 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     private void attachPermissionsToTemplate(OrganizationRoleTemplate template, List<String> codes) {
         List<OrganizationRoleTemplatePermission> templatePerms = new ArrayList<>();
         for (String rawCode : codes) {
-            if (rawCode == null || rawCode.isBlank()) continue;
+            if (rawCode == null || rawCode.isBlank())
+                continue;
             String code = rawCode.trim();
             featurePermissionRepository.findByPermissionCodeIgnoreCase(code).ifPresent(fp -> {
                 templatePerms.add(OrganizationRoleTemplatePermission.builder()
@@ -730,9 +767,9 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     private OrganizationRoleTemplateDto mapToDto(OrganizationRoleTemplate t, List<Company> companies) {
         List<String> permCodes = t.getPermissions() != null
                 ? t.getPermissions().stream()
-                .map(p -> p.getPermission().getPermissionCode())
-                .sorted()
-                .toList()
+                        .map(p -> p.getPermission().getPermissionCode())
+                        .sorted()
+                        .toList()
                 : Collections.emptyList();
 
         Set<String> templatePermSet = permCodes.stream().map(String::toUpperCase).collect(Collectors.toSet());
@@ -777,12 +814,24 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     }
 
     private OrganizationMember actor() {
+        return actor(null);
+    }
+
+    private OrganizationMember actor(UUID targetOrgId) {
         RequestContext.Context context = RequestContext.get();
-        if (context == null || context.organizationId() == null) {
+        UUID effectiveOrgId = targetOrgId;
+        if (effectiveOrgId == null && context != null) {
+            effectiveOrgId = context.organizationId();
+        }
+        if (effectiveOrgId == null) {
+            throw new ForbiddenException("Organization context required");
+        }
+        UUID userId = context != null ? context.userId() : null;
+        if (userId == null) {
             throw new ForbiddenException("Organization context required");
         }
         OrganizationMember actor = memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
-                context.organizationId(), context.userId(), MembershipStatus.ACTIVE)
+                effectiveOrgId, userId, MembershipStatus.ACTIVE)
                 .orElseThrow(() -> new ForbiddenException("Active organization membership required"));
         if (actor.getMemberType() != MemberType.OWNER && actor.getMemberType() != MemberType.ADMIN) {
             throw new ForbiddenException("Organization owner or admin permission required");
@@ -797,7 +846,8 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
     }
 
     private String formatDisplayName(String name) {
-        if (name == null || name.isBlank()) return "";
+        if (name == null || name.isBlank())
+            return "";
         return Arrays.stream(name.split("[_\\s]+"))
                 .map(s -> s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase())
                 .collect(Collectors.joining(" "));

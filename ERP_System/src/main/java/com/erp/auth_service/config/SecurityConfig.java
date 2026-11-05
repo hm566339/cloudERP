@@ -2,6 +2,7 @@ package com.erp.auth_service.config;
 
 import com.erp.auth_service.security.CustomUserDetailsService;
 import com.erp.auth_service.security.JwtAuthenticationFilter;
+import com.erp.auth_service.security.OrganizationContextFilter;
 import com.erp.auth_service.security.authorization.SsoPublicEndpoints;
 import com.erp.auth_service.security.authorization.YamlAuthorizationFilter;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,6 +28,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final OrganizationContextFilter organizationContextFilter;
         private final YamlAuthorizationFilter yamlAuthorizationFilter;
         private final CustomUserDetailsService userDetailsService;
 
@@ -79,8 +81,11 @@ public class SecurityConfig {
                                                 jwtAuthenticationFilter,
                                                 UsernamePasswordAuthenticationFilter.class)
                                 .addFilterAfter(
+                                                organizationContextFilter,
+                                                JwtAuthenticationFilter.class)
+                                .addFilterAfter(
                                                 yamlAuthorizationFilter,
-                                                JwtAuthenticationFilter.class);
+                                                OrganizationContextFilter.class);
 
                 return http.build();
         }
