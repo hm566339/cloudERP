@@ -7,6 +7,8 @@ import com.erp.workflow.entity.*;
 import com.erp.workflow.enums.*;
 import com.erp.workflow.exception.*;
 import com.erp.workflow.repository.*;
+import com.erp.workflow.security.CurrentUserContext;
+import com.erp.workflow.security.SecurityUtils;
 import com.erp.workflow.service.WorkflowDefinitionService;
 import com.erp.workflow.service.WorkflowExecutionService;
 import com.erp.workflow.service.WorkflowFormSchemaService;
@@ -47,8 +49,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     @Transactional
     public WorkflowTransactionResponse submitWorkflow(SubmitWorkflowRequest request) {
         // Check for existing active transaction for this document
-        Optional<WorkflowTransaction> existingOpt = transactionRepository.findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(
-                request.getCompanyId(), request.getDocumentType(), request.getDocumentId());
+        Optional<WorkflowTransaction> existingOpt = transactionRepository
+                .findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(
+                        request.getCompanyId(), request.getDocumentType(), request.getDocumentId());
 
         if (existingOpt.isPresent()) {
             WorkflowTransaction existing = existingOpt.get();
@@ -61,26 +64,34 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         // Resolve workflow definition
         final WorkflowDefinition definition;
         if (request.getWorkflowDefinitionId() != null) {
-            definition = definitionRepository.findByIdAndCompanyIdAndIsDeletedFalse(request.getWorkflowDefinitionId(), request.getCompanyId())
-                    .orElseThrow(() -> new ResourceNotFoundException("WorkflowDefinition", "id", request.getWorkflowDefinitionId()));
+            definition = definitionRepository
+                    .findByIdAndCompanyIdAndIsDeletedFalse(request.getWorkflowDefinitionId(), request.getCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("WorkflowDefinition", "id",
+                            request.getWorkflowDefinitionId()));
         } else {
             List<WorkflowDefinition> defs = StringUtils.hasText(request.getModuleName())
-                    ? definitionRepository.findActiveByModuleAndDocumentType(request.getCompanyId(), request.getModuleName(), request.getDocumentType())
+                    ? definitionRepository.findActiveByModuleAndDocumentType(request.getCompanyId(),
+                            request.getModuleName(), request.getDocumentType())
                     : definitionRepository.findActiveByDocumentType(request.getCompanyId(), request.getDocumentType());
 
-            // If moduleName was specified but no direct match, check definitions by documentType that are compatible with the requested module
+            // If moduleName was specified but no direct match, check definitions by
+            // documentType that are compatible with the requested module
             if (defs.isEmpty() && StringUtils.hasText(request.getModuleName())) {
-                List<WorkflowDefinition> candidateDefs = definitionRepository.findActiveByDocumentType(request.getCompanyId(), request.getDocumentType());
+                List<WorkflowDefinition> candidateDefs = definitionRepository
+                        .findActiveByDocumentType(request.getCompanyId(), request.getDocumentType());
                 defs = candidateDefs.stream()
-                        .filter(d -> isModuleCompatible(request.getModuleName(), d.getModuleName(), request.getDocumentType()))
+                        .filter(d -> isModuleCompatible(request.getModuleName(), d.getModuleName(),
+                                request.getDocumentType()))
                         .collect(Collectors.toList());
             }
 
-            // Safe documentType alias for Quotation/Sales strictly bounded to SALES or ACCOUNT modules
+            // Safe documentType alias for Quotation/Sales strictly bounded to SALES or
+            // ACCOUNT modules
             if (defs.isEmpty() && "QUOTATION".equalsIgnoreCase(request.getDocumentType())) {
                 String safeModule = StringUtils.hasText(request.getModuleName()) ? request.getModuleName() : "SALES";
                 if ("SALES".equalsIgnoreCase(safeModule) || "ACCOUNT".equalsIgnoreCase(safeModule)) {
-                    defs = definitionRepository.findActiveByModuleAndDocumentType(request.getCompanyId(), safeModule, "SALES");
+                    defs = definitionRepository.findActiveByModuleAndDocumentType(request.getCompanyId(), safeModule,
+                            "SALES");
                     if (defs.isEmpty()) {
                         defs = definitionRepository.findActiveByDocumentType(request.getCompanyId(), "SALES").stream()
                                 .filter(d -> isModuleCompatible(safeModule, d.getModuleName(), "SALES"))
@@ -90,9 +101,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             } else if (defs.isEmpty() && "SALES".equalsIgnoreCase(request.getDocumentType())) {
                 String safeModule = StringUtils.hasText(request.getModuleName()) ? request.getModuleName() : "SALES";
                 if ("SALES".equalsIgnoreCase(safeModule) || "ACCOUNT".equalsIgnoreCase(safeModule)) {
-                    defs = definitionRepository.findActiveByModuleAndDocumentType(request.getCompanyId(), safeModule, "QUOTATION");
+                    defs = definitionRepository.findActiveByModuleAndDocumentType(request.getCompanyId(), safeModule,
+                            "QUOTATION");
                     if (defs.isEmpty()) {
-                        defs = definitionRepository.findActiveByDocumentType(request.getCompanyId(), "QUOTATION").stream()
+                        defs = definitionRepository.findActiveByDocumentType(request.getCompanyId(), "QUOTATION")
+                                .stream()
                                 .filter(d -> isModuleCompatible(safeModule, d.getModuleName(), "QUOTATION"))
                                 .collect(Collectors.toList());
                     }
@@ -100,27 +113,31 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             }
 
             if (defs.isEmpty()) {
-                throw new ResourceNotFoundException("No active WorkflowDefinition found for documentType: " + request.getDocumentType() +
-                        (request.getModuleName() != null ? " in module: " + request.getModuleName() : ""));
+                throw new ResourceNotFoundException(
+                        "No active WorkflowDefinition found for documentType: " + request.getDocumentType() +
+                                (request.getModuleName() != null ? " in module: " + request.getModuleName() : ""));
             }
             definition = defs.get(0);
         }
 
         if (Boolean.FALSE.equals(definition.getIsActive())) {
-            throw new WorkflowValidationException("Cannot submit workflow for inactive definition '" + definition.getWorkflowName() + "'.");
+            throw new WorkflowValidationException(
+                    "Cannot submit workflow for inactive definition '" + definition.getWorkflowName() + "'.");
         }
 
         // Extract document amount for threshold evaluation
         java.math.BigDecimal docAmount = request.getAmount();
         if (docAmount == null && request.getMetadata() != null) {
             Object val = request.getMetadata().get("amount");
-            if (val == null) val = request.getMetadata().get("totalAmount");
+            if (val == null)
+                val = request.getMetadata().get("totalAmount");
             if (val instanceof Number) {
                 docAmount = java.math.BigDecimal.valueOf(((Number) val).doubleValue());
             } else if (val instanceof String && StringUtils.hasText((String) val)) {
                 try {
                     docAmount = new java.math.BigDecimal(((String) val).replace(",", "").trim());
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
 
@@ -133,40 +150,49 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             } else if (val instanceof String && StringUtils.hasText((String) val)) {
                 try {
                     docCustomerId = UUID.fromString((String) val);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
 
         // Validate customer applicability if scope is specific
         if ("specific".equalsIgnoreCase(definition.getCustomerScope())) {
             if (docCustomerId == null) {
-                log.info("Workflow definition {} applies to specific customers, but submission has no customerId. Enforcing full approval sequence.", definition.getWorkflowCode());
+                log.info(
+                        "Workflow definition {} applies to specific customers, but submission has no customerId. Enforcing full approval sequence.",
+                        definition.getWorkflowCode());
             }
         }
 
         // Determine if approval is required based on definition flag and threshold
-        boolean approvalRequired = definition.getIsApprovalRequired() == null || Boolean.TRUE.equals(definition.getIsApprovalRequired());
+        boolean approvalRequired = definition.getIsApprovalRequired() == null
+                || Boolean.TRUE.equals(definition.getIsApprovalRequired());
         String autoApprovalReason = null;
 
         if (!approvalRequired) {
             autoApprovalReason = "Auto-approved: Approval is not required for this workflow configuration.";
-        } else if (definition.getApprovalThreshold() != null && definition.getApprovalThreshold().compareTo(java.math.BigDecimal.ZERO) > 0) {
+        } else if (definition.getApprovalThreshold() != null
+                && definition.getApprovalThreshold().compareTo(java.math.BigDecimal.ZERO) > 0) {
             if (docAmount != null && docAmount.compareTo(definition.getApprovalThreshold()) < 0) {
                 approvalRequired = false;
-                autoApprovalReason = "Auto-approved: Document amount (" + docAmount + ") is below workflow approval threshold (" + definition.getApprovalThreshold() + ").";
+                autoApprovalReason = "Auto-approved: Document amount (" + docAmount
+                        + ") is below workflow approval threshold (" + definition.getApprovalThreshold() + ").";
             } else if (docAmount == null) {
-                log.info("Workflow definition {} has approval threshold {}, but submission amount is null. Enforcing approval by safe default.",
+                log.info(
+                        "Workflow definition {} has approval threshold {}, but submission amount is null. Enforcing approval by safe default.",
                         definition.getWorkflowCode(), definition.getApprovalThreshold());
             }
         }
 
         // Get first active stage
         final String wfCode = definition.getWorkflowCode();
-        List<WorkflowStage> stages = stageRepository.findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(definition.getId());
+        List<WorkflowStage> stages = stageRepository
+                .findByWorkflowDefinitionIdAndIsDeletedFalseOrderBySequenceNoAsc(definition.getId());
         WorkflowStage firstStage = stages.stream()
                 .filter(s -> !Boolean.FALSE.equals(s.getIsActive()))
                 .findFirst()
-                .orElseThrow(() -> new WorkflowValidationException("Workflow definition " + wfCode + " has no active stages configured."));
+                .orElseThrow(() -> new WorkflowValidationException(
+                        "Workflow definition " + wfCode + " has no active stages configured."));
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -220,12 +246,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
         if (!approvalRequired) {
             // Record auto-approval action for complete immutable audit trail
-            String reason = autoApprovalReason != null ? autoApprovalReason : "Auto-approved: Approval is not required for this workflow configuration.";
+            String reason = autoApprovalReason != null ? autoApprovalReason
+                    : "Auto-approved: Approval is not required for this workflow configuration.";
             WorkflowAction approveAction = WorkflowAction.builder()
                     .workflowTransaction(transaction)
                     .actionType(WorkflowActionType.APPROVE)
                     .performedBy(request.getInitiatedBy())
-                    .performedByName(request.getInitiatedByName() != null ? request.getInitiatedByName() + " (System)" : "System")
+                    .performedByName(request.getInitiatedByName() != null ? request.getInitiatedByName() + " (System)"
+                            : "System")
                     .previousStatus("PENDING")
                     .newStatus("APPROVED")
                     .comments(reason)
@@ -234,7 +262,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             actionRepository.save(approveAction);
 
             // Notify downstream business service via callback webhook
-            callbackService.triggerCallback(transaction, "APPROVED", reason, request.getInitiatedBy(), request.getInitiatedByName());
+            callbackService.triggerCallback(transaction, "APPROVED", reason, request.getInitiatedBy(),
+                    request.getInitiatedByName());
             log.info("Workflow transaction {} auto-approved without tasks: {}", transaction.getId(), reason);
         } else {
             // Assign tasks for first stage
@@ -245,7 +274,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     private void assignTasksForStage(WorkflowTransaction transaction, WorkflowStage stage) {
-        List<WorkflowApprover> approvers = approverRepository.findByWorkflowStageIdAndIsDeletedFalseOrderByApprovalOrderAsc(stage.getId());
+        List<WorkflowApprover> approvers = approverRepository
+                .findByWorkflowStageIdAndIsDeletedFalseOrderByApprovalOrderAsc(stage.getId());
         if (approvers.isEmpty()) {
             log.warn("Stage {} has no approvers configured!", stage.getStageCode());
             return;
@@ -254,7 +284,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         LocalDateTime dueDate = slaService.calculateTaskDueDate(stage);
         LocalDateTime now = LocalDateTime.now();
 
-        // If sequential, assign only to the first order approvers; if parallel, assign to all
+        // If sequential, assign only to the first order approvers; if parallel, assign
+        // to all
         int targetOrder = approvers.get(0).getApprovalOrder() != null ? approvers.get(0).getApprovalOrder() : 1;
 
         for (WorkflowApprover approver : approvers) {
@@ -285,9 +316,43 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                         approver.getUserId(),
                         WorkflowNotificationType.TASK_ASSIGNED,
                         "Workflow Approval Required",
-                        "New approval task assigned for " + transaction.getDocumentType() + " #" + transaction.getDocumentNumber(),
-                        WorkflowChannel.IN_APP
-                );
+                        "New approval task assigned for " + transaction.getDocumentType() + " #"
+                                + transaction.getDocumentNumber(),
+                        WorkflowChannel.IN_APP);
+            }
+        }
+    }
+
+    private void assertCanActionTask(WorkflowTask task, WorkflowTransaction txn, UUID userId, UUID callerCompanyId) {
+        boolean isSystemAdmin = SecurityUtils.isSystemAdmin();
+
+        // 1. Cross-company tenant isolation check
+        UUID effectiveCompanyId = callerCompanyId != null ? callerCompanyId
+                : SecurityUtils.getCurrentCompanyId().orElse(null);
+        if (!isSystemAdmin && effectiveCompanyId != null && txn != null && txn.getCompanyId() != null) {
+            if (!txn.getCompanyId().equals(effectiveCompanyId)) {
+                log.warn(
+                        "Cross-company access violation: user {} in company {} attempted to action task {} belonging to company {}",
+                        userId, effectiveCompanyId, task.getId(), txn.getCompanyId());
+                throw new UnauthorizedWorkflowActionException(
+                        "Cross-company access denied: task does not belong to the selected company.");
+            }
+        }
+
+        // 2. Assignment / authorization check (if assigned to specific user or role)
+        boolean hasSecurityContext = SecurityUtils.getAuthenticatedUser().isPresent()
+                || SecurityUtils.getCurrentUser().isPresent()
+                || CurrentUserContext.isAuthenticated();
+
+        if (!isSystemAdmin && hasSecurityContext
+                && (task.getAssignedUserId() != null || task.getAssignedRoleName() != null)) {
+            boolean userMatched = task.getAssignedUserId() != null && task.getAssignedUserId().equals(userId);
+            boolean roleMatched = task.getAssignedRoleName() != null
+                    && SecurityUtils.hasRole(task.getAssignedRoleName());
+            if (!userMatched && !roleMatched) {
+                log.warn("Unauthorized task action attempt: user {} does not have role {} or match assignee {}",
+                        userId, task.getAssignedRoleName(), task.getAssignedUserId());
+                throw new UnauthorizedWorkflowActionException("You are not authorized to action this workflow task.");
             }
         }
     }
@@ -295,11 +360,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     @Override
     @Transactional
     public WorkflowTaskResponse approveTask(UUID taskId, ApproveTaskRequest request, UUID userId, String userName) {
+        return approveTask(taskId, request, userId, userName, null);
+    }
+
+    @Override
+    @Transactional
+    public WorkflowTaskResponse approveTask(UUID taskId, ApproveTaskRequest request, UUID userId, String userName,
+            UUID companyId) {
         WorkflowTask task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkflowTask", "id", taskId));
 
         if (task.getTaskStatus() != WorkflowTaskStatus.PENDING) {
-            throw new WorkflowValidationException("Task is not in PENDING status. Current status: " + task.getTaskStatus());
+            throw new WorkflowValidationException(
+                    "Task is not in PENDING status. Current status: " + task.getTaskStatus());
         }
 
         // Concurrency check
@@ -311,11 +384,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         WorkflowTransaction txn = task.getWorkflowTransaction();
         WorkflowStage stage = task.getWorkflowStage();
 
-        // Enforce separation of duties: document initiator cannot approve their own workflow task
+        // Enforce separation of duties: document initiator cannot approve their own
+        // workflow task
         if (txn != null && txn.getInitiatedBy() != null && txn.getInitiatedBy().equals(userId)) {
-            log.warn("Separation of duties violation: user {} attempted to approve workflow transaction {} initiated by them", userId, txn.getId());
-            throw new UnauthorizedWorkflowActionException("Document initiator cannot approve their own workflow task (separation of duties).");
+            log.warn(
+                    "Separation of duties violation: user {} attempted to approve workflow transaction {} initiated by them",
+                    userId, txn.getId());
+            throw new UnauthorizedWorkflowActionException(
+                    "Document initiator cannot approve their own workflow task (separation of duties).");
         }
+
+        assertCanActionTask(task, txn, userId, companyId);
 
         // Mark task approved
         task.setTaskStatus(WorkflowTaskStatus.APPROVED);
@@ -379,15 +458,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             List<WorkflowApprover> allApprovers = approverRepository
                     .findByWorkflowStageIdAndIsDeletedFalseOrderByApprovalOrderAsc(stage.getId());
 
-            long pendingCount = taskRepository.countByWorkflowTransactionIdAndWorkflowStageIdAndTaskStatusAndIsDeletedFalse(
-                    txn.getId(), stage.getId(), WorkflowTaskStatus.PENDING);
+            long pendingCount = taskRepository
+                    .countByWorkflowTransactionIdAndWorkflowStageIdAndTaskStatusAndIsDeletedFalse(
+                            txn.getId(), stage.getId(), WorkflowTaskStatus.PENDING);
 
             if (pendingCount > 0) {
                 return false;
             }
 
             // Find next approval order
-            Set<UUID> completedUserIds = stageTasks.stream().map(WorkflowTask::getCompletedBy).filter(Objects::nonNull).collect(Collectors.toSet());
+            Set<UUID> completedUserIds = stageTasks.stream().map(WorkflowTask::getCompletedBy).filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
             Optional<WorkflowApprover> nextApprover = allApprovers.stream()
                     .filter(a -> a.getUserId() != null && !completedUserIds.contains(a.getUserId()))
                     .findFirst();
@@ -416,8 +497,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                             WorkflowNotificationType.TASK_ASSIGNED,
                             "Workflow Approval Required",
                             "New approval task assigned for " + txn.getDocumentType() + " #" + txn.getDocumentNumber(),
-                            WorkflowChannel.IN_APP
-                    );
+                            WorkflowChannel.IN_APP);
                 }
                 return false;
             }
@@ -441,7 +521,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             assignTasksForStage(txn, nextStage);
 
             // Outbound callback for stage change
-            callbackService.triggerCallback(txn, "WORKFLOW_STAGE_CHANGED", "Advanced to stage " + nextStage.getStageName(), userId, userName);
+            callbackService.triggerCallback(txn, "WORKFLOW_STAGE_CHANGED",
+                    "Advanced to stage " + nextStage.getStageName(), userId, userName);
         } else {
             // All stages complete -> WORKFLOW APPROVED
             txn.setStatus("APPROVED");
@@ -473,15 +554,22 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                     txn.getInitiatedBy(),
                     WorkflowNotificationType.WORKFLOW_APPROVED,
                     "Workflow Approved",
-                    "Your workflow for " + txn.getDocumentType() + " #" + txn.getDocumentNumber() + " has been approved.",
-                    WorkflowChannel.IN_APP
-            );
+                    "Your workflow for " + txn.getDocumentType() + " #" + txn.getDocumentNumber()
+                            + " has been approved.",
+                    WorkflowChannel.IN_APP);
         }
     }
 
     @Override
     @Transactional
     public WorkflowTaskResponse rejectTask(UUID taskId, RejectTaskRequest request, UUID userId, String userName) {
+        return rejectTask(taskId, request, userId, userName, null);
+    }
+
+    @Override
+    @Transactional
+    public WorkflowTaskResponse rejectTask(UUID taskId, RejectTaskRequest request, UUID userId, String userName,
+            UUID companyId) {
         WorkflowTask task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkflowTask", "id", taskId));
 
@@ -492,6 +580,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         LocalDateTime now = LocalDateTime.now();
         WorkflowTransaction txn = task.getWorkflowTransaction();
         WorkflowStage stage = task.getWorkflowStage();
+
+        assertCanActionTask(task, txn, userId, companyId);
 
         task.setTaskStatus(WorkflowTaskStatus.REJECTED);
         task.setActionTaken("REJECT");
@@ -531,8 +621,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                     WorkflowNotificationType.WORKFLOW_RETURNED,
                     "Workflow Returned",
                     "Document " + txn.getDocumentNumber() + " was returned: " + request.getComments(),
-                    WorkflowChannel.IN_APP
-            );
+                    WorkflowChannel.IN_APP);
         } else {
             // REJECT_DOCUMENT: mark entire workflow REJECTED
             txn.setStatus("REJECTED");
@@ -541,7 +630,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             transactionRepository.save(txn);
 
             // Cancel any remaining pending tasks
-            List<WorkflowTask> pending = taskRepository.findByWorkflowTransactionIdAndIsDeletedFalseOrderByAssignedAtAsc(txn.getId());
+            List<WorkflowTask> pending = taskRepository
+                    .findByWorkflowTransactionIdAndIsDeletedFalseOrderByAssignedAtAsc(txn.getId());
             for (WorkflowTask pt : pending) {
                 if (pt.getTaskStatus() == WorkflowTaskStatus.PENDING) {
                     pt.setTaskStatus(WorkflowTaskStatus.CANCELLED);
@@ -559,8 +649,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                     WorkflowNotificationType.WORKFLOW_REJECTED,
                     "Workflow Rejected",
                     "Document " + txn.getDocumentNumber() + " was rejected: " + request.getComments(),
-                    WorkflowChannel.IN_APP
-            );
+                    WorkflowChannel.IN_APP);
         }
 
         return mapToTaskResponse(task);
@@ -569,10 +658,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     @Override
     @Transactional
     public WorkflowTaskResponse returnTask(UUID taskId, ReturnTaskRequest request, UUID userId, String userName) {
+        return returnTask(taskId, request, userId, userName, null);
+    }
+
+    @Override
+    @Transactional
+    public WorkflowTaskResponse returnTask(UUID taskId, ReturnTaskRequest request, UUID userId, String userName,
+            UUID companyId) {
         WorkflowTask task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkflowTask", "id", taskId));
 
         WorkflowTransaction txn = task.getWorkflowTransaction();
+        assertCanActionTask(task, txn, userId, companyId);
         LocalDateTime now = LocalDateTime.now();
 
         task.setTaskStatus(WorkflowTaskStatus.REJECTED);
@@ -609,8 +706,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 WorkflowNotificationType.WORKFLOW_RETURNED,
                 "Workflow Returned",
                 "Workflow returned to initiator: " + request.getComments(),
-                WorkflowChannel.IN_APP
-        );
+                WorkflowChannel.IN_APP);
 
         return mapToTaskResponse(task);
     }
@@ -618,12 +714,23 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     @Override
     @Transactional
     public WorkflowTaskResponse delegateTask(UUID taskId, DelegateTaskRequest request, UUID userId, String userName) {
+        return delegateTask(taskId, request, userId, userName, null);
+    }
+
+    @Override
+    @Transactional
+    public WorkflowTaskResponse delegateTask(UUID taskId, DelegateTaskRequest request, UUID userId, String userName,
+            UUID companyId) {
         WorkflowTask task = taskRepository.findByIdAndIsDeletedFalse(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkflowTask", "id", taskId));
 
+        WorkflowTransaction txn = task.getWorkflowTransaction();
+        assertCanActionTask(task, txn, userId, companyId);
+
         task.setDelegatedFromUserId(userId);
         task.setAssignedUserId(request.getTargetUserId());
-        task.setComments("Delegated by " + userName + (request.getComments() != null ? ": " + request.getComments() : ""));
+        task.setComments(
+                "Delegated by " + userName + (request.getComments() != null ? ": " + request.getComments() : ""));
         taskRepository.save(task);
 
         WorkflowAction action = WorkflowAction.builder()
@@ -646,16 +753,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 request.getTargetUserId(),
                 WorkflowNotificationType.TASK_ASSIGNED,
                 "Workflow Task Delegated To You",
-                "Approval task for " + task.getWorkflowTransaction().getDocumentNumber() + " was delegated to you by " + userName,
-                WorkflowChannel.IN_APP
-        );
+                "Approval task for " + task.getWorkflowTransaction().getDocumentNumber() + " was delegated to you by "
+                        + userName,
+                WorkflowChannel.IN_APP);
 
         return mapToTaskResponse(task);
     }
 
     @Override
     @Transactional
-    public WorkflowTransactionResponse cancelWorkflow(UUID transactionId, CancelWorkflowRequest request, UUID userId, String userName) {
+    public WorkflowTransactionResponse cancelWorkflow(UUID transactionId, CancelWorkflowRequest request, UUID userId,
+            String userName) {
         WorkflowTransaction txn = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkflowTransaction", "id", transactionId));
 
@@ -670,7 +778,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         transactionRepository.save(txn);
 
         // Cancel all pending tasks
-        List<WorkflowTask> tasks = taskRepository.findByWorkflowTransactionIdAndIsDeletedFalseOrderByAssignedAtAsc(txn.getId());
+        List<WorkflowTask> tasks = taskRepository
+                .findByWorkflowTransactionIdAndIsDeletedFalseOrderByAssignedAtAsc(txn.getId());
         for (WorkflowTask t : tasks) {
             if (t.getTaskStatus() == WorkflowTaskStatus.PENDING) {
                 t.setTaskStatus(WorkflowTaskStatus.CANCELLED);
@@ -708,31 +817,50 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     public WorkflowTransactionResponse getTransactionByDocument(UUID companyId, String documentType, UUID documentId) {
         WorkflowTransaction txn = transactionRepository.findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(
                 companyId, documentType, documentId)
-                .orElseThrow(() -> new ResourceNotFoundException("WorkflowTransaction for document " + documentType + " (" + documentId + ")"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "WorkflowTransaction for document " + documentType + " (" + documentId + ")"));
         return mapToTransactionResponse(txn);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<WorkflowTransactionResponse> searchTransactions(UUID companyId, String moduleName, String documentType, String status, Pageable pageable) {
+    public Page<WorkflowTransactionResponse> searchTransactions(UUID companyId, String moduleName, String documentType,
+            String status, Pageable pageable) {
         return transactionRepository.searchTransactions(companyId, moduleName, documentType, status, pageable)
                 .map(this::mapToTransactionResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<WorkflowTaskResponse> getUserTasks(UUID userId, List<String> roles, WorkflowTaskStatus status, Pageable pageable) {
+    public Page<WorkflowTaskResponse> getUserTasks(UUID userId, List<String> roles, WorkflowTaskStatus status,
+            Pageable pageable) {
+        return getUserTasks(userId, roles, status, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<WorkflowTaskResponse> getUserTasks(UUID userId, List<String> roles, WorkflowTaskStatus status,
+            UUID companyId, Pageable pageable) {
         WorkflowTaskStatus targetStatus = status != null ? status : WorkflowTaskStatus.PENDING;
-        Page<WorkflowTask> page = (roles != null && !roles.isEmpty())
-                ? taskRepository.findUserTasks(userId, roles, targetStatus, pageable)
-                : taskRepository.findByAssignedUserIdAndTaskStatusAndIsDeletedFalse(userId, targetStatus, pageable);
+        Page<WorkflowTask> page;
+        if (companyId != null) {
+            page = (roles != null && !roles.isEmpty())
+                    ? taskRepository.findUserTasksByCompany(companyId, userId, roles, targetStatus, pageable)
+                    : taskRepository.findByCompanyIdAndAssignedUserIdAndTaskStatusAndIsDeletedFalse(companyId, userId,
+                            targetStatus, pageable);
+        } else {
+            page = (roles != null && !roles.isEmpty())
+                    ? taskRepository.findUserTasks(userId, roles, targetStatus, pageable)
+                    : taskRepository.findByAssignedUserIdAndTaskStatusAndIsDeletedFalse(userId, targetStatus, pageable);
+        }
 
         return page.map(this::mapToTaskResponse);
     }
 
     @Override
     @Transactional
-    public WorkflowCommentResponse addComment(UUID transactionId, AddCommentRequest request, UUID userId, String userName) {
+    public WorkflowCommentResponse addComment(UUID transactionId, AddCommentRequest request, UUID userId,
+            String userName) {
         WorkflowTransaction txn = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkflowTransaction", "id", transactionId));
 
@@ -778,7 +906,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                         .commentText(c.getCommentText())
                         .isInternal(c.getIsInternal())
                         .createdAt(c.getCreatedAt())
-                        .build()).collect(Collectors.toList());
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -796,18 +925,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                         .newStatus(a.getNewStatus())
                         .comments(a.getComments())
                         .createdAt(a.getCreatedAt())
-                        .build()).collect(Collectors.toList());
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private WorkflowTransactionResponse mapToTransactionResponse(WorkflowTransaction txn) {
-        List<WorkflowTask> tasks = taskRepository.findByWorkflowTransactionIdAndIsDeletedFalseOrderByAssignedAtAsc(txn.getId());
+        List<WorkflowTask> tasks = taskRepository
+                .findByWorkflowTransactionIdAndIsDeletedFalseOrderByAssignedAtAsc(txn.getId());
         List<WorkflowAction> actions = actionRepository.findByWorkflowTransactionIdOrderByCreatedAtAsc(txn.getId());
 
         return WorkflowTransactionResponse.builder()
                 .id(txn.getId())
                 .companyId(txn.getCompanyId())
                 .workflowDefinitionId(txn.getWorkflowDefinition() != null ? txn.getWorkflowDefinition().getId() : null)
-                .workflowDefinitionName(txn.getWorkflowDefinition() != null ? txn.getWorkflowDefinition().getWorkflowName() : null)
+                .workflowDefinitionName(
+                        txn.getWorkflowDefinition() != null ? txn.getWorkflowDefinition().getWorkflowName() : null)
                 .moduleName(txn.getModuleName())
                 .entityType(txn.getEntityType())
                 .entityId(txn.getEntityId())
@@ -846,9 +978,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     private WorkflowTaskResponse mapToTaskResponse(WorkflowTask task) {
         return WorkflowTaskResponse.builder()
                 .id(task.getId())
-                .workflowTransactionId(task.getWorkflowTransaction() != null ? task.getWorkflowTransaction().getId() : null)
-                .documentType(task.getWorkflowTransaction() != null ? task.getWorkflowTransaction().getDocumentType() : null)
-                .documentNumber(task.getWorkflowTransaction() != null ? task.getWorkflowTransaction().getDocumentNumber() : null)
+                .workflowTransactionId(
+                        task.getWorkflowTransaction() != null ? task.getWorkflowTransaction().getId() : null)
+                .documentType(
+                        task.getWorkflowTransaction() != null ? task.getWorkflowTransaction().getDocumentType() : null)
+                .documentNumber(
+                        task.getWorkflowTransaction() != null ? task.getWorkflowTransaction().getDocumentNumber()
+                                : null)
                 .workflowStageId(task.getWorkflowStage() != null ? task.getWorkflowStage().getId() : null)
                 .stageName(task.getWorkflowStage() != null ? task.getWorkflowStage().getStageName() : null)
                 .stageSequence(task.getWorkflowStage() != null ? task.getWorkflowStage().getSequenceNo() : null)
@@ -869,7 +1005,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     @Override
     @Transactional(readOnly = true)
-    public WorkflowUiDetailsResponse getUiDetails(UUID transactionId, UUID companyId, UUID currentUserId, List<String> roles) {
+    public WorkflowUiDetailsResponse getUiDetails(UUID transactionId, UUID companyId, UUID currentUserId,
+            List<String> roles) {
         WorkflowTransaction txn = (companyId != null)
                 ? transactionRepository.findByIdAndCompanyIdAndIsDeletedFalse(transactionId, companyId)
                         .orElseThrow(() -> new ResourceNotFoundException("WorkflowTransaction", "id", transactionId))
@@ -880,9 +1017,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     @Override
     @Transactional(readOnly = true)
-    public WorkflowUiDetailsResponse getUiDetailsByDocument(UUID companyId, String documentType, UUID documentId, UUID currentUserId, List<String> roles) {
-        Optional<WorkflowTransaction> txnOpt = transactionRepository.findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(
-                companyId, documentType, documentId);
+    public WorkflowUiDetailsResponse getUiDetailsByDocument(UUID companyId, String documentType, UUID documentId,
+            UUID currentUserId, List<String> roles) {
+        Optional<WorkflowTransaction> txnOpt = transactionRepository
+                .findByCompanyIdAndDocumentTypeAndDocumentIdAndIsDeletedFalse(
+                        companyId, documentType, documentId);
 
         if (txnOpt.isEmpty()) {
             WorkflowPermittedActions permittedActions = WorkflowPermittedActions.builder()
@@ -934,7 +1073,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
 
         // Tasks
-        List<WorkflowTask> taskEntities = taskRepository.findByWorkflowTransactionIdAndIsDeletedFalseOrderByAssignedAtAsc(txn.getId());
+        List<WorkflowTask> taskEntities = taskRepository
+                .findByWorkflowTransactionIdAndIsDeletedFalseOrderByAssignedAtAsc(txn.getId());
         List<WorkflowTaskResponse> taskResponses = taskEntities.stream()
                 .map(this::mapToTaskResponse)
                 .collect(Collectors.toList());
@@ -944,8 +1084,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 ? roles.stream().map(r -> r.toUpperCase().replace("ROLE_", "")).collect(Collectors.toSet())
                 : Collections.emptySet();
 
-        boolean isSystemAdmin = (roles != null && roles.stream().anyMatch(r ->
-                "SYSTEM_ADMIN".equalsIgnoreCase(r) || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(r) || "SCOPE_SYSTEM_ADMIN".equalsIgnoreCase(r)));
+        boolean isSystemAdmin = (roles != null && roles.stream().anyMatch(r -> "SYSTEM_ADMIN".equalsIgnoreCase(r)
+                || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(r) || "SCOPE_SYSTEM_ADMIN".equalsIgnoreCase(r)));
 
         WorkflowTask userPendingTask = null;
         for (WorkflowTask t : taskEntities) {
@@ -989,14 +1129,22 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         boolean canUploadAttachment = !isTerminal;
 
         List<String> actions = new ArrayList<>();
-        if (canApprove) actions.add("APPROVE");
-        if (canReject) actions.add("REJECT");
-        if (canReturn) actions.add("RETURN");
-        if (canDelegate) actions.add("DELEGATE");
-        if (canCancel) actions.add("CANCEL");
-        if (canSubmit) actions.add("SUBMIT");
-        if (canAddComment) actions.add("ADD_COMMENT");
-        if (canUploadAttachment) actions.add("UPLOAD_ATTACHMENT");
+        if (canApprove)
+            actions.add("APPROVE");
+        if (canReject)
+            actions.add("REJECT");
+        if (canReturn)
+            actions.add("RETURN");
+        if (canDelegate)
+            actions.add("DELEGATE");
+        if (canCancel)
+            actions.add("CANCEL");
+        if (canSubmit)
+            actions.add("SUBMIT");
+        if (canAddComment)
+            actions.add("ADD_COMMENT");
+        if (canUploadAttachment)
+            actions.add("UPLOAD_ATTACHMENT");
 
         WorkflowPermittedActions permittedActions = WorkflowPermittedActions.builder()
                 .canSubmit(canSubmit)
@@ -1057,6 +1205,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     public static boolean isModuleCompatible(String requestedModule, String definitionModule, String documentType) {
-        return com.erp.workflow.registry.DocumentTypeRegistry.isCompatible(requestedModule, definitionModule, documentType);
+        return com.erp.workflow.registry.DocumentTypeRegistry.isCompatible(requestedModule, definitionModule,
+                documentType);
     }
 }

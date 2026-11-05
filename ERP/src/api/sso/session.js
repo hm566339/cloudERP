@@ -20,6 +20,20 @@ export const getCompanySessions = async (companyId, params = {}) => {
   return response.data?.data || response.data;
 };
 
+export const getOrganizationSessions = async (organizationId, params = {}) => {
+  if (!organizationId) {
+    throw new Error('organizationId is required to fetch organization sessions');
+  }
+
+  const { page = 1, pageSize = 10 } = params;
+  const query = new URLSearchParams();
+  query.append('page', page);
+  query.append('pageSize', pageSize);
+
+  const response = await apiClient.get(`/api/sso/session/organization/${organizationId}?${query.toString()}`);
+  return response.data?.data || response.data;
+};
+
 export const deleteSession = async (id) => {
   const response = await apiClient.delete(`/api/sso/session/${id}`);
   return response.data?.data || response.data;

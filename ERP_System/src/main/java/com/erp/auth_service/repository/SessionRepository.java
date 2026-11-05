@@ -110,6 +110,7 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
                         @Param("companyId") UUID companyId,
                         @Param("now") LocalDateTime now);
 
+        @EntityGraph(attributePaths = { "user", "company", "module", "organization" })
         @Query("""
                         SELECT s
                         FROM Session s
@@ -118,5 +119,16 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
                         """)
         Page<Session> findAllByCompanyId(
                         @Param("companyId") UUID companyId,
+                        Pageable pageable);
+
+        @EntityGraph(attributePaths = { "user", "company", "module", "organization" })
+        @Query("""
+                        SELECT s
+                        FROM Session s
+                        WHERE s.organization.id = :organizationId
+                        ORDER BY s.createdAt DESC
+                        """)
+        Page<Session> findAllByOrganizationId(
+                        @Param("organizationId") UUID organizationId,
                         Pageable pageable);
 }

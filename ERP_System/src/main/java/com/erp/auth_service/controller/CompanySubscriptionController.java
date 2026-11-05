@@ -14,6 +14,17 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * Legacy company-scoped subscription controller.
+ *
+ * @deprecated As of version 2.0, the canonical ERP multi-company subscription model is
+ *             Organization-level. All active billing, plan tiers, company allowances (up to 4),
+ *             and checkouts are managed via Organization subscription endpoints:
+ *             {@code SubscriptionCheckoutController} and {@code SubscriptionBillingController}.
+ *             This controller is maintained strictly for backward-compatibility with legacy clients
+ *             and read-only introspection.
+ */
+@Deprecated(since = "2.0", forRemoval = false)
 @RestController
 @RequestMapping("/api/sso/company-subscriptions")
 @RequiredArgsConstructor

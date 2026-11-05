@@ -32,5 +32,10 @@ public interface SessionService {
             int page,
             int pageSize);
 
+    SessionPageResponse getAllOrganizationSessions(
+            UUID organizationId,
+            int page,
+            int pageSize);
+
     void revokeSessionByAdmin(UUID id);
 }

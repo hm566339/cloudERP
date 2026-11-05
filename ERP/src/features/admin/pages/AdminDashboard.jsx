@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAppSelector } from '../../../app/hooks';
 import { Activity, Users, Server, Clock, User, Info, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { checkBackendHealth } from '../../../services/apiService';
+import { getDashboard } from '../../../api/sso/dashboard';
 import { createLogger } from '../../../utils/logger';
 
 const logger = createLogger('ADMIN_DASHBOARD');
@@ -12,8 +13,15 @@ const logger = createLogger('ADMIN_DASHBOARD');
  */
 export default function AdminDashboard() {
   const auth = useAppSelector((state) => state.auth ?? {});
+  const selectedCompany = useAppSelector((state) => state.company?.selectedCompany ?? null);
   const [systemHealth, setSystemHealth] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [metricsLoading, setMetricsLoading] = useState(false);
+
+  const effectiveCompanyId = (selectedCompany?.id && selectedCompany.id !== 'all')
+    ? selectedCompany.id
+    : auth?.user?.companyId;
 
   useEffect(() => {
     const checkHealth = async () => {
@@ -32,8 +40,39 @@ export default function AdminDashboard() {
     checkHealth();
   }, []);
 
+  useEffect(() => {
+    if (!effectiveCompanyId) {
+      setDashboardData(null);
+      return;
+    }
+
+    let isMounted = true;
+    setMetricsLoading(true);
+    getDashboard(effectiveCompanyId)
+      .then((data) => {
+        if (isMounted) {
+          setDashboardData(data);
+        }
+      })
+      .catch((err) => {
+        logger.warn('Failed to fetch dashboard metrics for company', { companyId: effectiveCompanyId, err });
+        if (isMounted) {
+          setDashboardData(null);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setMetricsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [effectiveCompanyId]);
+
   return (
-    <div 
+    <div
       className="w-full max-w-none px-6 sm:px-8 py-6 space-y-5 animate-fade-in pb-12"
       style={{ width: '100%', maxWidth: 'none' }}
     >
@@ -52,13 +91,12 @@ export default function AdminDashboard() {
               <Server size={18} strokeWidth={1.75} />
             </div>
             {!loading && (
-              <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
-                systemHealth === true 
-                  ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/60' 
-                  : systemHealth === false 
-                  ? 'text-rose-700 bg-rose-50 border border-rose-200/60' 
-                  : 'text-amber-700 bg-amber-50 border border-amber-200/60'
-              }`}>
+              <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${systemHealth === true
+                  ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/60'
+                  : systemHealth === false
+                    ? 'text-rose-700 bg-rose-50 border border-rose-200/60'
+                    : 'text-amber-700 bg-amber-50 border border-amber-200/60'
+                }`}>
                 {systemHealth === true ? (
                   <><CheckCircle2 size={12} /> Healthy</>
                 ) : systemHealth === false ? (
@@ -71,15 +109,14 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-3">
             <span className="text-[12px] font-medium text-zinc-500 block mb-0.5">Backend Health</span>
-            <p className={`text-2xl font-bold tracking-tight ${
-              loading 
-                ? 'text-zinc-400 text-lg font-semibold' 
-                : systemHealth === true 
-                ? 'text-emerald-700' 
-                : systemHealth === false 
-                ? 'text-rose-700' 
-                : 'text-amber-700'
-            }`}>
+            <p className={`text-2xl font-bold tracking-tight ${loading
+                ? 'text-zinc-400 text-lg font-semibold'
+                : systemHealth === true
+                  ? 'text-emerald-700'
+                  : systemHealth === false
+                    ? 'text-rose-700'
+                    : 'text-amber-700'
+              }`}>
               {loading ? 'Checking...' : systemHealth ? 'Online' : 'Offline'}
             </p>
           </div>
@@ -91,11 +128,22 @@ export default function AdminDashboard() {
             <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100/60 flex items-center justify-center text-blue-600 shrink-0">
               <Users size={18} strokeWidth={1.75} />
             </div>
+            {dashboardData?.companyName && (
+              <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full text-blue-700 bg-blue-50 border border-blue-200/60 truncate max-w-[120px]" title={dashboardData.companyName}>
+                {dashboardData.companyName}
+              </span>
+            )}
           </div>
           <div className="mt-3">
             <span className="text-[12px] font-medium text-zinc-500 block mb-0.5">Active Users</span>
-            <p className="text-2xl font-bold text-zinc-900 tracking-tight">—</p>
-            <p className="text-[11px] text-zinc-400 mt-1">API integration pending</p>
+            <p className="text-2xl font-bold text-zinc-900 tracking-tight">
+              {metricsLoading ? '...' : (dashboardData?.users?.active ?? 0)}
+            </p>
+            <p className="text-[11px] text-zinc-400 mt-1">
+              {dashboardData?.users
+                ? `${dashboardData.users.total ?? 0} total registered users`
+                : (effectiveCompanyId ? 'Loading metrics...' : 'Select a company')}
+            </p>
           </div>
         </div>
 
@@ -116,19 +164,24 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* System Load */}
+        {/* Active Sessions */}
         <div className="min-h-[140px] p-5 bg-white dark:bg-[#161922] rounded-xl border border-zinc-200 dark:border-[#2A2F3D] shadow-2xs flex flex-col justify-between transition-all hover:border-zinc-300">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-100/60 flex items-center justify-center text-amber-600 shrink-0">
               <Activity size={18} strokeWidth={1.75} />
             </div>
             <span className="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full text-zinc-600 bg-zinc-100 border border-zinc-200/60">
-              Optimal
+              {dashboardData?.sessions ? `${dashboardData.sessions.active ?? 0} Live` : 'Optimal'}
             </span>
           </div>
           <div className="mt-3">
-            <span className="text-[12px] font-medium text-zinc-500 block mb-0.5">System Load</span>
-            <p className="text-2xl font-bold text-zinc-900 tracking-tight">Normal</p>
+            <span className="text-[12px] font-medium text-zinc-500 block mb-0.5">Active Sessions</span>
+            <p className="text-2xl font-bold text-zinc-900 tracking-tight">
+              {metricsLoading ? '...' : (dashboardData?.sessions?.active ?? 0)}
+            </p>
+            <p className="text-[11px] text-zinc-400 mt-1">
+              {dashboardData?.sessions ? `${dashboardData.sessions.total ?? 0} total sessions` : 'Live company sessions'}
+            </p>
           </div>
         </div>
       </div>
@@ -142,7 +195,7 @@ export default function AdminDashboard() {
           </h2>
           <span className="text-[11px] font-medium text-zinc-400">Authenticated Session</span>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">User ID</label>
@@ -170,9 +223,26 @@ export default function AdminDashboard() {
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">Company</label>
             <p className="text-sm font-medium text-zinc-800 px-1 py-1">
-              {auth?.user?.companyName || 'N/A'}
+              {dashboardData?.companyName || selectedCompany?.companyName || auth?.user?.companyName || 'N/A'}
             </p>
           </div>
+
+          {dashboardData && (
+            <div className="space-y-1 md:col-span-2 pt-2 border-t border-zinc-100 dark:border-[#2A2F3D]">
+              <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">Company Resources</label>
+              <div className="flex gap-4 flex-wrap text-xs font-medium text-zinc-700 dark:text-[#E6E8EE]">
+                <span className="bg-zinc-100 dark:bg-[#1D212C] px-2.5 py-1 rounded-md border border-zinc-200/60 dark:border-[#2A2F3D]">
+                  Active Modules: <strong className="text-indigo-600 dark:text-primary">{dashboardData?.modules?.active ?? 0}</strong>
+                </span>
+                <span className="bg-zinc-100 dark:bg-[#1D212C] px-2.5 py-1 rounded-md border border-zinc-200/60 dark:border-[#2A2F3D]">
+                  Configured Roles: <strong className="text-indigo-600 dark:text-primary">{dashboardData?.roles?.total ?? 0}</strong>
+                </span>
+                <span className="bg-zinc-100 dark:bg-[#1D212C] px-2.5 py-1 rounded-md border border-zinc-200/60 dark:border-[#2A2F3D]">
+                  Active Sessions: <strong className="text-indigo-600 dark:text-primary">{dashboardData?.sessions?.active ?? 0}</strong>
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

@@ -29,78 +29,103 @@ import java.util.UUID;
 @Tag(name = "Workflow Tasks", description = "Actions on approval tasks (Approve, Reject, Return, Delegate)")
 public class WorkflowTaskController {
 
-    private final WorkflowExecutionService executionService;
+        private final WorkflowExecutionService executionService;
 
-    @PostMapping("/{id}/approve")
-    @Operation(summary = "Approve a workflow task")
-    public ResponseEntity<ApiResponse<WorkflowTaskResponse>> approveTask(
-            @PathVariable UUID id,
-            @Valid @RequestBody(required = false) ApiRequest<ApproveTaskRequest> request) {
-        ApproveTaskRequest data = (request != null && request.getData() != null)
-                ? request.getData()
-                : ApproveTaskRequest.builder().taskId(id).build();
+        private UUID resolveCompanyId(UUID requestCompanyId) {
+                boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
+                return (isSystemAdmin && requestCompanyId != null)
+                                ? requestCompanyId
+                                : SecurityUtils.getCurrentCompanyId().orElse(requestCompanyId);
+        }
 
-        UUID userId = SecurityUtils.getCurrentUserId()
-                .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
-        String username = SecurityUtils.getCurrentUsername();
+        @PostMapping("/{id}/approve")
+        @Operation(summary = "Approve a workflow task")
+        public ResponseEntity<ApiResponse<WorkflowTaskResponse>> approveTask(
+                        @PathVariable UUID id,
+                        @RequestParam(required = false) UUID companyId,
+                        @Valid @RequestBody(required = false) ApiRequest<ApproveTaskRequest> request) {
+                ApproveTaskRequest data = (request != null && request.getData() != null)
+                                ? request.getData()
+                                : ApproveTaskRequest.builder().taskId(id).build();
 
-        WorkflowTaskResponse response = executionService.approveTask(id, data, userId, username);
-        return ResponseEntity.ok(ApiResponse.success(response, "Task approved successfully"));
-    }
+                UUID userId = SecurityUtils.getCurrentUserId()
+                                .orElseThrow(() -> new UnauthorizedWorkflowActionException(
+                                                "User identity is required"));
+                String username = SecurityUtils.getCurrentUsername();
+                UUID effectiveCompanyId = resolveCompanyId(companyId);
 
-    @PostMapping("/{id}/reject")
-    @Operation(summary = "Reject a workflow task with reason")
-    public ResponseEntity<ApiResponse<WorkflowTaskResponse>> rejectTask(
-            @PathVariable UUID id,
-            @Valid @RequestBody ApiRequest<RejectTaskRequest> request) {
-        UUID userId = SecurityUtils.getCurrentUserId()
-                .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
-        String username = SecurityUtils.getCurrentUsername();
+                WorkflowTaskResponse response = executionService.approveTask(id, data, userId, username,
+                                effectiveCompanyId);
+                return ResponseEntity.ok(ApiResponse.success(response, "Task approved successfully"));
+        }
 
-        WorkflowTaskResponse response = executionService.rejectTask(id, request.getData(), userId, username);
-        return ResponseEntity.ok(ApiResponse.success(response, "Task rejected"));
-    }
+        @PostMapping("/{id}/reject")
+        @Operation(summary = "Reject a workflow task with reason")
+        public ResponseEntity<ApiResponse<WorkflowTaskResponse>> rejectTask(
+                        @PathVariable UUID id,
+                        @RequestParam(required = false) UUID companyId,
+                        @Valid @RequestBody ApiRequest<RejectTaskRequest> request) {
+                UUID userId = SecurityUtils.getCurrentUserId()
+                                .orElseThrow(() -> new UnauthorizedWorkflowActionException(
+                                                "User identity is required"));
+                String username = SecurityUtils.getCurrentUsername();
+                UUID effectiveCompanyId = resolveCompanyId(companyId);
 
-    @PostMapping("/{id}/return")
-    @Operation(summary = "Return task/document back to initiator for revisions")
-    public ResponseEntity<ApiResponse<WorkflowTaskResponse>> returnTask(
-            @PathVariable UUID id,
-            @Valid @RequestBody ApiRequest<ReturnTaskRequest> request) {
-        UUID userId = SecurityUtils.getCurrentUserId()
-                .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
-        String username = SecurityUtils.getCurrentUsername();
+                WorkflowTaskResponse response = executionService.rejectTask(id, request.getData(), userId, username,
+                                effectiveCompanyId);
+                return ResponseEntity.ok(ApiResponse.success(response, "Task rejected"));
+        }
 
-        WorkflowTaskResponse response = executionService.returnTask(id, request.getData(), userId, username);
-        return ResponseEntity.ok(ApiResponse.success(response, "Task returned to initiator"));
-    }
+        @PostMapping("/{id}/return")
+        @Operation(summary = "Return task/document back to initiator for revisions")
+        public ResponseEntity<ApiResponse<WorkflowTaskResponse>> returnTask(
+                        @PathVariable UUID id,
+                        @RequestParam(required = false) UUID companyId,
+                        @Valid @RequestBody ApiRequest<ReturnTaskRequest> request) {
+                UUID userId = SecurityUtils.getCurrentUserId()
+                                .orElseThrow(() -> new UnauthorizedWorkflowActionException(
+                                                "User identity is required"));
+                String username = SecurityUtils.getCurrentUsername();
+                UUID effectiveCompanyId = resolveCompanyId(companyId);
 
-    @PostMapping("/{id}/delegate")
-    @Operation(summary = "Delegate a task to another user")
-    public ResponseEntity<ApiResponse<WorkflowTaskResponse>> delegateTask(
-            @PathVariable UUID id,
-            @Valid @RequestBody ApiRequest<DelegateTaskRequest> request) {
-        UUID userId = SecurityUtils.getCurrentUserId()
-                .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
-        String username = SecurityUtils.getCurrentUsername();
+                WorkflowTaskResponse response = executionService.returnTask(id, request.getData(), userId, username,
+                                effectiveCompanyId);
+                return ResponseEntity.ok(ApiResponse.success(response, "Task returned to initiator"));
+        }
 
-        WorkflowTaskResponse response = executionService.delegateTask(id, request.getData(), userId, username);
-        return ResponseEntity.ok(ApiResponse.success(response, "Task delegated successfully"));
-    }
+        @PostMapping("/{id}/delegate")
+        @Operation(summary = "Delegate a task to another user")
+        public ResponseEntity<ApiResponse<WorkflowTaskResponse>> delegateTask(
+                        @PathVariable UUID id,
+                        @RequestParam(required = false) UUID companyId,
+                        @Valid @RequestBody ApiRequest<DelegateTaskRequest> request) {
+                UUID userId = SecurityUtils.getCurrentUserId()
+                                .orElseThrow(() -> new UnauthorizedWorkflowActionException(
+                                                "User identity is required"));
+                String username = SecurityUtils.getCurrentUsername();
+                UUID effectiveCompanyId = resolveCompanyId(companyId);
+
+                WorkflowTaskResponse response = executionService.delegateTask(id, request.getData(), userId, username,
+                                effectiveCompanyId);
+                return ResponseEntity.ok(ApiResponse.success(response, "Task delegated successfully"));
+        }
 
     @GetMapping("/my-tasks")
     @Operation(summary = "Get pending or completed tasks for current user and assigned roles")
     public ResponseEntity<ApiResponse<Page<WorkflowTaskResponse>>> getMyTasks(
             @RequestParam(required = false) UUID userId,
+            @RequestParam(required = false) UUID companyId,
             @RequestParam(required = false) WorkflowTaskStatus status,
             Pageable pageable) {
         UUID currentUserId = SecurityUtils.getCurrentUserId()
                 .orElseThrow(() -> new UnauthorizedWorkflowActionException("User identity is required"));
         boolean isSystemAdmin = SecurityUtils.hasRole("SYSTEM_ADMIN");
         UUID effectiveUserId = (isSystemAdmin && userId != null) ? userId : currentUserId;
+        UUID effectiveCompanyId = resolveCompanyId(companyId);
         List<String> roles = SecurityUtils.getCurrentRoles();
 
         Page<WorkflowTaskResponse> page = executionService.getUserTasks(
-                effectiveUserId, roles, status != null ? status : WorkflowTaskStatus.PENDING, pageable);
+                effectiveUserId, roles, status != null ? status : WorkflowTaskStatus.PENDING, effectiveCompanyId, pageable);
         return ResponseEntity.ok(ApiResponse.success(page));
     }
 }

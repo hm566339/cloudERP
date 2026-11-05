@@ -111,9 +111,18 @@ public class SessionController {
     @GetMapping("/all/{companyId}")
     public ResponseEntity<ResponseWrapper<SessionPageResponse>> getAllSessions(
             @PathVariable UUID companyId,
-            @RequestParam int page,
-            @RequestParam int pageSize) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
         return ResponseEntity.ok(ResponseWrapper.success(sessionService.getAllSessions(companyId, page, pageSize)));
+    }
+
+    @GetMapping("/organization/{organizationId}")
+    public ResponseEntity<ResponseWrapper<SessionPageResponse>> getOrganizationSessions(
+            @PathVariable UUID organizationId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return ResponseEntity
+                .ok(ResponseWrapper.success(sessionService.getAllOrganizationSessions(organizationId, page, pageSize)));
     }
 
     @DeleteMapping("/admin/{id}")

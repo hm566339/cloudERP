@@ -15,11 +15,19 @@ public interface WorkflowExecutionService {
 
     WorkflowTaskResponse approveTask(UUID taskId, ApproveTaskRequest request, UUID userId, String userName);
 
+    WorkflowTaskResponse approveTask(UUID taskId, ApproveTaskRequest request, UUID userId, String userName, UUID companyId);
+
     WorkflowTaskResponse rejectTask(UUID taskId, RejectTaskRequest request, UUID userId, String userName);
+
+    WorkflowTaskResponse rejectTask(UUID taskId, RejectTaskRequest request, UUID userId, String userName, UUID companyId);
 
     WorkflowTaskResponse returnTask(UUID taskId, ReturnTaskRequest request, UUID userId, String userName);
 
+    WorkflowTaskResponse returnTask(UUID taskId, ReturnTaskRequest request, UUID userId, String userName, UUID companyId);
+
     WorkflowTaskResponse delegateTask(UUID taskId, DelegateTaskRequest request, UUID userId, String userName);
+
+    WorkflowTaskResponse delegateTask(UUID taskId, DelegateTaskRequest request, UUID userId, String userName, UUID companyId);
 
     WorkflowTransactionResponse cancelWorkflow(UUID transactionId, CancelWorkflowRequest request, UUID userId, String userName);
 
@@ -30,6 +38,8 @@ public interface WorkflowExecutionService {
     Page<WorkflowTransactionResponse> searchTransactions(UUID companyId, String moduleName, String documentType, String status, Pageable pageable);
 
     Page<WorkflowTaskResponse> getUserTasks(UUID userId, List<String> roles, WorkflowTaskStatus status, Pageable pageable);
+
+    Page<WorkflowTaskResponse> getUserTasks(UUID userId, List<String> roles, WorkflowTaskStatus status, UUID companyId, Pageable pageable);
 
     WorkflowCommentResponse addComment(UUID transactionId, AddCommentRequest request, UUID userId, String userName);
 

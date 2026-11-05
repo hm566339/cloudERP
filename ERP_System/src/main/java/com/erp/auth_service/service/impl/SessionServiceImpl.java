@@ -6,6 +6,7 @@ import com.erp.auth_service.dto.request.TokenExchangeRequest;
 import com.erp.auth_service.dto.response.*;
 import com.erp.auth_service.exception.BadCredentialsException;
 import com.erp.auth_service.exception.BadRequestException;
+import com.erp.auth_service.exception.ForbiddenException;
 import com.erp.auth_service.exception.ResourceNotFoundException;
 import com.erp.auth_service.mapper.SsoSessionMapper;
 import com.erp.auth_service.model.AuthorizationCode;
@@ -17,6 +18,7 @@ import com.erp.auth_service.repository.ModuleRepository;
 import com.erp.auth_service.repository.SessionRepository;
 import com.erp.auth_service.security.JwtDecoder;
 import com.erp.auth_service.security.JwtService;
+import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.service.SessionService;
 
 import jakarta.servlet.http.Cookie;
@@ -495,10 +497,73 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public SessionPageResponse getAllOrganizationSessions(
+            UUID organizationId,
+            int page,
+            int pageSize) {
+
+        int validatedPage = Math.max(page, 1);
+        int validatedPageSize = Math.min(Math.max(pageSize, 1), 100);
+
+        Pageable pageable = PageRequest.of(
+                validatedPage - 1,
+                validatedPageSize,
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Page<Session> sessionPage = sessionRepository.findAllByOrganizationId(
+                organizationId,
+                pageable);
+
+        List<SsoSessionResponse> activeSessions = sessionPage.getContent()
+                .stream()
+                .filter(session -> session.getAccessTokenValidTill() != null &&
+                        session.getAccessTokenValidTill().isAfter(now))
+                .map(ssoSessionMapper::toResponse)
+                .toList();
+
+        long filteredTotalCount = sessionPage.getContent()
+                .stream()
+                .filter(session -> session.getAccessTokenValidTill() != null &&
+                        session.getAccessTokenValidTill().isAfter(now))
+                .count();
+
+        return SessionPageResponse.builder()
+                .sessions(activeSessions)
+                .pagination(
+                        PaginationResponse.builder()
+                                .currentPage(validatedPage)
+                                .pageSize(validatedPageSize)
+                                .totalPages(sessionPage.getTotalPages())
+                                .totalCount(filteredTotalCount)
+                                .build())
+                .build();
+    }
+
+    @Override
     public void revokeSessionByAdmin(UUID id) {
 
         Session session = sessionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
+
+        RequestContext.Context context = RequestContext.get();
+        if (context != null) {
+            if (context.organizationId() != null && session.getOrganization() != null) {
+                if (!session.getOrganization().getId().equals(context.organizationId())) {
+                    log.warn("Cross-organization session revocation denied: actor org={}, session org={}",
+                            context.organizationId(), session.getOrganization().getId());
+                    throw new ForbiddenException("Cannot revoke session belonging to another organization");
+                }
+            } else if (context.companyId() != null && session.getCompany() != null) {
+                if (!session.getCompany().getId().equals(context.companyId())) {
+                    log.warn("Cross-company session revocation denied: actor company={}, session company={}",
+                            context.companyId(), session.getCompany().getId());
+                    throw new ForbiddenException("Cannot revoke session belonging to another company");
+                }
+            }
+        }
 
         sessionRepository.delete(session);
 

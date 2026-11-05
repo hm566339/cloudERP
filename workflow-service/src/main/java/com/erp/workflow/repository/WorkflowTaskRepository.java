@@ -32,9 +32,30 @@ public interface WorkflowTaskRepository extends JpaRepository<WorkflowTask, UUID
             @Param("status") WorkflowTaskStatus status,
             Pageable pageable);
 
+    @Query("SELECT t FROM WorkflowTask t JOIN t.workflowTransaction tx " +
+           "WHERE tx.companyId = :companyId " +
+           "AND (t.assignedUserId = :userId OR t.assignedRoleName IN :roles) " +
+           "AND t.taskStatus = :status AND t.isDeleted = false")
+    Page<WorkflowTask> findUserTasksByCompany(
+            @Param("companyId") UUID companyId,
+            @Param("userId") UUID userId,
+            @Param("roles") List<String> roles,
+            @Param("status") WorkflowTaskStatus status,
+            Pageable pageable);
+
     @Query("SELECT t FROM WorkflowTask t WHERE t.assignedUserId = :userId " +
            "AND t.taskStatus = :status AND t.isDeleted = false")
     Page<WorkflowTask> findByAssignedUserIdAndTaskStatusAndIsDeletedFalse(
+            @Param("userId") UUID userId,
+            @Param("status") WorkflowTaskStatus status,
+            Pageable pageable);
+
+    @Query("SELECT t FROM WorkflowTask t JOIN t.workflowTransaction tx " +
+           "WHERE tx.companyId = :companyId " +
+           "AND t.assignedUserId = :userId " +
+           "AND t.taskStatus = :status AND t.isDeleted = false")
+    Page<WorkflowTask> findByCompanyIdAndAssignedUserIdAndTaskStatusAndIsDeletedFalse(
+            @Param("companyId") UUID companyId,
             @Param("userId") UUID userId,
             @Param("status") WorkflowTaskStatus status,
             Pageable pageable);

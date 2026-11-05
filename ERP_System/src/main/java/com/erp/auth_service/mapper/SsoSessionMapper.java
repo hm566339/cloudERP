@@ -9,10 +9,8 @@ import com.erp.auth_service.model.Session;
 import com.erp.auth_service.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
@@ -21,6 +19,11 @@ public interface SsoSessionMapper {
     @Mapping(source = "user.username", target = "username")
     @Mapping(source = "module.name", target = "moduleName")
     @Mapping(source = "module.id", target = "moduleId")
+    @Mapping(source = "company.id", target = "companyId")
+    @Mapping(source = "company.companyName", target = "companyName")
+    @Mapping(source = "company.companyCode", target = "companyCode")
+    @Mapping(source = "organization.id", target = "organizationId")
+    @Mapping(source = "organization.displayName", target = "organizationName")
     @Mapping(source = "createdAt", target = "createdAt")
     @Mapping(source = "updatedAt", target = "updatedAt")
     SsoSessionResponse toResponse(Session session);

@@ -1,23 +1,37 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Monitor, Smartphone, LogOut, RefreshCw, AlertTriangle, Shield, Trash2, ShieldAlert } from 'lucide-react'
+import { Monitor, Smartphone, LogOut, RefreshCw, AlertTriangle, Shield, Trash2, ShieldAlert, Building2 } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '../../../app/hooks'
 import { addAlert } from '../../notifications/notificationSlice'
-import { 
-  getMySessions, 
-  getCompanySessions, 
-  deleteSession, 
-  deleteAdminSession, 
-  deleteAllSessions 
+import {
+  getMySessions,
+  getCompanySessions,
+  getOrganizationSessions,
+  deleteSession,
+  deleteAdminSession,
+  deleteAllSessions
 } from '../../../api/sso/session'
 import { confirmDialog } from '../../../utils/confirmDialog'
 import Pagination from '../../../components/common/Pagination'
 
 export default function SessionList() {
   const dispatch = useAppDispatch()
-  
+
   const selectedCompany = useAppSelector((state) => state.company.selectedCompany)
   const currentUser = useAppSelector((state) => state.auth?.user ?? null)
   const isSuperAdmin = currentUser?.role === 'super_admin'
+
+  const orgId = currentUser?.organizationId || currentUser?.organization?.id || selectedCompany?.organizationId || selectedCompany?.organization?.id
+  const isOrgAdmin = Boolean(
+    isSuperAdmin ||
+    currentUser?.memberType === 'OWNER' ||
+    currentUser?.memberType === 'ADMIN' ||
+    currentUser?.role === 'owner' ||
+    currentUser?.role === 'admin' ||
+    currentUser?.role === 'organizationowner' ||
+    currentUser?.roles?.some(r => ['OWNER', 'ADMIN', 'ROLE_OWNER', 'ROLE_ADMIN', 'ROLE_ORGANIZATION_OWNER'].includes(String(r).toUpperCase()))
+  )
+
+  const [sessionScope, setSessionScope] = useState('company') // 'company' | 'organization'
 
   const [mySessions, setMySessions] = useState([])
   const [companySessionsData, setCompanySessionsData] = useState({ sessions: [], totalPages: 1, totalCount: 0 })
@@ -25,7 +39,7 @@ export default function SessionList() {
 
   const [isLoadingMySessions, setIsLoadingMySessions] = useState(false)
   const [isLoadingCompanySessions, setIsLoadingCompanySessions] = useState(false)
-  
+
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
@@ -45,6 +59,25 @@ export default function SessionList() {
   }, [])
 
   const fetchCompanySessions = useCallback(async () => {
+    if (sessionScope === 'organization') {
+      if (!orgId) return
+      setIsLoadingCompanySessions(true)
+      try {
+        const data = await getOrganizationSessions(orgId, { page, pageSize })
+        const sessionsArray = Array.isArray(data) ? data : data.sessions || []
+        const pagination = data._pageInfo || data.pagination || null
+        const totalPages = pagination?.totalPages || data.totalPages || 1
+        const totalCount = pagination?.totalCount || pagination?.totalElements || sessionsArray.length
+
+        setCompanySessionsData({ sessions: sessionsArray, totalPages, totalCount })
+      } catch (error) {
+        console.error('Failed to fetch organization sessions', error)
+      } finally {
+        setIsLoadingCompanySessions(false)
+      }
+      return
+    }
+
     if (!selectedCompany?.id || selectedCompany.id === 'all') return
     setIsLoadingCompanySessions(true)
     try {
@@ -53,251 +86,286 @@ export default function SessionList() {
       const pagination = data._pageInfo || data.pagination || null
       const totalPages = pagination?.totalPages || data.totalPages || 1
       const totalCount = pagination?.totalCount || pagination?.totalElements || sessionsArray.length
-      
+
       setCompanySessionsData({ sessions: sessionsArray, totalPages, totalCount })
     } catch (error) {
       console.error('Failed to fetch company sessions', error)
     } finally {
       setIsLoadingCompanySessions(false)
     }
-  }, [selectedCompany?.id, page, pageSize])
+}, [sessionScope, orgId, selectedCompany?.id, page, pageSize])
 
-  useEffect(() => {
-    fetchMySessions()
-    fetchCompanySessions()
-  }, [fetchMySessions, fetchCompanySessions])
+useEffect(() => {
+  fetchMySessions()
+  fetchCompanySessions()
+}, [fetchMySessions, fetchCompanySessions])
 
-  const handleEndSession = async (session, isAdminAction = false) => {
-    const prompt = isAdminAction 
-      ? `Terminate user session for ${session.username}? The selected user will immediately lose access.`
-      : `End this session? You will be logged out from this device.`
-      
-    if (await confirmDialog({ message: prompt })) {
-      try {
-        if (isAdminAction) {
-          await deleteAdminSession(session.id)
-        } else {
-          await deleteSession(session.id)
-        }
-        dispatch(addAlert({ type: 'success', message: 'Session terminated successfully.' }))
-        if (selectedSession?.id === session.id) setSelectedSession(null)
-        fetchMySessions()
-        fetchCompanySessions()
-      } catch (error) {
-        console.error("Terminate session error", error)
-        dispatch(addAlert({ type: 'error', message: error?.response?.data?.message || 'Failed to terminate session.' }))
+const handleEndSession = async (session, isAdminAction = false) => {
+  const prompt = isAdminAction
+    ? `Terminate user session for ${session.username}? The selected user will immediately lose access.`
+    : `End this session? You will be logged out from this device.`
+
+  if (await confirmDialog({ message: prompt })) {
+    try {
+      if (isAdminAction) {
+        await deleteAdminSession(session.id)
+      } else {
+        await deleteSession(session.id)
       }
+      dispatch(addAlert({ type: 'success', message: 'Session terminated successfully.' }))
+      if (selectedSession?.id === session.id) setSelectedSession(null)
+      fetchMySessions()
+      fetchCompanySessions()
+    } catch (error) {
+      console.error("Terminate session error", error)
+      dispatch(addAlert({ type: 'error', message: error?.response?.data?.message || 'Failed to terminate session.' }))
     }
   }
+}
 
-  const handleDeleteAllSessions = async (force) => {
-    const prompt = force
-      ? `FORCE Terminate all sessions? This will aggressively sign out every active session across all devices.`
-      : `Terminate all sessions? This will sign out every active session.`
+const handleDeleteAllSessions = async (force) => {
+  const prompt = force
+    ? `FORCE Terminate all sessions? This will aggressively sign out every active session across all devices.`
+    : `Terminate all sessions? This will sign out every active session.`
 
-    if (await confirmDialog({ message: prompt })) {
-      try {
-        await deleteAllSessions(force)
-        dispatch(addAlert({ type: 'success', message: 'All sessions terminated successfully.' }))
-        setSelectedSession(null)
-        fetchMySessions()
-        fetchCompanySessions()
-      } catch (error) {
-        console.error("Terminate all sessions error", error)
-        dispatch(addAlert({ type: 'error', message: error?.response?.data?.message || 'Failed to terminate all sessions.' }))
-      }
+  if (await confirmDialog({ message: prompt })) {
+    try {
+      await deleteAllSessions(force)
+      dispatch(addAlert({ type: 'success', message: 'All sessions terminated successfully.' }))
+      setSelectedSession(null)
+      fetchMySessions()
+      fetchCompanySessions()
+    } catch (error) {
+      console.error("Terminate all sessions error", error)
+      dispatch(addAlert({ type: 'error', message: error?.response?.data?.message || 'Failed to terminate all sessions.' }))
     }
   }
+}
 
-  const getStatusBadge = (session) => {
-    if (!session.accessTokenValidTill) {
-      return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 text-zinc-500 border border-zinc-200/60">
-          Unknown
-        </span>
-      )
-    }
-    
-    const validTill = new Date(session.accessTokenValidTill)
-    const now = new Date()
-    const diffMins = (validTill - now) / (1000 * 60)
-
-    if (diffMins < 0) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200/60">
-          Expired
-        </span>
-      )
-    }
-    if (diffMins < 30) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
-          Expiring Soon
-        </span>
-      )
-    }
+const getStatusBadge = (session) => {
+  if (!session.accessTokenValidTill) {
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-        Active
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 text-zinc-500 border border-zinc-200/60">
+        Unknown
       </span>
     )
   }
 
-  const SessionRow = ({ session, isAdminView = false }) => {
-    const isMobile = session.userAgent?.toLowerCase().includes('mobile')
-    const isSelected = selectedSession?.id === session.id
+  const validTill = new Date(session.accessTokenValidTill)
+  const now = new Date()
+  const diffMins = (validTill - now) / (1000 * 60)
 
+  if (diffMins < 0) {
     return (
-      <tr 
-        onClick={() => setSelectedSession(session)}
-        className={`cursor-pointer transition-colors group select-none ${
-          isSelected 
-            ? 'bg-indigo-50/70 dark:bg-primary/10 border-indigo-200 dark:border-primary/30' 
-            : 'hover:bg-zinc-50/80 dark:hover:bg-[#222736]'
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200/60">
+        Expired
+      </span>
+    )
+  }
+  if (diffMins < 30) {
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
+        Expiring Soon
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+      Active
+    </span>
+  )
+}
+
+const SessionRow = ({ session, isAdminView = false }) => {
+  const isMobile = session.userAgent?.toLowerCase().includes('mobile')
+  const isSelected = selectedSession?.id === session.id
+
+  return (
+    <tr
+      onClick={() => setSelectedSession(session)}
+      className={`cursor-pointer transition-colors group select-none ${isSelected
+          ? 'bg-indigo-50/70 dark:bg-primary/10 border-indigo-200 dark:border-primary/30'
+          : 'hover:bg-zinc-50/80 dark:hover:bg-[#222736]'
         }`}
-        style={{ minHeight: '64px' }}
-      >
-        {/* Device & User */}
-        <td className="px-4 py-3.5">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${
-              isMobile 
-                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/40' 
-                : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/40'
+      style={{ minHeight: '64px' }}
+    >
+      {/* Device & User */}
+      <td className="px-4 py-3.5">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${isMobile
+              ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/40'
+              : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/40'
             }`}>
-              {isMobile ? <Smartphone size={16} /> : <Monitor size={16} />}
-            </div>
-            <div className="min-w-0 flex-1">
+            {isMobile ? <Smartphone size={16} /> : <Monitor size={16} />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <p className="font-semibold text-xs text-zinc-900 dark:text-[#E6E8EE] truncate" title={session.username || 'Unknown'}>
                 {session.username || 'Unknown'}
               </p>
-              <p className="text-[10px] font-mono text-zinc-400 dark:text-[#6B7184] truncate" title={session.moduleName || 'System'}>
-                {session.moduleName || 'System'}
-              </p>
+              {session.companyName && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40 truncate max-w-[120px]" title={session.companyName}>
+                  {session.companyName}
+                </span>
+              )}
             </div>
-          </div>
-        </td>
-
-        {/* Network */}
-        <td className="px-4 py-3.5">
-          <div className="min-w-0">
-            <p className="text-xs font-mono font-medium text-zinc-800 dark:text-[#E6E8EE] truncate" title={session.ipAddress || 'Unknown IP'}>
-              {session.ipAddress || 'Unknown IP'}
-            </p>
-            <p 
-              className="text-[10px] text-zinc-400 dark:text-[#6B7184] truncate max-w-full block overflow-hidden text-ellipsis whitespace-nowrap" 
-              title={session.userAgent || 'Unknown Browser'}
-            >
-              {session.userAgent || 'Unknown Browser'}
+            <p className="text-[10px] font-mono text-zinc-400 dark:text-[#6B7184] truncate" title={session.moduleName || 'System'}>
+              {session.moduleName || 'System'}
             </p>
           </div>
-        </td>
+        </div>
+      </td>
 
-        {/* Login Time */}
-        <td className="px-4 py-3.5">
-          <p className="text-xs text-zinc-600 dark:text-[#A0A6B5] font-medium whitespace-nowrap">
-            {session.createdAt ? new Date(session.createdAt).toLocaleString() : '—'}
+      {/* Network */}
+      <td className="px-4 py-3.5">
+        <div className="min-w-0">
+          <p className="text-xs font-mono font-medium text-zinc-800 dark:text-[#E6E8EE] truncate" title={session.ipAddress || 'Unknown IP'}>
+            {session.ipAddress || 'Unknown IP'}
           </p>
-        </td>
-
-        {/* Status */}
-        <td className="px-4 py-3.5">
-          {getStatusBadge(session)}
-        </td>
-
-        {/* Actions */}
-        <td className="px-4 py-3.5 text-right">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              handleEndSession(session, isAdminView)
-            }}
-            className="w-8 h-8 rounded-lg inline-flex items-center justify-center border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-400 dark:text-[#A0A6B5] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:border-rose-200 dark:hover:border-rose-900/60 transition-colors shadow-2xs"
-            title="Terminate Session"
-            aria-label="Terminate Session"
+          <p
+            className="text-[10px] text-zinc-400 dark:text-[#6B7184] truncate max-w-full block overflow-hidden text-ellipsis whitespace-nowrap"
+            title={session.userAgent || 'Unknown Browser'}
           >
-            <LogOut size={14} />
-          </button>
-        </td>
-      </tr>
-    )
-  }
+            {session.userAgent || 'Unknown Browser'}
+          </p>
+        </div>
+      </td>
 
-  return (
-    <div 
-      className="w-full max-w-none px-6 sm:px-8 py-6 space-y-6 animate-fade-in pb-12"
-      style={{ width: '100%', maxWidth: 'none' }}
-    >
-      {/* ── Page Header ── */}
-      <div className="space-y-1">
-        <h1 className="text-[22px] sm:text-[24px] font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Session Management</h1>
-        <p className="text-[13px] text-zinc-500 dark:text-[#A0A6B5]">
-          Monitor current live connections, device categories and trigger security audits
+      {/* Login Time */}
+      <td className="px-4 py-3.5">
+        <p className="text-xs text-zinc-600 dark:text-[#A0A6B5] font-medium whitespace-nowrap">
+          {session.createdAt ? new Date(session.createdAt).toLocaleString() : '—'}
         </p>
-      </div>
+      </td>
 
-      {/* ── Main Two-Column Layout ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_360px] gap-5 items-start">
-        {/* ── Left Column: My Sessions & Company Sessions ── */}
-        <div className="space-y-5 min-w-0">
-          {/* My Sessions Card */}
-          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/60 dark:bg-[#1D212C]">
-              <div className="flex items-center gap-2">
-                <Shield className="text-indigo-600 dark:text-primary" size={17} />
-                <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE]">My Sessions</h3>
-              </div>
-              <span className="text-[10px] font-semibold text-zinc-500 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#222736] px-2 py-0.5 rounded-full">
-                {mySessions.length} Active
-              </span>
+      {/* Status */}
+      <td className="px-4 py-3.5">
+        {getStatusBadge(session)}
+      </td>
+
+      {/* Actions */}
+      <td className="px-4 py-3.5 text-right">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleEndSession(session, isAdminView)
+          }}
+          className="w-8 h-8 rounded-lg inline-flex items-center justify-center border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-400 dark:text-[#A0A6B5] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:border-rose-200 dark:hover:border-rose-900/60 transition-colors shadow-2xs"
+          title="Terminate Session"
+          aria-label="Terminate Session"
+        >
+          <LogOut size={14} />
+        </button>
+      </td>
+    </tr>
+  )
+}
+
+return (
+  <div
+    className="w-full max-w-none px-6 sm:px-8 py-6 space-y-6 animate-fade-in pb-12"
+    style={{ width: '100%', maxWidth: 'none' }}
+  >
+    {/* ── Page Header ── */}
+    <div className="space-y-1">
+      <h1 className="text-[22px] sm:text-[24px] font-bold text-zinc-900 dark:text-[#E6E8EE] tracking-tight">Session Management</h1>
+      <p className="text-[13px] text-zinc-500 dark:text-[#A0A6B5]">
+        Monitor current live connections, device categories and trigger security audits
+      </p>
+    </div>
+
+    {/* ── Main Two-Column Layout ── */}
+    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_360px] gap-5 items-start">
+      {/* ── Left Column: My Sessions & Company Sessions ── */}
+      <div className="space-y-5 min-w-0">
+        {/* My Sessions Card */}
+        <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/60 dark:bg-[#1D212C]">
+            <div className="flex items-center gap-2">
+              <Shield className="text-indigo-600 dark:text-primary" size={17} />
+              <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE]">My Sessions</h3>
             </div>
-            
-            <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
-              <table className="w-full min-w-[620px] table-fixed divide-y divide-zinc-200 dark:divide-[#2A2F3D] text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="My Sessions Table">
-                <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] sticky top-0 z-10">
-                  <tr className="text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider select-none">
-                    <th scope="col" className="w-[27%] min-w-[160px] px-4 py-3">Device & User</th>
-                    <th scope="col" className="w-[25%] min-w-[140px] px-4 py-3">Network</th>
-                    <th scope="col" className="w-[22%] min-w-[130px] px-4 py-3">Login Time</th>
-                    <th scope="col" className="w-[16%] min-w-[100px] px-4 py-3">Status</th>
-                    <th scope="col" className="w-[10%] min-w-[60px] px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
-                  {isLoadingMySessions ? (
-                    <tr>
-                      <td colSpan={5} className="p-8 text-center">
-                        <div className="flex justify-center items-center gap-2 text-zinc-400 dark:text-[#6B7184] text-xs font-medium">
-                          <RefreshCw className="animate-spin" size={14} /> Loading my sessions...
-                        </div>
-                      </td>
-                    </tr>
-                  ) : mySessions.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="p-8 text-center text-zinc-400 dark:text-[#6B7184] text-xs font-medium">
-                        No active sessions found.
-                      </td>
-                    </tr>
-                  ) : (
-                    mySessions.map(session => <SessionRow key={session.id} session={session} />)
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <span className="text-[10px] font-semibold text-zinc-500 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#222736] px-2 py-0.5 rounded-full">
+              {mySessions.length} Active
+            </span>
           </div>
 
-          {/* Company Sessions (For Admins) */}
-          {(isSuperAdmin || selectedCompany?.id) && (
-            <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/60 dark:bg-[#1D212C]">
+          <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
+            <table className="w-full min-w-[620px] table-fixed divide-y divide-zinc-200 dark:divide-[#2A2F3D] text-left border-collapse" style={{ width: '100%', tableLayout: 'fixed' }} aria-label="My Sessions Table">
+              <thead className="bg-zinc-50 dark:bg-[#1D212C] border-b border-zinc-200 dark:border-[#2A2F3D] sticky top-0 z-10">
+                <tr className="text-xs font-semibold text-zinc-600 dark:text-[#A0A6B5] uppercase tracking-wider select-none">
+                  <th scope="col" className="w-[27%] min-w-[160px] px-4 py-3">Device & User</th>
+                  <th scope="col" className="w-[25%] min-w-[140px] px-4 py-3">Network</th>
+                  <th scope="col" className="w-[22%] min-w-[130px] px-4 py-3">Login Time</th>
+                  <th scope="col" className="w-[16%] min-w-[100px] px-4 py-3">Status</th>
+                  <th scope="col" className="w-[10%] min-w-[60px] px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
+                {isLoadingMySessions ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center">
+                      <div className="flex justify-center items-center gap-2 text-zinc-400 dark:text-[#6B7184] text-xs font-medium">
+                        <RefreshCw className="animate-spin" size={14} /> Loading my sessions...
+                      </div>
+                    </td>
+                  </tr>
+                ) : mySessions.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-zinc-400 dark:text-[#6B7184] text-xs font-medium">
+                      No active sessions found.
+                    </td>
+                  </tr>
+                ) : (
+                  mySessions.map(session => <SessionRow key={session.id} session={session} />)
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+          {/* Company / Organization Sessions (For Admins) */ }
+          {(isSuperAdmin || selectedCompany?.id || (isOrgAdmin && orgId)) && (
+          <div className="bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-zinc-100 dark:border-[#2A2F3D] flex items-center justify-between bg-zinc-50/60 dark:bg-[#1D212C] flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Monitor className="text-indigo-600 dark:text-primary" size={17} />
-                  <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE]">Company Sessions</h3>
+                  <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE]">
+                    {sessionScope === 'organization' ? 'Organization Sessions (All Companies)' : 'Company Sessions'}
+                  </h3>
                 </div>
-                <span className="text-[10px] font-semibold text-zinc-500 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#222736] px-2 py-0.5 rounded-full">
-                  {companySessionsData.totalCount || companySessions.length} Total
-                </span>
+
+                <div className="flex items-center gap-3">
+                  {isOrgAdmin && orgId && (
+                    <div className="inline-flex rounded-lg p-0.5 bg-zinc-100 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D]">
+                      <button
+                        type="button"
+                        onClick={() => { setSessionScope('company'); setPage(1); }}
+                        className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${sessionScope === 'company'
+                            ? 'bg-white dark:bg-[#2A2F3D] text-zinc-900 dark:text-white shadow-2xs'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                          }`}
+                      >
+                        Company View
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setSessionScope('organization'); setPage(1); }}
+                        className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${sessionScope === 'organization'
+                            ? 'bg-white dark:bg-[#2A2F3D] text-zinc-900 dark:text-white shadow-2xs'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                          }`}
+                      >
+                        Organization View
+                      </button>
+                    </div>
+                  )}
+
+                  <span className="text-[10px] font-semibold text-zinc-500 dark:text-[#A0A6B5] bg-zinc-100 dark:bg-[#222736] px-2 py-0.5 rounded-full">
+                    {companySessionsData.totalCount || companySessions.length} Total
+                  </span>
+                </div>
               </div>
 
               <div className="overflow-x-auto min-w-0 max-w-full custom-scrollbar">
@@ -316,7 +384,7 @@ export default function SessionList() {
                       <tr>
                         <td colSpan={5} className="p-8 text-center">
                           <div className="flex justify-center items-center gap-2 text-zinc-400 dark:text-[#6B7184] text-xs font-medium">
-                            <RefreshCw className="animate-spin" size={14} /> Loading company sessions...
+                            <RefreshCw className="animate-spin" size={14} /> Loading {sessionScope === 'organization' ? 'organization' : 'company'} sessions...
                           </div>
                         </td>
                       </tr>
@@ -324,9 +392,11 @@ export default function SessionList() {
                       <tr>
                         <td colSpan={5} className="py-8 px-4 text-center text-zinc-400 dark:text-[#6B7184] text-xs font-medium">
                           <div className="h-[75px] flex items-center justify-center">
-                            {selectedCompany?.id === 'all' 
-                              ? "Please select a company to view sessions." 
-                              : "No active company sessions found."}
+                            {sessionScope === 'organization'
+                              ? "No active sessions found across the organization."
+                              : selectedCompany?.id === 'all'
+                                ? "Please select a company to view sessions."
+                                : "No active company sessions found."}
                           </div>
                         </td>
                       </tr>
@@ -341,20 +411,20 @@ export default function SessionList() {
 
               {companySessions.length > 0 && (
                 <div className="p-4 border-t border-zinc-100 dark:border-[#2A2F3D] bg-white dark:bg-[#161922]">
-                  <Pagination 
-                    page={page} 
-                    totalPages={companySessionsData.totalPages} 
-                    totalElements={companySessionsData.totalCount} 
-                    pageSize={pageSize} 
-                    onPageChange={setPage} 
-                    onPageSizeChange={setPageSize} 
-                    itemName="sessions" 
+                  <Pagination
+                    page={page}
+                    totalPages={companySessionsData.totalPages}
+                    totalElements={companySessionsData.totalCount}
+                    pageSize={pageSize}
+                    onPageChange={setPage}
+                    onPageSizeChange={setPageSize}
+                    itemName="sessions"
                   />
                 </div>
               )}
             </div>
           )}
-        </div>
+          </div>
 
         {/* ── Right Column: Session Details & Danger Zone ── */}
         <div className="space-y-5 min-w-0">
@@ -363,7 +433,7 @@ export default function SessionList() {
             <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-700 dark:text-[#E6E8EE] border-b border-zinc-100 dark:border-[#2A2F3D] pb-2.5">
               Session Details
             </h3>
-            
+
             {!selectedSession ? (
               <div className="min-h-[150px] flex flex-col items-center justify-center text-center p-6 text-zinc-400 dark:text-[#6B7184]">
                 <Monitor size={24} className="mb-2 text-zinc-300 dark:text-[#6B7184] stroke-[1.5]" />
@@ -375,6 +445,16 @@ export default function SessionList() {
                   <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">User</label>
                   <div className="text-xs font-semibold text-zinc-900 dark:text-[#E6E8EE]">{selectedSession.username || 'Unknown'}</div>
                 </div>
+
+                {selectedSession.companyName && (
+                  <div>
+                    <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Company</label>
+                    <div className="text-xs font-semibold text-zinc-800 dark:text-[#E6E8EE] flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+                      {selectedSession.companyName} {selectedSession.companyCode ? `(${selectedSession.companyCode})` : ''}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="text-[10px] font-bold text-zinc-400 dark:text-[#6B7184] uppercase tracking-wider mb-1 block">Device & Browser</label>
@@ -455,5 +535,5 @@ export default function SessionList() {
         </div>
       </div>
     </div>
-  )
+    )
 }

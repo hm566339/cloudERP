@@ -12,11 +12,15 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SsoSessionResponse {
 
-
     private UUID id;
     private String username;
     private String ipAddress;
     private String userAgent;
+    private UUID companyId;
+    private String companyName;
+    private String companyCode;
+    private UUID organizationId;
+    private String organizationName;
     private UUID moduleId;
     private String moduleName;
     private LocalDateTime createdAt;
