@@ -7,6 +7,7 @@
  */
 
 import apiClient from '../common/client.js';
+import { getActiveOrganizationId } from '../common/roleCompanyContext.js';
 
 const PRIMARY_PREFIX = '/api/sso/organization';
 const FALLBACK_PREFIX = '/api/organization';
@@ -19,12 +20,23 @@ async function executeWithFallback(endpoint, options = {}) {
   const primaryUrl = `${PRIMARY_PREFIX}${endpoint}`;
   const fallbackUrl = `${FALLBACK_PREFIX}${endpoint}`;
 
+  const orgId = options.params?.organizationId || getActiveOrganizationId();
+  const effectiveParams = {
+    ...(options.params || {}),
+    ...(orgId && !options.params?.organizationId ? { organizationId: orgId } : {}),
+  };
+  const headers = {
+    ...(options.headers || {}),
+    ...(orgId ? { 'X-Organization-Id': orgId } : {}),
+  };
+
   try {
     const res = await apiClient({
       url: primaryUrl,
       method,
       data: options.data,
-      params: options.params,
+      params: effectiveParams,
+      headers,
     });
     return res?.data?.data !== undefined ? res.data.data : res.data;
   } catch (primaryErr) {
@@ -33,7 +45,8 @@ async function executeWithFallback(endpoint, options = {}) {
         url: fallbackUrl,
         method,
         data: options.data,
-        params: options.params,
+        params: effectiveParams,
+        headers,
       });
       return res?.data?.data !== undefined ? res.data.data : res.data;
     }

@@ -17,17 +17,20 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping({"/api/sso/organization/role-templates", "/api/organization/role-templates"})
+@RequestMapping({ "/api/sso/organization/role-templates", "/api/organization/role-templates" })
 @RequiredArgsConstructor
 @Slf4j
 public class OrganizationRoleTemplateController {
 
     private final OrganizationRoleTemplateService roleTemplateService;
+    private final com.erp.auth_service.repository.CompanyRepository companyRepository;
+    private final com.erp.auth_service.repository.OrganizationMemberRepository organizationMemberRepository;
 
     @GetMapping
     public ResponseEntity<ResponseWrapper<List<OrganizationRoleTemplateDto>>> getTemplates(
-            @RequestParam(required = false) UUID organizationId) {
-        UUID orgId = resolveOrgId(organizationId);
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
         List<OrganizationRoleTemplateDto> response = roleTemplateService.getTemplates(orgId);
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
@@ -35,8 +38,9 @@ public class OrganizationRoleTemplateController {
     @GetMapping("/{templateId}")
     public ResponseEntity<ResponseWrapper<OrganizationRoleTemplateDto>> getTemplateById(
             @PathVariable UUID templateId,
-            @RequestParam(required = false) UUID organizationId) {
-        UUID orgId = resolveOrgId(organizationId);
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
         OrganizationRoleTemplateDto response = roleTemplateService.getTemplateById(orgId, templateId);
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
@@ -44,8 +48,9 @@ public class OrganizationRoleTemplateController {
     @PostMapping
     public ResponseEntity<ResponseWrapper<OrganizationRoleTemplateDto>> createTemplate(
             @Valid @RequestBody CreateRoleTemplateRequest request,
-            @RequestParam(required = false) UUID organizationId) {
-        UUID orgId = resolveOrgId(organizationId);
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
         OrganizationRoleTemplateDto response = roleTemplateService.createTemplate(orgId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseWrapper.success(response));
     }
@@ -54,8 +59,9 @@ public class OrganizationRoleTemplateController {
     public ResponseEntity<ResponseWrapper<OrganizationRoleTemplateDto>> updateTemplate(
             @PathVariable UUID templateId,
             @Valid @RequestBody UpdateRoleTemplateRequest request,
-            @RequestParam(required = false) UUID organizationId) {
-        UUID orgId = resolveOrgId(organizationId);
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
         OrganizationRoleTemplateDto response = roleTemplateService.updateTemplate(orgId, templateId, request);
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
@@ -64,8 +70,9 @@ public class OrganizationRoleTemplateController {
     public ResponseEntity<ResponseWrapper<OrganizationRoleTemplateDto>> duplicateTemplate(
             @PathVariable UUID templateId,
             @RequestParam(required = false) String newName,
-            @RequestParam(required = false) UUID organizationId) {
-        UUID orgId = resolveOrgId(organizationId);
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
         OrganizationRoleTemplateDto response = roleTemplateService.duplicateTemplate(orgId, templateId, newName);
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseWrapper.success(response));
     }
@@ -74,8 +81,9 @@ public class OrganizationRoleTemplateController {
     public ResponseEntity<ResponseWrapper<OrganizationRoleTemplateDto>> updateTemplateStatus(
             @PathVariable UUID templateId,
             @RequestParam boolean status,
-            @RequestParam(required = false) UUID organizationId) {
-        UUID orgId = resolveOrgId(organizationId);
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
         OrganizationRoleTemplateDto response = roleTemplateService.updateTemplateStatus(orgId, templateId, status);
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
@@ -83,8 +91,9 @@ public class OrganizationRoleTemplateController {
     @DeleteMapping("/{templateId}")
     public ResponseEntity<ResponseWrapper<Map<String, String>>> deleteTemplate(
             @PathVariable UUID templateId,
-            @RequestParam(required = false) UUID organizationId) {
-        UUID orgId = resolveOrgId(organizationId);
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
         roleTemplateService.deleteTemplate(orgId, templateId);
         return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Role template deleted successfully")));
     }
@@ -93,8 +102,9 @@ public class OrganizationRoleTemplateController {
     public ResponseEntity<ResponseWrapper<TemplateApplyPreviewDto>> previewApply(
             @PathVariable UUID templateId,
             @Valid @RequestBody ApplyTemplateRequest request,
-            @RequestParam(required = false) UUID organizationId) {
-        UUID orgId = resolveOrgId(organizationId);
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
         TemplateApplyPreviewDto response = roleTemplateService.previewApply(orgId, templateId, request);
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
@@ -103,8 +113,9 @@ public class OrganizationRoleTemplateController {
     public ResponseEntity<ResponseWrapper<ApplyTemplateResultDto>> applyTemplate(
             @PathVariable UUID templateId,
             @Valid @RequestBody ApplyTemplateRequest request,
-            @RequestParam(required = false) UUID organizationId) {
-        UUID orgId = resolveOrgId(organizationId);
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
         ApplyTemplateResultDto response = roleTemplateService.applyTemplate(orgId, templateId, request);
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
@@ -112,8 +123,9 @@ public class OrganizationRoleTemplateController {
     @GetMapping("/compare")
     public ResponseEntity<ResponseWrapper<RoleComparisonDto>> compareRole(
             @RequestParam String roleName,
-            @RequestParam(required = false) UUID organizationId) {
-        UUID orgId = resolveOrgId(organizationId);
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
         RoleComparisonDto response = roleTemplateService.compareRoleAcrossCompanies(orgId, roleName);
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
@@ -121,22 +133,39 @@ public class OrganizationRoleTemplateController {
     @PostMapping("/import")
     public ResponseEntity<ResponseWrapper<OrganizationRoleTemplateDto>> importCompanyRole(
             @Valid @RequestBody ImportRoleTemplateRequest request,
-            @RequestParam(required = false) UUID organizationId) {
-        UUID orgId = resolveOrgId(organizationId);
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
         OrganizationRoleTemplateDto response = roleTemplateService.importCompanyRoleAsTemplate(
                 orgId, request.getCompanyId(), request.getRoleId(), request.getTemplateName(), request.getDescription());
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseWrapper.success(response));
     }
 
-    private UUID resolveOrgId(UUID explicitOrgId) {
+
+    private UUID resolveOrgId(UUID explicitOrgId, UUID headerOrgId) {
         if (explicitOrgId != null) {
             return explicitOrgId;
         }
-        RequestContext.Context ctx = RequestContext.get();
-        if (ctx == null || ctx.organizationId() == null) {
-            throw new ForbiddenException("Organization context is required");
+        if (headerOrgId != null) {
+            return headerOrgId;
         }
-        return ctx.organizationId();
+        RequestContext.Context ctx = RequestContext.get();
+        if (ctx != null && ctx.organizationId() != null) {
+            return ctx.organizationId();
+        }
+        if (ctx != null && ctx.companyId() != null && companyRepository != null) {
+            var compOpt = companyRepository.findById(ctx.companyId());
+            if (compOpt.isPresent() && compOpt.get().getOrganization() != null) {
+                return compOpt.get().getOrganization().getId();
+            }
+        }
+        if (ctx != null && ctx.userId() != null && organizationMemberRepository != null) {
+            var memberOpt = organizationMemberRepository.findFirstByUser_IdAndMembershipStatus(
+                    ctx.userId(), com.erp.auth_service.utility.MembershipStatus.ACTIVE);
+            if (memberOpt.isPresent()) {
+                return memberOpt.get().getOrganization().getId();
+            }
+        }
+        throw new ForbiddenException("Organization context is required");
     }
 }
-

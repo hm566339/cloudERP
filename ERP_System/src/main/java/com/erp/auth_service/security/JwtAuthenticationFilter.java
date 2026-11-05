@@ -388,22 +388,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
 
                     TenantContext.set(companyCode);
-                    if (session.getOrganization() != null && !isSystemAdmin) {
+                    com.erp.auth_service.model.Organization effectiveOrg = session.getOrganization();
+                    if (effectiveOrg == null && session.getCompany() != null) {
+                        effectiveOrg = session.getCompany().getOrganization();
+                    }
+
+                    if (effectiveOrg != null) {
                         RequestContext.set(
                                 session.getUser().getId(),
-                                session.getOrganization().getId(),
+                                effectiveOrg.getId(),
                                 session.getCompany().getId(),
                                 session.getModule() != null ? session.getModule().getClientId() : null,
-                                session.getOrganization().getAccessMode());
-                        if (session.getOrganization().getAccessMode() == AccessMode.READ_ONLY
+                                effectiveOrg.getAccessMode() != null ? effectiveOrg.getAccessMode() : AccessMode.FULL);
+                        if (effectiveOrg.getAccessMode() == AccessMode.READ_ONLY
                                 && isBusinessWrite(request)) {
                             rejectForbidden(response, "Organization is read-only");
                             return;
                         }
                     } else {
+                        UUID fallbackOrgId = null;
+                        String headerOrgStr = request.getHeader("X-Organization-Id");
+                        if (headerOrgStr != null && !headerOrgStr.isBlank()) {
+                            try {
+                                fallbackOrgId = UUID.fromString(headerOrgStr.trim());
+                            } catch (Exception ignored) {
+                            }
+                        }
                         RequestContext.set(
                                 session.getUser().getId(),
-                                null,
+                                fallbackOrgId,
                                 isSystemAdmin ? null
                                         : (session.getCompany() != null ? session.getCompany().getId() : null),
                                 session.getModule() != null ? session.getModule().getClientId() : null,

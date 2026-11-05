@@ -323,6 +323,83 @@ export const getActiveCompanyId = (userOrContext = null) => {
 };
 
 /**
+ * Resolves the active organization ID.
+ * Precedence:
+ *   1. Explicit user/context passed
+ *   2. Redux store (auth.organization / organization)
+ *   3. selected_organization in localStorage
+ *   4. auth_user fallback in localStorage
+ *   5. persist:root fallback
+ */
+export const getActiveOrganizationId = (userOrContext = null) => {
+  const sanitize = (raw) => {
+    if (!raw) return null;
+    const str = String(raw).trim();
+    if (
+      !str ||
+      str === 'undefined' ||
+      str === 'null' ||
+      str === '0' ||
+      str === '00000000-0000-0000-0000-000000000000'
+    ) {
+      return null;
+    }
+    return str;
+  };
+
+  if (userOrContext) {
+    const directId =
+      sanitize(userOrContext.organization?.id) ||
+      sanitize(userOrContext.organizationId) ||
+      sanitize(userOrContext.orgId) ||
+      sanitize(userOrContext.id);
+    if (directId) return directId;
+  }
+
+  if (typeof window === 'undefined') return null;
+
+  try {
+    if (window.__REDUX_STORE__?.getState) {
+      const state = window.__REDUX_STORE__.getState();
+      const orgId =
+        sanitize(state.auth?.organization?.id) ||
+        sanitize(state.auth?.user?.organizationId) ||
+        sanitize(state.organization?.id);
+      if (orgId) return orgId;
+    }
+  } catch (e) { }
+
+  try {
+    const saved = localStorage.getItem('selected_organization') || localStorage.getItem('auth_organization');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const savedId = sanitize(parsed?.id || parsed?.organizationId);
+      if (savedId) return savedId;
+    }
+  } catch (e) { }
+
+  try {
+    const authUserStr = localStorage.getItem('auth_user');
+    if (authUserStr) {
+      const authUser = JSON.parse(authUserStr);
+      const authId = sanitize(authUser?.organizationId || authUser?.organization?.id);
+      if (authId) return authId;
+    }
+  } catch (e) { }
+
+  try {
+    const persistedRoot = JSON.parse(localStorage.getItem('persist:root'));
+    if (persistedRoot?.auth) {
+      const authState = JSON.parse(persistedRoot.auth);
+      const orgId = sanitize(authState?.organization?.id || authState?.user?.organizationId);
+      if (orgId) return orgId;
+    }
+  } catch (e) { }
+
+  return null;
+};
+
+/**
  * Builds or filters query parameters according to user role.
  *
  * For OWNER and SystemAdmin:

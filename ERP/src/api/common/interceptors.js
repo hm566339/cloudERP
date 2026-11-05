@@ -47,6 +47,7 @@ import {
   isOwnerOrSystemAdminUser,
   isOwnerOrSystemAdminRole,
   getActiveCompanyId,
+  getActiveOrganizationId,
   isValidCompanyId,
   buildRoleBasedCompanyParams,
   cleanUrlRoleBasedCompany
@@ -56,6 +57,7 @@ export {
   isOwnerOrSystemAdminUser,
   isOwnerOrSystemAdminRole,
   getActiveCompanyId,
+  getActiveOrganizationId,
   isValidCompanyId,
   buildRoleBasedCompanyParams,
   cleanUrlRoleBasedCompany
@@ -265,7 +267,7 @@ export const attachRequestInterceptor = (instance) => {
               const cleanQuery = searchParams.toString();
               config.url = cleanQuery ? `${base}?${cleanQuery}` : base;
             }
-          } catch {}
+          } catch { }
         }
 
         // Clean up any legacy companyCode params from all requests to prevent backend confusion
@@ -349,6 +351,14 @@ export const attachRequestInterceptor = (instance) => {
           const token = getFreshAccessToken();
           if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
+          }
+        }
+
+        // Attach X-Organization-Id header for organization APIs if available
+        if (config.headers && !config.headers['X-Organization-Id'] && !config.headers['x-organization-id']) {
+          const activeOrgId = getActiveOrganizationId();
+          if (activeOrgId && (config.url?.includes('/organization') || config.url?.includes('/role-templates'))) {
+            config.headers['X-Organization-Id'] = activeOrgId;
           }
         }
 
@@ -522,7 +532,7 @@ export const attachResponseInterceptor = (instance) => {
               return true;
             }
           }
-        } catch (e) {}
+        } catch (e) { }
 
         if (typeof localStorage !== 'undefined') {
           try {
@@ -533,7 +543,7 @@ export const attachResponseInterceptor = (instance) => {
               const role = String(u?.role || '').toLowerCase().replace(/[\s_]/g, '');
               if (role === 'superadmin' || role === 'systemadmin') return true;
             }
-          } catch (e) {}
+          } catch (e) { }
         }
         return false;
       };
