@@ -34,7 +34,8 @@ function AppShellContent() {
   const isOwnerWorkspace =
     location.pathname.startsWith('/owner') ||
     location.pathname.startsWith('/organization') ||
-    location.pathname.startsWith('/subscription');
+  location.pathname.startsWith('/subscription') ||
+    location.pathname.startsWith('/settings/organization');
 
   if (isOwner && isOwnerWorkspace) {
     return <OwnerLayout />;

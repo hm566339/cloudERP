@@ -181,7 +181,7 @@ export function getOwnerSidebarNavGroups({
   return [
     {
       id: 'dashboard-group',
-      title: null, // Top-level group without section header
+      title: 'DASHBOARD',
       items: [
         {
           id: 'dashboard',
@@ -190,12 +190,6 @@ export function getOwnerSidebarNavGroups({
           icon: LayoutDashboard,
           isEntitled: true,
         },
-      ],
-    },
-    {
-      id: 'my-company-group',
-      title: 'MY COMPANY',
-      items: [
         {
           id: 'companies',
           label: 'Companies',
@@ -217,15 +211,15 @@ export function getOwnerSidebarNavGroups({
       title: 'SETTINGS',
       items: [
         {
-          id: 'organization-settings',
-          label: 'Organization Settings',
+          id: 'organization-management',
+          label: 'Organization Management',
           path: '/owner/settings',
-          icon: Settings,
+          icon: Building2,
           isEntitled: true,
         },
         {
-          id: 'subscription-billing',
-          label: 'Subscription / Billing',
+          id: 'subscription-management',
+          label: 'Subscription Management',
           path: '/subscription',
           icon: CreditCard,
           badge: isTrial && daysRemaining !== null ? `${daysRemaining}d left` : (isActive ? 'Active' : null),

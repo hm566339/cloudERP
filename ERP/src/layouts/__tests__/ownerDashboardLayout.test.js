@@ -27,12 +27,17 @@ describe('Owner Dashboard UI & Layout Configuration Suite', () => {
         isActive: true,
       });
 
-      // Assert 4 standard groups exist
-      assert.strictEqual(navGroups.length, 4);
+      // Assert 3 standard groups exist (DASHBOARD, MODULES, SETTINGS)
+      assert.strictEqual(navGroups.length, 3);
       assert.strictEqual(navGroups[0].id, 'dashboard-group');
-      assert.strictEqual(navGroups[1].id, 'my-company-group');
-      assert.strictEqual(navGroups[2].id, 'modules-group');
-      assert.strictEqual(navGroups[3].id, 'settings-group');
+      assert.strictEqual(navGroups[0].title, 'DASHBOARD');
+      assert.strictEqual(navGroups[0].items.length, 2);
+      assert.strictEqual(navGroups[0].items[0].id, 'dashboard');
+      assert.strictEqual(navGroups[0].items[1].id, 'companies');
+      assert.strictEqual(navGroups[1].id, 'modules-group');
+      assert.strictEqual(navGroups[1].title, 'MODULES');
+      assert.strictEqual(navGroups[2].id, 'settings-group');
+      assert.strictEqual(navGroups[2].title, 'SETTINGS');
 
       const modulesGroup = navGroups.find((g) => g.id === 'modules-group');
       assert.ok(modulesGroup, 'modules-group must exist');

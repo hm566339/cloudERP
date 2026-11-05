@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import {
   Building2,
@@ -32,6 +32,10 @@ import { useAccessMode } from '../../../hooks/useAccessMode';
 import { getEntitledModules, normalizeModuleName } from '../../../utils/moduleNormalization';
 import OwnerLayout, { useIsOwnerLayout } from '../../../layouts/OwnerLayout';
 import { useRBAC } from '../../../utils/rbac';
+import {
+  getOrganizationCompanies,
+  getOrganizationSubscription,
+} from '../../../api/sso/organizationSettings.api.js';
 
 /**
  * Master catalog metadata for canonical ERP business modules.
@@ -158,14 +162,60 @@ function OwnerDashboardContent() {
     user,
   } = authContext;
 
+  const [liveCompanies, setLiveCompanies] = useState(companies);
+  const [liveSubscription, setLiveSubscription] = useState(subscription);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
+
+  const fetchDashboardData = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const [compsRes, subRes] = await Promise.allSettled([
+        getOrganizationCompanies(),
+        getOrganizationSubscription(),
+      ]);
+
+      if (compsRes.status === 'fulfilled' && compsRes.value) {
+        let list = [];
+        if (Array.isArray(compsRes.value)) {
+          list = compsRes.value;
+        } else if (Array.isArray(compsRes.value.companies)) {
+          list = compsRes.value.companies;
+        } else if (Array.isArray(compsRes.value.data)) {
+          list = compsRes.value.data;
+        }
+        if (list.length > 0) {
+          setLiveCompanies(list);
+        }
+      }
+
+      if (subRes.status === 'fulfilled' && subRes.value) {
+        setLiveSubscription((prev) => ({ ...prev, ...subRes.value }));
+      }
+    } catch (err) {
+      console.warn('Live owner dashboard data fetch warning:', err);
+      setFetchError(err?.message || 'Failed to refresh dashboard metrics.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const effectiveCompanies = liveCompanies.length > 0 ? liveCompanies : companies;
+  const effectiveSubscription = liveSubscription || subscription;
+
   const activeCompanyId =
-    selectedCompany?.id || currentCompany?.id || (companies.length > 0 ? companies[0].id : null);
+  selectedCompany?.id || currentCompany?.id || (effectiveCompanies.length > 0 ? effectiveCompanies[0].id : null);
   const activeCompanyCode =
-    selectedCompany?.code || currentCompany?.code || (companies.length > 0 ? companies[0].code : '');
+  selectedCompany?.code || currentCompany?.code || (effectiveCompanies.length > 0 ? effectiveCompanies[0].code : '');
   const activeCompanyName =
     selectedCompany?.name ||
     currentCompany?.name ||
-    (companies.length > 0 ? companies[0].name : 'Primary Company');
+  (effectiveCompanies.length > 0 ? effectiveCompanies[0].name : 'Primary Company');
 
   const {
     isTrial,
@@ -194,7 +244,7 @@ function OwnerDashboardContent() {
   const orgStatus = organization?.status || 'ACTIVE';
 
   // Subscription plan label formatting
-  const planDisplay = subscription?.planName || (subscription?.planCode ? subscription.planCode.replace(/_/g, ' ') : (isTrial ? 'Free Trial' : 'Enterprise Plan'));
+  const planDisplay = effectiveSubscription?.planName || (effectiveSubscription?.planCode ? effectiveSubscription.planCode.replace(/_/g, ' ') : (isTrial ? 'Free Trial' : 'Enterprise Plan'));
 
   // ── DYNAMIC MODULE LAUNCHERS GENERATION ────────────────────────────────────
   // Does not hardcode to 5 cards: generates dynamically from existing organization API data.
@@ -338,58 +388,76 @@ function OwnerDashboardContent() {
             </Link>
             <button
               type="button"
-              onClick={() => window.location.reload()}
+              onClick={fetchDashboardData}
+              disabled={isLoading}
               title="Refresh metrics"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] text-[#2E3D28] dark:text-[#E6E8EE] text-xs font-semibold shadow-2xs transition-colors"
             >
-              <RefreshCw size={13} className="text-[#485942] dark:text-[#A0A6B5]" />
+              <RefreshCw size={13} className={`text-[#485942] dark:text-[#A0A6B5] ${isLoading ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
             </button>
           </div>
         </section>
 
+        {fetchError && (
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-200">
+            <span>Failed to refresh live organization data: {fetchError}</span>
+            <button
+              type="button"
+              onClick={fetchDashboardData}
+              className="font-semibold underline ml-2 hover:text-amber-950 dark:hover:text-amber-100"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* ── 2. Summary KPI Cards Row (Compact, balanced, and modern enterprise cards) ── */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 
           {/* Card 1: Total Companies */}
-          <div className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider">
-                  Total Companies
-                </span>
-                <div className="w-7 h-7 rounded-lg bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100/60 dark:border-indigo-900/60 flex items-center justify-center shrink-0">
-                  <Building2 size={15} />
+            <Link
+              to="/owner/companies"
+              className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between group"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-[#2E3D28] dark:group-hover:text-white transition-colors">
+                      Total Companies
+                    </span>
+                    <div className="w-7 h-7 rounded-lg bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100/60 dark:border-indigo-900/60 flex items-center justify-center shrink-0">
+                      <Building2 size={15} />
+                    </div>
                 </div>
+                <p className="text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none">
+                  {effectiveCompanies.length}
+                </p>
               </div>
-              <p className="text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none">
-                {companies.length}
-              </p>
-            </div>
-            <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>{companies.length > 0 ? `${companies.length} Active` : '0 Active'}</span>
-              </span>
-              <span
-                className="inline-flex items-center px-1.5 py-0.5 rounded bg-[#EDEEE4] dark:bg-[#1D212C] text-[#485942] dark:text-[#A0A6B5] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[10px] font-mono truncate max-w-[130px]"
-                title={activeCompanyCode ? `Primary: ${activeCompanyCode}` : undefined}
-              >
-                {activeCompanyName && activeCompanyName !== 'Primary Company' ? activeCompanyName : (activeCompanyCode ? `ID: ${activeCompanyCode.slice(0, 8)}…` : 'Default')}
-              </span>
-            </div>
-          </div>
+              <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>{effectiveCompanies.length > 0 ? `${effectiveCompanies.length} Active` : '0 Active'}</span>
+                </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] text-[#485942] dark:text-[#A0A6B5] font-medium group-hover:underline">
+                    <span>View all</span>
+                    <ArrowRight size={11} />
+                  </span>
+              </div>
+        </Link>
 
-          {/* Card 2: Active Modules */}
-          <div className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
+        {/* Card 2: Active Modules */}
+          <Link
+            to="/subscription"
+            className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between group"
+          >
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider">
-                  Active Modules
-                </span>
-                <div className="w-7 h-7 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100/60 dark:border-emerald-900/60 flex items-center justify-center shrink-0">
-                  <Layers size={15} />
-                </div>
+                  <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-[#2E3D28] dark:group-hover:text-white transition-colors">
+                    Active Modules
+                  </span>
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100/60 dark:border-emerald-900/60 flex items-center justify-center shrink-0">
+                    <Layers size={15} />
+                  </div>
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none">
@@ -405,81 +473,80 @@ function OwnerDashboardContent() {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 <span>{entitledCount} Provisioned</span>
               </span>
-              {availableModuleLaunchers.length - entitledCount > 0 ? (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-[#EDEEE4] dark:bg-[#1D212C] text-[#485942] dark:text-[#6B7184] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[10px]">
-                  {availableModuleLaunchers.length - entitledCount} Locked
-                </span>
-              ) : (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100/60 dark:border-emerald-900/60 text-[10px]">
-                  All Active
-                </span>
-              )}
+              <span className="inline-flex items-center gap-1 text-[10px] text-[#485942] dark:text-[#A0A6B5] font-medium group-hover:underline">
+                <span>Manage</span>
+                <ArrowRight size={11} />
+              </span>
             </div>
-          </div>
+      </Link>
 
-          {/* Card 3: Subscription Status */}
-          <div className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider">
+      {/* Card 3: Subscription Status */}
+        <Link
+          to="/subscription"
+          className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between group"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-[#2E3D28] dark:group-hover:text-white transition-colors">
                   Subscription
                 </span>
                 <div className="w-7 h-7 rounded-lg bg-sky-50/80 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-100/60 dark:border-sky-900/60 flex items-center justify-center shrink-0">
                   <CreditCard size={15} />
                 </div>
-              </div>
-              <p className="text-xl sm:text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none truncate capitalize" title={planDisplay}>
-                {planDisplay}
-              </p>
             </div>
-            <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium text-[11px] ${
-                isTrial
-                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/70 dark:border-amber-900/60'
-                  : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60'
+            <p className="text-xl sm:text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none truncate capitalize" title={planDisplay}>
+              {planDisplay}
+            </p>
+          </div>
+          <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium text-[11px] ${isTrial
+                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/70 dark:border-amber-900/60'
+                : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60'
               }`}>
-                <Clock size={11} />
-                <span>{daysRemaining !== null ? `${daysRemaining} days left` : 'Active'}</span>
+              <Clock size={11} />
+              <span>{daysRemaining !== null ? `${daysRemaining} days left` : 'Active'}</span>
+            </span>
+              <span className="inline-flex items-center gap-1 text-[10px] text-[#485942] dark:text-[#A0A6B5] font-medium group-hover:underline">
+                <span>Details</span>
+                <ArrowRight size={11} />
               </span>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-[#EDEEE4] dark:bg-[#1D212C] text-[#485942] dark:text-[#A0A6B5] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[10px] font-mono uppercase">
-                {authContext.accessMode || 'Full'}
-              </span>
-            </div>
           </div>
+    </Link>
 
-          {/* Card 4: Organization Owner Profile */}
-          <div className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider">
-                  Owner Profile
-                </span>
-                <div className="w-7 h-7 rounded-lg bg-[#DCE2CF]/60 dark:bg-[#202922] text-[#2E3D28] dark:text-[#8FA87B] border border-[#D5D8CA] dark:border-[#2E3D31] flex items-center justify-center shrink-0">
-                  <ShieldCheck size={15} />
-                </div>
-              </div>
-              <p className="text-xl sm:text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none truncate" title={ownerName}>
-                {ownerName}
-              </p>
+          {/* Card 4: Organization Owner Profile */ }
+    <Link
+      to="/profile"
+      className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between group"
+    >
+      <div>
+        <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-[#2E3D28] dark:group-hover:text-white transition-colors">
+              Owner Profile
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-[#DCE2CF]/60 dark:bg-[#202922] text-[#2E3D28] dark:text-[#8FA87B] border border-[#D5D8CA] dark:border-[#2E3D31] flex items-center justify-center shrink-0">
+              <ShieldCheck size={15} />
             </div>
-            <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#DCE2CF]/60 dark:bg-[#202922] text-[#2E3D28] dark:text-[#8FA87B] border border-[#D5D8CA] dark:border-[#2E3D31] font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2E3D28] dark:bg-[#8FA87B]"></span>
-                <span>Verified</span>
-              </span>
-              <span
-                className="text-[10px] font-mono text-[#485942] dark:text-[#A0A6B5] truncate max-w-[120px]"
-                title={ownerEmail}
-              >
-                {ownerEmail}
-              </span>
-            </div>
-          </div>
+        </div>
+        <p className="text-xl sm:text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none truncate" title={ownerName}>
+          {ownerName}
+        </p>
+      </div>
+      <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#DCE2CF]/60 dark:bg-[#202922] text-[#2E3D28] dark:text-[#8FA87B] border border-[#D5D8CA] dark:border-[#2E3D31] font-medium">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#2E3D28] dark:bg-[#8FA87B]"></span>
+          <span>Verified</span>
+        </span>
+          <span className="inline-flex items-center gap-1 text-[10px] text-[#485942] dark:text-[#A0A6B5] font-medium group-hover:underline">
+            <span>View Profile</span>
+            <ArrowRight size={11} />
+          </span>
+      </div>
+          </Link >
 
-        </section>
+        </section >
 
-        {/* ── 3. Organization Overview Section (Balanced responsive grid without text overlap) ── */}
-        <section className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+    {/* ── 3. Organization Overview Section (Balanced responsive grid without text overlap) ── */ }
+    < section className = "bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs overflow-hidden" >
           <div className="px-5 py-4 border-b border-[#D5D8CA] dark:border-[#2A2F3D] flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight">Organization Overview</h2>
@@ -518,13 +585,13 @@ function OwnerDashboardContent() {
             </div>
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-[#485942] dark:text-[#6B7184] uppercase tracking-wider">Registered Workspaces</span>
-              <p className="text-xs font-bold text-[#2E3D28] dark:text-[#E6E8EE]">{companies.length} {companies.length === 1 ? 'Workspace' : 'Workspaces'}</p>
+              <p className="text-xs font-bold text-[#2E3D28] dark:text-[#E6E8EE]">{effectiveCompanies.length} {effectiveCompanies.length === 1 ? 'Workspace' : 'Workspaces'}</p>
             </div>
           </div>
-        </section>
+        </section >
 
-        {/* ── 4. Business Modules (Balanced responsive grid with aligned buttons and wrapping descriptions) ── */}
-        <section className="space-y-3.5">
+    {/* ── 4. Business Modules (Balanced responsive grid with aligned buttons and wrapping descriptions) ── */ }
+    < section className = "space-y-3.5" >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
             <div>
               <h2 className="text-base font-display font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight">
@@ -605,10 +672,10 @@ function OwnerDashboardContent() {
               );
             })}
           </div>
-        </section>
+        </section >
 
-        {/* ── 5. Company Management Section ("Your Companies") ── */}
-        <section className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs overflow-hidden">
+    {/* ── 5. Company Management Section ("Your Companies") ── */ }
+    < section className = "bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs overflow-hidden" >
           <div className="p-5 border-b border-[#D5D8CA] dark:border-[#2A2F3D] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-display font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight">
@@ -643,14 +710,14 @@ function OwnerDashboardContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#D5D8CA] dark:divide-[#2A2F3D]">
-                {companies.length === 0 ? (
+                {effectiveCompanies.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-zinc-400 dark:text-[#6B7184]">
                       No companies found. Create a company to get started.
                     </td>
                   </tr>
                 ) : (
-                  companies.map((comp) => {
+                  effectiveCompanies.map((comp) => {
                     const isCurrent =
                       comp.id === activeCompanyId || comp.code === activeCompanyCode;
                     return (
@@ -738,10 +805,10 @@ function OwnerDashboardContent() {
               </tbody>
             </table>
           </div>
-        </section>
+        </section >
 
-        {/* ── 6. Subscription Section (Compact enterprise license card) ── */}
-        <section className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    {/* ── 6. Subscription Section (Compact enterprise license card) ── */ }
+    < section className = "bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" >
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="w-11 h-11 rounded-xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
               <CreditCard size={20} />
@@ -774,22 +841,22 @@ function OwnerDashboardContent() {
               <ArrowRight size={13} />
             </Link>
           </div>
-        </section>
+        </section >
 
-      </div>
+      </div >
 
-      {/* ── Minimalist Clean Footer matching full content width ── */}
-      <footer className="border-t border-[var(--color-border)] bg-[var(--color-surface)] py-4 mt-8">
-        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
-          <p>© {new Date().getFullYear()} Mark2 ERP. All rights reserved.</p>
-          <div className="flex items-center gap-3">
-            <span>Organization: <strong className="text-[var(--color-text-primary)] font-mono">{orgCode || 'ORG'}</strong></span>
-            <span>•</span>
-            <Link to="/subscription" className="hover:text-[var(--color-text-primary)] transition-colors">Subscription & Billing</Link>
-          </div>
+    {/* ── Minimalist Clean Footer matching full content width ── */ }
+    < footer className = "border-t border-[var(--color-border)] bg-[var(--color-surface)] py-4 mt-8" >
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
+        <p>© {new Date().getFullYear()} Mark2 ERP. All rights reserved.</p>
+        <div className="flex items-center gap-3">
+          <span>Organization: <strong className="text-[var(--color-text-primary)] font-mono">{orgCode || 'ORG'}</strong></span>
+          <span>•</span>
+          <Link to="/subscription" className="hover:text-[var(--color-text-primary)] transition-colors">Subscription & Billing</Link>
         </div>
-      </footer>
-    </div>
+      </div>
+      </footer >
+    </div >
   );
 }
 
