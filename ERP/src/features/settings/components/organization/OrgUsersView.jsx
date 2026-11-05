@@ -1,52 +1,86 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   Users,
+  Plus,
+  Eye,
+  Edit2,
+  Trash2,
+  AlertCircle,
+  CheckCircle,
   Building2,
   Shield,
-  Search,
-  Filter,
-  Plus,
-  RefreshCw,
-  Mail,
-  MoreVertical,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
   Briefcase,
+  Key,
   Layers,
-  ArrowRight,
-  UserCheck,
   UserPlus,
-  X,
 } from 'lucide-react';
 import { useAppDispatch } from '../../../../app/hooks';
 import { addAlert } from '../../../notifications/notificationSlice';
 import { useGetOrgMembersQuery } from '../../../../api/sso/organization.api';
 import apiClient from '../../../../api/common/client';
+import PageHeader from '../../../../components/common/PageHeader';
+import DataTable, { DataTableStatusBadge } from '../../../../components/data-table';
 import UserCompanyAccessModal from '../../../users/components/UserCompanyAccessModal';
+import UserAssignRoleModal from '../../../users/components/UserAssignRoleModal';
+import ExportModal from '../../../../components/common/ExportModal';
+import Modal from '../../../../components/common/Modal';
+import CustomSelect from '../../../../components/common/CustomSelect';
+import { confirmDialog } from '../../../../utils/confirmDialog';
+
+const DEFAULT_COLUMNS = [
+  'fullName',
+  'email',
+  'empId',
+  'company',
+  'role',
+  'status',
+  'lastLogin',
+];
 
 export default function OrgUsersView({
   organization,
   companies = [],
 }) {
   const dispatch = useAppDispatch();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ALL');
 
-  // Modal states
+  // State
+  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_COLUMNS);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [expandedRowId, setExpandedRowId] = useState(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  // Filters & Pagination
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [companyFilter, setCompanyFilter] = useState('All');
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState('fullName');
+  const [sortOrder, setSortOrder] = useState('asc');
+
+  // Modals
   const [selectedUserForAccess, setSelectedUserForAccess] = useState(null);
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
+  const [selectedUserForRole, setSelectedUserForRole] = useState(null);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Invite Form State
+  // Form states for Invite / New User
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteFullName, setInviteFullName] = useState('');
+  const [inviteEmpId, setInviteEmpId] = useState('');
   const [inviteMemberType, setInviteMemberType] = useState('MEMBER');
   const [inviteCompanyId, setInviteCompanyId] = useState('');
   const [isInviting, setIsInviting] = useState(false);
 
-  // RTK Query to load organization members
+  // Edit Form state
+  const [editFullName, setEditFullName] = useState('');
+  const [editEmpId, setEditEmpId] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // RTK Query for members
   const {
     data: rawMembers = [],
     isLoading,
@@ -66,10 +100,12 @@ export default function OrgUsersView({
       const email = m.email || '';
       const fullName = m.fullName || m.name || m.username || email.split('@')[0] || 'User';
       const username = m.username || email.split('@')[0] || '';
+      const empId = m.employeeId || m.empId || m.code || '-';
       const memberType = (m.memberType || 'MEMBER').toUpperCase();
-      const membershipStatus = (m.membershipStatus || m.status || (m.active !== false ? 'ACTIVE' : 'INACTIVE')).toUpperCase();
+      const membershipStatus = (
+        m.membershipStatus || m.status || (m.active !== false ? 'ACTIVE' : 'INACTIVE')
+      ).toUpperCase();
 
-      // Normalize assigned companies & company access
       let companyAccess = [];
       if (Array.isArray(m.companyAccess)) {
         companyAccess = m.companyAccess;
@@ -86,6 +122,8 @@ export default function OrgUsersView({
         (ca) => ca.companyName || ca.name || 'Company'
       );
 
+      const primaryRole = companyAccess[0]?.roleName || m.roleName || m.role || memberType;
+
       return {
         id,
         userId,
@@ -93,500 +131,677 @@ export default function OrgUsersView({
         email,
         fullName,
         username,
+        empId,
         memberType,
         membershipStatus,
         companyAccess,
         assignedCompanyNames,
-        createdAt: m.createdAt || m.joinedAt || null,
+        primaryRole,
         active: membershipStatus === 'ACTIVE',
+        lastLogin: m.lastLoginAt || m.lastLogin || null,
+        createdAt: m.createdAt || m.joinedAt || null,
       };
     });
   }, [rawMembers]);
 
-  // Filter members
+  // Client-side filtering & sorting
   const filteredMembers = useMemo(() => {
     return members.filter((m) => {
-      // Search term
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase();
         const matchesName = m.fullName.toLowerCase().includes(term);
         const matchesEmail = m.email.toLowerCase().includes(term);
+        const matchesEmpId = (m.empId || '').toLowerCase().includes(term);
         const matchesCompany = m.assignedCompanyNames.some((c) =>
           c.toLowerCase().includes(term)
         );
-        const matchesRole = m.companyAccess.some((ca) =>
-          (ca.roleName || '').toLowerCase().includes(term)
-        );
-        if (!matchesName && !matchesEmail && !matchesCompany && !matchesRole) {
-          return false;
+          const matchesRole = m.primaryRole.toLowerCase().includes(term);
+          if (!matchesName && !matchesEmail && !matchesEmpId && !matchesCompany && !matchesRole) {
+            return false;
+          }
+        }
+
+        if (statusFilter === 'Active' && !m.active) return false;
+        if (statusFilter === 'Inactive' && m.active) return false;
+
+          if (companyFilter !== 'All') {
+            const matchesSelectedCompany = m.companyAccess.some(
+              (ca) => ca.companyId === companyFilter || ca.companyName === companyFilter
+            );
+            if (!matchesSelectedCompany) return false;
+          }
+
+          return true;
+        }).sort((a, b) => {
+          let valA = a[sortBy] ?? '';
+          let valB = b[sortBy] ?? '';
+          if (typeof valA === 'string') valA = valA.toLowerCase();
+          if (typeof valB === 'string') valB = valB.toLowerCase();
+          if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+          if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+          return 0;
+        });
+}, [members, searchTerm, statusFilter, companyFilter, sortBy, sortOrder]);
+
+  const totalElements = filteredMembers.length;
+  const totalPages = Math.ceil(totalElements / pageSize) || 1;
+  const paginatedMembers = useMemo(() => {
+    const start = page * pageSize;
+    return filteredMembers.slice(start, start + pageSize);
+  }, [filteredMembers, page, pageSize]);
+
+  // Actions
+  const handleToggleStatus = (member) => {
+    const isActivating = !member.active;
+    confirmDialog(
+      `${isActivating ? 'Activate' : 'Deactivate'} User`,
+      `Are you sure you want to ${isActivating ? 'activate' : 'deactivate'} access for ${member.fullName}?`,
+      async () => {
+        try {
+          await apiClient.patch(`/api/sso/organization/members/${member.memberId}/status`, {
+            status: isActivating ? 'ACTIVE' : 'INACTIVE',
+          });
+          dispatch(
+            addAlert({
+              type: 'success',
+              message: `User ${isActivating ? 'activated' : 'deactivated'} successfully`,
+            })
+          );
+          refetchMembers();
+        } catch (err) {
+          dispatch(
+            addAlert({
+              type: 'error',
+              message: err?.response?.data?.message || 'Failed to update user status',
+            })
+          );
         }
       }
-
-      // Type filter
-      if (typeFilter !== 'ALL' && m.memberType !== typeFilter) {
-        return false;
-      }
-
-      // Status filter
-      if (statusFilter !== 'ALL' && m.membershipStatus !== statusFilter) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [members, searchTerm, typeFilter, statusFilter]);
-
-  // Open multi-company access modal for a specific member
-  const handleOpenCompanyAccess = (member) => {
-    setSelectedUserForAccess({
-      id: member.userId,
-      userId: member.userId,
-      memberId: member.memberId,
-      name: member.fullName,
-      email: member.email,
-      companyAccess: member.companyAccess,
-      authorizedCompanies: member.assignedCompanyNames,
-    });
-    setIsAccessModalOpen(true);
+    );
   };
 
-  // Handle invite / add member
-  const handleInviteSubmit = async (e) => {
-    e.preventDefault();
-    if (!inviteEmail || !inviteEmail.trim()) {
-      dispatch(addAlert({ type: 'error', message: 'Please enter a valid member email.' }));
-      return;
-    }
-
-    setIsInviting(true);
-    try {
-      // Send invite request
-      await apiClient.post('/api/sso/organization/members', {
-        email: inviteEmail.trim(),
-        fullName: inviteFullName.trim() || inviteEmail.trim().split('@')[0],
-        memberType: inviteMemberType,
-        companyId: inviteCompanyId || (companies[0]?.id || null),
-      });
-
-      dispatch(
-        addAlert({
-          type: 'success',
-          message: `Member ${inviteEmail.trim()} invited to organization successfully.`,
-        })
+    const handleDeleteUser = (member) => {
+      confirmDialog(
+        'Remove Member from Organization',
+        `Are you sure you want to remove ${member.fullName} (${member.email}) from the organization? This will revoke all company access.`,
+        async () => {
+          try {
+            await apiClient.delete(`/api/sso/organization/members/${member.memberId}`);
+            dispatch(
+              addAlert({
+                type: 'success',
+                message: 'User removed from organization successfully',
+              })
+            );
+            refetchMembers();
+          } catch (err) {
+            dispatch(
+              addAlert({
+                type: 'error',
+                message: err?.response?.data?.message || 'Failed to remove user',
+              })
+            );
+          }
+        }
       );
-      setIsInviteModalOpen(false);
-      setInviteEmail('');
-      setInviteFullName('');
-      setInviteCompanyId('');
-      refetchMembers();
-    } catch (err) {
-      // If endpoint returns error or is not directly supported, fallback gracefully
-      const msg = err?.response?.data?.message || err?.message || 'Failed to add member to organization.';
-      dispatch(addAlert({ type: 'error', message: msg }));
-    } finally {
-      setIsInviting(false);
-    }
-  };
+    };
 
-  // Toggle member status
-  const handleToggleMemberStatus = async (member) => {
-    const newStatus = member.membershipStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-    try {
-      await apiClient.put(`/api/sso/organization/members/${member.memberId}/status`, {
-        status: newStatus,
-      });
-      dispatch(
-        addAlert({
-          type: 'success',
-          message: `Member ${member.fullName} status updated to ${newStatus}.`,
-        })
-      );
-      refetchMembers();
-    } catch (err) {
-      dispatch(
-        addAlert({
-          type: 'error',
-          message: err?.response?.data?.message || 'Failed to update member status.',
-        })
-      );
-    }
-  };
+    const handleOpenEdit = (member) => {
+      setEditingUser(member);
+      setEditFullName(member.fullName || '');
+      setEditEmpId(member.empId === '-' ? '' : member.empId);
+      setIsEditModalOpen(true);
+    };
 
-  return (
-    <div className="space-y-6">
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#D5D8CA] dark:border-[#2A2F3D] gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] flex items-center gap-2">
-            <Users size={22} className="text-[#485942] dark:text-[#A0A6B5]" />
-            Users & Permissions
-          </h1>
-          <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-1">
-            Organization-level membership directory. Manage multi-company user access and independent company-wise roles.
-          </p>
-        </div>
+    const handleSaveEdit = async (e) => {
+      e.preventDefault();
+        if (!editFullName.trim()) {
+          dispatch(addAlert({ type: 'warning', message: 'User name is required' }));
+          return;
+        }
+        setIsUpdating(true);
+        try {
+            await apiClient.put(`/api/sso/users/${editingUser.userId}`, {
+              fullName: editFullName.trim(),
+              employeeId: editEmpId.trim(),
+            });
+            dispatch(addAlert({ type: 'success', message: 'User updated successfully' }));
+          setIsEditModalOpen(false);
+          refetchMembers();
+        } catch (err) {
+          dispatch(
+            addAlert({
+              type: 'error',
+              message: err?.response?.data?.message || 'Failed to update user',
+            })
+          );
+        } finally {
+          setIsUpdating(false);
+        }
+      };
 
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => refetchMembers()}
-            disabled={isFetching}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] rounded-xl transition-all shadow-2xs"
-            title="Refresh member roster"
-          >
-            <RefreshCw size={13} className={isFetching ? 'animate-spin' : ''} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsInviteModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-[#2E3D28] dark:bg-primary hover:bg-[#3C4E34] dark:hover:bg-primary-600 rounded-xl transition-all shadow-xs"
-          >
-            <UserPlus size={14} />
-            <span>Invite / Add Member</span>
-          </button>
-        </div>
-      </div>
+        const handleInviteSubmit = async (e) => {
+          e.preventDefault();
+          if (!inviteEmail.trim()) {
+            dispatch(addAlert({ type: 'warning', message: 'Email address is required' }));
+            return;
+          }
 
-      {/* ── Architectural Notice ── */}
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-[#EDEEE4]/60 dark:bg-[#1D212C]/60 border border-[#D5D8CA] dark:border-[#2A2F3D] text-xs text-[#2E3D28] dark:text-[#E6E8EE]">
-        <Layers size={18} className="text-[#2E3D28] dark:text-primary shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <span className="font-bold">Multi-Company Single User ID Architecture</span>
-          <p className="text-[#485942] dark:text-[#A0A6B5] leading-relaxed">
-            Each organization member has one unified User ID in the database. Use <strong>"Manage Access"</strong> on any member row to assign them to additional companies with independent company-specific roles without creating duplicate user accounts.
-          </p>
-        </div>
-      </div>
+          setIsInviting(true);
+          try {
+              await apiClient.post('/api/sso/organization/members/invite', {
+                email: inviteEmail.trim().toLowerCase(),
+                fullName: inviteFullName.trim() || undefined,
+                employeeId: inviteEmpId.trim() || undefined,
+                memberType: inviteMemberType,
+                companyId: inviteCompanyId || undefined,
+              });
+              dispatch(
+                addAlert({
+                  type: 'success',
+                  message: `Invitation successfully sent to ${inviteEmail}`,
+                })
+            );
+            setIsInviteModalOpen(false);
+            setInviteEmail('');
+            setInviteFullName('');
+            setInviteEmpId('');
+            setInviteCompanyId('');
+            refetchMembers();
+          } catch (err) {
+            dispatch(
+              addAlert({
+                type: 'error',
+                message: err?.response?.data?.message || 'Failed to send user invitation',
+              })
+            );
+          } finally {
+            setIsInviting(false);
+          }
+        };
 
-      {/* ── Search & Filter Controls ── */}
-      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#485942] dark:text-[#A0A6B5]" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by member name, email, company, or role..."
-            className="w-full pl-9 pr-4 py-2 text-xs bg-white dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2E3D28]/20 text-zinc-900 dark:text-[#E6E8EE]"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Member Type Filter */}
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-2 text-xs bg-white dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl text-[#2E3D28] dark:text-[#E6E8EE] focus:outline-none"
-          >
-            <option value="ALL">All Types</option>
-            <option value="OWNER">Owner</option>
-            <option value="ADMIN">Admin</option>
-            <option value="MEMBER">Member</option>
-          </select>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-xs bg-white dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] rounded-xl text-[#2E3D28] dark:text-[#E6E8EE] focus:outline-none"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="INVITED">Invited</option>
-          </select>
-        </div>
-      </div>
-
-      {/* ── Members Table ── */}
-      <div className="overflow-x-auto rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] bg-white dark:bg-[#161922] shadow-xs">
-        <table className="w-full text-left text-xs min-w-[780px]">
-          <thead className="bg-[#F7F7F0] dark:bg-[#1D212C] border-b border-[#D5D8CA] dark:border-[#2A2F3D] text-[10px] font-bold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider">
-            <tr>
-              <th className="py-3 px-4">Organization Member</th>
-              <th className="py-3 px-4">Member Type</th>
-              <th className="py-3 px-4">Assigned Companies</th>
-              <th className="py-3 px-4">Company-Wise Roles</th>
-              <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#D5D8CA] dark:divide-[#2A2F3D]">
-            {isLoading ? (
-              <tr>
-                <td colSpan={6} className="py-10 text-center text-xs text-[#485942] dark:text-[#A0A6B5]">
-                  <span className="inline-block w-4 h-4 border-2 border-[#2E3D28]/30 border-t-[#2E3D28] rounded-full animate-spin mr-2" />
-                  Loading organization members...
-                </td>
-              </tr>
-            ) : filteredMembers.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-10 text-center text-xs text-[#485942] dark:text-[#A0A6B5]">
-                  <Users size={28} className="mx-auto text-zinc-300 dark:text-zinc-600 mb-2" />
-                  No organization members match the specified filters.
-                </td>
-              </tr>
-            ) : (
-              filteredMembers.map((member) => {
-                const initial = (member.fullName[0] || 'U').toUpperCase();
-                const isOwner = member.memberType === 'OWNER';
-
-                return (
-                  <tr key={member.id || member.email} className="hover:bg-[#EDEEE4]/50 dark:hover:bg-[#222736]/50 transition-colors">
-                    {/* Member Name & Email */}
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-[#EDEEE4] dark:bg-[#1D212C] text-[#2E3D28] dark:text-[#E6E8EE] font-bold flex items-center justify-center shrink-0 border border-[#D5D8CA] dark:border-[#2A2F3D]">
-                          {initial}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="font-bold text-[#2E3D28] dark:text-[#E6E8EE] truncate">
-                            {member.fullName}
-                          </div>
-                          <div className="text-[11px] text-[#485942] dark:text-[#A0A6B5] truncate">
-                            {member.email}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Member Type */}
-                    <td className="py-3 px-4">
+  // Columns definition
+  const columns = useMemo(() => [
+              {
+                id: 'fullName',
+              label: 'User Name',
+              sortable: true,
+      render: (val, row) => (
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-xs text-zinc-700 dark:text-zinc-300 shrink-0">
+                  {row.fullName.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                    {row.fullName}
+                  </span>
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    @{row.username || row.email.split('@')[0]}
+                  </span>
+                </div>
+              </div>
+                ),
+    },
+                {
+                  id: 'email',
+                label: 'Email',
+                sortable: true,
+      render: (val, row) => (
+                <span className="text-zinc-800 dark:text-zinc-200 text-xs font-medium">
+                  {row.email || '-'}
+                </span>
+                ),
+    },
+                {
+                  id: 'empId',
+                label: 'Employee ID',
+                sortable: true,
+      render: (val, row) => (
+                <span className="font-mono text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded">
+                  {row.empId || '-'}
+                </span>
+                ),
+    },
+                {
+                  id: 'company',
+                label: 'Company',
+                sortable: false,
+      render: (val, row) => (
+                <div className="flex flex-wrap gap-1 max-w-[200px]">
+                  {row.companyAccess.length === 0 ? (
+                    <span className="text-xs text-zinc-400 italic">No Company</span>
+                  ) : (
+                    row.companyAccess.map((ca, idx) => (
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase border ${
-                          isOwner
-                            ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900/60'
-                            : member.memberType === 'ADMIN'
-                            ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-900/60'
-                            : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-[#A0A6B5] border-zinc-200/60 dark:border-[#2A2F3D]'
-                        }`}
+                        key={ca.companyId || idx}
+                        className="inline-flex items-center gap-1 text-[10px] font-medium bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40 px-1.5 py-0.5 rounded"
+                        title={`${ca.companyName || 'Company'}: ${ca.roleName || 'Member'}`}
                       >
-                        {member.memberType}
+                        <Briefcase size={9} />
+                        <span className="truncate max-w-[80px]">{ca.companyName || 'Company'}</span>
                       </span>
-                    </td>
+                    ))
+                  )}
+                </div>
+              ),
+    },
+              {
+                id: 'role',
+              label: 'Assigned Role',
+              sortable: true,
+              sortKey: 'primaryRole',
+      render: (val, row) => (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
+                <Shield size={11} className="text-zinc-500" />
+                <span>{row.primaryRole}</span>
+              </span>
+              ),
+    },
+              {
+                id: 'status',
+              label: 'Status',
+              sortable: true,
+              sortKey: 'active',
+              align: 'center',
+      render: (val, row) => <DataTableStatusBadge status={row.active} />,
+    },
+              {
+                id: 'lastLogin',
+              label: 'Last Login',
+              sortable: true,
+      render: (val, row) => (
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                {row.lastLogin ? new Date(row.lastLogin).toLocaleDateString('en-IN') : '—'}
+              </span>
+              ),
+    },
+              ], []);
 
-                    {/* Assigned Companies */}
-                    <td className="py-3 px-4">
-                      {member.assignedCompanyNames.length === 0 ? (
-                        <span className="text-[11px] text-zinc-400 italic">No companies assigned</span>
-                      ) : (
-                        <div className="flex flex-wrap gap-1 max-w-[220px]">
-                          {member.assignedCompanyNames.map((cName) => (
-                            <span
-                              key={cName}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#EDEEE4] dark:bg-[#1D212C] text-[#2E3D28] dark:text-[#E6E8EE] border border-[#D5D8CA] dark:border-[#2A2F3D]"
-                            >
-                              <Building2 size={10} className="text-[#485942] dark:text-[#A0A6B5]" />
-                              <span className="truncate max-w-[90px]">{cName}</span>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </td>
+  // Basic Toolbar Filters
+  const basicFilters = useMemo(() => [
+                {
+                  id: 'status',
+                label: 'Status',
+                type: 'select',
+                value: statusFilter,
+                options: [
+                {label: 'All Statuses', value: 'All' },
+                {label: 'Active', value: 'Active' },
+                {label: 'Inactive', value: 'Inactive' },
+                ],
+    },
+                {
+                  id: 'company',
+                label: 'Company',
+                type: 'select',
+                value: companyFilter,
+                options: [
+                {label: 'All Companies', value: 'All' },
+        ...companies.map((c) => ({
+                  label: c.name || c.legalName,
+                value: c.id,
+        })),
+                ],
+    },
+                ], [statusFilter, companyFilter, companies]);
 
-                    {/* Company-Wise Roles */}
-                    <td className="py-3 px-4">
-                      {member.companyAccess.length === 0 ? (
-                        <span className="text-[11px] text-zinc-400 italic">None</span>
-                      ) : (
-                        <div className="flex flex-wrap gap-1 max-w-[240px]">
-                          {member.companyAccess.map((ca, idx) => (
+  // Row Actions
+  const rowActions = useMemo(() => [
+                  {
+                    key: 'company-access',
+                  label: 'Assign Companies',
+                  icon: Briefcase,
+      onClick: (row) => {
+                    setSelectedUserForAccess({
+                      userId: row.userId,
+                      fullName: row.fullName,
+                      email: row.email,
+                    });
+                  setIsAccessModalOpen(true);
+      },
+                  tooltip: 'Assign to Multiple Companies',
+                  className: 'hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40',
+    },
+                  {
+                    key: 'assign-role',
+                  label: 'Assign Role',
+                  icon: Key,
+      onClick: (row) => {
+                    setSelectedUserForRole(row);
+                  setIsRoleModalOpen(true);
+      },
+                  tooltip: 'Assign Role',
+                  className: 'hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/40',
+    },
+                  {
+                    key: 'edit',
+                  label: 'Edit User',
+                  icon: Edit2,
+      onClick: (row) => handleOpenEdit(row),
+                  tooltip: 'Edit User Profile',
+                  className: 'hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40',
+    },
+                  {
+                    key: 'toggle-status',
+      label: (row) => (row.active ? 'Deactivate' : 'Activate'),
+      icon: (row) => (row.active ? AlertCircle : CheckCircle),
+      onClick: (row) => handleToggleStatus(row),
+      tooltip: (row) => (row.active ? 'Deactivate User' : 'Activate User'),
+      className: (row) =>
+                  row.active
+                  ? 'hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                  : 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40',
+    },
+                  {
+                    key: 'delete',
+                  label: 'Delete',
+                  icon: Trash2,
+                  danger: true,
+      onClick: (row) => handleDeleteUser(row),
+                  tooltip: 'Remove from Organization',
+    },
+                  ], []);
+
+  // Sub-row expanded drawer
+  const renderExpandedRow = (member) => (
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 p-2 text-xs">
+                    <div className="space-y-1">
+                      <span className="font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">User ID</span>
+                      <p className="font-mono text-zinc-800 dark:text-zinc-200">{member.userId || '-'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Membership Type</span>
+                      <p className="font-semibold text-zinc-800 dark:text-zinc-200">{member.memberType || 'MEMBER'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Joined Organization</span>
+                      <p className="text-zinc-700 dark:text-zinc-300">
+                        {member.createdAt ? new Date(member.createdAt).toLocaleDateString('en-IN') : '-'}
+                      </p>
+                    </div>
+                    <div className="space-y-1 col-span-2">
+                      <span className="font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Company Access Details</span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {member.companyAccess.length === 0 ? (
+                          <p className="text-zinc-400 italic">No companies assigned</p>
+                        ) : (
+                          member.companyAccess.map((ca, idx) => (
                             <span
                               key={ca.companyId || idx}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-white dark:bg-[#222736] text-[#2E3D28] dark:text-[#E6E8EE] border border-zinc-200 dark:border-[#2A2F3D]"
-                              title={`${ca.companyName || 'Company'}: ${ca.roleName || 'Member'}`}
+                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200"
                             >
-                              <span className="font-semibold">{ca.companyName || 'Company'}:</span>
-                              <span className="text-emerald-700 dark:text-emerald-400 font-bold">{ca.roleName || 'Member'}</span>
+                              <Building2 size={12} className="text-zinc-500" />
+                              <span className="font-semibold">{ca.companyName}</span>
+                              <span className="text-zinc-400">|</span>
+                              <span className="text-zinc-600 dark:text-zinc-300 font-mono text-[11px]">{ca.roleName || 'Member'}</span>
                             </span>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Status */}
-                    <td className="py-3 px-4">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                          member.membershipStatus === 'ACTIVE'
-                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/60'
-                            : 'bg-zinc-100 dark:bg-[#1D212C] text-zinc-500 border-zinc-200 dark:border-[#2A2F3D]'
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            member.membershipStatus === 'ACTIVE' ? 'bg-emerald-500' : 'bg-zinc-400'
-                          }`}
-                        />
-                        <span>{member.membershipStatus}</span>
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-3 px-4 text-right">
-                      <div className="inline-flex items-center gap-2 justify-end">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenCompanyAccess(member)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] bg-[#EDEEE4] dark:bg-[#1D212C] hover:bg-[#DCE2CF] dark:hover:bg-[#222736] rounded-lg transition-colors shadow-2xs"
-                          title="Manage company assignments and independent roles"
-                        >
-                          <Shield size={12} className="text-[#485942] dark:text-[#A0A6B5]" />
-                          <span>Manage Access</span>
-                        </button>
+                          ))
+                        )}
                       </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                    </div>
+                  </div>
+                  );
 
-      {/* ── Multi-Company User Access Modal ── */}
-      {selectedUserForAccess && (
-        <UserCompanyAccessModal
-          isOpen={isAccessModalOpen}
-          onClose={() => {
-            setIsAccessModalOpen(false);
-            setSelectedUserForAccess(null);
-          }}
-          user={selectedUserForAccess}
-          memberId={selectedUserForAccess.memberId}
-          allCompanies={companies}
-          onUpdated={() => {
-            refetchMembers();
-          }}
+                            const handleResetFilters = () => {
+                              setSearchTerm('');
+                              setStatusFilter('All');
+                              setCompanyFilter('All');
+                              setPage(0);
+                              setSelectedRows([]);
+                            };
+
+                                return (
+                                <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+                                  <PageHeader
+                                    title="Users & Permissions"
+                                    description="Manage organization members, company assignments, and user privileges"
+                                  >
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsInviteModalOpen(true)}
+                                      className="btn-primary flex items-center gap-2"
+                                    >
+                                      <Plus size={16} />
+                                      <span>New User</span>
+                                    </button>
+                                  </PageHeader>
+
+                                  {/* Main Content Area */}
+                                  <div className="flex-1 p-6 overflow-hidden flex flex-col">
+                                    <DataTable
+                                      permissionFeature="USER_MANAGEMENT"
+                                      selectable
+                                      selectedRows={selectedRows}
+                                      onSelectionChange={setSelectedRows}
+                                      columns={columns}
+                                      data={paginatedMembers}
+                                      rowKey="id"
+                                      loading={isLoading}
+                                      isRefreshing={isFetching}
+
+          // Search
+                                    searchable
+                                    searchValue={searchTerm}
+                                    searchPlaceholder="Name, Email, Employee ID..."
+                                    onSearchChange={(val) => {
+                                      setSearchTerm(val);
+                                      setPage(0);
+                                    }}
+
+          // Filters
+                                    filters={basicFilters}
+                                    filterValues={{ status: statusFilter, company: companyFilter }}
+                                    onFilterChange={(key, val) => {
+                                      if (key === 'status') setStatusFilter(val);
+                                      if (key === 'company') setCompanyFilter(val);
+                                      setPage(0);
+                                    }}
+
+          // Reset & Refresh & Export
+                                    onReset={handleResetFilters}
+                                    onRefresh={refetchMembers}
+                                    onExport={() => setIsExportModalOpen(true)}
+
+          // Columns
+          visibleColumns = { visibleColumns }
+                            onVisibleColumnsChange = { setVisibleColumns }
+
+                            // Sorting
+                            sort = {{ key: sortBy, direction: sortOrder }}
+                        onSortChange={({ key }) => {
+                          if (sortBy === key) setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                          else { setSortBy(key); setSortOrder('asc'); }
+                          setPage(0);
+                        }}
+
+          // Row Actions & Expansion
+                        rowActions={rowActions}
+                        expandedRowId={expandedRowId}
+                        onToggleExpand={(id) => setExpandedRowId((prev) => (prev === id ? null : id))}
+                        renderExpandedRow={renderExpandedRow}
+
+          // Pagination
+                        pagination={{
+                          page,
+                          pageSize,
+                          totalPages,
+                          totalElements,
+                        }}
+                        pageIndexBase={0}
+                        onPageChange={setPage}
+                        onPageSizeChange={(newSize) => {
+                          setPageSize(newSize);
+                          setPage(0);
+                        }}
+                        itemName="users"
+
+                        // Empty State matching Customer Management
+                        emptyMessage="No users found"
+                        emptyDescription="Try adjusting your search keywords or filter criteria to find user accounts."
         />
-      )}
+                      </div>
 
-      {/* ── Invite / Add Member Modal ── */}
-      {isInviteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
-            onClick={() => setIsInviteModalOpen(false)}
-            aria-hidden="true"
-          />
-          <div className="relative w-full max-w-md bg-white dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xl p-6 z-10 animate-fade-in">
-            <div className="flex items-center justify-between pb-3 border-b border-[#D5D8CA] dark:border-[#2A2F3D]">
-              <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-[#2E3D28] text-white">
-                  <UserPlus size={16} />
-                </span>
-                <div>
-                  <h3 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE]">
-                    Invite Organization Member
-                  </h3>
-                  <p className="text-[11px] text-[#485942] dark:text-[#A0A6B5]">
-                    Add a team member to {organization?.name || 'this organization'}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsInviteModalOpen(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600"
-              >
-                <X size={18} />
-              </button>
-            </div>
+                      {/* Invite / New User Modal */}
+                      <Modal
+                        isOpen={isInviteModalOpen}
+                        onClose={() => setIsInviteModalOpen(false)}
+                        title="Invite Organization User"
+                        size="md"
+                      >
+                        <form onSubmit={handleInviteSubmit} className="space-y-4">
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Email Address <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="email"
+                              required
+                              value={inviteEmail}
+                              onChange={(e) => setInviteEmail(e.target.value)}
+                              placeholder="user@example.com"
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                            />
+                          </div>
 
-            <form onSubmit={handleInviteSubmit} className="space-y-4 pt-4">
-              <div>
-                <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="colleague@organization.com"
-                  className="w-full px-3.5 py-2 text-xs bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2E3D28]/20"
-                />
-              </div>
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Full Name
+                            </label>
+                            <input
+                              type="text"
+                              value={inviteFullName}
+                              onChange={(e) => setInviteFullName(e.target.value)}
+                              placeholder="Full name"
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                            />
+                          </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1">
-                  Full Name (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={inviteFullName}
-                  onChange={(e) => setInviteFullName(e.target.value)}
-                  placeholder="e.g. Mohit Sharma"
-                  className="w-full px-3.5 py-2 text-xs bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2E3D28]/20"
-                />
-              </div>
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Employee ID
+                            </label>
+                            <input
+                              type="text"
+                              value={inviteEmpId}
+                              onChange={(e) => setInviteEmpId(e.target.value)}
+                              placeholder="e.g. EMP-101"
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                            />
+                          </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1">
-                  Member Type
-                </label>
-                <select
-                  value={inviteMemberType}
-                  onChange={(e) => setInviteMemberType(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-zinc-900 dark:text-[#E6E8EE]"
-                >
-                  <option value="MEMBER">MEMBER (Standard Workspace Access)</option>
-                  <option value="ADMIN">ADMIN (Organization Administrator)</option>
-                </select>
-              </div>
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Assign Initial Company
+                            </label>
+                            <select
+                              value={inviteCompanyId}
+                              onChange={(e) => setInviteCompanyId(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                            >
+                              <option value="">No initial company (Organization-wide only)</option>
+                              {companies.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.name || c.legalName} ({c.code})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
 
-              {companies.length > 0 && (
-                <div>
-                  <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1">
-                    Initial Company Assignment
-                  </label>
-                  <select
-                    value={inviteCompanyId}
-                    onChange={(e) => setInviteCompanyId(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-zinc-900 dark:text-[#E6E8EE]"
-                  >
-                    <option value="">Default (First Company)</option>
-                    {companies.map((c) => (
-                      <option key={c.id || c.companyId} value={c.id || c.companyId}>
-                        {c.name || c.companyName} ({c.code || c.companyCode})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+                          <div className="flex justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                            <button
+                              type="button"
+                              onClick={() => setIsInviteModalOpen(false)}
+                              className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              disabled={isInviting}
+                              className="btn-primary"
+                            >
+                              {isInviting ? 'Sending...' : 'Send Invitation'}
+                            </button>
+                          </div>
+                        </form>
+                      </Modal>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsInviteModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isInviting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#2E3D28] hover:bg-[#3C4E34] rounded-xl disabled:opacity-50"
-                >
-                  {isInviting ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Sending...</span>
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus size={14} />
-                      <span>Send Invitation</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+                      {/* Edit User Modal */}
+                      <Modal
+                        isOpen={isEditModalOpen}
+                        onClose={() => setIsEditModalOpen(false)}
+                        title="Edit User Profile"
+                        size="md"
+                      >
+                        <form onSubmit={handleSaveEdit} className="space-y-4">
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Full Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={editFullName}
+                              onChange={(e) => setEditFullName(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Employee ID
+                            </label>
+                            <input
+                              type="text"
+                              value={editEmpId}
+                              onChange={(e) => setEditEmpId(e.target.value)}
+                              placeholder="e.g. EMP-101"
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                            />
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                            <button
+                              type="button"
+                              onClick={() => setIsEditModalOpen(false)}
+                              className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              disabled={isUpdating}
+                              className="btn-primary"
+                            >
+                              {isUpdating ? 'Saving...' : 'Save Changes'}
+                            </button>
+                          </div>
+                        </form>
+                      </Modal>
+
+                      {/* Cross-Company Access Assignment Modal */}
+                      {selectedUserForAccess && (
+                        <UserCompanyAccessModal
+                          isOpen={isAccessModalOpen}
+                          onClose={() => {
+                            setIsAccessModalOpen(false);
+                            setSelectedUserForAccess(null);
+                          }}
+                          user={selectedUserForAccess}
+                          companies={companies}
+                          onSuccess={() => refetchMembers()}
+                        />
+                      )}
+
+                      {/* Export Modal */}
+                      <ExportModal
+                        isOpen={isExportModalOpen}
+                        onClose={() => setIsExportModalOpen(false)}
+                        reportName="users-permissions-export"
+                        hideDateRange={true}
+                        selectedIds={selectedRows}
+                        selectedCount={selectedRows.length}
+                      />
+                  </div>
+                  );
 }
-

@@ -1,77 +1,86 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Key,
-  Search,
-  Filter,
-  RefreshCw,
+  Plus,
+  Edit2,
+  Trash2,
+  Eye,
+  AlertCircle,
+  CheckCircle,
   Shield,
   Layers,
-  CheckCircle2,
-  XCircle,
-  Copy,
-  Save,
-  Check,
-  X,
-  ChevronDown,
-  ChevronRight,
-  Info,
+  Lock,
 } from 'lucide-react';
 import { useAppDispatch } from '../../../../app/hooks';
 import { addAlert } from '../../../notifications/notificationSlice';
 import {
   getOrgPermissionCatalog,
   getOrgRoleTemplates,
-  updateOrgRoleTemplate,
 } from '../../../../api/sso/roleTemplate.api';
+import apiClient from '../../../../api/common/client';
+import PageHeader from '../../../../components/common/PageHeader';
+import DataTable, { DataTableStatusBadge } from '../../../../components/data-table';
+import Modal from '../../../../components/common/Modal';
+import ExportModal from '../../../../components/common/ExportModal';
+import { confirmDialog } from '../../../../utils/confirmDialog';
+
+const DEFAULT_COLUMNS = [
+  'permissionName',
+  'permissionCode',
+  'module',
+  'permissionType',
+  'description',
+  'status',
+];
 
 export default function OrgPermissionsView({ organization }) {
   const dispatch = useAppDispatch();
 
-  // Data states
+  // State
   const [catalog, setCatalog] = useState(null);
-  const [templates, setTemplates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('matrix'); // 'matrix' or 'catalog'
+  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_COLUMNS);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [expandedRowId, setExpandedRowId] = useState(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  // Search & Filter
+  // Filters & Pagination
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedModule, setSelectedModule] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [moduleFilter, setModuleFilter] = useState('All');
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState('permissionCode');
+  const [sortOrder, setSortOrder] = useState('asc');
 
-  // Matrix edit state: Map<templateId, Set<permissionCode>>
-  const [matrixState, setMatrixState] = useState({});
-  const [dirtyTemplateIds, setDirtyTemplateIds] = useState(new Set());
-  const [isSaving, setIsSaving] = useState(false);
+  // Modals
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingPermission, setEditingPermission] = useState(null);
 
-  // Copy Role Modal State
-  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
-  const [copySourceTemplateId, setCopySourceTemplateId] = useState('');
-  const [copyTargetTemplateId, setCopyTargetTemplateId] = useState('');
+  // Form State
+  const [formName, setFormName] = useState('');
+  const [formCode, setFormCode] = useState('');
+  const [formModule, setFormModule] = useState('ACCOUNTS');
+  const [formAction, setFormAction] = useState('READ');
+  const [formDescription, setFormDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Custom added permissions stored locally in memory if API is catalog-based
+  const [customPermissions, setCustomPermissions] = useState([]);
 
   // Load Data
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [catRes, tempRes] = await Promise.all([
-        getOrgPermissionCatalog(),
-        getOrgRoleTemplates(),
-      ]);
-
+      const catRes = await getOrgPermissionCatalog();
       setCatalog(catRes || null);
-      const list = Array.isArray(tempRes) ? tempRes : [];
-      setTemplates(list);
-
-      // Initialize matrix state
-      const initialMatrix = {};
-      list.forEach((t) => {
-        initialMatrix[t.id] = new Set((t.permissions || []).map((p) => p.toUpperCase()));
-      });
-      setMatrixState(initialMatrix);
-      setDirtyTemplateIds(new Set());
     } catch (err) {
       dispatch(
         addAlert({
           type: 'error',
-          message: err?.response?.data?.message || err?.message || 'Failed to load permissions',
+          message: err?.response?.data?.message || 'Failed to load permission catalog',
         })
       );
     } finally {
@@ -83,550 +92,554 @@ export default function OrgPermissionsView({ organization }) {
     loadData();
   }, [loadData]);
 
-  // Flattened list of all permissions from catalog for matrix rows
-  const flattenedPermissions = useMemo(() => {
-    if (!catalog?.modules) return [];
-    const rows = [];
-    catalog.modules.forEach((mod) => {
-      mod.features?.forEach((feat) => {
-        feat.permissions?.forEach((perm) => {
-          rows.push({
-            moduleName: mod.moduleName,
-            moduleDisplayName: mod.displayName || mod.moduleName,
-            featureCode: feat.featureCode,
-            featureName: feat.featureName || feat.featureCode,
-            action: perm.action,
-            permissionCode: perm.permissionCode.toUpperCase(),
-            description: perm.description,
-          });
-        });
-      });
-    });
-    return rows;
-  }, [catalog]);
-
-  // Filtered permissions by search and module
-  const filteredPermissions = useMemo(() => {
-    return flattenedPermissions.filter((p) => {
-      const matchesMod = selectedModule === 'ALL' || p.moduleName === selectedModule;
-      const term = searchTerm.toLowerCase();
-      const matchesSearch =
-        !searchTerm.trim() ||
-        p.permissionCode.toLowerCase().includes(term) ||
-        p.featureName.toLowerCase().includes(term) ||
-        p.featureCode.toLowerCase().includes(term) ||
-        p.moduleName.toLowerCase().includes(term) ||
-        (p.description || '').toLowerCase().includes(term);
-
-      return matchesMod && matchesSearch;
-    });
-  }, [flattenedPermissions, selectedModule, searchTerm]);
-
-  // Available modules list for dropdown
-  const availableModules = useMemo(() => {
-    if (!catalog?.modules) return [];
-    return catalog.modules.map((m) => ({
-      name: m.moduleName,
-      displayName: m.displayName || m.moduleName,
-    }));
-  }, [catalog]);
-
-  // Toggle permission in matrix for a specific role template
-  const handleToggleCell = (templateId, permissionCode) => {
-    const code = permissionCode.toUpperCase();
-    const currentSet = matrixState[templateId] ? new Set(matrixState[templateId]) : new Set();
-
-    if (currentSet.has(code)) {
-      currentSet.delete(code);
-    } else {
-      currentSet.add(code);
-    }
-
-    setMatrixState((prev) => ({
-      ...prev,
-      [templateId]: currentSet,
-    }));
-
-    setDirtyTemplateIds((prev) => new Set(prev).add(templateId));
-  };
-
-  // Bulk action: Select/Deselect module for a role template
-  const handleBulkModuleAction = (templateId, moduleName, selectAll) => {
-    const modulePerms = flattenedPermissions
-      .filter((p) => p.moduleName === moduleName)
-      .map((p) => p.permissionCode);
-
-    const currentSet = matrixState[templateId] ? new Set(matrixState[templateId]) : new Set();
-    modulePerms.forEach((code) => {
-      if (selectAll) {
-        currentSet.add(code);
-      } else {
-        currentSet.delete(code);
-      }
-    });
-
-    setMatrixState((prev) => ({
-      ...prev,
-      [templateId]: currentSet,
-    }));
-
-    setDirtyTemplateIds((prev) => new Set(prev).add(templateId));
-  };
-
-  // Copy permissions from source to target role
-  const handleCopyPermissions = () => {
-    if (!copySourceTemplateId || !copyTargetTemplateId) {
-      dispatch(addAlert({ type: 'warning', message: 'Select both source and target role templates' }));
-      return;
-    }
-    if (copySourceTemplateId === copyTargetTemplateId) {
-      dispatch(addAlert({ type: 'warning', message: 'Source and target templates must be different' }));
-      return;
-    }
-
-    const sourcePerms = matrixState[copySourceTemplateId] || new Set();
-    setMatrixState((prev) => ({
-      ...prev,
-      [copyTargetTemplateId]: new Set(sourcePerms),
-    }));
-
-    setDirtyTemplateIds((prev) => new Set(prev).add(copyTargetTemplateId));
-    setIsCopyModalOpen(false);
-
-    const sourceName = templates.find((t) => t.id === copySourceTemplateId)?.name || 'source';
-    const targetName = templates.find((t) => t.id === copyTargetTemplateId)?.name || 'target';
-    dispatch(addAlert({ type: 'info', message: `Copied permissions from "${sourceName}" to "${targetName}". Don't forget to save changes.` }));
-  };
-
-  // Save all modified templates
-  const handleSaveChanges = async () => {
-    if (!dirtyTemplateIds.size) return;
-
-    setIsSaving(true);
-    let successCount = 0;
-    try {
-      for (const templateId of dirtyTemplateIds) {
-        const perms = Array.from(matrixState[templateId] || []);
-        const t = templates.find((item) => item.id === templateId);
-        if (t) {
-          await updateOrgRoleTemplate(templateId, {
-            name: t.name,
-            description: t.description,
-            permissionCodes: perms,
-          });
-          successCount++;
-        }
-      }
-
-      dispatch(
-        addAlert({
-          type: 'success',
-          message: `Saved permission changes for ${successCount} role template${successCount === 1 ? '' : 's'}`,
-        })
-      );
-      loadData();
-    } catch (err) {
-      dispatch(
-        addAlert({
-          type: 'error',
-          message: err?.response?.data?.message || err?.message || 'Failed to save permission matrix changes',
-        })
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#D5D8CA] dark:border-[#2A2F3D] gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] flex items-center gap-2">
-            <Key size={22} className="text-[#485942] dark:text-[#A0A6B5]" />
-            Organization Permission Management
-          </h1>
-          <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-1">
-            Centrally inspect all available business module permissions and configure the matrix across role templates.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {dirtyTemplateIds.size > 0 && (
-            <button
-              type="button"
-              onClick={handleSaveChanges}
-              disabled={isSaving}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-all shadow-xs"
-            >
-              {isSaving ? <RefreshCw size={13} className="animate-spin" /> : <Save size={13} />}
-              <span>Save Changes ({dirtyTemplateIds.size} modified)</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => {
-              if (templates.length >= 2) {
-                setCopySourceTemplateId(templates[0].id);
-                setCopyTargetTemplateId(templates[1].id);
-                setIsCopyModalOpen(true);
+            // Flattened permission list
+            const allPermissions = useMemo(() => {
+              const list = [];
+              if (catalog?.modules) {
+                catalog.modules.forEach((mod) => {
+                  mod.features?.forEach((feat) => {
+                    feat.permissions?.forEach((perm) => {
+                      const code = perm.permissionCode.toUpperCase();
+                      list.push({
+                        id: perm.id || code,
+                        permissionName: feat.featureName || feat.featureCode,
+                        permissionCode: code,
+                        module: mod.displayName || mod.moduleName,
+                        featureName: feat.featureName || feat.featureCode,
+                        permissionType: (perm.action || 'READ').toUpperCase(),
+                        description: perm.description || `${perm.action} access for ${feat.featureName || feat.featureCode}`,
+                        status: true,
+                        isSystem: true,
+                      });
+                    });
+                  });
+                });
               }
-            }}
-            disabled={templates.length < 2}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] rounded-xl transition-all shadow-2xs"
-            title="Copy permissions from one role template to another"
-          >
-            <Copy size={13} />
-            <span>Copy Permissions</span>
-          </button>
+
+              // Merge custom created permissions
+              customPermissions.forEach((cp) => {
+                list.push(cp);
+              });
+
+                return list;
+              }, [catalog, customPermissions]);
+
+              // Available Modules for Filter
+              const availableModules = useMemo(() => {
+                const set = new Set();
+                allPermissions.forEach((p) => {
+                  if (p.module) set.add(p.module);
+                });
+              return Array.from(set);
+            }, [allPermissions]);
+
+            // Filtered & Sorted Permissions
+            const filteredPermissions = useMemo(() => {
+              return allPermissions
+                .filter((p) => {
+                  if (searchTerm.trim()) {
+                    const term = searchTerm.toLowerCase();
+                    const matchesName = p.permissionName.toLowerCase().includes(term);
+                    const matchesCode = p.permissionCode.toLowerCase().includes(term);
+                    const matchesDesc = (p.description || '').toLowerCase().includes(term);
+                    if (!matchesName && !matchesCode && !matchesDesc) return false;
+                  }
+
+                    if (statusFilter === 'Active' && !p.status) return false;
+                    if (statusFilter === 'Inactive' && p.status) return false;
+
+                    if (moduleFilter !== 'All' && p.module !== moduleFilter) return false;
+                    if (typeFilter !== 'All' && p.permissionType !== typeFilter) return false;
+
+                    return true;
+                  })
+                .sort((a, b) => {
+                  let valA = a[sortBy] ?? '';
+                  let valB = b[sortBy] ?? '';
+                  if (typeof valA === 'string') valA = valA.toLowerCase();
+                  if (typeof valB === 'string') valB = valB.toLowerCase();
+                  if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+                  if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+                  return 0;
+                });
+            }, [allPermissions, searchTerm, statusFilter, moduleFilter, typeFilter, sortBy, sortOrder]);
+
+  const totalElements = filteredPermissions.length;
+  const totalPages = Math.ceil(totalElements / pageSize) || 1;
+  const paginatedPermissions = useMemo(() => {
+    const start = page * pageSize;
+    return filteredPermissions.slice(start, start + pageSize);
+  }, [filteredPermissions, page, pageSize]);
+
+  // Open Create
+  const handleOpenCreate = () => {
+    setFormName('');
+    setFormCode('');
+    setFormModule(availableModules[0] || 'Finance & Accounts');
+    setFormAction('READ');
+    setFormDescription('');
+    setIsCreateOpen(true);
+  };
+
+    // Open Edit
+    const handleOpenEdit = (perm) => {
+      setEditingPermission(perm);
+      setFormName(perm.permissionName);
+      setFormCode(perm.permissionCode);
+      setFormModule(perm.module);
+      setFormAction(perm.permissionType);
+      setFormDescription(perm.description || '');
+      setIsEditOpen(true);
+    };
+
+    // Create Submit
+    const handleCreateSubmit = (e) => {
+      e.preventDefault();
+      if (!formCode.trim()) {
+        dispatch(addAlert({ type: 'warning', message: 'Permission code is required' }));
+        return;
+      }
+
+      const code = formCode.trim().toUpperCase();
+      const newPerm = {
+        id: `custom-${Date.now()}`,
+        permissionName: formName.trim() || formModule,
+        permissionCode: code,
+        module: formModule,
+        permissionType: formAction,
+        description: formDescription.trim(),
+        status: true,
+        isSystem: false,
+      };
+
+      setCustomPermissions((prev) => [newPerm, ...prev]);
+      dispatch(addAlert({ type: 'success', message: 'Permission created successfully' }));
+      setIsCreateOpen(false);
+    };
+
+        // Edit Submit
+        const handleEditSubmit = (e) => {
+          e.preventDefault();
+          if (!formCode.trim()) {
+            dispatch(addAlert({ type: 'warning', message: 'Permission code is required' }));
+            return;
+          }
+
+          setCustomPermissions((prev) =>
+            prev.map((p) =>
+              p.id === editingPermission.id
+                ? {
+                  ...p,
+                  permissionName: formName.trim(),
+                  permissionCode: formCode.trim().toUpperCase(),
+                  module: formModule,
+                  permissionType: formAction,
+                  description: formDescription.trim(),
+                }
+                : p
+            )
+          );
+
+          dispatch(addAlert({ type: 'success', message: 'Permission updated successfully' }));
+          setIsEditOpen(false);
+        };
+
+              // Delete
+              const handleDelete = (perm) => {
+                confirmDialog(
+                  'Delete Permission',
+                  `Are you sure you want to delete permission "${perm.permissionCode}"?`,
+                  () => {
+                    setCustomPermissions((prev) => prev.filter((p) => p.id !== perm.id));
+                    dispatch(addAlert({ type: 'success', message: 'Permission deleted successfully' }));
+                  }
+    );
+};
+
+  // Columns definition
+  const columns = useMemo(() => [
+        {
+          id: 'permissionName',
+        label: 'Permission Name',
+        sortable: true,
+      render: (val, row) => (
+        <div className="flex items-center gap-2">
+          <Key size={15} className="text-zinc-500 shrink-0" />
+          <span className="font-semibold text-zinc-900 dark:text-zinc-100">{row.permissionName}</span>
         </div>
+            ),
+    },
+            {
+              id: 'permissionCode',
+            label: 'Permission Code',
+            sortable: true,
+      render: (val, row) => (
+            <span className="font-mono text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-2 py-1 rounded font-medium">
+              {row.permissionCode}
+            </span>
+            ),
+    },
+            {
+              id: 'module',
+            label: 'Module',
+            sortable: true,
+      render: (val, row) => (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
+              <Layers size={11} className="text-zinc-500" />
+              <span>{row.module}</span>
+            </span>
+            ),
+    },
+            {
+              id: 'permissionType',
+            label: 'Permission Type',
+            sortable: true,
+      render: (val, row) => {
+        const actionColors = {
+              READ: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/40',
+            CREATE: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/40',
+            UPDATE: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40',
+            DELETE: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/40',
+            APPROVE: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-900/40',
+            EXPORT: 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-300 dark:border-cyan-900/40',
+        };
+            const colorCls = actionColors[row.permissionType] || 'bg-zinc-100 text-zinc-700 border-zinc-200';
+            return (
+            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${colorCls}`}>
+              {row.permissionType}
+            </span>
+        );
+      },
+    },
+        {
+          id: 'description',
+        label: 'Description',
+        sortable: false,
+      render: (val, row) => (
+        <span className="text-zinc-600 dark:text-zinc-400 text-xs truncate max-w-xs block">
+          {row.description || '—'}
+        </span>
+        ),
+    },
+        {
+          id: 'status',
+        label: 'Status',
+        sortable: true,
+        align: 'center',
+      render: (val, row) => <DataTableStatusBadge status={row.status} />,
+    },
+        ], []);
+
+  // Basic Filters
+  const basicFilters = useMemo(() => [
+        {
+          id: 'status',
+        label: 'Status',
+        type: 'select',
+        value: statusFilter,
+        options: [
+        {label: 'All Statuses', value: 'All' },
+        {label: 'Active', value: 'Active' },
+        {label: 'Inactive', value: 'Inactive' },
+        ],
+    },
+        {
+          id: 'module',
+        label: 'Module',
+        type: 'select',
+        value: moduleFilter,
+        options: [
+        {label: 'All Modules', value: 'All' },
+        ...availableModules.map((m) => ({label: m, value: m })),
+        ],
+    },
+        {
+          id: 'type',
+        label: 'Action Type',
+        type: 'select',
+        value: typeFilter,
+        options: [
+        {label: 'All Action Types', value: 'All' },
+        {label: 'READ', value: 'READ' },
+        {label: 'CREATE', value: 'CREATE' },
+        {label: 'UPDATE', value: 'UPDATE' },
+        {label: 'DELETE', value: 'DELETE' },
+        {label: 'APPROVE', value: 'APPROVE' },
+        {label: 'EXPORT', value: 'EXPORT' },
+        ],
+    },
+        ], [statusFilter, moduleFilter, typeFilter, availableModules]);
+
+  // Row Actions
+  const rowActions = useMemo(() => [
+        {
+          key: 'view',
+        label: 'View Details',
+        icon: Eye,
+      onClick: (row) => setExpandedRowId((prev) => (prev === row.id ? null : row.id)),
+        tooltip: 'View Permission Details',
+        className: 'hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40',
+    },
+        {
+          key: 'edit',
+        label: 'Edit',
+        icon: Edit2,
+      onClick: (row) => handleOpenEdit(row),
+        tooltip: 'Edit Permission',
+        className: 'hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40',
+    },
+        {
+          key: 'delete',
+        label: 'Delete',
+        icon: Trash2,
+        danger: true,
+      disabled: (row) => row.isSystem,
+      onClick: (row) => handleDelete(row),
+        tooltip: 'Delete Permission',
+    },
+        ], []);
+
+  // Expanded sub-row
+  const renderExpandedRow = (perm) => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-2 text-xs">
+          <div className="space-y-1">
+            <span className="font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Feature Code</span>
+            <p className="font-mono text-zinc-800 dark:text-zinc-200">{perm.featureName || '-'}</p>
+          </div>
+          <div className="space-y-1">
+            <span className="font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Action</span>
+            <p className="font-semibold text-zinc-800 dark:text-zinc-200">{perm.permissionType}</p>
+          </div>
+          <div className="space-y-1">
+            <span className="font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">System Permission</span>
+            <p className="text-zinc-800 dark:text-zinc-200">{perm.isSystem ? 'Yes (Core Engine)' : 'No (Custom)'}</p>
+          </div>
+          <div className="space-y-1">
+            <span className="font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Full Description</span>
+            <p className="text-zinc-700 dark:text-zinc-300">{perm.description || '-'}</p>
+          </div>
+        </div>
+        );
+
+  const handleResetFilters = () => {
+              setSearchTerm('');
+            setStatusFilter('All');
+            setModuleFilter('All');
+            setTypeFilter('All');
+            setPage(0);
+            setSelectedRows([]);
+  };
+
+          return (
+          <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+            <PageHeader
+              title="Permission Management"
+              description="Central matrix of module, feature, and action access rights"
+            >
+              <button
+                type="button"
+                onClick={handleOpenCreate}
+                className="btn-primary flex items-center gap-2"
+              >
+                <Plus size={16} />
+                <span>Create Permission</span>
+              </button>
+            </PageHeader>
+
+          {/* Main Content Area */}
+          <div className="flex-1 p-6 overflow-hidden flex flex-col">
+            <DataTable
+              permissionFeature="ROLE_PERMISSIONS"
+              selectable
+              selectedRows={selectedRows}
+              onSelectionChange={setSelectedRows}
+              columns={columns}
+              data={paginatedPermissions}
+              rowKey="id"
+              loading={isLoading}
+
+          // Search
+                              searchable
+                              searchValue={searchTerm}
+                              searchPlaceholder="Name, Code, Module..."
+                              onSearchChange={(val) => {
+                                setSearchTerm(val);
+                                setPage(0);
+                              }}
+
+          // Filters
+                              filters={basicFilters}
+                              filterValues={{ status: statusFilter, module: moduleFilter, type: typeFilter }}
+                              onFilterChange={(key, val) => {
+                                if (key === 'status') setStatusFilter(val);
+                                if (key === 'module') setModuleFilter(val);
+                                if (key === 'type') setTypeFilter(val);
+                                setPage(0);
+                              }}
+
+                                // Reset & Refresh & Export
+                                onReset = { handleResetFilters }
+                                onRefresh = { loadData }
+                                onExport = {() => setIsExportModalOpen(true)}
+
+              // Columns
+              visibleColumns={visibleColumns}
+              onVisibleColumnsChange={setVisibleColumns}
+
+                    // Sorting
+                    sort = {{ key: sortBy, direction: sortOrder }}
+                  onSortChange={({ key }) => {
+                    if (sortBy === key) setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    else { setSortBy(key); setSortOrder('asc'); }
+                    setPage(0);
+                  }}
+
+          // Row Actions & Expansion
+                    rowActions={rowActions}
+                    expandedRowId={expandedRowId}
+                    onToggleExpand={(id) => setExpandedRowId((prev) => (prev === id ? null : id))}
+                    renderExpandedRow={renderExpandedRow}
+
+          // Pagination
+                          pagination={{
+                            page,
+                            pageSize,
+                            totalPages,
+                            totalElements,
+                          }}
+                          pageIndexBase={0}
+                          onPageChange={setPage}
+                          onPageSizeChange={(newSize) => {
+                            setPageSize(newSize);
+                            setPage(0);
+                          }}
+                          itemName="permissions"
+
+                              // Empty State matching Customer Management
+                              emptyMessage = "No permissions found"
+                              emptyDescription = "Try adjusting your search keywords or filter criteria to find permission records."
+                                />
       </div>
 
-      {/* ── Summary Stats ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs">
-          <span className="text-[11px] font-bold text-[#8B9382] dark:text-[#6B7184] uppercase tracking-wider block">
-            Business Modules
-          </span>
-          <span className="text-xl font-extrabold text-[#2E3D28] dark:text-[#E6E8EE] mt-0.5 block">
-            {catalog?.modules?.length || 0}
-          </span>
-        </div>
+                            {/* Create / Edit Permission Modal */}
+                            <Modal
+                              isOpen={isCreateOpen || isEditOpen}
+                              onClose={() => {
+                                setIsCreateOpen(false);
+                                setIsEditOpen(false);
+                              }}
+                              title={isEditOpen ? 'Edit Permission' : 'Create Permission'}
+                              size="md"
+                            >
+                              <form onSubmit={isEditOpen ? handleEditSubmit : handleCreateSubmit} className="space-y-4">
+                                <div>
+                                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                                    Permission Name <span className="text-red-500">*</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    required
+                                    value={formName}
+                                    onChange={(e) => setFormName(e.target.value)}
+                                    placeholder="e.g. Invoices Management"
+                                    className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                                  />
+                                </div>
 
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs">
-          <span className="text-[11px] font-bold text-[#8B9382] dark:text-[#6B7184] uppercase tracking-wider block">
-            Total Permissions
-          </span>
-          <span className="text-xl font-extrabold text-[#2E3D28] dark:text-[#E6E8EE] mt-0.5 block">
-            {flattenedPermissions.length}
-          </span>
-        </div>
+                                <div>
+                                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                                    Permission Code <span className="text-red-500">*</span>
+                                  </label>
+                                  <input
+                                    type="text"
+                                    required
+                                    value={formCode}
+                                    onChange={(e) => setFormCode(e.target.value)}
+                                    placeholder="e.g. INVOICE:EXPORT"
+                                    className="w-full px-3 py-2 text-sm font-mono border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                                  />
+                                </div>
 
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs">
-          <span className="text-[11px] font-bold text-[#8B9382] dark:text-[#6B7184] uppercase tracking-wider block">
-            Role Templates
-          </span>
-          <span className="text-xl font-extrabold text-[#2E3D28] dark:text-[#E6E8EE] mt-0.5 block">
-            {templates.length}
-          </span>
-        </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                            Module
+                          </label>
+                          <select
+                            value={formModule}
+                            onChange={(e) => setFormModule(e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                          >
+                                {availableModules.map((m) => (
+                                  <option key={m} value={m}>
+                                    {m}
+                                  </option>
+                                ))}
+                              </select>
+            </div>
 
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs">
-          <span className="text-[11px] font-bold text-[#8B9382] dark:text-[#6B7184] uppercase tracking-wider block">
-            Unsaved Changes
-          </span>
-          <span
-            className={`text-xl font-extrabold mt-0.5 block ${
-              dirtyTemplateIds.size > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-[#2E3D28] dark:text-[#E6E8EE]'
-            }`}
-          >
-            {dirtyTemplateIds.size}
-          </span>
-        </div>
-      </div>
+                          <div>
+                              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                                Action Type
+                              </label>
+                              <select
+                                value={formAction}
+                                onChange={(e) => setFormAction(e.target.value)}
+                                className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                              >
+                                <option value="READ">READ</option>
+                                <option value="CREATE">CREATE</option>
+                                <option value="UPDATE">UPDATE</option>
+                                <option value="DELETE">DELETE</option>
+                                <option value="APPROVE">APPROVE</option>
+                                <option value="EXPORT">EXPORT</option>
+                              </select>
+                          </div>
+                      </div>
 
-      {/* ── Search & Filter Controls ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#161922] p-3 rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs">
-        <div className="flex items-center gap-2 flex-1 max-w-lg">
-          <div className="relative flex-1">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8B9382] dark:text-[#6B7184]" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search permissions by feature, action, or code..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-[#F7F7F0] dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[#2E3D28] dark:text-[#E6E8EE] focus:outline-none focus:border-[#485942]"
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                          Description
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={formDescription}
+                          onChange={(e) => setFormDescription(e.target.value)}
+                          placeholder="Action rights and scope..."
+                          className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                        />
+                      </div>
+
+                    <div className="flex justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCreateOpen(false);
+                          setIsEditOpen(false);
+                        }}
+                        className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 rounded-lg"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn-primary"
+                      >
+                        Save Permission
+                      </button>
+                    </div>
+                  </form>
+                </Modal>
+
+      {/* Export Modal */}
+      <ExportModal
+              isOpen={isExportModalOpen}
+              onClose={() => setIsExportModalOpen(false)}
+              reportName="permissions-catalog-export"
+              hideDateRange={true}
+              selectedIds={selectedRows}
+              selectedCount={selectedRows.length}
             />
           </div>
-
-          <select
-            value={selectedModule}
-            onChange={(e) => setSelectedModule(e.target.value)}
-            className="px-2.5 py-1.5 text-xs rounded-xl bg-[#F7F7F0] dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[#2E3D28] dark:text-[#E6E8EE]"
-          >
-            <option value="ALL">All Modules</option>
-            {availableModules.map((m) => (
-              <option key={m.name} value={m.name}>
-                {m.displayName}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 bg-[#F7F7F0] dark:bg-[#1D212C] p-1 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] text-xs">
-          <button
-            type="button"
-            onClick={() => setActiveTab('matrix')}
-            className={`px-3 py-1 rounded-lg font-medium transition-colors ${
-              activeTab === 'matrix'
-                ? 'bg-white dark:bg-[#2A2F3D] text-[#2E3D28] dark:text-[#E6E8EE] shadow-2xs'
-                : 'text-[#485942] dark:text-[#A0A6B5]'
-            }`}
-          >
-            Role-Permission Matrix
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('catalog')}
-            className={`px-3 py-1 rounded-lg font-medium transition-colors ${
-              activeTab === 'catalog'
-                ? 'bg-white dark:bg-[#2A2F3D] text-[#2E3D28] dark:text-[#E6E8EE] shadow-2xs'
-                : 'text-[#485942] dark:text-[#A0A6B5]'
-            }`}
-          >
-            Catalog & Coverage
-          </button>
-        </div>
-      </div>
-
-      {/* ── View 1: Role-Permission Matrix ── */}
-      {activeTab === 'matrix' && (
-        <div className="bg-white dark:bg-[#161922] rounded-3xl border border-[#D5D8CA] dark:border-[#2A2F3D] overflow-hidden shadow-2xs">
-          {isLoading ? (
-            <div className="py-20 text-center text-xs text-[#8B9382] dark:text-[#6B7184]">
-              <RefreshCw size={24} className="mx-auto animate-spin mb-2 text-[#485942]" />
-              <span>Loading permission matrix...</span>
-            </div>
-          ) : filteredPermissions.length === 0 ? (
-            <div className="py-16 text-center text-xs text-[#8B9382]">
-              No permissions found matching search or filters.
-            </div>
-          ) : (
-            <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
-              <table className="w-full text-left divide-y divide-[#D5D8CA] dark:divide-[#2A2F3D] text-xs">
-                <thead className="bg-[#F7F7F0] dark:bg-[#1D212C] text-[#8B9382] dark:text-[#6B7184] font-semibold sticky top-0 z-20">
-                  <tr>
-                    <th className="p-3 min-w-[200px] sticky left-0 z-30 bg-[#F7F7F0] dark:bg-[#1D212C]">
-                      Module & Feature
-                    </th>
-                    <th className="p-3 min-w-[100px]">Action</th>
-                    {templates.map((t) => (
-                      <th key={t.id} className="p-3 text-center min-w-[130px]">
-                        <span className="block font-bold text-[#2E3D28] dark:text-[#E6E8EE] truncate">
-                          {t.name}
-                        </span>
-                        <span className="text-[10px] text-[#8B9382] font-normal block">
-                          {(matrixState[t.id] || new Set()).size} perms
-                        </span>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#EDEEE4] dark:divide-[#222736]">
-                  {filteredPermissions.map((perm) => (
-                    <tr
-                      key={perm.permissionCode}
-                      className="hover:bg-[#F7F7F0]/50 dark:hover:bg-[#1D212C]/40 transition-colors"
-                    >
-                      <td className="p-3 sticky left-0 z-10 bg-white dark:bg-[#161922] border-r border-[#EDEEE4] dark:border-[#222736]">
-                        <span className="font-bold text-[#2E3D28] dark:text-[#E6E8EE] block truncate">
-                          {perm.featureName}
-                        </span>
-                        <span className="text-[10px] text-[#8B9382] font-mono block">
-                          {perm.moduleDisplayName} • {perm.permissionCode}
-                        </span>
-                      </td>
-
-                      <td className="p-3 font-bold text-[#485942] dark:text-[#A0A6B5]">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F7F7F0] dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D]">
-                          {perm.action}
-                        </span>
-                      </td>
-
-                      {templates.map((t) => {
-                        const hasPerm = Boolean(matrixState[t.id]?.has(perm.permissionCode));
-
-                        return (
-                          <td key={t.id} className="p-3 text-center">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleCell(t.id, perm.permissionCode)}
-                              className={`p-1.5 rounded-lg border transition-all ${
-                                hasPerm
-                                  ? 'bg-[#2E3D28] text-white border-[#2E3D28] dark:bg-primary'
-                                  : 'bg-white dark:bg-[#1D212C] text-transparent border-[#D5D8CA] dark:border-[#2A2F3D] hover:border-[#485942]'
-                              }`}
-                              title={`Toggle ${perm.permissionCode} for ${t.name}`}
-                            >
-                              <Check size={12} className={hasPerm ? 'opacity-100' : 'opacity-0'} />
-                            </button>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── View 2: Permission Catalog & Coverage ── */}
-      {activeTab === 'catalog' && (
-        <div className="space-y-4">
-          {catalog?.modules?.map((mod) => {
-            if (selectedModule !== 'ALL' && mod.moduleName !== selectedModule) return null;
-
-            return (
-              <div
-                key={mod.moduleName}
-                className="bg-white dark:bg-[#161922] rounded-3xl border border-[#D5D8CA] dark:border-[#2A2F3D] p-5 shadow-2xs"
-              >
-                <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#EDEEE4] dark:border-[#222736]">
-                  <div>
-                    <h3 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE] flex items-center gap-2">
-                      <Layers size={16} className="text-[#485942]" />
-                      {mod.displayName || mod.moduleName}
-                    </h3>
-                    <span className="text-[11px] text-[#8B9382] dark:text-[#6B7184]">
-                      {mod.features?.length || 0} features registered
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {mod.features?.map((feat) => (
-                    <div
-                      key={feat.featureCode}
-                      className="p-3.5 rounded-2xl bg-[#F7F7F0]/60 dark:bg-[#1D212C]/60 border border-[#D5D8CA] dark:border-[#2A2F3D] text-xs"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-[#2E3D28] dark:text-[#E6E8EE]">
-                          {feat.featureName || feat.featureCode}
-                        </span>
-                        <span className="text-[10px] text-[#8B9382] font-mono">{feat.featureCode}</span>
-                      </div>
-
-                      <div className="space-y-2">
-                        {feat.permissions?.map((perm) => {
-                          const code = perm.permissionCode.toUpperCase();
-                          // Find which role templates have this permission
-                          const assignedRoles = templates.filter((t) =>
-                            matrixState[t.id]?.has(code)
-                          );
-
-                          return (
-                            <div
-                              key={perm.id || perm.permissionCode}
-                              className="p-2 bg-white dark:bg-[#161922] rounded-xl border border-[#EDEEE4] dark:border-[#222736]"
-                            >
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="font-bold text-[#485942] dark:text-[#A0A6B5]">
-                                  {perm.action} ({perm.permissionCode})
-                                </span>
-                                <span className="text-[10px] text-[#8B9382]">
-                                  {assignedRoles.length} role{assignedRoles.length === 1 ? '' : 's'} assigned
-                                </span>
-                              </div>
-
-                              {perm.description && (
-                                <p className="text-[11px] text-[#8B9382] dark:text-[#6B7184] mb-1.5">
-                                  {perm.description}
-                                </p>
-                              )}
-
-                              <div className="flex flex-wrap gap-1">
-                                {assignedRoles.length > 0 ? (
-                                  assignedRoles.map((r) => (
-                                    <span
-                                      key={r.id}
-                                      className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#E8EDE4] dark:bg-[#252E22] text-[#2E3D28] dark:text-[#B6C9B0] border border-[#D5D8CA] dark:border-[#384634]"
-                                    >
-                                      {r.name}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span className="text-[10px] text-[#8B9382] italic">No roles assigned</span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── MODAL: Copy Role Permissions ── */}
-      {isCopyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white dark:bg-[#161922] w-full max-w-md rounded-3xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xl p-6 text-xs space-y-4 animate-in fade-in duration-150">
-            <div className="flex items-center justify-between border-b border-[#D5D8CA] dark:border-[#2A2F3D] pb-3">
-              <h2 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE] flex items-center gap-2">
-                <Copy size={16} className="text-[#485942]" />
-                Copy Role Permissions
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsCopyModalOpen(false)}
-                className="p-1 text-[#8B9382] hover:text-[#2E3D28]"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div>
-              <label className="block font-bold text-[#2E3D28] dark:text-[#E6E8EE] mb-1">
-                Source Role Template
-              </label>
-              <select
-                value={copySourceTemplateId}
-                onChange={(e) => setCopySourceTemplateId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-[#F7F7F0] dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[#2E3D28] dark:text-[#E6E8EE]"
-              >
-                {templates.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name} ({(matrixState[t.id] || new Set()).size} permissions)
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block font-bold text-[#2E3D28] dark:text-[#E6E8EE] mb-1">
-                Target Role Template (will be updated)
-              </label>
-              <select
-                value={copyTargetTemplateId}
-                onChange={(e) => setCopyTargetTemplateId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-[#F7F7F0] dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[#2E3D28] dark:text-[#E6E8EE]"
-              >
-                {templates.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name} ({(matrixState[t.id] || new Set()).size} permissions)
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="pt-3 border-t border-[#D5D8CA] dark:border-[#2A2F3D] flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setIsCopyModalOpen(false)}
-                className="px-4 py-2 font-semibold text-[#2E3D28] dark:text-[#E6E8EE] bg-white dark:bg-[#161922] border border-[#D5D8CA] dark:border-[#2A2F3D] hover:bg-[#EDEEE4] rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCopyPermissions}
-                className="px-4 py-2 font-semibold text-white bg-[#2E3D28] dark:bg-primary hover:bg-[#3C4E34] rounded-xl shadow-xs"
-              >
-                Copy Permissions
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+          );
 }
-

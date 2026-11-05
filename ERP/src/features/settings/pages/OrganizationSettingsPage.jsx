@@ -213,40 +213,40 @@ export default function OrganizationSettingsPage() {
         } else if (Array.isArray(comps?.content)) {
           list = comps.content;
         }
-          if (list.length > 0) {
-            setRegisteredCompanies(list);
-          }
+        if (list.length > 0) {
+          setRegisteredCompanies(list);
         }
+      }
 
-          // 6. Subscription
-          if (results[5].status === 'fulfilled' && results[5].value) {
-            const sub = results[5].value;
-            if (sub.planName) setSubscriptionPlanName(sub.planName);
-            else if (sub.planCode) setSubscriptionPlanName(sub.planCode);
-            if (sub.trialPeriod !== undefined) setIsTrial(Boolean(sub.trialPeriod));
-          }
+      // 6. Subscription
+      if (results[5].status === 'fulfilled' && results[5].value) {
+        const sub = results[5].value;
+        if (sub.planName) setSubscriptionPlanName(sub.planName);
+        else if (sub.planCode) setSubscriptionPlanName(sub.planCode);
+        if (sub.trialPeriod !== undefined) setIsTrial(Boolean(sub.trialPeriod));
+      }
 
-          // 7. Entitled Modules
-          if (results[6].status === 'fulfilled' && results[6].value) {
-            const modData = results[6].value;
-            if (Array.isArray(modData.modules)) {
-              const names = modData.modules
-                .filter((m) => m.enabled)
-                .map((m) => m.name || m.key);
-              if (names.length > 0) setEnabledModules(names);
-            }
-          }
-} catch (err) {
-  console.warn('Organization settings load notice:', err?.message || err);
-  setLoadError(err?.message || 'Failed to load organization settings.');
-} finally {
-  setIsLoading(false);
-}
+      // 7. Entitled Modules
+      if (results[6].status === 'fulfilled' && results[6].value) {
+        const modData = results[6].value;
+        if (Array.isArray(modData.modules)) {
+          const names = modData.modules
+            .filter((m) => m.enabled)
+            .map((m) => m.name || m.key);
+          if (names.length > 0) setEnabledModules(names);
+        }
+      }
+    } catch (err) {
+      console.warn('Organization settings load notice:', err?.message || err);
+      setLoadError(err?.message || 'Failed to load organization settings.');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-useEffect(() => {
-  loadSettingsData();
-}, [loadSettingsData]);
+  useEffect(() => {
+    loadSettingsData();
+  }, [loadSettingsData]);
 
   // Navigate to another section
   const handleNavigateSection = (sectionId) => {
@@ -259,157 +259,128 @@ useEffect(() => {
   // Save Handlers
   // ───────────────────────────────────────────────────────────────────────────
 
-    const handleSaveProfile = async ({ name: newName, email: newEmail }) => {
-      if (!newName || !newName.trim()) {
-        dispatch(addAlert({ type: 'error', message: 'Organization name cannot be blank.' }));
-        return;
-      }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!newEmail || !emailRegex.test(newEmail.trim())) {
-        dispatch(addAlert({ type: 'error', message: 'Please provide a valid organization email address.' }));
-        return;
-      }
+  const handleSaveProfile = async ({ name: newName, email: newEmail }) => {
+    if (!newName || !newName.trim()) {
+      dispatch(addAlert({ type: 'error', message: 'Organization name cannot be blank.' }));
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!newEmail || !emailRegex.test(newEmail.trim())) {
+      dispatch(addAlert({ type: 'error', message: 'Please provide a valid organization email address.' }));
+      return;
+    }
 
-        setIsSaving(true);
-        try {
-          await updateOrganizationProfile({
-            name: newName.trim(),
-            primaryEmail: newEmail.trim(),
-          });
-          setName(newName.trim());
-          setContactEmail(newEmail.trim());
-          dispatch(
-            addAlert({
-              type: 'success',
-              message: 'Organization profile updated successfully.',
-            })
-          );
-        } catch (err) {
-          dispatch(
-            addAlert({
-              type: 'error',
-              message: err?.response?.data?.message || err?.message || 'Failed to update organization profile.',
-            })
-          );
-        } finally {
-          setIsSaving(false);
-        }
-      };
+    setIsSaving(true);
+    try {
+      await updateOrganizationProfile({
+        name: newName.trim(),
+        primaryEmail: newEmail.trim(),
+      });
+      setName(newName.trim());
+      setContactEmail(newEmail.trim());
+      dispatch(
+        addAlert({
+          type: 'success',
+          message: 'Organization profile updated successfully.',
+        })
+      );
+    } catch (err) {
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: err?.response?.data?.message || err?.message || 'Failed to update organization profile.',
+        })
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-        const handleSaveSecurity = async ({ twoFactorRequired: new2FA, sessionTimeout: newTimeout }) => {
-          setIsSaving(true);
-          try {
-            await updateSecuritySettings({
-              enforce2FA: new2FA,
-              sessionTimeoutMinutes: parseInt(newTimeout, 10) || 60,
-            });
-            setTwoFactorRequired(new2FA);
-            setSessionTimeout(newTimeout);
-            dispatch(
-              addAlert({
-                type: 'success',
-                message: 'Organization security policies updated successfully.',
-              })
-            );
-          } catch (err) {
-            dispatch(
-              addAlert({
-                type: 'error',
-                message: err?.response?.data?.message || err?.message || 'Failed to update security policies.',
-              })
-            );
-          } finally {
-            setIsSaving(false);
-          }
-        };
+  const handleSaveSecurity = async ({ twoFactorRequired: new2FA, sessionTimeout: newTimeout }) => {
+    setIsSaving(true);
+    try {
+      await updateSecuritySettings({
+        enforce2FA: new2FA,
+        sessionTimeoutMinutes: parseInt(newTimeout, 10) || 60,
+      });
+      setTwoFactorRequired(new2FA);
+      setSessionTimeout(newTimeout);
+      dispatch(
+        addAlert({
+          type: 'success',
+          message: 'Organization security policies updated successfully.',
+        })
+      );
+    } catch (err) {
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: err?.response?.data?.message || err?.message || 'Failed to update security policies.',
+        })
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-        const handleSaveRegional = async (regionalPayload) => {
-          setIsSaving(true);
-          try {
-            await updateRegionalSettings(regionalPayload);
-            if (regionalPayload.currency) setCurrency(regionalPayload.currency);
-            if (regionalPayload.timezone) setTimezone(regionalPayload.timezone);
-            if (regionalPayload.fiscalYearStartMonth) setFiscalYearStart(regionalPayload.fiscalYearStartMonth);
-            if (regionalPayload.dateFormat) setDateFormat(regionalPayload.dateFormat);
-            if (regionalPayload.timeFormat) setTimeFormat(regionalPayload.timeFormat);
-            dispatch(
-              addAlert({
-                type: 'success',
-                message: 'Regional and fiscal defaults updated successfully.',
-              })
-            );
-          } catch (err) {
-            dispatch(
-              addAlert({
-                type: 'error',
-                message: err?.response?.data?.message || err?.message || 'Failed to update regional settings.',
-              })
-            );
-          } finally {
-            setIsSaving(false);
-          }
-        };
+  const handleSaveRegional = async (regionalPayload) => {
+    setIsSaving(true);
+    try {
+      await updateRegionalSettings(regionalPayload);
+      if (regionalPayload.currency) setCurrency(regionalPayload.currency);
+      if (regionalPayload.timezone) setTimezone(regionalPayload.timezone);
+      if (regionalPayload.fiscalYearStartMonth) setFiscalYearStart(regionalPayload.fiscalYearStartMonth);
+      if (regionalPayload.dateFormat) setDateFormat(regionalPayload.dateFormat);
+      if (regionalPayload.timeFormat) setTimeFormat(regionalPayload.timeFormat);
+      dispatch(
+        addAlert({
+          type: 'success',
+          message: 'Regional and fiscal defaults updated successfully.',
+        })
+      );
+    } catch (err) {
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: err?.response?.data?.message || err?.message || 'Failed to update regional settings.',
+        })
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-        // Current active section label
-        const activeSectionMeta = ORG_NAV_ITEMS.find((item) => item.id === activeSection) || ORG_NAV_ITEMS[0];
+  // Current active section label
+  const activeSectionMeta = ORG_NAV_ITEMS.find((item) => item.id === activeSection) || ORG_NAV_ITEMS[0];
 
-        // Organization summary object
-        const orgSummary = useMemo(() => ({
-          id: orgId || authOrg?.id,
-          name,
-          code: orgCode || authOrg?.code,
-          email: contactEmail || authOrg?.email,
-          primaryEmail: contactEmail,
-          status,
-          accessMode,
-        }), [orgId, authOrg, name, orgCode, contactEmail, status, accessMode]);
+  // Organization summary object
+  const orgSummary = useMemo(() => ({
+    id: orgId || authOrg?.id,
+    name,
+    code: orgCode || authOrg?.code,
+    email: contactEmail || authOrg?.email,
+    primaryEmail: contactEmail,
+    status,
+    accessMode,
+  }), [orgId, authOrg, name, orgCode, contactEmail, status, accessMode]);
 
-        return (
-          <div className="w-full flex-1 flex flex-col min-h-0 bg-[#E8E9DF] dark:bg-[#0F1117] text-zinc-900 dark:text-[#E6E8EE]">
-            {/* Global Breadcrumbs & Quick Bar */}
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#F7F7F0]/60 dark:bg-[#161922]/60 border-b border-[#D5D8CA] dark:border-[#2A2F3D] text-xs shrink-0">
-              <div className="flex items-center gap-1.5 text-[#485942] dark:text-[#A0A6B5] flex-wrap">
-                <Link to="/owner/dashboard" className="hover:text-[#2E3D28] dark:hover:text-[#E6E8EE] font-medium">
-                  Owner Dashboard
-                </Link>
-                <ChevronRight size={13} className="text-[#8B9382] dark:text-[#6B7184] shrink-0" />
-                <Link to={basePath} className="hover:text-[#2E3D28] dark:hover:text-[#E6E8EE] font-medium">
-                  Organization Management
-                </Link>
-                <ChevronRight size={13} className="text-[#8B9382] dark:text-[#6B7184] shrink-0" />
-                <span className="text-[#2E3D28] dark:text-[#E6E8EE] font-bold">
-                  {activeSectionMeta.label}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3 shrink-0">
+  return (
+          <div className="w-full flex-1 flex flex-col min-h-full bg-zinc-50/50 dark:bg-[#0F1117] text-zinc-900 dark:text-[#E6E8EE]">
+            {loadError && (
+              <div className="mx-6 mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
+                <span>Failed to load fresh organization data: {loadError}</span>
                 <button
                   type="button"
                   onClick={loadSettingsData}
-                  disabled={isLoading}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] rounded-lg transition-all shadow-2xs"
+                  className="font-bold underline hover:text-amber-950 dark:hover:text-amber-100"
                 >
-                  <RefreshCw size={12} className={isLoading ? 'animate-spin' : ''} />
-                  <span>Refresh</span>
+                  Retry
                 </button>
               </div>
-            </div>
+            )}
 
-            {/* Section View Container */}
-            <div className="flex-1 p-4 sm:p-6 w-full min-w-0">
-              {loadError && (
-                <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
-                  <span>Failed to load fresh organization data: {loadError}</span>
-                  <button
-                    type="button"
-                    onClick={loadSettingsData}
-                    className="font-bold underline hover:text-amber-950 dark:hover:text-amber-100"
-                  >
-                    Retry
-                  </button>
-                </div>
-              )}
-
+            {/* Active Organization Management Section View */}
+            <div className="flex-1 flex flex-col min-h-0">
               {/* 1. Overview */}
               {activeSection === 'overview' && (
                 <OrgOverviewView
@@ -525,6 +496,11 @@ useEffect(() => {
                 />
               )}
             </div>
+
+            {/* Bottom Footer matching Customer Management */}
+            <footer className="text-center py-4 text-xs text-zinc-400 dark:text-zinc-500 border-t border-zinc-200/60 dark:border-zinc-800/60">
+              &copy; 2026 Mark
+            </footer>
           </div>
-        );
+          );
 }

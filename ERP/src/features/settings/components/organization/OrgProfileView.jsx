@@ -5,10 +5,15 @@ import {
   Copy,
   Check,
   Save,
-  Shield,
-  Key,
-  Info,
+  RotateCcw,
+  Edit2,
+  Paperclip,
+  Globe,
+  Phone,
+  MapPin,
+  FileText,
 } from 'lucide-react';
+import PageHeader from '../../../../components/common/PageHeader';
 
 export default function OrgProfileView({
   organization,
@@ -17,15 +22,28 @@ export default function OrgProfileView({
   onSaveProfile,
   isSaving = false,
 }) {
-  const [name, setName] = useState(initialName || organization?.name || '');
-  const [email, setEmail] = useState(initialEmail || organization?.email || organization?.primaryEmail || '');
-  const [copiedId, setCopiedId] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
-  const orgCode = (organization?.code || '').toUpperCase();
+  // Form states
+  const [name, setName] = useState(initialName || organization?.name || '');
+  const [code, setCode] = useState((organization?.code || '').toUpperCase());
+  const [email, setEmail] = useState(initialEmail || organization?.email || organization?.primaryEmail || '');
+  const [phone, setPhone] = useState(organization?.phone || '+91 98765 43210');
+  const [website, setWebsite] = useState(organization?.website || 'https://www.example.com');
+  const [logoUrl, setLogoUrl] = useState(organization?.logoUrl || '');
+  const [address, setAddress] = useState(organization?.address || '123 Business Boulevard, Sector 62');
+  const [city, setCity] = useState(organization?.city || 'Noida');
+  const [state, setState] = useState(organization?.state || 'Uttar Pradesh');
+  const [country, setCountry] = useState(organization?.country || 'India');
+  const [postalCode, setPostalCode] = useState(organization?.postalCode || '201301');
+  const [gstin, setGstin] = useState(organization?.gstin || '09AAAAA0000A1Z5');
+  const [pan, setPan] = useState(organization?.pan || 'AAAAA0000A');
+  const [description, setDescription] = useState(
+    organization?.description || 'Central Multi-Company Enterprise Parent Organization.'
+  );
+
+  const [copiedId, setCopiedId] = useState(false);
   const orgId = organization?.id || '';
-  const status = organization?.status || 'ACTIVE';
-  const accessMode = organization?.accessMode || 'FULL';
 
   const handleCopyId = () => {
     if (!orgId) return;
@@ -34,169 +52,330 @@ export default function OrgProfileView({
     setTimeout(() => setCopiedId(false), 2000);
   };
 
-  const handleCopyCode = () => {
-    if (!orgCode) return;
-    navigator.clipboard.writeText(orgCode);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
+    const handleCancel = () => {
+      setName(initialName || organization?.name || '');
+      setEmail(initialEmail || organization?.email || organization?.primaryEmail || '');
+      setIsEditing(false);
+    };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (onSaveProfile) {
-      onSaveProfile({ name: name.trim(), email: email.trim() });
-    }
-  };
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      if (onSaveProfile) {
+        onSaveProfile({
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          website: website.trim(),
+          address: address.trim(),
+          city: city.trim(),
+          state: state.trim(),
+          country: country.trim(),
+          postalCode: postalCode.trim(),
+          gstin: gstin.trim(),
+          pan: pan.trim(),
+          description: description.trim(),
+        });
+      }
+      setIsEditing(false);
+    };
 
-  return (
-    <div className="space-y-6">
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#D5D8CA] dark:border-[#2A2F3D] gap-2">
-        <div>
-          <h1 className="text-xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] flex items-center gap-2">
-            <Building2 size={22} className="text-[#485942] dark:text-[#A0A6B5]" />
-            Organization Profile
-          </h1>
-          <p className="text-xs text-[#485942] dark:text-[#A0A6B5] mt-1">
-            Primary identification, corporate registration details, and administrative email address.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            {status}
-          </span>
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-[#1D212C] text-zinc-700 dark:text-[#A0A6B5] border border-zinc-200/60 dark:border-[#2A2F3D] uppercase">
-            {accessMode} ACCESS
-          </span>
-        </div>
-      </div>
-
-      {/* ── Form Card ── */}
-      <form onSubmit={handleSubmit} className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-xs p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Organization Name */}
-          <div>
-            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
-              Organization Legal Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3.5 py-2 text-sm bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2E3D28]/20 dark:focus:ring-primary/20 focus:border-[#2E3D28] dark:focus:border-primary text-zinc-900 dark:text-[#E6E8EE] font-medium"
-              placeholder="e.g. Acme Enterprise Holdings Ltd."
-            />
-            <p className="text-[11px] text-[#485942] dark:text-[#A0A6B5] mt-1">
-              Displayed on invoices, customer reports, and the navigation sidebar.
-            </p>
-          </div>
-
-          {/* Organization Code (Immutable) */}
-          <div>
-            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
-              Organization Code
-            </label>
+    return (
+          <div className="flex flex-col h-full bg-zinc-50/50 dark:bg-[#0F1117]">
+            <PageHeader
+              title="Organization Profile"
+              description="Manage organization identity, legal business details, and contact information"
+            >
+              <div className="flex items-center gap-2">
+                {!isEditing ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(true)}
+                    className="btn-primary flex items-center gap-2"
+                  >
+                    <Edit2 size={16} />
+                    <span>Edit Profile</span>
+                  </button>
+                ) : (
             <div className="flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                value={orgCode}
-                className="w-full px-3.5 py-2 text-sm bg-zinc-100 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-[#2E3D28] dark:text-[#E6E8EE] font-mono font-bold cursor-not-allowed select-all"
-              />
               <button
                 type="button"
-                onClick={handleCopyCode}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-xl text-[#2E3D28] dark:text-[#E6E8EE] transition-all shrink-0"
+                onClick={handleCancel}
+                className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors border border-zinc-200 dark:border-zinc-700"
               >
-                {copiedCode ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
-                <span>Copy</span>
+                Cancel
               </button>
-            </div>
-            <p className="text-[11px] text-[#485942] dark:text-[#A0A6B5] mt-1">
-              Immutable unique namespace used in vanity URLs and SSO routing.
-            </p>
-          </div>
-
-          {/* Primary Organization Email */}
-          <div>
-            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
-              Primary Administrative Email *
-            </label>
-            <div className="relative">
-              <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2 text-sm bg-white dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2E3D28]/20 dark:focus:ring-primary/20 focus:border-[#2E3D28] dark:focus:border-primary text-zinc-900 dark:text-[#E6E8EE]"
-                placeholder="admin@organization.com"
-              />
-            </div>
-            <p className="text-[11px] text-[#485942] dark:text-[#A0A6B5] mt-1">
-              Receives critical security alerts, billing invoices, and membership notices.
-            </p>
-          </div>
-
-          {/* Organization UUID (Immutable) */}
-          <div>
-            <label className="block text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] mb-1.5">
-              Organization System UUID
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                value={orgId}
-                className="w-full px-3.5 py-2 text-xs bg-zinc-100 dark:bg-[#1D212C] border border-zinc-200 dark:border-[#2A2F3D] rounded-xl text-[#485942] dark:text-[#A0A6B5] font-mono select-all truncate cursor-not-allowed"
-              />
               <button
                 type="button"
-                onClick={handleCopyId}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-white dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-xl text-[#2E3D28] dark:text-[#E6E8EE] transition-all shrink-0"
+                onClick={handleSubmit}
+                disabled={isSaving}
+                className="btn-primary flex items-center gap-2"
               >
-                {copiedId ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
-                <span>Copy UUID</span>
+                <Save size={16} />
+                <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
               </button>
             </div>
-            <p className="text-[11px] text-[#485942] dark:text-[#A0A6B5] mt-1">
-              Internal multi-tenant UUID for database entity foreign keys.
-            </p>
+          )}
+            </div>
+          </PageHeader>
+
+                {/* Main Content Area */}
+      <div className="flex-1 p-6 overflow-y-auto">
+                <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl">
+                  {/* Identity & Legal Entity Card */}
+                  <div className="bg-white dark:bg-[#161922] p-6 rounded-2xl border border-zinc-200 dark:border-[#2A2F3D] shadow-xs space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                      <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                        Organization Identity & Logo
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs text-zinc-500">ID: {orgId || '—'}</span>
+                        {orgId && (
+                          <button
+                            type="button"
+                            onClick={handleCopyId}
+                            className="p-1 hover:text-primary text-zinc-400"
+                            title="Copy ID"
+                          >
+                            {copiedId ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                          Organization Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          disabled={!isEditing}
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                          Organization Code
+                        </label>
+                        <input
+                          type="text"
+                          disabled
+                          value={code}
+                          className="w-full px-3 py-2 text-sm font-mono border border-zinc-300 dark:border-zinc-700 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                          Organization Logo
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center font-bold text-sm text-zinc-700 dark:text-zinc-300">
+                            {name ? name.charAt(0).toUpperCase() : 'O'}
+                          </div>
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              value={logoUrl}
+                              onChange={(e) => setLogoUrl(e.target.value)}
+                              placeholder="Logo URL..."
+                              className="flex-1 px-3 py-2 text-xs border border-zinc-300 dark:border-zinc-700 rounded-lg"
+                            />
+                          ) : (
+                            <span className="text-xs text-zinc-400">Default brand avatar</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                        Organization Description
+                      </label>
+                      <textarea
+                        rows={2}
+                        disabled={!isEditing}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                      />
+                    </div>
+                  </div>
+
+                      {/* Contact Details Card */}
+                      <div className="bg-white dark:bg-[#161922] p-6 rounded-2xl border border-zinc-200 dark:border-[#2A2F3D] shadow-xs space-y-4">
+                        <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                          Contact & Communication
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Primary Email <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="email"
+                              required
+                              disabled={!isEditing}
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Phone Number
+                            </label>
+                            <input
+                              type="text"
+                              disabled={!isEditing}
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Website URL
+                            </label>
+                            <input
+                              type="text"
+                              disabled={!isEditing}
+                              value={website}
+                              onChange={(e) => setWebsite(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Address & Taxation Card */}
+                      <div className="bg-white dark:bg-[#161922] p-6 rounded-2xl border border-zinc-200 dark:border-[#2A2F3D] shadow-xs space-y-4">
+                        <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                          Registered Address & Tax Details
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Street Address
+                            </label>
+                            <input
+                              type="text"
+                              disabled={!isEditing}
+                              value={address}
+                              onChange={(e) => setAddress(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              City
+                            </label>
+                            <input
+                              type="text"
+                              disabled={!isEditing}
+                              value={city}
+                              onChange={(e) => setCity(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              State / Province
+                            </label>
+                            <input
+                              type="text"
+                              disabled={!isEditing}
+                              value={state}
+                              onChange={(e) => setState(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Country
+                            </label>
+                            <input
+                              type="text"
+                              disabled={!isEditing}
+                              value={country}
+                              onChange={(e) => setCountry(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              Postal Code / PIN
+                            </label>
+                            <input
+                              type="text"
+                              disabled={!isEditing}
+                              value={postalCode}
+                              onChange={(e) => setPostalCode(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              GSTIN / Tax Registration
+                            </label>
+                            <input
+                              type="text"
+                              disabled={!isEditing}
+                              value={gstin}
+                              onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                              className="w-full px-3 py-2 text-sm font-mono border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1">
+                              PAN Number
+                            </label>
+                            <input
+                              type="text"
+                              disabled={!isEditing}
+                              value={pan}
+                              onChange={(e) => setPan(e.target.value.toUpperCase())}
+                              className="w-full px-3 py-2 text-sm font-mono border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20 disabled:bg-zinc-100 dark:disabled:bg-zinc-900"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {isEditing && (
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="btn-primary flex items-center gap-2"
+              >
+                <Save size={16} />
+                <span>{isSaving ? 'Saving...' : 'Save Profile Changes'}</span>
+              </button>
+            </div>
+          )}
+              </form>
+            </div>
           </div>
-        </div>
-
-        {/* Informational Callout */}
-        <div className="flex items-start gap-3 p-3.5 bg-zinc-50 dark:bg-[#1D212C] border border-zinc-200/70 dark:border-[#2A2F3D] rounded-xl text-xs text-[#485942] dark:text-[#A0A6B5]">
-          <Info size={16} className="text-[#2E3D28] dark:text-primary shrink-0 mt-0.5" />
-          <p>
-            Modifying your organization profile will update the legal entity header on future invoices, reports, and team invitation communications across all registered companies.
-          </p>
-        </div>
-
-        {/* Submit Button */}
-        <div className="flex justify-end pt-2">
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-white bg-[#2E3D28] dark:bg-primary hover:bg-[#3C4E34] dark:hover:bg-primary-600 rounded-xl shadow-xs transition-all disabled:opacity-50"
-          >
-            {isSaving ? (
-              <>
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Saving Profile...</span>
-              </>
-            ) : (
-              <>
-                <Save size={14} />
-                <span>Save Profile Changes</span>
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
+          );
 }
-
