@@ -3,6 +3,8 @@ import {
   Building2,
   Briefcase,
   Users,
+  Shield,
+  Key,
   ShieldCheck,
   Globe,
   Bell,
@@ -11,8 +13,8 @@ import {
 } from 'lucide-react';
 
 /**
- * Navigation configuration for Organization Management module vertical sub-sidebar.
- * Exactly 9 dedicated submenu pages.
+ * Navigation configuration for Organization Management module.
+ * Exactly 12 dedicated submenu pages.
  * Explicitly excludes Subscription & Billing (which belongs in the primary Owner Dashboard sidebar).
  */
 export const ORG_NAV_ITEMS = [
@@ -39,6 +41,24 @@ export const ORG_NAV_ITEMS = [
     label: 'Users & Permissions',
     icon: Users,
     description: 'Members & cross-company access',
+  },
+  {
+    id: 'roles',
+    label: 'Role Management',
+    icon: Shield,
+    description: 'Organization role templates & company deployment',
+  },
+  {
+    id: 'permissions',
+    label: 'Permission Management',
+    icon: Key,
+    description: 'Central module & action permission matrix',
+  },
+  {
+    id: 'portal-access',
+    label: 'Portal & Module Access',
+    icon: Globe,
+    description: 'Module entitlements & tenant visibility',
   },
   {
     id: 'security',

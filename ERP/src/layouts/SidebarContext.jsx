@@ -76,10 +76,10 @@ export function SidebarProvider({ children }) {
 
   const isMenuOpen = useCallback(
     (menuId, isParentActive) => {
-      if (isParentActive) return true;
       if (openMenus && openMenus[menuId] !== undefined) {
         return openMenus[menuId];
       }
+      if (isParentActive) return true;
       return false;
     },
     [openMenus]

@@ -5,16 +5,19 @@ import { ORG_NAV_ITEMS, resolveOrgSubmenuPath } from '../components/organization
 describe('Organization Management Module Frontend Redesign Test Suite', () => {
 
   describe('1. Sub-Sidebar Navigation Configuration', () => {
-    it('contains exactly 9 dedicated submenu navigation items', () => {
-      assert.strictEqual(ORG_NAV_ITEMS.length, 9);
+    it('contains exactly 12 dedicated submenu navigation items', () => {
+      assert.strictEqual(ORG_NAV_ITEMS.length, 12);
     });
 
-    it('contains all 9 required items in the correct order', () => {
+    it('contains all 12 required items in the correct order', () => {
       const expectedIds = [
         'overview',
         'profile',
         'companies',
         'users',
+        'roles',
+        'permissions',
+        'portal-access',
         'security',
         'login-portal',
         'notifications',
@@ -32,6 +35,9 @@ describe('Organization Management Module Frontend Redesign Test Suite', () => {
         'Organization Profile',
         'Companies Management',
         'Users & Permissions',
+        'Role Management',
+        'Permission Management',
+        'Portal & Module Access',
         'Security & Authentication',
         'Organization Login Portal',
         'Notifications',
@@ -62,6 +68,9 @@ describe('Organization Management Module Frontend Redesign Test Suite', () => {
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'profile'), '/owner/settings/profile');
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'companies'), '/owner/settings/companies');
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'users'), '/owner/settings/users');
+      assert.strictEqual(resolveOrgSubmenuPath(basePath, 'roles'), '/owner/settings/roles');
+      assert.strictEqual(resolveOrgSubmenuPath(basePath, 'permissions'), '/owner/settings/permissions');
+      assert.strictEqual(resolveOrgSubmenuPath(basePath, 'portal-access'), '/owner/settings/portal-access');
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'security'), '/owner/settings/security');
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'login-portal'), '/owner/settings/login-portal');
       assert.strictEqual(resolveOrgSubmenuPath(basePath, 'notifications'), '/owner/settings/notifications');

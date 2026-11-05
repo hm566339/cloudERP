@@ -89,13 +89,36 @@ export function isItemOrChildActive(item, currentPath) {
   if (item.path) {
     const cleanItem = stripCompany(item.path);
 
-    if (currentPath === item.path || (cleanCurrent === cleanItem && cleanItem !== '/')) {
+    // Organization Settings overview vs sub-item matching
+    const isOverview = cleanItem === '/owner/settings' || cleanItem === '/settings/organization' || item.id === 'org-overview' || item.id === 'overview';
+    if (isOverview) {
+      const isOverviewRoute =
+        cleanCurrent === '/owner/settings' ||
+        cleanCurrent === '/owner/settings/' ||
+        cleanCurrent === '/owner/settings/overview' ||
+        cleanCurrent === '/settings/organization' ||
+        cleanCurrent === '/settings/organization/' ||
+        cleanCurrent === '/settings/organization/overview';
+      if (isOverviewRoute) return true;
+    }
+
+    const normalizeOrg = (p) => String(p || '').replace(/^\/settings\/organization/, '/owner/settings');
+    const normCurrent = normalizeOrg(cleanCurrent);
+    const normItem = normalizeOrg(cleanItem);
+
+    if (normCurrent === normItem && normItem !== '/') {
       return true;
     }
 
     // Exact or sub-path matching without greedy prefix collision
-    if (cleanItem !== '/' && cleanItem !== '/super-admin/dashboard' && cleanItem !== '/owner/dashboard' && cleanItem !== '/dashboard') {
-      if (currentPath.startsWith(item.path + '/') || cleanCurrent.startsWith(cleanItem + '/')) {
+    if (
+      normItem !== '/' &&
+      normItem !== '/super-admin/dashboard' &&
+      normItem !== '/owner/dashboard' &&
+      normItem !== '/dashboard' &&
+      normItem !== '/owner/settings'
+    ) {
+      if (normCurrent.startsWith(normItem + '/')) {
         // Prevent /workflows from greedily matching /workflows/approvals
         const isApprovalsTarget = cleanCurrent === '/workflows/approvals' ||
           cleanCurrent.startsWith('/workflows/approvals/');

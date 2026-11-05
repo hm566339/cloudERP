@@ -10,6 +10,8 @@ export * from './settings.api';
 export * from './user';
 export * from './dashboard';
 export * from './organization.api';
+export * from './organizationSettings.api';
+export * from './roleTemplate.api';
 
 export * from './auth';
 export * from './token';

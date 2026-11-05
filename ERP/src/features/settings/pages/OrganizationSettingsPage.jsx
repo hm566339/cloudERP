@@ -23,11 +23,14 @@ import {
   getOrganizationModules,
 } from '../../../api/sso/organizationSettings.api.js';
 
-import OrganizationSubSidebar, { ORG_NAV_ITEMS } from '../components/OrganizationSubSidebar';
+import { ORG_NAV_ITEMS, resolveOrgSubmenuPath } from '../components/organizationNavConfig.js';
 import OrgOverviewView from '../components/organization/OrgOverviewView';
 import OrgProfileView from '../components/organization/OrgProfileView';
 import OrgCompaniesView from '../components/organization/OrgCompaniesView';
 import OrgUsersView from '../components/organization/OrgUsersView';
+import OrgRolesView from '../components/organization/OrgRolesView';
+import OrgPermissionsView from '../components/organization/OrgPermissionsView';
+import OrgPortalAccessView from '../components/organization/OrgPortalAccessView';
 import OrgSecurityView from '../components/organization/OrgSecurityView';
 import OrgLoginPortalView from '../components/organization/OrgLoginPortalView';
 import OrgNotificationsView from '../components/organization/OrgNotificationsView';
@@ -37,17 +40,20 @@ import OrgAppearanceView from '../components/organization/OrgAppearanceView';
 /**
  * OrganizationSettingsPage
  *
- * Enterprise Organization Management console featuring a dedicated VERTICAL SUB-SIDEBAR
- * with 9 distinct submenu sections:
+ * Enterprise Organization Management console integrated directly into the main ERP sidebar
+ * with 12 distinct submenu sections:
  * 1. Overview
  * 2. Organization Profile
  * 3. Companies Management
  * 4. Users & Permissions
- * 5. Security & Authentication
- * 6. Organization Login Portal
- * 7. Notifications
- * 8. Localization & Formats
- * 9. Appearance & Themes
+ * 5. Role Management
+ * 6. Permission Management
+ * 7. Portal & Module Access
+ * 8. Security & Authentication
+ * 9. Organization Login Portal
+ * 10. Notifications
+ * 11. Localization & Formats
+ * 12. Appearance & Themes
  */
 export default function OrganizationSettingsPage() {
   const dispatch = useAppDispatch();
@@ -83,6 +89,9 @@ export default function OrganizationSettingsPage() {
     if (path.includes('/profile')) return 'profile';
     if (path.includes('/companies')) return 'companies';
     if (path.includes('/users')) return 'users';
+    if (path.includes('/roles')) return 'roles';
+    if (path.includes('/permissions')) return 'permissions';
+    if (path.includes('/portal-access')) return 'portal-access';
     if (path.includes('/security')) return 'security';
     if (path.includes('/login-portal')) return 'login-portal';
     if (path.includes('/notifications')) return 'notifications';
@@ -90,9 +99,6 @@ export default function OrganizationSettingsPage() {
     if (path.includes('/appearance')) return 'appearance';
     return 'overview';
   }, [params.section, location.pathname]);
-
-  // Mobile drawer state
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   // Form & Settings States
   const [name, setName] = useState(authOrg?.name || authOrg?.code || 'My Organization');
@@ -359,188 +365,166 @@ useEffect(() => {
         }), [orgId, authOrg, name, orgCode, contactEmail, status, accessMode]);
 
         return (
-            <div className="flex flex-col lg:flex-row min-h-screen w-full bg-[#E8E9DF] dark:bg-[#0F1117] text-zinc-900 dark:text-[#E6E8EE]">
-              {/* ── Vertical Sub-Sidebar ── */}
-              <OrganizationSubSidebar
-                organization={orgSummary}
-                activeSection={activeSection}
-                onSelectSection={handleNavigateSection}
-                mobileOpen={mobileDrawerOpen}
-                onCloseMobile={() => setMobileDrawerOpen(false)}
-                companiesCount={registeredCompanies.length}
-              />
+          <div className="w-full flex-1 flex flex-col min-h-0 bg-[#E8E9DF] dark:bg-[#0F1117] text-zinc-900 dark:text-[#E6E8EE]">
+            {/* Global Breadcrumbs & Quick Bar */}
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#F7F7F0]/60 dark:bg-[#161922]/60 border-b border-[#D5D8CA] dark:border-[#2A2F3D] text-xs shrink-0">
+              <div className="flex items-center gap-1.5 text-[#485942] dark:text-[#A0A6B5] flex-wrap">
+                <Link to="/owner/dashboard" className="hover:text-[#2E3D28] dark:hover:text-[#E6E8EE] font-medium">
+                  Owner Dashboard
+                </Link>
+                <ChevronRight size={13} className="text-[#8B9382] dark:text-[#6B7184] shrink-0" />
+                <Link to={basePath} className="hover:text-[#2E3D28] dark:hover:text-[#E6E8EE] font-medium">
+                  Organization Management
+                </Link>
+                <ChevronRight size={13} className="text-[#8B9382] dark:text-[#6B7184] shrink-0" />
+                <span className="text-[#2E3D28] dark:text-[#E6E8EE] font-bold">
+                  {activeSectionMeta.label}
+                </span>
+              </div>
 
-                  {/* ── Main Content Area ── */}
-                  <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-                    {/* Mobile Submenu Header */}
-                    <div className="lg:hidden flex items-center justify-between p-4 bg-[#F7F7F0] dark:bg-[#161922] border-b border-[#D5D8CA] dark:border-[#2A2F3D] shrink-0">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setMobileDrawerOpen(true)}
-                          className="p-2 rounded-xl bg-white dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[#2E3D28] dark:text-[#E6E8EE] shadow-2xs"
-                          aria-label="Open Organization Submenu"
-                        >
-                          <Menu size={18} />
-                        </button>
-                        <div className="min-w-0">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#485942] dark:text-[#A0A6B5] block">
-                            Organization Management
-                          </span>
-                          <span className="text-xs font-bold text-[#2E3D28] dark:text-[#E6E8EE] truncate block">
-                            {activeSectionMeta.label}
-                          </span>
-                        </div>
-                      </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={loadSettingsData}
+                  disabled={isLoading}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] rounded-lg transition-all shadow-2xs"
+                >
+                  <RefreshCw size={12} className={isLoading ? 'animate-spin' : ''} />
+                  <span>Refresh</span>
+                </button>
+              </div>
+            </div>
 
-                      <button
-                        type="button"
-                        onClick={loadSettingsData}
-                        disabled={isLoading}
-                        className="p-2 rounded-xl bg-white dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] text-[#2E3D28] dark:text-[#E6E8EE]"
-                        title="Refresh"
-                      >
-                        <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
-                      </button>
-                    </div>
+            {/* Section View Container */}
+            <div className="flex-1 p-4 sm:p-6 w-full min-w-0">
+              {loadError && (
+                <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
+                  <span>Failed to load fresh organization data: {loadError}</span>
+                  <button
+                    type="button"
+                    onClick={loadSettingsData}
+                    className="font-bold underline hover:text-amber-950 dark:hover:text-amber-100"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
 
-                        {/* Global Breadcrumbs & Quick Bar */}
-                        <div className="hidden lg:flex items-center justify-between px-6 py-3 bg-[#F7F7F0]/60 dark:bg-[#161922]/60 border-b border-[#D5D8CA] dark:border-[#2A2F3D] text-xs">
-                          <div className="flex items-center gap-1.5 text-[#485942] dark:text-[#A0A6B5]">
-                            <Link to="/owner/dashboard" className="hover:text-[#2E3D28] dark:hover:text-[#E6E8EE] font-medium">
-                              Owner Dashboard
-                            </Link>
-                            <ChevronRight size={13} className="text-[#8B9382] dark:text-[#6B7184]" />
-                            <Link to={basePath} className="hover:text-[#2E3D28] dark:hover:text-[#E6E8EE] font-medium">
-                              Organization Management
-                            </Link>
-                            <ChevronRight size={13} className="text-[#8B9382] dark:text-[#6B7184]" />
-                            <span className="text-[#2E3D28] dark:text-[#E6E8EE] font-bold">
-                              {activeSectionMeta.label}
-                            </span>
-                          </div>
+              {/* 1. Overview */}
+              {activeSection === 'overview' && (
+                <OrgOverviewView
+                  organization={orgSummary}
+                  user={authUser}
+                  companies={registeredCompanies}
+                  membersCount={registeredCompanies.length}
+                  planName={subscriptionPlanName}
+                  isTrial={isTrial}
+                  twoFactorRequired={twoFactorRequired}
+                  sessionTimeout={sessionTimeout}
+                  currency={currency}
+                  timezone={timezone}
+                  enabledModules={enabledModules}
+                  loginUrl={loginUrl}
+                  onNavigateSection={handleNavigateSection}
+                />
+              )}
 
-                          <div className="flex items-center gap-3">
-                            <button
-                              type="button"
-                              onClick={loadSettingsData}
-                              disabled={isLoading}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] rounded-lg transition-all shadow-2xs"
-                            >
-                              <RefreshCw size={12} className={isLoading ? 'animate-spin' : ''} />
-                              <span>Refresh</span>
-                            </button>
-                          </div>
-                          </div>
+              {/* 2. Organization Profile */}
+              {activeSection === 'profile' && (
+                <OrgProfileView
+                  organization={orgSummary}
+                  initialName={name}
+                  initialEmail={contactEmail}
+                  onSaveProfile={handleSaveProfile}
+                  isSaving={isSaving}
+                />
+              )}
 
-                                {/* Section View Container */}
-                                <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full min-w-0">
-                                  {loadError && (
-                                    <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
-                                      <span>Failed to load fresh organization data: {loadError}</span>
-                                      <button
-                                        type="button"
-                                        onClick={loadSettingsData}
-                                        className="font-bold underline hover:text-amber-950 dark:hover:text-amber-100"
-                                      >
-                                        Retry
-                                      </button>
-                                    </div>
-          )}
+              {/* 3. Companies Management */}
+              {activeSection === 'companies' && (
+                <OrgCompaniesView
+                  companies={registeredCompanies}
+                  organization={orgSummary}
+                  maxCapacity={4}
+                />
+              )}
 
-                                {/* 1. Overview */}
-                                {activeSection === 'overview' && (
-                                  <OrgOverviewView
-                                    organization={orgSummary}
-                                    user={authUser}
-                                    companies={registeredCompanies}
-                                    membersCount={registeredCompanies.length}
-                                    planName={subscriptionPlanName}
-                                    isTrial={isTrial}
-                                    twoFactorRequired={twoFactorRequired}
-                                    sessionTimeout={sessionTimeout}
-                                    currency={currency}
-                                    timezone={timezone}
-                                    enabledModules={enabledModules}
-                                    loginUrl={loginUrl}
-                                    onNavigateSection={handleNavigateSection}
-                                  />
-                                )}
+              {/* 4. Users & Permissions */}
+              {activeSection === 'users' && (
+                <OrgUsersView
+                  organization={orgSummary}
+                  companies={registeredCompanies}
+                />
+              )}
 
-                                  {/* 2. Organization Profile */}
-                                  {activeSection === 'profile' && (
-                                    <OrgProfileView
-                                      organization={orgSummary}
-                                      initialName={name}
-                                      initialEmail={contactEmail}
-                                      onSaveProfile={handleSaveProfile}
-                                      isSaving={isSaving}
-                                    />
-                                  )}
+              {/* 5. Role Management */}
+              {activeSection === 'roles' && (
+                <OrgRolesView
+                  organization={orgSummary}
+                  companies={registeredCompanies}
+                />
+              )}
 
-                                  {/* 3. Companies Management */}
-                                  {activeSection === 'companies' && (
-                                    <OrgCompaniesView
-                                      companies={registeredCompanies}
-                                      organization={orgSummary}
-                                      maxCapacity={4}
-                                    />
-                                  )}
+              {/* 6. Permission Management */}
+              {activeSection === 'permissions' && (
+                <OrgPermissionsView
+                  organization={orgSummary}
+                />
+              )}
 
-                                  {/* 4. Users & Permissions */}
-                                  {activeSection === 'users' && (
-                                    <OrgUsersView
-                                      organization={orgSummary}
-                                      companies={registeredCompanies}
-                                    />
-                                  )}
+              {/* 7. Portal & Module Access */}
+              {activeSection === 'portal-access' && (
+                <OrgPortalAccessView
+                  organization={orgSummary}
+                  companies={registeredCompanies}
+                />
+              )}
 
-                                  {/* 5. Security & Authentication */}
-                                  {activeSection === 'security' && (
-                                    <OrgSecurityView
-                                      initialTwoFactor={twoFactorRequired}
-                                      initialTimeout={sessionTimeout}
-                                      onSaveSecurity={handleSaveSecurity}
-                                      isSaving={isSaving}
-                                    />
-                                  )}
+              {/* 8. Security & Authentication */}
+              {activeSection === 'security' && (
+                <OrgSecurityView
+                  initialTwoFactor={twoFactorRequired}
+                  initialTimeout={sessionTimeout}
+                  onSaveSecurity={handleSaveSecurity}
+                  isSaving={isSaving}
+                />
+              )}
 
-                              {/* 6. Organization Login Portal */}
-                              {activeSection === 'login-portal' && (
-                                <OrgLoginPortalView
-                                  organization={orgSummary}
-                                  loginUrl={loginUrl}
-                                />
-                              )}
+              {/* 9. Organization Login Portal */}
+              {activeSection === 'login-portal' && (
+                <OrgLoginPortalView
+                  organization={orgSummary}
+                  loginUrl={loginUrl}
+                />
+              )}
 
-                                {/* 7. Notifications */}
-                                {activeSection === 'notifications' && (
-                                  <OrgNotificationsView
-                                    organization={orgSummary}
-                                  />
-                                )}
+              {/* 10. Notifications */}
+              {activeSection === 'notifications' && (
+                <OrgNotificationsView
+                  organization={orgSummary}
+                />
+              )}
 
-                                  {/* 8. Localization & Formats */}
-                                  {activeSection === 'localization' && (
-                                    <OrgLocalizationView
-                                      initialCurrency={currency}
-                                      initialTimezone={timezone}
-                                      initialFiscalYear={fiscalYearStart}
-                                      initialDateFormat={dateFormat}
-                                      initialTimeFormat={timeFormat}
-                                      onSaveLocalization={handleSaveRegional}
-                                      isSaving={isSaving}
-                                    />
-                                  )}
+              {/* 11. Localization & Formats */}
+              {activeSection === 'localization' && (
+                <OrgLocalizationView
+                  initialCurrency={currency}
+                  initialTimezone={timezone}
+                  initialFiscalYear={fiscalYearStart}
+                  initialDateFormat={dateFormat}
+                  initialTimeFormat={timeFormat}
+                  onSaveLocalization={handleSaveRegional}
+                  isSaving={isSaving}
+                />
+              )}
 
-                                {/* 9. Appearance & Themes */}
-                                {activeSection === 'appearance' && (
-                                  <OrgAppearanceView
-                                    organization={orgSummary}
-                                  />
-                                )}
-                              </div>
-                          </main>
-                        </div>
-                        );
+              {/* 12. Appearance & Themes */}
+              {activeSection === 'appearance' && (
+                <OrgAppearanceView
+                  organization={orgSummary}
+                />
+              )}
+            </div>
+          </div>
+        );
 }

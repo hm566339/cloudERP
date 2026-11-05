@@ -261,9 +261,10 @@ describe('Dynamic SSO Module Visibility for Company Owner (Production-Ready Test
     const childrenIds = ssoSection.children.map((c) => c.id);
     assert.ok(childrenIds.includes('admin-dashboard'), 'Admin dashboard child must be present');
     assert.ok(childrenIds.includes('users'), 'Users child must be present');
-    assert.ok(childrenIds.includes('roles'), 'Roles child must be present');
-    assert.ok(childrenIds.includes('portal-access'), 'Portal access child must be present');
     assert.ok(childrenIds.includes('sessions'), 'Sessions child must be present');
+    // Role Management and Portal Access have been moved to Organization Management
+    assert.strictEqual(childrenIds.includes('roles'), false, 'Roles child must not be in SSO sidebar');
+    assert.strictEqual(childrenIds.includes('portal-access'), false, 'Portal access child must not be in SSO sidebar');
   });
 
   // 9. Direct browser navigation to SSO route succeeds for authorized Owner

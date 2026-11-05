@@ -40,6 +40,13 @@ public class Role {
     private Company company;
 
     /*
+     * ORGANIZATION ROLE TEMPLATE (ORIGIN TEMPLATE)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id")
+    private OrganizationRoleTemplate template;
+
+    /*
      * ROLE DETAILS
      */
     @Column(length = 100, nullable = false)

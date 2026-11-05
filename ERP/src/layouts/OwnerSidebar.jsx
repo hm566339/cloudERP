@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import MarkLogo from '../components/common/MarkLogo';
 import Tooltip from '../components/common/Tooltip';
+import SidebarNavItem from './SidebarNavItem';
+import { isItemOrChildActive } from './SidebarNavUtils.js';
 import { getOwnerSidebarNavGroups } from './ownerSidebarConfig';
 
 /**
@@ -58,10 +60,17 @@ export default function OwnerSidebar({
 
   const isItemActive = (item) => {
     if (!item) return false;
+
+    const currentPath = location.pathname;
+
+    // 0. Expandable items with children
+    if (item.children && item.children.length > 0) {
+      return isItemOrChildActive(item, currentPath);
+    }
+
     const itemPath = typeof item === 'string' ? item : item.path;
     if (!itemPath) return false;
 
-    const currentPath = location.pathname;
     // Strip company prefix: e.g. /company/ea811382.../accounts/dashboard -> /accounts/dashboard
     const strippedPath = currentPath.replace(/^\/company\/[^/]+/, '');
 
@@ -346,6 +355,50 @@ const renderNav = (collapsedMode = false) => {
                   }
 
                   return <div key={item.id}>{lockedContent}</div>;
+                }
+
+                // ── Expandable Navigation Item with Submenu (e.g. Organization Management) ──
+                if (item.children && item.children.length > 0) {
+                  if (collapsedMode) {
+                    const itemTooltipText = item.label;
+                    const collapsedContent = (
+                      <NavLink
+                        to={item.path}
+                        onClick={mobileOpen ? onMobileClose : undefined}
+                        className={`sidebar-item group justify-center p-2.5 ${active
+                            ? 'sidebar-item-active'
+                            : 'sidebar-item-inactive'
+                          }`}
+                        title={itemTooltipText}
+                      >
+                        <Icon
+                          size={18}
+                          className={`shrink-0 transition-colors ${active
+                              ? 'text-white'
+                              : (item.accentColor || 'text-zinc-500 dark:text-[#A0A6B5]')
+                            }`}
+                        />
+                      </NavLink>
+                    );
+
+                    return (
+                      <div key={item.id} className="flex justify-center">
+                        <Tooltip content={itemTooltipText}>
+                          {collapsedContent}
+                        </Tooltip>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <SidebarNavItem
+                      key={item.id}
+                      item={item}
+                      location={location}
+                      level={0}
+                      onLinkClick={mobileOpen ? onMobileClose : undefined}
+                    />
+                  );
                 }
 
                 // ── Standard ACTIVE / ENTITLED Link ──

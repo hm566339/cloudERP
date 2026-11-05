@@ -77,4 +77,6 @@ public interface UserRoleRepository
                         @Param("roleId") UUID roleId,
                         @Param("search") String search,
                         Pageable pageable);
+
+        long countByRole_Id(UUID roleId);
 }

@@ -492,22 +492,6 @@ function getRawModuleNavigationBlueprint(moduleName, base, authContext) {
           action: 'READ',
         },
         {
-          id: 'roles',
-          label: 'Role Management',
-          path: `${base}/roles`,
-          icon: ShieldCheck,
-          featureCode: 'ROLE_MANAGEMENT',
-          action: 'READ',
-        },
-        {
-          id: 'portal-access',
-          label: 'Portal Access',
-          path: `${base}/portal-access`,
-          icon: Globe,
-          featureCode: 'PORTAL_ACCESS',
-          action: 'READ',
-        },
-        {
           id: 'sessions',
           label: 'Session Management',
           path: `${base}/sessions`,

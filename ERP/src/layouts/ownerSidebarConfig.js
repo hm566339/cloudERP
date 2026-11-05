@@ -13,6 +13,7 @@ import {
   Factory,
 } from 'lucide-react';
 import { normalizeModuleName } from '../utils/moduleNormalization.js';
+import { ORG_NAV_ITEMS, resolveOrgSubmenuPath } from '../features/settings/components/organizationNavConfig.js';
 
 /**
  * Master catalog mapping of ERP business modules with rich UI configuration.
@@ -216,6 +217,12 @@ export function getOwnerSidebarNavGroups({
           path: '/owner/settings',
           icon: Building2,
           isEntitled: true,
+          children: ORG_NAV_ITEMS.map((item) => ({
+            id: `org-${item.id}`,
+            label: item.label,
+            path: resolveOrgSubmenuPath('/owner/settings', item.id),
+            icon: item.icon,
+          })),
         },
         {
           id: 'subscription-management',

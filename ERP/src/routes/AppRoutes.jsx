@@ -802,6 +802,8 @@ export default function AppRoutes() {
             <Route path="/owner/subscription" element={<SubscriptionPage />} />
             <Route path="/owner/settings/appearance" element={<OrganizationSettingsPage />} />
             <Route path="/owner/appearance" element={<Navigate to="/owner/settings/appearance" replace />} />
+            <Route path="/owner/roles" element={<Navigate to="/owner/settings/roles" replace />} />
+            <Route path="/owner/permissions" element={<Navigate to="/owner/settings/permissions" replace />} />
             <Route path="/owner/settings/subscription" element={<Navigate to="/subscription" replace />} />
             <Route path="/owner/profile" element={<Navigate to="/profile" replace />} />
             <Route path="/organization/dashboard" element={<Navigate to="/owner/dashboard" replace />} />

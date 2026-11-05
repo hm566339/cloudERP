@@ -92,4 +92,12 @@ public interface RoleRepository extends JpaRepository<Role, UUID> {
         List<RoleCountProjection> getRoleAssignmentCounts(
                         @Param("companyId") UUID companyId);
 
+        List<Role> findByTemplate_Id(UUID templateId);
+
+        long countByTemplate_Id(UUID templateId);
+
+        List<Role> findByCompany_Organization_IdAndNameIgnoreCase(UUID organizationId, String name);
+
+        List<Role> findByCompany_Organization_Id(UUID organizationId);
+
 }
