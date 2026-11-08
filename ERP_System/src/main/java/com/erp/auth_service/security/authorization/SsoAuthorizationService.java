@@ -10,6 +10,7 @@ import com.erp.auth_service.service.PermissionService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class SsoAuthorizationService {
         this(authorizationProperties, permissionService, featurePermissionRepository, null);
     }
 
+    @Autowired
     public SsoAuthorizationService(
             AuthorizationProperties authorizationProperties,
             PermissionService permissionService,
@@ -245,7 +247,8 @@ public class SsoAuthorizationService {
                 orgId = ctx.organizationId();
             }
 
-            // If orgId is not set in context, resolve if user has exactly 1 active membership
+            // If orgId is not set in context, resolve if user has exactly 1 active
+            // membership
             if (orgId == null && organizationMemberRepository != null) {
                 var activeMembers = organizationMemberRepository.findByUser_IdAndMembershipStatus(
                         userId, com.erp.auth_service.utility.MembershipStatus.ACTIVE);
@@ -270,18 +273,24 @@ public class SsoAuthorizationService {
                             String upperCode = candidateCode.toUpperCase(Locale.ROOT);
                             if (EXPLICIT_ORG_OWNER_PERMISSIONS.contains(upperCode)) {
                                 if (featurePermissionRepository != null) {
-                                    var fpOpt = featurePermissionRepository.findByPermissionCodeIgnoreCase(candidateCode);
+                                    var fpOpt = featurePermissionRepository
+                                            .findByPermissionCodeIgnoreCase(candidateCode);
                                     if (fpOpt.isPresent()) {
-                                        if (!fpOpt.get().isActive() || (fpOpt.get().getFeature() != null && !fpOpt.get().getFeature().isActive())) {
+                                        if (!fpOpt.get().isActive() || (fpOpt.get().getFeature() != null
+                                                && !fpOpt.get().getFeature().isActive())) {
                                             log.warn("Access denied: Permission [{}] is disabled", candidateCode);
-                                            return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode, "PERMISSION_DISABLED");
+                                            return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode,
+                                                    "PERMISSION_DISABLED");
                                         }
-                                        log.debug("Granting exact allowlisted org permission [{}] for active Organization OWNER [{}] in org [{}]",
+                                        log.debug(
+                                                "Granting exact allowlisted org permission [{}] for active Organization OWNER [{}] in org [{}]",
                                                 candidateCode, userId, orgId);
-                                        return AuthorizationDecision.allow(featureCode, primaryAction, candidateCode, "ORG_OWNER_PERMISSION");
+                                        return AuthorizationDecision.allow(featureCode, primaryAction, candidateCode,
+                                                "ORG_OWNER_PERMISSION");
                                     }
                                 } else {
-                                    return AuthorizationDecision.allow(featureCode, primaryAction, candidateCode, "ORG_OWNER_PERMISSION");
+                                    return AuthorizationDecision.allow(featureCode, primaryAction, candidateCode,
+                                            "ORG_OWNER_PERMISSION");
                                 }
                             }
                         }
@@ -339,7 +348,8 @@ public class SsoAuthorizationService {
                 if (featurePermissionRepository != null) {
                     var fpOpt = featurePermissionRepository.findByPermissionCodeIgnoreCase(candidateCode);
                     if (fpOpt.isPresent()) {
-                        if (!fpOpt.get().isActive() || (fpOpt.get().getFeature() != null && !fpOpt.get().getFeature().isActive())) {
+                        if (!fpOpt.get().isActive()
+                                || (fpOpt.get().getFeature() != null && !fpOpt.get().getFeature().isActive())) {
                             return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode,
                                     "PERMISSION_DISABLED");
                         }

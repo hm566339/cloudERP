@@ -12,6 +12,7 @@ import com.erp.auth_service.utility.AccessMode;
 import com.erp.auth_service.utility.MembershipStatus;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,6 +33,7 @@ public class OrganizationAppearanceController {
         this(appearanceService, null, null);
     }
 
+    @Autowired
     public OrganizationAppearanceController(
             OrganizationAppearanceService appearanceService,
             com.erp.auth_service.repository.CompanyRepository companyRepository,
