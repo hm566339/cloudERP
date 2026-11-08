@@ -16,6 +16,7 @@ import com.erp.auth_service.utility.MembershipStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -61,12 +62,18 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
     @Override
     @Transactional
     public void grantCompanyAccess(UUID memberId, UUID companyId) {
-        grantCompanyAccess(memberId, companyId, null);
+        grantCompanyAccess(memberId, companyId, (List<UUID>) null);
     }
 
     @Override
     @Transactional
     public void grantCompanyAccess(UUID memberId, UUID companyId, UUID roleId) {
+        grantCompanyAccess(memberId, companyId, roleId != null ? List.of(roleId) : null);
+    }
+
+    @Override
+    @Transactional
+    public void grantCompanyAccess(UUID memberId, UUID companyId, List<UUID> roleIds) {
         authorizationService.requireWriteAccess();
         OrganizationMember actor = actor();
         OrganizationMember target = target(memberId, actor.getOrganization().getId());
@@ -74,12 +81,17 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                 .findByIdAndOrganization_IdAndActiveTrue(companyId, actor.getOrganization().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
 
-        Role targetRole = null;
-        if (roleId != null && roleRepository != null) {
-            targetRole = roleRepository.findById(roleId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
-            if (targetRole.getCompany() == null || !targetRole.getCompany().getId().equals(companyId)) {
-                throw new BadRequestException("Role does not belong to selected company");
+        List<Role> targetRoles = new ArrayList<>();
+        if (roleIds != null && !roleIds.isEmpty() && roleRepository != null) {
+            for (UUID rId : roleIds) {
+                if (rId != null) {
+                    Role r = roleRepository.findById(rId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + rId));
+                    if (r.getCompany() == null || !r.getCompany().getId().equals(companyId)) {
+                        throw new BadRequestException("Role " + r.getName() + " does not belong to selected company");
+                    }
+                    targetRoles.add(r);
+                }
             }
         }
 
@@ -111,14 +123,14 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
             }
         }
 
-        // Assign role if specified
-        if (targetRole != null && userRoleRepository != null) {
-            List<UserRole> existingRoles = userRoleRepository
-                    .findAllByUser_IdAndRole_Company_Id(target.getUser().getId(), companyId);
-            if (existingRoles != null && !existingRoles.isEmpty()) {
-                userRoleRepository.deleteAll(existingRoles);
+        // Assign roles if specified
+        if (!targetRoles.isEmpty() && userRoleRepository != null) {
+            for (Role targetRole : targetRoles) {
+                Optional<UserRole> existingUr = userRoleRepository.findByUser_IdAndRole_Id(target.getUser().getId(), targetRole.getId());
+                if (existingUr.isEmpty()) {
+                    userRoleRepository.save(UserRole.builder().user(target.getUser()).role(targetRole).build());
+                }
             }
-            userRoleRepository.save(UserRole.builder().user(target.getUser()).role(targetRole).build());
         }
 
         // Ensure user portal access for active company modules
@@ -135,11 +147,26 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                 }
             }
         }
+
+        // Invalidate active session for this user in this company so refreshed permissions take effect
+        if (sessionRepository != null) {
+            sessionRepository.deleteByUser_IdAndCompany_Id(target.getUser().getId(), companyId);
+        }
     }
 
     @Override
     @Transactional
     public void updateCompanyRole(UUID memberId, UUID companyId, UUID roleId) {
+        if (roleId == null) {
+            syncCompanyRoles(memberId, companyId, List.of());
+        } else {
+            syncCompanyRoles(memberId, companyId, List.of(roleId));
+        }
+    }
+
+    @Override
+    @Transactional
+    public void addCompanyRole(UUID memberId, UUID companyId, UUID roleId) {
         authorizationService.requireWriteAccess();
         OrganizationMember actor = actor();
         OrganizationMember target = target(memberId, actor.getOrganization().getId());
@@ -154,12 +181,79 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         }
 
         if (userRoleRepository != null) {
+            Optional<UserRole> existing = userRoleRepository.findByUser_IdAndRole_Id(target.getUser().getId(), roleId);
+            if (existing.isEmpty()) {
+                userRoleRepository.save(UserRole.builder().user(target.getUser()).role(role).build());
+            }
+        }
+
+        if (sessionRepository != null) {
+            sessionRepository.deleteByUser_IdAndCompany_Id(target.getUser().getId(), companyId);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeCompanyRole(UUID memberId, UUID companyId, UUID roleId) {
+        authorizationService.requireWriteAccess();
+        OrganizationMember actor = actor();
+        OrganizationMember target = target(memberId, actor.getOrganization().getId());
+
+        accessRepository.findActiveCompany(target.getId(), actor.getOrganization().getId(), companyId)
+                .orElseThrow(() -> new BadRequestException("User does not have active access to this company"));
+
+        if (userRoleRepository != null) {
+            Optional<UserRole> existing = userRoleRepository.findByUser_IdAndRole_Id(target.getUser().getId(), roleId);
+            if (existing.isPresent()) {
+                UserRole ur = existing.get();
+                if (ur.getRole() != null && ur.getRole().getCompany() != null && ur.getRole().getCompany().getId().equals(companyId)) {
+                    userRoleRepository.delete(ur);
+                }
+            }
+        }
+
+        if (sessionRepository != null) {
+            sessionRepository.deleteByUser_IdAndCompany_Id(target.getUser().getId(), companyId);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void syncCompanyRoles(UUID memberId, UUID companyId, List<UUID> roleIds) {
+        authorizationService.requireWriteAccess();
+        OrganizationMember actor = actor();
+        OrganizationMember target = target(memberId, actor.getOrganization().getId());
+
+        accessRepository.findActiveCompany(target.getId(), actor.getOrganization().getId(), companyId)
+                .orElseThrow(() -> new BadRequestException("User does not have active access to this company"));
+
+        List<Role> targetRoles = new ArrayList<>();
+        if (roleIds != null && !roleIds.isEmpty() && roleRepository != null) {
+            for (UUID rId : roleIds) {
+                if (rId != null) {
+                    Role r = roleRepository.findById(rId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + rId));
+                    if (r.getCompany() == null || !r.getCompany().getId().equals(companyId)) {
+                        throw new BadRequestException("Role " + r.getName() + " does not belong to target company");
+                    }
+                    targetRoles.add(r);
+                }
+            }
+        }
+
+        if (userRoleRepository != null) {
             List<UserRole> existing = userRoleRepository.findAllByUser_IdAndRole_Company_Id(target.getUser().getId(),
                     companyId);
             if (existing != null && !existing.isEmpty()) {
                 userRoleRepository.deleteAll(existing);
             }
-            userRoleRepository.save(UserRole.builder().user(target.getUser()).role(role).build());
+            for (Role role : targetRoles) {
+                userRoleRepository.save(UserRole.builder().user(target.getUser()).role(role).build());
+            }
+        }
+
+        if (sessionRepository != null) {
+            sessionRepository.deleteByUser_IdAndCompany_Id(target.getUser().getId(), companyId);
         }
     }
 
@@ -177,7 +271,7 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         access.setActive(false);
         accessRepository.save(access);
 
-        // Clean up user's roles in that revoked company
+        // Clean up user's roles in that revoked company only
         if (userRoleRepository != null) {
             List<UserRole> companyRoles = userRoleRepository
                     .findAllByUser_IdAndRole_Company_Id(target.getUser().getId(), companyId);
@@ -185,7 +279,7 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                 userRoleRepository.deleteAll(companyRoles);
             }
         }
-        // Clean up user's portal access in that company
+        // Clean up user's portal access in that company only
         if (userPortalAccessRepository != null) {
             List<UserPortalAccess> portalAccesses = userPortalAccessRepository
                     .findAllByUser_IdAndCompanyModule_Company_Id(target.getUser().getId(), companyId);
@@ -226,22 +320,33 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
 
         return allCompanies.stream().map(comp -> {
             boolean hasAccess = activeCompanyIds.contains(comp.getId());
-            UUID rId = null;
-            String rName = null;
+            List<UUID> rIds = new ArrayList<>();
+            List<String> rNames = new ArrayList<>();
+
             if (hasAccess && userRoleRepository != null) {
                 List<UserRole> roles = userRoleRepository.findAllByUser_IdAndRole_Company_Id(target.getUser().getId(),
                         comp.getId());
-                if (roles != null && !roles.isEmpty() && roles.get(0).getRole() != null) {
-                    rId = roles.get(0).getRole().getId();
-                    rName = roles.get(0).getRole().getName();
+                if (roles != null && !roles.isEmpty()) {
+                    for (UserRole ur : roles) {
+                        if (ur.getRole() != null && ur.getRole().isStatus()) {
+                            rIds.add(ur.getRole().getId());
+                            rNames.add(ur.getRole().getName());
+                        }
+                    }
                 }
             }
+
+            UUID primaryRoleId = rIds.isEmpty() ? null : rIds.get(0);
+            String primaryRoleName = rNames.isEmpty() ? null : String.join(", ", rNames);
+
             return MemberCompanyRoleDto.builder()
                     .companyId(comp.getId())
                     .companyName(comp.getCompanyName())
                     .companyCode(comp.getCompanyCode())
-                    .roleId(rId)
-                    .roleName(rName)
+                    .roleId(primaryRoleId)
+                    .roleName(primaryRoleName)
+                    .roleIds(rIds)
+                    .roleNames(rNames)
                     .active(hasAccess)
                     .build();
         }).toList();
@@ -290,22 +395,33 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
 
                     List<MemberCompanyRoleDto> companyAccessList = activeAccess.stream().map(a -> {
                         Company comp = a.getCompany();
-                        UUID rId = null;
-                        String rName = null;
+                        List<UUID> rIds = new ArrayList<>();
+                        List<String> rNames = new ArrayList<>();
+
                         if (userRoleRepository != null) {
                             List<UserRole> uRoles = userRoleRepository
                                     .findAllByUser_IdAndRole_Company_Id(m.getUser().getId(), comp.getId());
-                            if (uRoles != null && !uRoles.isEmpty() && uRoles.get(0).getRole() != null) {
-                                rId = uRoles.get(0).getRole().getId();
-                                rName = uRoles.get(0).getRole().getName();
+                            if (uRoles != null && !uRoles.isEmpty()) {
+                                for (UserRole ur : uRoles) {
+                                    if (ur.getRole() != null && ur.getRole().isStatus()) {
+                                        rIds.add(ur.getRole().getId());
+                                        rNames.add(ur.getRole().getName());
+                                    }
+                                }
                             }
                         }
+
+                        UUID primaryRoleId = rIds.isEmpty() ? null : rIds.get(0);
+                        String primaryRoleName = rNames.isEmpty() ? null : String.join(", ", rNames);
+
                         return MemberCompanyRoleDto.builder()
                                 .companyId(comp.getId())
                                 .companyName(comp.getCompanyName())
                                 .companyCode(comp.getCompanyCode())
-                                .roleId(rId)
-                                .roleName(rName)
+                                .roleId(primaryRoleId)
+                                .roleName(primaryRoleName)
+                                .roleIds(rIds)
+                                .roleNames(rNames)
                                 .active(a.getActive())
                                 .build();
                     }).toList();

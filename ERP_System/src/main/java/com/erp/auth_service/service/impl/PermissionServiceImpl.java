@@ -635,6 +635,10 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     private User getUserOrThrow(UUID userId) {
+        Optional<User> withRoles = userRepository.findByIdWithRoles(userId);
+        if (withRoles != null && withRoles.isPresent()) {
+            return withRoles.get();
+        }
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
     }

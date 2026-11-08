@@ -61,6 +61,7 @@ class OrganizationAdministrationServiceImplTest {
         private Company companyA;
         private Company companyB;
         private Role roleManagerCompanyB;
+        private Role roleAuditorCompanyB;
 
         @BeforeEach
         void setUp() {
@@ -83,8 +84,8 @@ class OrganizationAdministrationServiceImplTest {
                                 .membershipStatus(MembershipStatus.ACTIVE)
                                 .build();
 
-                targetUser = User.builder().id(UUID.randomUUID()).username("mohit").email("mohit@example.com")
-                                .fullName("Mohit").build();
+                targetUser = User.builder().id(UUID.randomUUID()).username("rahul").email("rahul@example.com")
+                                .fullName("Rahul Sharma").build();
                 targetMember = OrganizationMember.builder()
                                 .id(UUID.randomUUID())
                                 .organization(organization)
@@ -98,6 +99,8 @@ class OrganizationAdministrationServiceImplTest {
                 companyB = Company.builder().id(UUID.randomUUID()).companyCode("COMP-B").companyName("Company Beta")
                                 .organization(organization).active(true).build();
                 roleManagerCompanyB = Role.builder().id(UUID.randomUUID()).name("MANAGER").company(companyB)
+                                .status(true).build();
+                roleAuditorCompanyB = Role.builder().id(UUID.randomUUID()).name("AUDITOR").company(companyB)
                                 .status(true).build();
         }
 
@@ -129,7 +132,6 @@ class OrganizationAdministrationServiceImplTest {
         assertThrows(ResourceNotFoundException.class, () -> service.grantCompanyAccess(owner.getId(), otherCompanyId));
     }
 
-
         @Test
         @DisplayName("Grant Company Access with Role assigns role to target company and provisions portal access")
         void testGrantCompanyAccessWithRole() {
@@ -157,6 +159,9 @@ class OrganizationAdministrationServiceImplTest {
                 verify(userRoleRepository).save(roleCaptor.capture());
                 assertEquals("MANAGER", roleCaptor.getValue().getRole().getName());
                 assertEquals(companyB.getId(), roleCaptor.getValue().getRole().getCompany().getId());
+
+                // Verify session invalidated for targetUser in companyB
+                verify(sessionRepository).deleteByUser_IdAndCompany_Id(targetUser.getId(), companyB.getId());
         }
 
         @Test
@@ -173,15 +178,89 @@ class OrganizationAdministrationServiceImplTest {
                 when(accessRepository.findActiveCompany(targetMember.getId(), organization.getId(), companyB.getId()))
                                 .thenReturn(Optional.of(accessB));
                 when(roleRepository.findById(roleManagerCompanyB.getId())).thenReturn(Optional.of(roleManagerCompanyB));
+                when(userRoleRepository.findAllByUser_IdAndRole_Company_Id(targetUser.getId(), companyB.getId()))
+                                .thenReturn(List.of());
 
                 service.updateCompanyRole(targetMember.getId(), companyB.getId(), roleManagerCompanyB.getId());
 
                 verify(userRoleRepository).save(argThat(ur -> ur.getUser().getId().equals(targetUser.getId()) &&
                                 ur.getRole().getId().equals(roleManagerCompanyB.getId())));
+                verify(sessionRepository).deleteByUser_IdAndCompany_Id(targetUser.getId(), companyB.getId());
         }
 
         @Test
-        @DisplayName("Member and User Company Accesses return all company statuses and roles")
+        @DisplayName("Add Company Role supports multiple roles in same company")
+        void testAddCompanyRoleMultiRole() {
+                RequestContext.set(owner.getUser().getId(), organization.getId(), companyA.getId(), null, AccessMode.FULL);
+                when(memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(organization.getId(),
+                                owner.getUser().getId(), MembershipStatus.ACTIVE))
+                                .thenReturn(Optional.of(owner));
+                when(memberRepository.findById(targetMember.getId())).thenReturn(Optional.of(targetMember));
+                MemberCompanyAccess accessB = MemberCompanyAccess.builder().organizationMember(targetMember)
+                                .company(companyB).active(true).build();
+                when(accessRepository.findActiveCompany(targetMember.getId(), organization.getId(), companyB.getId()))
+                                .thenReturn(Optional.of(accessB));
+                when(roleRepository.findById(roleAuditorCompanyB.getId())).thenReturn(Optional.of(roleAuditorCompanyB));
+                when(userRoleRepository.findByUser_IdAndRole_Id(targetUser.getId(), roleAuditorCompanyB.getId()))
+                                .thenReturn(Optional.empty());
+
+                service.addCompanyRole(targetMember.getId(), companyB.getId(), roleAuditorCompanyB.getId());
+
+                verify(userRoleRepository).save(argThat(ur -> ur.getUser().getId().equals(targetUser.getId()) &&
+                                ur.getRole().getId().equals(roleAuditorCompanyB.getId())));
+                verify(sessionRepository).deleteByUser_IdAndCompany_Id(targetUser.getId(), companyB.getId());
+        }
+
+        @Test
+        @DisplayName("Remove Company Role revokes single role without deleting company access")
+        void testRemoveCompanyRole() {
+                RequestContext.set(owner.getUser().getId(), organization.getId(), companyA.getId(), null, AccessMode.FULL);
+                when(memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(organization.getId(),
+                                owner.getUser().getId(), MembershipStatus.ACTIVE))
+                                .thenReturn(Optional.of(owner));
+                when(memberRepository.findById(targetMember.getId())).thenReturn(Optional.of(targetMember));
+                MemberCompanyAccess accessB = MemberCompanyAccess.builder().organizationMember(targetMember)
+                                .company(companyB).active(true).build();
+                when(accessRepository.findActiveCompany(targetMember.getId(), organization.getId(), companyB.getId()))
+                                .thenReturn(Optional.of(accessB));
+
+                UserRole ur = UserRole.builder().user(targetUser).role(roleAuditorCompanyB).build();
+                when(userRoleRepository.findByUser_IdAndRole_Id(targetUser.getId(), roleAuditorCompanyB.getId()))
+                                .thenReturn(Optional.of(ur));
+
+                service.removeCompanyRole(targetMember.getId(), companyB.getId(), roleAuditorCompanyB.getId());
+
+                verify(userRoleRepository).delete(ur);
+                // Company access must NOT be revoked!
+                verify(accessRepository, never()).delete(any());
+                verify(sessionRepository).deleteByUser_IdAndCompany_Id(targetUser.getId(), companyB.getId());
+        }
+
+        @Test
+        @DisplayName("Sync Company Roles replaces company roles and validates company ownership")
+        void testSyncCompanyRoles() {
+                RequestContext.set(owner.getUser().getId(), organization.getId(), companyA.getId(), null, AccessMode.FULL);
+                when(memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(organization.getId(),
+                                owner.getUser().getId(), MembershipStatus.ACTIVE))
+                                .thenReturn(Optional.of(owner));
+                when(memberRepository.findById(targetMember.getId())).thenReturn(Optional.of(targetMember));
+                MemberCompanyAccess accessB = MemberCompanyAccess.builder().organizationMember(targetMember)
+                                .company(companyB).active(true).build();
+                when(accessRepository.findActiveCompany(targetMember.getId(), organization.getId(), companyB.getId()))
+                                .thenReturn(Optional.of(accessB));
+                when(roleRepository.findById(roleManagerCompanyB.getId())).thenReturn(Optional.of(roleManagerCompanyB));
+                when(roleRepository.findById(roleAuditorCompanyB.getId())).thenReturn(Optional.of(roleAuditorCompanyB));
+                when(userRoleRepository.findAllByUser_IdAndRole_Company_Id(targetUser.getId(), companyB.getId()))
+                                .thenReturn(List.of());
+
+                service.syncCompanyRoles(targetMember.getId(), companyB.getId(), List.of(roleManagerCompanyB.getId(), roleAuditorCompanyB.getId()));
+
+                verify(userRoleRepository, times(2)).save(any(UserRole.class));
+                verify(sessionRepository).deleteByUser_IdAndCompany_Id(targetUser.getId(), companyB.getId());
+        }
+
+        @Test
+        @DisplayName("Member and User Company Accesses return multi-role list and comma-formatted roleName")
         void testMemberAndUserCompanyAccesses() {
                 RequestContext.set(owner.getUser().getId(), organization.getId(), companyA.getId(), null,
                                 AccessMode.FULL);
@@ -200,10 +279,12 @@ class OrganizationAdministrationServiceImplTest {
                 when(accessRepository.findActiveForMember(targetMember.getId(), organization.getId()))
                                 .thenReturn(List.of(accessA));
 
-                Role roleAdminA = Role.builder().id(UUID.randomUUID()).name("ADMIN").company(companyA).build();
-                UserRole userRoleA = UserRole.builder().user(targetUser).role(roleAdminA).build();
+                Role roleAccountantA = Role.builder().id(UUID.randomUUID()).name("ACCOUNTANT").company(companyA).status(true).build();
+                Role roleAuditorA = Role.builder().id(UUID.randomUUID()).name("AUDITOR").company(companyA).status(true).build();
+                UserRole userRole1 = UserRole.builder().user(targetUser).role(roleAccountantA).build();
+                UserRole userRole2 = UserRole.builder().user(targetUser).role(roleAuditorA).build();
                 when(userRoleRepository.findAllByUser_IdAndRole_Company_Id(targetUser.getId(), companyA.getId()))
-                                .thenReturn(List.of(userRoleA));
+                                .thenReturn(List.of(userRole1, userRole2));
 
                 List<MemberCompanyRoleDto> memberAccessList = service.memberCompanyAccesses(targetMember.getId());
                 assertEquals(2, memberAccessList.size());
@@ -211,12 +292,17 @@ class OrganizationAdministrationServiceImplTest {
                 MemberCompanyRoleDto compADto = memberAccessList.stream()
                                 .filter(c -> c.getCompanyId().equals(companyA.getId())).findFirst().orElseThrow();
                 assertTrue(compADto.isActive());
-                assertEquals("ADMIN", compADto.getRoleName());
+                assertEquals("ACCOUNTANT, AUDITOR", compADto.getRoleName());
+                assertEquals(roleAccountantA.getId(), compADto.getRoleId());
+                assertEquals(2, compADto.getRoleIds().size());
+                assertTrue(compADto.getRoleNames().contains("ACCOUNTANT"));
+                assertTrue(compADto.getRoleNames().contains("AUDITOR"));
 
                 MemberCompanyRoleDto compBDto = memberAccessList.stream()
                                 .filter(c -> c.getCompanyId().equals(companyB.getId())).findFirst().orElseThrow();
                 assertFalse(compBDto.isActive());
                 assertNull(compBDto.getRoleName());
+                assertTrue(compBDto.getRoleIds().isEmpty());
 
                 // Test userCompanyAccesses
                 List<MemberCompanyRoleDto> userAccessList = service.userCompanyAccesses(targetUser.getId());

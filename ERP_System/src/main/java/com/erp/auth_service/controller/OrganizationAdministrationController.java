@@ -24,11 +24,14 @@ public class OrganizationAdministrationController {
     private final OrganizationAdministrationService administrationService;
 
     @PostMapping("/{memberId}/companies")
-
     public ResponseEntity<ResponseWrapper<Map<String, String>>> grant(
             @PathVariable UUID memberId,
             @Valid @RequestBody CompanyAccessRequest request) {
-        administrationService.grantCompanyAccess(memberId, request.getCompanyId(), request.getRoleId());
+        if (request.getRoleIds() != null && !request.getRoleIds().isEmpty()) {
+            administrationService.grantCompanyAccess(memberId, request.getCompanyId(), request.getRoleIds());
+        } else {
+            administrationService.grantCompanyAccess(memberId, request.getCompanyId(), request.getRoleId());
+        }
         return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Company access granted")));
     }
 
@@ -37,12 +40,45 @@ public class OrganizationAdministrationController {
             @PathVariable UUID memberId,
             @PathVariable UUID companyId,
             @Valid @RequestBody RequestWrapper<AssignRoleRequest> request) {
-        administrationService.updateCompanyRole(memberId, companyId, request.getData().getRoleId());
+        AssignRoleRequest data = request.getData();
+        if (data.getRoleIds() != null && !data.getRoleIds().isEmpty()) {
+            administrationService.syncCompanyRoles(memberId, companyId, data.getRoleIds());
+        } else {
+            administrationService.updateCompanyRole(memberId, companyId, data.getRoleId());
+        }
         return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Company role updated successfully")));
     }
 
-    @DeleteMapping("/{memberId}/companies/{companyId}")
+    @PutMapping("/{memberId}/companies/{companyId}/roles")
+    public ResponseEntity<ResponseWrapper<Map<String, String>>> syncRoles(
+            @PathVariable UUID memberId,
+            @PathVariable UUID companyId,
+            @Valid @RequestBody RequestWrapper<AssignRoleRequest> request) {
+        AssignRoleRequest data = request.getData();
+        List<UUID> roleIds = data.getRoleIds() != null ? data.getRoleIds() : (data.getRoleId() != null ? List.of(data.getRoleId()) : List.of());
+        administrationService.syncCompanyRoles(memberId, companyId, roleIds);
+        return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Company roles synchronized successfully")));
+    }
 
+    @PostMapping("/{memberId}/companies/{companyId}/roles/{roleId}")
+    public ResponseEntity<ResponseWrapper<Map<String, String>>> addRole(
+            @PathVariable UUID memberId,
+            @PathVariable UUID companyId,
+            @PathVariable UUID roleId) {
+        administrationService.addCompanyRole(memberId, companyId, roleId);
+        return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Role assigned to company successfully")));
+    }
+
+    @DeleteMapping("/{memberId}/companies/{companyId}/roles/{roleId}")
+    public ResponseEntity<ResponseWrapper<Map<String, String>>> removeRole(
+            @PathVariable UUID memberId,
+            @PathVariable UUID companyId,
+            @PathVariable UUID roleId) {
+        administrationService.removeCompanyRole(memberId, companyId, roleId);
+        return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Role revoked from company successfully")));
+    }
+
+    @DeleteMapping("/{memberId}/companies/{companyId}")
     public ResponseEntity<ResponseWrapper<Map<String, String>>> revoke(
             @PathVariable UUID memberId,
             @PathVariable UUID companyId) {
@@ -50,12 +86,18 @@ public class OrganizationAdministrationController {
         return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Company access revoked")));
     }
 
+    // ─── USER-BASED ENDPOINTS ───
+
     @PostMapping("/user/{userId}/companies")
     public ResponseEntity<ResponseWrapper<Map<String, String>>> grantByUserId(
             @PathVariable UUID userId,
             @Valid @RequestBody CompanyAccessRequest request) {
         UUID memberId = administrationService.resolveMemberIdByUserId(userId);
-        administrationService.grantCompanyAccess(memberId, request.getCompanyId(), request.getRoleId());
+        if (request.getRoleIds() != null && !request.getRoleIds().isEmpty()) {
+            administrationService.grantCompanyAccess(memberId, request.getCompanyId(), request.getRoleIds());
+        } else {
+            administrationService.grantCompanyAccess(memberId, request.getCompanyId(), request.getRoleId());
+        }
         return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Company access granted")));
     }
 
@@ -65,8 +107,45 @@ public class OrganizationAdministrationController {
             @PathVariable UUID companyId,
             @Valid @RequestBody RequestWrapper<AssignRoleRequest> request) {
         UUID memberId = administrationService.resolveMemberIdByUserId(userId);
-        administrationService.updateCompanyRole(memberId, companyId, request.getData().getRoleId());
+        AssignRoleRequest data = request.getData();
+        if (data.getRoleIds() != null && !data.getRoleIds().isEmpty()) {
+            administrationService.syncCompanyRoles(memberId, companyId, data.getRoleIds());
+        } else {
+            administrationService.updateCompanyRole(memberId, companyId, data.getRoleId());
+        }
         return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Company role updated successfully")));
+    }
+
+    @PutMapping("/user/{userId}/companies/{companyId}/roles")
+    public ResponseEntity<ResponseWrapper<Map<String, String>>> syncRolesByUserId(
+            @PathVariable UUID userId,
+            @PathVariable UUID companyId,
+            @Valid @RequestBody RequestWrapper<AssignRoleRequest> request) {
+        UUID memberId = administrationService.resolveMemberIdByUserId(userId);
+        AssignRoleRequest data = request.getData();
+        List<UUID> roleIds = data.getRoleIds() != null ? data.getRoleIds() : (data.getRoleId() != null ? List.of(data.getRoleId()) : List.of());
+        administrationService.syncCompanyRoles(memberId, companyId, roleIds);
+        return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Company roles synchronized successfully")));
+    }
+
+    @PostMapping("/user/{userId}/companies/{companyId}/roles/{roleId}")
+    public ResponseEntity<ResponseWrapper<Map<String, String>>> addRoleByUserId(
+            @PathVariable UUID userId,
+            @PathVariable UUID companyId,
+            @PathVariable UUID roleId) {
+        UUID memberId = administrationService.resolveMemberIdByUserId(userId);
+        administrationService.addCompanyRole(memberId, companyId, roleId);
+        return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Role assigned to company successfully")));
+    }
+
+    @DeleteMapping("/user/{userId}/companies/{companyId}/roles/{roleId}")
+    public ResponseEntity<ResponseWrapper<Map<String, String>>> removeRoleByUserId(
+            @PathVariable UUID userId,
+            @PathVariable UUID companyId,
+            @PathVariable UUID roleId) {
+        UUID memberId = administrationService.resolveMemberIdByUserId(userId);
+        administrationService.removeCompanyRole(memberId, companyId, roleId);
+        return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Role revoked from company successfully")));
     }
 
     @DeleteMapping("/user/{userId}/companies/{companyId}")
@@ -79,7 +158,6 @@ public class OrganizationAdministrationController {
     }
 
     @GetMapping
-
     public ResponseEntity<ResponseWrapper<List<PlatformMemberSummaryResponse>>> members() {
         RequestContext.Context context = RequestContext.get();
         return ResponseEntity

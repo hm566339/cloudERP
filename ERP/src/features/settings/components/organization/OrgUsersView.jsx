@@ -364,36 +364,46 @@ export default function OrgUsersView({
     },
                 {
                   id: 'company',
-                label: 'Company',
+                label: 'Company & Assigned Roles',
                 sortable: false,
       render: (val, row) => (
-                <div className="flex flex-wrap gap-1 max-w-[200px]">
+                <div className="flex flex-col gap-1 max-w-[320px]">
                   {row.companyAccess.length === 0 ? (
-                    <span className="text-xs text-zinc-400 italic">No Company</span>
+                    <span className="text-xs text-zinc-400 italic">No Company Access</span>
                   ) : (
-                    row.companyAccess.map((ca, idx) => (
-                      <span
-                        key={ca.companyId || idx}
-                        className="inline-flex items-center gap-1 text-[10px] font-medium bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40 px-1.5 py-0.5 rounded"
-                        title={`${ca.companyName || 'Company'}: ${ca.roleName || 'Member'}`}
-                      >
-                        <Briefcase size={9} />
-                        <span className="truncate max-w-[80px]">{ca.companyName || 'Company'}</span>
-                      </span>
-                    ))
+                    row.companyAccess.map((ca, idx) => {
+                      const roles = Array.isArray(ca.roleNames) && ca.roleNames.length > 0
+                        ? ca.roleNames.join(', ')
+                        : (ca.roleName || 'Member');
+                      return (
+                        <div
+                          key={ca.companyId || idx}
+                          className="flex items-center gap-1.5 text-xs bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded px-2 py-0.5"
+                          title={`${ca.companyName || 'Company'}: ${roles}`}
+                        >
+                          <Briefcase size={11} className="text-zinc-500 shrink-0" />
+                          <span className="font-semibold text-zinc-800 dark:text-zinc-200 shrink-0">
+                            {ca.companyName || 'Company'}:
+                          </span>
+                          <span className="font-medium text-indigo-600 dark:text-indigo-400 truncate">
+                            {roles}
+                          </span>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               ),
     },
               {
                 id: 'role',
-              label: 'Assigned Role',
+              label: 'Member Type',
               sortable: true,
-              sortKey: 'primaryRole',
+              sortKey: 'memberType',
       render: (val, row) => (
               <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
                 <Shield size={11} className="text-zinc-500" />
-                <span>{row.primaryRole}</span>
+                <span>{row.memberType || 'MEMBER'}</span>
               </span>
               ),
     },

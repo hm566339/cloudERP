@@ -597,36 +597,67 @@ export const {
   useRevokeMemberCompanyAccessMutation,
 } = organizationApiSlice;
 
-export const grantMemberCompanyAccess = async (targetId, companyId, roleId, isUserId = false) => {
-  const path = isUserId
-    ? `/api/sso/organization/members/user/${targetId}/companies`
-    : `/api/sso/organization/members/${targetId}/companies`;
-  const res = await apiClient.post(path, { companyId, roleId });
-  return res.data;
-};
+  export const grantMemberCompanyAccess = async (targetId, companyId, roleIdOrRoleIds, isUserId = false) => {
+    const path = isUserId
+      ? `/api/sso/organization/members/user/${targetId}/companies`
+      : `/api/sso/organization/members/${targetId}/companies`;
+    const isArray = Array.isArray(roleIdOrRoleIds);
+    const payload = {
+      companyId,
+      ...(isArray ? { roleIds: roleIdOrRoleIds } : (roleIdOrRoleIds ? { roleId: roleIdOrRoleIds } : {})),
+    };
+    const res = await apiClient.post(path, payload);
+    return res.data;
+  };
 
-export const updateMemberCompanyRole = async (targetId, companyId, roleId, isUserId = false) => {
-  const path = isUserId
-    ? `/api/sso/organization/members/user/${targetId}/companies/${companyId}/role`
-    : `/api/sso/organization/members/${targetId}/companies/${companyId}/role`;
-  const res = await apiClient.put(path, { data: { roleId } });
-  return res.data;
-};
+    export const updateMemberCompanyRole = async (targetId, companyId, roleIdOrRoleIds, isUserId = false) => {
+      const isArray = Array.isArray(roleIdOrRoleIds);
+      const path = isUserId
+        ? `/api/sso/organization/members/user/${targetId}/companies/${companyId}/role`
+        : `/api/sso/organization/members/${targetId}/companies/${companyId}/role`;
+      const payload = isArray ? { data: { roleIds: roleIdOrRoleIds } } : { data: { roleId: roleIdOrRoleIds } };
+      const res = await apiClient.put(path, payload);
+      return res.data;
+    };
 
-export const revokeMemberCompanyAccess = async (targetId, companyId, isUserId = false) => {
-  const path = isUserId
-    ? `/api/sso/organization/members/user/${targetId}/companies/${companyId}`
-    : `/api/sso/organization/members/${targetId}/companies/${companyId}`;
-  const res = await apiClient.delete(path);
-  return res.data;
-};
+    export const addMemberCompanyRole = async (targetId, companyId, roleId, isUserId = false) => {
+      const path = isUserId
+        ? `/api/sso/organization/members/user/${targetId}/companies/${companyId}/roles/${roleId}`
+        : `/api/sso/organization/members/${targetId}/companies/${companyId}/roles/${roleId}`;
+      const res = await apiClient.post(path);
+      return res.data;
+    };
 
-export const getUserCompanyAccess = async (userId) => {
-  const res = await apiClient.get(`/api/sso/organization/members/user/${userId}/companies/access`);
-  return res.data?.data || res.data || [];
-};
+    export const removeMemberCompanyRole = async (targetId, companyId, roleId, isUserId = false) => {
+      const path = isUserId
+        ? `/api/sso/organization/members/user/${targetId}/companies/${companyId}/roles/${roleId}`
+        : `/api/sso/organization/members/${targetId}/companies/${companyId}/roles/${roleId}`;
+      const res = await apiClient.delete(path);
+      return res.data;
+    };
 
-export const getMemberCompanyAccess = async (memberId) => {
-  const res = await apiClient.get(`/api/sso/organization/members/${memberId}/companies/access`);
-  return res.data?.data || res.data || [];
-};
+    export const syncMemberCompanyRoles = async (targetId, companyId, roleIds, isUserId = false) => {
+      const path = isUserId
+        ? `/api/sso/organization/members/user/${targetId}/companies/${companyId}/roles`
+        : `/api/sso/organization/members/${targetId}/companies/${companyId}/roles`;
+      const res = await apiClient.put(path, { data: { roleIds } });
+      return res.data;
+    };
+
+    export const revokeMemberCompanyAccess = async (targetId, companyId, isUserId = false) => {
+      const path = isUserId
+        ? `/api/sso/organization/members/user/${targetId}/companies/${companyId}`
+        : `/api/sso/organization/members/${targetId}/companies/${companyId}`;
+      const res = await apiClient.delete(path);
+      return res.data;
+    };
+
+    export const getUserCompanyAccess = async (userId) => {
+      const res = await apiClient.get(`/api/sso/organization/members/user/${userId}/companies/access`);
+      return res.data?.data || res.data || [];
+    };
+
+    export const getMemberCompanyAccess = async (memberId) => {
+      const res = await apiClient.get(`/api/sso/organization/members/${memberId}/companies/access`);
+      return res.data?.data || res.data || [];
+    };

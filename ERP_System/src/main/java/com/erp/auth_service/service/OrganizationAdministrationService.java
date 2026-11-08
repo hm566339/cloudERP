@@ -11,7 +11,15 @@ public interface OrganizationAdministrationService {
 
     void grantCompanyAccess(UUID memberId, UUID companyId, UUID roleId);
 
+    void grantCompanyAccess(UUID memberId, UUID companyId, List<UUID> roleIds);
+
     void updateCompanyRole(UUID memberId, UUID companyId, UUID roleId);
+
+    void addCompanyRole(UUID memberId, UUID companyId, UUID roleId);
+
+    void removeCompanyRole(UUID memberId, UUID companyId, UUID roleId);
+
+    void syncCompanyRoles(UUID memberId, UUID companyId, List<UUID> roleIds);
 
     void revokeCompanyAccess(UUID memberId, UUID companyId);
 

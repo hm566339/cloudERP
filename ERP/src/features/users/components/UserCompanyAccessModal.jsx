@@ -5,6 +5,9 @@ import {
   getUserCompanyAccess,
   grantMemberCompanyAccess,
   updateMemberCompanyRole,
+  addMemberCompanyRole,
+  removeMemberCompanyRole,
+  syncMemberCompanyRoles,
   revokeMemberCompanyAccess,
 } from '../../../api/sso/organization.api';
 import { getRoles } from '../../../api/sso/role';
@@ -23,17 +26,19 @@ import {
   UserCheck,
   X,
   Info,
+  Check,
 } from 'lucide-react';
 import { confirmDialog } from '../../../utils/confirmDialog';
 
 /**
  * UserCompanyAccessModal
  * 
- * Comprehensive modal for managing Multi-Company User Access and Company-Wise Roles.
- * - Displays all companies accessible by the user and their specific role in each company.
+ * Comprehensive modal for managing Multi-Company User Access and Company-Wise Multi-Role Assignments.
+ * - Displays all companies accessible by the user and all roles assigned to that user in each company.
  * - Allows assigning the user to additional companies under the same organization without duplicating records.
- * - Allows updating the user's role independently for each company.
- * - Allows removing user access from a particular company while keeping other company access intact.
+ * - Allows adding multiple roles to the same user in a company (e.g. Accountant + Auditor).
+ * - Allows removing an individual role independently without affecting other roles or companies.
+ * - Allows revoking company access completely while keeping other companies intact.
  */
 export default function UserCompanyAccessModal({
   isOpen,
@@ -49,14 +54,19 @@ export default function UserCompanyAccessModal({
   const [accessList, setAccessList] = useState([]);
   const [availableCompanies, setAvailableCompanies] = useState([]);
   const [companyRolesMap, setCompanyRolesMap] = useState({});
+
+  // Target assignment to a new company
   const [targetCompanyId, setTargetCompanyId] = useState('');
-  const [targetRoleId, setTargetRoleId] = useState('');
+  const [targetRoleIds, setTargetRoleIds] = useState([]);
   const [targetRoles, setTargetRoles] = useState([]);
   const [isRolesLoading, setIsRolesLoading] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
-  const [editingRoleCompanyId, setEditingRoleCompanyId] = useState(null);
-  const [selectedNewRole, setSelectedNewRole] = useState('');
-  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+
+  // Inline role addition to an existing company
+  const [addingRoleCompanyId, setAddingRoleCompanyId] = useState(null);
+  const [selectedRoleToAdd, setSelectedRoleToAdd] = useState('');
+  const [isAddingRole, setIsAddingRole] = useState(false);
+  const [isRemovingRole, setIsRemovingRole] = useState(false);
 
   const userId = user?.id || user?.userId;
   const memberId = initialMemberId || user?.memberId;
@@ -116,9 +126,10 @@ export default function UserCompanyAccessModal({
   useEffect(() => {
     if (isOpen) {
       setTargetCompanyId('');
-      setTargetRoleId('');
+      setTargetRoleIds([]);
       setTargetRoles([]);
-      setEditingRoleCompanyId(null);
+      setAddingRoleCompanyId(null);
+      setSelectedRoleToAdd('');
       loadAccessData();
       loadOrganizationCompanies();
     }
@@ -147,7 +158,7 @@ export default function UserCompanyAccessModal({
   useEffect(() => {
     if (!targetCompanyId) {
       setTargetRoles([]);
-      setTargetRoleId('');
+      setTargetRoleIds([]);
       return;
     }
 
@@ -158,10 +169,9 @@ export default function UserCompanyAccessModal({
         setTargetRoles(roles);
         setIsRolesLoading(false);
         if (roles.length > 0) {
-          // Pre-select first non-admin or first available role
-          setTargetRoleId(roles[0].id);
+          setTargetRoleIds([roles[0].id]);
         } else {
-          setTargetRoleId('');
+          setTargetRoleIds([]);
         }
       }
     });
@@ -170,6 +180,13 @@ export default function UserCompanyAccessModal({
       isMounted = false;
     };
   }, [targetCompanyId, fetchRolesForCompany]);
+
+  // Toggle role selection for target company assignment
+  const handleToggleTargetRole = (roleId) => {
+    setTargetRoleIds(prev => 
+      prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]
+    );
+  };
 
   // Handle assigning user to a new company
   const handleAssignToCompany = async (e) => {
@@ -191,14 +208,14 @@ export default function UserCompanyAccessModal({
 
     setIsAssigning(true);
     try {
-      await grantMemberCompanyAccess(targetId, targetCompanyId, targetRoleId || undefined, isUserId);
+      await grantMemberCompanyAccess(targetId, targetCompanyId, targetRoleIds, isUserId);
       dispatch(addAlert({
         type: 'success',
-        message: `Successfully granted company access${targetRoleId ? ' and assigned role' : ''}!`,
+        message: `Successfully granted company access and assigned roles!`,
       }));
 
       setTargetCompanyId('');
-      setTargetRoleId('');
+      setTargetRoleIds([]);
       setTargetRoles([]);
       await loadAccessData();
       onUpdated?.();
@@ -213,20 +230,26 @@ export default function UserCompanyAccessModal({
     }
   };
 
-  // Open role editor for an existing company access
-  const handleOpenEditRole = async (compId, currentRoleId) => {
-    setEditingRoleCompanyId(compId);
-    setSelectedNewRole(currentRoleId || '');
+  // Open inline add role for an existing company
+  const handleOpenAddRole = async (compId) => {
+    setAddingRoleCompanyId(compId);
+    setSelectedRoleToAdd('');
     const roles = await fetchRolesForCompany(compId);
-    if (!currentRoleId && roles.length > 0) {
-      setSelectedNewRole(roles[0].id);
+    // Find unassigned roles
+    const currentAccess = accessList.find(a => a.companyId === compId);
+    const assignedIds = new Set(
+      Array.isArray(currentAccess?.roleIds) ? currentAccess.roleIds : (currentAccess?.roleId ? [currentAccess.roleId] : [])
+    );
+    const unassigned = roles.filter(r => !assignedIds.has(r.id));
+    if (unassigned.length > 0) {
+      setSelectedRoleToAdd(unassigned[0].id);
     }
   };
 
-  // Submit role update for an existing company access
-  const handleSaveRole = async (compId) => {
-    if (!selectedNewRole) {
-      dispatch(addAlert({ type: 'warning', message: 'Please select a role' }));
+  // Submit adding role to existing company
+  const handleAddRoleToCompany = async (compId) => {
+    if (!selectedRoleToAdd) {
+      dispatch(addAlert({ type: 'warning', message: 'Please select a role to add' }));
       return;
     }
 
@@ -235,68 +258,98 @@ export default function UserCompanyAccessModal({
     const targetId = effectiveMemberId || effectiveUserId;
     const isUserId = !effectiveMemberId;
 
-    setIsUpdatingRole(true);
+    setIsAddingRole(true);
     try {
-      await updateMemberCompanyRole(targetId, compId, selectedNewRole, isUserId);
+      await addMemberCompanyRole(targetId, compId, selectedRoleToAdd, isUserId);
       dispatch(addAlert({
         type: 'success',
-        message: 'Role updated successfully for this company!',
+        message: 'Role added successfully to this company!',
       }));
-      setEditingRoleCompanyId(null);
+      setAddingRoleCompanyId(null);
+      setSelectedRoleToAdd('');
       await loadAccessData();
       onUpdated?.();
     } catch (err) {
-      console.error('Failed to update company role:', err);
+      console.error('Failed to add company role:', err);
       dispatch(addAlert({
         type: 'error',
-        message: err?.response?.data?.message || err?.message || 'Failed to update company role',
+        message: err?.response?.data?.message || err?.message || 'Failed to add role',
       }));
     } finally {
-      setIsUpdatingRole(false);
+      setIsAddingRole(false);
     }
   };
 
-  // Handle removing company access
-  const handleRevokeCompany = async (compId, compName) => {
+  // Submit removing role from existing company
+  const handleRemoveRoleFromCompany = (compId, roleId, roleName, compName) => {
+    confirmDialog(
+      'Remove Role Assignment',
+      `Are you sure you want to remove the role "${roleName}" from "${compName}" for this user? Access to other roles and other companies will remain unaffected.`,
+      async () => {
+        const effectiveMemberId = memberId || user?.memberId;
+        const effectiveUserId = userId || user?.id || user?.userId;
+        const targetId = effectiveMemberId || effectiveUserId;
+        const isUserId = !effectiveMemberId;
+
+        setIsRemovingRole(true);
+        try {
+          await removeMemberCompanyRole(targetId, compId, roleId, isUserId);
+          dispatch(addAlert({
+            type: 'success',
+            message: `Role "${roleName}" removed successfully from "${compName}".`,
+          }));
+          await loadAccessData();
+          onUpdated?.();
+        } catch (err) {
+          console.error('Failed to remove company role:', err);
+          dispatch(addAlert({
+            type: 'error',
+            message: err?.response?.data?.message || err?.message || 'Failed to remove role',
+          }));
+        } finally {
+          setIsRemovingRole(false);
+        }
+      }
+    );
+  };
+
+  // Handle removing company access completely
+  const handleRevokeCompany = (compId, compName) => {
     const activeCount = accessList.filter(a => a.active).length;
     if (activeCount <= 1) {
       dispatch(addAlert({
         type: 'warning',
-        message: 'Cannot revoke the user\'s only remaining active company access. Delete the user to fully remove their account.',
+        message: 'Cannot revoke the user\'s only remaining active company access. Deactivate the member to disable their entire account.',
       }));
       return;
     }
 
-    const confirmed = await confirmDialog({
-      title: 'Revoke Company Access',
-      message: `Are you sure you want to remove ${user?.fullName || user?.name || 'this user'}'s access from "${compName}"? Other companies and the main user account will remain untouched.`,
-      confirmText: 'Revoke Access',
-      cancelText: 'Cancel',
-      danger: true,
-    });
+    confirmDialog(
+      'Revoke Company Access',
+      `Are you sure you want to remove ${user?.fullName || user?.name || 'this user'}'s access from "${compName}"? Other companies and the main user account will remain untouched.`,
+      async () => {
+        const effectiveMemberId = memberId || user?.memberId;
+        const effectiveUserId = userId || user?.id || user?.userId;
+        const targetId = effectiveMemberId || effectiveUserId;
+        const isUserId = !effectiveMemberId;
 
-    if (!confirmed) return;
-
-    const effectiveMemberId = memberId || user?.memberId;
-    const effectiveUserId = userId || user?.id || user?.userId;
-    const targetId = effectiveMemberId || effectiveUserId;
-    const isUserId = !effectiveMemberId;
-
-    try {
-      await revokeMemberCompanyAccess(targetId, compId, isUserId);
-      dispatch(addAlert({
-        type: 'success',
-        message: `Company access revoked for "${compName}".`,
-      }));
-      await loadAccessData();
-      onUpdated?.();
-    } catch (err) {
-      console.error('Failed to revoke company access:', err);
-      dispatch(addAlert({
-        type: 'error',
-        message: err?.response?.data?.message || err?.message || 'Failed to revoke company access',
-      }));
-    }
+        try {
+          await revokeMemberCompanyAccess(targetId, compId, isUserId);
+          dispatch(addAlert({
+            type: 'success',
+            message: `Company access revoked for "${compName}".`,
+          }));
+          await loadAccessData();
+          onUpdated?.();
+        } catch (err) {
+          console.error('Failed to revoke company access:', err);
+          dispatch(addAlert({
+            type: 'error',
+            message: err?.response?.data?.message || err?.message || 'Failed to revoke company access',
+          }));
+        }
+      }
+    );
   };
 
   if (!isOpen) return null;
@@ -324,7 +377,7 @@ export default function UserCompanyAccessModal({
             </div>
             <div>
               <h3 className="text-lg font-bold text-zinc-900 dark:text-[#E6E8EE]">
-                Manage Company Access & Roles
+                Multi-Company Role Assignment
               </h3>
               <p className="text-xs text-zinc-500 dark:text-[#A0A6B5]">
                 {user?.fullName || user?.name} ({user?.email || user?.username}) • User ID: <span className="font-mono">{userId ? String(userId).slice(0, 8) : '—'}</span>
@@ -339,15 +392,15 @@ export default function UserCompanyAccessModal({
           </button>
         </div>
 
-        {/* Section 1: Active Company Access List */}
+        {/* Section 1: Active Company Access & Roles List */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-[#A0A6B5] flex items-center gap-1.5">
               <Shield className="w-4 h-4 text-emerald-600" />
-              Active Company Memberships ({activeAccessList.length})
+              Assigned Companies & Roles ({activeAccessList.length})
             </h4>
             <span className="text-[11px] font-medium text-zinc-400">
-              Max 4 Companies per Organization Plan
+              Multiple roles per company supported
             </span>
           </div>
 
@@ -364,12 +417,28 @@ export default function UserCompanyAccessModal({
             <div className="divide-y divide-zinc-100 dark:divide-[#2A2F3D] border border-zinc-200 dark:border-[#2A2F3D] rounded-lg overflow-hidden bg-white dark:bg-[#161922]">
               {activeAccessList.map((access) => {
                 const compId = access.companyId;
-                const isEditingThisRole = editingRoleCompanyId === compId;
+                const isAddingThisRole = addingRoleCompanyId === compId;
                 const currentRolesList = companyRolesMap[compId] || [];
 
+                // Resolve multi-roles
+                const rawNames = Array.isArray(access.roleNames) && access.roleNames.length > 0
+                  ? access.roleNames
+                  : (access.roleName ? access.roleName.split(',').map(s => s.trim()) : []);
+                const rawIds = Array.isArray(access.roleIds) && access.roleIds.length > 0
+                  ? access.roleIds
+                  : (access.roleId ? [access.roleId] : []);
+
+                const rolePairs = rawNames.map((name, idx) => ({
+                  id: rawIds[idx] || null,
+                  name,
+                }));
+
+                const assignedRoleIds = new Set(rawIds.map(String));
+                const unassignedRoles = currentRolesList.filter(r => !assignedRoleIds.has(String(r.id)));
+
                 return (
-                  <div key={compId} className="p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-zinc-50/60 dark:hover:bg-[#1D212C]/60 transition-colors">
-                    <div className="space-y-0.5">
+                  <div key={compId} className="p-3.5 space-y-2 hover:bg-zinc-50/60 dark:hover:bg-[#1D212C]/60 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm text-zinc-900 dark:text-[#E6E8EE]">
                           {access.companyName || 'Company'}
@@ -379,76 +448,100 @@ export default function UserCompanyAccessModal({
                             {access.companyCode}
                           </span>
                         )}
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                          Active
+                        </span>
                       </div>
 
-                      {/* Current Role display */}
-                      {!isEditingThisRole && (
-                        <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-                          <span>Role:</span>
-                          <span className="font-bold text-indigo-600 dark:text-indigo-400 uppercase text-[11px] px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/50 dark:border-indigo-800/50">
-                            {access.roleName || user?.role || 'User'}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleRevokeCompany(compId, access.companyName)}
+                          disabled={activeAccessList.length <= 1}
+                          title={activeAccessList.length <= 1 ? "Cannot revoke the user's only company access" : "Revoke Company Access"}
+                          className={`p-1 text-xs font-semibold rounded-lg border transition-colors ${activeAccessList.length <= 1
+                              ? 'text-zinc-300 dark:text-zinc-700 border-zinc-200 dark:border-zinc-800 cursor-not-allowed'
+                              : 'text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                            }`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Role Badges with inline Revoke and "+ Add Role" */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {rolePairs.length > 0 ? (
+                        rolePairs.map((r, rIdx) => (
+                          <span
+                            key={r.id || rIdx}
+                            className="inline-flex items-center gap-1.5 font-semibold text-indigo-700 dark:text-indigo-300 text-[11px] px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-800/80 shadow-xs"
+                          >
+                            <span>{r.name}</span>
+                            {r.id && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveRoleFromCompany(compId, r.id, r.name, access.companyName)}
+                                disabled={isRemovingRole}
+                                title={`Remove role ${r.name}`}
+                                className="text-indigo-400 hover:text-rose-600 transition-colors p-0.5 rounded hover:bg-rose-50"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
                           </span>
-                        </div>
+                        ))
+                      ) : (
+                        <span className="text-xs text-zinc-400 italic">No roles assigned</span>
+                      )}
+
+                      {!isAddingThisRole && (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenAddRole(compId)}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 bg-emerald-50/60 dark:bg-emerald-950/30 hover:bg-emerald-100/60 px-2 py-0.5 rounded border border-dashed border-emerald-300 dark:border-emerald-800 transition-colors"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>Add Role</span>
+                        </button>
                       )}
                     </div>
 
-                    {/* Role edit / actions */}
-                    <div className="flex items-center gap-2">
-                      {isEditingThisRole ? (
-                        <div className="flex items-center gap-2 w-full md:w-auto">
-                          <CustomSelect
-                            value={selectedNewRole}
-                            onChange={(e) => setSelectedNewRole(e.target.value)}
-                            className="text-xs py-1.5 px-2.5 rounded-lg border border-zinc-300 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE]"
-                          >
-                            <option value="">-- Select Role --</option>
-                            {currentRolesList.map((r) => (
-                              <option key={r.id} value={r.id}>
-                                {r.name || r.roleName}
-                              </option>
-                            ))}
-                          </CustomSelect>
-                          <button
-                            type="button"
-                            onClick={() => handleSaveRole(compId)}
-                            disabled={isUpdatingRole || !selectedNewRole}
-                            className="px-2.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors flex items-center gap-1 shadow-xs"
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditingRoleCompanyId(null)}
-                            disabled={isUpdatingRole}
-                            className="px-2 py-1.5 text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditRole(compId, access.roleId)}
-                            className="px-2.5 py-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg border border-indigo-200/60 dark:border-indigo-800/60 transition-colors"
-                          >
-                            Change Role
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRevokeCompany(compId, access.companyName)}
-                            disabled={activeAccessList.length <= 1}
-                            title={activeAccessList.length <= 1 ? "Cannot revoke the user's only company access" : "Revoke Company Access"}
-                            className={`p-1.5 text-xs font-semibold rounded-lg border transition-colors ${activeAccessList.length <= 1
-                                ? 'text-zinc-300 dark:text-zinc-700 border-zinc-200 dark:border-zinc-800 cursor-not-allowed'
-                                : 'text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/40'
-                              }`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                    </div>
+                    {/* Inline Add Role Form */}
+                    {isAddingThisRole && (
+                      <div className="flex items-center gap-2 pt-2">
+                        <CustomSelect
+                          value={selectedRoleToAdd}
+                          onChange={(e) => setSelectedRoleToAdd(e.target.value)}
+                          className="text-xs py-1 px-2 rounded-lg border border-zinc-300 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-800 dark:text-[#E6E8EE]"
+                        >
+                          <option value="">-- Choose Role to Add --</option>
+                          {unassignedRoles.map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.name || r.roleName}
+                            </option>
+                          ))}
+                        </CustomSelect>
+                        <button
+                          type="button"
+                          onClick={() => handleAddRoleToCompany(compId)}
+                          disabled={isAddingRole || !selectedRoleToAdd}
+                          className="px-2.5 py-1 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors flex items-center gap-1 shadow-xs"
+                        >
+                          {isAddingRole ? 'Adding...' : 'Add'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAddingRoleCompanyId(null);
+                            setSelectedRoleToAdd('');
+                          }}
+                          className="px-2 py-1 text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -456,7 +549,7 @@ export default function UserCompanyAccessModal({
           )}
         </div>
 
-        {/* Section 2: Assign to Additional Company */}
+        {/* Section 2: Assign to Additional Company with Multi-Role */}
         <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-[#2A2F3D]">
           <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-[#A0A6B5] flex items-center gap-1.5">
             <Plus className="w-4 h-4 text-indigo-600" />
@@ -492,10 +585,10 @@ export default function UserCompanyAccessModal({
                   </CustomSelect>
                 </div>
 
-                {/* Role in that Company Select */}
+                {/* Roles Checkboxes / Multi-select */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-zinc-600 dark:text-[#A0A6B5] block">
-                    Role in Target Company *
+                    Roles in Target Company *
                   </label>
                   {isRolesLoading ? (
                     <div className="text-xs text-zinc-400 p-2.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] flex items-center gap-2">
@@ -511,19 +604,30 @@ export default function UserCompanyAccessModal({
                       No roles defined in this company
                     </div>
                   ) : (
-                    <CustomSelect
-                      value={targetRoleId}
-                      onChange={(e) => setTargetRoleId(e.target.value)}
-                      className="input-field text-xs"
-                      required
-                    >
-                      <option value="">-- Choose Role in Selected Company --</option>
-                      {targetRoles.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name || r.roleName}
-                        </option>
-                      ))}
-                    </CustomSelect>
+                    <div className="flex flex-wrap gap-1.5 p-2 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] max-h-36 overflow-y-auto">
+                      {targetRoles.map((r) => {
+                        const isSelected = targetRoleIds.includes(r.id);
+                        return (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => handleToggleTargetRole(r.id)}
+                            className={`text-xs px-2.5 py-1 rounded-md font-medium border flex items-center gap-1.5 transition-colors ${
+                              isSelected
+                                ? 'bg-indigo-50 border-indigo-300 text-indigo-700 dark:bg-indigo-950/60 dark:border-indigo-700 dark:text-indigo-300'
+                                : 'bg-zinc-50 border-zinc-200 text-zinc-600 dark:bg-[#161922] dark:border-[#2A2F3D] dark:text-[#A0A6B5]'
+                            }`}
+                          >
+                            <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${
+                              isSelected ? 'bg-indigo-600 text-white' : 'border border-zinc-300 dark:border-zinc-600'
+                            }`}>
+                              {isSelected ? <Check className="w-2.5 h-2.5" /> : null}
+                            </span>
+                            <span>{r.name || r.roleName}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </div>
@@ -540,8 +644,8 @@ export default function UserCompanyAccessModal({
               <div className="flex justify-end pt-1">
                 <button
                   type="submit"
-                  disabled={isAssigning || !targetCompanyId || !targetRoleId}
-                  className="btn-primary flex items-center gap-1.5 text-xs py-2 px-4 shadow-sm"
+                  disabled={isAssigning || !targetCompanyId || targetRoleIds.length === 0}
+                  className="btn-primary flex items-center gap-1.5 text-xs py-2 px-4 shadow-xs"
                 >
                   {isAssigning ? (
                     <>
@@ -551,7 +655,7 @@ export default function UserCompanyAccessModal({
                   ) : (
                     <>
                       <UserCheck className="w-4 h-4" />
-                      <span>Assign to Company & Set Role</span>
+                      <span>Assign to Company & Set Roles</span>
                     </>
                   )}
                 </button>
