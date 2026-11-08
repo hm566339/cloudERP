@@ -764,16 +764,13 @@ public class AuthServiceImpl implements AuthService {
                         return;
                 }
                 try {
-                        UUID sessionId = UUID.randomUUID();
                         Map<String, Object> claims = buildOwnerClaims(user, organization);
-                        claims.put("sessionId", sessionId.toString());
                         String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
                         String refreshToken = jwtService.generateRefreshToken(user.getUsername(),
                                         organization.getOrganizationCode());
 
                         if (org.springframework.util.StringUtils.hasText(accessToken)) {
                                 Session session = Session.builder()
-                                                .id(sessionId)
                                                 .user(user)
                                                 .company(null)
                                                 .organization(organization)
@@ -791,12 +788,12 @@ public class AuthServiceImpl implements AuthService {
                                                 .userAgent(userAgent)
                                                 .build();
 
-                                sessionRepository.save(session);
+                                Session savedSession = sessionRepository.save(session);
 
                                 if (refreshTokenRecordRepository != null
                                                 && org.springframework.util.StringUtils.hasText(refreshToken)) {
                                         refreshTokenRecordRepository.save(RefreshTokenRecord.builder()
-                                                        .session(session)
+                                                        .session(savedSession)
                                                         .tokenHash(hashRefreshToken(refreshToken))
                                                         .familyId(UUID.randomUUID())
                                                         .issuedAt(LocalDateTime.now())
@@ -816,7 +813,7 @@ public class AuthServiceImpl implements AuthService {
                                                 .build());
                         }
                 } catch (Exception ex) {
-                        log.debug("Direct owner session creation on login bypassed: {}", ex.getMessage());
+                        log.error("Direct owner session creation on login failed: {}", ex.getMessage(), ex);
                 }
         }
 
@@ -853,16 +850,13 @@ public class AuthServiceImpl implements AuthService {
                                         ? module.getClientId().toString()
                                         : ((module != null) ? "ACCOUNT" : "ERP_WORKSPACE");
 
-                        UUID sessionId = UUID.randomUUID();
                         Map<String, Object> claims = buildClaims(user, company, module, effectiveClientId);
-                        claims.put("sessionId", sessionId.toString());
                         String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
                         String refreshToken = jwtService.generateRefreshToken(user.getUsername(),
                                         company.getCompanyCode());
 
                         if (org.springframework.util.StringUtils.hasText(accessToken)) {
                                 Session session = Session.builder()
-                                                .id(sessionId)
                                                 .user(user)
                                                 .company(company)
                                                 .organization(organization != null ? organization
@@ -885,12 +879,12 @@ public class AuthServiceImpl implements AuthService {
                                                 .userAgent(userAgent)
                                                 .build();
 
-                                sessionRepository.save(session);
+                                Session savedSession = sessionRepository.save(session);
 
                                 if (refreshTokenRecordRepository != null
                                                 && org.springframework.util.StringUtils.hasText(refreshToken)) {
                                         refreshTokenRecordRepository.save(RefreshTokenRecord.builder()
-                                                        .session(session)
+                                                        .session(savedSession)
                                                         .tokenHash(hashRefreshToken(refreshToken))
                                                         .familyId(UUID.randomUUID())
                                                         .issuedAt(LocalDateTime.now())
@@ -910,7 +904,7 @@ public class AuthServiceImpl implements AuthService {
                                                 .build());
                         }
                 } catch (Exception ex) {
-                        log.debug("Direct session creation on login bypassed: {}", ex.getMessage());
+                        log.error("Direct session creation on login failed: {}", ex.getMessage(), ex);
                 }
         }
 
@@ -1302,7 +1296,8 @@ public class AuthServiceImpl implements AuthService {
                                 throw new BadCredentialsException("Refresh token revoked");
                         }
 
-                        // 2. Concurrency grace window (30 seconds) for legitimate in-flight requests from the same session/client
+                        // 2. Concurrency grace window (30 seconds) for legitimate in-flight requests
+                        // from the same session/client
                         if (record.getUsedAt() != null && record.getUsedAt().isAfter(now.minusSeconds(30))) {
                                 Session session = record.getSession();
                                 if (session == null || session.getRefreshTokenValidTill() == null
@@ -1311,19 +1306,23 @@ public class AuthServiceImpl implements AuthService {
                                         throw new BadCredentialsException("Session expired");
                                 }
 
-                                if (session.getUser() == null || session.getUser().getAccountStatus() != AccountStatus.ACTIVE) {
+                                if (session.getUser() == null
+                                                || session.getUser().getAccountStatus() != AccountStatus.ACTIVE) {
                                         revokeRefreshFamily(record.getFamilyId(), session);
                                         throw new InvalidOperationException("User account is inactive");
                                 }
 
                                 // Client / device binding check:
-                                // If a clientId was presented with the refresh request, verify it matches the session module's clientId
-                                if (clientId != null && session.getModule() != null && session.getModule().getClientId() != null) {
+                                // If a clientId was presented with the refresh request, verify it matches the
+                                // session module's clientId
+                                if (clientId != null && session.getModule() != null
+                                                && session.getModule().getClientId() != null) {
                                         if (!session.getModule().getClientId().equals(clientId)) {
                                                 log.warn("CRITICAL: Stolen refresh token replay detected across clients! Client mismatch: session clientId={} vs presented clientId={}",
                                                                 session.getModule().getClientId(), clientId);
                                                 revokeRefreshFamily(record.getFamilyId(), session);
-                                                throw new BadCredentialsException("Client mismatch during token refresh");
+                                                throw new BadCredentialsException(
+                                                                "Client mismatch during token refresh");
                                         }
                                 }
 
@@ -1334,7 +1333,8 @@ public class AuthServiceImpl implements AuthService {
                                                         record.getFamilyId(), session.getId());
                                         return RefreshTokenResponse.builder()
                                                         .accessToken(activeAccess)
-                                                        .refreshToken(activeRefresh != null ? activeRefresh : presentedToken)
+                                                        .refreshToken(activeRefresh != null ? activeRefresh
+                                                                        : presentedToken)
                                                         .expiresIn((long) ACCESS_TOKEN_MINUTES * 60)
                                                         .build();
                                 }
@@ -1998,10 +1998,8 @@ public class AuthServiceImpl implements AuthService {
 
                 Map<String, Object> claims;
                 String refreshToken;
-                UUID sessionId = UUID.randomUUID();
                 if (company == null) {
                         claims = buildOwnerClaims(user, code.getOrganization());
-                        claims.put("sessionId", sessionId.toString());
                         refreshToken = jwtService.generateRefreshToken(
                                         user.getUsername(),
                                         code.getOrganization().getOrganizationCode());
@@ -2011,7 +2009,6 @@ public class AuthServiceImpl implements AuthService {
                                         company,
                                         module,
                                         effectiveClientId);
-                        claims.put("sessionId", sessionId.toString());
                         refreshToken = jwtService.generateRefreshToken(
                                         user.getUsername(),
                                         company.getCompanyCode());
@@ -2037,7 +2034,6 @@ public class AuthServiceImpl implements AuthService {
                                 REFRESH_TOKEN_DAYS);
 
                 Session session = Session.builder()
-                                .id(sessionId)
                                 .user(user)
                                 .company(company)
                                 .organization(code.getOrganization())
@@ -2052,10 +2048,10 @@ public class AuthServiceImpl implements AuthService {
                                                                 .plusDays(REFRESH_TOKEN_DAYS))
                                 .build();
 
-                sessionRepository.save(session);
+                Session savedSession = sessionRepository.save(session);
 
                 refreshTokenRecordRepository.save(RefreshTokenRecord.builder()
-                                .session(session)
+                                .session(savedSession)
                                 .tokenHash(hashRefreshToken(refreshToken))
                                 .familyId(UUID.randomUUID())
                                 .issuedAt(LocalDateTime.now())
@@ -3143,9 +3139,7 @@ public class AuthServiceImpl implements AuthService {
                                         return new ResourceNotFoundException("SYSTEM_ADMIN module not found");
                                 });
 
-                UUID sessionId = UUID.randomUUID();
                 Map<String, Object> claims = buildAdminClaims(user, user.getCompany());
-                claims.put("sessionId", sessionId.toString());
 
                 String accessToken = jwtService.generateAccessToken(
                                 user.getUsername(),
@@ -3156,7 +3150,6 @@ public class AuthServiceImpl implements AuthService {
                                 user.getCompany().getCompanyCode());
 
                 Session session = Session.builder()
-                                .id(sessionId)
                                 .user(user)
                                 .company(user.getCompany())
                                 .module(module)
