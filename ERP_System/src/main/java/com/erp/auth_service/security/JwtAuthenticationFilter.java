@@ -6,6 +6,7 @@ import com.erp.auth_service.repository.OrganizationMemberRepository;
 import com.erp.auth_service.repository.SessionRepository;
 import com.erp.auth_service.repository.platform.PlatformAdminRepository;
 import com.erp.auth_service.repository.platform.SupportAccessSessionRepository;
+import com.erp.auth_service.security.authorization.SsoPublicEndpoints;
 import com.erp.auth_service.utility.AccessMode;
 import com.erp.auth_service.utility.AccountStatus;
 import com.erp.auth_service.utility.MemberType;
@@ -66,8 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.equals("/api/sso/auth/admin-login")
                 || path.equals("/api/sso/auth/register")
                 || path.equals("/api/sso/signup")
-                || ("GET".equalsIgnoreCase(request.getMethod())
-                        && path.matches("/api/sso/organization/(?!appearance$|members$)[^/]+/?"))
+                || SsoPublicEndpoints.isPublicOrganizationLookup(request.getMethod(), path)
                 || path.equals("/api/sso/authorize")
                 || path.equals("/api/sso/token/exchange")
                 || path.equals("/api/sso/token/refresh")
@@ -278,6 +278,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             boolean isOrgOwner = "ORGANIZATION_OWNER".equals(principalType);
+            if (!isOrgOwner && session.getOrganization() != null && organizationMemberRepository != null) {
+                var memberCheck = organizationMemberRepository
+                        .findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                session.getOrganization().getId(), session.getUser().getId(), MembershipStatus.ACTIVE);
+                if (memberCheck.isPresent() && memberCheck.get().getMemberType() == MemberType.OWNER) {
+                    isOrgOwner = true;
+                }
+            }
 
             // ==================== ORGANIZATION OWNER SESSION ====================
             if (isOrgOwner) {

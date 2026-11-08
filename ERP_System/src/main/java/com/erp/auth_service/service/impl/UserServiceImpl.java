@@ -1482,14 +1482,47 @@ public class UserServiceImpl implements UserService {
                 // All companies this member can access in the org
                 memberCompanyAccessRepository
                         .findActiveForMember(member.getId(), orgId)
-                        .forEach(mca -> accessibleCompanies.add(
-                                SsoMeResponse.CompanyContext.builder()
-                                        .id(mca.getCompany().getId())
-                                        .code(mca.getCompany().getCompanyCode())
-                                        .name(mca.getCompany().getCompanyName())
-                                        .legalName(mca.getCompany().getLegalName())
-                                        .active(mca.getCompany().getActive())
-                                        .build()));
+                        .forEach(mca -> {
+                            List<com.erp.auth_service.dto.response.RoleResponse> compRoles = new java.util.ArrayList<>();
+                            if (userRoleRepository != null) {
+                                try {
+                                    var urs = userRoleRepository.findAllByUser_IdAndRole_Company_Id(userId, mca.getCompany().getId());
+                                    if (urs != null) {
+                                        for (UserRole ur : urs) {
+                                            if (ur.getRole() != null && ur.getRole().isStatus()) {
+                                                compRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
+                                                        .id(ur.getRole().getId())
+                                                        .name(ur.getRole().getName())
+                                                        .status(ur.getRole().isStatus())
+                                                        .build());
+                                            }
+                                        }
+                                    }
+                                } catch (Exception ignored) {}
+                            }
+                            if (compRoles.isEmpty() && member.getMemberType() == MemberType.OWNER) {
+                                compRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
+                                        .name("OWNER")
+                                        .status(true)
+                                        .build());
+                            }
+                            com.erp.auth_service.dto.response.RoleResponse primaryRole = compRoles.isEmpty() ? null : compRoles.get(0);
+
+                            accessibleCompanies.add(
+                                    SsoMeResponse.CompanyContext.builder()
+                                            .id(mca.getCompany().getId())
+                                            .code(mca.getCompany().getCompanyCode())
+                                            .name(mca.getCompany().getCompanyName())
+                                            .legalName(mca.getCompany().getLegalName())
+                                            .active(mca.getCompany().getActive())
+                                            .membership(SsoMeResponse.CompanyMembershipContext.builder()
+                                                    .id(mca.getId())
+                                                    .status(Boolean.TRUE.equals(mca.getActive()) ? "ACTIVE" : "INACTIVE")
+                                                    .role(primaryRole)
+                                                    .roles(compRoles)
+                                                    .build())
+                                            .build());
+                        });
             }
         }
 
@@ -1905,6 +1938,12 @@ public class UserServiceImpl implements UserService {
                                 .name(effectiveCompany.getCompanyName())
                                 .legalName(effectiveCompany.getLegalName())
                                 .active(effectiveCompany.getActive())
+                                .membership(SsoMeResponse.CompanyMembershipContext.builder()
+                                        .status("ACTIVE")
+                                        .role(roles.isEmpty() ? null : roles.get(0))
+                                        .roles(roles)
+                                        .build())
+                                .modules(authorizedModules)
                                 .build())
                 .companies(accessibleCompanies)
                 .membership(membershipCtx)
@@ -1914,6 +1953,18 @@ public class UserServiceImpl implements UserService {
                 .roles(roles)
                 .features(effective != null ? effective.getFeatures() : java.util.Collections.emptyList())
                 .permissions(effective != null ? effective.getPermissions() : java.util.Collections.emptyList())
+                .organizations(organization == null ? java.util.Collections.emptyList()
+                        : List.of(SsoMeResponse.OrganizationTreeContext.builder()
+                                .id(organization.getId())
+                                .code(organization.getOrganizationCode())
+                                .name(organization.getDisplayName())
+                                .membership(membershipCtx)
+                                .subscription(subscriptionCtx)
+                                .accessMode(effectiveAccessMode.name())
+                                .companies(accessibleCompanies)
+                                .build()))
+                .activeOrganizationId(organization != null ? organization.getId() : null)
+                .activeCompanyId(effectiveCompanyId)
                 .build();
     }
 

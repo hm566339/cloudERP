@@ -35,14 +35,13 @@ public class YamlAuthorizationFilter extends OncePerRequestFilter {
         // 2. Skip configured public endpoints
         for (String publicPattern : SsoPublicEndpoints.PUBLIC_ENDPOINTS) {
             if (pathMatcher.match(publicPattern, path)) {
-                // Organization lookup is public ONLY for GET on organization code, NOT for appearance or members
-                if (publicPattern.contains("/organization/")) {
-                    if (!"GET".equalsIgnoreCase(method) || path.contains("/appearance") || path.contains("/members")) {
-                        continue;
-                    }
-                }
                 return true;
             }
+        }
+
+        // 3. Skip public organization lookup (GET /api/sso/organization/{orgCode})
+        if (SsoPublicEndpoints.isPublicOrganizationLookup(method, path)) {
+            return true;
         }
 
         return false;
@@ -58,14 +57,16 @@ public class YamlAuthorizationFilter extends OncePerRequestFilter {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         // 2. If not authenticated -> 401
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"message\":\"Authentication required\"}");
             return;
         }
 
-        // 3. Authorize via SsoAuthorizationService (handles SYSTEM_ADMIN, YAML URL match, action, DB permissions)
+        // 3. Authorize via SsoAuthorizationService (handles SYSTEM_ADMIN, YAML URL
+        // match, action, DB permissions)
         AuthorizationDecision decision = ssoAuthorizationService.authorize(authentication, request);
 
         // 4. If allowed -> continue filter chain

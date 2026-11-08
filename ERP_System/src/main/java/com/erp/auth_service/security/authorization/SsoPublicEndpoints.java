@@ -1,8 +1,27 @@
 package com.erp.auth_service.security.authorization;
 
+import java.util.Locale;
+import java.util.Set;
+
 public final class SsoPublicEndpoints {
 
-    private SsoPublicEndpoints() {}
+    private SsoPublicEndpoints() {
+    }
+
+    public static final Set<String> RESERVED_ORGANIZATION_PATHS = Set.of(
+            "role-templates",
+            "permissions",
+            "members",
+            "appearance",
+            "profile",
+            "login-portal",
+            "regional-settings",
+            "security",
+            "companies",
+            "subscription",
+            "modules",
+            "settings",
+            "audit");
 
     public static final String[] PUBLIC_ENDPOINTS = {
             "/api/admin/auth/login",
@@ -16,7 +35,6 @@ public final class SsoPublicEndpoints {
             "/api/sso/auth/admin-login",
             "/api/sso/auth/register",
             "/api/sso/signup",
-            "/api/sso/organization/*",
             "/api/sso/authorize",
             "/api/sso/token/exchange",
             "/api/sso/token/refresh",
@@ -64,5 +82,30 @@ public final class SsoPublicEndpoints {
             cleanPath = cleanPath.substring(0, qIdx);
         }
         return "/api/sso/user".equals(cleanPath) || "/api/sso/user/".equals(cleanPath);
+    }
+
+    public static boolean isPublicOrganizationLookup(String method, String path) {
+        if (!"GET".equalsIgnoreCase(method)) {
+            return false;
+        }
+        if (path == null) {
+            return false;
+        }
+        String cleanPath = path;
+        int qIdx = cleanPath.indexOf('?');
+        if (qIdx >= 0) {
+            cleanPath = cleanPath.substring(0, qIdx);
+        }
+        if (!cleanPath.startsWith("/api/sso/organization/")) {
+            return false;
+        }
+        String sub = cleanPath.substring("/api/sso/organization/".length());
+        if (sub.endsWith("/")) {
+            sub = sub.substring(0, sub.length() - 1);
+        }
+        if (sub.isEmpty() || sub.contains("/")) {
+            return false;
+        }
+        return !RESERVED_ORGANIZATION_PATHS.contains(sub.toLowerCase(Locale.ROOT));
     }
 }

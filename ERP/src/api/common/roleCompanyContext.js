@@ -351,6 +351,9 @@ export const getActiveOrganizationId = (userOrContext = null) => {
     const directId =
       sanitize(userOrContext.organization?.id) ||
       sanitize(userOrContext.organizationId) ||
+      sanitize(userOrContext.activeOrganizationId) ||
+      sanitize(userOrContext.membership?.organizationId) ||
+      sanitize(userOrContext.membership?.organization?.id) ||
       sanitize(userOrContext.orgId) ||
       sanitize(userOrContext.id);
     if (directId) return directId;
@@ -363,8 +366,12 @@ export const getActiveOrganizationId = (userOrContext = null) => {
       const state = window.__REDUX_STORE__.getState();
       const orgId =
         sanitize(state.auth?.organization?.id) ||
+        sanitize(state.auth?.activeOrganizationId) ||
+        sanitize(state.auth?.membership?.organizationId) ||
         sanitize(state.auth?.user?.organizationId) ||
-        sanitize(state.organization?.id);
+      sanitize(state.auth?.user?.organization?.id) ||
+        sanitize(state.organization?.id) ||
+        sanitize(state.organization?.selectedOrganization?.id);
       if (orgId) return orgId;
     }
   } catch (e) { }
@@ -382,7 +389,7 @@ export const getActiveOrganizationId = (userOrContext = null) => {
     const authUserStr = localStorage.getItem('auth_user');
     if (authUserStr) {
       const authUser = JSON.parse(authUserStr);
-      const authId = sanitize(authUser?.organizationId || authUser?.organization?.id);
+      const authId = sanitize(authUser?.organizationId || authUser?.organization?.id || authUser?.membership?.organizationId);
       if (authId) return authId;
     }
   } catch (e) { }
@@ -391,7 +398,13 @@ export const getActiveOrganizationId = (userOrContext = null) => {
     const persistedRoot = JSON.parse(localStorage.getItem('persist:root'));
     if (persistedRoot?.auth) {
       const authState = JSON.parse(persistedRoot.auth);
-      const orgId = sanitize(authState?.organization?.id || authState?.user?.organizationId);
+      const orgId = sanitize(
+        authState?.organization?.id ||
+        authState?.activeOrganizationId ||
+        authState?.user?.organizationId ||
+        authState?.user?.organization?.id ||
+        authState?.membership?.organizationId
+      );
       if (orgId) return orgId;
     }
   } catch (e) { }

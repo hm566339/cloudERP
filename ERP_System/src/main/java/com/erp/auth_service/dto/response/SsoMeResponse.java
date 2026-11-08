@@ -110,6 +110,16 @@ public class SsoMeResponse {
 
     private List<UserPermissionDetailDto> permissions;
 
+    // ──────────────────────────────────────────────────────────────
+    // HIERARCHICAL MULTI-TENANT CONTEXT
+    // ──────────────────────────────────────────────────────────────
+
+    private List<OrganizationTreeContext> organizations;
+
+    private UUID activeOrganizationId;
+
+    private UUID activeCompanyId;
+
     // ══════════════════════════════════════════════════════════════
     // NESTED CONTEXT TYPES
     // ══════════════════════════════════════════════════════════════
@@ -157,6 +167,44 @@ public class SsoMeResponse {
         private String name;
         private String legalName;
         private Boolean active;
+        private CompanyMembershipContext membership;
+        private List<ModuleContext> modules;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CompanyMembershipContext {
+        private UUID id;
+        private String status;
+        private RoleResponse role;
+        private List<RoleResponse> roles;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FeatureContext {
+        private UUID id;
+        private String code;
+        private String name;
+        private List<UserPermissionDetailDto> permissions;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OrganizationTreeContext {
+        private UUID id;
+        private String code;
+        private String name;
+        private MembershipContext membership;
+        private SubscriptionContext subscription;
+        private String accessMode;
+        private List<CompanyContext> companies;
     }
 
     @Data
@@ -205,5 +253,6 @@ public class SsoMeResponse {
          * Whether the user has FULL or READ_ONLY access to this module specifically.
          */
         private boolean active;
+        private List<FeatureContext> features;
     }
 }

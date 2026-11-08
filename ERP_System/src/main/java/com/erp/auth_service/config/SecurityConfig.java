@@ -53,7 +53,8 @@ public class SecurityConfig {
                                                 .authenticationEntryPoint((request, response, authException) -> {
                                                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                                                         response.setContentType("application/json");
-                                                        response.getWriter().write("{\"message\":\"Authentication required\"}");
+                                                        response.getWriter().write(
+                                                                        "{\"message\":\"Authentication required\"}");
                                                 })
                                                 .accessDeniedHandler((request, response, accessDeniedException) -> {
                                                         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -67,12 +68,21 @@ public class SecurityConfig {
                                                 .requestMatchers(SsoPublicEndpoints.PUBLIC_ENDPOINTS)
                                                 .permitAll()
 
+                                                // Public Organization Lookup (GET
+                                                // /api/sso/organization/{organizationCode})
+                                                .requestMatchers(request -> SsoPublicEndpoints
+                                                                .isPublicOrganizationLookup(request.getMethod(),
+                                                                                request.getServletPath()))
+                                                .permitAll()
+
                                                 // Public Registration
-                                                .requestMatchers(HttpMethod.POST, SsoPublicEndpoints.PUBLIC_POST_ENDPOINTS)
+                                                .requestMatchers(HttpMethod.POST,
+                                                                SsoPublicEndpoints.PUBLIC_POST_ENDPOINTS)
                                                 .permitAll()
 
                                                 // Everything else must at least be authenticated.
-                                                // Business authorization is resolved dynamically via YamlAuthorizationFilter.
+                                                // Business authorization is resolved dynamically via
+                                                // YamlAuthorizationFilter.
                                                 .anyRequest()
                                                 .authenticated())
 

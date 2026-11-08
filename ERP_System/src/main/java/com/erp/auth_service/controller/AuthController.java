@@ -54,7 +54,7 @@ public class AuthController {
         return ResponseEntity.ok(ResponseWrapper.success(organizationService.signup(request)));
     }
 
-    @GetMapping("/organization/{organizationCode:^(?!appearance$).+}")
+    @GetMapping("/organization/{organizationCode:^(?!appearance$|members$|role-templates$|permissions$|profile$|companies$|modules$|security$|subscription$|login-portal$|regional-settings$|settings$|audit$).+}")
     public ResponseEntity<ResponseWrapper<OrganizationLookupResponse>> organization(
             @PathVariable String organizationCode) {
         return ResponseEntity.ok(ResponseWrapper.success(organizationService.lookup(organizationCode)));
@@ -80,7 +80,8 @@ public class AuthController {
 
         HttpHeaders headers = new HttpHeaders();
         if (response != null && StringUtils.hasText(response.getAccessToken())) {
-            attachAuthCookies(headers, response.getAccessToken(), response.getRefreshToken(), isSecureCookie(httpServletRequest));
+            attachAuthCookies(headers, response.getAccessToken(), response.getRefreshToken(),
+                    isSecureCookie(httpServletRequest));
         }
 
         return ResponseEntity.ok().headers(headers).body(ResponseWrapper.success(response));
@@ -99,7 +100,8 @@ public class AuthController {
 
         HttpHeaders headers = new HttpHeaders();
         if (response != null && StringUtils.hasText(response.getAccessToken())) {
-            attachAuthCookies(headers, response.getAccessToken(), response.getRefreshToken(), isSecureCookie(httpServletRequest));
+            attachAuthCookies(headers, response.getAccessToken(), response.getRefreshToken(),
+                    isSecureCookie(httpServletRequest));
         }
 
         return ResponseEntity.ok().headers(headers).body(ResponseWrapper.success(response));
@@ -275,7 +277,8 @@ public class AuthController {
 
         HttpHeaders headers = new HttpHeaders();
         if (tokenResponse != null && StringUtils.hasText(tokenResponse.getAccessToken())) {
-            attachAuthCookies(headers, tokenResponse.getAccessToken(), tokenResponse.getRefreshToken(), isSecureCookie(httpServletRequest));
+            attachAuthCookies(headers, tokenResponse.getAccessToken(), tokenResponse.getRefreshToken(),
+                    isSecureCookie(httpServletRequest));
         }
 
         return ResponseEntity.ok().headers(headers).body(tokenResponse);
@@ -303,7 +306,8 @@ public class AuthController {
                 if (cid != null) {
                     try {
                         clientId = UUID.fromString(cid.toString());
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
             } else if (dataObj instanceof String s && StringUtils.hasText(s)) {
                 tokenToUse = s;
@@ -320,7 +324,8 @@ public class AuthController {
                 if (cid != null) {
                     try {
                         clientId = UUID.fromString(cid.toString());
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
             }
         }
@@ -368,7 +373,8 @@ public class AuthController {
                 .maxAge(accessTokenMaxAge)
                 .build();
 
-        ResponseCookie refreshCookie = ResponseCookie.from("ACCESS_TOKEN_REFRESH", refreshToken != null ? refreshToken : "")
+        ResponseCookie refreshCookie = ResponseCookie
+                .from("ACCESS_TOKEN_REFRESH", refreshToken != null ? refreshToken : "")
                 .httpOnly(false)
                 .secure(isSec)
                 .sameSite(sameSite)
