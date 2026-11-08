@@ -325,6 +325,34 @@ export function buildAuthContext(payload) {
   const rawRole = data.roles || data.role || userCtx?.role || userCtx?.roles;
   const role = normalizeRole(rawRole);
 
+  const activeOrgId = data.activeOrganizationId || data.organization?.id || null;
+  const activeCompId = data.activeCompanyId || data.currentCompany?.id || null;
+
+  // Extract nested permissions from currentCompany.modules[].features[].permissions if present
+  let resolvedPermissions = Array.isArray(data.permissions) ? [...data.permissions] : [];
+  if (data.currentCompany && Array.isArray(data.currentCompany.modules)) {
+    const nestedPerms = [];
+    for (const mod of data.currentCompany.modules) {
+      if (Array.isArray(mod.features)) {
+        for (const feat of mod.features) {
+          if (Array.isArray(feat.permissions)) {
+            for (const perm of feat.permissions) {
+              nestedPerms.push({
+                ...perm,
+                featureCode: perm.featureCode || feat.featureCode || feat.code,
+                featureName: perm.featureName || feat.featureName || feat.name,
+                moduleName: perm.moduleName || mod.name || mod.code,
+              });
+            }
+          }
+        }
+      }
+    }
+    if (nestedPerms.length > 0) {
+      resolvedPermissions = nestedPerms;
+    }
+  }
+
   return {
     user: {
       ...userCtx,
@@ -336,21 +364,23 @@ export function buildAuthContext(payload) {
       role,
       accountStatus: userCtx?.accountStatus || data.accountStatus,
       companyCode: data.currentCompany?.code || data.companyCode,
-      companyId: data.currentCompany?.id || data.companyId,
+      companyId: activeCompId || data.companyId,
       companyName: data.currentCompany?.name || data.companyName,
       organizationCode: data.organization?.code || data.organizationCode,
-      organizationId: data.organization?.id || data.organizationId,
+      organizationId: activeOrgId || data.organizationId,
       accessMode: data.accessMode || 'FULL',
     },
     organization: data.organization || null,
+    activeOrganizationId: activeOrgId,
+    activeCompanyId: activeCompId,
     currentCompany: data.currentCompany || null,
     companies: Array.isArray(data.companies) ? data.companies : [],
     membership: data.membership || null,
     subscription: data.subscription || null,
     accessMode: data.accessMode || 'FULL',
-    modules: normalizeModulesList(data.modules || []),
+    modules: normalizeModulesList(data.modules || (data.currentCompany?.modules || [])),
     features: normalizeFeaturesList(data.features || []),
-    permissions: normalizePermissionsList(data.permissions || []),
+    permissions: normalizePermissionsList(resolvedPermissions),
   };
 }
 

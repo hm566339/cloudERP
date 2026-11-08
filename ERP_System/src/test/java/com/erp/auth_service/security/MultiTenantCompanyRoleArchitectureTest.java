@@ -486,4 +486,200 @@ public class MultiTenantCompanyRoleArchitectureTest {
                 assertTrue(SsoPublicEndpoints.isPublicOrganizationLookup("GET",
                                 "/api/sso/organization/mark2-enterprises"));
         }
+
+        @Test
+        @DisplayName("Scenario 10: Single-company automatic selection when user has exactly one company")
+        void testSingleCompanyAutomaticSelection() {
+                MemberCompanyAccess accessA = MemberCompanyAccess.builder()
+                                .id(UUID.randomUUID())
+                                .organizationMember(rahulMemberAbc)
+                                .organization(abcGroup)
+                                .company(companyA)
+                                .active(true)
+                                .build();
+
+                UserRole ur1 = UserRole.builder().user(rahul).role(roleAccountant).build();
+
+                when(memberCompanyAccessRepository.findActiveForMember(rahulMemberAbc.getId(), abcGroup.getId()))
+                                .thenReturn(List.of(accessA));
+                when(companyRepository.findById(companyA.getId())).thenReturn(Optional.of(companyA));
+                when(userRoleRepository.findAllByUser_IdAndRole_Company_Id(rahul.getId(), companyA.getId()))
+                                .thenReturn(List.of(ur1));
+                when(userRoleRepository.findAllByUser_IdAndCompany_Id(rahul.getId(), companyA.getId()))
+                                .thenReturn(List.of(ur1));
+
+                // Act: No explicit company requested — user has exactly 1 accessible company
+                SsoMeResponse response = userService.getSsoMe(testToken);
+
+                // Assert: Company A must be automatically selected
+                assertNotNull(response);
+                assertEquals(companyA.getId(), response.getActiveCompanyId());
+                assertNotNull(response.getCurrentCompany());
+                assertEquals(companyA.getId(), response.getCurrentCompany().getId());
+                assertEquals("Company A", response.getCurrentCompany().getName());
+                assertNotNull(response.getCurrentCompany().getModules());
+        }
+
+        @Test
+        @DisplayName("Scenario 11: Multiple-company requires explicit selection when no session company is present")
+        void testMultipleCompaniesExplicitSelectionRequired() {
+                MemberCompanyAccess accessA = MemberCompanyAccess.builder()
+                                .id(UUID.randomUUID())
+                                .organizationMember(rahulMemberAbc)
+                                .organization(abcGroup)
+                                .company(companyA)
+                                .active(true)
+                                .build();
+                MemberCompanyAccess accessB = MemberCompanyAccess.builder()
+                                .id(UUID.randomUUID())
+                                .organizationMember(rahulMemberAbc)
+                                .organization(abcGroup)
+                                .company(companyB)
+                                .active(true)
+                                .build();
+
+                when(memberCompanyAccessRepository.findActiveForMember(rahulMemberAbc.getId(), abcGroup.getId()))
+                                .thenReturn(List.of(accessA, accessB));
+
+                // Session has no company
+                testSession.setCompany(null);
+
+                // Act: No explicit company requested — user has 2 accessible companies
+                SsoMeResponse response = userService.getSsoMe(testToken);
+
+                // Assert: Requires explicit selection, currentCompany must be null
+                assertNotNull(response);
+                assertNull(response.getActiveCompanyId(), "Active company must be null when multiple companies available without selection");
+                assertNull(response.getCurrentCompany(), "Current company must be null when multiple companies available without selection");
+                assertEquals(2, response.getCompanies().size());
+                assertNotNull(response.getCompanies().get(0).getModules(), "modules must never be null");
+                assertNotNull(response.getCompanies().get(1).getModules(), "modules must never be null");
+        }
+
+        @Test
+        @DisplayName("Scenario 12: Complete Company -> Module -> Feature -> Permission nesting")
+        void testCompleteModuleFeaturePermissionNesting() {
+                MemberCompanyAccess accessA = MemberCompanyAccess.builder()
+                                .id(UUID.randomUUID())
+                                .organizationMember(rahulMemberAbc)
+                                .organization(abcGroup)
+                                .company(companyA)
+                                .active(true)
+                                .build();
+
+                UserRole ur1 = UserRole.builder().user(rahul).role(roleAccountant).build();
+
+                Module accountModule = Module.builder()
+                                .id(UUID.randomUUID())
+                                .name("ACCOUNT")
+                                .moduleStatus(true)
+                                .build();
+
+                CompanyModule cmFinance = CompanyModule.builder()
+                                .id(UUID.randomUUID())
+                                .company(companyA)
+                                .module(accountModule)
+                                .active(true)
+                                .build();
+
+                com.erp.auth_service.dto.response.UserPermissionDetailDto readPerm =
+                                com.erp.auth_service.dto.response.UserPermissionDetailDto.builder()
+                                                .permissionCode("CUSTOMERS:READ")
+                                                .action("READ")
+                                                .featureCode("CUSTOMERS")
+                                                .moduleName("ACCOUNT")
+                                                .source("ROLE")
+                                                .active(true)
+                                                .allowed(true)
+                                                .build();
+
+                com.erp.auth_service.dto.response.UserFeatureDto custFeature =
+                                com.erp.auth_service.dto.response.UserFeatureDto.builder()
+                                                .featureCode("CUSTOMERS")
+                                                .featureName("Customers")
+                                                .moduleName("ACCOUNT")
+                                                .source("ROLE")
+                                                .build();
+
+                com.erp.auth_service.dto.response.EffectivePermissionsResponse eff =
+                                com.erp.auth_service.dto.response.EffectivePermissionsResponse.builder()
+                                                .userId(rahul.getId())
+                                                .roles(List.of("ACCOUNTANT"))
+                                                .features(List.of(custFeature))
+                                                .permissions(List.of(readPerm))
+                                                .build();
+
+                when(memberCompanyAccessRepository.findActiveForMember(rahulMemberAbc.getId(), abcGroup.getId()))
+                                .thenReturn(List.of(accessA));
+                when(companyRepository.findById(companyA.getId())).thenReturn(Optional.of(companyA));
+                when(companyModuleRepository.findByCompany_IdAndActiveTrue(companyA.getId()))
+                                .thenReturn(List.of(cmFinance));
+                when(userRoleRepository.findAllByUser_IdAndRole_Company_Id(rahul.getId(), companyA.getId()))
+                                .thenReturn(List.of(ur1));
+                when(userRoleRepository.findAllByUser_IdAndCompany_Id(rahul.getId(), companyA.getId()))
+                                .thenReturn(List.of(ur1));
+                when(permissionService.getEffectivePermissions(eq(rahul.getId()), eq(companyA.getId())))
+                                .thenReturn(eff);
+
+                // Act
+                SsoMeResponse response = userService.getSsoMe(testToken, companyA.getId());
+
+                // Assert
+                assertNotNull(response);
+                assertEquals(companyA.getId(), response.getActiveCompanyId());
+                assertNotNull(response.getCurrentCompany());
+
+                List<SsoMeResponse.ModuleContext> mods = response.getCurrentCompany().getModules();
+                assertNotNull(mods);
+                assertFalse(mods.isEmpty(), "Company modules must not be empty");
+
+                SsoMeResponse.ModuleContext mod = mods.get(0);
+                assertEquals("ACCOUNT", mod.getName());
+                assertNotNull(mod.getFeatures(), "Module features must not be null");
+                assertFalse(mod.getFeatures().isEmpty(), "Module features must be populated");
+
+                SsoMeResponse.FeatureContext feat = mod.getFeatures().get(0);
+                assertEquals("CUSTOMERS", feat.getCode());
+                assertEquals("Customers", feat.getName());
+                assertNotNull(feat.getPermissions(), "Feature permissions must not be null");
+                assertFalse(feat.getPermissions().isEmpty(), "Feature permissions must be populated");
+
+                com.erp.auth_service.dto.response.UserPermissionDetailDto p = feat.getPermissions().get(0);
+                assertEquals("CUSTOMERS:READ", p.getPermissionCode());
+                assertEquals("READ", p.getAction());
+                assertTrue(p.isAllowed());
+                assertTrue(p.isActive());
+        }
+
+        @Test
+        @DisplayName("Scenario 13: Missing module assignments return empty arrays not null")
+        void testMissingModuleAssignmentsReturnEmptyArrayNotNull() {
+                MemberCompanyAccess accessA = MemberCompanyAccess.builder()
+                                .id(UUID.randomUUID())
+                                .organizationMember(rahulMemberAbc)
+                                .organization(abcGroup)
+                                .company(companyA)
+                                .active(true)
+                                .build();
+
+                when(memberCompanyAccessRepository.findActiveForMember(rahulMemberAbc.getId(), abcGroup.getId()))
+                                .thenReturn(List.of(accessA));
+                when(companyRepository.findById(companyA.getId())).thenReturn(Optional.of(companyA));
+                when(companyModuleRepository.findByCompany_IdAndActiveTrue(companyA.getId()))
+                                .thenReturn(Collections.emptyList());
+
+                // Act
+                SsoMeResponse response = userService.getSsoMe(testToken, companyA.getId());
+
+                // Assert: Must return empty lists, NEVER null
+                assertNotNull(response);
+                assertNotNull(response.getCurrentCompany());
+                assertNotNull(response.getCurrentCompany().getModules());
+                assertTrue(response.getCurrentCompany().getModules().isEmpty());
+
+                assertNotNull(response.getCompanies());
+                assertFalse(response.getCompanies().isEmpty());
+                assertNotNull(response.getCompanies().get(0).getModules());
+                assertTrue(response.getCompanies().get(0).getModules().isEmpty());
+        }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react'
-import { useLogoutApiMutation } from '../features/auth/services/authApi';
+import { useLogoutApiMutation, authApi } from '../features/auth/services/authApi';
 import { Outlet, Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, Users, ShieldCheck, Layers, Activity, Globe,
@@ -169,6 +169,8 @@ export default function CompanyLayout() {
 
     if (companyId && selectedCompany?.id !== companyId) {
       dispatch(setSelectedCompany({ id: companyId }));
+      // Completely refresh the selected company's authorization context
+      dispatch(authApi.endpoints.ssoGetMe.initiate(companyId, { subscribe: false, forceRefetch: true }));
     }
   }, [companyId, selectedCompany?.id, dispatch, userRole, location.pathname, navigate]);
 

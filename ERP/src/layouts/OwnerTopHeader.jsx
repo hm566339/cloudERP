@@ -22,7 +22,7 @@ import {
 import { useAppDispatch } from '../app/hooks';
 import { setSelectedCompany } from '../features/company-management/companySlice';
 import { logout as logoutAction } from '../features/auth/authSlice';
-import { useLogoutApiMutation } from '../features/auth/services/authApi';
+import { useLogoutApiMutation, authApi } from '../features/auth/services/authApi';
 import { removeCookie } from '../utils/cookieHelper';
 import ThemeToggle from '../components/common/ThemeToggle';
 
@@ -102,6 +102,8 @@ export default function OwnerTopHeader({
         name: comp.name || comp.legalName,
       })
     );
+    // Refresh the complete authorization context for the selected company
+    dispatch(authApi.endpoints.ssoGetMe.initiate(comp.id, { subscribe: false, forceRefetch: true }));
     setCompanyDropdownOpen(false);
   };
 

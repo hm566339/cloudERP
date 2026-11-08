@@ -140,6 +140,8 @@ export function useAuth() {
     isLoading: sessionStatus === 'idle' || sessionStatus === 'checking',
     sessionStatus,
     organization: authContext?.organization || null,
+    activeOrganizationId: authContext?.activeOrganizationId || authContext?.organization?.id || null,
+    activeCompanyId: authContext?.activeCompanyId || authContext?.currentCompany?.id || selectedCompany?.id || null,
     currentCompany: authContext?.currentCompany || selectedCompany || null,
     companies: authContext?.companies || [],
     subscription: authContext?.subscription || null,

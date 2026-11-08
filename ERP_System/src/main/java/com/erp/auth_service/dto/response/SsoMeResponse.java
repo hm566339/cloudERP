@@ -190,6 +190,8 @@ public class SsoMeResponse {
         private UUID id;
         private String code;
         private String name;
+        private String featureCode;
+        private String featureName;
         private List<UserPermissionDetailDto> permissions;
     }
 

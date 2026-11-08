@@ -13,7 +13,9 @@ const initialState = {
   user: null,
   // Global ERP shell context — sourced canonically from SSO /me
   organization: null,       // { id, code, name, status, accessMode, timezone, currency }
-  currentCompany: null,     // { id, code, name, legalName, active }
+  activeOrganizationId: null, // UUID of active organization
+  activeCompanyId: null,      // UUID of active company
+  currentCompany: null,     // { id, code, name, legalName, active, membership, modules }
   companies: [],            // All accessible companies for the org member
   membership: null,         // { memberId, memberType, membershipStatus, joinedAt }
   subscription: null,       // { id, planCode, status, accessMode, trialing, daysRemaining, trialEndsAt, ... }
@@ -40,6 +42,8 @@ function applySsoMePayload(state, payload) {
   };
 
   if (normalized.organization) state.organization = normalized.organization;
+  state.activeOrganizationId = normalized.activeOrganizationId || normalized.organization?.id || null;
+  state.activeCompanyId = normalized.activeCompanyId || normalized.currentCompany?.id || null;
   if (normalized.currentCompany) state.currentCompany = normalized.currentCompany;
   if (normalized.companies && normalized.companies.length > 0) state.companies = normalized.companies;
   if (normalized.membership) state.membership = normalized.membership;
@@ -67,6 +71,8 @@ const authSlice = createSlice({
         state.features = normalizeFeaturesList(action.payload.features);
       }
       if (action.payload.organization) state.organization = action.payload.organization;
+      state.activeOrganizationId = action.payload.activeOrganizationId || action.payload.organization?.id || null;
+      state.activeCompanyId = action.payload.activeCompanyId || action.payload.currentCompany?.id || null;
       if (action.payload.currentCompany) state.currentCompany = action.payload.currentCompany;
       if (action.payload.companies) state.companies = action.payload.companies;
       if (action.payload.membership) state.membership = action.payload.membership;
@@ -88,6 +94,8 @@ const authSlice = createSlice({
       state.permissions = [];
       state.features = [];
       state.organization = null;
+      state.activeOrganizationId = null;
+      state.activeCompanyId = null;
       state.currentCompany = null;
       state.companies = [];
       state.membership = null;
@@ -102,6 +110,8 @@ const authSlice = createSlice({
       state.permissions = [];
       state.features = [];
       state.organization = null;
+      state.activeOrganizationId = null;
+      state.activeCompanyId = null;
       state.currentCompany = null;
       state.companies = [];
       state.membership = null;
@@ -260,6 +270,8 @@ export const selectMembership = (state) => state.auth?.membership ?? null;
 export const selectSubscription = (state) => state.auth?.subscription ?? null;
 export const selectAccessMode = (state) => state.auth?.accessMode ?? 'FULL';
 export const selectAuthorizedModules = (state) => state.auth?.modules ?? [];
+export const selectActiveOrganizationId = (state) => state.auth?.activeOrganizationId ?? null;
+export const selectActiveCompanyId = (state) => state.auth?.activeCompanyId ?? null;
 
 /**
  * Returns the single canonical authorization context object (memoized to prevent re-renders)
@@ -268,6 +280,8 @@ export const selectAuthContext = createSelector(
   [
     (state) => state.auth?.user ?? null,
     (state) => state.auth?.organization ?? null,
+    (state) => state.auth?.activeOrganizationId ?? null,
+    (state) => state.auth?.activeCompanyId ?? null,
     (state) => state.auth?.currentCompany ?? null,
     (state) => state.auth?.companies ?? null,
     (state) => state.auth?.membership ?? null,
@@ -277,9 +291,11 @@ export const selectAuthContext = createSelector(
     (state) => state.auth?.features ?? null,
     (state) => state.auth?.permissions ?? null,
   ],
-  (user, organization, currentCompany, companies, membership, subscription, accessMode, modules, features, permissions) => ({
+  (user, organization, activeOrganizationId, activeCompanyId, currentCompany, companies, membership, subscription, accessMode, modules, features, permissions) => ({
     user,
     organization,
+    activeOrganizationId: activeOrganizationId || organization?.id || null,
+    activeCompanyId: activeCompanyId || currentCompany?.id || null,
     currentCompany,
     companies: companies || [],
     membership,
