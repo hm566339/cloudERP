@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/sso/company")
+@RequestMapping({"/api/sso/company", "/api/sso/companies", "/api/company", "/api/companies"})
 @RequiredArgsConstructor
 public class CompanyController {
 

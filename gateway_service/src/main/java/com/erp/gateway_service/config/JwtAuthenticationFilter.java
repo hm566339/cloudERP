@@ -39,6 +39,26 @@ public class JwtAuthenticationFilter
 
         private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
+        /**
+         * Reserved organization sub-paths that are NEVER public — they always require a
+         * valid JWT. This mirrors SsoPublicEndpoints.RESERVED_ORGANIZATION_PATHS in the
+         * auth service so that both layers enforce the same boundary.
+         */
+        private static final java.util.Set<String> RESERVED_ORGANIZATION_PATHS = java.util.Set.of(
+                        "role-templates",
+                        "permissions",
+                        "members",
+                        "appearance",
+                        "profile",
+                        "login-portal",
+                        "regional-settings",
+                        "security",
+                        "companies",
+                        "subscription",
+                        "modules",
+                        "settings",
+                        "audit");
+
         private static final List<String> PUBLIC_PATTERNS = List.of(
                         // Auth & SSO public endpoints
                         "/api/admin/auth/login",
@@ -48,7 +68,10 @@ public class JwtAuthenticationFilter
                         "/api/sso/auth/admin-login",
                         "/api/sso/auth/register",
                         "/api/sso/signup",
-                        "/api/sso/organization/*",
+                        // NOTE: /api/sso/organization/* is intentionally omitted here.
+                        // Public organization lookup (GET /api/sso/organization/{code}) is handled
+                        // through isPublicOrganizationLookup() in isPublicEndpoint() below,
+                        // using the RESERVED_ORGANIZATION_PATHS allowlist to protect admin endpoints.
                         "/api/sso/authorize",
                         "/api/sso/token/exchange",
                         "/api/sso/token/refresh",
@@ -121,13 +144,29 @@ public class JwtAuthenticationFilter
                 return (exchange, chain) -> authenticateAndExecute(exchange, chain);
         }
 
+        /**
+         * Returns true when the request path is a public (unauthenticated) endpoint
+         * that
+         * the gateway should let through without JWT validation.
+         *
+         * Public organization lookup: GET /api/sso/organization/{code}
+         * – Only a single-segment code path is public (e.g.
+         * /api/sso/organization/my-org).
+         * – Any path that extends further or whose segment matches a reserved admin
+         * path
+         * (companies, subscription, appearance, members, etc.) is PROTECTED and
+         * requires
+         * a valid JWT. This mirrors SsoPublicEndpoints.isPublicOrganizationLookup() in
+         * the auth service.
+         */
         public static boolean isPublicEndpoint(String method, String path) {
                 if (!StringUtils.hasText(path)) {
                         return false;
                 }
 
                 // Public user registration (POST /api/sso/user)
-                if ("POST".equalsIgnoreCase(method) && ("/api/sso/user".equals(path) || "/api/sso/user/".equals(path))) {
+                if ("POST".equalsIgnoreCase(method)
+                                && ("/api/sso/user".equals(path) || "/api/sso/user/".equals(path))) {
                         return true;
                 }
 
@@ -135,18 +174,28 @@ public class JwtAuthenticationFilter
                                 ? path.substring(0, path.length() - 1)
                                 : path;
 
+                // Public organization lookup: GET /api/sso/organization/{orgCode}
+                // Protected if: not GET, path goes deeper than one segment, or segment is a
+                // reserved admin path.
+                if (normalizedPath.startsWith("/api/sso/organization/")) {
+                        if (!"GET".equalsIgnoreCase(method)) {
+                                return false; // Only GET is ever public for org lookup
+                        }
+                        String sub = normalizedPath.substring("/api/sso/organization/".length());
+                        // Must be exactly one non-empty segment (no further slashes)
+                        if (sub.isEmpty() || sub.contains("/")) {
+                                return false;
+                        }
+                        // Reserved admin sub-paths are protected (require authentication)
+                        if (RESERVED_ORGANIZATION_PATHS.contains(sub.toLowerCase(java.util.Locale.ROOT))) {
+                                return false;
+                        }
+                        return true;
+                }
+
+                // All other patterns
                 for (String pattern : PUBLIC_PATTERNS) {
                         if (PATH_MATCHER.match(pattern, path) || PATH_MATCHER.match(pattern, normalizedPath)) {
-                                // Organization lookup is public ONLY for GET on organization code, NOT for appearance or members
-                                if (pattern.contains("/organization/")) {
-                                        if (!"GET".equalsIgnoreCase(method)) {
-                                                return false;
-                                        }
-                                        String segment = normalizedPath.substring(normalizedPath.lastIndexOf('/') + 1);
-                                        if ("appearance".equalsIgnoreCase(segment) || "members".equalsIgnoreCase(segment)) {
-                                                return false;
-                                        }
-                                }
                                 return true;
                         }
                 }
@@ -172,7 +221,8 @@ public class JwtAuthenticationFilter
                 String token = extractToken(exchange);
 
                 if (token == null) {
-                        log.warn("Gateway [UNAUTHORIZED] -> [{}] {} Missing Authorization Header or Cookie", method, path);
+                        log.warn("Gateway [UNAUTHORIZED] -> [{}] {} Missing Authorization Header or Cookie", method,
+                                        path);
                         return Mono.error(
                                         new ResponseStatusException(
                                                         HttpStatus.UNAUTHORIZED,
@@ -206,10 +256,17 @@ public class JwtAuthenticationFilter
                                                                         .headers(headers -> headers.set(
                                                                                         HttpHeaders.AUTHORIZATION,
                                                                                         "Bearer " + finalToken))
-                                                                        .header("X-USER-ID", userId == null ? "" : userId)
-                                                                        .header("X-COMPANY-CODE", companyCode == null ? "" : companyCode)
-                                                                        .header("X-COMPANY-ID", companyId == null ? "" : companyId)
-                                                                        .header("X-USERNAME", username == null ? "" : username)
+                                                                        .header("X-USER-ID",
+                                                                                        userId == null ? "" : userId)
+                                                                        .header("X-COMPANY-CODE",
+                                                                                        companyCode == null ? ""
+                                                                                                        : companyCode)
+                                                                        .header("X-COMPANY-ID",
+                                                                                        companyId == null ? ""
+                                                                                                        : companyId)
+                                                                        .header("X-USERNAME",
+                                                                                        username == null ? ""
+                                                                                                        : username)
                                                                         .header("X-ROLES", roles == null ? "" : roles)
                                                                         .header("X-SCOPE", scope == null ? "" : scope)
                                                                         .build())
@@ -223,7 +280,8 @@ public class JwtAuthenticationFilter
                                         });
 
                 } catch (Exception ex) {
-                        log.warn("Gateway [JWT_FAILED] -> [{}] {} JWT verification failed: {}", method, path, ex.getMessage());
+                        log.warn("Gateway [JWT_FAILED] -> [{}] {} JWT verification failed: {}", method, path,
+                                        ex.getMessage());
 
                         return Mono.error(
                                         new ResponseStatusException(

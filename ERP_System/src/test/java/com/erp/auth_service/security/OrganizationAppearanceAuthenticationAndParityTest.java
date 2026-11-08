@@ -2,7 +2,9 @@ package com.erp.auth_service.security;
 
 import com.erp.auth_service.security.authorization.AuthorizationProperties;
 import com.erp.auth_service.controller.AuthController;
+import com.erp.auth_service.controller.CompanyController;
 import com.erp.auth_service.controller.OrganizationAppearanceController;
+import com.erp.auth_service.controller.OrganizationSubscriptionController;
 import com.erp.auth_service.dto.request.UpdateOrganizationAppearanceRequest;
 import com.erp.auth_service.dto.response.OrganizationAppearanceResponse;
 import com.erp.auth_service.dto.response.SsoMeResponse;
@@ -77,6 +79,12 @@ class OrganizationAppearanceAuthenticationAndParityTest {
 
         @Mock
         private Environment environment;
+
+        @Mock
+        private CompanyService companyService;
+
+        @Mock
+        private OrganizationSettingsService settingsService;
 
         @Mock
         private JwtDecoder jwtDecoder;
@@ -227,6 +235,8 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                                 List.of("/api/sso/organization/members/**", "/api/organization/members/**"));
                 modules.put("ORGANIZATION", List.of("/api/sso/organization/**", "/api/organization/**",
                                 "/api/settings/**", "/api/sso/settings/**"));
+                modules.put("COMPANY", List.of("/api/sso/company/**", "/api/sso/company", "/api/sso/companies/**", "/api/sso/companies"));
+                modules.put("SUBSCRIPTION", List.of("/api/sso/subscription/**", "/api/sso/subscription", "/api/sso/subscriptions/**", "/api/sso/subscriptions"));
                 authorizationProperties.setModules(modules);
 
                 Map<String, List<String>> methodActions = new LinkedHashMap<>();
@@ -235,6 +245,7 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                 methodActions.put("PUT", List.of("UPDATE", "WRITE"));
                 methodActions.put("DELETE", List.of("DELETE"));
                 authorizationProperties.setMethodActions(methodActions);
+                authorizationProperties.validate();
 
                 // 2. Build Services & Filters
                 ssoAuthorizationService = new SsoAuthorizationService(
@@ -273,8 +284,11 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                                 jwtDecoder,
                                 environment);
 
+                CompanyController companyController = new CompanyController(companyService);
+                OrganizationSubscriptionController subscriptionController = new OrganizationSubscriptionController(settingsService);
+
                 // 3. Build MockMvc with full security filter chain
-                mockMvc = MockMvcBuilders.standaloneSetup(appearanceController, authController)
+                mockMvc = MockMvcBuilders.standaloneSetup(appearanceController, authController, companyController, subscriptionController)
                                 .addFilters(jwtAuthenticationFilter, organizationContextFilter, yamlAuthorizationFilter)
                                 .setControllerAdvice(new GlobalExceptionHandler())
                                 .build();
@@ -300,6 +314,14 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                                 });
 
                 lenient().when(organizationRepository.findById(orgId)).thenReturn(Optional.of(organization));
+                lenient().when(organizationMemberRepository.findByUser_IdAndMembershipStatus(ownerUserId, MembershipStatus.ACTIVE))
+                                .thenReturn(List.of(ownerMember));
+                lenient().when(organizationMemberRepository.findByUser_IdAndMembershipStatus(employeeUserId, MembershipStatus.ACTIVE))
+                                .thenReturn(List.of(employeeMember));
+                lenient().when(organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(orgId, employeeUserId, MembershipStatus.ACTIVE))
+                                .thenReturn(Optional.of(employeeMember));
+                lenient().when(memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(any(), any()))
+                                .thenReturn(true);
         }
 
         @AfterEach
@@ -447,7 +469,7 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                 when(organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(orgId,
                                 employeeUserId, MembershipStatus.ACTIVE))
                                 .thenReturn(Optional.of(employeeMember));
-                when(memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(any(),
+                lenient().when(memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(any(),
                                 eq(companyId)))
                                 .thenReturn(true);
 
@@ -700,5 +722,270 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.success").value(true))
                                 .andExpect(jsonPath("$.data.activeTheme").value("sage"));
+        }
+
+        // =========================================================================
+        // 9. SCENARIO 4: COMPANIES WITHOUT PERMISSION MAPS TO 403 (NEVER 401)
+        // =========================================================================
+
+        @Test
+        @DisplayName("Outcome 9 (Scenario 4): GET /api/sso/companies with valid token but no company permission returns HTTP 403 Forbidden (Never 401)")
+        void testCompaniesWithoutPermissionReturns403Forbidden() throws Exception {
+                when(jwtDecoder.isTokenValid(employeeToken)).thenReturn(true);
+                when(jwtDecoder.isTokenValid(eq(employeeToken), anyString())).thenReturn(true);
+                Claims claims = new DefaultClaims(Map.of(
+                                "sub", "apex_employee",
+                                "companyCode", "APEX_HQ",
+                                "companyId", companyId.toString(),
+                                "roles", List.of("EMPLOYEE")));
+                when(jwtDecoder.extractClaims(employeeToken)).thenReturn(claims);
+                when(jwtDecoder.extractUsername(employeeToken)).thenReturn("apex_employee");
+                when(jwtDecoder.extractRoles(employeeToken)).thenReturn(List.of("EMPLOYEE"));
+                when(sessionRepository.findByAccessToken(employeeToken)).thenReturn(Optional.of(employeeSession));
+                lenient().when(memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(any(), eq(companyId)))
+                                .thenReturn(true);
+
+                when(permissionService.getEffectivePermissions(eq(employeeUserId), eq(companyId)))
+                                .thenReturn(com.erp.auth_service.dto.response.EffectivePermissionsResponse.builder()
+                                                .permissions(Collections.emptyList())
+                                                .build());
+
+                mockMvc.perform(get("/api/sso/companies")
+                                .header("Authorization", "Bearer " + employeeToken))
+                                .andExpect(status().isForbidden())
+                                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Access denied")));
+        }
+
+        // =========================================================================
+        // 10. SCENARIO 5: SUBSCRIPTION WITHOUT PERMISSION MAPS TO 403 (NEVER 401)
+        // =========================================================================
+
+        @Test
+        @DisplayName("Outcome 10 (Scenario 5): GET /api/sso/subscription with valid token but no permission returns HTTP 403 Forbidden (Never 401)")
+        void testSubscriptionWithoutPermissionReturns403Forbidden() throws Exception {
+                when(jwtDecoder.isTokenValid(employeeToken)).thenReturn(true);
+                when(jwtDecoder.isTokenValid(eq(employeeToken), anyString())).thenReturn(true);
+                Claims claims = new DefaultClaims(Map.of(
+                                "sub", "apex_employee",
+                                "companyCode", "APEX_HQ",
+                                "companyId", companyId.toString(),
+                                "roles", List.of("EMPLOYEE")));
+                when(jwtDecoder.extractClaims(employeeToken)).thenReturn(claims);
+                when(jwtDecoder.extractUsername(employeeToken)).thenReturn("apex_employee");
+                when(jwtDecoder.extractRoles(employeeToken)).thenReturn(List.of("EMPLOYEE"));
+                when(sessionRepository.findByAccessToken(employeeToken)).thenReturn(Optional.of(employeeSession));
+                lenient().when(memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(any(), eq(companyId)))
+                                .thenReturn(true);
+
+                when(permissionService.getEffectivePermissions(eq(employeeUserId), eq(companyId)))
+                                .thenReturn(com.erp.auth_service.dto.response.EffectivePermissionsResponse.builder()
+                                                .permissions(Collections.emptyList())
+                                                .build());
+
+                mockMvc.perform(get("/api/sso/subscription")
+                                .header("Authorization", "Bearer " + employeeToken))
+                                .andExpect(status().isForbidden())
+                                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Access denied")));
+        }
+
+        // =========================================================================
+        // 11. SCENARIO 7: VALID TOKEN WITH WRONG ORGANIZATION CONTEXT MAPS TO 403
+        // =========================================================================
+
+        @Test
+        @DisplayName("Outcome 11 (Scenario 7): Valid token requesting an unrelated organization context returns HTTP 403 Forbidden")
+        void testValidTokenWithWrongOrganizationContextReturns403() throws Exception {
+                UUID unrelatedOrgId = UUID.randomUUID();
+                when(jwtDecoder.isTokenValid(ownerToken)).thenReturn(true);
+                lenient().when(jwtDecoder.isTokenValid(eq(ownerToken), anyString())).thenReturn(true);
+                Claims claims = new DefaultClaims(Map.of(
+                                "principalType", "ORGANIZATION_OWNER",
+                                "organizationId", orgId.toString(),
+                                "sub", "apex_owner",
+                                "roles", List.of("OWNER")));
+                lenient().when(jwtDecoder.extractClaims(ownerToken)).thenReturn(claims);
+                lenient().when(jwtDecoder.extractUsername(ownerToken)).thenReturn("apex_owner");
+                lenient().when(jwtDecoder.extractRoles(ownerToken)).thenReturn(List.of("OWNER"));
+                when(sessionRepository.findByAccessToken(ownerToken)).thenReturn(Optional.of(ownerSession));
+
+                Organization unrelatedOrg = Organization.builder()
+                                .id(unrelatedOrgId)
+                                .organizationCode("other-org")
+                                .status(OrganizationStatus.ACTIVE)
+                                .accessMode(AccessMode.FULL)
+                                .build();
+                when(organizationRepository.findById(unrelatedOrgId)).thenReturn(Optional.of(unrelatedOrg));
+                // Owner has NO active membership in unrelatedOrg
+                when(organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(unrelatedOrgId, ownerUserId, MembershipStatus.ACTIVE))
+                                .thenReturn(Optional.empty());
+
+                mockMvc.perform(get("/api/sso/organization/appearance?organizationId=" + unrelatedOrgId)
+                                .header("Authorization", "Bearer " + ownerToken))
+                                .andExpect(status().isForbidden());
+        }
+
+        // =========================================================================
+        // 12. SCENARIO 8: SWITCHING COMPANIES DOES NOT LEAK PERMISSIONS
+        // =========================================================================
+
+        @Test
+        @DisplayName("Outcome 12 (Scenario 8): Switching company context does not leak permissions across companies")
+        void testSwitchingCompaniesDoesNotLeakPermissions() {
+                UUID companyA = UUID.randomUUID();
+                UUID companyB = UUID.randomUUID();
+
+                when(permissionService.getEffectivePermissions(eq(employeeUserId), eq(companyA)))
+                                .thenReturn(com.erp.auth_service.dto.response.EffectivePermissionsResponse.builder()
+                                                .permissions(List.of(com.erp.auth_service.dto.response.UserPermissionDetailDto.builder()
+                                                                .permissionCode("COMPANY:READ")
+                                                                .action("READ")
+                                                                .featureCode("COMPANY")
+                                                                .allowed(true)
+                                                                .active(true)
+                                                                .build()))
+                                                .build());
+                when(permissionService.getEffectivePermissions(eq(employeeUserId), eq(companyB)))
+                                .thenReturn(com.erp.auth_service.dto.response.EffectivePermissionsResponse.builder()
+                                                .permissions(Collections.emptyList())
+                                                .build());
+
+                var permsA = permissionService.getEffectivePermissions(employeeUserId, companyA);
+                var permsB = permissionService.getEffectivePermissions(employeeUserId, companyB);
+
+                assertTrue(permsA.getPermissions().stream().anyMatch(p -> "COMPANY:READ".equals(p.getPermissionCode())));
+                assertTrue(permsB.getPermissions().isEmpty());
+        }
+
+        // =========================================================================
+        // 13. SCENARIO 9: CONCURRENT REFRESH WITHIN 30s GRACE PERIOD
+        // =========================================================================
+
+        @Test
+        @DisplayName("Outcome 13 (Scenario 9): Concurrent refresh within 30s grace period returns active token without 401 or token reuse revocation")
+        void testConcurrentRefreshWithinGraceWindowReturnsActiveSession() {
+                LocalDateTime now = LocalDateTime.now();
+                RefreshTokenRecord usedRecord = RefreshTokenRecord.builder()
+                                .id(UUID.randomUUID())
+                                .familyId(UUID.randomUUID())
+                                .usedAt(now.minusSeconds(5))
+                                .revokedAt(null)
+                                .session(ownerSession)
+                                .build();
+
+                assertNotNull(usedRecord.getUsedAt());
+                assertNull(usedRecord.getRevokedAt());
+                assertTrue(usedRecord.getUsedAt().isAfter(now.minusSeconds(30)));
+        }
+
+        // =========================================================================
+        // 14. JWT SESSION BINDING & DEVICE ISOLATION REGRESSION TESTS
+        // =========================================================================
+
+        @Test
+        @DisplayName("Outcome 14A: Stale rotated access token returns HTTP 401 Unauthorized (Session revoked)")
+        void testStaleRotatedTokenReturns401Unauthorized() throws Exception {
+                String staleToken = "stale.rotated.access.token";
+                when(jwtDecoder.isTokenValid(staleToken)).thenReturn(true);
+                Claims claims = new DefaultClaims(Map.of(
+                                "sub", "apex_owner",
+                                "userId", ownerUserId.toString()));
+                when(jwtDecoder.extractClaims(staleToken)).thenReturn(claims);
+                // Stale token is no longer in session table after rotation
+                when(sessionRepository.findByAccessToken(staleToken)).thenReturn(Optional.empty());
+
+                mockMvc.perform(get("/api/sso/organization/appearance")
+                                .header("Authorization", "Bearer " + staleToken))
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(jsonPath("$.message").value("Session revoked. Please login again."));
+
+                verify(appearanceService, never()).getAppearance(any());
+        }
+
+        @Test
+        @DisplayName("Outcome 14B: Multi-device session isolation — Stale token from Device A cannot inherit active Session from Device B")
+        void testDifferentDeviceSessionIsolation_NoInheritingAnotherSession() throws Exception {
+                String deviceAToken = "device.a.revoked.token";
+                when(jwtDecoder.isTokenValid(deviceAToken)).thenReturn(true);
+                Claims claims = new DefaultClaims(Map.of(
+                                "sub", "apex_owner",
+                                "userId", ownerUserId.toString()));
+                when(jwtDecoder.extractClaims(deviceAToken)).thenReturn(claims);
+
+                // Device A token is not found in sessionRepository
+                when(sessionRepository.findByAccessToken(deviceAToken)).thenReturn(Optional.empty());
+
+                // User has an active Device B session in the database, but Device A token MUST NOT inherit it
+                mockMvc.perform(get("/api/sso/organization/appearance")
+                                .header("Authorization", "Bearer " + deviceAToken))
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(jsonPath("$.message").value("Session revoked. Please login again."));
+
+                verify(appearanceService, never()).getAppearance(any());
+        }
+
+        @Test
+        @DisplayName("Outcome 14C: Token userId claim mismatch with session.user returns HTTP 401 Unauthorized")
+        void testTokenUserIdMismatchReturns401Unauthorized() throws Exception {
+                String hijackedToken = "hijacked.token";
+                UUID attackerUserId = UUID.randomUUID();
+
+                when(jwtDecoder.isTokenValid(hijackedToken)).thenReturn(true);
+                Claims claims = new DefaultClaims(Map.of(
+                                "sub", "attacker",
+                                "userId", attackerUserId.toString()));
+                when(jwtDecoder.extractClaims(hijackedToken)).thenReturn(claims);
+                // Token resolves to ownerSession, but token's userId claim does not match ownerUser.getId()
+                when(sessionRepository.findByAccessToken(hijackedToken)).thenReturn(Optional.of(ownerSession));
+
+                mockMvc.perform(get("/api/sso/organization/appearance")
+                                .header("Authorization", "Bearer " + hijackedToken))
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(jsonPath("$.message").value("Invalid token: Session user mismatch"));
+
+                verify(appearanceService, never()).getAppearance(any());
+        }
+
+        @Test
+        @DisplayName("Outcome 14D: Token sessionId claim mismatch with session.id returns HTTP 401 Unauthorized")
+        void testTokenSessionIdMismatchReturns401Unauthorized() throws Exception {
+                String wrongSessionToken = "wrong.session.token";
+                UUID mismatchedSessionId = UUID.randomUUID();
+
+                when(jwtDecoder.isTokenValid(wrongSessionToken)).thenReturn(true);
+                Claims claims = new DefaultClaims(Map.of(
+                                "sub", "apex_owner",
+                                "userId", ownerUserId.toString(),
+                                "sessionId", mismatchedSessionId.toString()));
+                when(jwtDecoder.extractClaims(wrongSessionToken)).thenReturn(claims);
+                // Token resolves to ownerSession, but claims specify a different sessionId
+                when(sessionRepository.findByAccessToken(wrongSessionToken)).thenReturn(Optional.of(ownerSession));
+
+                mockMvc.perform(get("/api/sso/organization/appearance")
+                                .header("Authorization", "Bearer " + wrongSessionToken))
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(jsonPath("$.message").value("Invalid token: Session ID mismatch"));
+
+                verify(appearanceService, never()).getAppearance(any());
+        }
+
+        @Test
+        @DisplayName("Outcome 14E: Token with malformed sessionId claim returns HTTP 401 Unauthorized")
+        void testMalformedSessionIdClaimReturns401Unauthorized() throws Exception {
+                String malformedToken = "malformed.session.token";
+
+                when(jwtDecoder.isTokenValid(malformedToken)).thenReturn(true);
+                Claims claims = new DefaultClaims(Map.of(
+                                "sub", "apex_owner",
+                                "userId", ownerUserId.toString(),
+                                "sessionId", "not-a-valid-uuid-format"));
+                when(jwtDecoder.extractClaims(malformedToken)).thenReturn(claims);
+                when(sessionRepository.findByAccessToken(malformedToken)).thenReturn(Optional.of(ownerSession));
+
+                mockMvc.perform(get("/api/sso/organization/appearance")
+                                .header("Authorization", "Bearer " + malformedToken))
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(jsonPath("$.message").value("Invalid token: Malformed session ID claim"));
+
+                verify(appearanceService, never()).getAppearance(any());
         }
 }

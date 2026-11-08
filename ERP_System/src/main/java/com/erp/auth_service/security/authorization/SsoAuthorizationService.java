@@ -109,6 +109,11 @@ public class SsoAuthorizationService {
         String primaryAction = candidateActions.get(0);
         String primaryPermissionCode = featureCode + ":" + primaryAction;
 
+        // Self-identity / current user auth context (/api/sso/me, /api/sso/auth/me) is always allowed for authenticated users
+        if ("AUTH".equalsIgnoreCase(featureCode) && "READ".equalsIgnoreCase(primaryAction)) {
+            return AuthorizationDecision.allow(featureCode, primaryAction, primaryPermissionCode, "AUTH_ME_READ");
+        }
+
         // 4. Check DB permissions
         return evaluateDbAuthorization(authentication, featureCode, candidateActions, primaryAction,
                 primaryPermissionCode);

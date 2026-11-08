@@ -16,6 +16,7 @@ class JwtAuthenticationFilterTest {
         assertTrue(JwtAuthenticationFilter.isPublicEndpoint("GET", "/api/sso/organization/mohit"));
         assertTrue(JwtAuthenticationFilter.isPublicEndpoint("GET", "/api/sso/organization/mohit/"));
         assertTrue(JwtAuthenticationFilter.isPublicEndpoint("GET", "/api/sso/organization/acme-corp"));
+        assertTrue(JwtAuthenticationFilter.isPublicEndpoint("GET", "/api/sso/organization/my-org-123"));
     }
 
     @ParameterizedTest
@@ -60,11 +61,27 @@ class JwtAuthenticationFilterTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            // Organization admin endpoints — all require authentication
             "/api/sso/organization/appearance",
             "/api/sso/organization/appearance/",
             "/api/sso/organization/appearance/reset",
+            "/api/sso/organization/companies",
+            "/api/sso/organization/companies/",
+            "/api/sso/organization/subscription",
+            "/api/sso/organization/subscription/",
+            "/api/sso/organization/profile",
+            "/api/sso/organization/members",
             "/api/sso/organization/members/companies",
             "/api/sso/organization/members/123/companies",
+            "/api/sso/organization/role-templates",
+            "/api/sso/organization/permissions",
+            "/api/sso/organization/login-portal",
+            "/api/sso/organization/regional-settings",
+            "/api/sso/organization/security",
+            "/api/sso/organization/modules",
+            "/api/sso/organization/settings",
+            "/api/sso/organization/audit",
+            // Other protected endpoints
             "/api/account/invoices",
             "/api/inventory/products",
             "/api/v1/workflow/definitions",
@@ -83,5 +100,24 @@ class JwtAuthenticationFilterTest {
         assertFalse(JwtAuthenticationFilter.isPublicEndpoint("PUT", "/api/sso/organization/appearance"));
         assertFalse(JwtAuthenticationFilter.isPublicEndpoint("PUT", "/api/sso/organization/appearance/"));
         assertFalse(JwtAuthenticationFilter.isPublicEndpoint("POST", "/api/sso/organization/appearance/reset"));
+    }
+
+    @Test
+    @DisplayName("Organization company and subscription mutations must require authentication")
+    void testOrganizationCompanyAndSubscriptionMutationsRequireAuth() {
+        assertFalse(JwtAuthenticationFilter.isPublicEndpoint("POST", "/api/sso/organization/companies"));
+        assertFalse(JwtAuthenticationFilter.isPublicEndpoint("PUT", "/api/sso/organization/companies/some-id"));
+        assertFalse(JwtAuthenticationFilter.isPublicEndpoint("DELETE", "/api/sso/organization/companies/some-id"));
+        assertFalse(JwtAuthenticationFilter.isPublicEndpoint("POST", "/api/sso/organization/subscription"));
+        assertFalse(JwtAuthenticationFilter.isPublicEndpoint("PUT", "/api/sso/organization/subscription"));
+    }
+
+    @Test
+    @DisplayName("Public org lookup does not apply to paths with sub-segments beyond the org code")
+    void testOrgLookupDoesNotMatchDeepPaths() {
+        // /api/sso/organization/my-org/anything is NOT public even though my-org alone would be
+        assertFalse(JwtAuthenticationFilter.isPublicEndpoint("GET", "/api/sso/organization/my-org/companies"));
+        assertFalse(JwtAuthenticationFilter.isPublicEndpoint("GET", "/api/sso/organization/my-org/subscription"));
+        assertFalse(JwtAuthenticationFilter.isPublicEndpoint("GET", "/api/sso/organization/my-org/members"));
     }
 }

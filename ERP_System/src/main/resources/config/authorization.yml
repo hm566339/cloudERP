@@ -27,13 +27,27 @@ sso:
 
       COMPANY:
         - "/api/sso/company/**"
+        - "/api/sso/company"
+        - "/api/sso/companies/**"
+        - "/api/sso/companies"
+        - "/api/company/**"
+        - "/api/company"
+        - "/api/companies/**"
+        - "/api/companies"
         - "/api/sso/company-modules/**"
 
       COMPANY_SUBSCRIPTION:
         - "/api/sso/company-subscriptions/**"
 
       SUBSCRIPTION:
+        - "/api/sso/subscription/**"
+        - "/api/sso/subscription"
         - "/api/sso/subscriptions/**"
+        - "/api/sso/subscriptions"
+        - "/api/subscription/**"
+        - "/api/subscription"
+        - "/api/subscriptions/**"
+        - "/api/subscriptions"
 
       SUBSCRIPTION_PLAN:
         - "/api/sso/subscription-plans/**"

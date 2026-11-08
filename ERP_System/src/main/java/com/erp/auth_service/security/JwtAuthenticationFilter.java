@@ -1,6 +1,7 @@
 package com.erp.auth_service.security;
 
 import com.erp.auth_service.model.Organization;
+import com.erp.auth_service.model.Session;
 import com.erp.auth_service.model.platform.PlatformAdminStatus;
 import com.erp.auth_service.repository.MemberCompanyAccessRepository;
 import com.erp.auth_service.repository.OrganizationMemberRepository;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -281,7 +283,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // Standard Customer Token
+            // Standard Customer Token: Strict exact access-token-to-session binding
             var sessionOptional = sessionRepository.findByAccessToken(token);
 
             if (sessionOptional.isEmpty()) {
@@ -290,6 +292,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             var session = sessionOptional.get();
+
+            // Validate token-to-session binding: userId
+            String userIdClaim = claims.get("userId", String.class);
+            if (userIdClaim != null && !userIdClaim.isBlank()) {
+                try {
+                    UUID tokenUserId = UUID.fromString(userIdClaim.trim());
+                    if (!tokenUserId.equals(session.getUser().getId())) {
+                        rejectUnauthorized(response, "Invalid token: Session user mismatch");
+                        return;
+                    }
+                } catch (Exception e) {
+                    rejectUnauthorized(response, "Invalid token: Malformed user ID claim");
+                    return;
+                }
+            }
+
+            // Validate token-to-session binding: sessionId (if present in claims)
+            String sessionIdClaim = claims.get("sessionId", String.class);
+            if (sessionIdClaim == null || sessionIdClaim.isBlank()) {
+                sessionIdClaim = claims.get("sid", String.class);
+            }
+            if (sessionIdClaim != null && !sessionIdClaim.isBlank()) {
+                try {
+                    UUID tokenSessionId = UUID.fromString(sessionIdClaim.trim());
+                    if (!tokenSessionId.equals(session.getId())) {
+                        rejectUnauthorized(response, "Invalid token: Session ID mismatch");
+                        return;
+                    }
+                } catch (Exception e) {
+                    rejectUnauthorized(response, "Invalid token: Malformed session ID claim");
+                    return;
+                }
+            }
 
             if (session.getUser().getAccountStatus() != AccountStatus.ACTIVE) {
                 rejectUnauthorized(response, "User account is inactive");
@@ -303,7 +338,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // ── Resolve effective organization context ────────────────────────────────
-            Organization effectiveOrg = session.getOrganization();
+            Organization effectiveOrg = null;
+            String rawOrgId = request.getParameter("organizationId");
+            if (rawOrgId == null || rawOrgId.isBlank()) {
+                rawOrgId = request.getHeader("X-Organization-Id");
+            }
+            if (rawOrgId != null && !rawOrgId.isBlank() && organizationRepository != null) {
+                try {
+                    effectiveOrg = organizationRepository.findById(UUID.fromString(rawOrgId.trim())).orElse(null);
+                } catch (Exception ignored) {
+                }
+            }
+            if (effectiveOrg == null) {
+                effectiveOrg = session.getOrganization();
+            }
             if (effectiveOrg == null && session.getCompany() != null) {
                 effectiveOrg = session.getCompany().getOrganization();
             }
@@ -356,7 +404,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // ==================== ORGANIZATION OWNER SESSION ====================
             if (isOrgOwner) {
                 if (effectiveOrg == null) {
-                    rejectUnauthorized(response, "Invalid session: Organization context missing");
+                    rejectForbidden(response, "Access denied: Organization context missing");
                     return;
                 }
 
@@ -382,7 +430,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
                 String username = jwtService.extractUsername(token);
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (username != null) {
                     CustomUserDetails userDetails = new CustomUserDetails(session.getUser());
                     if (jwtService.isTokenValid(token, userDetails.getUsername())
                             || (jwtService.isTokenValid(token) && username.equalsIgnoreCase(userDetails.getUsername()))) {
@@ -433,7 +481,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // ==================== COMPANY EMPLOYEE / ORGANIZATION MEMBER SESSION ====================
             if (session.getCompany() == null && isCompanyScopedPath(path)) {
-                rejectUnauthorized(response, "Invalid token. Company information missing.");
+                rejectForbidden(response, "Company-scoped session required for company business APIs");
                 return;
             }
 
@@ -457,8 +505,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String username = jwtService.extractUsername(token);
 
-            if (username != null
-                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (username != null) {
 
                 CustomUserDetails userDetails = new CustomUserDetails(session.getUser());
 
@@ -470,7 +517,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             : jwtService.extractClaims(token).get("companyCode", String.class);
 
                     if (companyCode == null && isCompanyScopedPath(path)) {
-                        rejectUnauthorized(response, "Invalid token. Company information missing.");
+                        rejectForbidden(response, "Company-scoped session required for company business APIs");
                         return;
                     }
 

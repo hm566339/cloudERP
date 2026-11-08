@@ -269,7 +269,8 @@ public class AuthServiceImpl implements AuthService {
                                 });
 
                 if (Boolean.FALSE.equals(company.getActive())) {
-                        log.warn("Login rejected - company inactive | companyCode={} | ip={}", company.getCompanyCode(), ip);
+                        log.warn("Login rejected - company inactive | companyCode={} | ip={}", company.getCompanyCode(),
+                                        ip);
                         throw new BadRequestException("Company is inactive");
                 }
 
@@ -638,7 +639,10 @@ public class AuthServiceImpl implements AuthService {
                                         .companies(companies)
                                         .redirectUrl("/erp/owner/dashboard");
 
-                        if (organizationSecuritySettingsRepository != null && organizationSecuritySettingsRepository.findByOrganization_Id(organization.getId()).map(com.erp.auth_service.model.OrganizationSecuritySettings::getEnforce2FA).orElse(false)) {
+                        if (organizationSecuritySettingsRepository != null && organizationSecuritySettingsRepository
+                                        .findByOrganization_Id(organization.getId())
+                                        .map(com.erp.auth_service.model.OrganizationSecuritySettings::getEnforce2FA)
+                                        .orElse(false)) {
                                 respBuilder.requires2FA(true);
                         }
                         tryCreateOwnerSessionAndTokens(user, organization, ip, userAgent, respBuilder);
@@ -739,10 +743,13 @@ public class AuthServiceImpl implements AuthService {
                                                 .code(organization.getOrganizationCode()).build())
                                 .redirectUrl(redirectUrl);
 
-                if (organizationSecuritySettingsRepository != null && organizationSecuritySettingsRepository.findByOrganization_Id(organization.getId()).map(com.erp.auth_service.model.OrganizationSecuritySettings::getEnforce2FA).orElse(false)) {
-                                respBuilder.requires2FA(true);
-                        }
-                        tryCreateSessionAndTokens(user, company, organization, module, ip, userAgent, respBuilder);
+                if (organizationSecuritySettingsRepository != null && organizationSecuritySettingsRepository
+                                .findByOrganization_Id(organization.getId())
+                                .map(com.erp.auth_service.model.OrganizationSecuritySettings::getEnforce2FA)
+                                .orElse(false)) {
+                        respBuilder.requires2FA(true);
+                }
+                tryCreateSessionAndTokens(user, company, organization, module, ip, userAgent, respBuilder);
 
                 return respBuilder.build();
         }
@@ -757,20 +764,28 @@ public class AuthServiceImpl implements AuthService {
                         return;
                 }
                 try {
+                        UUID sessionId = UUID.randomUUID();
                         Map<String, Object> claims = buildOwnerClaims(user, organization);
+                        claims.put("sessionId", sessionId.toString());
                         String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
                         String refreshToken = jwtService.generateRefreshToken(user.getUsername(),
                                         organization.getOrganizationCode());
 
                         if (org.springframework.util.StringUtils.hasText(accessToken)) {
                                 Session session = Session.builder()
+                                                .id(sessionId)
                                                 .user(user)
                                                 .company(null)
                                                 .organization(organization)
                                                 .module(null)
                                                 .accessToken(accessToken)
+                                                .refreshToken(refreshToken)
                                                 .accessTokenValidTill(
-                                                                LocalDateTime.now().plusMinutes(resolveSessionTimeoutMinutes(organization != null ? organization.getId() : null)))
+                                                                LocalDateTime.now().plusMinutes(
+                                                                                resolveSessionTimeoutMinutes(
+                                                                                                organization != null
+                                                                                                                ? organization.getId()
+                                                                                                                : null)))
                                                 .refreshTokenValidTill(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
                                                 .ipAddress(ip)
                                                 .userAgent(userAgent)
@@ -831,27 +846,40 @@ public class AuthServiceImpl implements AuthService {
                         return;
                 }
                 try {
-                        ensureCompanyMemberAccess(user, company, organization != null ? organization : (company != null ? company.getOrganization() : null));
+                        ensureCompanyMemberAccess(user, company, organization != null ? organization
+                                        : (company != null ? company.getOrganization() : null));
 
                         String effectiveClientId = (module != null && module.getClientId() != null)
                                         ? module.getClientId().toString()
                                         : ((module != null) ? "ACCOUNT" : "ERP_WORKSPACE");
 
+                        UUID sessionId = UUID.randomUUID();
                         Map<String, Object> claims = buildClaims(user, company, module, effectiveClientId);
+                        claims.put("sessionId", sessionId.toString());
                         String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
                         String refreshToken = jwtService.generateRefreshToken(user.getUsername(),
                                         company.getCompanyCode());
 
                         if (org.springframework.util.StringUtils.hasText(accessToken)) {
                                 Session session = Session.builder()
+                                                .id(sessionId)
                                                 .user(user)
                                                 .company(company)
                                                 .organization(organization != null ? organization
                                                                 : company.getOrganization())
                                                 .module(module)
                                                 .accessToken(accessToken)
+                                                .refreshToken(refreshToken)
                                                 .accessTokenValidTill(
-                                                                LocalDateTime.now().plusMinutes(resolveSessionTimeoutMinutes(organization != null ? organization.getId() : (company != null && company.getOrganization() != null ? company.getOrganization().getId() : null))))
+                                                                LocalDateTime.now().plusMinutes(
+                                                                                resolveSessionTimeoutMinutes(
+                                                                                                organization != null
+                                                                                                                ? organization.getId()
+                                                                                                                : (company != null
+                                                                                                                                && company.getOrganization() != null
+                                                                                                                                                ? company.getOrganization()
+                                                                                                                                                                .getId()
+                                                                                                                                                : null))))
                                                 .refreshTokenValidTill(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
                                                 .ipAddress(ip)
                                                 .userAgent(userAgent)
@@ -1202,6 +1230,7 @@ public class AuthServiceImpl implements AuthService {
 
                 if (isOwnerSession) {
                         Map<String, Object> claims = buildOwnerClaims(user, session.getOrganization());
+                        claims.put("sessionId", session.getId().toString());
                         newAccessToken = jwtService.generateAccessToken(user.getUsername(), claims);
                         newRefreshToken = jwtService.generateRefreshToken(user.getUsername(),
                                         session.getOrganization().getOrganizationCode());
@@ -1216,6 +1245,7 @@ public class AuthServiceImpl implements AuthService {
                                         company,
                                         module,
                                         effectiveClientId);
+                        claims.put("sessionId", session.getId().toString());
 
                         newAccessToken = jwtService.generateAccessToken(
                                         user.getUsername(),
@@ -1227,7 +1257,7 @@ public class AuthServiceImpl implements AuthService {
                 }
 
                 session.setAccessToken(newAccessToken);
-                session.setRefreshToken(null);
+                session.setRefreshToken(newRefreshToken);
                 session.setAccessTokenValidTill(
                                 LocalDateTime.now()
                                                 .plusMinutes(ACCESS_TOKEN_MINUTES));
@@ -1263,7 +1293,55 @@ public class AuthServiceImpl implements AuthService {
                         UUID clientId) {
                 LocalDateTime now = LocalDateTime.now();
                 if (record.getUsedAt() != null || record.getRevokedAt() != null) {
-                        log.warn("CRITICAL: Refresh token reuse detected! Revoking token family | familyId={} | sessionId={}",
+                        // 1. Explicitly revoked -> confirmed attack/reuse -> revoke family & reject
+                        if (record.getRevokedAt() != null) {
+                                log.warn("CRITICAL: Attempt to use revoked refresh token! Revoking token family | familyId={} | sessionId={}",
+                                                record.getFamilyId(),
+                                                record.getSession() != null ? record.getSession().getId() : null);
+                                revokeRefreshFamily(record.getFamilyId(), record.getSession());
+                                throw new BadCredentialsException("Refresh token revoked");
+                        }
+
+                        // 2. Concurrency grace window (30 seconds) for legitimate in-flight requests from the same session/client
+                        if (record.getUsedAt() != null && record.getUsedAt().isAfter(now.minusSeconds(30))) {
+                                Session session = record.getSession();
+                                if (session == null || session.getRefreshTokenValidTill() == null
+                                                || session.getRefreshTokenValidTill().isBefore(now)) {
+                                        revokeRefreshFamily(record.getFamilyId(), session);
+                                        throw new BadCredentialsException("Session expired");
+                                }
+
+                                if (session.getUser() == null || session.getUser().getAccountStatus() != AccountStatus.ACTIVE) {
+                                        revokeRefreshFamily(record.getFamilyId(), session);
+                                        throw new InvalidOperationException("User account is inactive");
+                                }
+
+                                // Client / device binding check:
+                                // If a clientId was presented with the refresh request, verify it matches the session module's clientId
+                                if (clientId != null && session.getModule() != null && session.getModule().getClientId() != null) {
+                                        if (!session.getModule().getClientId().equals(clientId)) {
+                                                log.warn("CRITICAL: Stolen refresh token replay detected across clients! Client mismatch: session clientId={} vs presented clientId={}",
+                                                                session.getModule().getClientId(), clientId);
+                                                revokeRefreshFamily(record.getFamilyId(), session);
+                                                throw new BadCredentialsException("Client mismatch during token refresh");
+                                        }
+                                }
+
+                                String activeAccess = session.getAccessToken();
+                                String activeRefresh = session.getRefreshToken();
+                                if (activeAccess != null) {
+                                        log.info("Concurrent refresh within grace window (30s) returning active token pair | familyId={} | sessionId={}",
+                                                        record.getFamilyId(), session.getId());
+                                        return RefreshTokenResponse.builder()
+                                                        .accessToken(activeAccess)
+                                                        .refreshToken(activeRefresh != null ? activeRefresh : presentedToken)
+                                                        .expiresIn((long) ACCESS_TOKEN_MINUTES * 60)
+                                                        .build();
+                                }
+                        }
+
+                        // 3. Replay outside grace window -> Confirmed reuse! Revoke family.
+                        log.warn("CRITICAL: Refresh token reuse detected outside grace window! Revoking token family | familyId={} | sessionId={}",
                                         record.getFamilyId(),
                                         record.getSession() != null ? record.getSession().getId() : null);
                         revokeRefreshFamily(record.getFamilyId(), record.getSession());
@@ -1349,6 +1427,7 @@ public class AuthServiceImpl implements AuthService {
 
                 if (isOwnerSession) {
                         Map<String, Object> claims = buildOwnerClaims(user, session.getOrganization());
+                        claims.put("sessionId", session.getId().toString());
                         accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
                         refreshToken = jwtService.generateRefreshToken(user.getUsername(),
                                         session.getOrganization().getOrganizationCode());
@@ -1357,13 +1436,14 @@ public class AuthServiceImpl implements AuthService {
                                         ? module.getClientId().toString()
                                         : (clientId != null ? clientId.toString() : "ERP_WORKSPACE");
                         Map<String, Object> claims = buildClaims(user, company, module, effectiveClientId);
+                        claims.put("sessionId", session.getId().toString());
                         accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
                         refreshToken = jwtService.generateRefreshToken(user.getUsername(), company.getCompanyCode());
                 }
 
                 session.setAccessToken(accessToken);
                 session.setAccessTokenValidTill(now.plusMinutes(ACCESS_TOKEN_MINUTES));
-                session.setRefreshToken(null);
+                session.setRefreshToken(refreshToken);
                 session.setRefreshTokenValidTill(now.plusDays(REFRESH_TOKEN_DAYS));
                 session.setModule(module);
                 sessionRepository.save(session);
@@ -1482,6 +1562,7 @@ public class AuthServiceImpl implements AuthService {
                 Map<String, Object> claims = buildAdminClaims(
                                 user,
                                 company);
+                claims.put("sessionId", session.getId().toString());
 
                 String newAccessToken = jwtService.generateAccessToken(
                                 user.getUsername(),
@@ -1493,7 +1574,7 @@ public class AuthServiceImpl implements AuthService {
 
                 session.setAccessToken(newAccessToken);
 
-                session.setRefreshToken(null);
+                session.setRefreshToken(newRefreshToken);
 
                 session.setAccessTokenValidTill(
                                 now.plusMinutes(
@@ -1578,7 +1659,8 @@ public class AuthServiceImpl implements AuthService {
                                 });
 
                 if (Boolean.FALSE.equals(company.getActive())) {
-                        log.warn("Direct auth code rejected - company inactive | companyCode={}", company.getCompanyCode());
+                        log.warn("Direct auth code rejected - company inactive | companyCode={}",
+                                        company.getCompanyCode());
                         throw new BadRequestException("Company is inactive");
                 }
 
@@ -1916,8 +1998,10 @@ public class AuthServiceImpl implements AuthService {
 
                 Map<String, Object> claims;
                 String refreshToken;
+                UUID sessionId = UUID.randomUUID();
                 if (company == null) {
                         claims = buildOwnerClaims(user, code.getOrganization());
+                        claims.put("sessionId", sessionId.toString());
                         refreshToken = jwtService.generateRefreshToken(
                                         user.getUsername(),
                                         code.getOrganization().getOrganizationCode());
@@ -1927,6 +2011,7 @@ public class AuthServiceImpl implements AuthService {
                                         company,
                                         module,
                                         effectiveClientId);
+                        claims.put("sessionId", sessionId.toString());
                         refreshToken = jwtService.generateRefreshToken(
                                         user.getUsername(),
                                         company.getCompanyCode());
@@ -1952,11 +2037,13 @@ public class AuthServiceImpl implements AuthService {
                                 REFRESH_TOKEN_DAYS);
 
                 Session session = Session.builder()
+                                .id(sessionId)
                                 .user(user)
                                 .company(company)
                                 .organization(code.getOrganization())
                                 .module(module)
                                 .accessToken(accessToken)
+                                .refreshToken(refreshToken)
                                 .accessTokenValidTill(
                                                 LocalDateTime.now()
                                                                 .plusMinutes(ACCESS_TOKEN_MINUTES))
@@ -2226,7 +2313,8 @@ public class AuthServiceImpl implements AuthService {
                                         "Token is required");
                 }
 
-                if (passwordReset == null || passwordReset.getPassword() == null || passwordReset.getPassword().isBlank()) {
+                if (passwordReset == null || passwordReset.getPassword() == null
+                                || passwordReset.getPassword().isBlank()) {
                         log.warn("Password reset rejected - password is required");
                         throw new BadRequestException("Password is required");
                 }
@@ -2284,12 +2372,14 @@ public class AuthServiceImpl implements AuthService {
                                         "Invalid company token");
                 }
 
-                if (passwordReset == null || passwordReset.getPassword() == null || passwordReset.getPassword().isBlank()) {
+                if (passwordReset == null || passwordReset.getPassword() == null
+                                || passwordReset.getPassword().isBlank()) {
                         log.warn("Password setup/reset failed - password is required | token={}", maskCode(rawCode));
                         throw new BadRequestException("Password is required");
                 }
 
-                // Resolve company attributes before deleting sessions to prevent LazyInitializationException
+                // Resolve company attributes before deleting sessions to prevent
+                // LazyInitializationException
                 String companyCode = company.getCompanyCode();
                 UUID companyId = company.getId();
 
@@ -2451,10 +2541,12 @@ public class AuthServiceImpl implements AuthService {
 
                 if (activeCompanyId != null && userRoleRepository != null) {
                         try {
-                                List<UserRole> companyRoles = userRoleRepository.findAllByUser_IdAndCompany_Id(user.getId(), activeCompanyId);
+                                List<UserRole> companyRoles = userRoleRepository
+                                                .findAllByUser_IdAndCompany_Id(user.getId(), activeCompanyId);
                                 if (companyRoles != null && !companyRoles.isEmpty()) {
                                         roleNames.addAll(companyRoles.stream()
-                                                        .filter(r -> r != null && r.getRole() != null && r.getRole().isStatus())
+                                                        .filter(r -> r != null && r.getRole() != null
+                                                                        && r.getRole().isStatus())
                                                         .map(r -> r.getRole().getName())
                                                         .filter(name -> name != null && !name.isBlank())
                                                         .toList());
@@ -2465,15 +2557,19 @@ public class AuthServiceImpl implements AuthService {
 
                 if (roleNames.isEmpty() && user.getUserRoles() != null && !user.getUserRoles().isEmpty()) {
                         roleNames.addAll(user.getUserRoles().stream()
-                                        .filter(r -> r != null && r.getRole() != null && r.getRole().isStatus() && (
-                                                activeCompanyId == null
-                                                || r.getRole().getCompany() == null
-                                                || activeCompanyId.equals(r.getRole().getCompany().getId())
-                                                || "SYSTEM_ADMIN".equalsIgnoreCase(r.getRole().getName())
-                                                || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(r.getRole().getName())
-                                                || "OWNER".equalsIgnoreCase(r.getRole().getName())
-                                                || "ROLE_OWNER".equalsIgnoreCase(r.getRole().getName())
-                                        ))
+                                        .filter(r -> r != null && r.getRole() != null && r.getRole().isStatus()
+                                                        && (activeCompanyId == null
+                                                                        || r.getRole().getCompany() == null
+                                                                        || activeCompanyId.equals(r.getRole()
+                                                                                        .getCompany().getId())
+                                                                        || "SYSTEM_ADMIN".equalsIgnoreCase(
+                                                                                        r.getRole().getName())
+                                                                        || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(
+                                                                                        r.getRole().getName())
+                                                                        || "OWNER".equalsIgnoreCase(
+                                                                                        r.getRole().getName())
+                                                                        || "ROLE_OWNER".equalsIgnoreCase(
+                                                                                        r.getRole().getName())))
                                         .map(r -> r.getRole().getName())
                                         .filter(name -> name != null && !name.isBlank())
                                         .toList());
@@ -2483,7 +2579,8 @@ public class AuthServiceImpl implements AuthService {
                                 List<UserRole> dbRoles = userRoleRepository.findAllByUser_Id(user.getId());
                                 if (dbRoles != null && !dbRoles.isEmpty()) {
                                         roleNames.addAll(dbRoles.stream()
-                                                        .filter(r -> r != null && r.getRole() != null && r.getRole().isStatus())
+                                                        .filter(r -> r != null && r.getRole() != null
+                                                                        && r.getRole().isStatus())
                                                         .map(r -> r.getRole().getName())
                                                         .filter(name -> name != null && !name.isBlank())
                                                         .toList());
@@ -2491,9 +2588,12 @@ public class AuthServiceImpl implements AuthService {
                         } catch (Exception ignored) {
                         }
                 }
-                if (roleNames.isEmpty() && company != null && company.getOrganization() != null && organizationMemberRepository != null) {
+                if (roleNames.isEmpty() && company != null && company.getOrganization() != null
+                                && organizationMemberRepository != null) {
                         try {
-                                organizationMemberRepository.findByOrganization_IdAndUser_Id(company.getOrganization().getId(), user.getId())
+                                organizationMemberRepository
+                                                .findByOrganization_IdAndUser_Id(company.getOrganization().getId(),
+                                                                user.getId())
                                                 .ifPresent(m -> {
                                                         if (m.getMemberType() != null) {
                                                                 roleNames.add(m.getMemberType().name());
@@ -2791,7 +2891,9 @@ public class AuthServiceImpl implements AuthService {
                                 }
                                 if (scopedRoles.isEmpty() && userRoleRepository != null) {
                                         try {
-                                                List<UserRole> dbRoles = userRoleRepository.findAllByUser_IdAndCompany_Id(user.getId(), company.getId());
+                                                List<UserRole> dbRoles = userRoleRepository
+                                                                .findAllByUser_IdAndCompany_Id(user.getId(),
+                                                                                company.getId());
                                                 if (dbRoles != null && !dbRoles.isEmpty()) {
                                                         scopedRoles.addAll(dbRoles.stream()
                                                                         .filter(ur -> ur.getRole() != null)
@@ -2804,7 +2906,8 @@ public class AuthServiceImpl implements AuthService {
                                 userResponse.setRole(scopedRoles);
                         } else if (isOwner) {
                                 List<com.erp.auth_service.dto.response.RoleResponse> ownerRoles = new ArrayList<>();
-                                ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder().name("OWNER").status(true)
+                                ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder().name("OWNER")
+                                                .status(true)
                                                 .build());
                                 ownerRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
                                                 .name("ROLE_OWNER").status(true).build());
@@ -3040,7 +3143,9 @@ public class AuthServiceImpl implements AuthService {
                                         return new ResourceNotFoundException("SYSTEM_ADMIN module not found");
                                 });
 
+                UUID sessionId = UUID.randomUUID();
                 Map<String, Object> claims = buildAdminClaims(user, user.getCompany());
+                claims.put("sessionId", sessionId.toString());
 
                 String accessToken = jwtService.generateAccessToken(
                                 user.getUsername(),
@@ -3051,6 +3156,7 @@ public class AuthServiceImpl implements AuthService {
                                 user.getCompany().getCompanyCode());
 
                 Session session = Session.builder()
+                                .id(sessionId)
                                 .user(user)
                                 .company(user.getCompany())
                                 .module(module)
@@ -3174,7 +3280,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         private void ensureCompanyMemberAccess(User user, Company company, Organization organization) {
-                if (user == null || company == null || organizationMemberRepository == null || memberCompanyAccessRepository == null) {
+                if (user == null || company == null || organizationMemberRepository == null
+                                || memberCompanyAccessRepository == null) {
                         return;
                 }
                 Organization org = organization != null ? organization : company.getOrganization();
@@ -3228,7 +3335,8 @@ public class AuthServiceImpl implements AuthService {
 
                         if (member != null && member.getId() != null) {
                                 Optional<MemberCompanyAccess> accessOpt = memberCompanyAccessRepository
-                                                .findByOrganizationMember_IdAndCompany_Id(member.getId(), company.getId());
+                                                .findByOrganizationMember_IdAndCompany_Id(member.getId(),
+                                                                company.getId());
 
                                 if (accessOpt.isPresent()) {
                                         MemberCompanyAccess access = accessOpt.get();
