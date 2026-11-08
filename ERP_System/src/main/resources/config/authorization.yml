@@ -5,6 +5,7 @@ sso:
     modules:
       AUTH:
         - "/api/sso/auth/**"
+        - "/api/sso/me"
 
       USER:
         - "/api/sso/user/**"

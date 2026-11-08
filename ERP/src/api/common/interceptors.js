@@ -363,26 +363,26 @@ export const attachRequestInterceptor = (instance) => {
         }
 
         // Attach organizationId query parameter for organization-level APIs if not already set
-        if (config.url?.includes('/role-templates') || config.url?.includes('/organization/permissions') || config.url?.includes('/organization/role-templates')) {
-          const activeOrgId = getActiveOrganizationId();
-          if (activeOrgId) {
-            config.params = config.params || {};
-            if (!config.params.organizationId) {
-              config.params.organizationId = activeOrgId;
+          if (config.url?.includes('/role-templates') || config.url?.includes('/organization')) {
+            const activeOrgId = getActiveOrganizationId();
+            if (activeOrgId) {
+              config.params = config.params || {};
+              if (!config.params.organizationId) {
+                config.params.organizationId = activeOrgId;
+              }
             }
           }
-        }
 
-        // Request logging omitted in production; no sensitive payload or credentials printed
-      } catch (e) {
-        console.warn('[API REQUEST ERROR] Failed processing request config', e);
-      }
-      return config;
-    },
-    (error) => {
-      console.error('[API REQUEST ERROR]', error);
-      return Promise.reject(error);
-    },
+          // Request logging omitted in production; no sensitive payload or credentials printed
+        } catch (e) {
+          console.warn('[API REQUEST ERROR] Failed processing request config', e);
+        }
+        return config;
+      },
+      (error) => {
+        console.error('[API REQUEST ERROR]', error);
+        return Promise.reject(error);
+      },
   );
 };
 

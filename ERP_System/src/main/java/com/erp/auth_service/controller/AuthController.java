@@ -248,7 +248,7 @@ public class AuthController {
      * The account module's /api/account/auth/me is preserved for backward
      * compatibility.
      */
-    @GetMapping("/auth/me")
+    @GetMapping({ "/auth/me", "/me" })
     public ResponseEntity<ResponseWrapper<SsoMeResponse>> me(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestParam(value = "companyId", required = false) String companyParam,

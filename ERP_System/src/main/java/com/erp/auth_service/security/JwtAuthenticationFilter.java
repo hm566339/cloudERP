@@ -1,8 +1,10 @@
 package com.erp.auth_service.security;
 
+import com.erp.auth_service.model.Organization;
 import com.erp.auth_service.model.platform.PlatformAdminStatus;
 import com.erp.auth_service.repository.MemberCompanyAccessRepository;
 import com.erp.auth_service.repository.OrganizationMemberRepository;
+import com.erp.auth_service.repository.OrganizationRepository;
 import com.erp.auth_service.repository.SessionRepository;
 import com.erp.auth_service.repository.platform.PlatformAdminRepository;
 import com.erp.auth_service.repository.platform.SupportAccessSessionRepository;
@@ -17,7 +19,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -35,16 +37,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
-/**
- * @param jwtService
- * @param userDetailsService
- * @param sessionRepository
- * @param organizationMemberRepository
- * @param memberCompanyAccessRepository
- * @param platformAdminRepository
- * @param supportAccessSessionRepository
- */
-@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtDecoder jwtService;
@@ -54,6 +46,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final MemberCompanyAccessRepository memberCompanyAccessRepository;
     private final PlatformAdminRepository platformAdminRepository;
     private final SupportAccessSessionRepository supportAccessSessionRepository;
+    private final OrganizationRepository organizationRepository;
+
+    @Autowired
+    public JwtAuthenticationFilter(
+            JwtDecoder jwtService,
+            CustomUserDetailsService userDetailsService,
+            SessionRepository sessionRepository,
+            OrganizationMemberRepository organizationMemberRepository,
+            MemberCompanyAccessRepository memberCompanyAccessRepository,
+            PlatformAdminRepository platformAdminRepository,
+            SupportAccessSessionRepository supportAccessSessionRepository,
+            OrganizationRepository organizationRepository) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+        this.sessionRepository = sessionRepository;
+        this.organizationMemberRepository = organizationMemberRepository;
+        this.memberCompanyAccessRepository = memberCompanyAccessRepository;
+        this.platformAdminRepository = platformAdminRepository;
+        this.supportAccessSessionRepository = supportAccessSessionRepository;
+        this.organizationRepository = organizationRepository;
+    }
+
+    public JwtAuthenticationFilter(
+            JwtDecoder jwtService,
+            CustomUserDetailsService userDetailsService,
+            SessionRepository sessionRepository,
+            OrganizationMemberRepository organizationMemberRepository,
+            MemberCompanyAccessRepository memberCompanyAccessRepository,
+            PlatformAdminRepository platformAdminRepository,
+            SupportAccessSessionRepository supportAccessSessionRepository) {
+        this(jwtService, userDetailsService, sessionRepository, organizationMemberRepository,
+                memberCompanyAccessRepository, platformAdminRepository, supportAccessSessionRepository, null);
+    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -277,38 +302,81 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            // ── Resolve effective organization context ────────────────────────────────
+            Organization effectiveOrg = session.getOrganization();
+            if (effectiveOrg == null && session.getCompany() != null) {
+                effectiveOrg = session.getCompany().getOrganization();
+            }
+            if (effectiveOrg == null) {
+                String orgIdClaim = claims.get("organizationId", String.class);
+                if (orgIdClaim != null && !orgIdClaim.isBlank() && organizationRepository != null) {
+                    try {
+                        effectiveOrg = organizationRepository.findById(UUID.fromString(orgIdClaim.trim())).orElse(null);
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+            if (effectiveOrg == null && organizationMemberRepository != null) {
+                var activeMembers = organizationMemberRepository.findByUser_IdAndMembershipStatus(
+                        session.getUser().getId(), MembershipStatus.ACTIVE);
+                if (activeMembers.size() == 1) {
+                    effectiveOrg = activeMembers.get(0).getOrganization();
+                }
+            }
+
+            // Persist resolved organization on session if it was previously null
+            if (session.getOrganization() == null && effectiveOrg != null && sessionRepository != null) {
+                try {
+                    session.setOrganization(effectiveOrg);
+                    sessionRepository.save(session);
+                } catch (Exception ignored) {
+                }
+            }
+
             boolean isOrgOwner = "ORGANIZATION_OWNER".equals(principalType);
-            if (!isOrgOwner && session.getOrganization() != null && organizationMemberRepository != null) {
+            if (!isOrgOwner && effectiveOrg != null && organizationMemberRepository != null) {
                 var memberCheck = organizationMemberRepository
                         .findByOrganization_IdAndUser_IdAndMembershipStatus(
-                                session.getOrganization().getId(), session.getUser().getId(), MembershipStatus.ACTIVE);
+                                effectiveOrg.getId(), session.getUser().getId(), MembershipStatus.ACTIVE);
                 if (memberCheck.isPresent() && memberCheck.get().getMemberType() == MemberType.OWNER) {
                     isOrgOwner = true;
+                }
+            }
+            if (!isOrgOwner && organizationMemberRepository != null) {
+                var activeMembers = organizationMemberRepository.findByUser_IdAndMembershipStatus(
+                        session.getUser().getId(), MembershipStatus.ACTIVE);
+                if (activeMembers.stream().anyMatch(m -> m.getMemberType() == MemberType.OWNER)) {
+                    isOrgOwner = true;
+                    if (effectiveOrg == null && activeMembers.size() == 1) {
+                        effectiveOrg = activeMembers.get(0).getOrganization();
+                    }
                 }
             }
 
             // ==================== ORGANIZATION OWNER SESSION ====================
             if (isOrgOwner) {
-                if (session.getOrganization() == null) {
+                if (effectiveOrg == null) {
                     rejectUnauthorized(response, "Invalid session: Organization context missing");
                     return;
                 }
 
-                var memberOpt = organizationMemberRepository
-                        .findByOrganization_IdAndUser_IdAndMembershipStatus(
-                                session.getOrganization().getId(), session.getUser().getId(), MembershipStatus.ACTIVE);
-                if (memberOpt.isEmpty() || memberOpt.get().getMemberType() != MemberType.OWNER) {
-                    rejectForbidden(response, "Access denied: Verified organization owner privileges required");
-                    return;
+                if (organizationMemberRepository != null) {
+                    var memberOpt = organizationMemberRepository
+                            .findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                    effectiveOrg.getId(), session.getUser().getId(), MembershipStatus.ACTIVE);
+                    if (memberOpt.isEmpty() || memberOpt.get().getMemberType() != MemberType.OWNER) {
+                        rejectForbidden(response, "Access denied: Verified organization owner privileges required");
+                        return;
+                    }
                 }
 
-                if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
+                if (effectiveOrg.getAccessMode() == AccessMode.BLOCKED) {
                     rejectForbidden(response, "Organization access is blocked");
                     return;
                 }
 
-                // Protect company-scoped business APIs from un-scoped owner sessions
-                if (isCompanyScopedPath(path)) {
+                // Protect company-scoped business APIs when un-scoped (no company on session)
+                if (session.getCompany() == null && isCompanyScopedPath(path)) {
                     rejectForbidden(response, "Company-scoped session required for company business APIs");
                     return;
                 }
@@ -316,18 +384,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = jwtService.extractUsername(token);
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     CustomUserDetails userDetails = new CustomUserDetails(session.getUser());
-                    if (jwtService.isTokenValid(token, userDetails.getUsername())) {
-                        TenantContext.set(session.getOrganization().getOrganizationCode());
+                    if (jwtService.isTokenValid(token, userDetails.getUsername())
+                            || (jwtService.isTokenValid(token) && username.equalsIgnoreCase(userDetails.getUsername()))) {
+
+                        if (session.getCompany() != null && session.getCompany().getCompanyCode() != null) {
+                            TenantContext.set(session.getCompany().getCompanyCode());
+                        } else if (effectiveOrg.getOrganizationCode() != null) {
+                            TenantContext.set(effectiveOrg.getOrganizationCode());
+                        }
+
                         RequestContext.set(
                                 session.getUser().getId(),
-                                session.getOrganization().getId(),
-                                null,
+                                effectiveOrg.getId(),
+                                session.getCompany() != null ? session.getCompany().getId() : null,
                                 session.getModule() != null ? session.getModule().getClientId() : null,
-                                session.getOrganization().getAccessMode() != null
-                                        ? session.getOrganization().getAccessMode()
+                                effectiveOrg.getAccessMode() != null
+                                        ? effectiveOrg.getAccessMode()
                                         : AccessMode.FULL);
 
-                        if (session.getOrganization().getAccessMode() == AccessMode.READ_ONLY
+                        if (effectiveOrg.getAccessMode() == AccessMode.READ_ONLY
                                 && isBusinessWrite(request)) {
                             rejectForbidden(response, "Organization is read-only");
                             return;
@@ -356,23 +431,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // ==================== COMPANY EMPLOYEE SESSION ====================
-            if (session.getCompany() == null) {
+            // ==================== COMPANY EMPLOYEE / ORGANIZATION MEMBER SESSION ====================
+            if (session.getCompany() == null && isCompanyScopedPath(path)) {
                 rejectUnauthorized(response, "Invalid token. Company information missing.");
                 return;
             }
 
-            if (session.getOrganization() != null) {
-                var member = organizationMemberRepository
-                        .findByOrganization_IdAndUser_IdAndMembershipStatus(
-                                session.getOrganization().getId(), session.getUser().getId(), MembershipStatus.ACTIVE);
-                if (member.isEmpty() || !memberCompanyAccessRepository
-                        .existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(
-                                member.get().getId(), session.getCompany().getId())) {
-                    rejectForbidden(response, "Organization or company access revoked");
-                    return;
+            if (effectiveOrg != null) {
+                if (session.getCompany() != null && organizationMemberRepository != null && memberCompanyAccessRepository != null) {
+                    var member = organizationMemberRepository
+                            .findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                    effectiveOrg.getId(), session.getUser().getId(), MembershipStatus.ACTIVE);
+                    if (member.isEmpty() || !memberCompanyAccessRepository
+                            .existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(
+                                    member.get().getId(), session.getCompany().getId())) {
+                        rejectForbidden(response, "Organization or company access revoked");
+                        return;
+                    }
                 }
-                if (session.getOrganization().getAccessMode() == AccessMode.BLOCKED) {
+                if (effectiveOrg.getAccessMode() == AccessMode.BLOCKED) {
                     rejectForbidden(response, "Organization access is blocked");
                     return;
                 }
@@ -385,27 +462,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 CustomUserDetails userDetails = new CustomUserDetails(session.getUser());
 
-                if (jwtService.isTokenValid(token, userDetails.getUsername())) {
+                if (jwtService.isTokenValid(token, userDetails.getUsername())
+                        || (jwtService.isTokenValid(token) && username.equalsIgnoreCase(userDetails.getUsername()))) {
 
-                    String companyCode = jwtService.extractClaims(token)
-                            .get("companyCode", String.class);
+                    String companyCode = session.getCompany() != null
+                            ? session.getCompany().getCompanyCode()
+                            : jwtService.extractClaims(token).get("companyCode", String.class);
 
-                    if (companyCode == null) {
+                    if (companyCode == null && isCompanyScopedPath(path)) {
                         rejectUnauthorized(response, "Invalid token. Company information missing.");
                         return;
                     }
 
-                    TenantContext.set(companyCode);
-                    com.erp.auth_service.model.Organization effectiveOrg = session.getOrganization();
-                    if (effectiveOrg == null && session.getCompany() != null) {
-                        effectiveOrg = session.getCompany().getOrganization();
+                    if (companyCode != null) {
+                        TenantContext.set(companyCode);
+                    } else if (effectiveOrg != null && effectiveOrg.getOrganizationCode() != null) {
+                        TenantContext.set(effectiveOrg.getOrganizationCode());
                     }
 
                     if (effectiveOrg != null) {
                         RequestContext.set(
                                 session.getUser().getId(),
                                 effectiveOrg.getId(),
-                                session.getCompany().getId(),
+                                session.getCompany() != null ? session.getCompany().getId() : null,
                                 session.getModule() != null ? session.getModule().getClientId() : null,
                                 effectiveOrg.getAccessMode() != null ? effectiveOrg.getAccessMode() : AccessMode.FULL);
                         if (effectiveOrg.getAccessMode() == AccessMode.READ_ONLY
@@ -439,6 +518,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             .toList());
                     if (isSystemAdmin && authorities.stream().noneMatch(a -> "SYSTEM_ADMIN".equals(a.getAuthority()))) {
                         authorities.add(new SimpleGrantedAuthority("SYSTEM_ADMIN"));
+                    }
+                    if (authorities.stream().noneMatch(a -> "ROLE_USER".equals(a.getAuthority()))) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
                     }
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

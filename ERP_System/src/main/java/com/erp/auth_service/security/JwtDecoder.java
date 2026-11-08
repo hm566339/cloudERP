@@ -132,7 +132,8 @@ public class JwtDecoder {
 
     public boolean isTokenValid(String token, String username) {
         final String extractedUsername = extractUsername(token);
-        return extractedUsername.equals(username)
+        return extractedUsername != null
+                && extractedUsername.equalsIgnoreCase(username)
                 && !isTokenExpired(token);
     }
 }
