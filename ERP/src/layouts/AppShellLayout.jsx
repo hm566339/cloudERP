@@ -24,17 +24,32 @@ function AppShellContent() {
     (Array.isArray(authContext?.roles) &&
       authContext.roles.some((r) => (typeof r === 'string' ? r : r?.name)?.toUpperCase() === 'OWNER'));
 
+  const currentCompanyRoles = authContext?.currentCompany?.membership?.roles ||
+    (authContext?.currentCompany?.membership?.role ? [authContext.currentCompany.membership.role] : []);
+  const activeCompanyRole = authContext?.currentCompany?.membership?.role?.name ||
+    (currentCompanyRoles[0]?.name) ||
+    null;
+  const effectiveRole = activeCompanyRole || userRole;
+
   const isAccountant =
-    userRole?.toUpperCase() === 'ACCOUNTANT' ||
-    (Array.isArray(currentUser?.roles) && currentUser.roles.some((r) => {
-      const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
-      return String(name).toUpperCase() === 'ACCOUNTANT' || String(name).toUpperCase() === 'ROLE_ACCOUNTANT';
-    }));
+      String(effectiveRole).toUpperCase() === 'ACCOUNTANT' ||
+        String(effectiveRole).toUpperCase() === 'ROLE_ACCOUNTANT' ||
+        (currentCompanyRoles.length > 0 && currentCompanyRoles.some((r) => {
+          const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
+          return String(name).toUpperCase() === 'ACCOUNTANT' || String(name).toUpperCase() === 'ROLE_ACCOUNTANT';
+    })) ||
+    (currentCompanyRoles.length === 0 && !activeCompanyRole && (
+      userRole?.toUpperCase() === 'ACCOUNTANT' ||
+      (Array.isArray(currentUser?.roles) && currentUser.roles.some((r) => {
+        const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
+        return String(name).toUpperCase() === 'ACCOUNTANT' || String(name).toUpperCase() === 'ROLE_ACCOUNTANT';
+      }))
+    ));
 
   const isOwnerWorkspace =
     location.pathname.startsWith('/owner') ||
     location.pathname.startsWith('/organization') ||
-  location.pathname.startsWith('/subscription') ||
+    location.pathname.startsWith('/subscription') ||
     location.pathname.startsWith('/settings/organization');
 
   if (isOwner && isOwnerWorkspace) {

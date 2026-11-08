@@ -8,6 +8,7 @@ import {
 } from '../dynamicSidebarConfig.js';
 import { isItemOrChildActive } from '../SidebarNavUtils.js';
 import { CANONICAL_MODULES, buildAuthContext, canViewModule, hasModule } from '../../utils/moduleNormalization.js';
+import { getAccessibleModuleKeys } from '../../utils/moduleAccess.js';
 
 describe('Fully Dynamic Role-Based ERP Sidebar Navigation Suite', () => {
 
@@ -1028,5 +1029,519 @@ describe('Fully Dynamic Role-Based ERP Sidebar Navigation Suite', () => {
       assert.strictEqual(hasPermission(blockedCtx, 'WORKFLOW_TASKS', 'READ'), false);
       assert.deepStrictEqual(buildDynamicSidebar({ authContext: blockedCtx }), []);
     });
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // MULTI-TENANT RBAC SIDEBAR COMPREHENSIVE REQUIREMENTS SUITE (12 TESTS)
+  // ──────────────────────────────────────────────────────────────────────────
+  describe('Multi-Tenant RBAC Hierarchy & Active Company Sidebar Audit', () => {
+
+    // Test 1: Org Owner viewing Company A sees only Company A's assigned modules
+    it('1. Owner viewing Company A (assigned ACCOUNT only) sees ONLY Accounts, never unassigned Inventory/CRM', () => {
+      const payload = {
+        user: { id: 'u-owner', role: 'owner', email: 'owner@enterprise.com' },
+        membership: { memberType: 'OWNER' },
+        accessMode: 'FULL',
+        currentCompany: {
+          id: 'comp-a',
+          name: 'Company A',
+          modules: [
+            {
+              id: 'm-acc',
+              code: 'account',
+              name: 'Finance & Accounts',
+              canonical: 'ACCOUNT',
+              active: true,
+              features: [
+                {
+                  code: 'CUSTOMERS',
+                  active: true,
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+                {
+                  code: 'SALES_INVOICES',
+                  active: true,
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const ctx = buildAuthContext(payload, 'comp-a');
+      const links = buildDynamicSidebar({ authContext: ctx, companyId: 'comp-a', userRole: 'owner' });
+      const moduleIds = links.map((l) => l.id);
+
+      assert.ok(moduleIds.includes('accounts'), 'Company A should display accounts module');
+      assert.strictEqual(moduleIds.includes('inventory'), false, 'Inventory must NOT appear for Company A');
+      assert.strictEqual(moduleIds.includes('sales-crm'), false, 'Sales & CRM must NOT appear for Company A');
+    });
+
+    // Test 2: Company Admin sees only authorized features for assigned company
+    it('2. Company Admin in Company B sees only authorized features for Company B', () => {
+      const payload = {
+        user: { id: 'u-admin-b', role: 'company_admin' },
+        accessMode: 'FULL',
+        currentCompany: {
+          id: 'comp-b',
+          name: 'Company B',
+          membership: { role: { name: 'COMPANY_ADMIN' } },
+          modules: [
+            {
+              id: 'm-crm',
+              code: 'crm',
+              canonical: 'CRM',
+              active: true,
+              features: [
+                {
+                  code: 'LEADS',
+                  active: true,
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const ctx = buildAuthContext(payload, 'comp-b');
+      const links = buildDynamicSidebar({ authContext: ctx, companyId: 'comp-b', userRole: 'company_admin' });
+      const crmSection = links.find((l) => l.id === 'sales-crm');
+
+      assert.ok(crmSection, 'Sales & CRM section must exist');
+      assert.ok(crmSection.children.some((c) => c.id === 'crm-leads'), 'Leads should appear');
+      assert.strictEqual(crmSection.children.some((c) => c.id === 'crm-quotations'), false, 'Quotations should NOT appear');
+      assert.strictEqual(crmSection.children.some((c) => c.id === 'crm-orders'), false, 'Orders should NOT appear');
+      assert.strictEqual(links.some((l) => l.id === 'accounts'), false, 'Accounts must NOT appear');
+    });
+
+    // Test 3: Accountant sees only accounting-related authorized menus
+    it('3. Accountant in Company A sees only accounting-related authorized menus', () => {
+      const payload = {
+        user: { id: 'u-acc', role: 'accountant' },
+        accessMode: 'FULL',
+        currentCompany: {
+          id: 'comp-a',
+          name: 'Company A',
+          membership: { role: { name: 'ACCOUNTANT' } },
+          modules: [
+            {
+              id: 'm-acc',
+              code: 'account',
+              canonical: 'ACCOUNT',
+              active: true,
+              features: [
+                {
+                  code: 'CUSTOMERS',
+                  active: true,
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+                {
+                  code: 'CHART_OF_ACCOUNTS',
+                  active: true,
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const ctx = buildAuthContext(payload, 'comp-a');
+      const links = buildDynamicSidebar({ authContext: ctx, companyId: 'comp-a', userRole: 'accountant' });
+      const accSection = links.find((l) => l.id === 'accounts');
+
+      assert.ok(accSection, 'Accounts section must exist');
+      const masters = accSection.children.find((c) => c.id === 'acc-masters');
+      assert.ok(masters, 'Masters group should appear');
+      assert.ok(masters.children.some((c) => c.id === 'acc-cust'), 'Customers should appear');
+      assert.ok(masters.children.some((c) => c.id === 'acc-coa'), 'Chart of Accounts should appear');
+      assert.strictEqual(accSection.children.some((c) => c.id === 'acc-bank'), false, 'Bank Accounts must NOT appear');
+    });
+
+    // Test 4: Employee sees only assigned features
+    it('4. Employee sees only specifically assigned features', () => {
+      const payload = {
+        user: { id: 'u-emp', role: 'employee' },
+        accessMode: 'FULL',
+        currentCompany: {
+          id: 'comp-a',
+          modules: [
+            {
+              code: 'account',
+              canonical: 'ACCOUNT',
+              active: true,
+              features: [
+                {
+                  code: 'CUSTOMERS',
+                  active: true,
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const ctx = buildAuthContext(payload, 'comp-a');
+      const links = buildDynamicSidebar({ authContext: ctx, companyId: 'comp-a', userRole: 'employee' });
+      const accSection = links.find((l) => l.id === 'accounts');
+
+      assert.ok(accSection, 'Accounts module appears');
+      const masters = accSection.children.find((c) => c.id === 'acc-masters');
+      assert.ok(masters, 'Masters group is visible');
+      assert.strictEqual(masters.children.length, 1, 'Only Customers feature should be visible inside Masters');
+      assert.strictEqual(masters.children[0].id, 'acc-cust');
+      assert.strictEqual(accSection.children.some((c) => c.id === 'acc-txn'), false, 'Transactions group is hidden');
+      assert.strictEqual(accSection.children.some((c) => c.id === 'acc-bank'), false, 'Bank group is hidden');
+    });
+
+    // Test 5: Custom roles (Auditor, Warehouse Supervisor) work strictly according to permissions
+    it('5. Custom roles (Auditor, Warehouse Supervisor) resolve according to their specific permissions', () => {
+      // Auditor
+      const auditorPayload = {
+        user: { id: 'u-auditor', role: 'auditor' },
+        accessMode: 'FULL',
+        currentCompany: {
+          id: 'comp-a',
+          membership: { role: { name: 'AUDITOR' } },
+          modules: [
+            {
+              code: 'account',
+              canonical: 'ACCOUNT',
+              active: true,
+              features: [
+                {
+                  code: 'GL_JOURNALS',
+                  active: true,
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const auditorCtx = buildAuthContext(auditorPayload, 'comp-a');
+      const auditorLinks = buildDynamicSidebar({ authContext: auditorCtx, companyId: 'comp-a', userRole: 'auditor' });
+      const auditorAcc = auditorLinks.find((l) => l.id === 'accounts');
+      const txn = auditorAcc.children.find((c) => c.id === 'acc-txn');
+      assert.ok(txn && txn.children.some((c) => c.id === 'acc-txn-jour'), 'Auditor sees GL Journals');
+      assert.strictEqual(auditorAcc.children.some((c) => c.id === 'acc-masters'), false, 'Auditor does not see Customers/Masters');
+
+      // Warehouse Supervisor
+      const whSupervisorPayload = {
+        user: { id: 'u-wh', role: 'warehouse_supervisor' },
+        accessMode: 'FULL',
+        currentCompany: {
+          id: 'comp-c',
+          membership: { role: { name: 'WAREHOUSE_SUPERVISOR' } },
+          modules: [
+            {
+              code: 'inventory',
+              canonical: 'INVENTORY',
+              active: true,
+              features: [
+                {
+                  code: 'PRODUCTS',
+                  active: true,
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+                {
+                  code: 'WAREHOUSES',
+                  active: true,
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const whCtx = buildAuthContext(whSupervisorPayload, 'comp-c');
+      const whLinks = buildDynamicSidebar({ authContext: whCtx, companyId: 'comp-c', userRole: 'warehouse_supervisor' });
+      assert.ok(whLinks.some((l) => l.id === 'inventory'), 'Supervisor sees Inventory');
+      assert.strictEqual(whLinks.some((l) => l.id === 'accounts'), false, 'Supervisor does not see Accounts');
+    });
+
+    // Test 6: Zero cross-company leakage
+    it('6. Cross-Company Isolation: Company A permissions do not leak into Company B', () => {
+      const multiCompanyPayload = {
+        user: { id: 'u-rahul', username: 'rahul.sharma' },
+        accessMode: 'FULL',
+        companies: [
+          {
+            id: 'comp-a',
+            name: 'Company A',
+            membership: { role: { name: 'ACCOUNTANT' } },
+            modules: [
+              {
+                code: 'account',
+                canonical: 'ACCOUNT',
+                active: true,
+                features: [
+                  {
+                    code: 'CUSTOMERS',
+                    active: true,
+                    permissions: [{ action: 'READ', allowed: true, active: true }],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'comp-b',
+            name: 'Company B',
+            membership: { role: { name: 'SALES_EXECUTIVE' } },
+            modules: [
+              {
+                code: 'crm',
+                canonical: 'CRM',
+                active: true,
+                features: [
+                  {
+                    code: 'LEADS',
+                    active: true,
+                    permissions: [{ action: 'READ', allowed: true, active: true }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      // Company A context
+      const ctxA = buildAuthContext(multiCompanyPayload, 'comp-a');
+      const linksA = buildDynamicSidebar({ authContext: ctxA, companyId: 'comp-a' });
+      assert.ok(linksA.some((l) => l.id === 'accounts'), 'Company A has Accounts');
+      assert.strictEqual(linksA.some((l) => l.id === 'sales-crm'), false, 'Company A has NO Sales & CRM');
+
+      // Company B context
+      const ctxB = buildAuthContext(multiCompanyPayload, 'comp-b');
+      const linksB = buildDynamicSidebar({ authContext: ctxB, companyId: 'comp-b' });
+      assert.ok(linksB.some((l) => l.id === 'sales-crm'), 'Company B has Sales & CRM');
+      assert.strictEqual(linksB.some((l) => l.id === 'accounts'), false, 'Company B has NO Accounts');
+    });
+
+    // Test 7: Company Switching rebuilds sidebar with clean state
+    it('7. Company Switching: rebuilds dynamic sidebar correctly using new company context', () => {
+      const sessionData = {
+        user: { id: 'u-user', username: 'test.user' },
+        accessMode: 'FULL',
+        companies: [
+          {
+            id: 'comp-alpha',
+            name: 'Alpha Ltd',
+            membership: { role: { name: 'INVENTORY_MANAGER' } },
+            modules: [
+              {
+                code: 'inventory',
+                canonical: 'INVENTORY',
+                active: true,
+                features: [
+                  { code: 'PRODUCTS', active: true, permissions: [{ action: 'READ', allowed: true, active: true }] },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'comp-beta',
+            name: 'Beta Ltd',
+            membership: { role: { name: 'ACCOUNTANT' } },
+            modules: [
+              {
+                code: 'account',
+                canonical: 'ACCOUNT',
+                active: true,
+                features: [
+                  { code: 'CUSTOMERS', active: true, permissions: [{ action: 'READ', allowed: true, active: true }] },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      // Initial Alpha
+      const ctxAlpha = buildAuthContext(sessionData, 'comp-alpha');
+      const linksAlpha = buildDynamicSidebar({ authContext: ctxAlpha, companyId: 'comp-alpha' });
+      assert.deepStrictEqual(linksAlpha.map((l) => l.id), ['inventory']);
+
+      // Switch to Beta
+      const ctxBeta = buildAuthContext(sessionData, 'comp-beta');
+      const linksBeta = buildDynamicSidebar({ authContext: ctxBeta, companyId: 'comp-beta' });
+      assert.deepStrictEqual(linksBeta.map((l) => l.id), ['accounts']);
+    });
+
+    // Test 8: Missing permissions hide the menu item (READ action required)
+    it('8. Missing permissions hide the menu item: CREATE/UPDATE without READ does not surface menu', () => {
+      const payload = {
+        user: { id: 'u-creator', role: 'creator' },
+        accessMode: 'FULL',
+        currentCompany: {
+          id: 'comp-1',
+          modules: [
+            {
+              code: 'inventory',
+              canonical: 'INVENTORY',
+              active: true,
+              features: [
+                {
+                  code: 'PRODUCTS',
+                  active: true,
+                  permissions: [
+                    { action: 'CREATE', allowed: true, active: true },
+                    { action: 'UPDATE', allowed: true, active: true },
+                    // NOTE: NO READ permission granted
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const ctx = buildAuthContext(payload, 'comp-1');
+      const links = buildDynamicSidebar({ authContext: ctx, companyId: 'comp-1' });
+      assert.deepStrictEqual(links, [], 'Without READ permission on Products, sidebar item is hidden and empty parent pruned');
+    });
+
+    // Test 9: Inactive modules (active: false) and inactive features are hidden
+    it('9. Inactive modules and inactive features are completely hidden', () => {
+      const payload = {
+        user: { id: 'u-user', role: 'admin' },
+        accessMode: 'FULL',
+        currentCompany: {
+          id: 'comp-1',
+          modules: [
+            {
+              code: 'inventory',
+              canonical: 'INVENTORY',
+              active: false, // Module inactive
+              features: [
+                { code: 'PRODUCTS', active: true, permissions: [{ action: 'READ', allowed: true, active: true }] },
+              ],
+            },
+            {
+              code: 'account',
+              canonical: 'ACCOUNT',
+              active: true,
+              features: [
+                {
+                  code: 'CUSTOMERS',
+                  active: false, // Feature inactive
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+                {
+                  code: 'SALES_INVOICES',
+                  active: true,
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const ctx = buildAuthContext(payload, 'comp-1');
+      const links = buildDynamicSidebar({ authContext: ctx, companyId: 'comp-1' });
+
+      // Inactive inventory module should not appear
+      assert.strictEqual(links.some((l) => l.id === 'inventory'), false, 'Inactive module must NOT appear');
+
+      // Inactive feature inside active module should not appear
+      const acc = links.find((l) => l.id === 'accounts');
+      assert.ok(acc, 'Accounts module should appear');
+      assert.strictEqual(acc.children.some((c) => c.id === 'acc-masters'), false, 'Inactive CUSTOMERS feature means masters group pruned');
+      const txn = acc.children.find((c) => c.id === 'acc-txn');
+      assert.ok(txn && txn.children.some((c) => c.id === 'acc-txn-sales'), 'Active SALES_INVOICES feature should appear');
+    });
+
+    // Test 10: Subscription restrictions: BLOCKED mode returns empty sidebar
+    it('10. Subscription restrictions: BLOCKED accessMode returns empty sidebar immediately', () => {
+      const payload = {
+        user: { id: 'u-owner', role: 'owner' },
+        accessMode: 'BLOCKED',
+        subscription: { status: 'CANCELLED', accessMode: 'BLOCKED' },
+        currentCompany: {
+          id: 'comp-1',
+          modules: [
+            {
+              code: 'account',
+              canonical: 'ACCOUNT',
+              active: true,
+              features: [
+                { code: 'CUSTOMERS', active: true, permissions: [{ action: 'READ', allowed: true, active: true }] },
+              ],
+            },
+          ],
+        },
+      };
+
+      const ctx = buildAuthContext(payload, 'comp-1');
+      const links = buildDynamicSidebar({ authContext: ctx, companyId: 'comp-1' });
+      assert.deepStrictEqual(links, [], 'BLOCKED accessMode must return empty sidebar');
+    });
+
+    // Test 11: Route Protection & getAccessibleModuleKeys boundary enforcement
+    it('11. Route Protection & getAccessibleModuleKeys: enforces strict company-assigned boundaries', () => {
+      // Owner in company with only ACCOUNT
+      const ownerKeys = getAccessibleModuleKeys({
+        userRole: 'owner',
+        memberType: 'OWNER',
+        permissions: ['all'],
+        companyId: 'comp-a',
+        authModules: [
+          { code: 'account', canonical: 'ACCOUNT', active: true },
+        ],
+      });
+      assert.ok(ownerKeys.includes('finance'), 'Owner has finance module');
+      assert.strictEqual(ownerKeys.includes('inventory'), false, 'Owner does NOT have inventory in Company A');
+      assert.strictEqual(ownerKeys.includes('crm'), false, 'Owner does NOT have crm in Company A');
+
+      // Regular employee with only CRM permissions in Company A (which only has ACCOUNT)
+      const empKeys = getAccessibleModuleKeys({
+        userRole: 'employee',
+        memberType: 'MEMBER',
+        permissions: ['crm'],
+        companyId: 'comp-a',
+        authModules: [
+          { code: 'account', canonical: 'ACCOUNT', active: true },
+        ],
+      });
+      assert.strictEqual(empKeys.length, 0, 'Employee cannot access CRM when company only has ACCOUNT');
+    });
+
+    // Test 12: Empty parent menus are recursively pruned
+    it('12. Empty parent menus are recursively pruned when no children survive permission check', () => {
+      const payload = {
+        user: { id: 'u-empty', role: 'employee' },
+        accessMode: 'FULL',
+        currentCompany: {
+          id: 'comp-1',
+          modules: [
+            {
+              code: 'crm',
+              canonical: 'CRM',
+              active: true,
+              features: [
+                {
+                  code: 'NON_EXISTENT_FEATURE',
+                  active: true,
+                  permissions: [{ action: 'READ', allowed: true, active: true }],
+                },
+              ],
+            },
+          ],
+        },
+      };
+
+      const ctx = buildAuthContext(payload, 'comp-1');
+      const links = buildDynamicSidebar({ authContext: ctx, companyId: 'comp-1' });
+      assert.deepStrictEqual(links, [], 'When no child navigation items match permissions, entire module is pruned');
+    });
+
   });
 });

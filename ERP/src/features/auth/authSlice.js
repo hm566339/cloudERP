@@ -44,14 +44,14 @@ function applySsoMePayload(state, payload) {
   if (normalized.organization) state.organization = normalized.organization;
   state.activeOrganizationId = normalized.activeOrganizationId || normalized.organization?.id || null;
   state.activeCompanyId = normalized.activeCompanyId || normalized.currentCompany?.id || null;
-  if (normalized.currentCompany) state.currentCompany = normalized.currentCompany;
+  state.currentCompany = normalized.currentCompany || null;
   if (normalized.companies && normalized.companies.length > 0) state.companies = normalized.companies;
-  if (normalized.membership) state.membership = normalized.membership;
-  if (normalized.subscription) state.subscription = normalized.subscription;
-  if (normalized.accessMode) state.accessMode = normalized.accessMode;
-  if (normalized.modules) state.modules = normalized.modules;
-  if (normalized.features) state.features = normalized.features;
-  if (normalized.permissions) state.permissions = normalized.permissions;
+  state.membership = normalized.membership || null;
+  state.subscription = normalized.subscription || null;
+  state.accessMode = normalized.accessMode || 'FULL';
+  state.modules = normalized.modules || [];
+  state.features = normalized.features || [];
+  state.permissions = normalized.permissions || [];
 
   state.sessionStatus = 'authenticated';
 }
@@ -202,7 +202,7 @@ const authSlice = createSlice({
           // Invalidate the company context without wiping user credentials.
           state.currentCompany = null;
           if (typeof localStorage !== 'undefined') {
-            try { localStorage.removeItem('selected_company'); } catch (e) {}
+            try { localStorage.removeItem('selected_company'); } catch (e) { }
           }
           return;
         }

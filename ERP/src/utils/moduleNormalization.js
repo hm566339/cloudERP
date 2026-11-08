@@ -319,599 +319,643 @@ export function normalizePermissionsList(rawPermissions) {
     .filter(Boolean);
 }
 
-export function buildAuthContext(payload) {
-  const data = payload?.data || payload || {};
-  const userCtx = data.user || data;
-  const rawRole = data.roles || data.role || userCtx?.role || userCtx?.roles;
-  const role = normalizeRole(rawRole);
+  export function buildAuthContext(payload, targetCompanyId = null) {
+    const data = payload?.data || payload || {};
+    const userCtx = data.user || data;
 
-  const activeOrgId = data.activeOrganizationId || data.organization?.id || null;
-  const activeCompId = data.activeCompanyId || data.currentCompany?.id || null;
+    const companiesList = Array.isArray(data.companies) ? data.companies : [];
+    const activeCompId = targetCompanyId || data.activeCompanyId || data.currentCompany?.id || data.companyId || userCtx?.companyId || null;
 
-  // Extract nested permissions from currentCompany.modules[].features[].permissions if present
-  let resolvedPermissions = Array.isArray(data.permissions) ? [...data.permissions] : [];
-  if (data.currentCompany && Array.isArray(data.currentCompany.modules)) {
-    const nestedPerms = [];
-    for (const mod of data.currentCompany.modules) {
-      if (Array.isArray(mod.features)) {
-        for (const feat of mod.features) {
-          if (Array.isArray(feat.permissions)) {
-            for (const perm of feat.permissions) {
-              nestedPerms.push({
-                ...perm,
-                featureCode: perm.featureCode || feat.featureCode || feat.code,
-                featureName: perm.featureName || feat.featureName || feat.name,
-                moduleName: perm.moduleName || mod.name || mod.code,
+    // Locate the target company in companiesList if specified
+    let targetCompany = data.currentCompany || null;
+    if (activeCompId && companiesList.length > 0) {
+      const matched = companiesList.find(
+        (c) => c && (
+          String(c.id).toLowerCase() === String(activeCompId).toLowerCase() ||
+          String(c.code).toLowerCase() === String(activeCompId).toLowerCase()
+        )
+      );
+      if (matched) {
+        targetCompany = matched;
+      }
+    }
+
+    const activeOrgId = data.activeOrganizationId || data.organization?.id || null;
+
+    // Extract company-specific role if present
+    const compRole = targetCompany?.membership?.role || targetCompany?.membership?.roles;
+    const rawRole = compRole || data.roles || data.role || userCtx?.role || userCtx?.roles;
+    const role = normalizeRole(rawRole);
+    const roles = targetCompany?.membership?.roles || (Array.isArray(data.roles) ? data.roles : (role ? [{ name: role, status: true }] : []));
+
+    // Extract company-specific modules
+    let resolvedModules = Array.isArray(data.modules) ? data.modules : [];
+    if (targetCompany && Array.isArray(targetCompany.modules) && targetCompany.modules.length > 0) {
+      resolvedModules = targetCompany.modules;
+    }
+
+    // Extract company-specific features and permissions
+    let resolvedFeatures = Array.isArray(data.features) ? [...data.features] : [];
+    let resolvedPermissions = Array.isArray(data.permissions) ? [...data.permissions] : [];
+
+      if (targetCompany && Array.isArray(targetCompany.modules) && targetCompany.modules.length > 0) {
+        const nestedFeats = [];
+        const nestedPerms = [];
+            for (const mod of targetCompany.modules) {
+              if (mod.active !== false && Array.isArray(mod.features)) {
+                for (const feat of mod.features) {
+                      if (feat.active !== false) {
+                        nestedFeats.push({
+                          ...feat,
+                          featureCode: feat.featureCode || feat.code,
+                          featureName: feat.featureName || feat.name,
+                          moduleName: feat.moduleName || mod.name || mod.code,
+                          active: true,
+                        });
+                        if (Array.isArray(feat.permissions)) {
+                          for (const perm of feat.permissions) {
+                            if (perm.allowed !== false && perm.active !== false) {
+                              nestedPerms.push({
+                                ...perm,
+                                featureCode: perm.featureCode || feat.featureCode || feat.code,
+                                featureName: perm.featureName || feat.featureName || feat.name,
+                                moduleName: perm.moduleName || mod.name || mod.code,
+                              });
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                if (nestedFeats.length > 0) {
+                  resolvedFeatures = nestedFeats;
+                }
+                if (nestedPerms.length > 0) {
+                  resolvedPermissions = nestedPerms;
+                }
+              }
+
+              return {
+                user: {
+                  ...userCtx,
+                  id: userCtx?.id || data.id,
+                  username: userCtx?.username || data.username,
+                  email: userCtx?.email || data.email,
+                  fullName: userCtx?.fullName || data.fullName,
+                  empId: userCtx?.empId || data.empId,
+                  role,
+                  roles,
+                  accountStatus: userCtx?.accountStatus || data.accountStatus,
+                  companyCode: targetCompany?.code || data.currentCompany?.code || data.companyCode,
+                  companyId: targetCompany?.id || activeCompId,
+                  companyName: targetCompany?.name || targetCompany?.legalName || data.currentCompany?.name || data.companyName,
+                  organizationCode: data.organization?.code || data.organizationCode,
+                  organizationId: activeOrgId || data.organizationId,
+                  accessMode: data.accessMode || 'FULL',
+                },
+                organization: data.organization || null,
+                activeOrganizationId: activeOrgId,
+                activeCompanyId: targetCompany?.id || activeCompId,
+                currentCompany: targetCompany,
+                companies: companiesList,
+                membership: data.membership || null,
+                subscription: data.subscription || null,
+                accessMode: data.accessMode || 'FULL',
+                modules: normalizeModulesList(resolvedModules),
+                features: normalizeFeaturesList(resolvedFeatures),
+                permissions: normalizePermissionsList(resolvedPermissions),
+              };
+            }
+
+            export function isSystemAdminUser(authContextOrUser) {
+              if (!authContextOrUser) return false;
+              const user = authContextOrUser?.user || authContextOrUser;
+              const roleStr = typeof user?.role === 'string' ? user.role : (user?.role?.name || '');
+              const cleanRole = String(roleStr).trim().toUpperCase().replace(/[\s_-]+/g, '');
+              if (cleanRole === 'SYSTEMADMIN' || cleanRole === 'ROLESYSTEMADMIN' || cleanRole === 'SUPERADMIN' || cleanRole === 'ROLESUPERADMIN') {
+                return true;
+              }
+              const rolesList = authContextOrUser?.roles || user?.roles;
+              if (Array.isArray(rolesList)) {
+                for (const r of rolesList) {
+                  const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
+                  const clean = String(name).trim().toUpperCase().replace(/[\s_-]+/g, '');
+                  if (clean === 'SYSTEMADMIN' || clean === 'ROLESYSTEMADMIN' || clean === 'SUPERADMIN' || clean === 'ROLESUPERADMIN') {
+                    return true;
+                  }
+                }
+              }
+              if (Array.isArray(user?.authorities)) {
+                for (const a of user.authorities) {
+                  const authStr = typeof a === 'string' ? a : a?.authority;
+                  const clean = String(authStr).trim().toUpperCase().replace(/[\s_-]+/g, '');
+                  if (clean === 'SYSTEMADMIN' || clean === 'ROLESYSTEMADMIN' || clean === 'SUPERADMIN' || clean === 'ROLESUPERADMIN') {
+                    return true;
+                  }
+                }
+              }
+              return false;
+            }
+
+            /**
+             * Returns list of unique active canonical modules entitled to the user.
+             * @param {object|Array} authContextOrModules
+             * @returns {string[]} e.g. ['ACCOUNT', 'INVENTORY', 'CRM']
+             */
+            export function getEntitledModules(authContextOrModules) {
+              if (!authContextOrModules) return [];
+
+              // Super admin preserves platform-wide canonical modules
+              if (isSystemAdminUser(authContextOrModules)) {
+                return Object.values(CANONICAL_MODULES);
+              }
+
+              const rawModules = Array.isArray(authContextOrModules)
+                ? authContextOrModules
+                : (authContextOrModules.modules || []);
+
+              const entitled = new Set();
+
+              for (const m of rawModules) {
+                if (typeof m === 'string') {
+                  const canonical = normalizeModuleName(m);
+                  if (canonical) entitled.add(canonical);
+                } else if (m && typeof m === 'object') {
+                  if (m.active !== false) {
+                    const canonical = normalizeModuleName(m.canonical || m.code || m.name || m.moduleName);
+                    if (canonical) entitled.add(canonical);
+                  }
+                }
+              }
+
+              // Check if any ALL or ALL_MODULES permission is present
+              const permissions = authContextOrModules?.permissions || [];
+              for (const p of permissions) {
+                const code = typeof p === 'string' ? p.toUpperCase() : (p.permissionCode || p.featureCode || '').toUpperCase();
+                if (code === 'ALL' || code === 'ALL_MODULES') {
+                  if (entitled.size > 0) {
+                    return Array.from(entitled);
+                  }
+                  if (isSystemAdminUser(authContextOrModules)) {
+                    return Object.values(CANONICAL_MODULES);
+                  }
+                  return [];
+                }
+              }
+
+              // If no entitled modules found from raw modules list, inspect permissions and user/membership roles
+              if (entitled.size === 0) {
+                for (const p of permissions) {
+                  const explicitMod = typeof p === 'object' ? (p.moduleName || p.module) : null;
+                  if (explicitMod) {
+                    const canonical = normalizeModuleName(explicitMod);
+                    if (canonical && canonical !== CANONICAL_MODULES.SSO && canonical !== CANONICAL_MODULES.CORE) {
+                      entitled.add(canonical);
+                    }
+                  }
+                }
+
+                const user = authContextOrModules?.user || authContextOrModules;
+                const roleStr = String(user?.role || authContextOrModules?.role || authContextOrModules?.membership?.role || '').toUpperCase();
+                if (roleStr.includes('ACCOUNTANT') || roleStr.includes('FINANCE')) {
+                  entitled.add(CANONICAL_MODULES.ACCOUNT);
+                }
+                if (roleStr.includes('INVENTORY') || roleStr.includes('WAREHOUSE')) {
+                  entitled.add(CANONICAL_MODULES.INVENTORY);
+                }
+                if (roleStr.includes('SALES') || roleStr.includes('CRM')) {
+                  entitled.add(CANONICAL_MODULES.CRM);
+                }
+              }
+
+              return Array.from(entitled);
+            }
+
+            /**
+             * Checks if the user is entitled to view a specific module.
+             */
+            export function hasModule(authContext, moduleName) {
+              if (!moduleName) return false;
+              const canonical = normalizeModuleName(moduleName);
+              if (!canonical) return false;
+
+              const entitled = getEntitledModules(authContext);
+              return entitled.includes(canonical) || entitled.includes('ALL_MODULES');
+            }
+
+            /**
+             * Checks if the user has access to a feature.
+             * If moduleName is provided, the feature must belong to that module AND user must have that module.
+             */
+            export function hasFeature(authContext, featureName, moduleName) {
+              if (!featureName) return false;
+              if (isSystemAdminUser(authContext)) return true;
+              if (moduleName && !hasModule(authContext, moduleName)) return false;
+
+              const targetFeature = normalizeFeatureCode(String(featureName).trim().toUpperCase());
+              const canonicalModule = moduleName ? normalizeModuleName(moduleName) : null;
+
+              // 1. Check features list
+              const features = authContext?.features || [];
+              if (features.length > 0) {
+                const matching = features.find((f) => {
+                  if (typeof f === 'string') {
+                    return normalizeFeatureCode(f.toUpperCase()) === targetFeature;
+                  }
+                  if (f && typeof f === 'object') {
+                    const code = normalizeFeatureCode(String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase());
+                    if (code !== targetFeature) return false;
+                    if (canonicalModule) {
+                      const mod = normalizeModuleName(f.moduleName);
+                      if (mod && mod !== canonicalModule) return false;
+                    }
+                    return f.active !== false;
+                  }
+                  return false;
+                });
+
+                if (matching) return true;
+                return false;
+              }
+
+              // 2. Fallback: check permissions list for any allowed action on this feature
+              const permissions = authContext?.permissions || [];
+              return permissions.some((p) => {
+                if (typeof p === 'string') {
+                  const parts = p.toUpperCase().split(':');
+                  const feat = normalizeFeatureCode(parts[0] || p.toUpperCase());
+                  return feat === targetFeature || p.toUpperCase() === 'ALL' || p.toUpperCase() === 'ALL_MODULES';
+                }
+                if (p && typeof p === 'object') {
+                  const feat = normalizeFeatureCode(String(p.featureCode || p.feature || '').trim().toUpperCase());
+                  const pCode = String(p.permissionCode || '').trim().toUpperCase();
+                  const pFeat = normalizeFeatureCode(pCode.includes(':') ? pCode.split(':')[0] : pCode);
+                  if (feat !== targetFeature && pFeat !== targetFeature) return false;
+                  if (canonicalModule) {
+                    const mod = normalizeModuleName(p.moduleName);
+                    if (mod && mod !== canonicalModule) return false;
+                  }
+                  return p.allowed !== false && p.active !== false;
+                }
+                return false;
               });
             }
-          }
-        }
-      }
-    }
-    if (nestedPerms.length > 0) {
-      resolvedPermissions = nestedPerms;
-    }
-  }
 
-  return {
-    user: {
-      ...userCtx,
-      id: userCtx?.id || data.id,
-      username: userCtx?.username || data.username,
-      email: userCtx?.email || data.email,
-      fullName: userCtx?.fullName || data.fullName,
-      empId: userCtx?.empId || data.empId,
-      role,
-      accountStatus: userCtx?.accountStatus || data.accountStatus,
-      companyCode: data.currentCompany?.code || data.companyCode,
-      companyId: activeCompId || data.companyId,
-      companyName: data.currentCompany?.name || data.companyName,
-      organizationCode: data.organization?.code || data.organizationCode,
-      organizationId: activeOrgId || data.organizationId,
-      accessMode: data.accessMode || 'FULL',
-    },
-    organization: data.organization || null,
-    activeOrganizationId: activeOrgId,
-    activeCompanyId: activeCompId,
-    currentCompany: data.currentCompany || null,
-    companies: Array.isArray(data.companies) ? data.companies : [],
-    membership: data.membership || null,
-    subscription: data.subscription || null,
-    accessMode: data.accessMode || 'FULL',
-    modules: normalizeModulesList(data.modules || (data.currentCompany?.modules || [])),
-    features: normalizeFeaturesList(data.features || []),
-    permissions: normalizePermissionsList(resolvedPermissions),
-  };
-}
+            /**
+             * Checks if the user has permission on a feature & action.
+             * e.g. hasPermission(authContext, 'CUSTOMERS', 'READ', 'ACCOUNT')
+             * or hasPermission(featureCode, action) when bound to authContext
+             */
+            export function hasPermission(authContextOrFeature, featureNameOrAction, actionOrModule, maybeModule) {
+              let authContext, featureName, action, moduleName;
+              if (typeof authContextOrFeature === 'string') {
+                featureName = authContextOrFeature;
+                action = featureNameOrAction;
+                moduleName = actionOrModule;
+                authContext = null;
+              } else {
+                authContext = authContextOrFeature;
+                featureName = featureNameOrAction;
+                action = actionOrModule;
+                moduleName = maybeModule;
+              }
 
-export function isSystemAdminUser(authContextOrUser) {
-  if (!authContextOrUser) return false;
-  const user = authContextOrUser?.user || authContextOrUser;
-  const roleStr = typeof user?.role === 'string' ? user.role : (user?.role?.name || '');
-  const cleanRole = String(roleStr).trim().toUpperCase().replace(/[\s_-]+/g, '');
-  if (cleanRole === 'SYSTEMADMIN' || cleanRole === 'ROLESYSTEMADMIN' || cleanRole === 'SUPERADMIN' || cleanRole === 'ROLESUPERADMIN') {
-    return true;
-  }
-  const rolesList = authContextOrUser?.roles || user?.roles;
-  if (Array.isArray(rolesList)) {
-    for (const r of rolesList) {
-      const name = typeof r === 'string' ? r : (r?.name || r?.code || '');
-      const clean = String(name).trim().toUpperCase().replace(/[\s_-]+/g, '');
-      if (clean === 'SYSTEMADMIN' || clean === 'ROLESYSTEMADMIN' || clean === 'SUPERADMIN' || clean === 'ROLESUPERADMIN') {
-        return true;
-      }
-    }
-  }
-  if (Array.isArray(user?.authorities)) {
-    for (const a of user.authorities) {
-      const authStr = typeof a === 'string' ? a : a?.authority;
-      const clean = String(authStr).trim().toUpperCase().replace(/[\s_-]+/g, '');
-      if (clean === 'SYSTEMADMIN' || clean === 'ROLESYSTEMADMIN' || clean === 'SUPERADMIN' || clean === 'ROLESUPERADMIN') {
-        return true;
-      }
-    }
-  }
-  return false;
-}
+              // Support "FEATURE:ACTION" combined syntax in featureName (e.g. "CUSTOMERS:READ")
+              if (typeof featureName === 'string' && featureName.includes(':') && !action) {
+                const parts = featureName.split(':');
+                featureName = parts[0];
+                action = parts[1];
+              }
 
-/**
- * Returns list of unique active canonical modules entitled to the user.
- * @param {object|Array} authContextOrModules
- * @returns {string[]} e.g. ['ACCOUNT', 'INVENTORY', 'CRM']
- */
-export function getEntitledModules(authContextOrModules) {
-  if (!authContextOrModules) return [];
+              if (!featureName) return false;
+              if (isSystemAdminUser(authContext)) return true;
 
-  // Super admin preserves platform-wide canonical modules
-  if (isSystemAdminUser(authContextOrModules)) {
-    return Object.values(CANONICAL_MODULES);
-  }
+              // Enforce accessMode restrictions
+              const accessMode = authContext?.accessMode || authContext?.user?.accessMode;
+              if (accessMode === 'BLOCKED') return false;
 
-  const rawModules = Array.isArray(authContextOrModules)
-    ? authContextOrModules
-    : (authContextOrModules.modules || []);
+              const targetFeature = normalizeFeatureCode(String(featureName).trim().toUpperCase());
+              let targetAction = action ? String(action).trim().toUpperCase() : null;
+              if (targetAction === 'VIEW') targetAction = 'READ';
+              if (targetAction === 'EDIT') targetAction = 'UPDATE';
+              if (targetAction === 'NEW') targetAction = 'CREATE';
 
-  const entitled = new Set();
+              if (accessMode === 'READ_ONLY' && targetAction) {
+                const mutationActions = ['CREATE', 'UPDATE', 'WRITE', 'DELETE', 'APPROVE', 'POST', 'CANCEL', 'REVERSE', 'CLOSE', 'AWARD'];
+                if (mutationActions.includes(targetAction)) {
+                  return false;
+                }
+              }
 
-  for (const m of rawModules) {
-    if (typeof m === 'string') {
-      const canonical = normalizeModuleName(m);
-      if (canonical) entitled.add(canonical);
-    } else if (m && typeof m === 'object') {
-      if (m.active !== false) {
-        const canonical = normalizeModuleName(m.canonical || m.code || m.name || m.moduleName);
-        if (canonical) entitled.add(canonical);
-      }
-    }
-  }
+              if (moduleName && !hasModule(authContext, moduleName)) return false;
 
-  // Check if any ALL or ALL_MODULES permission is present
-  const permissions = authContextOrModules?.permissions || [];
-  for (const p of permissions) {
-    const code = typeof p === 'string' ? p.toUpperCase() : (p.permissionCode || p.featureCode || '').toUpperCase();
-    if (code === 'ALL' || code === 'ALL_MODULES') {
-      if (entitled.size > 0) {
-        return Array.from(entitled);
-      }
-      if (isSystemAdminUser(authContextOrModules)) {
-        return Object.values(CANONICAL_MODULES);
-      }
-      return [];
-    }
-  }
+              const canonicalModule = moduleName ? normalizeModuleName(moduleName) : null;
+              const permissions = Array.isArray(authContext)
+                ? authContext
+                : authContext?.permissions || authContext?.user?.permissions || [];
 
-  // If no entitled modules found from raw modules list, inspect permissions and user/membership roles
-  if (entitled.size === 0) {
-    for (const p of permissions) {
-      const explicitMod = typeof p === 'object' ? (p.moduleName || p.module) : null;
-      if (explicitMod) {
-        const canonical = normalizeModuleName(explicitMod);
-        if (canonical && canonical !== CANONICAL_MODULES.SSO && canonical !== CANONICAL_MODULES.CORE) {
-          entitled.add(canonical);
-        }
-      }
-    }
+              // Determine candidate actions that satisfy the requested targetAction
+              let candidateActions = null;
+              if (targetAction) {
+                if (targetAction === 'READ') {
+                  candidateActions = ['READ', 'VIEW'];
+                } else if (targetAction === 'CREATE') {
+                  candidateActions = ['CREATE', 'WRITE'];
+                } else if (targetAction === 'UPDATE') {
+                  candidateActions = ['UPDATE', 'EDIT', 'WRITE'];
+                } else if (targetAction === 'DELETE') {
+                  candidateActions = ['DELETE'];
+                } else if (targetAction === 'APPROVE') {
+                  candidateActions = ['APPROVE'];
+                } else if (targetAction === 'EXPORT') {
+                  candidateActions = ['EXPORT', 'READ', 'VIEW'];
+                } else if (targetAction === 'WRITE') {
+                  candidateActions = ['WRITE', 'CREATE', 'UPDATE'];
+                } else {
+                  candidateActions = [targetAction];
+                }
+              }
 
-    const user = authContextOrModules?.user || authContextOrModules;
-    const roleStr = String(user?.role || authContextOrModules?.role || authContextOrModules?.membership?.role || '').toUpperCase();
-    if (roleStr.includes('ACCOUNTANT') || roleStr.includes('FINANCE')) {
-      entitled.add(CANONICAL_MODULES.ACCOUNT);
-    }
-    if (roleStr.includes('INVENTORY') || roleStr.includes('WAREHOUSE')) {
-      entitled.add(CANONICAL_MODULES.INVENTORY);
-    }
-    if (roleStr.includes('SALES') || roleStr.includes('CRM')) {
-      entitled.add(CANONICAL_MODULES.CRM);
-    }
-  }
+              // Check if targetFeature has explicit permissions defined in the permission set
+              // Check if targetFeature has explicit permissions defined in the permission set
+              const hasExplicitFeaturePerm = permissions.some((p) => {
+                if (typeof p === 'string') {
+                  const upper = p.trim().toUpperCase();
+                  let pFeat = upper;
+                  if (upper.includes(':')) {
+                    pFeat = upper.split(':')[0];
+                  } else if (upper.includes('_')) {
+                    const lastUnderscore = upper.lastIndexOf('_');
+                    const suffix = upper.slice(lastUnderscore + 1);
+                    if (['READ', 'VIEW', 'CREATE', 'WRITE', 'UPDATE', 'EDIT', 'DELETE', 'APPROVE', 'EXPORT'].includes(suffix)) {
+                      pFeat = upper.slice(0, lastUnderscore);
+                    }
+                  }
+                  return normalizeFeatureCode(pFeat) === targetFeature;
+                }
+                if (p && typeof p === 'object') {
+                  const feat = normalizeFeatureCode(String(p.featureCode || p.feature || '').trim().toUpperCase());
+                  const permCode = String(p.permissionCode || '').trim().toUpperCase();
+                  const pFeat = normalizeFeatureCode(permCode.includes(':') ? permCode.split(':')[0] : feat);
+                  return feat === targetFeature || pFeat === targetFeature;
+                }
+                return false;
+              });
 
-  return Array.from(entitled);
-}
+              const isDistinctCatalogFeature = SSO_FEATURE_CODES.includes(targetFeature) ||
+                targetFeature === 'WORKFLOW_TASKS' ||
+                targetFeature === 'WORKFLOW_DEFINITIONS' ||
+                targetFeature === 'APPROVAL_REQUESTS' ||
+                targetFeature === 'APPROVALS';
+              const allowPrefixFallback = !hasExplicitFeaturePerm && !isDistinctCatalogFeature && targetFeature.includes('_');
 
-/**
- * Checks if the user is entitled to view a specific module.
- */
-export function hasModule(authContext, moduleName) {
-  if (!moduleName) return false;
-  const canonical = normalizeModuleName(moduleName);
-  if (!canonical) return false;
+              return permissions.some((p) => {
+                if (typeof p === 'string') {
+                  const upper = p.trim().toUpperCase();
+                  if (upper === 'ALL' || upper === 'ALL_MODULES') return true;
 
-  const entitled = getEntitledModules(authContext);
-  return entitled.includes(canonical) || entitled.includes('ALL_MODULES');
-}
+                  let pFeat = upper;
+                  let pAct = '';
+                  if (upper.includes(':')) {
+                    const parts = upper.split(':');
+                    pFeat = parts[0];
+                    pAct = parts[1] || '';
+                  } else if (upper.includes('_')) {
+                    const lastUnderscore = upper.lastIndexOf('_');
+                    const suffix = upper.slice(lastUnderscore + 1);
+                    if (['READ', 'VIEW', 'CREATE', 'WRITE', 'UPDATE', 'EDIT', 'DELETE', 'APPROVE', 'EXPORT'].includes(suffix)) {
+                      pFeat = upper.slice(0, lastUnderscore);
+                      pAct = suffix;
+                    }
+                  }
 
-/**
- * Checks if the user has access to a feature.
- * If moduleName is provided, the feature must belong to that module AND user must have that module.
- */
-export function hasFeature(authContext, featureName, moduleName) {
-  if (!featureName) return false;
-  if (isSystemAdminUser(authContext)) return true;
-  if (moduleName && !hasModule(authContext, moduleName)) return false;
+                  pFeat = normalizeFeatureCode(pFeat);
+                  let normalizedPAct = pAct;
+                  if (normalizedPAct === 'VIEW') normalizedPAct = 'READ';
+                  if (normalizedPAct === 'EDIT') normalizedPAct = 'UPDATE';
+                  if (normalizedPAct === 'NEW') normalizedPAct = 'CREATE';
 
-  const targetFeature = normalizeFeatureCode(String(featureName).trim().toUpperCase());
-  const canonicalModule = moduleName ? normalizeModuleName(moduleName) : null;
+                  if (targetAction) {
+                    if (pFeat === targetFeature) {
+                      if (candidateActions.includes(normalizedPAct)) return true;
+                      if (upper === `${targetFeature}:${targetAction}`) return true;
+                      if (upper === `${targetAction}_${targetFeature}`) return true;
+                      if (targetAction === 'READ' && (upper === `${targetFeature}_VIEW` || upper === `VIEW_${targetFeature}`)) return true;
+                      if (targetAction === 'APPROVE' && (upper === `${targetFeature}_APPROVE` || upper === `APPROVE_${targetFeature}`)) return true;
+                    }
 
-  // 1. Check features list
-  const features = authContext?.features || [];
-  if (features.length > 0) {
-    const matching = features.find((f) => {
-      if (typeof f === 'string') {
-        return normalizeFeatureCode(f.toUpperCase()) === targetFeature;
-      }
-      if (f && typeof f === 'object') {
-        const code = normalizeFeatureCode(String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase());
-        if (code !== targetFeature) return false;
-        if (canonicalModule) {
-          const mod = normalizeModuleName(f.moduleName);
-          if (mod && mod !== canonicalModule) return false;
-        }
-        return f.active !== false;
-      }
-      return false;
-    });
+                    if (allowPrefixFallback) {
+                      const parentPrefix = targetFeature.split('_')[0];
+                      if (pFeat === parentPrefix && candidateActions.includes(normalizedPAct)) {
+                        return true;
+                      }
+                    }
 
-    if (matching) return true;
-    return false;
-  }
+                    return false;
+                  }
 
-  // 2. Fallback: check permissions list for any allowed action on this feature
-  const permissions = authContext?.permissions || [];
-  return permissions.some((p) => {
-    if (typeof p === 'string') {
-      const parts = p.toUpperCase().split(':');
-      const feat = normalizeFeatureCode(parts[0] || p.toUpperCase());
-      return feat === targetFeature || p.toUpperCase() === 'ALL' || p.toUpperCase() === 'ALL_MODULES';
-    }
-    if (p && typeof p === 'object') {
-      const feat = normalizeFeatureCode(String(p.featureCode || p.feature || '').trim().toUpperCase());
-      const pCode = String(p.permissionCode || '').trim().toUpperCase();
-      const pFeat = normalizeFeatureCode(pCode.includes(':') ? pCode.split(':')[0] : pCode);
-      if (feat !== targetFeature && pFeat !== targetFeature) return false;
-      if (canonicalModule) {
-        const mod = normalizeModuleName(p.moduleName);
-        if (mod && mod !== canonicalModule) return false;
-      }
-      return p.allowed !== false && p.active !== false;
-    }
-    return false;
-  });
-}
+                  return pFeat === targetFeature || upper === targetFeature || upper.startsWith(`${targetFeature}:`);
+                }
 
-/**
- * Checks if the user has permission on a feature & action.
- * e.g. hasPermission(authContext, 'CUSTOMERS', 'READ', 'ACCOUNT')
- * or hasPermission(featureCode, action) when bound to authContext
- */
-export function hasPermission(authContextOrFeature, featureNameOrAction, actionOrModule, maybeModule) {
-  let authContext, featureName, action, moduleName;
-  if (typeof authContextOrFeature === 'string') {
-    featureName = authContextOrFeature;
-    action = featureNameOrAction;
-    moduleName = actionOrModule;
-    authContext = null;
-  } else {
-    authContext = authContextOrFeature;
-    featureName = featureNameOrAction;
-    action = actionOrModule;
-    moduleName = maybeModule;
-  }
+                if (p && typeof p === 'object') {
+                  // Must be allowed and active
+                  if (p.allowed === false || p.active === false || String(p.status || '').toUpperCase() === 'INACTIVE' || p.status === false) return false;
 
-  // Support "FEATURE:ACTION" combined syntax in featureName (e.g. "CUSTOMERS:READ")
-  if (typeof featureName === 'string' && featureName.includes(':') && !action) {
-    const parts = featureName.split(':');
-    featureName = parts[0];
-    action = parts[1];
-  }
+                  const permCode = String(p.permissionCode || '').trim().toUpperCase();
+                  const feat = normalizeFeatureCode(String(p.featureCode || p.feature || '').trim().toUpperCase());
+                  if (permCode === 'ALL' || permCode === 'ALL_MODULES' || feat === 'ALL' || feat === 'ALL_MODULES') {
+                    return true;
+                  }
 
-  if (!featureName) return false;
-  if (isSystemAdminUser(authContext)) return true;
+                  // Module match if module specified
+                  if (canonicalModule) {
+                    const mod = normalizeModuleName(p.moduleName);
+                    if (mod && mod !== canonicalModule) return false;
+                  }
 
-  // Enforce accessMode restrictions
-  const accessMode = authContext?.accessMode || authContext?.user?.accessMode;
-  if (accessMode === 'BLOCKED') return false;
+                  let act = String(p.action || '').trim().toUpperCase();
+                  if (!act && permCode.includes(':')) {
+                    act = permCode.split(':')[1].toUpperCase();
+                  }
+                  if (act === 'VIEW') act = 'READ';
+                  if (act === 'EDIT') act = 'UPDATE';
 
-  const targetFeature = normalizeFeatureCode(String(featureName).trim().toUpperCase());
-  let targetAction = action ? String(action).trim().toUpperCase() : null;
-  if (targetAction === 'VIEW') targetAction = 'READ';
-  if (targetAction === 'EDIT') targetAction = 'UPDATE';
-  if (targetAction === 'NEW') targetAction = 'CREATE';
+                  const pFeat = feat || normalizeFeatureCode(permCode.includes(':') ? permCode.split(':')[0] : permCode);
 
-  if (accessMode === 'READ_ONLY' && targetAction) {
-    const mutationActions = ['CREATE', 'UPDATE', 'WRITE', 'DELETE', 'APPROVE', 'POST', 'CANCEL', 'REVERSE', 'CLOSE', 'AWARD'];
-    if (mutationActions.includes(targetAction)) {
-      return false;
-    }
-  }
+                  if (targetAction) {
+                    const isActionMatch = candidateActions.includes(act) ||
+                      candidateActions.some(ca => permCode === `${targetFeature}:${ca}` || permCode === `${ca}_${targetFeature}`);
 
-  if (moduleName && !hasModule(authContext, moduleName)) return false;
+                    if (pFeat === targetFeature) {
+                      return isActionMatch;
+                    }
 
-  const canonicalModule = moduleName ? normalizeModuleName(moduleName) : null;
-  const permissions = Array.isArray(authContext)
-    ? authContext
-    : authContext?.permissions || authContext?.user?.permissions || [];
+                    if (allowPrefixFallback) {
+                      const parentPrefix = targetFeature.split('_')[0];
+                      if (pFeat === parentPrefix && isActionMatch) {
+                        return true;
+                      }
+                    }
 
-  // Determine candidate actions that satisfy the requested targetAction
-  let candidateActions = null;
-  if (targetAction) {
-    if (targetAction === 'READ') {
-      candidateActions = ['READ', 'VIEW'];
-    } else if (targetAction === 'CREATE') {
-      candidateActions = ['CREATE', 'WRITE'];
-    } else if (targetAction === 'UPDATE') {
-      candidateActions = ['UPDATE', 'EDIT', 'WRITE'];
-    } else if (targetAction === 'DELETE') {
-      candidateActions = ['DELETE'];
-    } else if (targetAction === 'APPROVE') {
-      candidateActions = ['APPROVE'];
-    } else if (targetAction === 'EXPORT') {
-      candidateActions = ['EXPORT', 'READ', 'VIEW'];
-    } else if (targetAction === 'WRITE') {
-      candidateActions = ['WRITE', 'CREATE', 'UPDATE'];
-    } else {
-      candidateActions = [targetAction];
-    }
-  }
+                    return false;
+                  }
 
-  // Check if targetFeature has explicit permissions defined in the permission set
-  // Check if targetFeature has explicit permissions defined in the permission set
-  const hasExplicitFeaturePerm = permissions.some((p) => {
-    if (typeof p === 'string') {
-      const upper = p.trim().toUpperCase();
-      let pFeat = upper;
-      if (upper.includes(':')) {
-        pFeat = upper.split(':')[0];
-      } else if (upper.includes('_')) {
-        const lastUnderscore = upper.lastIndexOf('_');
-        const suffix = upper.slice(lastUnderscore + 1);
-        if (['READ', 'VIEW', 'CREATE', 'WRITE', 'UPDATE', 'EDIT', 'DELETE', 'APPROVE', 'EXPORT'].includes(suffix)) {
-          pFeat = upper.slice(0, lastUnderscore);
-        }
-      }
-      return normalizeFeatureCode(pFeat) === targetFeature;
-    }
-    if (p && typeof p === 'object') {
-      const feat = normalizeFeatureCode(String(p.featureCode || p.feature || '').trim().toUpperCase());
-      const permCode = String(p.permissionCode || '').trim().toUpperCase();
-      const pFeat = normalizeFeatureCode(permCode.includes(':') ? permCode.split(':')[0] : feat);
-      return feat === targetFeature || pFeat === targetFeature;
-    }
-    return false;
-  });
+                  return pFeat === targetFeature || permCode === targetFeature || permCode.startsWith(`${targetFeature}:`);
+                }
 
-  const isDistinctCatalogFeature = SSO_FEATURE_CODES.includes(targetFeature) ||
-    targetFeature === 'WORKFLOW_TASKS' ||
-    targetFeature === 'WORKFLOW_DEFINITIONS' ||
-    targetFeature === 'APPROVAL_REQUESTS' ||
-    targetFeature === 'APPROVALS';
-  const allowPrefixFallback = !hasExplicitFeaturePerm && !isDistinctCatalogFeature && targetFeature.includes('_');
+                return false;
+              });
+            }
 
-  return permissions.some((p) => {
-    if (typeof p === 'string') {
-      const upper = p.trim().toUpperCase();
-      if (upper === 'ALL' || upper === 'ALL_MODULES') return true;
+            /**
+             * Convenience action checkers
+             */
+            export function canRead(authContext, featureName, moduleName) {
+              return hasPermission(authContext, featureName, 'READ', moduleName);
+            }
 
-      let pFeat = upper;
-      let pAct = '';
-      if (upper.includes(':')) {
-        const parts = upper.split(':');
-        pFeat = parts[0];
-        pAct = parts[1] || '';
-      } else if (upper.includes('_')) {
-        const lastUnderscore = upper.lastIndexOf('_');
-        const suffix = upper.slice(lastUnderscore + 1);
-        if (['READ', 'VIEW', 'CREATE', 'WRITE', 'UPDATE', 'EDIT', 'DELETE', 'APPROVE', 'EXPORT'].includes(suffix)) {
-          pFeat = upper.slice(0, lastUnderscore);
-          pAct = suffix;
-        }
-      }
+            export function canCreate(authContext, featureName, moduleName) {
+              return hasPermission(authContext, featureName, 'CREATE', moduleName);
+            }
 
-      pFeat = normalizeFeatureCode(pFeat);
-      let normalizedPAct = pAct;
-      if (normalizedPAct === 'VIEW') normalizedPAct = 'READ';
-      if (normalizedPAct === 'EDIT') normalizedPAct = 'UPDATE';
-      if (normalizedPAct === 'NEW') normalizedPAct = 'CREATE';
+            export function canUpdate(authContext, featureName, moduleName) {
+              return hasPermission(authContext, featureName, 'UPDATE', moduleName);
+            }
 
-      if (targetAction) {
-        if (pFeat === targetFeature) {
-          if (candidateActions.includes(normalizedPAct)) return true;
-          if (upper === `${targetFeature}:${targetAction}`) return true;
-          if (upper === `${targetAction}_${targetFeature}`) return true;
-          if (targetAction === 'READ' && (upper === `${targetFeature}_VIEW` || upper === `VIEW_${targetFeature}`)) return true;
-          if (targetAction === 'APPROVE' && (upper === `${targetFeature}_APPROVE` || upper === `APPROVE_${targetFeature}`)) return true;
-        }
+            export function canWrite(authContext, featureName, moduleName) {
+              return hasPermission(authContext, featureName, 'WRITE', moduleName) ||
+                hasPermission(authContext, featureName, 'CREATE', moduleName) ||
+                hasPermission(authContext, featureName, 'UPDATE', moduleName);
+            }
 
-        if (allowPrefixFallback) {
-          const parentPrefix = targetFeature.split('_')[0];
-          if (pFeat === parentPrefix && candidateActions.includes(normalizedPAct)) {
-            return true;
-          }
-        }
+            export function canDelete(authContext, featureName, moduleName) {
+              return hasPermission(authContext, featureName, 'DELETE', moduleName);
+            }
 
-        return false;
-      }
+            export function canApprove(authContext, featureName, moduleName) {
+              return hasPermission(authContext, featureName, 'APPROVE', moduleName);
+            }
 
-      return pFeat === targetFeature || upper === targetFeature || upper.startsWith(`${targetFeature}:`);
-    }
+            /**
+             * Evaluates whether a route/module/feature requirement is satisfied.
+             * Used by ProtectedRoute and layout navigation.
+             */
+            export function canViewModule(authContext, moduleOrFeature) {
+              if (!moduleOrFeature) return false;
+              if (isSystemAdminUser(authContext)) return true;
 
-    if (p && typeof p === 'object') {
-      // Must be allowed and active
-      if (p.allowed === false || p.active === false || String(p.status || '').toUpperCase() === 'INACTIVE' || p.status === false) return false;
+              const str = String(moduleOrFeature).trim();
+              const lower = str.toLowerCase();
+              const upper = str.toUpperCase();
+              const normUpper = normalizeFeatureCode(upper);
 
-      const permCode = String(p.permissionCode || '').trim().toUpperCase();
-      const feat = normalizeFeatureCode(String(p.featureCode || p.feature || '').trim().toUpperCase());
-      if (permCode === 'ALL' || permCode === 'ALL_MODULES' || feat === 'ALL' || feat === 'ALL_MODULES') {
-        return true;
-      }
+              const TOP_LEVEL_MODULE_ALIASES = {
+                account: CANONICAL_MODULES.ACCOUNT,
+                accounts: CANONICAL_MODULES.ACCOUNT,
+                finance: CANONICAL_MODULES.ACCOUNT,
+                accounting: CANONICAL_MODULES.ACCOUNT,
+                inventory: CANONICAL_MODULES.INVENTORY,
+                inv: CANONICAL_MODULES.INVENTORY,
+                crm: CANONICAL_MODULES.CRM,
+                sales: CANONICAL_MODULES.CRM,
+                'sales-crm': CANONICAL_MODULES.CRM,
+                'sales_crm': CANONICAL_MODULES.CRM,
+                salescrm: CANONICAL_MODULES.CRM,
+                workflow: CANONICAL_MODULES.WORKFLOW,
+                workflows: CANONICAL_MODULES.WORKFLOW,
+                wf: CANONICAL_MODULES.WORKFLOW,
+                hr: CANONICAL_MODULES.HR,
+                manufacturing: CANONICAL_MODULES.MANUFACTURING,
+                mfg: CANONICAL_MODULES.MANUFACTURING,
+                purchases: CANONICAL_MODULES.PURCHASES,
+                purchase: CANONICAL_MODULES.PURCHASES,
+                procurement: CANONICAL_MODULES.PURCHASES,
+                core: CANONICAL_MODULES.CORE,
+                sso: CANONICAL_MODULES.SSO,
+                auth: CANONICAL_MODULES.SSO,
+                admin: CANONICAL_MODULES.SSO,
+              };
 
-      // Module match if module specified
-      if (canonicalModule) {
-        const mod = normalizeModuleName(p.moduleName);
-        if (mod && mod !== canonicalModule) return false;
-      }
+              const entitled = getEntitledModules(authContext);
+              const isTopModule = Boolean(TOP_LEVEL_MODULE_ALIASES[lower] || Object.values(CANONICAL_MODULES).includes(upper));
 
-      let act = String(p.action || '').trim().toUpperCase();
-      if (!act && permCode.includes(':')) {
-        act = permCode.split(':')[1].toUpperCase();
-      }
-      if (act === 'VIEW') act = 'READ';
-      if (act === 'EDIT') act = 'UPDATE';
+              // 1. Target is a top-level module (e.g. 'ACCOUNT', 'INVENTORY', 'CRM', 'SSO')
+              if (isTopModule) {
+                const canonical = TOP_LEVEL_MODULE_ALIASES[lower] || upper;
+                if (entitled.includes(canonical)) {
+                  return true;
+                }
+                // Fallback: If SSO module, check if user has active SSO feature permissions
+                if (canonical === CANONICAL_MODULES.SSO) {
+                  const permissions = authContext?.permissions || [];
+                  const SSO_ADMIN_FEATS = ['USER', 'ROLE', 'PERMISSION', 'FEATURE', 'MODULE', 'MODULE_ROUTE', 'PORTAL_ACCESS', 'SESSION', 'ORGANIZATION', 'COMPANY', 'SUBSCRIPTION', 'PLATFORM_ADMIN'];
+                  return SSO_ADMIN_FEATS.some((featCode) =>
+                    permissions.some((p) => {
+                      if (typeof p === 'string') {
+                        return p.toUpperCase() === featCode || p.toUpperCase().startsWith(`${featCode}:`);
+                      }
+                      const fc = normalizeFeatureCode(String(p.featureCode || p.feature || '').toUpperCase());
+                      return fc === featCode && p.allowed !== false && p.active !== false;
+                    })
+                  );
+                }
+                return false;
+              }
 
-      const pFeat = feat || normalizeFeatureCode(permCode.includes(':') ? permCode.split(':')[0] : permCode);
+              // 2. Target is a feature (e.g. 'CUSTOMERS', 'PRODUCTS', 'ACCOUNT_GROUPS', etc.)
+              if (upper === 'DASHBOARD' || upper.endsWith('_DASHBOARD') || normUpper === 'DASHBOARD') {
+                return entitled.length > 0;
+              }
 
-      if (targetAction) {
-        const isActionMatch = candidateActions.includes(act) ||
-          candidateActions.some(ca => permCode === `${targetFeature}:${ca}` || permCode === `${ca}_${targetFeature}`);
+              const features = authContext?.features || [];
 
-        if (pFeat === targetFeature) {
-          return isActionMatch;
-        }
+              // If features list is provided in session, feature must exist and be active
+              if (features.length > 0) {
+                const matchingFeat = features.find((f) => {
+                  if (typeof f === 'string') return normalizeFeatureCode(f.toUpperCase()) === normUpper || f.toUpperCase() === upper;
+                  const code = normalizeFeatureCode(String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase());
+                  const rawCode = String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase();
+                  return (code === normUpper || rawCode === upper) && f.active !== false;
+                });
 
-        if (allowPrefixFallback) {
-          const parentPrefix = targetFeature.split('_')[0];
-          if (pFeat === parentPrefix && isActionMatch) {
-            return true;
-          }
-        }
+                if (matchingFeat) {
+                  const parentMod = typeof matchingFeat === 'object' ? normalizeModuleName(matchingFeat.moduleName) : null;
+                  if (parentMod && !entitled.includes(parentMod)) {
+                    return false;
+                  }
+                } else {
+                  // Feature not in features list — check if permission explicitly authorizes it
+                  const hasExplicit = hasPermission(authContext, normUpper, 'READ') || hasPermission(authContext, upper, 'READ');
+                  if (!hasExplicit) return false;
+                }
+              }
 
-        return false;
-      }
-
-      return pFeat === targetFeature || permCode === targetFeature || permCode.startsWith(`${targetFeature}:`);
-    }
-
-    return false;
-  });
-}
-
-/**
- * Convenience action checkers
- */
-export function canRead(authContext, featureName, moduleName) {
-  return hasPermission(authContext, featureName, 'READ', moduleName);
-}
-
-export function canCreate(authContext, featureName, moduleName) {
-  return hasPermission(authContext, featureName, 'CREATE', moduleName);
-}
-
-export function canUpdate(authContext, featureName, moduleName) {
-  return hasPermission(authContext, featureName, 'UPDATE', moduleName);
-}
-
-export function canWrite(authContext, featureName, moduleName) {
-  return hasPermission(authContext, featureName, 'WRITE', moduleName) ||
-    hasPermission(authContext, featureName, 'CREATE', moduleName) ||
-    hasPermission(authContext, featureName, 'UPDATE', moduleName);
-}
-
-export function canDelete(authContext, featureName, moduleName) {
-  return hasPermission(authContext, featureName, 'DELETE', moduleName);
-}
-
-export function canApprove(authContext, featureName, moduleName) {
-  return hasPermission(authContext, featureName, 'APPROVE', moduleName);
-}
-
-/**
- * Evaluates whether a route/module/feature requirement is satisfied.
- * Used by ProtectedRoute and layout navigation.
- */
-export function canViewModule(authContext, moduleOrFeature) {
-  if (!moduleOrFeature) return false;
-  if (isSystemAdminUser(authContext)) return true;
-
-  const str = String(moduleOrFeature).trim();
-  const lower = str.toLowerCase();
-  const upper = str.toUpperCase();
-  const normUpper = normalizeFeatureCode(upper);
-
-  const TOP_LEVEL_MODULE_ALIASES = {
-    account: CANONICAL_MODULES.ACCOUNT,
-    accounts: CANONICAL_MODULES.ACCOUNT,
-    finance: CANONICAL_MODULES.ACCOUNT,
-    accounting: CANONICAL_MODULES.ACCOUNT,
-    inventory: CANONICAL_MODULES.INVENTORY,
-    inv: CANONICAL_MODULES.INVENTORY,
-    crm: CANONICAL_MODULES.CRM,
-    sales: CANONICAL_MODULES.CRM,
-    'sales-crm': CANONICAL_MODULES.CRM,
-    'sales_crm': CANONICAL_MODULES.CRM,
-    salescrm: CANONICAL_MODULES.CRM,
-    workflow: CANONICAL_MODULES.WORKFLOW,
-    workflows: CANONICAL_MODULES.WORKFLOW,
-    wf: CANONICAL_MODULES.WORKFLOW,
-    hr: CANONICAL_MODULES.HR,
-    manufacturing: CANONICAL_MODULES.MANUFACTURING,
-    mfg: CANONICAL_MODULES.MANUFACTURING,
-    purchases: CANONICAL_MODULES.PURCHASES,
-    purchase: CANONICAL_MODULES.PURCHASES,
-    procurement: CANONICAL_MODULES.PURCHASES,
-    core: CANONICAL_MODULES.CORE,
-    sso: CANONICAL_MODULES.SSO,
-    auth: CANONICAL_MODULES.SSO,
-    admin: CANONICAL_MODULES.SSO,
-  };
-
-  const entitled = getEntitledModules(authContext);
-  const isTopModule = Boolean(TOP_LEVEL_MODULE_ALIASES[lower] || Object.values(CANONICAL_MODULES).includes(upper));
-
-  // 1. Target is a top-level module (e.g. 'ACCOUNT', 'INVENTORY', 'CRM', 'SSO')
-  if (isTopModule) {
-    const canonical = TOP_LEVEL_MODULE_ALIASES[lower] || upper;
-    if (entitled.includes(canonical)) {
-      return true;
-    }
-    // Fallback: If SSO module, check if user has active SSO feature permissions
-    if (canonical === CANONICAL_MODULES.SSO) {
-      const permissions = authContext?.permissions || [];
-      const SSO_ADMIN_FEATS = ['USER', 'ROLE', 'PERMISSION', 'FEATURE', 'MODULE', 'MODULE_ROUTE', 'PORTAL_ACCESS', 'SESSION', 'ORGANIZATION', 'COMPANY', 'SUBSCRIPTION', 'PLATFORM_ADMIN'];
-      return SSO_ADMIN_FEATS.some((featCode) =>
-        permissions.some((p) => {
-          if (typeof p === 'string') {
-            return p.toUpperCase() === featCode || p.toUpperCase().startsWith(`${featCode}:`);
-          }
-          const fc = normalizeFeatureCode(String(p.featureCode || p.feature || '').toUpperCase());
-          return fc === featCode && p.allowed !== false && p.active !== false;
-        })
-      );
-    }
-    return false;
-  }
-
-  // 2. Target is a feature (e.g. 'CUSTOMERS', 'PRODUCTS', 'ACCOUNT_GROUPS', etc.)
-  if (upper === 'DASHBOARD' || upper.endsWith('_DASHBOARD') || normUpper === 'DASHBOARD') {
-    return entitled.length > 0;
-  }
-
-  const features = authContext?.features || [];
-
-  // If features list is provided in session, feature must exist and be active
-  if (features.length > 0) {
-    const matchingFeat = features.find((f) => {
-      if (typeof f === 'string') return normalizeFeatureCode(f.toUpperCase()) === normUpper || f.toUpperCase() === upper;
-      const code = normalizeFeatureCode(String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase());
-      const rawCode = String(f.featureCode || f.featureName || f.code || '').trim().toUpperCase();
-      return (code === normUpper || rawCode === upper) && f.active !== false;
-    });
-
-    if (matchingFeat) {
-      const parentMod = typeof matchingFeat === 'object' ? normalizeModuleName(matchingFeat.moduleName) : null;
-      if (parentMod && !entitled.includes(parentMod)) {
-        return false;
-      }
-    } else {
-      // Feature not in features list — check if permission explicitly authorizes it
-      const hasExplicit = hasPermission(authContext, normUpper, 'READ') || hasPermission(authContext, upper, 'READ');
-      if (!hasExplicit) return false;
-    }
-  }
-
-  // 3. User MUST have active READ permission (or wildcard ALL/ALL_MODULES)
-  let allowed = hasPermission(authContext, normUpper, 'READ') || hasPermission(authContext, upper, 'READ');
-  if (!allowed && (normUpper === 'QUOTATIONS' || upper === 'QUOTATIONS')) {
-    allowed = hasPermission(authContext, 'SALES_INVOICES', 'READ') || hasPermission(authContext, 'SALES', 'READ');
-  }
-  if (!allowed && (normUpper === 'PURCHASE_REQUISITIONS' || upper === 'PURCHASE_REQUISITIONS')) {
-    allowed = hasPermission(authContext, 'PURCHASE_INVOICES', 'READ') || hasPermission(authContext, 'PURCHASE', 'READ');
-  }
-  if (!allowed && (normUpper === 'PURCHASE_INVOICES' || upper === 'PURCHASE_INVOICES')) {
-    allowed = hasPermission(authContext, 'PURCHASE_REQUISITIONS', 'READ') || hasPermission(authContext, 'PURCHASE', 'READ');
-  }
-  if (!allowed && (normUpper === 'EXPENSE_REQUESTS' || upper === 'EXPENSE_REQUESTS')) {
-    allowed = hasPermission(authContext, 'EXPENSES', 'READ') || hasPermission(authContext, 'EXPENSE', 'READ');
-  }
-  if (!allowed && (normUpper === 'EXPENSES' || upper === 'EXPENSES')) {
-    allowed = hasPermission(authContext, 'EXPENSE_REQUESTS', 'READ') || hasPermission(authContext, 'EXPENSE', 'READ');
-  }
-    if (!allowed && (normUpper === 'WORKFLOW_DEFINITIONS' || upper === 'WORKFLOW_DEFINITIONS')) {
-    allowed = hasPermission(authContext, 'WORKFLOW', 'READ') || hasPermission(authContext, 'WORKFLOW_APPROVALS', 'READ');
-  }
-  if (!allowed && (normUpper === 'WORKFLOW_TASKS' || upper === 'APPROVAL_REQUESTS' || upper === 'APPROVALS')) {
-    allowed = hasPermission(authContext, 'APPROVAL_REQUESTS', 'READ') ||
-      hasPermission(authContext, 'APPROVALS', 'READ') ||
-      hasPermission(authContext, 'WORKFLOW_TASKS', 'APPROVE') ||
-      hasPermission(authContext, 'WORKFLOW_APPROVE', 'APPROVE');
-  }
-  return allowed;
-}
+              // 3. User MUST have active READ permission (or wildcard ALL/ALL_MODULES)
+              let allowed = hasPermission(authContext, normUpper, 'READ') || hasPermission(authContext, upper, 'READ');
+              if (!allowed && (normUpper === 'QUOTATIONS' || upper === 'QUOTATIONS')) {
+                allowed = hasPermission(authContext, 'SALES_INVOICES', 'READ') || hasPermission(authContext, 'SALES', 'READ');
+              }
+              if (!allowed && (normUpper === 'PURCHASE_REQUISITIONS' || upper === 'PURCHASE_REQUISITIONS')) {
+                allowed = hasPermission(authContext, 'PURCHASE_INVOICES', 'READ') || hasPermission(authContext, 'PURCHASE', 'READ');
+              }
+              if (!allowed && (normUpper === 'PURCHASE_INVOICES' || upper === 'PURCHASE_INVOICES')) {
+                allowed = hasPermission(authContext, 'PURCHASE_REQUISITIONS', 'READ') || hasPermission(authContext, 'PURCHASE', 'READ');
+              }
+              if (!allowed && (normUpper === 'EXPENSE_REQUESTS' || upper === 'EXPENSE_REQUESTS')) {
+                allowed = hasPermission(authContext, 'EXPENSES', 'READ') || hasPermission(authContext, 'EXPENSE', 'READ');
+              }
+              if (!allowed && (normUpper === 'EXPENSES' || upper === 'EXPENSES')) {
+                allowed = hasPermission(authContext, 'EXPENSE_REQUESTS', 'READ') || hasPermission(authContext, 'EXPENSE', 'READ');
+              }
+              if (!allowed && (normUpper === 'WORKFLOW_DEFINITIONS' || upper === 'WORKFLOW_DEFINITIONS')) {
+                allowed = hasPermission(authContext, 'WORKFLOW', 'READ') || hasPermission(authContext, 'WORKFLOW_APPROVALS', 'READ');
+              }
+              if (!allowed && (normUpper === 'WORKFLOW_TASKS' || upper === 'APPROVAL_REQUESTS' || upper === 'APPROVALS')) {
+                allowed = hasPermission(authContext, 'APPROVAL_REQUESTS', 'READ') ||
+                  hasPermission(authContext, 'APPROVALS', 'READ') ||
+                  hasPermission(authContext, 'WORKFLOW_TASKS', 'APPROVE') ||
+                  hasPermission(authContext, 'WORKFLOW_APPROVE', 'APPROVE');
+              }
+              return allowed;
+            }

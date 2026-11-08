@@ -105,6 +105,16 @@ export default function OwnerTopHeader({
     // Refresh the complete authorization context for the selected company
     dispatch(authApi.endpoints.ssoGetMe.initiate(comp.id, { subscribe: false, forceRefetch: true }));
     setCompanyDropdownOpen(false);
+
+    if (location.pathname.startsWith('/company/')) {
+      const segments = location.pathname.split('/').filter(Boolean);
+      if (segments.length >= 2) {
+        segments[1] = comp.id;
+        navigate('/' + segments.join('/'));
+      } else {
+        navigate(`/company/${comp.id}/dashboard`);
+      }
+    }
   };
 
   const handleLogout = useCallback(async () => {
@@ -262,9 +272,8 @@ export default function OwnerTopHeader({
                           key={comp.id || comp.code}
                           type="button"
                           onClick={() => handleSelectCompany(comp)}
-                          className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-[#EDEEE4] dark:hover:bg-[#222736] transition-colors ${
-                            isCurrent ? 'font-bold text-[#2E3D28] dark:text-[#4C8DFF] bg-[#EDEEE4] dark:bg-[#4C8DFF]/15' : 'text-[#485942] dark:text-[#E6E8EE]'
-                          }`}
+                          className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-[#EDEEE4] dark:hover:bg-[#222736] transition-colors ${isCurrent ? 'font-bold text-[#2E3D28] dark:text-[#4C8DFF] bg-[#EDEEE4] dark:bg-[#4C8DFF]/15' : 'text-[#485942] dark:text-[#E6E8EE]'
+                            }`}
                         >
                           <div className="truncate mr-2">
                             <div className="truncate">{comp.name || comp.legalName}</div>

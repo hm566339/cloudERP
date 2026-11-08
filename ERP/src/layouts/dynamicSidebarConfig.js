@@ -739,8 +739,9 @@ export function buildDynamicSidebar({
   canAccess = null,
   permissions = null,
 } = {}) {
-  // ── 1. System Admin Global Console Exception ──────────────────────────────
-  const normalizedContext = buildAuthContext(authContext);
+  // ── 1. Resolve Target Company Context ──────────────────────────────────────
+  const targetCompanyId = companyId || authContext?.activeCompanyId || authContext?.currentCompany?.id || null;
+  const normalizedContext = buildAuthContext(authContext, targetCompanyId);
   if (permissions && Array.isArray(permissions)) {
     normalizedContext.permissions = permissions;
   }
@@ -761,7 +762,8 @@ export function buildDynamicSidebar({
     return [];
   }
 
-  const base = companyId ? `/company/${companyId}` : '';
+  const effectiveCompanyId = companyId || normalizedContext.activeCompanyId || normalizedContext.currentCompany?.id || null;
+  const base = effectiveCompanyId ? `/company/${effectiveCompanyId}` : '';
   const links = [];
 
   // Deduplicate and preserve order
@@ -793,10 +795,25 @@ export function buildDynamicSidebar({
       continue;
     }
 
+    // Deduplicate items within the module
+    const seenItemKeys = new Set();
+    const deduplicatedChildren = [];
+    for (const child of filteredChildren) {
+      const key = `${child.id}::${child.path || ''}`;
+      if (!seenItemKeys.has(key)) {
+        seenItemKeys.add(key);
+        deduplicatedChildren.push(child);
+      }
+    }
+
+    if (deduplicatedChildren.length === 0) {
+      continue;
+    }
+
     // If the only surviving child is the generic root dashboard and user has no explicit DASHBOARD permission,
     // the parent module must not appear because all its children/features are inaccessible (Rule 4).
-    const isOnlyRootDashboard = filteredChildren.length === 1 &&
-      (filteredChildren[0].id === 'admin-dashboard' || filteredChildren[0].id === 'acc-dash' || filteredChildren[0].id === 'inv-dashboard' || filteredChildren[0].id === 'crm-dashboard');
+    const isOnlyRootDashboard = deduplicatedChildren.length === 1 &&
+      (deduplicatedChildren[0].id === 'admin-dashboard' || deduplicatedChildren[0].id === 'acc-dash' || deduplicatedChildren[0].id === 'inv-dashboard' || deduplicatedChildren[0].id === 'crm-dashboard');
     if (isOnlyRootDashboard) {
       const hasExplicitDash = checkHasPermission(normalizedContext, 'DASHBOARD', 'READ') ||
         checkHasPermission(normalizedContext, `${moduleName}_DASHBOARD`, 'READ') ||
@@ -813,7 +830,7 @@ export function buildDynamicSidebar({
       label: meta.label,
       icon: meta.icon,
       path: meta.defaultPath(base),
-      children: filteredChildren,
+      children: deduplicatedChildren,
     });
   }
 
@@ -825,7 +842,7 @@ export function buildDynamicSidebar({
  */
 export function getAuthorizedNavigation(authContext = {}, options = {}) {
   const currentCompany = authContext?.currentCompany || options?.currentCompany;
-  const companyId = options?.companyId || currentCompany?.id || currentCompany?.code || null;
+  const companyId = options?.companyId || currentCompany?.id || currentCompany?.code || authContext?.activeCompanyId || null;
   const userRole = options?.userRole || authContext?.user?.role || 'employee';
   const isSuperAdminGlobal = Boolean(options?.isSuperAdminGlobal);
 
