@@ -74,6 +74,9 @@ class PermissionServiceImplTest {
     @Mock
     private com.erp.auth_service.repository.UserPortalAccessRepository userPortalAccessRepository;
 
+    @Mock
+    private com.erp.auth_service.repository.OrganizationMemberRepository organizationMemberRepository;
+
     @InjectMocks
     private PermissionServiceImpl permissionService;
 

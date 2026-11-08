@@ -304,8 +304,10 @@ class SsoAuthorizationTest {
             String path = "/api/sso/company/123" + suffix;
             // Test with POST method
             List<String> actions = ssoAuthorizationService.resolveCandidateActions(path, "POST");
-            assertEquals(List.of(expectedAction), actions,
-                    "Suffix " + suffix + " on POST should resolve to " + expectedAction);
+            assertEquals(expectedAction, actions.get(0),
+                    "Primary action for suffix " + suffix + " on POST should resolve to " + expectedAction);
+            assertTrue(actions.contains(expectedAction),
+                    "Suffix " + suffix + " on POST should contain " + expectedAction);
         }
 
         @Test

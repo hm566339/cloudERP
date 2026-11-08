@@ -41,6 +41,38 @@ public class PermissionServiceImpl implements PermissionService {
 
     private static final Set<String> VALID_ACTIONS = com.erp.auth_service.utility.PermissionAction.NAMES;
 
+    public static final Set<String> EXPLICIT_ORG_OWNER_PERMISSIONS = Set.of(
+            // Organization Appearance & Settings
+            "ORGANIZATION:READ",
+            "ORGANIZATION:WRITE",
+            "ORGANIZATION:UPDATE",
+            "ORGANIZATION:CREATE",
+            "ORGANIZATION:DELETE",
+            "ORGANIZATION_APPEARANCE:READ",
+            "ORGANIZATION_APPEARANCE:WRITE",
+            "ORGANIZATION_APPEARANCE:UPDATE",
+
+            // Permission Catalog & Matrix
+            "ORGANIZATION_PERMISSIONS:READ",
+            "ORGANIZATION_PERMISSIONS:WRITE",
+            "PERMISSION:READ",
+            "PERMISSION:WRITE",
+            "PERMISSION:DELETE",
+
+            // Organization Role Templates
+            "ORGANIZATION_ROLE_TEMPLATES:READ",
+            "ORGANIZATION_ROLE_TEMPLATES:CREATE",
+            "ORGANIZATION_ROLE_TEMPLATES:WRITE",
+            "ORGANIZATION_ROLE_TEMPLATES:UPDATE",
+            "ORGANIZATION_ROLE_TEMPLATES:DELETE",
+
+            // Organization Members & Invitations
+            "ORGANIZATION_MEMBERS:READ",
+            "ORGANIZATION_MEMBERS:CREATE",
+            "ORGANIZATION_MEMBERS:WRITE",
+            "ORGANIZATION_MEMBERS:UPDATE",
+            "ORGANIZATION_MEMBERS:DELETE");
+
     private final FeaturePermissionRepository featurePermissionRepository;
     private final UserPermissionRepository userPermissionRepository;
     private final UserRepository userRepository;
@@ -54,6 +86,7 @@ public class PermissionServiceImpl implements PermissionService {
     private final com.erp.auth_service.repository.SubscriptionPlanModuleRepository subscriptionPlanModuleRepository;
     private final com.erp.auth_service.repository.CompanySubscriptionRepository companySubscriptionRepository;
     private final com.erp.auth_service.repository.SubscriptionPlanRepository subscriptionPlanRepository;
+    private final com.erp.auth_service.repository.OrganizationMemberRepository organizationMemberRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -66,12 +99,14 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @Transactional
-    public FeaturePermissionResponse createPermission(com.erp.auth_service.dto.request.CreatePermissionRequest request) {
+    public FeaturePermissionResponse createPermission(
+            com.erp.auth_service.dto.request.CreatePermissionRequest request) {
         String action = normalizeAction(request.getAction());
         String featureCode = request.getFeatureCode().trim().toUpperCase();
         String permissionCode = featureCode + ":" + action;
 
-        if (featurePermissionRepository.findByFeature_CodeIgnoreCaseAndActionIgnoreCase(featureCode, action).isPresent()) {
+        if (featurePermissionRepository.findByFeature_CodeIgnoreCaseAndActionIgnoreCase(featureCode, action)
+                .isPresent()) {
             throw new BadRequestException("Permission already exists: " + permissionCode);
         }
 
@@ -122,15 +157,18 @@ public class PermissionServiceImpl implements PermissionService {
         FeaturePermission permission = resolvePermission(request.getFeatureCode(), request.getAction());
 
         if (!permission.isActive() || !permission.getFeature().isActive()) {
-            throw new BadRequestException("Cannot grant inactive feature or permission: " + permission.getPermissionCode());
+            throw new BadRequestException(
+                    "Cannot grant inactive feature or permission: " + permission.getPermissionCode());
         }
 
-        Optional<UserPermission> existing = userPermissionRepository.findByUser_IdAndPermission_Id(targetUserId, permission.getId());
+        Optional<UserPermission> existing = userPermissionRepository.findByUser_IdAndPermission_Id(targetUserId,
+                permission.getId());
 
         UserPermission userPermission;
         if (existing.isPresent()) {
             userPermission = existing.get();
-            log.info("Updating existing permission assignment for user: {} permission: {}", targetUser.getUsername(), permission.getPermissionCode());
+            log.info("Updating existing permission assignment for user: {} permission: {}", targetUser.getUsername(),
+                    permission.getPermissionCode());
             userPermission.setActive(true);
             userPermission.setRevoked(false);
             userPermission.setRevokedAt(null);
@@ -139,7 +177,8 @@ public class PermissionServiceImpl implements PermissionService {
             userPermission.setGrantedBy(adminUserId);
             userPermission.setGrantedAt(LocalDateTime.now());
         } else {
-            log.info("Creating new permission assignment for user: {} permission: {}", targetUser.getUsername(), permission.getPermissionCode());
+            log.info("Creating new permission assignment for user: {} permission: {}", targetUser.getUsername(),
+                    permission.getPermissionCode());
             userPermission = UserPermission.builder()
                     .user(targetUser)
                     .permission(permission)
@@ -156,13 +195,16 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @Transactional
-    public UserPermissionResponse revokePermission(UUID adminUserId, UUID targetUserId, RevokePermissionRequest request) {
+    public UserPermissionResponse revokePermission(UUID adminUserId, UUID targetUserId,
+            RevokePermissionRequest request) {
         User targetUser = getUserOrThrow(targetUserId);
         FeaturePermission permission = resolvePermission(request.getFeatureCode(), request.getAction());
 
-        UserPermission userPermission = userPermissionRepository.findByUser_IdAndPermission_Id(targetUserId, permission.getId())
+        UserPermission userPermission = userPermissionRepository
+                .findByUser_IdAndPermission_Id(targetUserId, permission.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "User [" + targetUser.getUsername() + "] does not have permission [" + permission.getPermissionCode() + "]"));
+                        "User [" + targetUser.getUsername() + "] does not have permission ["
+                                + permission.getPermissionCode() + "]"));
 
         userPermission.setActive(false);
         userPermission.setRevoked(true);
@@ -177,7 +219,8 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @Transactional
-    public List<UserPermissionResponse> syncUserPermissions(UUID adminUserId, UUID targetUserId, SyncPermissionsRequest request) {
+    public List<UserPermissionResponse> syncUserPermissions(UUID adminUserId, UUID targetUserId,
+            SyncPermissionsRequest request) {
         User targetUser = getUserOrThrow(targetUserId);
 
         for (SyncPermissionsRequest.PermissionSyncItem item : request.getPermissions()) {
@@ -202,7 +245,8 @@ public class PermissionServiceImpl implements PermissionService {
 
             if (item.isEnabled()) {
                 if (!permission.isActive() || !permission.getFeature().isActive()) {
-                    throw new BadRequestException("Cannot enable inactive permission: " + permission.getPermissionCode());
+                    throw new BadRequestException(
+                            "Cannot enable inactive permission: " + permission.getPermissionCode());
                 }
                 UserPermission up = existing.orElseGet(() -> UserPermission.builder()
                         .user(targetUser)
@@ -243,13 +287,15 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @Transactional
-    public List<FeaturePermissionResponse> syncRolePermissions(UUID adminUserId, UUID roleId, SyncPermissionsRequest request) {
+    public List<FeaturePermissionResponse> syncRolePermissions(UUID adminUserId, UUID roleId,
+            SyncPermissionsRequest request) {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with ID: " + roleId));
 
         assertCompanyOwnership(role.getCompany());
 
-        // Group actions by feature to enforce permission dependencies (WRITE/DELETE requires READ)
+        // Group actions by feature to enforce permission dependencies (WRITE/DELETE
+        // requires READ)
         Map<String, Map<String, Boolean>> featureActions = new LinkedHashMap<>();
         for (SyncPermissionsRequest.PermissionSyncItem item : request.getPermissions()) {
             String action = normalizeAction(item.getAction());
@@ -257,7 +303,8 @@ public class PermissionServiceImpl implements PermissionService {
             featureActions.computeIfAbsent(featureCode, k -> new HashMap<>()).put(action, item.isEnabled());
         }
 
-        // Dependency validation: WRITE or DELETE implies READ; disabling READ disables WRITE and DELETE
+        // Dependency validation: WRITE or DELETE implies READ; disabling READ disables
+        // WRITE and DELETE
         for (Map.Entry<String, Map<String, Boolean>> entry : featureActions.entrySet()) {
             Map<String, Boolean> actions = entry.getValue();
             boolean writeEnabled = Boolean.TRUE.equals(actions.get("WRITE"));
@@ -298,8 +345,7 @@ public class PermissionServiceImpl implements PermissionService {
                 FeaturePermission permission = permissionOpt.get();
 
                 Optional<RolePermission> existing = rolePermissionRepository.findById(
-                        new com.erp.auth_service.utility.RolePermissionId(role.getId(), permission.getId())
-                );
+                        new com.erp.auth_service.utility.RolePermissionId(role.getId(), permission.getId()));
 
                 if (isEnabled) {
                     if (!existing.isPresent()) {
@@ -337,20 +383,65 @@ public class PermissionServiceImpl implements PermissionService {
 
         List<String> userRoles = new ArrayList<>();
         Set<String> roleGrantedPermissions = new HashSet<>();
+
+        // Resolve organization ID for organization-level membership checks
+        UUID orgId = null;
+        com.erp.auth_service.security.RequestContext.Context ctx = com.erp.auth_service.security.RequestContext.get();
+        if (ctx != null && ctx.organizationId() != null) {
+            orgId = ctx.organizationId();
+        } else if (companyId != null && companyRepository != null) {
+            var compOpt = companyRepository.findById(companyId);
+            if (compOpt.isPresent() && compOpt.get().getOrganization() != null) {
+                orgId = compOpt.get().getOrganization().getId();
+            }
+        } else if (organizationMemberRepository != null) {
+            var activeMembers = organizationMemberRepository.findByUser_IdAndMembershipStatus(
+                    userId, com.erp.auth_service.utility.MembershipStatus.ACTIVE);
+            if (activeMembers.size() == 1) {
+                orgId = activeMembers.get(0).getOrganization().getId();
+            }
+        }
+
+        boolean isOrgOwner = false;
+        if (orgId != null && organizationMemberRepository != null) {
+            var memberOpt = organizationMemberRepository
+                    .findByOrganization_IdAndUser_IdAndMembershipStatus(
+                            orgId, userId, com.erp.auth_service.utility.MembershipStatus.ACTIVE);
+            if (memberOpt.isPresent() && memberOpt.get().getMemberType() == com.erp.auth_service.utility.MemberType.OWNER) {
+                isOrgOwner = true;
+            }
+        }
+
+        if (isOrgOwner) {
+            if (!userRoles.contains("OWNER")) {
+                userRoles.add(0, "OWNER");
+            }
+            List<FeaturePermission> allPermissions = featurePermissionRepository.findAll();
+            for (FeaturePermission fp : allPermissions) {
+                if (fp.isActive() && fp.getFeature() != null && fp.getFeature().isActive()) {
+                    String permCode = fp.getPermissionCode() != null
+                            ? fp.getPermissionCode().toUpperCase(Locale.ROOT)
+                            : "";
+                    if (EXPLICIT_ORG_OWNER_PERMISSIONS.contains(permCode)) {
+                        roleGrantedPermissions.add(fp.getPermissionCode());
+                    }
+                }
+            }
+        }
         
         if (user.getUserRoles() != null) {
             for (UserRole ur : user.getUserRoles()) {
                 if (ur.getRole() != null && ur.getRole().isStatus()) {
                     boolean isSysAdminRole = "SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
                             || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName());
-                    boolean isOwnerRole = "OWNER".equalsIgnoreCase(ur.getRole().getName())
-                            || "ROLE_OWNER".equalsIgnoreCase(ur.getRole().getName());
                     if (companyId != null && ur.getRole().getCompany() != null
                             && !companyId.equals(ur.getRole().getCompany().getId())
-                            && !isSysAdminRole && !isOwnerRole) {
+                            && !isSysAdminRole) {
                         continue;
                     }
-                    userRoles.add(ur.getRole().getName());
+                    if (!userRoles.contains(ur.getRole().getName())) {
+                        userRoles.add(ur.getRole().getName());
+                    }
                     List<RolePermission> rps = rolePermissionRepository.findByRole_Id(ur.getRole().getId());
                     for (RolePermission rp : rps) {
                         if (rp.getPermission() != null && rp.getPermission().isActive()
@@ -417,8 +508,10 @@ public class PermissionServiceImpl implements PermissionService {
                 }
             }
 
-            boolean isOwner = (user.getUserRoles() != null && user.getUserRoles().stream().anyMatch(ur -> ur.getRole() != null
-                    && ("OWNER".equalsIgnoreCase(ur.getRole().getName()) || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
+            boolean isOwner = isOrgOwner || (user.getUserRoles() != null && user.getUserRoles().stream()
+                    .filter(ur -> companyId == null || ur.getRole() == null || ur.getRole().getCompany() == null || companyId.equals(ur.getRole().getCompany().getId()))
+                    .anyMatch(ur -> ur.getRole() != null
+                            && ("OWNER".equalsIgnoreCase(ur.getRole().getName()) || "ADMIN".equalsIgnoreCase(ur.getRole().getName()))));
 
             if (isOwner && plan != null && subscriptionPlanModuleRepository != null) {
                 List<SubscriptionPlanModule> spms = subscriptionPlanModuleRepository.findByPlan_IdAndActiveTrue(plan.getId());
@@ -570,7 +663,8 @@ public class PermissionServiceImpl implements PermissionService {
         featureModules.add("SSO");
         if (moduleNames != null) {
             for (String mod : moduleNames) {
-                if (mod == null) continue;
+                if (mod == null)
+                    continue;
                 String normalized = mod.toUpperCase(Locale.ROOT);
                 if (normalized.startsWith("ACCOUNT")) {
                     featureModules.add("ACCOUNT");
@@ -618,9 +712,11 @@ public class PermissionServiceImpl implements PermissionService {
         String normalizedAction = normalizeAction(action);
         String normalizedFeatureCode = featureCode.trim().toUpperCase();
 
-        return featurePermissionRepository.findByFeature_CodeIgnoreCaseAndActionIgnoreCase(normalizedFeatureCode, normalizedAction)
+        return featurePermissionRepository
+                .findByFeature_CodeIgnoreCaseAndActionIgnoreCase(normalizedFeatureCode, normalizedAction)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Permission not found for feature [" + normalizedFeatureCode + "] and action [" + normalizedAction + "]"));
+                        "Permission not found for feature [" + normalizedFeatureCode + "] and action ["
+                                + normalizedAction + "]"));
     }
 
     private String normalizeAction(String action) {
@@ -676,17 +772,22 @@ public class PermissionServiceImpl implements PermissionService {
             return;
         }
         if (company == null) {
-            throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Role is not associated with any company");
+            throw new com.erp.auth_service.exception.ForbiddenException(
+                    "Access denied: Role is not associated with any company");
         }
-        com.erp.auth_service.security.RequestContext.Context context = com.erp.auth_service.security.RequestContext.get();
+        com.erp.auth_service.security.RequestContext.Context context = com.erp.auth_service.security.RequestContext
+                .get();
         if (context != null) {
             if (context.organizationId() != null) {
-                if (company.getOrganization() == null || !company.getOrganization().getId().equals(context.organizationId())) {
-                    throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Role does not belong to authorized organization");
+                if (company.getOrganization() == null
+                        || !company.getOrganization().getId().equals(context.organizationId())) {
+                    throw new com.erp.auth_service.exception.ForbiddenException(
+                            "Access denied: Role does not belong to authorized organization");
                 }
             }
             if (context.companyId() != null && !context.companyId().equals(company.getId())) {
-                throw new com.erp.auth_service.exception.ForbiddenException("Access denied: Role does not belong to authorized company context");
+                throw new com.erp.auth_service.exception.ForbiddenException(
+                        "Access denied: Role does not belong to authorized company context");
             }
         }
     }

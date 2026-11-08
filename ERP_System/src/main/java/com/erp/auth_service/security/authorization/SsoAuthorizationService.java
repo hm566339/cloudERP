@@ -16,16 +16,36 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import static com.erp.auth_service.service.impl.PermissionServiceImpl.EXPLICIT_ORG_OWNER_PERMISSIONS;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class SsoAuthorizationService {
 
     private final AuthorizationProperties authorizationProperties;
     private final PermissionService permissionService;
     private final FeaturePermissionRepository featurePermissionRepository;
+    private final com.erp.auth_service.repository.OrganizationMemberRepository organizationMemberRepository;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+    public SsoAuthorizationService(
+            AuthorizationProperties authorizationProperties,
+            PermissionService permissionService,
+            FeaturePermissionRepository featurePermissionRepository) {
+        this(authorizationProperties, permissionService, featurePermissionRepository, null);
+    }
+
+    public SsoAuthorizationService(
+            AuthorizationProperties authorizationProperties,
+            PermissionService permissionService,
+            FeaturePermissionRepository featurePermissionRepository,
+            com.erp.auth_service.repository.OrganizationMemberRepository organizationMemberRepository) {
+        this.authorizationProperties = authorizationProperties;
+        this.permissionService = permissionService;
+        this.featurePermissionRepository = featurePermissionRepository;
+        this.organizationMemberRepository = organizationMemberRepository;
+    }
 
     /**
      * Determines whether the given authentication possesses SYSTEM_ADMIN
@@ -174,6 +194,38 @@ public class SsoAuthorizationService {
         return Collections.emptyList();
     }
 
+    private List<String> buildCandidatePermissionCodes(String featureCode, List<String> candidateActions) {
+        Set<String> codes = new LinkedHashSet<>();
+        for (String act : candidateActions) {
+            codes.add(featureCode + ":" + act);
+            if ("ORGANIZATION_APPEARANCE".equalsIgnoreCase(featureCode)) {
+                codes.add("ORGANIZATION:" + act);
+            } else if ("ORGANIZATION".equalsIgnoreCase(featureCode)) {
+                codes.add("ORGANIZATION_APPEARANCE:" + act);
+            } else if ("ORGANIZATION_PERMISSIONS".equalsIgnoreCase(featureCode)) {
+                codes.add("PERMISSION:" + act);
+            } else if ("PERMISSION".equalsIgnoreCase(featureCode)) {
+                codes.add("ORGANIZATION_PERMISSIONS:" + act);
+            } else if ("ORGANIZATION_ROLE_TEMPLATES".equalsIgnoreCase(featureCode)) {
+                codes.add("ROLE:" + act);
+            } else if ("ORGANIZATION_MEMBERS".equalsIgnoreCase(featureCode)) {
+                codes.add("ORGANIZATION:" + act);
+                codes.add("USER_MANAGEMENT:" + act);
+            }
+        }
+        return new ArrayList<>(codes);
+    }
+
+    public static final Set<String> ORGANIZATION_ADMIN_FEATURE_CODES = EXPLICIT_ORG_OWNER_PERMISSIONS.stream()
+            .map(p -> p.substring(0, p.indexOf(':')))
+            .collect(Collectors.toUnmodifiableSet());
+
+    private boolean isOrganizationFeature(String featureCode) {
+        if (featureCode == null)
+            return false;
+        return ORGANIZATION_ADMIN_FEATURE_CODES.contains(featureCode.toUpperCase(Locale.ROOT));
+    }
+
     private AuthorizationDecision evaluateDbAuthorization(
             Authentication authentication,
             String featureCode,
@@ -181,16 +233,70 @@ public class SsoAuthorizationService {
             String primaryAction,
             String primaryPermissionCode) {
 
-        List<String> candidatePermissionCodes = candidateActions.stream()
-                .map(act -> featureCode + ":" + act)
-                .toList();
+        List<String> candidatePermissionCodes = buildCandidatePermissionCodes(featureCode, candidateActions);
         // 1. Regular database user (CustomUserDetails)
         if (authentication.getPrincipal() instanceof CustomUserDetails cud && cud.getUser() != null) {
             UUID userId = cud.getUser().getId();
             UUID companyId = null;
+            UUID orgId = null;
             RequestContext.Context ctx = RequestContext.get();
-            if (ctx != null && ctx.companyId() != null) {
+            if (ctx != null) {
                 companyId = ctx.companyId();
+                orgId = ctx.organizationId();
+            }
+
+            // If orgId is not set in context, resolve if user has exactly 1 active membership
+            if (orgId == null && organizationMemberRepository != null) {
+                var activeMembers = organizationMemberRepository.findByUser_IdAndMembershipStatus(
+                        userId, com.erp.auth_service.utility.MembershipStatus.ACTIVE);
+                if (activeMembers.size() == 1) {
+                    orgId = activeMembers.get(0).getOrganization().getId();
+                }
+            }
+
+            // Organization-level authorization check
+            if (isOrganizationFeature(featureCode) && organizationMemberRepository != null) {
+                if (orgId != null) {
+                    var memberOpt = organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
+                            orgId, userId, com.erp.auth_service.utility.MembershipStatus.ACTIVE);
+                    if (memberOpt.isEmpty()) {
+                        log.warn("Access denied: User [{}] has no active membership in target organization [{}]",
+                                userId, orgId);
+                        return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode,
+                                "ACTIVE_ORGANIZATION_MEMBERSHIP_REQUIRED");
+                    }
+                    if (memberOpt.get().getMemberType() == com.erp.auth_service.utility.MemberType.OWNER) {
+                        for (String candidateCode : candidatePermissionCodes) {
+                            String upperCode = candidateCode.toUpperCase(Locale.ROOT);
+                            if (EXPLICIT_ORG_OWNER_PERMISSIONS.contains(upperCode)) {
+                                if (featurePermissionRepository != null) {
+                                    var fpOpt = featurePermissionRepository.findByPermissionCodeIgnoreCase(candidateCode);
+                                    if (fpOpt.isPresent()) {
+                                        if (!fpOpt.get().isActive() || (fpOpt.get().getFeature() != null && !fpOpt.get().getFeature().isActive())) {
+                                            log.warn("Access denied: Permission [{}] is disabled", candidateCode);
+                                            return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode, "PERMISSION_DISABLED");
+                                        }
+                                        log.debug("Granting exact allowlisted org permission [{}] for active Organization OWNER [{}] in org [{}]",
+                                                candidateCode, userId, orgId);
+                                        return AuthorizationDecision.allow(featureCode, primaryAction, candidateCode, "ORG_OWNER_PERMISSION");
+                                    }
+                                } else {
+                                    return AuthorizationDecision.allow(featureCode, primaryAction, candidateCode, "ORG_OWNER_PERMISSION");
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    var activeMembers = organizationMemberRepository.findByUser_IdAndMembershipStatus(
+                            userId, com.erp.auth_service.utility.MembershipStatus.ACTIVE);
+                    if (activeMembers.isEmpty()) {
+                        return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode,
+                                "ACTIVE_ORGANIZATION_MEMBERSHIP_REQUIRED");
+                    } else if (activeMembers.size() > 1) {
+                        return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode,
+                                "ORGANIZATION_CONTEXT_REQUIRED");
+                    }
+                }
             }
 
             EffectivePermissionsResponse effective = (companyId != null)
@@ -227,12 +333,19 @@ public class SsoAuthorizationService {
             }
 
             // Check if feature permission exists in catalog to differentiate
-            // PERMISSION_NOT_FOUND vs PERMISSION_DENIED
+            // PERMISSION_NOT_FOUND vs PERMISSION_DENIED vs PERMISSION_DISABLED
             boolean existsInCatalog = false;
             for (String candidateCode : candidatePermissionCodes) {
-                if (featurePermissionRepository.findByPermissionCodeIgnoreCase(candidateCode).isPresent()) {
-                    existsInCatalog = true;
-                    break;
+                if (featurePermissionRepository != null) {
+                    var fpOpt = featurePermissionRepository.findByPermissionCodeIgnoreCase(candidateCode);
+                    if (fpOpt.isPresent()) {
+                        if (!fpOpt.get().isActive() || (fpOpt.get().getFeature() != null && !fpOpt.get().getFeature().isActive())) {
+                            return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode,
+                                    "PERMISSION_DISABLED");
+                        }
+                        existsInCatalog = true;
+                        break;
+                    }
                 }
             }
 
