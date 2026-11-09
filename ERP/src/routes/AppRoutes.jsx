@@ -544,9 +544,12 @@ export default function AppRoutes() {
   const activeOrgId = currentOrg?.id;
 
   const shouldSkipAppearance = !activeOrgId || isPublicPage;
-  const { data: orgAppearance } = useGetOrganizationAppearanceQuery(undefined, {
-    skip: shouldSkipAppearance,
-  });
+  const { data: orgAppearance } = useGetOrganizationAppearanceQuery(
+    activeOrgId ? { organizationId: activeOrgId } : undefined,
+    {
+      skip: shouldSkipAppearance,
+    }
+  );
 
   React.useEffect(() => {
     if (activeOrgId && !isPublicPage) {

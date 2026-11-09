@@ -287,16 +287,13 @@ public class SsoAuthorizationService {
                                             return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode,
                                                     "PERMISSION_DISABLED");
                                         }
-                                        log.debug(
-                                                "Granting exact allowlisted org permission [{}] for active Organization OWNER [{}] in org [{}]",
-                                                candidateCode, userId, orgId);
-                                        return AuthorizationDecision.allow(featureCode, primaryAction, candidateCode,
-                                                "ORG_OWNER_PERMISSION");
                                     }
-                                } else {
-                                    return AuthorizationDecision.allow(featureCode, primaryAction, candidateCode,
-                                            "ORG_OWNER_PERMISSION");
                                 }
+                                log.debug(
+                                        "Granting exact allowlisted org permission [{}] for active Organization OWNER [{}] in org [{}]",
+                                        candidateCode, userId, orgId);
+                                return AuthorizationDecision.allow(featureCode, primaryAction, candidateCode,
+                                        "ORG_OWNER_PERMISSION");
                             }
                         }
                     }

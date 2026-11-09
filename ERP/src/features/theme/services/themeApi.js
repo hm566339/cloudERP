@@ -9,10 +9,21 @@ export const themeApi = baseApi.enhanceEndpoints({
      * Retrieves the persistent appearance configuration for the active organization.
      */
     getOrganizationAppearance: builder.query({
-      query: () => ({
-        url: '/api/sso/organization/appearance',
-        method: 'GET',
-      }),
+      query: (arg) => {
+        let params = undefined;
+        let headers = undefined;
+        const orgId = typeof arg === 'string' ? arg : arg?.organizationId;
+        if (orgId) {
+          params = { organizationId: orgId };
+          headers = { 'X-Organization-Id': orgId };
+        }
+        return {
+          url: '/api/sso/organization/appearance',
+          method: 'GET',
+          params,
+          headers,
+        };
+      },
       providesTags: ['OrganizationAppearance'],
       transformResponse: (response) => response?.data || response,
     }),

@@ -52,6 +52,20 @@ public class PermissionServiceImpl implements PermissionService {
             "ORGANIZATION_APPEARANCE:WRITE",
             "ORGANIZATION_APPEARANCE:UPDATE",
 
+            // Multi-Company Management
+            "COMPANY:READ",
+            "COMPANY:WRITE",
+            "COMPANY:CREATE",
+            "COMPANY:UPDATE",
+            "COMPANY:DELETE",
+
+            // Organization Subscription
+            "SUBSCRIPTION:READ",
+            "SUBSCRIPTION:WRITE",
+            "SUBSCRIPTION:UPDATE",
+            "SUBSCRIPTION:CREATE",
+            "SUBSCRIPTION:DELETE",
+
             // Permission Catalog & Matrix
             "ORGANIZATION_PERMISSIONS:READ",
             "ORGANIZATION_PERMISSIONS:WRITE",

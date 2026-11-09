@@ -359,161 +359,172 @@ export const getActiveOrganizationId = (userOrContext = null) => {
     if (directId) return directId;
   }
 
-  if (typeof window === 'undefined') return null;
+  const win = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
+  if (!win) return null;
 
   try {
-    if (window.__REDUX_STORE__?.getState) {
-      const state = window.__REDUX_STORE__.getState();
-      const orgId =
-        sanitize(state.auth?.organization?.id) ||
-        sanitize(state.auth?.activeOrganizationId) ||
-        sanitize(state.auth?.membership?.organizationId) ||
-        sanitize(state.auth?.user?.organizationId) ||
-      sanitize(state.auth?.user?.organization?.id) ||
-        sanitize(state.organization?.id) ||
-        sanitize(state.organization?.selectedOrganization?.id);
-      if (orgId) return orgId;
-    }
-  } catch (e) { }
-
-  try {
-    const saved = localStorage.getItem('selected_organization') || localStorage.getItem('auth_organization');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const savedId = sanitize(parsed?.id || parsed?.organizationId);
-      if (savedId) return savedId;
-    }
-  } catch (e) { }
-
-  try {
-    const authUserStr = localStorage.getItem('auth_user');
-    if (authUserStr) {
-      const authUser = JSON.parse(authUserStr);
-      const authId = sanitize(authUser?.organizationId || authUser?.organization?.id || authUser?.membership?.organizationId);
-      if (authId) return authId;
-    }
-  } catch (e) { }
-
-  try {
-    const persistedRoot = JSON.parse(localStorage.getItem('persist:root'));
-    if (persistedRoot?.auth) {
-      const authState = JSON.parse(persistedRoot.auth);
-      const orgId = sanitize(
-        authState?.organization?.id ||
-        authState?.activeOrganizationId ||
-        authState?.user?.organizationId ||
-        authState?.user?.organization?.id ||
-        authState?.membership?.organizationId
-      );
-      if (orgId) return orgId;
-    }
-  } catch (e) { }
-
-  return null;
-};
-
-/**
- * Builds or filters query parameters according to user role.
- *
- * For OWNER and SystemAdmin:
- *   - Injects the active `companyId` query parameter only if a valid, non-dummy company exists.
- *
- * For every other role (ACCOUNTANT, MEMBER, EMPLOYEE, etc.):
- *   - Completely OMITS `companyId`.
- *   - Strips any existing `companyId` parameter (even if passed by caller).
- *   - Never sends undefined, null, or empty string.
- *
- * @param {Object|URLSearchParams} params - Outgoing request params.
- * @param {Object} [options] - Additional options:
- * @param {string} [options.companyId] - Optional explicit companyId.
- * @param {Object} [options.user] - Optional user context.
- * @param {boolean} [options.forceInclude] - Override to force inclusion if contract demands it.
- * @param {boolean} [options.isPrivileged] - Explicitly pass privileged status.
- * @returns {Object|URLSearchParams} Cleaned params object or URLSearchParams.
- */
-export const buildRoleBasedCompanyParams = (params = {}, options = {}) => {
-  const {
-    companyId,
-    user,
-    forceInclude = false,
-    isPrivileged: explicitPrivileged
-  } = options;
-
-  const privileged = explicitPrivileged !== undefined
-    ? Boolean(explicitPrivileged)
-    : isOwnerOrSystemAdminUser(user);
-
-  const activeCompanyId = isValidCompanyId(companyId)
-    ? String(companyId).trim()
-    : getActiveCompanyId(user);
-
-  if (typeof URLSearchParams !== 'undefined' && params instanceof URLSearchParams) {
-    if ((privileged || forceInclude) && isValidCompanyId(activeCompanyId)) {
-      params.set('companyId', activeCompanyId);
-    } else {
-      params.delete('companyId');
-    }
-    return params;
-  }
-
-  const result = { ...(params || {}) };
-
-  if (privileged || forceInclude) {
-    if (isValidCompanyId(activeCompanyId)) {
-      result.companyId = activeCompanyId;
-    } else {
-      delete result.companyId;
-    }
-  } else {
-    // Non-privileged roles: omit companyId completely!
-    delete result.companyId;
-  }
-
-  // Guard against invalid companyIds or literal 'undefined' / 'null'
-  if (!isValidCompanyId(result.companyId)) {
-    delete result.companyId;
-  }
-
-  return result;
-};
-
-/**
- * Cleans query parameters inside a URL string itself.
- * If a URL string already has `?companyId=...` embedded:
- *   - For non-privileged users: removes `companyId` completely.
- *   - For OWNER/SystemAdmin: synchronizes `companyId` with `activeCompanyId`, or removes if dummy/missing.
- *
- * @param {string} url - Target URL.
- * @param {boolean} isPrivileged - Whether user is OWNER or SystemAdmin.
- * @param {string} [activeCompanyId] - Active company ID to set if privileged.
- * @returns {string} Sanitized URL string.
- */
-export const cleanUrlRoleBasedCompany = (url, isPrivileged, activeCompanyId) => {
-  if (!url || typeof url !== 'string' || !url.includes('?')) return url;
-
-  try {
-    const questionIdx = url.indexOf('?');
-    const pathname = url.substring(0, questionIdx);
-    const queryString = url.substring(questionIdx + 1);
-
-    if (!queryString) return pathname;
-
-    const searchParams = new URLSearchParams(queryString);
-
-    if (isPrivileged) {
-      if (isValidCompanyId(activeCompanyId) && searchParams.has('companyId')) {
-        searchParams.set('companyId', activeCompanyId);
-      } else {
-        searchParams.delete('companyId');
+      if (win.__REDUX_STORE__?.getState) {
+        const state = win.__REDUX_STORE__.getState();
+        const orgId =
+          sanitize(state.auth?.organization?.id) ||
+          sanitize(state.auth?.activeOrganizationId) ||
+          sanitize(state.auth?.membership?.organizationId) ||
+          sanitize(state.auth?.user?.organizationId) ||
+          sanitize(state.auth?.user?.organization?.id) ||
+          sanitize(state.organization?.id) ||
+          sanitize(state.organization?.selectedOrganization?.id);
+        if (orgId) return orgId;
       }
-    } else {
-      searchParams.delete('companyId');
-    }
+    } catch (e) { }
 
-    const cleanQuery = searchParams.toString();
-    return cleanQuery ? `${pathname}?${cleanQuery}` : pathname;
-  } catch (e) {
-    return url;
-  }
-};
+    try {
+        if (typeof localStorage !== 'undefined') {
+          const directKey =
+            sanitize(localStorage.getItem('active_organization_id')) ||
+            sanitize(localStorage.getItem('organizationId')) ||
+            sanitize(localStorage.getItem('organization_id'));
+          if (directKey) return directKey;
+
+          const saved = localStorage.getItem('selected_organization') || localStorage.getItem('auth_organization');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            const savedId = sanitize(parsed?.id || parsed?.organizationId);
+            if (savedId) return savedId;
+          }
+        }
+      } catch (e) { }
+
+      try {
+          if (typeof localStorage !== 'undefined') {
+            const authUserStr = localStorage.getItem('auth_user');
+            if (authUserStr) {
+              const authUser = JSON.parse(authUserStr);
+              const authId = sanitize(authUser?.organizationId || authUser?.organization?.id || authUser?.membership?.organizationId);
+              if (authId) return authId;
+            }
+          }
+        } catch (e) { }
+
+        try {
+          const persistedRoot = JSON.parse(localStorage.getItem('persist:root'));
+          if (persistedRoot?.auth) {
+            const authState = JSON.parse(persistedRoot.auth);
+            const orgId = sanitize(
+              authState?.organization?.id ||
+              authState?.activeOrganizationId ||
+              authState?.user?.organizationId ||
+              authState?.user?.organization?.id ||
+              authState?.membership?.organizationId
+            );
+            if (orgId) return orgId;
+          }
+        } catch (e) { }
+
+        return null;
+      };
+
+      /**
+       * Builds or filters query parameters according to user role.
+       *
+       * For OWNER and SystemAdmin:
+       *   - Injects the active `companyId` query parameter only if a valid, non-dummy company exists.
+       *
+       * For every other role (ACCOUNTANT, MEMBER, EMPLOYEE, etc.):
+       *   - Completely OMITS `companyId`.
+       *   - Strips any existing `companyId` parameter (even if passed by caller).
+       *   - Never sends undefined, null, or empty string.
+       *
+       * @param {Object|URLSearchParams} params - Outgoing request params.
+       * @param {Object} [options] - Additional options:
+       * @param {string} [options.companyId] - Optional explicit companyId.
+       * @param {Object} [options.user] - Optional user context.
+       * @param {boolean} [options.forceInclude] - Override to force inclusion if contract demands it.
+       * @param {boolean} [options.isPrivileged] - Explicitly pass privileged status.
+       * @returns {Object|URLSearchParams} Cleaned params object or URLSearchParams.
+       */
+      export const buildRoleBasedCompanyParams = (params = {}, options = {}) => {
+        const {
+          companyId,
+          user,
+          forceInclude = false,
+          isPrivileged: explicitPrivileged
+        } = options;
+
+        const privileged = explicitPrivileged !== undefined
+          ? Boolean(explicitPrivileged)
+          : isOwnerOrSystemAdminUser(user);
+
+        const activeCompanyId = isValidCompanyId(companyId)
+          ? String(companyId).trim()
+          : getActiveCompanyId(user);
+
+        if (typeof URLSearchParams !== 'undefined' && params instanceof URLSearchParams) {
+          if ((privileged || forceInclude) && isValidCompanyId(activeCompanyId)) {
+            params.set('companyId', activeCompanyId);
+          } else {
+            params.delete('companyId');
+          }
+          return params;
+        }
+
+        const result = { ...(params || {}) };
+
+        if (privileged || forceInclude) {
+          if (isValidCompanyId(activeCompanyId)) {
+            result.companyId = activeCompanyId;
+          } else {
+            delete result.companyId;
+          }
+        } else {
+          // Non-privileged roles: omit companyId completely!
+          delete result.companyId;
+        }
+
+        // Guard against invalid companyIds or literal 'undefined' / 'null'
+        if (!isValidCompanyId(result.companyId)) {
+          delete result.companyId;
+        }
+
+        return result;
+      };
+
+      /**
+       * Cleans query parameters inside a URL string itself.
+       * If a URL string already has `?companyId=...` embedded:
+       *   - For non-privileged users: removes `companyId` completely.
+       *   - For OWNER/SystemAdmin: synchronizes `companyId` with `activeCompanyId`, or removes if dummy/missing.
+       *
+       * @param {string} url - Target URL.
+       * @param {boolean} isPrivileged - Whether user is OWNER or SystemAdmin.
+       * @param {string} [activeCompanyId] - Active company ID to set if privileged.
+       * @returns {string} Sanitized URL string.
+       */
+      export const cleanUrlRoleBasedCompany = (url, isPrivileged, activeCompanyId) => {
+        if (!url || typeof url !== 'string' || !url.includes('?')) return url;
+
+        try {
+          const questionIdx = url.indexOf('?');
+          const pathname = url.substring(0, questionIdx);
+          const queryString = url.substring(questionIdx + 1);
+
+          if (!queryString) return pathname;
+
+          const searchParams = new URLSearchParams(queryString);
+
+          if (isPrivileged) {
+            if (isValidCompanyId(activeCompanyId) && searchParams.has('companyId')) {
+              searchParams.set('companyId', activeCompanyId);
+            } else {
+              searchParams.delete('companyId');
+            }
+          } else {
+            searchParams.delete('companyId');
+          }
+
+          const cleanQuery = searchParams.toString();
+          return cleanQuery ? `${pathname}?${cleanQuery}` : pathname;
+        } catch (e) {
+          return url;
+        }
+      };
 

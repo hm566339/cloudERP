@@ -19,7 +19,14 @@
 
 import axios from 'axios';
 import { detectModule, getRefreshEndpoint, isRefreshEndpoint } from './moduleRegistry.js';
-import { isModuleRefreshing, setRefreshing, enqueue, processQueue } from './refreshQueue.js';
+import {
+  isModuleRefreshing,
+  setRefreshing,
+  setModuleRefreshPromise,
+  getModuleRefreshPromise,
+  enqueue,
+  processQueue,
+} from './refreshQueue.js';
 import { dispatchLogout, isAuthPage } from './logout.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -315,11 +322,20 @@ export const attachRequestInterceptor = (instance) => {
 
           // 3. Request header injection (X-Company-Id) — for ALL users
           if (isValidCompanyId(activeCompanyId)) {
-            if (!config.headers) config.headers = {};
-            config.headers['X-Company-Id'] = activeCompanyId;
+            if (config.headers && typeof config.headers.set === 'function') {
+              config.headers.set('X-Company-Id', activeCompanyId);
+            } else {
+              if (!config.headers) config.headers = {};
+              config.headers['X-Company-Id'] = activeCompanyId;
+            }
           } else if (config.headers) {
-            delete config.headers['X-Company-Id'];
-            delete config.headers['x-company-id'];
+            if (typeof config.headers.delete === 'function') {
+              config.headers.delete('X-Company-Id');
+              config.headers.delete('x-company-id');
+            } else {
+              delete config.headers['X-Company-Id'];
+              delete config.headers['x-company-id'];
+            }
           }
 
           // 4. For Owner / SystemAdmin: synchronize path parameters if URL contains /company/:id or /api/settings/:id
@@ -341,48 +357,83 @@ export const attachRequestInterceptor = (instance) => {
         // Let Axios and the browser handle multipart/form-data boundary automatically
         if (config.data instanceof FormData) {
           if (config.headers) {
-            delete config.headers['Content-Type'];
-            delete config.headers['content-type'];
+            if (typeof config.headers.delete === 'function') {
+              config.headers.delete('Content-Type');
+              config.headers.delete('content-type');
+            } else {
+              delete config.headers['Content-Type'];
+              delete config.headers['content-type'];
+            }
           }
         }
 
         // Attach Authorization header from cookie/storage if not already explicitly present
-        if (config.headers && !config.headers['Authorization'] && !config.headers['authorization']) {
+        const hasAuthHeader = config.headers && (
+          typeof config.headers.has === 'function'
+            ? (config.headers.has('Authorization') || config.headers.has('authorization'))
+            : (config.headers['Authorization'] || config.headers['authorization'])
+        );
+        if (!hasAuthHeader) {
           const token = getFreshAccessToken();
           if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
+            if (config.headers && typeof config.headers.set === 'function') {
+              config.headers.set('Authorization', `Bearer ${token}`);
+            } else {
+              if (!config.headers) config.headers = {};
+              config.headers['Authorization'] = `Bearer ${token}`;
+            }
           }
         }
 
         // Attach X-Organization-Id header for organization APIs if available
-        if (config.headers && !config.headers['X-Organization-Id'] && !config.headers['x-organization-id']) {
-          const activeOrgId = getActiveOrganizationId();
+        const hasOrgHeader = config.headers && (
+          typeof config.headers.has === 'function'
+            ? (config.headers.has('X-Organization-Id') || config.headers.has('x-organization-id'))
+            : (config.headers['X-Organization-Id'] || config.headers['x-organization-id'])
+        );
+        if (!hasOrgHeader) {
+          let activeOrgId = getActiveOrganizationId();
+          if (!activeOrgId && config.params?.organizationId) {
+            activeOrgId = String(config.params.organizationId).trim();
+          }
+          if (!activeOrgId && config.url && typeof config.url === 'string' && config.url.includes('organizationId=')) {
+            try {
+              const parsedUrl = new URL(config.url, 'http://localhost');
+              const qOrgId = parsedUrl.searchParams.get('organizationId');
+              if (qOrgId) activeOrgId = qOrgId.trim();
+            } catch (e) { }
+          }
           if (activeOrgId && (config.url?.includes('/organization') || config.url?.includes('/role-templates'))) {
-            config.headers['X-Organization-Id'] = activeOrgId;
+            if (config.headers && typeof config.headers.set === 'function') {
+              config.headers.set('X-Organization-Id', activeOrgId);
+            } else {
+              if (!config.headers) config.headers = {};
+              config.headers['X-Organization-Id'] = activeOrgId;
+            }
           }
         }
 
         // Attach organizationId query parameter for organization-level APIs if not already set
-          if (config.url?.includes('/role-templates') || config.url?.includes('/organization')) {
-            const activeOrgId = getActiveOrganizationId();
-            if (activeOrgId) {
-              config.params = config.params || {};
-              if (!config.params.organizationId) {
-                config.params.organizationId = activeOrgId;
-              }
+        if (config.url?.includes('/role-templates') || config.url?.includes('/organization')) {
+          const activeOrgId = getActiveOrganizationId();
+          if (activeOrgId) {
+            config.params = config.params || {};
+            if (!config.params.organizationId) {
+              config.params.organizationId = activeOrgId;
             }
           }
-
-          // Request logging omitted in production; no sensitive payload or credentials printed
-        } catch (e) {
-          console.warn('[API REQUEST ERROR] Failed processing request config', e);
         }
-        return config;
-      },
-      (error) => {
-        console.error('[API REQUEST ERROR]', error);
-        return Promise.reject(error);
-      },
+
+        // Request logging omitted in production; no sensitive payload or credentials printed
+      } catch (e) {
+        console.warn('[API REQUEST ERROR] Failed processing request config', e);
+      }
+      return config;
+    },
+    (error) => {
+      console.error('[API REQUEST ERROR]', error);
+      return Promise.reject(error);
+    },
   );
 };
 
@@ -526,8 +577,7 @@ export const attachResponseInterceptor = (instance) => {
         }
       }
 
-      // No refresh in progress — initiate one
-      setRefreshing(moduleName, true);
+      // No refresh in progress — initiate single-flight refresh
       originalRequest._retry = true;
 
       // Only platform super/system admin (loginType === 'ADMIN') uses /admin/token/refresh.
@@ -590,7 +640,7 @@ export const attachResponseInterceptor = (instance) => {
         };
       }
 
-      try {
+      const performRefresh = async () => {
         // Use raw axios (NOT apiClient) to avoid interceptor recursion.
         // withCredentials: true lets the browser send the refresh cookie.
         const refreshResponse = await axios.post(
@@ -640,7 +690,19 @@ export const attachResponseInterceptor = (instance) => {
           }
         }
 
-        const freshToken = newAccessToken || getFreshAccessToken();
+        return newAccessToken || getFreshAccessToken();
+      };
+
+      const refreshPromise = performRefresh();
+      setModuleRefreshPromise(moduleName, refreshPromise);
+
+      try {
+        const freshToken = await refreshPromise;
+
+        // Release refreshing lock and drain all queued requests IMMEDIATELY
+        setRefreshing(moduleName, false);
+        processQueue(moduleName, null, freshToken);
+
         if (freshToken) {
           if (originalRequest?.headers) {
             if (typeof originalRequest.headers.set === 'function') {
@@ -654,14 +716,12 @@ export const attachResponseInterceptor = (instance) => {
           }
         }
 
-        // Token refreshed successfully
-
-        // Resolve all queued requests for this module with the new token
-        processQueue(moduleName, null, freshToken);
-
         // Retry the original request
         return instance(originalRequest);
       } catch (refreshError) {
+        setRefreshing(moduleName, false);
+        processQueue(moduleName, refreshError);
+
         console.error(
           `[Auth] Token refresh failed for module "${moduleName}":`,
           refreshError?.response?.status || refreshError.message,
@@ -672,20 +732,12 @@ export const attachResponseInterceptor = (instance) => {
         // Server error (5xx) or network offline / timeout during refresh: NOT a confirmed session expiry.
         // DO NOT delete cookies, DO NOT call logout, DO NOT clear Redux.
         if (!status || status >= 500) {
-          processQueue(moduleName, refreshError);
           return Promise.reject(refreshError);
         }
 
         // 401, 403 or genuine client rejection -> session is expired or revoked.
-        // Reject all queued requests for this module
-        processQueue(moduleName, refreshError);
-
-        // Logout
         dispatchLogout();
-
         return Promise.reject(refreshError);
-      } finally {
-        setRefreshing(moduleName, false);
       }
     },
   );

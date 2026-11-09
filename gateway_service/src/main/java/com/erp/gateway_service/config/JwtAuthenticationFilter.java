@@ -244,10 +244,23 @@ public class JwtAuthenticationFilter
                         String roles = rolesObj != null ? rolesObj.toString() : "";
                         String scope = claims.get("scope", String.class);
 
-                        log.info("Gateway [AUTHENTICATED] -> user: {}, userId: {}, roles: {}, companyId: {}, method: {}, uri: {}",
-                                        username, userId, roles, companyId, method, path);
+                        String organizationId = claims.get("organizationId", String.class);
+                        if (!StringUtils.hasText(organizationId)) {
+                            organizationId = exchange.getRequest().getHeaders().getFirst("X-Organization-Id");
+                        }
+                        if (!StringUtils.hasText(organizationId)) {
+                            organizationId = exchange.getRequest().getHeaders().getFirst("X-ORGANIZATION-ID");
+                        }
+                        if (!StringUtils.hasText(organizationId)) {
+                            organizationId = exchange.getRequest().getQueryParams().getFirst("organizationId");
+                        }
+
+                        log.info("Gateway [AUTHENTICATED] -> user: {}, userId: {}, roles: {}, companyId: {}, orgId: {}, method: {}, uri: {}",
+                                        username, userId, roles, companyId, organizationId, method, path);
 
                         final String finalToken = token;
+
+                        final String finalOrgId = organizationId == null ? "" : organizationId;
 
                         ServerWebExchange mutatedExchange = exchange.mutate()
                                         .request(
@@ -264,6 +277,10 @@ public class JwtAuthenticationFilter
                                                                         .header("X-COMPANY-ID",
                                                                                         companyId == null ? ""
                                                                                                         : companyId)
+                                                                        .header("X-ORGANIZATION-ID",
+                                                                                        finalOrgId)
+                                                                        .header("X-Organization-Id",
+                                                                                        finalOrgId)
                                                                         .header("X-USERNAME",
                                                                                         username == null ? ""
                                                                                                         : username)

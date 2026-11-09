@@ -57,23 +57,33 @@ sso:
 
       ORGANIZATION_ROLE_TEMPLATES:
         - "/api/sso/organization/role-templates/**"
+        - "/api/sso/organization/role-templates"
         - "/api/organization/role-templates/**"
+        - "/api/organization/role-templates"
 
       ORGANIZATION_MEMBERS:
         - "/api/sso/organization/members/**"
+        - "/api/sso/organization/members"
         - "/api/organization/members/**"
+        - "/api/organization/members"
 
       ORGANIZATION_PERMISSIONS:
         - "/api/sso/organization/permissions/**"
+        - "/api/sso/organization/permissions"
         - "/api/organization/permissions/**"
+        - "/api/organization/permissions"
 
       ORGANIZATION_APPEARANCE:
         - "/api/sso/organization/appearance/**"
+        - "/api/sso/organization/appearance"
         - "/api/organization/appearance/**"
+        - "/api/organization/appearance"
 
       ORGANIZATION:
         - "/api/sso/organization/**"
+        - "/api/sso/organization"
         - "/api/organization/**"
+        - "/api/organization"
         - "/api/settings/**"
         - "/api/sso/settings/**"
 

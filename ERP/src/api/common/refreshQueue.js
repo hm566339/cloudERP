@@ -2,12 +2,10 @@
  * @fileoverview Per-module refresh queue manager.
  *
  * Each backend module gets its own independent refresh state. This ensures:
- * - Only ONE refresh request per module at a time (no duplicate refreshes).
+ * - Only ONE refresh request per module at a time (single-flight deduplication).
  * - Multiple modules can refresh CONCURRENTLY (account refreshing won't block HR).
- * - All pending requests for a module are resolved/rejected together after refresh.
- *
- * @see {import('./types').RefreshState}
- * @see {import('./types').QueuedRequest}
+ * - All pending/queued requests for a module are resolved/rejected cleanly together.
+ * - Single-flight promise sharing prevents hanging/pending request deadlocks.
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -16,19 +14,19 @@
 
 /**
  * Per-module refresh state map.
- * @type {Map<string, import('./types').RefreshState>}
  */
 const moduleStates = new Map();
 
 /**
  * Get or initialize the refresh state for a module.
  * @param {string} moduleName
- * @returns {import('./types').RefreshState}
+ * @returns {object}
  */
 const getState = (moduleName) => {
   if (!moduleStates.has(moduleName)) {
     moduleStates.set(moduleName, {
       isRefreshing: false,
+      activePromise: null,
       queue: [],
     });
   }
@@ -46,7 +44,8 @@ const getState = (moduleName) => {
  * @returns {boolean}
  */
 export const isModuleRefreshing = (moduleName) => {
-  return getState(moduleName).isRefreshing;
+  const state = getState(moduleName);
+  return state.isRefreshing || state.activePromise !== null;
 };
 
 /**
@@ -56,24 +55,55 @@ export const isModuleRefreshing = (moduleName) => {
  * @param {boolean} value - True = refresh in progress, false = refresh complete.
  */
 export const setRefreshing = (moduleName, value) => {
-  getState(moduleName).isRefreshing = value;
+  const state = getState(moduleName);
+  state.isRefreshing = Boolean(value);
+  if (!value) {
+    state.activePromise = null;
+  }
 };
 
 /**
- * Enqueue a pending request that is waiting for a module's refresh to complete.
- * Returns a Promise that resolves when the refresh succeeds, or rejects if it fails.
+ * Bind an in-flight refresh promise to a module for single-flight sharing.
+ *
+ * @param {string} moduleName
+ * @param {Promise<string|null>|null} promise
+ */
+export const setModuleRefreshPromise = (moduleName, promise) => {
+  const state = getState(moduleName);
+  state.activePromise = promise;
+  state.isRefreshing = promise !== null;
+};
+
+/**
+ * Get the in-flight refresh promise for a module, if any.
+ *
+ * @param {string} moduleName
+ * @returns {Promise<string|null>|null}
+ */
+export const getModuleRefreshPromise = (moduleName) => {
+  return getState(moduleName).activePromise;
+};
+
+/**
+ * Enqueue or await the active refresh promise.
+ * Returns a Promise that resolves with the fresh token when refresh succeeds,
+ * or rejects if it fails.
  *
  * @param {string} moduleName - Module name.
- * @returns {Promise<void>} Resolves on successful refresh, rejects on failure.
+ * @returns {Promise<string|null>} Resolves on successful refresh, rejects on failure.
  */
 export const enqueue = (moduleName) => {
+  const state = getState(moduleName);
+  if (state.activePromise) {
+    return state.activePromise;
+  }
   return new Promise((resolve, reject) => {
-    getState(moduleName).queue.push({ resolve, reject });
+    state.queue.push({ resolve, reject });
   });
 };
 
 /**
- * Process (resolve or reject) all queued requests for a module.
+ * Process (resolve or reject) all queued requests for a module and reset refresh state.
  *
  * @param {string} moduleName - Module name.
  * @param {Error | null} error - If null, all queued requests are resolved.
@@ -82,7 +112,10 @@ export const enqueue = (moduleName) => {
  */
 export const processQueue = (moduleName, error, token = null) => {
   const state = getState(moduleName);
-  const queue = [...state.queue]; // Snapshot to avoid mutation during iteration
+  state.isRefreshing = false;
+  state.activePromise = null;
+
+  const queue = [...state.queue];
   state.queue = [];
 
   queue.forEach(({ resolve, reject }) => {
@@ -99,29 +132,29 @@ export const processQueue = (moduleName, error, token = null) => {
  * Used during logout to ensure a clean slate.
  */
 export const clearAllQueues = () => {
-  moduleStates.forEach((state, moduleName) => {
-    // Reject any remaining queued requests
+  moduleStates.forEach((state) => {
     if (state.queue.length > 0) {
       const logoutError = new Error('Session terminated — all pending requests cancelled.');
       state.queue.forEach(({ reject }) => reject(logoutError));
       state.queue = [];
     }
     state.isRefreshing = false;
+    state.activePromise = null;
   });
   moduleStates.clear();
 };
 
 /**
  * Get debug info about all module states.
- * Useful for development debugging.
  *
- * @returns {Object<string, { isRefreshing: boolean, queueLength: number }>}
+ * @returns {Object<string, { isRefreshing: boolean, hasActivePromise: boolean, queueLength: number }>}
  */
 export const getDebugInfo = () => {
   const info = {};
   moduleStates.forEach((state, name) => {
     info[name] = {
       isRefreshing: state.isRefreshing,
+      hasActivePromise: state.activePromise !== null,
       queueLength: state.queue.length,
     };
   });

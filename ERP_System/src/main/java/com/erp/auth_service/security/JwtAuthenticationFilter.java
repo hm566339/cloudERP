@@ -429,51 +429,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
 
-                String username = jwtService.extractUsername(token);
-                if (username != null) {
-                    CustomUserDetails userDetails = new CustomUserDetails(session.getUser());
-                    if (jwtService.isTokenValid(token, userDetails.getUsername())
-                            || (jwtService.isTokenValid(token) && username.equalsIgnoreCase(userDetails.getUsername()))) {
+                CustomUserDetails userDetails = new CustomUserDetails(session.getUser());
 
-                        if (session.getCompany() != null && session.getCompany().getCompanyCode() != null) {
-                            TenantContext.set(session.getCompany().getCompanyCode());
-                        } else if (effectiveOrg.getOrganizationCode() != null) {
-                            TenantContext.set(effectiveOrg.getOrganizationCode());
-                        }
+                if (session.getCompany() != null && session.getCompany().getCompanyCode() != null) {
+                    TenantContext.set(session.getCompany().getCompanyCode());
+                } else if (effectiveOrg.getOrganizationCode() != null) {
+                    TenantContext.set(effectiveOrg.getOrganizationCode());
+                }
 
-                        RequestContext.set(
-                                session.getUser().getId(),
-                                effectiveOrg.getId(),
-                                session.getCompany() != null ? session.getCompany().getId() : null,
-                                session.getModule() != null ? session.getModule().getClientId() : null,
-                                effectiveOrg.getAccessMode() != null
-                                        ? effectiveOrg.getAccessMode()
-                                        : AccessMode.FULL);
+                RequestContext.set(
+                        session.getUser().getId(),
+                        effectiveOrg.getId(),
+                        session.getCompany() != null ? session.getCompany().getId() : null,
+                        session.getModule() != null ? session.getModule().getClientId() : null,
+                        effectiveOrg.getAccessMode() != null
+                                ? effectiveOrg.getAccessMode()
+                                : AccessMode.FULL);
 
-                        if (effectiveOrg.getAccessMode() == AccessMode.READ_ONLY
-                                && isBusinessWrite(request)) {
-                            rejectForbidden(response, "Organization is read-only");
-                            return;
-                        }
+                if (effectiveOrg.getAccessMode() == AccessMode.READ_ONLY
+                        && isBusinessWrite(request)) {
+                    rejectForbidden(response, "Organization is read-only");
+                    return;
+                }
 
-                        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-                        authorities.add(new SimpleGrantedAuthority("ROLE_OWNER"));
-                        authorities.add(new SimpleGrantedAuthority("OWNER"));
-                        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-                        for (String r : jwtService.extractRoles(token)) {
-                            if (!"OWNER".equalsIgnoreCase(r) && !"ROLE_OWNER".equalsIgnoreCase(r)) {
-                                authorities.add(new SimpleGrantedAuthority(r));
-                            }
-                        }
-
-                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                authorities);
-                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                authorities.add(new SimpleGrantedAuthority("ROLE_OWNER"));
+                authorities.add(new SimpleGrantedAuthority("OWNER"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+                for (String r : jwtService.extractRoles(token)) {
+                    if (!"OWNER".equalsIgnoreCase(r) && !"ROLE_OWNER".equalsIgnoreCase(r)) {
+                        authorities.add(new SimpleGrantedAuthority(r));
                     }
                 }
+
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        authorities);
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
 
                 filterChain.doFilter(request, response);
                 return;
@@ -503,86 +497,77 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
 
-            String username = jwtService.extractUsername(token);
+            CustomUserDetails userDetails = new CustomUserDetails(session.getUser());
 
-            if (username != null) {
+            String companyCode = session.getCompany() != null
+                    ? session.getCompany().getCompanyCode()
+                    : jwtService.extractClaims(token).get("companyCode", String.class);
 
-                CustomUserDetails userDetails = new CustomUserDetails(session.getUser());
-
-                if (jwtService.isTokenValid(token, userDetails.getUsername())
-                        || (jwtService.isTokenValid(token) && username.equalsIgnoreCase(userDetails.getUsername()))) {
-
-                    String companyCode = session.getCompany() != null
-                            ? session.getCompany().getCompanyCode()
-                            : jwtService.extractClaims(token).get("companyCode", String.class);
-
-                    if (companyCode == null && isCompanyScopedPath(path)) {
-                        rejectForbidden(response, "Company-scoped session required for company business APIs");
-                        return;
-                    }
-
-                    if (companyCode != null) {
-                        TenantContext.set(companyCode);
-                    } else if (effectiveOrg != null && effectiveOrg.getOrganizationCode() != null) {
-                        TenantContext.set(effectiveOrg.getOrganizationCode());
-                    }
-
-                    if (effectiveOrg != null) {
-                        RequestContext.set(
-                                session.getUser().getId(),
-                                effectiveOrg.getId(),
-                                session.getCompany() != null ? session.getCompany().getId() : null,
-                                session.getModule() != null ? session.getModule().getClientId() : null,
-                                effectiveOrg.getAccessMode() != null ? effectiveOrg.getAccessMode() : AccessMode.FULL);
-                        if (effectiveOrg.getAccessMode() == AccessMode.READ_ONLY
-                                && isBusinessWrite(request)) {
-                            rejectForbidden(response, "Organization is read-only");
-                            return;
-                        }
-                    } else {
-                        UUID fallbackOrgId = null;
-                        String headerOrgStr = request.getHeader("X-Organization-Id");
-                        if (headerOrgStr != null && !headerOrgStr.isBlank()) {
-                            try {
-                                fallbackOrgId = UUID.fromString(headerOrgStr.trim());
-                            } catch (Exception ignored) {
-                            }
-                        }
-                        RequestContext.set(
-                                session.getUser().getId(),
-                                fallbackOrgId,
-                                isSystemAdmin ? null
-                                        : (session.getCompany() != null ? session.getCompany().getId() : null),
-                                session.getModule() != null ? session.getModule().getClientId() : null,
-                                AccessMode.FULL);
-                    }
-
-                    // Employees do not inherit organization-owner permissions
-                    List<SimpleGrantedAuthority> authorities = new ArrayList<>(jwtService.extractRoles(token)
-                            .stream()
-                            .filter(r -> !"OWNER".equalsIgnoreCase(r) && !"ROLE_OWNER".equalsIgnoreCase(r))
-                            .map(SimpleGrantedAuthority::new)
-                            .toList());
-                    if (isSystemAdmin && authorities.stream().noneMatch(a -> "SYSTEM_ADMIN".equals(a.getAuthority()))) {
-                        authorities.add(new SimpleGrantedAuthority("SYSTEM_ADMIN"));
-                    }
-                    if (authorities.stream().noneMatch(a -> "ROLE_USER".equals(a.getAuthority()))) {
-                        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-                    }
-
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            authorities);
-
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request));
-
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(authToken);
-                }
+            if (companyCode == null && isCompanyScopedPath(path)) {
+                rejectForbidden(response, "Company-scoped session required for company business APIs");
+                return;
             }
+
+            if (companyCode != null) {
+                TenantContext.set(companyCode);
+            } else if (effectiveOrg != null && effectiveOrg.getOrganizationCode() != null) {
+                TenantContext.set(effectiveOrg.getOrganizationCode());
+            }
+
+            if (effectiveOrg != null) {
+                RequestContext.set(
+                        session.getUser().getId(),
+                        effectiveOrg.getId(),
+                        session.getCompany() != null ? session.getCompany().getId() : null,
+                        session.getModule() != null ? session.getModule().getClientId() : null,
+                        effectiveOrg.getAccessMode() != null ? effectiveOrg.getAccessMode() : AccessMode.FULL);
+                if (effectiveOrg.getAccessMode() == AccessMode.READ_ONLY
+                        && isBusinessWrite(request)) {
+                    rejectForbidden(response, "Organization is read-only");
+                    return;
+                }
+            } else {
+                UUID fallbackOrgId = null;
+                String headerOrgStr = request.getHeader("X-Organization-Id");
+                if (headerOrgStr != null && !headerOrgStr.isBlank()) {
+                    try {
+                        fallbackOrgId = UUID.fromString(headerOrgStr.trim());
+                    } catch (Exception ignored) {
+                    }
+                }
+                RequestContext.set(
+                        session.getUser().getId(),
+                        fallbackOrgId,
+                        isSystemAdmin ? null
+                                : (session.getCompany() != null ? session.getCompany().getId() : null),
+                        session.getModule() != null ? session.getModule().getClientId() : null,
+                        AccessMode.FULL);
+            }
+
+            // Employees do not inherit organization-owner permissions
+            List<SimpleGrantedAuthority> authorities = new ArrayList<>(jwtService.extractRoles(token)
+                    .stream()
+                    .filter(r -> !"OWNER".equalsIgnoreCase(r) && !"ROLE_OWNER".equalsIgnoreCase(r))
+                    .map(SimpleGrantedAuthority::new)
+                    .toList());
+            if (isSystemAdmin && authorities.stream().noneMatch(a -> "SYSTEM_ADMIN".equals(a.getAuthority()))) {
+                authorities.add(new SimpleGrantedAuthority("SYSTEM_ADMIN"));
+            }
+            if (authorities.stream().noneMatch(a -> "ROLE_USER".equals(a.getAuthority()))) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+            }
+
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    authorities);
+
+            authToken.setDetails(
+                    new WebAuthenticationDetailsSource()
+                            .buildDetails(request));
+
+            SecurityContextHolder.getContext()
+                    .setAuthentication(authToken);
 
             filterChain.doFilter(request, response);
 
