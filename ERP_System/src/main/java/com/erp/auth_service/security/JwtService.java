@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -45,16 +46,39 @@ public class JwtService {
         }
     }
 
-    private static final long ACCESS_EXPIRATION = 1000 * 60 * 30; // 30 min
+    @Value("${security.jwt.access-token-expiration-minutes:30}")
+    private long accessTokenExpirationMinutes = 30;
+
     private static final long REFRESH_EXPIRATION = 1000L * 60 * 60 * 24 * 30; // 30 days
+
+    public JwtService(long accessTokenExpirationMinutes) {
+        this();
+        this.accessTokenExpirationMinutes = accessTokenExpirationMinutes;
+    }
+
+    public long getAccessTokenExpirationMinutes() {
+        return accessTokenExpirationMinutes;
+    }
+
+    public void setAccessTokenExpirationMinutes(long accessTokenExpirationMinutes) {
+        this.accessTokenExpirationMinutes = accessTokenExpirationMinutes;
+    }
+
+    public long getAccessTokenExpirationMillis() {
+        return accessTokenExpirationMinutes * 60 * 1000L;
+    }
 
     // ================= ACCESS TOKEN =================
 
     public String generateAccessToken(String username, Map<String, Object> claims) {
+        return generateAccessToken(username, claims, accessTokenExpirationMinutes);
+    }
 
+    public String generateAccessToken(String username, Map<String, Object> claims, long expirationMinutes) {
+        long effectiveMinutes = expirationMinutes > 0 ? expirationMinutes : accessTokenExpirationMinutes;
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
-        Date expiry = new Date(nowMillis + ACCESS_EXPIRATION);
+        Date expiry = new Date(nowMillis + (effectiveMinutes * 60 * 1000L));
 
         return Jwts.builder()
                 .claims(claims)

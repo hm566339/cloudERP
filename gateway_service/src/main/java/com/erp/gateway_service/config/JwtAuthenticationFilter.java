@@ -236,6 +236,15 @@ public class JwtAuthenticationFilter
                                         .parseSignedClaims(token)
                                         .getPayload();
 
+                        String tokenType = claims.get("token_type", String.class);
+                        if ("refresh".equalsIgnoreCase(tokenType)) {
+                                log.warn("Gateway [UNAUTHORIZED] -> [{}] {} Refresh token presented as access token",
+                                                method, path);
+                                return Mono.error(new ResponseStatusException(
+                                                HttpStatus.UNAUTHORIZED,
+                                                "Refresh token cannot be used as an access token"));
+                        }
+
                         String userId = claims.get("userId", String.class);
                         String companyCode = claims.get("companyCode", String.class);
                         String companyId = claims.get("companyId", String.class);

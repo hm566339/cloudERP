@@ -68,10 +68,23 @@ public class AuthServiceImpl implements AuthService {
         @org.springframework.beans.factory.annotation.Autowired(required = false)
         private com.erp.auth_service.repository.OrganizationSecuritySettingsRepository organizationSecuritySettingsRepository;
 
-        private static final int ACCESS_TOKEN_MINUTES = 15;
+        private static final int DEFAULT_ACCESS_TOKEN_MINUTES = 30;
         private static final int REFRESH_TOKEN_DAYS = 7;
         private static final int MAX_FAILED_ATTEMPTS = 5;
         private static final int LOCKOUT_MINUTES = 30;
+
+        public int getAccessTokenExpirationMinutes() {
+                if (jwtService != null) {
+                        try {
+                                long minutes = jwtService.getAccessTokenExpirationMinutes();
+                                if (minutes > 0) {
+                                        return (int) minutes;
+                                }
+                        } catch (Exception ignored) {
+                        }
+                }
+                return DEFAULT_ACCESS_TOKEN_MINUTES;
+        }
 
         @Value("${api.frontend}")
         private String url;
@@ -765,7 +778,9 @@ public class AuthServiceImpl implements AuthService {
                 }
                 try {
                         Map<String, Object> claims = buildOwnerClaims(user, organization);
-                        String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
+                        int sessionMinutes = resolveSessionTimeoutMinutes(
+                                        organization != null ? organization.getId() : null);
+                        String accessToken = jwtService.generateAccessToken(user.getUsername(), claims, sessionMinutes);
                         String refreshToken = jwtService.generateRefreshToken(user.getUsername(),
                                         organization.getOrganizationCode());
 
@@ -778,11 +793,7 @@ public class AuthServiceImpl implements AuthService {
                                                 .accessToken(accessToken)
                                                 .refreshToken(refreshToken)
                                                 .accessTokenValidTill(
-                                                                LocalDateTime.now().plusMinutes(
-                                                                                resolveSessionTimeoutMinutes(
-                                                                                                organization != null
-                                                                                                                ? organization.getId()
-                                                                                                                : null)))
+                                                                LocalDateTime.now().plusMinutes(sessionMinutes))
                                                 .refreshTokenValidTill(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
                                                 .ipAddress(ip)
                                                 .userAgent(userAgent)
@@ -851,7 +862,12 @@ public class AuthServiceImpl implements AuthService {
                                         : ((module != null) ? "ACCOUNT" : "ERP_WORKSPACE");
 
                         Map<String, Object> claims = buildClaims(user, company, module, effectiveClientId);
-                        String accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
+                        UUID effectiveOrgId = organization != null ? organization.getId()
+                                        : (company != null && company.getOrganization() != null
+                                                        ? company.getOrganization().getId()
+                                                        : null);
+                        int sessionMinutes = resolveSessionTimeoutMinutes(effectiveOrgId);
+                        String accessToken = jwtService.generateAccessToken(user.getUsername(), claims, sessionMinutes);
                         String refreshToken = jwtService.generateRefreshToken(user.getUsername(),
                                         company.getCompanyCode());
 
@@ -865,15 +881,7 @@ public class AuthServiceImpl implements AuthService {
                                                 .accessToken(accessToken)
                                                 .refreshToken(refreshToken)
                                                 .accessTokenValidTill(
-                                                                LocalDateTime.now().plusMinutes(
-                                                                                resolveSessionTimeoutMinutes(
-                                                                                                organization != null
-                                                                                                                ? organization.getId()
-                                                                                                                : (company != null
-                                                                                                                                && company.getOrganization() != null
-                                                                                                                                                ? company.getOrganization()
-                                                                                                                                                                .getId()
-                                                                                                                                                : null))))
+                                                                LocalDateTime.now().plusMinutes(sessionMinutes))
                                                 .refreshTokenValidTill(LocalDateTime.now().plusDays(REFRESH_TOKEN_DAYS))
                                                 .ipAddress(ip)
                                                 .userAgent(userAgent)
@@ -1222,10 +1230,14 @@ public class AuthServiceImpl implements AuthService {
                 String newAccessToken;
                 String newRefreshToken;
 
+                int sessionMinutes = isOwnerSession
+                                ? resolveSessionTimeoutMinutes(session.getOrganization() != null ? session.getOrganization().getId() : null)
+                                : resolveSessionTimeoutMinutes(company != null && company.getOrganization() != null ? company.getOrganization().getId() : (session.getOrganization() != null ? session.getOrganization().getId() : null));
+
                 if (isOwnerSession) {
                         Map<String, Object> claims = buildOwnerClaims(user, session.getOrganization());
                         claims.put("sessionId", session.getId().toString());
-                        newAccessToken = jwtService.generateAccessToken(user.getUsername(), claims);
+                        newAccessToken = jwtService.generateAccessToken(user.getUsername(), claims, sessionMinutes);
                         newRefreshToken = jwtService.generateRefreshToken(user.getUsername(),
                                         session.getOrganization().getOrganizationCode());
                 } else {
@@ -1243,7 +1255,8 @@ public class AuthServiceImpl implements AuthService {
 
                         newAccessToken = jwtService.generateAccessToken(
                                         user.getUsername(),
-                                        claims);
+                                        claims,
+                                        sessionMinutes);
 
                         newRefreshToken = jwtService.generateRefreshToken(
                                         user.getUsername(),
@@ -1254,7 +1267,7 @@ public class AuthServiceImpl implements AuthService {
                 session.setRefreshToken(newRefreshToken);
                 session.setAccessTokenValidTill(
                                 LocalDateTime.now()
-                                                .plusMinutes(ACCESS_TOKEN_MINUTES));
+                                                .plusMinutes(sessionMinutes));
                 session.setRefreshTokenValidTill(
                                 LocalDateTime.now()
                                                 .plusDays(REFRESH_TOKEN_DAYS));
@@ -1277,7 +1290,7 @@ public class AuthServiceImpl implements AuthService {
                 response.setAccessToken(newAccessToken);
                 response.setRefreshToken(newRefreshToken);
                 response.setExpiresIn(
-                                (long) (ACCESS_TOKEN_MINUTES * 60));
+                                (long) (sessionMinutes * 60));
                 return response;
         }
 
@@ -1335,7 +1348,7 @@ public class AuthServiceImpl implements AuthService {
                                                         .accessToken(activeAccess)
                                                         .refreshToken(activeRefresh != null ? activeRefresh
                                                                         : presentedToken)
-                                                        .expiresIn((long) ACCESS_TOKEN_MINUTES * 60)
+                                                        .expiresIn((long) getAccessTokenExpirationMinutes() * 60)
                                                         .build();
                                 }
                         }
@@ -1425,10 +1438,14 @@ public class AuthServiceImpl implements AuthService {
                 String accessToken;
                 String refreshToken;
 
+                int sessionMinutes = isOwnerSession
+                                ? resolveSessionTimeoutMinutes(session.getOrganization() != null ? session.getOrganization().getId() : null)
+                                : resolveSessionTimeoutMinutes(company != null && company.getOrganization() != null ? company.getOrganization().getId() : (session.getOrganization() != null ? session.getOrganization().getId() : null));
+
                 if (isOwnerSession) {
                         Map<String, Object> claims = buildOwnerClaims(user, session.getOrganization());
                         claims.put("sessionId", session.getId().toString());
-                        accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
+                        accessToken = jwtService.generateAccessToken(user.getUsername(), claims, sessionMinutes);
                         refreshToken = jwtService.generateRefreshToken(user.getUsername(),
                                         session.getOrganization().getOrganizationCode());
                 } else {
@@ -1437,12 +1454,12 @@ public class AuthServiceImpl implements AuthService {
                                         : (clientId != null ? clientId.toString() : "ERP_WORKSPACE");
                         Map<String, Object> claims = buildClaims(user, company, module, effectiveClientId);
                         claims.put("sessionId", session.getId().toString());
-                        accessToken = jwtService.generateAccessToken(user.getUsername(), claims);
+                        accessToken = jwtService.generateAccessToken(user.getUsername(), claims, sessionMinutes);
                         refreshToken = jwtService.generateRefreshToken(user.getUsername(), company.getCompanyCode());
                 }
 
                 session.setAccessToken(accessToken);
-                session.setAccessTokenValidTill(now.plusMinutes(ACCESS_TOKEN_MINUTES));
+                session.setAccessTokenValidTill(now.plusMinutes(sessionMinutes));
                 session.setRefreshToken(refreshToken);
                 session.setRefreshTokenValidTill(now.plusDays(REFRESH_TOKEN_DAYS));
                 session.setModule(module);
@@ -1461,7 +1478,7 @@ public class AuthServiceImpl implements AuthService {
                 return RefreshTokenResponse.builder()
                                 .accessToken(accessToken)
                                 .refreshToken(refreshToken)
-                                .expiresIn((long) ACCESS_TOKEN_MINUTES * 60)
+                                .expiresIn((long) sessionMinutes * 60)
                                 .build();
         }
 
@@ -1564,9 +1581,12 @@ public class AuthServiceImpl implements AuthService {
                                 company);
                 claims.put("sessionId", session.getId().toString());
 
+                int sessionMinutes = getAccessTokenExpirationMinutes();
+
                 String newAccessToken = jwtService.generateAccessToken(
                                 user.getUsername(),
-                                claims);
+                                claims,
+                                sessionMinutes);
 
                 String newRefreshToken = jwtService.generateRefreshToken(
                                 user.getUsername(),
@@ -1578,7 +1598,7 @@ public class AuthServiceImpl implements AuthService {
 
                 session.setAccessTokenValidTill(
                                 now.plusMinutes(
-                                                ACCESS_TOKEN_MINUTES));
+                                                sessionMinutes));
 
                 session.setRefreshTokenValidTill(
                                 now.plusDays(
@@ -1599,7 +1619,7 @@ public class AuthServiceImpl implements AuthService {
                                 .toRefreshTokenResponse(session);
 
                 response.setExpiresIn(
-                                (long) ACCESS_TOKEN_MINUTES * 60);
+                                (long) sessionMinutes * 60);
 
                 return response;
         }
@@ -2022,15 +2042,22 @@ public class AuthServiceImpl implements AuthService {
                                 (module != null ? module.getId() : "NONE"),
                                 effectiveClientId);
 
+                int sessionMinutes = resolveSessionTimeoutMinutes(
+                                code.getOrganization() != null ? code.getOrganization().getId()
+                                                : (company != null && company.getOrganization() != null
+                                                                ? company.getOrganization().getId()
+                                                                : null));
+
                 String accessToken = jwtService.generateAccessToken(
                                 user.getUsername(),
-                                claims);
+                                claims,
+                                sessionMinutes);
 
                 log.info(
                                 "Tokens generated | userId={} | username={} | accessTokenExpiresInMinutes={} | refreshTokenExpiresInDays={}",
                                 user.getId(),
                                 user.getUsername(),
-                                ACCESS_TOKEN_MINUTES,
+                                sessionMinutes,
                                 REFRESH_TOKEN_DAYS);
 
                 Session session = Session.builder()
@@ -2042,7 +2069,7 @@ public class AuthServiceImpl implements AuthService {
                                 .refreshToken(refreshToken)
                                 .accessTokenValidTill(
                                                 LocalDateTime.now()
-                                                                .plusMinutes(ACCESS_TOKEN_MINUTES))
+                                                                .plusMinutes(sessionMinutes))
                                 .refreshTokenValidTill(
                                                 LocalDateTime.now()
                                                                 .plusDays(REFRESH_TOKEN_DAYS))
@@ -2071,13 +2098,13 @@ public class AuthServiceImpl implements AuthService {
                                 user.getId(),
                                 user.getUsername(),
                                 effectiveClientId,
-                                (ACCESS_TOKEN_MINUTES * 60));
+                                (sessionMinutes * 60));
 
                 return TokenResponse.builder()
                                 .accessToken(accessToken)
                                 .refreshToken(refreshToken)
                                 .expiresIn(
-                                                (long) (ACCESS_TOKEN_MINUTES * 60))
+                                                (long) (sessionMinutes * 60))
                                 .user(userMapper.toResponse(user))
                                 .build();
         }
@@ -3140,10 +3167,15 @@ public class AuthServiceImpl implements AuthService {
                                 });
 
                 Map<String, Object> claims = buildAdminClaims(user, user.getCompany());
+                int sessionMinutes = resolveSessionTimeoutMinutes(
+                                user.getCompany() != null && user.getCompany().getOrganization() != null
+                                                ? user.getCompany().getOrganization().getId()
+                                                : null);
 
                 String accessToken = jwtService.generateAccessToken(
                                 user.getUsername(),
-                                claims);
+                                claims,
+                                sessionMinutes);
 
                 String refreshToken = jwtService.generateRefreshToken(
                                 user.getUsername(),
@@ -3157,7 +3189,7 @@ public class AuthServiceImpl implements AuthService {
                                 .refreshToken(refreshToken)
                                 .accessTokenValidTill(
                                                 LocalDateTime.now()
-                                                                .plusMinutes(ACCESS_TOKEN_MINUTES))
+                                                                .plusMinutes(sessionMinutes))
                                 .refreshTokenValidTill(
                                                 LocalDateTime.now()
                                                                 .plusDays(REFRESH_TOKEN_DAYS))
@@ -3575,8 +3607,8 @@ public class AuthServiceImpl implements AuthService {
                         return organizationSecuritySettingsRepository.findByOrganization_Id(orgId)
                                         .map(com.erp.auth_service.model.OrganizationSecuritySettings::getSessionTimeoutMinutes)
                                         .filter(m -> m != null && m > 0)
-                                        .orElse(ACCESS_TOKEN_MINUTES);
+                                        .orElse(getAccessTokenExpirationMinutes());
                 }
-                return ACCESS_TOKEN_MINUTES;
+                return getAccessTokenExpirationMinutes();
         }
 }

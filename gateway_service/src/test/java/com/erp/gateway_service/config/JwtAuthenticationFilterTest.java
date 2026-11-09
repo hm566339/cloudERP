@@ -6,8 +6,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 
 import java.lang.reflect.Field;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class JwtAuthenticationFilterTest {
 
@@ -71,6 +74,85 @@ class JwtAuthenticationFilterTest {
             assertEquals(List.of(organizationId),
                     forwarded.get().getRequest().getHeaders().get("X-Organization-Id"));
         }
+    }
+
+    @Test
+    @DisplayName("A valid refresh token is rejected when presented to a protected endpoint")
+    void testRefreshTokenIsRejectedAsAccessToken() throws Exception {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        Field publicKeyField = JwtAuthenticationFilter.class.getDeclaredField("publicKey");
+        publicKeyField.setAccessible(true);
+
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter();
+        publicKeyField.set(filter, keyPair.getPublic());
+
+        String refreshToken = Jwts.builder()
+                .subject("user@example.test")
+                .claim("token_type", "refresh")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 60_000))
+                .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
+                .compact();
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/sso/me")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + refreshToken)
+                        .build());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> filter.filter(exchange, downstream -> reactor.core.publisher.Mono.empty())
+                        .block(Duration.ofSeconds(3)));
+
+        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Malformed, expired, wrong-signature, and missing tokens are rejected")
+    void testInvalidAndMissingTokensAreRejected() throws Exception {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        KeyPair trustedKeyPair = keyPairGenerator.generateKeyPair();
+        KeyPair untrustedKeyPair = keyPairGenerator.generateKeyPair();
+        Field publicKeyField = JwtAuthenticationFilter.class.getDeclaredField("publicKey");
+        publicKeyField.setAccessible(true);
+
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter();
+        publicKeyField.set(filter, trustedKeyPair.getPublic());
+
+        String expiredToken = Jwts.builder()
+                .subject("user@example.test")
+                .issuedAt(new Date(System.currentTimeMillis() - 120_000))
+                .expiration(new Date(System.currentTimeMillis() - 60_000))
+                .signWith(trustedKeyPair.getPrivate(), Jwts.SIG.RS256)
+                .compact();
+        String wrongSignatureToken = Jwts.builder()
+                .subject("user@example.test")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 60_000))
+                .signWith(untrustedKeyPair.getPrivate(), Jwts.SIG.RS256)
+                .compact();
+
+        for (String token : List.of("not-a-jwt", expiredToken, wrongSignatureToken)) {
+            assertUnauthorized(filter, token);
+        }
+        assertUnauthorized(filter, null);
+    }
+
+    private void assertUnauthorized(JwtAuthenticationFilter filter, String token) {
+        MockServerHttpRequest.BaseBuilder<?> request = MockServerHttpRequest.get("/api/sso/me");
+        if (token != null) {
+            request.header(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        }
+        MockServerWebExchange exchange = MockServerWebExchange.from(request.build());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> filter.filter(exchange, downstream -> reactor.core.publisher.Mono.empty())
+                        .block(Duration.ofSeconds(3)));
+
+        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
     }
 
     @Test
