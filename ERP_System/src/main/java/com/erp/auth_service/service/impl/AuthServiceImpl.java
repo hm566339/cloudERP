@@ -1231,8 +1231,13 @@ public class AuthServiceImpl implements AuthService {
                 String newRefreshToken;
 
                 int sessionMinutes = isOwnerSession
-                                ? resolveSessionTimeoutMinutes(session.getOrganization() != null ? session.getOrganization().getId() : null)
-                                : resolveSessionTimeoutMinutes(company != null && company.getOrganization() != null ? company.getOrganization().getId() : (session.getOrganization() != null ? session.getOrganization().getId() : null));
+                                ? resolveSessionTimeoutMinutes(
+                                                session.getOrganization() != null ? session.getOrganization().getId()
+                                                                : null)
+                                : resolveSessionTimeoutMinutes(company != null && company.getOrganization() != null
+                                                ? company.getOrganization().getId()
+                                                : (session.getOrganization() != null ? session.getOrganization().getId()
+                                                                : null));
 
                 if (isOwnerSession) {
                         Map<String, Object> claims = buildOwnerClaims(user, session.getOrganization());
@@ -1439,8 +1444,13 @@ public class AuthServiceImpl implements AuthService {
                 String refreshToken;
 
                 int sessionMinutes = isOwnerSession
-                                ? resolveSessionTimeoutMinutes(session.getOrganization() != null ? session.getOrganization().getId() : null)
-                                : resolveSessionTimeoutMinutes(company != null && company.getOrganization() != null ? company.getOrganization().getId() : (session.getOrganization() != null ? session.getOrganization().getId() : null));
+                                ? resolveSessionTimeoutMinutes(
+                                                session.getOrganization() != null ? session.getOrganization().getId()
+                                                                : null)
+                                : resolveSessionTimeoutMinutes(company != null && company.getOrganization() != null
+                                                ? company.getOrganization().getId()
+                                                : (session.getOrganization() != null ? session.getOrganization().getId()
+                                                                : null));
 
                 if (isOwnerSession) {
                         Map<String, Object> claims = buildOwnerClaims(user, session.getOrganization());
