@@ -72,7 +72,17 @@ public class YamlAuthorizationFilter extends OncePerRequestFilter {
 
         // 3. Authorize via SsoAuthorizationService (handles SYSTEM_ADMIN, YAML URL
         // match, action, DB permissions)
-        AuthorizationDecision decision = ssoAuthorizationService.authorize(authentication, request);
+        AuthorizationDecision decision;
+        try {
+            decision = ssoAuthorizationService.authorize(authentication, request);
+        } catch (Exception ex) {
+            log.error("Internal error during YAML authorization evaluation for request [{}] [{}]: {}",
+                    request.getMethod(), request.getRequestURI(), ex.getMessage(), ex);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\":\"Internal authorization error\"}");
+            return;
+        }
 
         // 4. If allowed -> continue filter chain
         if (decision.isAllowed()) {

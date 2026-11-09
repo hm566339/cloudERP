@@ -1,6 +1,7 @@
 package com.erp.auth_service.repository;
 
 import com.erp.auth_service.model.UserPermission;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,8 +14,10 @@ import java.util.UUID;
 @Repository
 public interface UserPermissionRepository extends JpaRepository<UserPermission, UUID> {
 
+    @EntityGraph(attributePaths = {"permission", "permission.feature"})
     Optional<UserPermission> findByUser_IdAndPermission_Id(UUID userId, UUID permissionId);
 
+    @EntityGraph(attributePaths = {"permission", "permission.feature"})
     List<UserPermission> findByUser_Id(UUID userId);
 
     @Query("SELECT up.permission.permissionCode FROM UserPermission up " +

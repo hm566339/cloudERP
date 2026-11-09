@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.AntPathMatcher;
 
 import java.util.*;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 import static com.erp.auth_service.service.impl.PermissionServiceImpl.EXPLICIT_ORG_OWNER_PERMISSIONS;
 
 @Service
+@Transactional(readOnly = true)
 @Slf4j
 public class SsoAuthorizationService {
 
@@ -280,13 +282,26 @@ public class SsoAuthorizationService {
                                 if (featurePermissionRepository != null) {
                                     var fpOpt = featurePermissionRepository
                                             .findByPermissionCodeIgnoreCase(candidateCode);
-                                    if (fpOpt.isPresent()) {
-                                        if (!fpOpt.get().isActive() || (fpOpt.get().getFeature() != null
-                                                && !fpOpt.get().getFeature().isActive())) {
-                                            log.warn("Access denied: Permission [{}] is disabled", candidateCode);
-                                            return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode,
-                                                    "PERMISSION_DISABLED");
+                                    if (fpOpt.isEmpty()) {
+                                        continue;
+                                    }
+                                    var fp = fpOpt.get();
+                                    boolean isPermissionActive = fp.isActive();
+                                    boolean isFeatureActive = false;
+                                    try {
+                                        if (fp.getFeature() != null) {
+                                            isFeatureActive = fp.getFeature().isActive();
+                                        } else {
+                                            log.warn("Feature is null for permission [{}]", candidateCode);
                                         }
+                                    } catch (Exception e) {
+                                        log.warn("Could not inspect feature active status for permission [{}]: {}", candidateCode, e.getMessage());
+                                        isFeatureActive = false;
+                                    }
+                                    if (!isPermissionActive || !isFeatureActive) {
+                                        log.warn("Access denied: Permission [{}] is disabled or feature unavailable", candidateCode);
+                                        return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode,
+                                                "PERMISSION_DISABLED");
                                     }
                                 }
                                 log.debug(
@@ -350,8 +365,20 @@ public class SsoAuthorizationService {
                 if (featurePermissionRepository != null) {
                     var fpOpt = featurePermissionRepository.findByPermissionCodeIgnoreCase(candidateCode);
                     if (fpOpt.isPresent()) {
-                        if (!fpOpt.get().isActive()
-                                || (fpOpt.get().getFeature() != null && !fpOpt.get().getFeature().isActive())) {
+                        var fp = fpOpt.get();
+                        boolean isPermissionActive = fp.isActive();
+                        boolean isFeatureActive = false;
+                        try {
+                            if (fp.getFeature() != null) {
+                                isFeatureActive = fp.getFeature().isActive();
+                            } else {
+                                log.warn("Feature is null for permission [{}]", candidateCode);
+                            }
+                        } catch (Exception e) {
+                            log.warn("Could not inspect feature active status for permission [{}]: {}", candidateCode, e.getMessage());
+                            isFeatureActive = false;
+                        }
+                        if (!isPermissionActive || !isFeatureActive) {
                             return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode,
                                     "PERMISSION_DISABLED");
                         }

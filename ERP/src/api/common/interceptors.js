@@ -38,14 +38,36 @@ import { dispatchLogout, isAuthPage } from './logout.js';
  */
 const getFreshAccessToken = () => {
   if (typeof document !== 'undefined') {
-    const match =
-      document.cookie.match(/(^| )ACCESS_TOKEN=([^;]+)/) ||
+    // 1. Check canonical ACCESS_TOKEN cookie first
+    const canonicalMatch = document.cookie.match(/(^| )ACCESS_TOKEN=([^;]+)/);
+    if (canonicalMatch) {
+      // Clean up legacy duplicate cookies so they do not linger
+      try {
+        if (document.cookie.includes('auth_token=')) {
+          document.cookie = 'auth_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+        }
+        if (document.cookie.includes('access_token=')) {
+          document.cookie = 'access_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+        }
+      } catch (_) {}
+      return canonicalMatch[2];
+    }
+    // 2. Fallback to legacy cookies only if canonical ACCESS_TOKEN is missing
+    const fallbackMatch =
       document.cookie.match(/(^| )auth_token=([^;]+)/) ||
       document.cookie.match(/(^| )access_token=([^;]+)/);
-    if (match) return match[2];
+    if (fallbackMatch) return fallbackMatch[2];
   }
   if (typeof localStorage !== 'undefined') {
-    return localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('auth_token') || localStorage.getItem('token');
+    const canonicalStorage = localStorage.getItem('ACCESS_TOKEN');
+    if (canonicalStorage) {
+      try {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('access_token');
+      } catch (_) {}
+      return canonicalStorage;
+    }
+    return localStorage.getItem('auth_token') || localStorage.getItem('token');
   }
   return null;
 };
@@ -374,9 +396,11 @@ export const attachRequestInterceptor = (instance) => {
         if (currentAccessToken) {
           if (config.headers && typeof config.headers.set === 'function') {
             config.headers.set('Authorization', `Bearer ${currentAccessToken}`);
-          } else {
-            if (!config.headers) config.headers = {};
+            config.headers.set('authorization', `Bearer ${currentAccessToken}`);
+          }
+          if (config.headers && typeof config.headers === 'object') {
             config.headers['Authorization'] = `Bearer ${currentAccessToken}`;
+            config.headers['authorization'] = `Bearer ${currentAccessToken}`;
           }
         }
 
@@ -559,8 +583,11 @@ export const attachResponseInterceptor = (instance) => {
           if (freshToken && originalRequest?.headers) {
             if (typeof originalRequest.headers.set === 'function') {
               originalRequest.headers.set('Authorization', `Bearer ${freshToken}`);
-            } else {
+              originalRequest.headers.set('authorization', `Bearer ${freshToken}`);
+            }
+            if (typeof originalRequest.headers === 'object') {
               originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
+              originalRequest.headers['authorization'] = `Bearer ${freshToken}`;
             }
           }
           // Refresh succeeded — retry the original request
@@ -667,7 +694,13 @@ export const attachResponseInterceptor = (instance) => {
         if (typeof document !== 'undefined') {
           if (newAccessToken) {
             document.cookie = `ACCESS_TOKEN=${newAccessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-            document.cookie = `auth_token=${newAccessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+            // Clean up legacy cookies
+            document.cookie = `auth_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+            document.cookie = `access_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+            if (typeof window !== 'undefined' && window.location.hostname) {
+              document.cookie = `auth_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${window.location.hostname}; SameSite=Lax`;
+              document.cookie = `access_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${window.location.hostname}; SameSite=Lax`;
+            }
           }
           if (newRefreshToken) {
             document.cookie = `ACCESS_TOKEN_REFRESH=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax${secureAttr}`;
@@ -677,7 +710,10 @@ export const attachResponseInterceptor = (instance) => {
         if (typeof localStorage !== 'undefined') {
           if (newAccessToken) {
             localStorage.setItem('ACCESS_TOKEN', newAccessToken);
-            localStorage.setItem('auth_token', newAccessToken);
+            try {
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('access_token');
+            } catch (_) {}
           }
           if (newRefreshToken) {
             localStorage.setItem('ACCESS_TOKEN_REFRESH', newRefreshToken);
@@ -693,7 +729,15 @@ export const attachResponseInterceptor = (instance) => {
       try {
         const freshToken = await refreshPromise;
 
-        // Release refreshing lock and drain all queued requests IMMEDIATELY
+        // Atomically update default common headers first so any newly triggered request inherits the fresh token
+        if (freshToken) {
+          if (instance.defaults?.headers?.common) {
+            instance.defaults.headers.common['Authorization'] = `Bearer ${freshToken}`;
+            instance.defaults.headers.common['authorization'] = `Bearer ${freshToken}`;
+          }
+        }
+
+        // Release refreshing lock and drain all queued requests IMMEDIATELY with the fresh token
         setRefreshing(moduleName, false);
         processQueue(moduleName, null, freshToken);
 
@@ -701,12 +745,12 @@ export const attachResponseInterceptor = (instance) => {
           if (originalRequest?.headers) {
             if (typeof originalRequest.headers.set === 'function') {
               originalRequest.headers.set('Authorization', `Bearer ${freshToken}`);
-            } else {
-              originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
+              originalRequest.headers.set('authorization', `Bearer ${freshToken}`);
             }
-          }
-          if (instance.defaults?.headers?.common) {
-            instance.defaults.headers.common['Authorization'] = `Bearer ${freshToken}`;
+            if (typeof originalRequest.headers === 'object') {
+              originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
+              originalRequest.headers['authorization'] = `Bearer ${freshToken}`;
+            }
           }
         }
 

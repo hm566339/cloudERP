@@ -125,11 +125,28 @@ fi
 
 # 4. Save state for rollback
 log_info "Step 4/7: Recording release state for rollback tracking..."
-CURRENT_PREV="latest"
+CURRENT_PREV=""
 if [ -f "$STATE_FILE" ]; then
     # shellcheck disable=SC1090
     source "$STATE_FILE" 2>/dev/null || true
-    CURRENT_PREV="${DEPLOYED_TAG:-latest}"
+    CURRENT_PREV="${DEPLOYED_TAG:-}"
+fi
+
+# If state file was empty or missing, inspect actual running container on host
+if [ -z "$CURRENT_PREV" ] && command -v docker &>/dev/null; then
+    RUNNING_IMAGE=$(docker inspect --format='{{.Config.Image}}' erp-auth-service 2>/dev/null || true)
+    if [ -n "$RUNNING_IMAGE" ]; then
+        if [[ "$RUNNING_IMAGE" == *":auth-"* ]]; then
+            CURRENT_PREV="${RUNNING_IMAGE##*:auth-}"
+        else
+            CURRENT_PREV="${RUNNING_IMAGE##*:}"
+        fi
+        log_info "Detected active running production tag from erp-auth-service: ${CURRENT_PREV}"
+    fi
+fi
+
+if [ -z "$CURRENT_PREV" ]; then
+    CURRENT_PREV="latest"
 fi
 
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
