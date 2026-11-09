@@ -10,6 +10,7 @@ import { useAdminLoginMutation, useLazySsoGetMeQuery } from '../services/authApi
 import { setCredentials, selectIsAuthenticated, selectCurrentUser } from '../authSlice'
 import { addAlert } from '../../notifications/notificationSlice'
 import { extractRoleFromToken } from '../../../utils/rbac'
+import { clearLegacyAuthCookies } from '../../../utils/cookieHelper'
 import { clearSelectedCompany } from '../../company-management/companySlice'
 import { useRoutePath } from "../../../hooks/useRoutePath";
 
@@ -68,10 +69,13 @@ export default function AdminLogin() {
       const secureAttr = isHttps ? '; Secure' : '';
       if (accessToken) {
         document.cookie = `ACCESS_TOKEN=${accessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-        document.cookie = `auth_token=${accessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+        clearLegacyAuthCookies();
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem('ACCESS_TOKEN', accessToken);
-          localStorage.setItem('auth_token', accessToken);
+          try {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('access_token');
+          } catch (_) {}
         }
       }
       if (refreshTokenValue) {

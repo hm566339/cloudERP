@@ -19,7 +19,7 @@ import { setSelectedCompany, setCompanyList } from '../../company-management/com
 import { addAlert } from '../../notifications/notificationSlice';
 import CustomSelect from '../../../components/common/CustomSelect';
 import { extractRoleFromToken, parseJwt } from '../../../utils/rbac';
-import { getCookie } from '../../../utils/cookieHelper';
+import { getCookie, clearLegacyAuthCookies } from '../../../utils/cookieHelper';
 import { useRoutePath } from '../../../hooks/useRoutePath';
 import { getSafeErrorMessage } from '../../../utils/apiErrorHelper';
 import { normalizeModuleName } from '../../../utils/moduleNormalization';
@@ -241,10 +241,13 @@ export default function Login() {
         const secureAttr = isHttps ? '; Secure' : '';
         if (accessToken) {
           document.cookie = `ACCESS_TOKEN=${accessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-          document.cookie = `auth_token=${accessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+          clearLegacyAuthCookies();
           if (typeof localStorage !== 'undefined') {
             localStorage.setItem('ACCESS_TOKEN', accessToken);
-            localStorage.setItem('auth_token', accessToken);
+            try {
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('access_token');
+            } catch (_) {}
           }
         }
         if (refreshTokenValue) {

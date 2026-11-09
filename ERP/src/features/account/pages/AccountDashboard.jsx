@@ -7,7 +7,7 @@ import { useAppSelector } from '../../../app/hooks';
 
 import { dashboardApi } from '../../../api/account';
 import { resolveRolePermissions } from '../../../config/rbacConfig';
-import { getCookie, setCookie } from '../../../utils/cookieHelper';
+import { getCookie, setCookie, clearLegacyAuthCookies } from '../../../utils/cookieHelper';
 import {
   User, Shield, Building2, Key, Activity, Users,
   LayoutGrid, PieChart, CheckCircle2, AlertCircle,
@@ -126,8 +126,8 @@ function AccountDashboard() {
 
   useEffect(() => {
     if (urlToken) {
-      setCookie('auth_token', urlToken);
       setCookie('ACCESS_TOKEN', urlToken);
+      clearLegacyAuthCookies();
       searchParams.delete('token');
       searchParams.delete('accessToken');
       setSearchParams(searchParams, { replace: true });

@@ -10,7 +10,7 @@ import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { selectAuthContext, logout as logoutAction } from '../../auth/authSlice';
 import { setSelectedCompany, selectSelectedCompany } from '../../company-management/companySlice';
 import { useLogoutApiMutation } from '../../auth/services/authApi';
-import { removeCookie } from '../../../utils/cookieHelper';
+import { removeCookie, clearLegacyAuthCookies } from '../../../utils/cookieHelper';
 import MarkLogo from '../../../components/common/MarkLogo';
 import SubscriptionNoticeBanner from '../../../components/common/SubscriptionNoticeBanner';
 import { useAccessMode } from '../../../hooks/useAccessMode';
@@ -78,7 +78,7 @@ export default function CommonWorkspaceView() {
     } finally {
       removeCookie('ACCESS_TOKEN');
       removeCookie('ACCESS_TOKEN_REFRESH');
-      removeCookie('auth_token');
+      clearLegacyAuthCookies();
       localStorage.clear();
       sessionStorage.clear();
       dispatch(logoutAction());

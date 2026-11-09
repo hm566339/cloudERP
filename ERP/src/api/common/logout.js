@@ -104,10 +104,13 @@ export const dispatchLogout = (options = {}) => {
           sessionStorage.setItem('auth_return_to', returnUrl);
         }
         
-        // Expire all auth-related cookies manually
-        const cookiesToClear = ['ACCESS_TOKEN', 'ACCESS_TOKEN_REFRESH', 'auth_token'];
+        // Expire all auth-related and legacy cookies manually across root and host domains
+        const cookiesToClear = ['ACCESS_TOKEN', 'ACCESS_TOKEN_REFRESH', 'auth_token', 'access_token', 'refresh_token', 'SSO_SESSION'];
         cookiesToClear.forEach(name => {
-          document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+          document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+          if (typeof window !== 'undefined' && window.location.hostname) {
+            document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${window.location.hostname}; SameSite=Lax`;
+          }
         });
       } catch (storageError) {
         console.warn('[Auth] Failed to clear browser storage:', storageError);

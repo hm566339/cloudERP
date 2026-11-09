@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectAuthContext, logout as logoutAction } from '../../features/auth/authSlice';
 import { clearSelectedCompany } from '../../features/company-management/companySlice';
-import { removeCookie } from '../../utils/cookieHelper';
+import { removeCookie, clearLegacyAuthCookies } from '../../utils/cookieHelper';
 
 export default function NoModuleAccessView() {
   const navigate = useNavigate();
@@ -20,9 +20,9 @@ export default function NoModuleAccessView() {
   };
 
   const handleLogout = () => {
-    removeCookie('auth_token');
     removeCookie('ACCESS_TOKEN');
     removeCookie('ACCESS_TOKEN_REFRESH');
+    clearLegacyAuthCookies();
     localStorage.clear();
     sessionStorage.clear();
     dispatch(logoutAction());

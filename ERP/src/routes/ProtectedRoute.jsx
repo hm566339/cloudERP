@@ -3,7 +3,7 @@ import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../app/hooks';
 import { selectSelectedCompany, setSelectedCompany } from '../features/company-management/companySlice';
 import { selectIsAuthenticated, selectCurrentUser, selectSessionStatus, selectAuthContext, setCredentials } from '../features/auth/authSlice';
-import { getCookie } from '../utils/cookieHelper';
+import { getCookie, clearLegacyAuthCookies } from '../utils/cookieHelper';
 import { parseJwt, extractRoleFromToken, useRBAC, normalizeModuleName, canAccess } from '../utils/rbac';
 
 export default function ProtectedRoute({
@@ -121,7 +121,14 @@ export default function ProtectedRoute({
           const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
           const secureAttr = isHttps ? '; Secure' : '';
           document.cookie = `ACCESS_TOKEN=${queryToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-          document.cookie = `auth_token=${queryToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+          clearLegacyAuthCookies();
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('ACCESS_TOKEN', queryToken);
+            try {
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('access_token');
+            } catch (_) {}
+          }
           if (typeof window !== 'undefined' && window.history?.replaceState) {
             try {
               const cleanUrl = new URL(window.location.href);

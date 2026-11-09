@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { clearSelectedCompany, setSelectedCompany } from '../features/company-management/companySlice'
-import { removeCookie } from '../utils/cookieHelper'
+import { removeCookie, clearLegacyAuthCookies } from '../utils/cookieHelper'
 // removed useLogoutMutation
 import { ToastNotification } from './AuthLayout'
 import { addAlert } from '../features/notifications/notificationSlice'
@@ -219,9 +219,9 @@ const handleLogout = useCallback(async () => {
   }
 
   // 2) Strip credentials so no subsequent API call can carry a valid token
-  removeCookie("auth_token");
   removeCookie("ACCESS_TOKEN");
   removeCookie("ACCESS_TOKEN_REFRESH");
+  clearLegacyAuthCookies();
   localStorage.removeItem("auth_user");
   localStorage.removeItem("auth_permissions");
   localStorage.removeItem("selected_company");

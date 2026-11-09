@@ -83,9 +83,11 @@ public class SessionController {
     // ================= LOGOUT =================
     @PostMapping("/sso/logout")
     public ResponseEntity<Void> logout(
-            @CookieValue(value = "access_token", required = false) String accessToken,
+            @CookieValue(value = "ACCESS_TOKEN", required = false) String canonicalAccessToken,
+            @CookieValue(value = "access_token", required = false) String legacyAccessToken,
             HttpServletResponse response) {
 
+        String accessToken = StringUtils.hasText(canonicalAccessToken) ? canonicalAccessToken : legacyAccessToken;
         log.info("Logout API hit");
 
         return sessionService.logout(accessToken, response);
@@ -94,9 +96,11 @@ public class SessionController {
     // ================= REFRESH =================
     @GetMapping("/sso/refresh")
     public ResponseEntity<?> refresh(
-            @CookieValue(value = "refresh_token", required = false) String refreshToken,
+            @CookieValue(value = "ACCESS_TOKEN_REFRESH", required = false) String canonicalRefreshToken,
+            @CookieValue(value = "refresh_token", required = false) String legacyRefreshToken,
             HttpServletResponse response) {
 
+        String refreshToken = StringUtils.hasText(canonicalRefreshToken) ? canonicalRefreshToken : legacyRefreshToken;
         log.info("Refresh API hit");
 
         if (!StringUtils.hasText(refreshToken)) {

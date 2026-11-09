@@ -217,11 +217,14 @@ public class SessionServiceImpl implements SessionService {
 
             // ================= COOKIE =================
 
-            addSecureCookie(response, "access_token",
+            addSecureCookie(response, "ACCESS_TOKEN",
                     body.getAccessToken(), body.getExpiresIn());
+            clearCookie(response, "access_token");
+            clearCookie(response, "auth_token");
 
-            addSecureCookie(response, "refresh_token",
+            addSecureCookie(response, "ACCESS_TOKEN_REFRESH",
                     body.getRefreshToken(), 7 * 24 * 60 * 60);
+            clearCookie(response, "refresh_token");
 
             // ================= REDIRECT =================
             String redirectUrl = resolveSafeRedirect(gotoUrl);
@@ -306,6 +309,9 @@ public class SessionServiceImpl implements SessionService {
         }
 
         // ================= CLEAR COOKIES =================
+        clearCookie(response, "ACCESS_TOKEN");
+        clearCookie(response, "ACCESS_TOKEN_REFRESH");
+        clearCookie(response, "auth_token");
         clearCookie(response, "access_token");
         clearCookie(response, "refresh_token");
 
@@ -402,8 +408,11 @@ public class SessionServiceImpl implements SessionService {
 
             long expiresIn = body.getExpiresIn() != null ? body.getExpiresIn() : 1800L;
 
-            addSecureCookie(response, "access_token", body.getAccessToken(), expiresIn);
-            addSecureCookie(response, "refresh_token", body.getRefreshToken(), 7 * 24 * 60 * 60);
+            addSecureCookie(response, "ACCESS_TOKEN", body.getAccessToken(), expiresIn);
+            clearCookie(response, "access_token");
+            clearCookie(response, "auth_token");
+            addSecureCookie(response, "ACCESS_TOKEN_REFRESH", body.getRefreshToken(), 7 * 24 * 60 * 60);
+            clearCookie(response, "refresh_token");
 
             session.setAccessToken(body.getAccessToken());
             session.setRefreshToken(body.getRefreshToken());

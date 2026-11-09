@@ -678,6 +678,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return authHeader.substring(7).trim();
         }
         if (request.getCookies() != null) {
+            // Check canonical ACCESS_TOKEN first
+            for (Cookie cookie : request.getCookies()) {
+                if ("ACCESS_TOKEN".equals(cookie.getName())) {
+                    if (StringUtils.hasText(cookie.getValue())) {
+                        return cookie.getValue().trim();
+                    }
+                }
+            }
+            // Fallback for case-insensitive or legacy cookies
             for (Cookie cookie : request.getCookies()) {
                 if ("ACCESS_TOKEN".equalsIgnoreCase(cookie.getName())
                         || "access_token".equalsIgnoreCase(cookie.getName())

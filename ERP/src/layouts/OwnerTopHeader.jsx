@@ -23,7 +23,7 @@ import { useAppDispatch } from '../app/hooks';
 import { setSelectedCompany } from '../features/company-management/companySlice';
 import { logout as logoutAction } from '../features/auth/authSlice';
 import { useLogoutApiMutation, authApi } from '../features/auth/services/authApi';
-import { removeCookie } from '../utils/cookieHelper';
+import { removeCookie, clearLegacyAuthCookies } from '../utils/cookieHelper';
 import ThemeToggle from '../components/common/ThemeToggle';
 
 /**
@@ -125,7 +125,7 @@ export default function OwnerTopHeader({
     } finally {
       removeCookie('ACCESS_TOKEN');
       removeCookie('ACCESS_TOKEN_REFRESH');
-      removeCookie('auth_token');
+      clearLegacyAuthCookies();
       localStorage.clear();
       sessionStorage.clear();
       dispatch(logoutAction());

@@ -36,6 +36,7 @@ import { useGetCompaniesQuery } from '../../../api/sso/company.api';
 import { useGetOrganizationCompaniesQuery } from '../../../api/sso/organization.api';
 import { baseApi } from '../../../api/common/baseApi';
 import { addAlert } from '../../notifications/notificationSlice';
+import { clearLegacyAuthCookies } from '../../../utils/cookieHelper';
 
 /**
  * Normalizes a company object from any slice/API into a consistent shape.
@@ -340,9 +341,14 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
             const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
             const secureAttr = isHttps ? '; Secure' : '';
             document.cookie = `ACCESS_TOKEN=${newToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-            document.cookie = `auth_token=${newToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-            localStorage.setItem('ACCESS_TOKEN', newToken);
-            localStorage.setItem('auth_token', newToken);
+            clearLegacyAuthCookies();
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('ACCESS_TOKEN', newToken);
+              try {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('access_token');
+              } catch (_) {}
+            }
             switchSuccess = true;
           }
         } catch (selErr) {

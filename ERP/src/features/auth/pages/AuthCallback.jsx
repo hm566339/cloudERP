@@ -6,7 +6,7 @@ import { useLazySsoGetMeQuery } from '../../../features/auth/services/authApi';
 import { setCredentials } from '../authSlice';
 import { setSelectedCompany } from '../../company-management/companySlice';
 import { extractRoleFromToken, parseJwt } from '../../../utils/rbac';
-import { getCookie } from '../../../utils/cookieHelper';
+import { getCookie, clearLegacyAuthCookies } from '../../../utils/cookieHelper';
 import { useRoutePath } from "../../../hooks/useRoutePath";
 import { isSafeRedirectPath } from "../../../utils/redirectHelper";
 import { normalizeAppRedirectPath } from "../../../utils/moduleAccess";
@@ -36,10 +36,13 @@ export default function AuthCallback() {
       // If we got a token in the query params, save it to cookies and localStorage
       if (queryToken) {
         document.cookie = `ACCESS_TOKEN=${queryToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-        document.cookie = `auth_token=${queryToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+        clearLegacyAuthCookies();
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem('ACCESS_TOKEN', queryToken);
-          localStorage.setItem('auth_token', queryToken);
+          try {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('access_token');
+          } catch (_) {}
         }
       }
       
@@ -65,10 +68,13 @@ export default function AuthCallback() {
             const newRefreshToken = tokenData?.refresh_token || tokenData?.refreshToken;
             if (newAccessToken) {
               document.cookie = `ACCESS_TOKEN=${newAccessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-              document.cookie = `auth_token=${newAccessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+              clearLegacyAuthCookies();
               if (typeof localStorage !== 'undefined') {
                 localStorage.setItem('ACCESS_TOKEN', newAccessToken);
-                localStorage.setItem('auth_token', newAccessToken);
+                try {
+                  localStorage.removeItem('auth_token');
+                  localStorage.removeItem('access_token');
+                } catch (_) {}
               }
               activeToken = newAccessToken;
             }

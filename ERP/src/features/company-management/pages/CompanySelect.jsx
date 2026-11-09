@@ -7,7 +7,7 @@ import { useGetCompaniesQuery } from '../../../api/sso'
 import { useGetOpenCompaniesQuery } from '../../../api/sso/company.api'
 import { persistor, resetStore } from '../../../app/store'
 import { baseApi } from '../../../api/common/baseApi'
-import { getCookie, removeCookie } from '../../../utils/cookieHelper'
+import { getCookie, removeCookie, clearLegacyAuthCookies } from '../../../utils/cookieHelper'
 import { parseJwt, extractRoleFromToken } from '../../../utils/rbac'
 import { setCredentials } from '../../auth/authSlice'
 import { addAlert } from '../../notifications/notificationSlice'
@@ -103,10 +103,13 @@ export default function CompanySelect() {
         const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
         const secureAttr = isHttps ? '; Secure' : '';
         document.cookie = `ACCESS_TOKEN=${accessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-        document.cookie = `auth_token=${accessToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+        clearLegacyAuthCookies();
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem('ACCESS_TOKEN', accessToken);
-          localStorage.setItem('auth_token', accessToken);
+          try {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('access_token');
+          } catch (_) {}
         }
         if (refreshTokenValue) {
           document.cookie = `ACCESS_TOKEN_REFRESH=${refreshTokenValue}; path=/; max-age=604800; SameSite=Lax${secureAttr}`;
@@ -259,9 +262,9 @@ export default function CompanySelect() {
     }
 
     // 2) Strip credentials so no subsequent API call can carry a valid token
-    removeCookie("auth_token");
     removeCookie("ACCESS_TOKEN");
     removeCookie("ACCESS_TOKEN_REFRESH");
+    clearLegacyAuthCookies();
     localStorage.removeItem("auth_user");
     localStorage.removeItem("auth_permissions");
     localStorage.removeItem("selected_company");

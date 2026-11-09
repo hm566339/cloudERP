@@ -2662,9 +2662,16 @@ public class AuthServiceImpl implements AuthService {
                 Cookie[] cookies = request.getCookies();
 
                 if (cookies != null) {
-
+                        // Check canonical ACCESS_TOKEN first
                         for (Cookie cookie : cookies) {
-
+                                if ("ACCESS_TOKEN".equals(cookie.getName())
+                                                && cookie.getValue() != null
+                                                && !cookie.getValue().isBlank()) {
+                                        return cookie.getValue().trim();
+                                }
+                        }
+                        // Fallback for case-insensitive or legacy cookies
+                        for (Cookie cookie : cookies) {
                                 if (("ACCESS_TOKEN".equalsIgnoreCase(cookie.getName())
                                                 || "access_token".equalsIgnoreCase(cookie.getName())
                                                 || "accessToken".equalsIgnoreCase(cookie.getName())
@@ -2672,7 +2679,6 @@ public class AuthServiceImpl implements AuthService {
                                                 || "authToken".equalsIgnoreCase(cookie.getName()))
                                                 && cookie.getValue() != null
                                                 && !cookie.getValue().isBlank()) {
-
                                         return cookie.getValue().trim();
                                 }
                         }
