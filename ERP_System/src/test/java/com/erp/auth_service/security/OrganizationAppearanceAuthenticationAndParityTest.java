@@ -6,7 +6,9 @@ import com.erp.auth_service.controller.CompanyController;
 import com.erp.auth_service.controller.OrganizationAppearanceController;
 import com.erp.auth_service.controller.OrganizationSubscriptionController;
 import com.erp.auth_service.dto.request.UpdateOrganizationAppearanceRequest;
+import com.erp.auth_service.dto.response.CompanyListResponse;
 import com.erp.auth_service.dto.response.OrganizationAppearanceResponse;
+import com.erp.auth_service.dto.response.OrganizationSubscriptionResponse;
 import com.erp.auth_service.dto.response.SsoMeResponse;
 import com.erp.auth_service.exception.GlobalExceptionHandler;
 import com.erp.auth_service.model.*;
@@ -339,7 +341,6 @@ class OrganizationAppearanceAuthenticationAndParityTest {
         @DisplayName("Outcome 1: GET /api/sso/organization/appearance succeeds with HTTP 200 for authenticated Organization OWNER")
         void testGetAppearanceSuccessForOrganizationOwner() throws Exception {
                 when(jwtDecoder.isTokenValid(ownerToken)).thenReturn(true);
-                when(jwtDecoder.isTokenValid(eq(ownerToken), anyString())).thenReturn(true);
                 Claims claims = new DefaultClaims(Map.of(
                                 "principalType", "ORGANIZATION_OWNER",
                                 "organizationId", orgId.toString(),
@@ -347,7 +348,6 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                                 "sub", "apex_owner",
                                 "roles", List.of("OWNER", "ROLE_OWNER")));
                 when(jwtDecoder.extractClaims(ownerToken)).thenReturn(claims);
-                when(jwtDecoder.extractUsername(ownerToken)).thenReturn("apex_owner");
                 when(jwtDecoder.extractRoles(ownerToken)).thenReturn(List.of("OWNER"));
 
                 when(sessionRepository.findByAccessToken(ownerToken)).thenReturn(Optional.of(ownerSession));
@@ -383,10 +383,9 @@ class OrganizationAppearanceAuthenticationAndParityTest {
         // =========================================================================
 
         @Test
-        @DisplayName("Outcome 2: Full parity — same OWNER token succeeds with HTTP 200 on /api/sso/auth/me, /api/sso/me, and /api/sso/organization/appearance")
+        @DisplayName("Outcome 2: Same OWNER token succeeds on /me, appearance, companies, and subscription")
         void testParityBetweenAuthMeAndOrganizationAppearance() throws Exception {
                 when(jwtDecoder.isTokenValid(ownerToken)).thenReturn(true);
-                when(jwtDecoder.isTokenValid(eq(ownerToken), anyString())).thenReturn(true);
                 Claims claims = new DefaultClaims(Map.of(
                                 "principalType", "ORGANIZATION_OWNER",
                                 "organizationId", orgId.toString(),
@@ -394,7 +393,6 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                                 "sub", "apex_owner",
                                 "roles", List.of("OWNER")));
                 when(jwtDecoder.extractClaims(ownerToken)).thenReturn(claims);
-                when(jwtDecoder.extractUsername(ownerToken)).thenReturn("apex_owner");
                 when(jwtDecoder.extractRoles(ownerToken)).thenReturn(List.of("OWNER"));
 
                 when(sessionRepository.findByAccessToken(ownerToken)).thenReturn(Optional.of(ownerSession));
@@ -423,6 +421,10 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                                 .appearanceMode("light")
                                 .build();
                 when(appearanceService.getAppearance(orgId)).thenReturn(mockAppearance);
+                when(companyService.getAllCompanies(1, 10, null, null))
+                                .thenReturn(CompanyListResponse.builder().companies(List.of()).build());
+                when(settingsService.getSubscription(orgId, ownerUserId))
+                                .thenReturn(OrganizationSubscriptionResponse.builder().status("ACTIVE").build());
 
                 // 1. GET /api/sso/auth/me -> 200 OK
                 mockMvc.perform(get("/api/sso/auth/me")
@@ -445,6 +447,22 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                                 .andExpect(jsonPath("$.success").value(true))
                                 .andExpect(jsonPath("$.data.organizationCode").value("apex-global-enterprises"))
                                 .andExpect(jsonPath("$.data.activeTheme").value("sage"));
+
+                // 4. GET /api/sso/companies?organizationId=... -> 200 with the same token
+                mockMvc.perform(get("/api/sso/companies")
+                                .param("organizationId", orgId.toString())
+                                .header("X-Organization-Id", orgId.toString())
+                                .header("Authorization", "Bearer " + ownerToken))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.success").value(true));
+
+                // 5. GET /api/sso/subscription?organizationId=... -> 200 with the same token
+                mockMvc.perform(get("/api/sso/subscription")
+                                .param("organizationId", orgId.toString())
+                                .header("X-Organization-Id", orgId.toString())
+                                .header("Authorization", "Bearer " + ownerToken))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.success").value(true));
         }
 
         // =========================================================================
@@ -455,14 +473,12 @@ class OrganizationAppearanceAuthenticationAndParityTest {
         @DisplayName("Outcome 3: Authenticated employee WITHOUT appearance permission receives HTTP 403 Forbidden (Never 401)")
         void testAuthenticatedEmployeeWithoutPermissionReceives403Forbidden() throws Exception {
                 when(jwtDecoder.isTokenValid(employeeToken)).thenReturn(true);
-                when(jwtDecoder.isTokenValid(eq(employeeToken), anyString())).thenReturn(true);
                 Claims claims = new DefaultClaims(Map.of(
                                 "sub", "apex_employee",
                                 "companyCode", "APEX_HQ",
                                 "companyId", companyId.toString(),
                                 "roles", List.of("EMPLOYEE")));
                 when(jwtDecoder.extractClaims(employeeToken)).thenReturn(claims);
-                when(jwtDecoder.extractUsername(employeeToken)).thenReturn("apex_employee");
                 when(jwtDecoder.extractRoles(employeeToken)).thenReturn(List.of("EMPLOYEE"));
 
                 when(sessionRepository.findByAccessToken(employeeToken)).thenReturn(Optional.of(employeeSession));
@@ -577,14 +593,12 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                                 .build();
 
                 when(jwtDecoder.isTokenValid(ownerToken)).thenReturn(true);
-                when(jwtDecoder.isTokenValid(eq(ownerToken), anyString())).thenReturn(true);
                 Claims claims = new DefaultClaims(Map.of(
                                 "sub", "apex_owner",
                                 "companyCode", "APEX_HQ",
                                 "organizationId", orgId.toString(),
                                 "roles", List.of("OWNER")));
                 when(jwtDecoder.extractClaims(ownerToken)).thenReturn(claims);
-                when(jwtDecoder.extractUsername(ownerToken)).thenReturn("apex_owner");
                 when(jwtDecoder.extractRoles(ownerToken)).thenReturn(List.of("OWNER"));
 
                 when(sessionRepository.findByAccessToken(ownerToken)).thenReturn(Optional.of(nullOrgSession));
@@ -628,7 +642,6 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                                 .build();
 
                 when(jwtDecoder.isTokenValid(ownerToken)).thenReturn(true);
-                when(jwtDecoder.isTokenValid(eq(ownerToken), anyString())).thenReturn(true);
                 Claims claims = new DefaultClaims(Map.of(
                                 "principalType", "ORGANIZATION_OWNER",
                                 "sub", "apex_owner",
@@ -637,7 +650,6 @@ class OrganizationAppearanceAuthenticationAndParityTest {
                                 "organizationId", orgId.toString(),
                                 "roles", List.of("OWNER")));
                 when(jwtDecoder.extractClaims(ownerToken)).thenReturn(claims);
-                when(jwtDecoder.extractUsername(ownerToken)).thenReturn("apex_owner");
                 when(jwtDecoder.extractRoles(ownerToken)).thenReturn(List.of("OWNER"));
 
                 when(sessionRepository.findByAccessToken(ownerToken))
@@ -672,14 +684,12 @@ class OrganizationAppearanceAuthenticationAndParityTest {
         @DisplayName("Outcome 8: PUT and POST /reset for appearance succeed with HTTP 200 for Organization OWNER")
         void testPutAndResetAppearanceSuccessForOwner() throws Exception {
                 when(jwtDecoder.isTokenValid(ownerToken)).thenReturn(true);
-                when(jwtDecoder.isTokenValid(eq(ownerToken), anyString())).thenReturn(true);
                 Claims claims = new DefaultClaims(Map.of(
                                 "principalType", "ORGANIZATION_OWNER",
                                 "sub", "apex_owner",
                                 "organizationId", orgId.toString(),
                                 "roles", List.of("OWNER")));
                 when(jwtDecoder.extractClaims(ownerToken)).thenReturn(claims);
-                when(jwtDecoder.extractUsername(ownerToken)).thenReturn("apex_owner");
                 when(jwtDecoder.extractRoles(ownerToken)).thenReturn(List.of("OWNER"));
 
                 when(sessionRepository.findByAccessToken(ownerToken)).thenReturn(Optional.of(ownerSession));
@@ -732,14 +742,12 @@ class OrganizationAppearanceAuthenticationAndParityTest {
         @DisplayName("Outcome 9 (Scenario 4): GET /api/sso/companies with valid token but no company permission returns HTTP 403 Forbidden (Never 401)")
         void testCompaniesWithoutPermissionReturns403Forbidden() throws Exception {
                 when(jwtDecoder.isTokenValid(employeeToken)).thenReturn(true);
-                when(jwtDecoder.isTokenValid(eq(employeeToken), anyString())).thenReturn(true);
                 Claims claims = new DefaultClaims(Map.of(
                                 "sub", "apex_employee",
                                 "companyCode", "APEX_HQ",
                                 "companyId", companyId.toString(),
                                 "roles", List.of("EMPLOYEE")));
                 when(jwtDecoder.extractClaims(employeeToken)).thenReturn(claims);
-                when(jwtDecoder.extractUsername(employeeToken)).thenReturn("apex_employee");
                 when(jwtDecoder.extractRoles(employeeToken)).thenReturn(List.of("EMPLOYEE"));
                 when(sessionRepository.findByAccessToken(employeeToken)).thenReturn(Optional.of(employeeSession));
                 lenient().when(memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(any(), eq(companyId)))
@@ -764,14 +772,12 @@ class OrganizationAppearanceAuthenticationAndParityTest {
         @DisplayName("Outcome 10 (Scenario 5): GET /api/sso/subscription with valid token but no permission returns HTTP 403 Forbidden (Never 401)")
         void testSubscriptionWithoutPermissionReturns403Forbidden() throws Exception {
                 when(jwtDecoder.isTokenValid(employeeToken)).thenReturn(true);
-                when(jwtDecoder.isTokenValid(eq(employeeToken), anyString())).thenReturn(true);
                 Claims claims = new DefaultClaims(Map.of(
                                 "sub", "apex_employee",
                                 "companyCode", "APEX_HQ",
                                 "companyId", companyId.toString(),
                                 "roles", List.of("EMPLOYEE")));
                 when(jwtDecoder.extractClaims(employeeToken)).thenReturn(claims);
-                when(jwtDecoder.extractUsername(employeeToken)).thenReturn("apex_employee");
                 when(jwtDecoder.extractRoles(employeeToken)).thenReturn(List.of("EMPLOYEE"));
                 when(sessionRepository.findByAccessToken(employeeToken)).thenReturn(Optional.of(employeeSession));
                 lenient().when(memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(any(), eq(companyId)))

@@ -1,5 +1,12 @@
 import test, { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import axios from 'axios';
+import { attachInterceptors } from '../interceptors.js';
+import {
+  clearAllQueues,
+  getModuleRefreshPromise,
+  isModuleRefreshing,
+} from '../refreshQueue.js';
 
 /**
  * Queue and Single-Flight Refresh Coordinator mirroring interceptors.js
@@ -54,6 +61,170 @@ class SingleFlightRefreshCoordinator {
 }
 
 describe('401 Single-Flight Token Refresh Test Suite', () => {
+  it('uses the real Axios interceptors to refresh concurrent 401s once and settle every request', async () => {
+    const previousAdapter = axios.defaults.adapter;
+    const previousLocalStorage = globalThis.localStorage;
+    const storage = {
+      ACCESS_TOKEN: 'expired-access-token',
+      ACCESS_TOKEN_REFRESH: 'valid-refresh-token',
+    };
+    globalThis.localStorage = {
+      getItem: (key) => storage[key] || null,
+      setItem: (key, value) => { storage[key] = String(value); },
+      removeItem: (key) => { delete storage[key]; },
+    };
+
+    let refreshCalls = 0;
+    const requestAttempts = new Map();
+    const adapter = async (config) => {
+      if (config.url.includes('/api/sso/token/refresh')) {
+        refreshCalls += 1;
+        await new Promise((resolve) => setTimeout(resolve, 15));
+        return {
+          data: { success: true, data: { accessToken: 'fresh-access-token' } },
+          status: 200,
+          statusText: 'OK',
+          headers: new axios.AxiosHeaders(),
+          config,
+          request: {},
+        };
+      }
+
+      const url = config.url;
+      requestAttempts.set(url, (requestAttempts.get(url) || 0) + 1);
+      if (config.headers.get('Authorization') === 'Bearer fresh-access-token') {
+        return {
+          data: { success: true },
+          status: 200,
+          statusText: 'OK',
+          headers: new axios.AxiosHeaders(),
+          config,
+          request: {},
+        };
+      }
+
+      const response = {
+        data: { message: 'Unauthorized' },
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: new axios.AxiosHeaders(),
+        config,
+        request: {},
+      };
+      throw new axios.AxiosError(
+        'Request failed with status code 401',
+        axios.AxiosError.ERR_BAD_REQUEST,
+        config,
+        {},
+        response,
+      );
+    };
+
+    axios.defaults.adapter = adapter;
+    try {
+      const instance = axios.create({ adapter, timeout: 1000 });
+      attachInterceptors(instance);
+      const requests = [
+        '/api/sso/organization/appearance',
+        '/api/sso/organization/companies',
+        '/api/sso/organization/subscription',
+      ];
+
+      const responses = await Promise.all(requests.map((url) => instance.get(url)));
+
+      assert.equal(refreshCalls, 1);
+      assert.equal(responses.length, requests.length);
+      for (let index = 0; index < requests.length; index += 1) {
+        assert.equal(responses[index].status, 200);
+        assert.equal(requestAttempts.get(requests[index]), 2);
+      }
+      assert.equal(storage.ACCESS_TOKEN, 'fresh-access-token');
+      assert.equal(isModuleRefreshing('sso'), false);
+      assert.equal(getModuleRefreshPromise('sso'), null);
+    } finally {
+      clearAllQueues();
+      axios.defaults.adapter = previousAdapter;
+      if (previousLocalStorage === undefined) {
+        delete globalThis.localStorage;
+      } else {
+        globalThis.localStorage = previousLocalStorage;
+      }
+    }
+  });
+
+  it('does not refresh again when any concurrent retry still receives 401', async () => {
+    const previousAdapter = axios.defaults.adapter;
+    const previousLocalStorage = globalThis.localStorage;
+    globalThis.localStorage = {
+      getItem: (key) => ({
+        ACCESS_TOKEN: 'expired-access-token',
+        ACCESS_TOKEN_REFRESH: 'valid-refresh-token',
+      })[key] || null,
+      setItem: () => {},
+      removeItem: () => {},
+    };
+
+    let refreshCalls = 0;
+    let protectedRequestCalls = 0;
+    const adapter = async (config) => {
+      if (config.url.includes('/api/sso/token/refresh')) {
+        refreshCalls += 1;
+        return {
+          data: { success: true, data: { accessToken: 'fresh-access-token' } },
+          status: 200,
+          statusText: 'OK',
+          headers: new axios.AxiosHeaders(),
+          config,
+          request: {},
+        };
+      }
+
+      protectedRequestCalls += 1;
+      const response = {
+        data: { message: 'Unauthorized' },
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: new axios.AxiosHeaders(),
+        config,
+        request: {},
+      };
+      throw new axios.AxiosError(
+        'Request failed with status code 401',
+        axios.AxiosError.ERR_BAD_REQUEST,
+        config,
+        {},
+        response,
+      );
+    };
+
+    axios.defaults.adapter = adapter;
+    try {
+      const instance = axios.create({ adapter, timeout: 1000 });
+      attachInterceptors(instance);
+
+      const requestPaths = [
+        '/api/sso/organization/appearance',
+        '/api/sso/organization/companies',
+        '/api/sso/organization/subscription',
+      ];
+      const results = await Promise.allSettled(requestPaths.map((url) => instance.get(url)));
+
+      assert.equal(refreshCalls, 1);
+      assert.equal(protectedRequestCalls, requestPaths.length * 2);
+      assert.ok(results.every((result) => result.status === 'rejected'));
+      assert.equal(isModuleRefreshing('sso'), false);
+      assert.equal(getModuleRefreshPromise('sso'), null);
+    } finally {
+      clearAllQueues();
+      axios.defaults.adapter = previousAdapter;
+      if (previousLocalStorage === undefined) {
+        delete globalThis.localStorage;
+      } else {
+        globalThis.localStorage = previousLocalStorage;
+      }
+    }
+  });
+
   it('deduplicates 5 concurrent 401 responses into exactly 1 refresh call', async () => {
     let rawRefreshHttpCalls = 0;
 

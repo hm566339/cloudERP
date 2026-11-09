@@ -59,6 +59,48 @@ describe('Organization Appearance Outgoing Request & Interceptor Verification', 
     assert.ok(transformedConfig.url.includes(`organizationId=${testOrgId}`));
   });
 
+  it('replaces inherited stale credentials and matches the organization header to the requested organization', async () => {
+    const activeOrgId = 'active-org-id';
+    const requestedOrgId = 'requested-org-id';
+    mockStorage['ACCESS_TOKEN'] = 'current-access-token';
+    mockStorage['active_organization_id'] = activeOrgId;
+
+    const outgoingRequests = [];
+    const testInstance = axios.create({
+      adapter: async (config) => {
+        outgoingRequests.push(config);
+        return {
+          data: {},
+          status: 200,
+          statusText: 'OK',
+          headers: new axios.AxiosHeaders(),
+          config,
+          request: {},
+        };
+      },
+    });
+    testInstance.defaults.headers.common.Authorization = 'Bearer stale-default-token';
+    testInstance.defaults.headers.common['X-Organization-Id'] = activeOrgId;
+    attachRequestInterceptor(testInstance);
+
+    const urls = [
+      `/api/sso/organization/appearance?organizationId=${requestedOrgId}`,
+      `/api/sso/organization/companies?organizationId=${requestedOrgId}`,
+      `/api/sso/organization/subscription?organizationId=${requestedOrgId}`,
+    ];
+    for (const url of urls) {
+      await testInstance.get(url);
+    }
+
+    assert.equal(outgoingRequests.length, urls.length);
+    for (const { headers, params } of outgoingRequests) {
+      assert.equal(headers.get('Authorization'), 'Bearer current-access-token');
+      assert.equal(headers.get('X-Organization-Id'), requestedOrgId);
+      assert.equal(params.organizationId, requestedOrgId);
+    }
+
+  });
+
   it('2. Concurrent appearance, companies, and subscription requests share single refresh operation', async () => {
     const moduleName = 'sso';
     assert.equal(isModuleRefreshing(moduleName), false);
@@ -119,4 +161,3 @@ describe('Organization Appearance Outgoing Request & Interceptor Verification', 
     assert.equal(isModuleRefreshing(moduleName), false);
   });
 });
-

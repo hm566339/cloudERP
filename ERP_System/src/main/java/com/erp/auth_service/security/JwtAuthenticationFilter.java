@@ -20,9 +20,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -40,6 +43,8 @@ import java.util.stream.Collectors;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtDecoder jwtService;
     private final CustomUserDetailsService userDetailsService;
@@ -211,6 +216,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             principal, null, authorities);
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    logAuthenticationPopulation(request, authToken);
 
                     filterChain.doFilter(request, response);
                     return;
@@ -278,6 +284,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         principal, null, authorities);
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                logAuthenticationPopulation(request, authToken);
 
                 filterChain.doFilter(request, response);
                 return;
@@ -468,6 +475,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         authorities);
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                logAuthenticationPopulation(request, authToken);
 
                 filterChain.doFilter(request, response);
                 return;
@@ -568,6 +576,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext()
                     .setAuthentication(authToken);
+            logAuthenticationPopulation(request, authToken);
 
             filterChain.doFilter(request, response);
 
@@ -587,9 +596,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void rejectUnauthorized(HttpServletResponse response, String message) throws IOException {
+        log.warn("JWT/session authentication rejected reason={}", message);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.getWriter().write("{\"message\":\"" + message + "\"}");
+    }
+
+    private void logAuthenticationPopulation(HttpServletRequest request, Authentication authentication) {
+        Object principal = authentication.getPrincipal();
+        int authorityCount = authentication.getAuthorities() != null
+                ? authentication.getAuthorities().size()
+                : 0;
+        log.debug("JWT filter populated security context method={} path={} authenticationType={} principalType={} authenticated={} authorityCount={}",
+                request.getMethod(), request.getRequestURI(), authentication.getClass().getSimpleName(),
+                principal != null ? principal.getClass().getSimpleName() : "none",
+                authentication.isAuthenticated(), authorityCount);
     }
 
     private void rejectForbidden(HttpServletResponse response, String message) throws IOException {

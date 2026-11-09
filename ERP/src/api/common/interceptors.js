@@ -367,55 +367,48 @@ export const attachRequestInterceptor = (instance) => {
           }
         }
 
-        // Attach Authorization header from cookie/storage if not already explicitly present
-        const hasAuthHeader = config.headers && (
-          typeof config.headers.has === 'function'
-            ? (config.headers.has('Authorization') || config.headers.has('authorization'))
-            : (config.headers['Authorization'] || config.headers['authorization'])
-        );
-        if (!hasAuthHeader) {
-          const token = getFreshAccessToken();
-          if (token) {
-            if (config.headers && typeof config.headers.set === 'function') {
-              config.headers.set('Authorization', `Bearer ${token}`);
-            } else {
-              if (!config.headers) config.headers = {};
-              config.headers['Authorization'] = `Bearer ${token}`;
-            }
+        // Axios merges common defaults into config.headers before interceptors
+        // run. Reapply the current stored token so rotated credentials cannot be
+        // shadowed by a stale inherited Authorization value.
+        const currentAccessToken = getFreshAccessToken();
+        if (currentAccessToken) {
+          if (config.headers && typeof config.headers.set === 'function') {
+            config.headers.set('Authorization', `Bearer ${currentAccessToken}`);
+          } else {
+            if (!config.headers) config.headers = {};
+            config.headers['Authorization'] = `Bearer ${currentAccessToken}`;
           }
         }
 
-        // Attach X-Organization-Id header for organization APIs if available
-        const hasOrgHeader = config.headers && (
-          typeof config.headers.has === 'function'
-            ? (config.headers.has('X-Organization-Id') || config.headers.has('x-organization-id'))
-            : (config.headers['X-Organization-Id'] || config.headers['x-organization-id'])
-        );
-        if (!hasOrgHeader) {
-          let activeOrgId = getActiveOrganizationId();
-          if (!activeOrgId && config.params?.organizationId) {
-            activeOrgId = String(config.params.organizationId).trim();
-          }
-          if (!activeOrgId && config.url && typeof config.url === 'string' && config.url.includes('organizationId=')) {
-            try {
-              const parsedUrl = new URL(config.url, 'http://localhost');
-              const qOrgId = parsedUrl.searchParams.get('organizationId');
-              if (qOrgId) activeOrgId = qOrgId.trim();
-            } catch (e) { }
-          }
-          if (activeOrgId && (config.url?.includes('/organization') || config.url?.includes('/role-templates'))) {
-            if (config.headers && typeof config.headers.set === 'function') {
-              config.headers.set('X-Organization-Id', activeOrgId);
-            } else {
-              if (!config.headers) config.headers = {};
-              config.headers['X-Organization-Id'] = activeOrgId;
-            }
+        // Keep the organization header aligned with an explicitly requested
+        // target organization rather than a potentially stale active selection.
+        let requestedOrganizationId = config.params?.organizationId
+          ? String(config.params.organizationId).trim()
+          : null;
+        if (!requestedOrganizationId && config.url?.includes('organizationId=')) {
+          try {
+            requestedOrganizationId = new URL(config.url, 'http://localhost')
+              .searchParams.get('organizationId')?.trim() || null;
+          } catch (e) { }
+        }
+        const isOrganizationScopedRequest = config.url?.includes('/organization')
+          || config.url?.includes('/role-templates')
+          || Boolean(requestedOrganizationId);
+        const organizationId = isOrganizationScopedRequest
+          ? (requestedOrganizationId || getActiveOrganizationId())
+          : null;
+        if (organizationId) {
+          if (config.headers && typeof config.headers.set === 'function') {
+            config.headers.set('X-Organization-Id', organizationId);
+          } else {
+            if (!config.headers) config.headers = {};
+            config.headers['X-Organization-Id'] = organizationId;
           }
         }
 
         // Attach organizationId query parameter for organization-level APIs if not already set
         if (config.url?.includes('/role-templates') || config.url?.includes('/organization')) {
-          const activeOrgId = getActiveOrganizationId();
+          const activeOrgId = requestedOrganizationId || getActiveOrganizationId();
           if (activeOrgId) {
             config.params = config.params || {};
             if (!config.params.organizationId) {
@@ -559,6 +552,7 @@ export const attachResponseInterceptor = (instance) => {
 
       // If a refresh is already in-flight for this module, queue this request
       if (isModuleRefreshing(moduleName)) {
+        originalRequest._retry = true;
         try {
           const newToken = await enqueue(moduleName);
           const freshToken = newToken || getFreshAccessToken();
@@ -738,6 +732,8 @@ export const attachResponseInterceptor = (instance) => {
         // 401, 403 or genuine client rejection -> session is expired or revoked.
         dispatchLogout();
         return Promise.reject(refreshError);
+      } finally {
+        setRefreshing(moduleName, false);
       }
     },
   );

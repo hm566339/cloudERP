@@ -1,14 +1,77 @@
 package com.erp.gateway_service.config;
 
-import org.junit.jupiter.api.DisplayName;
+import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.server.MockServerWebExchange;
+import org.springframework.web.server.ServerWebExchange;
+
+import java.lang.reflect.Field;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.time.Duration;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class JwtAuthenticationFilterTest {
+
+    @Test
+    @DisplayName("The same valid token is validated and forwarded unchanged for SSO auth and organization APIs")
+    void testSameValidTokenIsForwardedForProtectedSsoEndpoints() throws Exception {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        Field publicKeyField = JwtAuthenticationFilter.class.getDeclaredField("publicKey");
+        publicKeyField.setAccessible(true);
+
+        JwtAuthenticationFilter filter = new JwtAuthenticationFilter();
+        publicKeyField.set(filter, keyPair.getPublic());
+
+        String organizationId = "f997d7d6-366b-4af7-a9f6-93e699a3f87c";
+        String token = Jwts.builder()
+                .subject("owner@example.test")
+                .claim("userId", "6e52b6cc-5d49-43b6-9aa4-9136242c8a9b")
+                .claim("organizationId", organizationId)
+                .claim("roles", List.of("OWNER"))
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 60_000))
+                .signWith(keyPair.getPrivate(), Jwts.SIG.RS256)
+                .compact();
+        String authorization = "Bearer " + token;
+
+        for (String path : List.of(
+                "/api/sso/me",
+                "/api/sso/organization/appearance?organizationId=" + organizationId,
+                "/api/sso/companies?organizationId=" + organizationId,
+                "/api/sso/subscription?organizationId=" + organizationId)) {
+            AtomicReference<ServerWebExchange> forwarded = new AtomicReference<>();
+            MockServerWebExchange exchange = MockServerWebExchange.from(
+                    MockServerHttpRequest.get(path)
+                            .header(HttpHeaders.AUTHORIZATION, authorization)
+                            .build());
+
+            filter.filter(exchange, downstream -> {
+                forwarded.set(downstream);
+                return reactor.core.publisher.Mono.empty();
+            }).block(Duration.ofSeconds(3));
+
+            assertNotNull(forwarded.get(), path + " must reach the downstream service");
+            assertEquals(authorization,
+                    forwarded.get().getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION));
+            assertEquals(List.of(organizationId),
+                    forwarded.get().getRequest().getHeaders().get("X-Organization-Id"));
+        }
+    }
 
     @Test
     @DisplayName("Organization lookup /api/sso/organization/{code} must be recognized as public")

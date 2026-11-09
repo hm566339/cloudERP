@@ -65,9 +65,17 @@ public class OrganizationContextFilter extends OncePerRequestFilter {
 
         // 2. Check for explicit organizationId supplied in query param or header
         String rawOrgId = request.getParameter("organizationId");
+        String organizationIdSource = "query";
         if (rawOrgId == null || rawOrgId.isBlank()) {
             rawOrgId = request.getHeader("X-Organization-Id");
+            organizationIdSource = rawOrgId != null && !rawOrgId.isBlank() ? "header" : "none";
         }
+        log.debug("Organization context resolving method={} path={} authenticationType={} principalType={} organizationIdSource={} organizationId={}",
+                request.getMethod(), request.getRequestURI(), authentication.getClass().getSimpleName(),
+                authentication.getPrincipal() != null
+                        ? authentication.getPrincipal().getClass().getSimpleName()
+                        : "none",
+                organizationIdSource, rawOrgId);
 
         if (rawOrgId != null && !rawOrgId.isBlank()) {
             UUID requestedOrgId;
@@ -207,4 +215,3 @@ public class OrganizationContextFilter extends OncePerRequestFilter {
         response.getWriter().write("{\"success\":false,\"message\":\"" + message + "\",\"data\":{}}");
     }
 }
-

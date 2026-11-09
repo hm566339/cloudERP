@@ -59,6 +59,11 @@ public class YamlAuthorizationFilter extends OncePerRequestFilter {
         // 2. If not authenticated -> 401
         if (authentication == null || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getPrincipal())) {
+            Object principal = authentication != null ? authentication.getPrincipal() : null;
+            log.warn("YAML authorization rejected unauthenticated request method={} path={} authenticationType={} principalType={}",
+                    request.getMethod(), request.getRequestURI(),
+                    authentication != null ? authentication.getClass().getSimpleName() : "none",
+                    principal != null ? principal.getClass().getSimpleName() : "none");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"message\":\"Authentication required\"}");
