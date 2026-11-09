@@ -337,9 +337,9 @@ function AccountDashboard() {
         {/* ────────── Dashboard Cards (KPIs) ────────── */}
         {companyId ? (
           <>
-            <DashboardSection 
-              title="Key Metrics" 
-              icon={BarChart3} 
+            <DashboardSection
+              title="Key Metrics"
+              icon={BarChart3}
               description="Real-time financial indicators."
             >
               {isLoadingCards ? (
@@ -357,7 +357,7 @@ function AccountDashboard() {
                     const variant = trendDir === 'up' ? 'success' : trendDir === 'down' ? 'danger' : 'default';
 
                     return (
-                      <StatCard 
+                      <StatCard
                         key={card.id || idx}
                         title={card.title}
                         value={typeof val === 'number' ? val.toLocaleString('en-IN') : val}
@@ -379,9 +379,9 @@ function AccountDashboard() {
 
             {/* ────────── Charts Row ────────── */}
             {isLoadingCards || (loading && charts.length === 0) ? (
-              <DashboardSection 
-                title="Analytics & Trends" 
-                icon={PieChart} 
+              <DashboardSection
+                title="Analytics & Trends"
+                icon={PieChart}
                 description="Visualized financial insights."
               >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -396,16 +396,16 @@ function AccountDashboard() {
                 </div>
               </DashboardSection>
             ) : charts && charts.length > 0 ? (
-              <DashboardSection 
-                title="Analytics & Trends" 
-                icon={PieChart} 
+              <DashboardSection
+                title="Analytics & Trends"
+                icon={PieChart}
                 description="Visualized financial insights."
               >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {charts.map((chart, idx) => {
                     const isExpense = chart.id?.includes('expense') || chart.id?.includes('payable');
                     return (
-                      <ChartCard 
+                      <ChartCard
                         key={chart.id || idx}
                         title={chart.title}
                         type="area"
@@ -413,13 +413,13 @@ function AccountDashboard() {
                         dataKeys={CHART_DATA_KEYS}
                         xAxisKey="label"
                         colors={(() => {
-                        const titleLower = (chart.title || chart.id || '').toLowerCase();
-                        if (titleLower.includes('expense') || titleLower.includes('payable')) return EXPENSE_CHART_COLORS;
-                        if (titleLower.includes('revenue') || titleLower.includes('sales')) return REVENUE_CHART_COLORS;
-                        if (titleLower.includes('cash')) return CASH_FLOW_COLORS;
-                        if (titleLower.includes('receivable')) return ['#2E3D28', '#74865A'];
-                        return DEFAULT_CHART_COLORS;
-                      })()}
+                          const titleLower = (chart.title || chart.id || '').toLowerCase();
+                          if (titleLower.includes('expense') || titleLower.includes('payable')) return EXPENSE_CHART_COLORS;
+                          if (titleLower.includes('revenue') || titleLower.includes('sales')) return REVENUE_CHART_COLORS;
+                          if (titleLower.includes('cash')) return CASH_FLOW_COLORS;
+                          if (titleLower.includes('receivable')) return ['#2E3D28', '#74865A'];
+                          return DEFAULT_CHART_COLORS;
+                        })()}
                       />
                     );
                   })}
@@ -444,9 +444,9 @@ function AccountDashboard() {
               )}
 
               {/* Activities */}
-              <DashboardSection 
-                title="Recent Activity" 
-                icon={Activity} 
+              <DashboardSection
+                title="Recent Activity"
+                icon={Activity}
                 className={`mb-0 ${(!rbac.permissions.includes('APPROVE') && alerts.length === 0) ? 'lg:col-span-2' : ''}`}
               >
                 <ActivityList activities={mappedActivities} loading={isLoadingActivities} />
@@ -455,9 +455,9 @@ function AccountDashboard() {
 
             {/* ────────── Module Navigation ────────── */}
             {navigation.length > 0 && (
-              <DashboardSection 
-                title="Module Navigation" 
-                icon={Navigation} 
+              <DashboardSection
+                title="Module Navigation"
+                icon={Navigation}
                 description="Quick access to key areas."
               >
                 <NavigationCard items={mappedNavigation} />

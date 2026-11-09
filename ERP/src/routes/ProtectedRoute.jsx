@@ -18,7 +18,7 @@ export default function ProtectedRoute({
   const sessionStatus = useAppSelector(selectSessionStatus);
   const selectedCompany = useAppSelector(selectSelectedCompany);
   const authContext = useAppSelector(selectAuthContext);
-  
+
   const location = useLocation();
   const { companyId } = useParams();
   const dispatch = useAppDispatch();
@@ -26,7 +26,7 @@ export default function ProtectedRoute({
 
   const isTenantLocked = !!user?.companyCode || !!user?.companyId;
   const lockedCompanyId = user?.companyCode || user?.companyId;
-  
+
   const rawRole = user?.role || authContext?.user?.role || '';
   const userRole = typeof rawRole === 'object' ? (rawRole.name || '') : String(rawRole);
   const normalizedUserRole = userRole.toLowerCase().replace(/[\s_]/g, '');
@@ -36,7 +36,7 @@ export default function ProtectedRoute({
   // Specific routes that bypass company requirements
   const isAccountsRoute = location.pathname === '/accounts' || location.pathname.startsWith('/accounts/') || location.pathname === '/account' || location.pathname.startsWith('/account/');
   const isProcurementRoute = [
-    '/purchase-requisitions', '/rfqs', '/supplier-quotes', '/supplier-quotations', '/purchase-orders', 
+    '/purchase-requisitions', '/rfqs', '/supplier-quotes', '/supplier-quotations', '/purchase-orders',
     '/goods-receipts', '/purchase-invoices', '/payments'
   ].some(p => location.pathname === p || location.pathname.startsWith(p + '/'));
   const shouldRequireCompany = requireCompany && !isAccountsRoute && !isProcurementRoute;
@@ -51,7 +51,7 @@ export default function ProtectedRoute({
           if (stored && (stored.id?.toString() === companyId.toString() || stored.code?.toString() === companyId.toString())) {
             candidate = stored;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
       if (isSuperAdminUser || !isTenantLocked || lockedCompanyId?.toString() === companyId.toString()) {
         dispatch(setSelectedCompany(candidate || {
@@ -100,7 +100,7 @@ export default function ProtectedRoute({
     const searchParams = new URLSearchParams(location.search);
     const queryToken = searchParams.get('token') || searchParams.get('accessToken') || searchParams.get('access_token') || searchParams.get('jwt');
     const cookieToken = queryToken || getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token') || (typeof localStorage !== 'undefined' ? (localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('auth_token')) : null);
-    
+
     if (cookieToken) {
       const decoded = parseJwt(cookieToken);
       if (decoded) {
@@ -127,7 +127,7 @@ export default function ProtectedRoute({
             try {
               localStorage.removeItem('auth_token');
               localStorage.removeItem('access_token');
-            } catch (_) {}
+            } catch (_) { }
           }
           if (typeof window !== 'undefined' && window.history?.replaceState) {
             try {

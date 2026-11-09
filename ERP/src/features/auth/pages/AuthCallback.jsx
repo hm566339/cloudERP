@@ -19,7 +19,7 @@ export default function AuthCallback() {
   const dispatch = useDispatch();
   const [triggerSsoGetMe] = useLazySsoGetMeQuery();
   const [error, setError] = useState(null);
-  
+
   // Prevent strict mode double-firing which can consume single-use auth codes
   const hasProcessed = useRef(false);
 
@@ -32,7 +32,7 @@ export default function AuthCallback() {
       const queryToken = searchParams.get('token') || searchParams.get('accessToken') || searchParams.get('access_token');
       const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
       const secureAttr = isHttps ? '; Secure' : '';
-      
+
       // If we got a token in the query params, save it to cookies and localStorage
       if (queryToken) {
         document.cookie = `ACCESS_TOKEN=${queryToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
@@ -42,15 +42,15 @@ export default function AuthCallback() {
           try {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('access_token');
-          } catch (_) {}
+          } catch (_) { }
         }
       }
-      
+
       let cookieToken = queryToken || getCookie('ACCESS_TOKEN') || getCookie('auth_token') || getCookie('access_token');
       if (!cookieToken && typeof localStorage !== 'undefined') {
         cookieToken = localStorage.getItem('ACCESS_TOKEN') || localStorage.getItem('auth_token');
       }
-      
+
       try {
         let activeToken = cookieToken;
         if (code) {
@@ -74,7 +74,7 @@ export default function AuthCallback() {
                 try {
                   localStorage.removeItem('auth_token');
                   localStorage.removeItem('access_token');
-                } catch (_) {}
+                } catch (_) { }
               }
               activeToken = newAccessToken;
             }
@@ -103,7 +103,7 @@ export default function AuthCallback() {
             tokenRole = extractRoleFromToken(activeToken, decodedToken) || 'viewer';
           }
         }
-        
+
         const isAdminContext = tokenRole === 'super_admin';
 
         let finalUser = decodedToken ? { ...decodedToken } : {};
@@ -124,8 +124,8 @@ export default function AuthCallback() {
           finalUser = { ...finalUser, ...decodedToken };
           mappedPermissions = meData?.permissions || decodedToken.permissions || decodedToken.modules || finalUser.permissions || (userRole === 'super_admin' ? ['all'] : ['dashboard']);
         } else {
-           userRole = extractRoleFromToken(null, finalUser) || 'viewer';
-           mappedPermissions = meData?.permissions || finalUser.permissions || (userRole === 'super_admin' ? ['all'] : ['dashboard']);
+          userRole = extractRoleFromToken(null, finalUser) || 'viewer';
+          mappedPermissions = meData?.permissions || finalUser.permissions || (userRole === 'super_admin' ? ['all'] : ['dashboard']);
         }
 
         const mergedUser = { ...finalUser, role: userRole };
@@ -137,7 +137,7 @@ export default function AuthCallback() {
             if (cachedSub) {
               mergedUser.subscription = JSON.parse(cachedSub);
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         dispatch(setCredentials({
@@ -176,7 +176,7 @@ export default function AuthCallback() {
         // Redirect to intended destination safely
         const rawDestination = sessionStorage.getItem('auth_redirect');
         sessionStorage.removeItem('auth_redirect');
-        
+
         let path = normalizeAppRedirectPath(rawDestination);
 
         const isOwnerUser =

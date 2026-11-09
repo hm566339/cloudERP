@@ -25,7 +25,7 @@ export default function AdminLogin() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
-  
+
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const currentUser = useSelector(selectCurrentUser)
 
@@ -75,7 +75,7 @@ export default function AdminLogin() {
           try {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('access_token');
-          } catch (_) {}
+          } catch (_) { }
         }
       }
       if (refreshTokenValue) {
@@ -134,7 +134,7 @@ export default function AdminLogin() {
 
   return (
     <div className="bg-white/95 dark:bg-[#161922]/95 backdrop-blur-2xl border border-white dark:border-[#2A2F3D] shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] p-8 sm:p-12 w-full max-w-lg mx-auto animate-fade-in-up relative overflow-hidden">
-      
+
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>

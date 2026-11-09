@@ -103,7 +103,7 @@ export const dispatchLogout = (options = {}) => {
         ) {
           sessionStorage.setItem('auth_return_to', returnUrl);
         }
-        
+
         // Expire all auth-related and legacy cookies manually across root and host domains
         const cookiesToClear = ['ACCESS_TOKEN', 'ACCESS_TOKEN_REFRESH', 'auth_token', 'access_token', 'refresh_token', 'SSO_SESSION'];
         cookiesToClear.forEach(name => {

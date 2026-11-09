@@ -8,9 +8,9 @@ export const getCookie = (name) => {
 export const setCookie = (name, value, days = 7) => {
   let expires = "";
   if (days) {
-      const date = new Date();
-      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-      expires = "; expires=" + date.toUTCString();
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    expires = "; expires=" + date.toUTCString();
   }
   document.cookie = name + "=" + encodeURIComponent(value || "") + expires + "; path=/";
 };
@@ -32,6 +32,6 @@ export const clearLegacyAuthCookies = () => {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('token');
-    } catch (_) {}
+    } catch (_) { }
   }
 };

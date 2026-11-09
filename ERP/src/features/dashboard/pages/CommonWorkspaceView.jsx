@@ -154,13 +154,13 @@ export default function CommonWorkspaceView() {
       {/* ── Top Bar / Global Header ── */}
       <header className="sticky top-0 z-30 bg-[#F7F7F0]/95 dark:bg-card-dark/95 backdrop-blur-md border-b border-[#D5D8CA] dark:border-border-dark shadow-xs transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          
+
           {/* Brand Logo & Organization Context */}
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             <MarkLogo className="h-8 w-auto object-contain cursor-pointer" onClick={() => navigate('/workspace')} />
-            
+
             <div className="hidden sm:block h-6 w-px bg-zinc-200" />
-            
+
             <div className="flex items-center gap-2">
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
@@ -187,7 +187,7 @@ export default function CommonWorkspaceView() {
 
           {/* Center / Right Actions */}
           <div className="flex items-center gap-3">
-            
+
             {/* Active Company Switcher */}
             {companies.length > 0 && (
               <div className="relative">
@@ -215,9 +215,8 @@ export default function CommonWorkspaceView() {
                             <button
                               key={comp.id || comp.code}
                               onClick={() => handleSelectCompany(comp)}
-                              className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-[var(--color-surface-2)] transition-colors ${
-                                isCurrent ? 'font-bold text-zinc-900 bg-zinc-50/80' : 'text-zinc-600'
-                              }`}
+                              className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-[var(--color-surface-2)] transition-colors ${isCurrent ? 'font-bold text-zinc-900 bg-zinc-50/80' : 'text-zinc-600'
+                                }`}
                             >
                               <div className="truncate mr-2">
                                 <div className="truncate">{comp.name || comp.legalName}</div>
@@ -291,7 +290,7 @@ export default function CommonWorkspaceView() {
                           <span>Organization Control Center</span>
                         </Link>
                       )}
-                      
+
                       <Link
                         to="/subscription"
                         onClick={() => setProfileDropdownOpen(false)}
@@ -326,12 +325,12 @@ export default function CommonWorkspaceView() {
 
       {/* ── Main Workspace Body ── */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
+
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
           <div className="absolute right-0 top-0 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            
+
             <div className="space-y-2 max-w-2xl">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11px] font-semibold text-zinc-200 border border-white/10 mb-1">
                 <Sparkles size={12} className="text-sky-400" />

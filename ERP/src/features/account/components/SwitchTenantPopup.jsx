@@ -347,7 +347,7 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
               try {
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('access_token');
-              } catch (_) {}
+              } catch (_) { }
             }
             switchSuccess = true;
           }
@@ -435,180 +435,180 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
       onClose();
 
       // 8. Load the selected company's dashboard and workspace
-        if (targetCompany?.id) {
-          navigate(`/company/${encodeURIComponent(targetCompany.id)}/dashboard`);
-        } else {
-          navigate('/company-select');
-        }
-      } catch (err) {
-        console.error('[SwitchTenant] Error during company switch:', err);
-        const msg = err?.data?.message || err?.message || 'Failed to switch company. Please try again.';
-        setErrorMessage(msg);
-        dispatch(addAlert({ type: 'error', message: msg }));
-      } finally {
-        setIsSwitching(false);
-        setSwitchingTargetId(null);
+      if (targetCompany?.id) {
+        navigate(`/company/${encodeURIComponent(targetCompany.id)}/dashboard`);
+      } else {
+        navigate('/company-select');
       }
-    };
+    } catch (err) {
+      console.error('[SwitchTenant] Error during company switch:', err);
+      const msg = err?.data?.message || err?.message || 'Failed to switch company. Please try again.';
+      setErrorMessage(msg);
+      dispatch(addAlert({ type: 'error', message: msg }));
+    } finally {
+      setIsSwitching(false);
+      setSwitchingTargetId(null);
+    }
+  };
 
-    if (!open) return null;
+  if (!open) return null;
 
-    return (
-      <div
-        ref={containerRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="switch-tenant-title"
-        className={`absolute bottom-full left-0 right-0 mb-2 w-full min-w-[280px] sm:min-w-[320px] bg-[var(--color-surface)] dark:bg-[#161922] border border-[var(--color-border)] dark:border-[#2A2F3D] rounded-2xl shadow-2xl z-50 overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 ${className}`}
-      >
-        {/* ── Top Header ── */}
-        <div className="flex items-center justify-between px-3.5 py-3 border-b border-[var(--color-border)] dark:border-[#2A2F3D] bg-[var(--color-surface-2)]/70 dark:bg-[#1D212C]/60">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-[var(--color-surface-2)] dark:bg-zinc-800 border border-[var(--color-border)] dark:border-zinc-700 flex items-center justify-center text-[var(--color-text-primary)] dark:text-[#A0A6B5] shrink-0">
-              <Building2 size={15} />
-            </div>
-            <div className="min-w-0">
-              <h3 id="switch-tenant-title" className="text-xs font-bold text-[var(--color-text-primary)] dark:text-[#E6E8EE] truncate">
-                Switch Tenant
-              </h3>
-              <p className="text-[10px] text-[var(--color-text-secondary)] dark:text-[#A0A6B5] truncate">
-                {organizationName}
-              </p>
-            </div>
+  return (
+    <div
+      ref={containerRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="switch-tenant-title"
+      className={`absolute bottom-full left-0 right-0 mb-2 w-full min-w-[280px] sm:min-w-[320px] bg-[var(--color-surface)] dark:bg-[#161922] border border-[var(--color-border)] dark:border-[#2A2F3D] rounded-2xl shadow-2xl z-50 overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 ${className}`}
+    >
+      {/* ── Top Header ── */}
+      <div className="flex items-center justify-between px-3.5 py-3 border-b border-[var(--color-border)] dark:border-[#2A2F3D] bg-[var(--color-surface-2)]/70 dark:bg-[#1D212C]/60">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-7 h-7 rounded-lg bg-[var(--color-surface-2)] dark:bg-zinc-800 border border-[var(--color-border)] dark:border-zinc-700 flex items-center justify-center text-[var(--color-text-primary)] dark:text-[#A0A6B5] shrink-0">
+            <Building2 size={15} />
           </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close Switch Tenant dialog"
-            className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg transition-colors cursor-pointer"
-          >
-            <X size={15} />
-          </button>
+          <div className="min-w-0">
+            <h3 id="switch-tenant-title" className="text-xs font-bold text-[var(--color-text-primary)] dark:text-[#E6E8EE] truncate">
+              Switch Tenant
+            </h3>
+            <p className="text-[10px] text-[var(--color-text-secondary)] dark:text-[#A0A6B5] truncate">
+              {organizationName}
+            </p>
+          </div>
         </div>
 
-        {/* ── Error Banner if Switch Failed ── */}
-        {errorMessage && (
-          <div className="mx-3 mt-2.5 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-[#F0616D] text-xs flex items-start gap-2">
-            <AlertCircle size={15} className="shrink-0 mt-0.5" />
-            <span className="flex-1 leading-snug">{errorMessage}</span>
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close Switch Tenant dialog"
+          className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:text-[#A0A6B5] dark:hover:text-[#E6E8EE] hover:bg-zinc-100 dark:hover:bg-[#222736] rounded-lg transition-colors cursor-pointer"
+        >
+          <X size={15} />
+        </button>
+      </div>
 
-        {/* ── Search Input (visible if 3+ companies) ── */}
-        {companyList.length > 2 && (
-          <div className="px-3 pt-2.5 pb-1">
-            <div className="relative">
-              <Search size={13} className="absolute left-2.5 top-2.5 text-zinc-400 dark:text-[#A0A6B5]" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search companies..."
+      {/* ── Error Banner if Switch Failed ── */}
+      {errorMessage && (
+        <div className="mx-3 mt-2.5 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-[#F0616D] text-xs flex items-start gap-2">
+          <AlertCircle size={15} className="shrink-0 mt-0.5" />
+          <span className="flex-1 leading-snug">{errorMessage}</span>
+        </div>
+      )}
+
+      {/* ── Search Input (visible if 3+ companies) ── */}
+      {companyList.length > 2 && (
+        <div className="px-3 pt-2.5 pb-1">
+          <div className="relative">
+            <Search size={13} className="absolute left-2.5 top-2.5 text-zinc-400 dark:text-[#A0A6B5]" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search companies..."
+              disabled={isSwitching}
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-[var(--color-surface)] dark:bg-[#1D212C] border border-[var(--color-border)] dark:border-[#2A2F3D] text-[var(--color-text-primary)] dark:text-[#E6E8EE] placeholder-[var(--color-text-muted)] dark:placeholder-[#6B7184] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/15 focus:border-[var(--color-primary)] transition-all disabled:opacity-50"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Company List (Scrollable) ── */}
+      <div className="p-3 space-y-1.5 max-h-60 sm:max-h-72 overflow-y-auto custom-scrollbar">
+        {filteredCompanies.length === 0 ? (
+          <div className="py-6 px-4 text-center">
+            <Building size={24} className="mx-auto text-zinc-300 dark:text-zinc-600 mb-1.5" />
+            <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+              No companies found
+            </p>
+            <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">
+              {searchTerm ? 'Try a different search term' : 'No available tenants for this account'}
+            </p>
+          </div>
+        ) : (
+          filteredCompanies.map((comp) => {
+            const isCompActive =
+              (activeCompanyId && comp.id.toLowerCase() === activeCompanyId) ||
+              (activeCompanyCode && comp.code.toLowerCase() === activeCompanyCode);
+
+            const isThisSwitching = isSwitching && switchingTargetId === comp.id;
+
+            return (
+              <button
+                key={comp.id}
+                type="button"
                 disabled={isSwitching}
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-[var(--color-surface)] dark:bg-[#1D212C] border border-[var(--color-border)] dark:border-[#2A2F3D] text-[var(--color-text-primary)] dark:text-[#E6E8EE] placeholder-[var(--color-text-muted)] dark:placeholder-[#6B7184] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/15 focus:border-[var(--color-primary)] transition-all disabled:opacity-50"
-              />
-            </div>
-          </div>
-        )}
+                onClick={() => handleSelectCompany(comp)}
+                className={`w-full group flex items-center justify-between gap-3 p-2.5 rounded-xl border text-left transition-all duration-150 cursor-pointer select-none active:scale-[0.99] disabled:pointer-events-none ${isCompActive
+                  ? 'bg-[var(--color-surface-2)] dark:bg-zinc-800 border-[var(--color-border)] dark:border-zinc-700 shadow-2xs'
+                  : 'bg-[var(--color-surface)] dark:bg-[#1D212C]/60 hover:bg-[var(--color-surface-2)] dark:hover:bg-[#222736] border-[var(--color-border)] dark:border-[#2A2F3D]'
+                  }`}
+              >
+                {/* Logo / Initials */}
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-zinc-100 to-zinc-50 dark:from-[#1D212C] dark:to-[#222736] border border-zinc-200/60 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-2xs">
+                  {comp.logoUrl ? (
+                    <img
+                      src={comp.logoUrl}
+                      alt={comp.name}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    comp.initials
+                  )}
+                </div>
 
-        {/* ── Company List (Scrollable) ── */}
-        <div className="p-3 space-y-1.5 max-h-60 sm:max-h-72 overflow-y-auto custom-scrollbar">
-          {filteredCompanies.length === 0 ? (
-            <div className="py-6 px-4 text-center">
-              <Building size={24} className="mx-auto text-zinc-300 dark:text-zinc-600 mb-1.5" />
-              <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-                No companies found
-              </p>
-              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">
-                {searchTerm ? 'Try a different search term' : 'No available tenants for this account'}
-              </p>
-            </div>
-          ) : (
-            filteredCompanies.map((comp) => {
-              const isCompActive =
-                (activeCompanyId && comp.id.toLowerCase() === activeCompanyId) ||
-                (activeCompanyCode && comp.code.toLowerCase() === activeCompanyCode);
-
-              const isThisSwitching = isSwitching && switchingTargetId === comp.id;
-
-              return (
-                <button
-                  key={comp.id}
-                  type="button"
-                  disabled={isSwitching}
-                  onClick={() => handleSelectCompany(comp)}
-                  className={`w-full group flex items-center justify-between gap-3 p-2.5 rounded-xl border text-left transition-all duration-150 cursor-pointer select-none active:scale-[0.99] disabled:pointer-events-none ${isCompActive
-                      ? 'bg-[var(--color-surface-2)] dark:bg-zinc-800 border-[var(--color-border)] dark:border-zinc-700 shadow-2xs'
-                      : 'bg-[var(--color-surface)] dark:bg-[#1D212C]/60 hover:bg-[var(--color-surface-2)] dark:hover:bg-[#222736] border-[var(--color-border)] dark:border-[#2A2F3D]'
-                    }`}
-                >
-                  {/* Logo / Initials */}
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-zinc-100 to-zinc-50 dark:from-[#1D212C] dark:to-[#222736] border border-zinc-200/60 dark:border-[#2A2F3D] text-zinc-700 dark:text-[#E6E8EE] flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden shadow-2xs">
-                    {comp.logoUrl ? (
-                      <img
-                        src={comp.logoUrl}
-                        alt={comp.name}
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      comp.initials
-                    )}
-                  </div>
-
-                  {/* Company Details */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <p
-                        className={`text-xs font-semibold truncate ${isCompActive
-                            ? 'text-[#2E3D28] dark:text-[#4C8DFF]'
-                            : 'text-zinc-800 dark:text-[#E6E8EE] group-hover:text-zinc-900 dark:group-hover:text-white'
-                          }`}
-                      >
-                        {comp.name}
-                      </p>
-                    </div>
-                    <p className="text-[9.5px] text-zinc-400 dark:text-[#A0A6B5] truncate mt-0.5">
-                      Code: <span className="font-mono">{comp.code}</span>
+                {/* Company Details */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p
+                      className={`text-xs font-semibold truncate ${isCompActive
+                        ? 'text-[#2E3D28] dark:text-[#4C8DFF]'
+                        : 'text-zinc-800 dark:text-[#E6E8EE] group-hover:text-zinc-900 dark:group-hover:text-white'
+                        }`}
+                    >
+                      {comp.name}
                     </p>
                   </div>
+                  <p className="text-[9.5px] text-zinc-400 dark:text-[#A0A6B5] truncate mt-0.5">
+                    Code: <span className="font-mono">{comp.code}</span>
+                  </p>
+                </div>
 
-                  {/* Right Action / Active Indicator */}
-                  <div className="shrink-0">
-                    {isThisSwitching ? (
-                      <Loader2 size={15} className="animate-spin text-blue-600 dark:text-[#4C8DFF]" />
-                    ) : isCompActive ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
-                        <Check size={11} className="stroke-[2.5]" />
-                        Active
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-medium text-zinc-400 group-hover:text-[#2E3D28] dark:group-hover:text-[#4C8DFF] flex items-center gap-0.5 transition-colors">
-                        Switch
-                        <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
-                      </span>
-                    )}
-                  </div>
-                </button>
-              );
-            })
-          )}
-        </div>
-
-        {/* ── Bottom Footer Summary ── */}
-        <div className="px-3.5 py-2 border-t border-[#D5D8CA] dark:border-[#2A2F3D] bg-[#EDEEE4]/50 dark:bg-[#1D212C]/40 flex items-center justify-between text-[9.5px] text-zinc-400 dark:text-[#A0A6B5]">
-          <span>{companyList.length} total {companyList.length === 1 ? 'company' : 'companies'}</span>
-          {isSwitching ? (
-            <span className="flex items-center gap-1.5 text-blue-600 dark:text-[#4C8DFF] font-medium">
-              <Loader2 size={11} className="animate-spin" />
-              Switching workspace...
-            </span>
-          ) : (
-            <span>Click any company to switch</span>
-          )}
-        </div>
+                {/* Right Action / Active Indicator */}
+                <div className="shrink-0">
+                  {isThisSwitching ? (
+                    <Loader2 size={15} className="animate-spin text-blue-600 dark:text-[#4C8DFF]" />
+                  ) : isCompActive ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+                      <Check size={11} className="stroke-[2.5]" />
+                      Active
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-medium text-zinc-400 group-hover:text-[#2E3D28] dark:group-hover:text-[#4C8DFF] flex items-center gap-0.5 transition-colors">
+                      Switch
+                      <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })
+        )}
       </div>
-    );
-  }
+
+      {/* ── Bottom Footer Summary ── */}
+      <div className="px-3.5 py-2 border-t border-[#D5D8CA] dark:border-[#2A2F3D] bg-[#EDEEE4]/50 dark:bg-[#1D212C]/40 flex items-center justify-between text-[9.5px] text-zinc-400 dark:text-[#A0A6B5]">
+        <span>{companyList.length} total {companyList.length === 1 ? 'company' : 'companies'}</span>
+        {isSwitching ? (
+          <span className="flex items-center gap-1.5 text-blue-600 dark:text-[#4C8DFF] font-medium">
+            <Loader2 size={11} className="animate-spin" />
+            Switching workspace...
+          </span>
+        ) : (
+          <span>Click any company to switch</span>
+        )}
+      </div>
+    </div>
+  );
+}
 

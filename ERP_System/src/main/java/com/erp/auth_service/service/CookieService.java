@@ -8,15 +8,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class CookieService {
 
-    //  ADD AUTH COOKIES
+    // ADD AUTH COOKIES
     public void addAuthCookies(HttpServletResponse response, TokenResponse tokenResponse) {
 
         response.addCookie(createSecureCookie(
                 "ACCESS_TOKEN_REFRESH",
                 tokenResponse.getRefreshToken(),
                 7 * 24 * 60 * 60, // 7 days
-                true
-        ));
+                true));
 
         response.addCookie(createSecureCookie(
                 "ACCESS_TOKEN",
@@ -28,8 +27,7 @@ public class CookieService {
                 "SSO_SESSION",
                 tokenResponse.getUser().getId().toString(),
                 7 * 24 * 60 * 60, // 7 days
-                true
-        ));
+                true));
 
         // Clear legacy cookies
         response.addCookie(deleteCookie("auth_token"));
@@ -37,7 +35,7 @@ public class CookieService {
         response.addCookie(deleteCookie("refresh_token"));
     }
 
-    //  CLEAR COOKIES (LOGOUT)
+    // CLEAR COOKIES (LOGOUT)
     public void clearCookies(HttpServletResponse response) {
         response.addCookie(deleteCookie("ACCESS_TOKEN"));
         response.addCookie(deleteCookie("ACCESS_TOKEN_REFRESH"));
@@ -47,7 +45,7 @@ public class CookieService {
         response.addCookie(deleteCookie("refresh_token"));
     }
 
-    //  CREATE SECURE COOKIE
+    // CREATE SECURE COOKIE
     private Cookie createSecureCookie(String name, String value, int maxAge, boolean httpOnly) {
         Cookie cookie = new Cookie(name, value);
         cookie.setHttpOnly(httpOnly);
@@ -58,7 +56,7 @@ public class CookieService {
         return cookie;
     }
 
-    //  DELETE COOKIE
+    // DELETE COOKIE
     private Cookie deleteCookie(String name) {
         Cookie cookie = new Cookie(name, null);
         cookie.setHttpOnly(true);

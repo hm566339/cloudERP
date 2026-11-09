@@ -109,7 +109,7 @@ export default function CompanySelect() {
           try {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('access_token');
-          } catch (_) {}
+          } catch (_) { }
         }
         if (refreshTokenValue) {
           document.cookie = `ACCESS_TOKEN_REFRESH=${refreshTokenValue}; path=/; max-age=604800; SameSite=Lax${secureAttr}`;

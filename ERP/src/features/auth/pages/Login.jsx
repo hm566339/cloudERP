@@ -247,7 +247,7 @@ export default function Login() {
             try {
               localStorage.removeItem('auth_token');
               localStorage.removeItem('access_token');
-            } catch (_) {}
+            } catch (_) { }
           }
         }
         if (refreshTokenValue) {
@@ -293,7 +293,7 @@ export default function Login() {
         try {
           const legacyMe = await triggerGetMe().unwrap();
           finalUser = { ...finalUser, ...(legacyMe?.data || legacyMe) };
-        } catch (legacyErr) {}
+        } catch (legacyErr) { }
       }
 
       const activeToken = accessToken || getCookie('ACCESS_TOKEN') || getCookie('auth_token');
