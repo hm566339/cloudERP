@@ -185,50 +185,17 @@ if [ ! -f "${SCRIPT_DIR}/db/init.sql" ]; then
     exit 1
 fi
 
-# Ensure all databases defined in init.sql exist on existing PostgreSQL instances
-if docker inspect erp-db &>/dev/null; then
-    log_info "Verifying application databases in PostgreSQL..."
-    for target_db in account sso workflow_db inventory manufacturing communication_db; do
-        if ! docker exec erp-db psql -U "${POSTGRES_USER:-postgres}" -tc "SELECT 1 FROM pg_database WHERE datname = '$target_db'" 2>/dev/null | grep -q 1; then
-            log_info "Creating database '$target_db'..."
-            docker exec erp-db psql -U "${POSTGRES_USER:-postgres}" -c "CREATE DATABASE $target_db;" 2>/dev/null || true
-        fi
-    done
-
-    # Apply automated database schema migrations (e.g. organization_appearance custom_palette)
-    log_info "Applying and verifying automated schema migrations on database 'sso'..."
-    MIGRATION_FILE="${SCRIPT_DIR}/ERP_System/src/main/resources/db/migration/V14__add_missing_organization_appearance_custom_palette.sql"
-    if [ -f "$MIGRATION_FILE" ]; then
-        docker exec -i erp-db psql -U "${POSTGRES_USER:-postgres}" -d sso < "$MIGRATION_FILE" 2>/dev/null || true
-        log_success "Verified database 'sso' schema migrations (custom_palette & extended appearance columns)."
-    fi
-fi
-
-# 7. Start/recreate services non-destructively (NEVER uses down -v or drops volumes)
-log_info "Step 6/7: Deploying updated containers (Preserving persistent database volume)..."
-if ! $DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --remove-orphans; then
-    log_error "Docker Compose up failed!"
+# 6a. Start/verify infrastructure dependencies (db, rabbitmq) first
+log_info "Step 6a/7: Starting PostgreSQL and RabbitMQ infrastructure services..."
+if ! $DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d db rabbitmq; then
+    log_error "Failed to start database or message broker containers!"
+    docker logs --tail 40 erp-db 2>/dev/null || true
     exit 1
 fi
 
-# 8. Verification and health checks
-log_info "Step 7/7: Verifying container health..."
-REQUIRED_CONTAINERS=(
-    "erp-db"
-    "erp-rabbitmq"
-    "erp-auth-service"
-    "erp-account-service"
-    "erp-gateway-service"
-    "erp-workflow-service"
-    "erp-inventory-service"
-    "erp-communication-service"
-    "erp-manufacturing-service"
-    "erp-frontend"
-)
-
-# Wait for PostgreSQL container to become healthy
+# Wait for PostgreSQL container to become healthy before dependent microservices start
 echo -n "Waiting for PostgreSQL database container to report healthy"
-MAX_ATTEMPTS=30
+MAX_ATTEMPTS=40
 ATTEMPT=0
 DB_HEALTHY=false
 while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
@@ -237,6 +204,15 @@ while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
         DB_HEALTHY=true
         break
     fi
+    STATE=$(docker inspect --format='{{json .State.Status}}' erp-db 2>/dev/null || echo "\"unknown\"")
+    if [ "$STATE" = "\"exited\"" ] || [ "$STATE" = "\"dead\"" ]; then
+        echo ""
+        log_error "PostgreSQL container (erp-db) exited prematurely (State: $STATE)!"
+        log_error "Recent logs from erp-db:"
+        docker logs --tail 40 erp-db 2>/dev/null || true
+        log_error "Check if disk space is full or if a stale postmaster.pid exists in the volume."
+        exit 1
+    fi
     echo -n "."
     sleep 2
     ATTEMPT=$((ATTEMPT + 1))
@@ -244,8 +220,13 @@ done
 echo ""
 
 if [ "$DB_HEALTHY" != true ]; then
-    log_warn "Database health check timed out. Microservices may take extra time initializing."
+    log_error "PostgreSQL container (erp-db) failed to become healthy within $((MAX_ATTEMPTS * 2)) seconds!"
+    log_error "Recent logs from erp-db:"
+    docker logs --tail 40 erp-db 2>/dev/null || true
+    log_error "Troubleshooting: Check disk space (df -h) or stale /var/lib/postgresql/data/postmaster.pid."
+    exit 1
 fi
+log_success "PostgreSQL database is running and healthy."
 
 # Wait for RabbitMQ message broker container to become healthy
 echo -n "Waiting for RabbitMQ message broker container to report healthy"
@@ -270,6 +251,46 @@ if [ "$RABBIT_HEALTHY" != true ]; then
     exit 1
 fi
 log_success "RabbitMQ message broker is healthy."
+
+# 6b. Verify application databases and execute automated schema migrations on healthy db
+log_info "Verifying application databases in PostgreSQL..."
+for target_db in account sso workflow_db inventory manufacturing communication_db; do
+    if ! docker exec erp-db psql -U "${POSTGRES_USER:-postgres}" -tc "SELECT 1 FROM pg_database WHERE datname = '$target_db'" 2>/dev/null | grep -q 1; then
+        log_info "Creating database '$target_db'..."
+        docker exec erp-db psql -U "${POSTGRES_USER:-postgres}" -c "CREATE DATABASE $target_db;" 2>/dev/null || true
+    fi
+done
+
+# Apply automated database schema migrations (e.g. organization_appearance custom_palette)
+log_info "Applying and verifying automated schema migrations on database 'sso'..."
+MIGRATION_FILE="${SCRIPT_DIR}/ERP_System/src/main/resources/db/migration/V14__add_missing_organization_appearance_custom_palette.sql"
+if [ -f "$MIGRATION_FILE" ]; then
+    docker exec -i erp-db psql -U "${POSTGRES_USER:-postgres}" -d sso < "$MIGRATION_FILE" 2>/dev/null || true
+    log_success "Verified database 'sso' schema migrations (custom_palette & extended appearance columns)."
+fi
+
+# 7. Start/recreate all application services non-destructively (NEVER uses down -v or drops volumes)
+log_info "Step 6c/7: Deploying updated application containers (Preserving persistent volumes)..."
+if ! $DOCKER_COMPOSE -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --remove-orphans; then
+    log_error "Docker Compose up failed!"
+    docker logs --tail 40 erp-db 2>/dev/null || true
+    exit 1
+fi
+
+# 8. Verification and health checks
+log_info "Step 7/7: Verifying container health..."
+REQUIRED_CONTAINERS=(
+    "erp-db"
+    "erp-rabbitmq"
+    "erp-auth-service"
+    "erp-account-service"
+    "erp-gateway-service"
+    "erp-workflow-service"
+    "erp-inventory-service"
+    "erp-communication-service"
+    "erp-manufacturing-service"
+    "erp-frontend"
+)
 
 # Give services a brief stabilization period
 sleep 5
