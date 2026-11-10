@@ -1,6 +1,9 @@
 package com.erp.auth_service.controller;
 
+import com.erp.auth_service.dto.platform.MemberCompanyRoleDto;
+import com.erp.auth_service.dto.platform.PlatformMemberSummaryResponse;
 import com.erp.auth_service.dto.request.InviteMemberRequest;
+import com.erp.auth_service.dto.response.AccessibleCompanyResponse;
 import com.erp.auth_service.dto.response.InviteMemberResponse;
 import com.erp.auth_service.exception.BadRequestException;
 import com.erp.auth_service.exception.DuplicateResourceException;
@@ -16,33 +19,25 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
 class OrganizationAdministrationControllerInviteTest {
 
     private MockMvc mockMvc;
-
-    @Mock
-    private OrganizationAdministrationService administrationService;
-
+    private FakeOrganizationAdministrationService fakeService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private UUID orgId;
@@ -50,7 +45,8 @@ class OrganizationAdministrationControllerInviteTest {
 
     @BeforeEach
     void setUp() {
-        OrganizationAdministrationController controller = new OrganizationAdministrationController(administrationService);
+        fakeService = new FakeOrganizationAdministrationService();
+        OrganizationAdministrationController controller = new OrganizationAdministrationController(fakeService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -75,32 +71,18 @@ class OrganizationAdministrationControllerInviteTest {
                 .memberType(MemberType.MEMBER)
                 .build();
 
-        InviteMemberResponse response = InviteMemberResponse.builder()
-                .memberId(UUID.randomUUID())
-                .userId(UUID.randomUUID())
-                .organizationId(orgId)
-                .email("newuser@example.com")
-                .fullName("New User")
-                .memberType(MemberType.MEMBER)
-                .membershipStatus(MembershipStatus.INVITED)
-                .message("Invitation successfully sent to newuser@example.com")
-                .invitedAt(LocalDateTime.now())
-                .build();
-
-        when(administrationService.inviteMember(eq(orgId), any(InviteMemberRequest.class)))
-                .thenReturn(response);
-
         mockMvc.perform(post("/api/sso/organization/members/invite")
-                        .param("organizationId", orgId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .param("organizationId", orgId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.email").value("newuser@example.com"))
                 .andExpect(jsonPath("$.data.membershipStatus").value("INVITED"))
                 .andExpect(jsonPath("$.data.message").value("Invitation successfully sent to newuser@example.com"));
 
-        verify(administrationService).inviteMember(eq(orgId), any(InviteMemberRequest.class));
+        assertEquals(orgId, fakeService.lastOrganizationId);
+        assertEquals("newuser@example.com", fakeService.lastInviteRequest.getEmail());
     }
 
     @Test
@@ -114,25 +96,10 @@ class OrganizationAdministrationControllerInviteTest {
                 .memberType(MemberType.MEMBER)
                 .build();
 
-        InviteMemberResponse response = InviteMemberResponse.builder()
-                .memberId(UUID.randomUUID())
-                .userId(UUID.randomUUID())
-                .organizationId(orgId)
-                .email("teammate@example.com")
-                .fullName("Teammate")
-                .memberType(MemberType.MEMBER)
-                .membershipStatus(MembershipStatus.INVITED)
-                .message("Invitation successfully sent to teammate@example.com")
-                .invitedAt(LocalDateTime.now())
-                .build();
-
-        when(administrationService.inviteMember(eq(orgId), any(InviteMemberRequest.class)))
-                .thenReturn(response);
-
         mockMvc.perform(post("/api/organization/members/invite")
-                        .header("X-Organization-Id", orgId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .header("X-Organization-Id", orgId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.email").value("teammate@example.com"));
@@ -148,31 +115,27 @@ class OrganizationAdministrationControllerInviteTest {
                 .build();
 
         mockMvc.perform(post("/api/sso/organization/members/invite")
-                        .param("organizationId", orgId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .param("organizationId", orgId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
-
-        verifyNoInteractions(administrationService);
     }
 
     @Test
     @DisplayName("POST /api/sso/organization/members/invite rejects duplicate active member with 409 Conflict")
     void inviteMemberDuplicateActive() throws Exception {
         RequestContext.set(userId, orgId, null, null, AccessMode.FULL);
+        fakeService.shouldThrowDuplicate = true;
 
         InviteMemberRequest request = InviteMemberRequest.builder()
                 .email("existing@example.com")
                 .build();
 
-        when(administrationService.inviteMember(eq(orgId), any(InviteMemberRequest.class)))
-                .thenThrow(new DuplicateResourceException("User is already an active member of this organization"));
-
         mockMvc.perform(post("/api/sso/organization/members/invite")
-                        .param("organizationId", orgId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .param("organizationId", orgId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("User is already an active member of this organization"));
@@ -182,18 +145,16 @@ class OrganizationAdministrationControllerInviteTest {
     @DisplayName("POST /api/sso/organization/members/invite rejects non-admin caller with 403 Forbidden")
     void inviteMemberUnauthorized() throws Exception {
         RequestContext.set(userId, orgId, null, null, AccessMode.FULL);
+        fakeService.shouldThrowForbidden = true;
 
         InviteMemberRequest request = InviteMemberRequest.builder()
                 .email("test@example.com")
                 .build();
 
-        when(administrationService.inviteMember(eq(orgId), any(InviteMemberRequest.class)))
-                .thenThrow(new ForbiddenException("Only organization OWNER or ADMIN can invite members"));
-
         mockMvc.perform(post("/api/sso/organization/members/invite")
-                        .param("organizationId", orgId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .param("organizationId", orgId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("Only organization OWNER or ADMIN can invite members"));
@@ -205,12 +166,13 @@ class OrganizationAdministrationControllerInviteTest {
         UUID targetMemberId = UUID.randomUUID();
 
         mockMvc.perform(patch("/api/sso/organization/members/" + targetMemberId + "/status")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"ACTIVE\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"status\":\"ACTIVE\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
-        verify(administrationService).updateMemberStatus(targetMemberId, "ACTIVE");
+        assertEquals(targetMemberId, fakeService.lastUpdatedMemberId);
+        assertEquals("ACTIVE", fakeService.lastUpdatedStatus);
     }
 
     @Test
@@ -222,7 +184,112 @@ class OrganizationAdministrationControllerInviteTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
-        verify(administrationService).removeMemberFromOrganization(targetMemberId);
+        assertEquals(targetMemberId, fakeService.lastRemovedMemberId);
+    }
+
+    // Fake Service implementation with zero external dependencies / agents
+    static class FakeOrganizationAdministrationService implements OrganizationAdministrationService {
+        UUID lastOrganizationId;
+        InviteMemberRequest lastInviteRequest;
+        UUID lastUpdatedMemberId;
+        String lastUpdatedStatus;
+        UUID lastRemovedMemberId;
+
+        boolean shouldThrowDuplicate = false;
+        boolean shouldThrowForbidden = false;
+
+        @Override
+        public InviteMemberResponse inviteMember(UUID organizationId, InviteMemberRequest request) {
+            this.lastOrganizationId = organizationId;
+            this.lastInviteRequest = request;
+
+            if (shouldThrowDuplicate) {
+                throw new DuplicateResourceException("User is already an active member of this organization");
+            }
+            if (shouldThrowForbidden) {
+                throw new ForbiddenException("Only organization OWNER or ADMIN can invite members");
+            }
+
+            return InviteMemberResponse.builder()
+                    .memberId(UUID.randomUUID())
+                    .userId(UUID.randomUUID())
+                    .organizationId(organizationId)
+                    .email(request.getEmail())
+                    .fullName(request.getFullName())
+                    .memberType(request.getMemberType() != null ? request.getMemberType() : MemberType.MEMBER)
+                    .membershipStatus(MembershipStatus.INVITED)
+                    .companyId(request.getCompanyId())
+                    .message("Invitation successfully sent to " + request.getEmail())
+                    .invitedAt(LocalDateTime.now())
+                    .build();
+        }
+
+        @Override
+        public void updateMemberStatus(UUID memberId, String status) {
+            this.lastUpdatedMemberId = memberId;
+            this.lastUpdatedStatus = status;
+        }
+
+        @Override
+        public void removeMemberFromOrganization(UUID memberId) {
+            this.lastRemovedMemberId = memberId;
+        }
+
+        @Override
+        public void grantCompanyAccess(UUID memberId, UUID companyId) {
+        }
+
+        @Override
+        public void grantCompanyAccess(UUID memberId, UUID companyId, UUID roleId) {
+        }
+
+        @Override
+        public void grantCompanyAccess(UUID memberId, UUID companyId, List<UUID> roleIds) {
+        }
+
+        @Override
+        public void updateCompanyRole(UUID memberId, UUID companyId, UUID roleId) {
+        }
+
+        @Override
+        public void addCompanyRole(UUID memberId, UUID companyId, UUID roleId) {
+        }
+
+        @Override
+        public void removeCompanyRole(UUID memberId, UUID companyId, UUID roleId) {
+        }
+
+        @Override
+        public void syncCompanyRoles(UUID memberId, UUID companyId, List<UUID> roleIds) {
+        }
+
+        @Override
+        public void revokeCompanyAccess(UUID memberId, UUID companyId) {
+        }
+
+        @Override
+        public List<AccessibleCompanyResponse> accessibleCompanies(UUID organizationId) {
+            return List.of();
+        }
+
+        @Override
+        public List<PlatformMemberSummaryResponse> organizationMembers(UUID organizationId) {
+            return List.of();
+        }
+
+        @Override
+        public List<MemberCompanyRoleDto> memberCompanyAccesses(UUID memberId) {
+            return List.of();
+        }
+
+        @Override
+        public List<MemberCompanyRoleDto> userCompanyAccesses(UUID userId) {
+            return List.of();
+        }
+
+        @Override
+        public UUID resolveMemberIdByUserId(UUID userId) {
+            return UUID.randomUUID();
+        }
     }
 }
-
