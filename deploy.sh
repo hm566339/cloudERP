@@ -60,6 +60,21 @@ else
 fi
 log_success "Docker environment verified: $($DOCKER_COMPOSE version | head -n 1)"
 
+# 1b. Production host disk space pre-flight check
+if command -v df &>/dev/null; then
+    AVAIL_KB=$(df -k "$SCRIPT_DIR" 2>/dev/null | awk 'NR==2 {print $4}' || echo "0")
+    if [ "$AVAIL_KB" -gt 0 ] 2>/dev/null; then
+        AVAIL_MB=$((AVAIL_KB / 1024))
+        if [ "$AVAIL_MB" -lt 2048 ]; then
+            log_warn "Host available disk space is low: ${AVAIL_MB}MB. Triggering safe non-destructive cleanup..."
+            docker image prune -f 2>/dev/null || true
+            docker builder prune -f --filter "until=168h" 2>/dev/null || true
+        else
+            log_success "Host disk space verified: ${AVAIL_MB}MB available."
+        fi
+    fi
+fi
+
 # 2. Environment file check
 log_info "Step 2/7: Validating environment configuration..."
 if [ ! -f "$ENV_FILE" ]; then
@@ -179,6 +194,14 @@ if docker inspect erp-db &>/dev/null; then
             docker exec erp-db psql -U "${POSTGRES_USER:-postgres}" -c "CREATE DATABASE $target_db;" 2>/dev/null || true
         fi
     done
+
+    # Apply automated database schema migrations (e.g. organization_appearance custom_palette)
+    log_info "Applying and verifying automated schema migrations on database 'sso'..."
+    MIGRATION_FILE="${SCRIPT_DIR}/ERP_System/src/main/resources/db/migration/V14__add_missing_organization_appearance_custom_palette.sql"
+    if [ -f "$MIGRATION_FILE" ]; then
+        docker exec -i erp-db psql -U "${POSTGRES_USER:-postgres}" -d sso < "$MIGRATION_FILE" 2>/dev/null || true
+        log_success "Verified database 'sso' schema migrations (custom_palette & extended appearance columns)."
+    fi
 fi
 
 # 7. Start/recreate services non-destructively (NEVER uses down -v or drops volumes)

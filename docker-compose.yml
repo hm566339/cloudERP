@@ -36,7 +36,7 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
+        max-size: "10m"
         max-file: "3"
     networks:
       - erp-network
@@ -65,7 +65,7 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
+        max-size: "10m"
         max-file: "3"
     networks:
       - erp-network
@@ -132,7 +132,7 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
+        max-size: "10m"
         max-file: "3"
     networks:
       - erp-network
@@ -190,7 +190,7 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
+        max-size: "10m"
         max-file: "3"
     networks:
       - erp-network
@@ -224,7 +224,7 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
+        max-size: "10m"
         max-file: "3"
     networks:
       - erp-network
@@ -267,7 +267,7 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
+        max-size: "10m"
         max-file: "3"
     networks:
       - erp-network
@@ -322,7 +322,7 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
+        max-size: "10m"
         max-file: "3"
     networks:
       - erp-network
@@ -375,7 +375,7 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
+        max-size: "10m"
         max-file: "3"
     networks:
       - erp-network
@@ -422,7 +422,7 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
+        max-size: "10m"
         max-file: "3"
     networks:
       - erp-network
@@ -455,7 +455,7 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"
+        max-size: "10m"
         max-file: "3"
     networks:
       - erp-network

@@ -43,6 +43,13 @@ spring:
         jdbc:
           time_zone: UTC
 
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+    validate-on-migrate: false
+
 server:
   port: ${PORT:8090}
   address: ${SERVER_ADDRESS:0.0.0.0}
@@ -69,7 +76,9 @@ management:
 
   health:
     diskspace:
-      enabled: true
+      enabled: ${HEALTH_DISKSPACE_ENABLED:true}
+      threshold: ${HEALTH_DISKSPACE_THRESHOLD:20MB}
+      path: ${HEALTH_DISKSPACE_PATH:/app}
     db:
       enabled: true
 

@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: erp-auth-service-test
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+management:
+  health:
+    diskspace:
+      enabled: false
+
