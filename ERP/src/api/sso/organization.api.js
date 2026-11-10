@@ -504,6 +504,17 @@ export const organizationApiSlice = baseApi.injectEndpoints({
       providesTags: ['OrganizationMembers'],
     }),
 
+    // POST /api/sso/organization/members/invite
+    inviteOrgMember: builder.mutation({
+      query: ({ organizationId, ...body }) => ({
+        url: `/api/sso/organization/members/invite`,
+        method: 'POST',
+        params: organizationId ? { organizationId } : undefined,
+        body,
+      }),
+      invalidatesTags: ['OrganizationMembers', 'Organization'],
+    }),
+
     // GET /api/sso/organization/members/{memberId}/companies/access
     getMemberCompanyAccess: builder.query({
       query: (memberId) => ({
@@ -590,6 +601,7 @@ export const {
   useAddOrganizationMemberMutation,
   useAssignModuleToOrganizationMutation,
   useGetOrgMembersQuery,
+  useInviteOrgMemberMutation,
   useGetMemberCompanyAccessQuery,
   useGetUserCompanyAccessQuery,
   useGrantMemberCompanyAccessMutation,

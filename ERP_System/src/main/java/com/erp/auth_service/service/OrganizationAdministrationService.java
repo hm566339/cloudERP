@@ -2,11 +2,19 @@ package com.erp.auth_service.service;
 
 import com.erp.auth_service.dto.platform.MemberCompanyRoleDto;
 import com.erp.auth_service.dto.platform.PlatformMemberSummaryResponse;
+import com.erp.auth_service.dto.request.InviteMemberRequest;
 import com.erp.auth_service.dto.response.AccessibleCompanyResponse;
+import com.erp.auth_service.dto.response.InviteMemberResponse;
 import java.util.List;
 import java.util.UUID;
 
 public interface OrganizationAdministrationService {
+    InviteMemberResponse inviteMember(UUID organizationId, InviteMemberRequest request);
+
+    void updateMemberStatus(UUID memberId, String status);
+
+    void removeMemberFromOrganization(UUID memberId);
+
     void grantCompanyAccess(UUID memberId, UUID companyId);
 
     void grantCompanyAccess(UUID memberId, UUID companyId, UUID roleId);

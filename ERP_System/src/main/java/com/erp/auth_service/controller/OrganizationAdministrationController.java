@@ -4,13 +4,20 @@ import com.erp.auth_service.dto.platform.MemberCompanyRoleDto;
 import com.erp.auth_service.dto.platform.PlatformMemberSummaryResponse;
 import com.erp.auth_service.dto.request.AssignRoleRequest;
 import com.erp.auth_service.dto.request.CompanyAccessRequest;
+import com.erp.auth_service.dto.request.InviteMemberRequest;
 import com.erp.auth_service.dto.request.RequestWrapper;
 import com.erp.auth_service.dto.response.AccessibleCompanyResponse;
+import com.erp.auth_service.dto.response.InviteMemberResponse;
 import com.erp.auth_service.dto.response.ResponseWrapper;
+import com.erp.auth_service.exception.BadRequestException;
+import com.erp.auth_service.exception.ForbiddenException;
+import com.erp.auth_service.repository.OrganizationMemberRepository;
 import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.service.OrganizationAdministrationService;
+import com.erp.auth_service.utility.MembershipStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -18,10 +25,44 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/sso/organization/members")
+@RequestMapping({ "/api/sso/organization/members", "/api/organization/members" })
 @RequiredArgsConstructor
 public class OrganizationAdministrationController {
     private final OrganizationAdministrationService administrationService;
+
+    @Autowired(required = false)
+    private OrganizationMemberRepository organizationMemberRepository;
+
+    @PostMapping("/invite")
+    public ResponseEntity<ResponseWrapper<InviteMemberResponse>> invite(
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId,
+            @Valid @RequestBody InviteMemberRequest request) {
+        UUID effectiveOrgId = resolveOrgId(organizationId, headerOrgId,
+                request != null ? request.getOrganizationId() : null);
+        InviteMemberResponse response = administrationService.inviteMember(effectiveOrgId, request);
+        return ResponseEntity.ok(ResponseWrapper.success(response));
+    }
+
+    @PatchMapping("/{memberId}/status")
+    public ResponseEntity<ResponseWrapper<Map<String, String>>> updateStatus(
+            @PathVariable UUID memberId,
+            @RequestBody Map<String, String> body) {
+        String status = body != null ? body.get("status") : null;
+        if (status == null || status.isBlank()) {
+            throw new BadRequestException("Status is required");
+        }
+        administrationService.updateMemberStatus(memberId, status);
+        return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Member status updated successfully")));
+    }
+
+    @DeleteMapping("/{memberId}")
+    public ResponseEntity<ResponseWrapper<Map<String, String>>> deleteMember(
+            @PathVariable UUID memberId) {
+        administrationService.removeMemberFromOrganization(memberId);
+        return ResponseEntity
+                .ok(ResponseWrapper.success(Map.of("message", "Member removed from organization successfully")));
+    }
 
     @PostMapping("/{memberId}/companies")
     public ResponseEntity<ResponseWrapper<Map<String, String>>> grant(
@@ -55,7 +96,8 @@ public class OrganizationAdministrationController {
             @PathVariable UUID companyId,
             @Valid @RequestBody RequestWrapper<AssignRoleRequest> request) {
         AssignRoleRequest data = request.getData();
-        List<UUID> roleIds = data.getRoleIds() != null ? data.getRoleIds() : (data.getRoleId() != null ? List.of(data.getRoleId()) : List.of());
+        List<UUID> roleIds = data.getRoleIds() != null ? data.getRoleIds()
+                : (data.getRoleId() != null ? List.of(data.getRoleId()) : List.of());
         administrationService.syncCompanyRoles(memberId, companyId, roleIds);
         return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Company roles synchronized successfully")));
     }
@@ -123,7 +165,8 @@ public class OrganizationAdministrationController {
             @Valid @RequestBody RequestWrapper<AssignRoleRequest> request) {
         UUID memberId = administrationService.resolveMemberIdByUserId(userId);
         AssignRoleRequest data = request.getData();
-        List<UUID> roleIds = data.getRoleIds() != null ? data.getRoleIds() : (data.getRoleId() != null ? List.of(data.getRoleId()) : List.of());
+        List<UUID> roleIds = data.getRoleIds() != null ? data.getRoleIds()
+                : (data.getRoleId() != null ? List.of(data.getRoleId()) : List.of());
         administrationService.syncCompanyRoles(memberId, companyId, roleIds);
         return ResponseEntity.ok(ResponseWrapper.success(Map.of("message", "Company roles synchronized successfully")));
     }
@@ -181,5 +224,29 @@ public class OrganizationAdministrationController {
     public ResponseEntity<ResponseWrapper<List<MemberCompanyRoleDto>>> getUserCompanyAccess(
             @PathVariable UUID userId) {
         return ResponseEntity.ok(ResponseWrapper.success(administrationService.userCompanyAccesses(userId)));
+    }
+
+    private UUID resolveOrgId(UUID explicitOrgId, UUID headerOrgId, UUID bodyOrgId) {
+        if (explicitOrgId != null) {
+            return explicitOrgId;
+        }
+        if (bodyOrgId != null) {
+            return bodyOrgId;
+        }
+        if (headerOrgId != null) {
+            return headerOrgId;
+        }
+        RequestContext.Context ctx = RequestContext.get();
+        if (ctx != null && ctx.organizationId() != null) {
+            return ctx.organizationId();
+        }
+        if (ctx != null && ctx.userId() != null && organizationMemberRepository != null) {
+            var activeMembers = organizationMemberRepository.findByUser_IdAndMembershipStatus(
+                    ctx.userId(), MembershipStatus.ACTIVE);
+            if (activeMembers.size() == 1) {
+                return activeMembers.get(0).getOrganization().getId();
+            }
+        }
+        throw new ForbiddenException("Organization context required");
     }
 }

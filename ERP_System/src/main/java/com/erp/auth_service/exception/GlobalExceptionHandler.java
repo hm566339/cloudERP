@@ -136,7 +136,8 @@ public class GlobalExceptionHandler {
         }
 
         // 401
-        @ExceptionHandler({BadCredentialsException.class, org.springframework.security.authentication.BadCredentialsException.class})
+        @ExceptionHandler({ BadCredentialsException.class,
+                        org.springframework.security.authentication.BadCredentialsException.class })
         public ResponseEntity<ResponseWrapper<Object>> handleBadCredentials(
                         Exception ex,
                         HttpServletRequest request) {
@@ -210,6 +211,14 @@ public class GlobalExceptionHandler {
                         org.springframework.web.HttpRequestMethodNotSupportedException ex,
                         HttpServletRequest request) {
                 return buildResponse(ex.getMessage(), HttpStatus.METHOD_NOT_ALLOWED, Map.of());
+        }
+
+        @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+        public ResponseEntity<ResponseWrapper<Object>> handleNoResourceFound(
+                        org.springframework.web.servlet.resource.NoResourceFoundException ex,
+                        HttpServletRequest request) {
+                log.warn("Static resource or endpoint not found: {} {}", request.getMethod(), request.getRequestURI());
+                return buildResponse("Endpoint not found: " + request.getRequestURI(), HttpStatus.NOT_FOUND, Map.of());
         }
 
         @ExceptionHandler(org.hibernate.LazyInitializationException.class)

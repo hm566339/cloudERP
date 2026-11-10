@@ -2,8 +2,11 @@ package com.erp.auth_service.service.impl;
 
 import com.erp.auth_service.dto.platform.MemberCompanyRoleDto;
 import com.erp.auth_service.dto.platform.PlatformMemberSummaryResponse;
+import com.erp.auth_service.dto.request.InviteMemberRequest;
 import com.erp.auth_service.dto.response.AccessibleCompanyResponse;
+import com.erp.auth_service.dto.response.InviteMemberResponse;
 import com.erp.auth_service.exception.BadRequestException;
+import com.erp.auth_service.exception.DuplicateResourceException;
 import com.erp.auth_service.exception.ForbiddenException;
 import com.erp.auth_service.exception.ResourceNotFoundException;
 import com.erp.auth_service.model.*;
@@ -11,24 +14,45 @@ import com.erp.auth_service.repository.*;
 import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.service.OrganizationAdministrationService;
 import com.erp.auth_service.service.AuthorizationService;
+import com.erp.auth_service.utility.AccessMode;
+import com.erp.auth_service.utility.AccountStatus;
 import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
+import com.erp.auth_service.utility.OrganizationStatus;
+import com.erp.auth_service.utility.Status;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class OrganizationAdministrationServiceImpl implements OrganizationAdministrationService {
     private final OrganizationMemberRepository memberRepository;
     private final MemberCompanyAccessRepository accessRepository;
     private final CompanyRepository companyRepository;
     private final AuthorizationService authorizationService;
     private final SubscriptionRepository subscriptionRepository;
+
+    @Autowired(required = false)
+    private OrganizationRepository organizationRepository;
+
+    @Autowired(required = false)
+    private UserRepository userRepository;
+
+    @Autowired(required = false)
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired(required = false)
+    private com.erp.auth_service.mail.EmailService emailService;
 
     @Autowired(required = false)
     private UserRoleRepository userRoleRepository;
@@ -126,7 +150,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         // Assign roles if specified
         if (!targetRoles.isEmpty() && userRoleRepository != null) {
             for (Role targetRole : targetRoles) {
-                Optional<UserRole> existingUr = userRoleRepository.findByUser_IdAndRole_Id(target.getUser().getId(), targetRole.getId());
+                Optional<UserRole> existingUr = userRoleRepository.findByUser_IdAndRole_Id(target.getUser().getId(),
+                        targetRole.getId());
                 if (existingUr.isEmpty()) {
                     userRoleRepository.save(UserRole.builder().user(target.getUser()).role(targetRole).build());
                 }
@@ -148,7 +173,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
             }
         }
 
-        // Invalidate active session for this user in this company so refreshed permissions take effect
+        // Invalidate active session for this user in this company so refreshed
+        // permissions take effect
         if (sessionRepository != null) {
             sessionRepository.deleteByUser_IdAndCompany_Id(target.getUser().getId(), companyId);
         }
@@ -206,7 +232,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
             Optional<UserRole> existing = userRoleRepository.findByUser_IdAndRole_Id(target.getUser().getId(), roleId);
             if (existing.isPresent()) {
                 UserRole ur = existing.get();
-                if (ur.getRole() != null && ur.getRole().getCompany() != null && ur.getRole().getCompany().getId().equals(companyId)) {
+                if (ur.getRole() != null && ur.getRole().getCompany() != null
+                        && ur.getRole().getCompany().getId().equals(companyId)) {
                     userRoleRepository.delete(ur);
                 }
             }
@@ -383,7 +410,7 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         }
         List<OrganizationMember> members = memberRepository.findByOrganization_Id(organizationId);
         return members.stream()
-                .filter(m -> m.getMembershipStatus() == MembershipStatus.ACTIVE && m.getDeletedAt() == null)
+                .filter(m -> m.getDeletedAt() == null && m.getMembershipStatus() != MembershipStatus.REMOVED)
                 .map(m -> {
                     var activeAccess = accessRepository.findActiveForMember(m.getId(), organizationId);
                     List<String> companyNames = activeAccess.stream()
@@ -398,7 +425,7 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                         List<UUID> rIds = new ArrayList<>();
                         List<String> rNames = new ArrayList<>();
 
-                        if (userRoleRepository != null) {
+                        if (userRoleRepository != null && m.getUser() != null) {
                             List<UserRole> uRoles = userRoleRepository
                                     .findAllByUser_IdAndRole_Company_Id(m.getUser().getId(), comp.getId());
                             if (uRoles != null && !uRoles.isEmpty()) {
@@ -426,12 +453,13 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                                 .build();
                     }).toList();
 
+                    User u = m.getUser();
                     return PlatformMemberSummaryResponse.builder()
                             .memberId(m.getId())
-                            .userId(m.getUser().getId())
-                            .email(m.getUser().getEmail())
-                            .username(m.getUser().getUsername())
-                            .fullName(m.getUser().getFullName())
+                            .userId(u != null ? u.getId() : null)
+                            .email(u != null ? u.getEmail() : null)
+                            .username(u != null ? u.getUsername() : null)
+                            .fullName(u != null ? u.getFullName() : null)
                             .memberType(m.getMemberType())
                             .membershipStatus(m.getMembershipStatus())
                             .authorizedCompanies(companyNames)
@@ -441,6 +469,311 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                             .build();
                 })
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public InviteMemberResponse inviteMember(UUID organizationId, InviteMemberRequest request) {
+        authorizationService.requireWriteAccess();
+
+        if (organizationId == null) {
+            throw new BadRequestException("Organization ID is required");
+        }
+
+        RequestContext.Context context = RequestContext.get();
+        if (context == null || context.userId() == null) {
+            throw new ForbiddenException("Authentication and organization context required");
+        }
+
+        if (organizationRepository == null || userRepository == null) {
+            throw new IllegalStateException("Required repositories are not initialized");
+        }
+
+        Organization org = organizationRepository.findById(organizationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found"));
+
+        if (org.getDeletedAt() != null
+                || org.getStatus() == OrganizationStatus.DELETED
+                || org.getStatus() == OrganizationStatus.SUSPENDED) {
+            throw new BadRequestException("Organization is not active or suspended");
+        }
+        if (org.getAccessMode() == AccessMode.BLOCKED) {
+            throw new ForbiddenException("Organization access is blocked");
+        }
+
+        OrganizationMember actor = memberRepository
+                .findByOrganization_IdAndUser_IdAndMembershipStatus(organizationId, context.userId(),
+                        MembershipStatus.ACTIVE)
+                .orElseThrow(() -> new ForbiddenException("Active organization membership required"));
+
+        if (actor.getMemberType() != MemberType.OWNER && actor.getMemberType() != MemberType.ADMIN) {
+            throw new ForbiddenException("Only organization OWNER or ADMIN can invite members");
+        }
+
+        MemberType requestedMemberType = request.getMemberType() != null ? request.getMemberType() : MemberType.MEMBER;
+        if (requestedMemberType == MemberType.OWNER) {
+            throw new BadRequestException("Cannot invite a member directly as OWNER. Use ownership transfer.");
+        }
+
+        // Subscription user limit check
+        Subscription subscription = subscriptionRepository
+                .findTopByOrganization_IdOrderByCreatedAtDesc(organizationId)
+                .orElse(null);
+        if (subscription != null && subscription.getPlan() != null && subscription.getPlan().getMaxUsers() != null) {
+            long currentMembers = memberRepository.countByOrganization_IdAndMembershipStatus(organizationId,
+                    MembershipStatus.ACTIVE);
+            if (currentMembers >= subscription.getPlan().getMaxUsers()) {
+                throw new BadRequestException("Maximum user limit (" + subscription.getPlan().getMaxUsers()
+                        + ") reached for organization's subscription plan");
+            }
+        }
+
+        String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
+
+        // Check if member already exists in this organization
+        List<OrganizationMember> existingMembers = memberRepository.findByOrganization_Id(organizationId);
+        Optional<OrganizationMember> existingOrgMemberOpt = existingMembers.stream()
+                .filter(m -> m.getUser() != null && email.equalsIgnoreCase(m.getUser().getEmail())
+                        && m.getDeletedAt() == null)
+                .findFirst();
+
+        if (existingOrgMemberOpt.isPresent()) {
+            OrganizationMember existing = existingOrgMemberOpt.get();
+            if (existing.getMembershipStatus() == MembershipStatus.ACTIVE) {
+                throw new DuplicateResourceException(
+                        "User with email " + email + " is already an active member of this organization");
+            }
+            if (existing.getMembershipStatus() == MembershipStatus.INVITED) {
+                existing.setInvitedBy(actor.getUser());
+                existing.setMemberType(requestedMemberType);
+                existing.setJoinedAt(LocalDateTime.now());
+                existing = memberRepository.save(existing);
+
+                if (request.getCompanyId() != null) {
+                    grantCompanyAccessIfRequested(existing, org, request.getCompanyId(), request.getRoleIds(),
+                            request.getRoleId());
+                }
+
+                trySendInviteEmail(email, org.getDisplayName() != null ? org.getDisplayName() : org.getLegalName());
+
+                return InviteMemberResponse.builder()
+                        .memberId(existing.getId())
+                        .userId(existing.getUser().getId())
+                        .organizationId(org.getId())
+                        .email(email)
+                        .username(existing.getUser().getUsername())
+                        .fullName(existing.getUser().getFullName())
+                        .memberType(existing.getMemberType())
+                        .membershipStatus(existing.getMembershipStatus())
+                        .companyId(request.getCompanyId())
+                        .message("Invitation resent successfully to " + email)
+                        .invitedAt(existing.getJoinedAt())
+                        .build();
+            }
+        }
+
+        // Resolve or create User
+        User targetUser;
+        Optional<User> existingGlobalUser = userRepository.findByEmailIgnoreCase(email);
+        Company primaryCompany = null;
+        if (request.getCompanyId() != null) {
+            primaryCompany = companyRepository
+                    .findByIdAndOrganization_IdAndActiveTrue(request.getCompanyId(), organizationId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Specified company not found or inactive in organization"));
+        } else {
+            List<Company> orgCompanies = companyRepository.findByOrganization_IdAndActiveTrue(organizationId);
+            if (!orgCompanies.isEmpty()) {
+                primaryCompany = orgCompanies.get(0);
+            } else {
+                throw new BadRequestException("Organization must have at least one active company to invite users");
+            }
+        }
+
+        if (existingGlobalUser.isPresent()) {
+            targetUser = existingGlobalUser.get();
+            if (request.getFullName() != null && !request.getFullName().isBlank()
+                    && (targetUser.getFullName() == null || targetUser.getFullName().isBlank())) {
+                targetUser.setFullName(request.getFullName().trim());
+            }
+            if (request.getEffectiveEmployeeId() != null
+                    && (targetUser.getEmpId() == null || targetUser.getEmpId().isBlank())) {
+                targetUser.setEmpId(request.getEffectiveEmployeeId());
+            }
+            targetUser = userRepository.save(targetUser);
+        } else {
+            String baseUsername = (request.getUsername() != null && !request.getUsername().isBlank())
+                    ? request.getUsername().trim()
+                    : email.split("@")[0].replaceAll("[^a-zA-Z0-9._]", "");
+            if (baseUsername.length() < 4) {
+                baseUsername = baseUsername + "user";
+            }
+            String finalUsername = baseUsername;
+            int counter = 1;
+            while (userRepository.existsByUsernameIgnoreCase(finalUsername)) {
+                finalUsername = baseUsername + counter++;
+            }
+
+            String fullName = (request.getFullName() != null && !request.getFullName().isBlank())
+                    ? request.getFullName().trim()
+                    : email.split("@")[0];
+
+            String tempPassword = UUID.randomUUID().toString().replace("-", "") + "Aa1@";
+            String encodedPassword = passwordEncoder != null
+                    ? passwordEncoder.encode(tempPassword)
+                    : new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode(tempPassword);
+
+            targetUser = User.builder()
+                    .company(primaryCompany)
+                    .email(email)
+                    .username(finalUsername)
+                    .fullName(fullName)
+                    .empId(request.getEffectiveEmployeeId())
+                    .password(encodedPassword)
+                    .accountStatus(AccountStatus.INACTIVE)
+                    .emailStatus(Status.UNVERIFIED)
+                    .failedLoginCount(0)
+                    .build();
+            targetUser = userRepository.save(targetUser);
+        }
+
+        OrganizationMember newMember = OrganizationMember.builder()
+                .organization(org)
+                .user(targetUser)
+                .memberType(requestedMemberType)
+                .membershipStatus(MembershipStatus.INVITED)
+                .invitedBy(actor.getUser())
+                .joinedAt(LocalDateTime.now())
+                .build();
+        newMember = memberRepository.save(newMember);
+
+        if (request.getCompanyId() != null) {
+            grantCompanyAccessIfRequested(newMember, org, request.getCompanyId(), request.getRoleIds(),
+                    request.getRoleId());
+        }
+
+        trySendInviteEmail(email, org.getDisplayName() != null ? org.getDisplayName() : org.getLegalName());
+
+        return InviteMemberResponse.builder()
+                .memberId(newMember.getId())
+                .userId(targetUser.getId())
+                .organizationId(org.getId())
+                .email(email)
+                .username(targetUser.getUsername())
+                .fullName(targetUser.getFullName())
+                .memberType(newMember.getMemberType())
+                .membershipStatus(newMember.getMembershipStatus())
+                .companyId(request.getCompanyId())
+                .message("Invitation successfully sent to " + email)
+                .invitedAt(newMember.getJoinedAt())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public void updateMemberStatus(UUID memberId, String status) {
+        authorizationService.requireWriteAccess();
+        OrganizationMember actor = actor();
+        OrganizationMember target = target(memberId, actor.getOrganization().getId());
+
+        if (target.getMemberType() == MemberType.OWNER) {
+            throw new ForbiddenException("Cannot modify status of organization owner");
+        }
+
+        MembershipStatus targetStatus;
+        try {
+            if ("INACTIVE".equalsIgnoreCase(status)) {
+                targetStatus = MembershipStatus.SUSPENDED;
+            } else {
+                targetStatus = MembershipStatus.valueOf(status.trim().toUpperCase(Locale.ROOT));
+            }
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(
+                    "Invalid status: " + status + ". Allowed values: ACTIVE, INACTIVE, SUSPENDED, INVITED");
+        }
+
+        target.setMembershipStatus(targetStatus);
+        memberRepository.save(target);
+
+        if (targetStatus == MembershipStatus.SUSPENDED || targetStatus == MembershipStatus.REMOVED) {
+            if (sessionRepository != null && target.getUser() != null) {
+                sessionRepository.deleteByUser_Id(target.getUser().getId());
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeMemberFromOrganization(UUID memberId) {
+        authorizationService.requireWriteAccess();
+        OrganizationMember actor = actor();
+        OrganizationMember target = target(memberId, actor.getOrganization().getId());
+
+        if (target.getMemberType() == MemberType.OWNER) {
+            throw new ForbiddenException("Cannot remove organization owner");
+        }
+
+        target.setMembershipStatus(MembershipStatus.REMOVED);
+        target.setDeletedAt(LocalDateTime.now());
+        memberRepository.save(target);
+
+        var activeAccess = accessRepository.findByOrganizationMember_IdAndActiveTrue(target.getId());
+        for (var acc : activeAccess) {
+            acc.setActive(false);
+            accessRepository.save(acc);
+        }
+
+        if (sessionRepository != null && target.getUser() != null) {
+            sessionRepository.deleteByUser_Id(target.getUser().getId());
+        }
+    }
+
+    private void grantCompanyAccessIfRequested(OrganizationMember member, Organization org, UUID companyId,
+            List<UUID> roleIds, UUID roleId) {
+        Company company = companyRepository.findByIdAndOrganization_IdAndActiveTrue(companyId, org.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found or inactive in organization"));
+
+        Optional<MemberCompanyAccess> existingAccess = accessRepository
+                .findByOrganizationMember_IdAndCompany_Id(member.getId(), company.getId());
+        if (existingAccess.isEmpty()) {
+            accessRepository.save(MemberCompanyAccess.builder()
+                    .organizationMember(member)
+                    .organization(org)
+                    .company(company)
+                    .active(true)
+                    .build());
+        } else {
+            MemberCompanyAccess mca = existingAccess.get();
+            if (!Boolean.TRUE.equals(mca.getActive())) {
+                mca.setActive(true);
+                accessRepository.save(mca);
+            }
+        }
+
+        List<UUID> targetRoleIds = roleIds != null && !roleIds.isEmpty() ? roleIds
+                : (roleId != null ? List.of(roleId) : List.of());
+        if (!targetRoleIds.isEmpty() && roleRepository != null && userRoleRepository != null) {
+            for (UUID rId : targetRoleIds) {
+                if (rId != null) {
+                    Role r = roleRepository.findById(rId).orElse(null);
+                    if (r != null && r.getCompany() != null && r.getCompany().getId().equals(company.getId())) {
+                        if (userRoleRepository.findByUser_IdAndRole_Id(member.getUser().getId(), r.getId()).isEmpty()) {
+                            userRoleRepository.save(UserRole.builder().user(member.getUser()).role(r).build());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void trySendInviteEmail(String email, String organizationName) {
+        if (emailService != null) {
+            try {
+                log.info("Dispatching invitation email notification for {} to {}", organizationName, email);
+            } catch (Exception ex) {
+                log.warn("Failed to dispatch invitation email to {}: {}", email, ex.getMessage());
+            }
+        }
     }
 
     private OrganizationMember actor() {
@@ -458,7 +791,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
     private OrganizationMember target(UUID memberId, UUID organizationId) {
         return memberRepository.findById(memberId)
                 .filter(member -> member.getOrganization().getId().equals(organizationId)
-                        && member.getMembershipStatus() == MembershipStatus.ACTIVE)
+                        && member.getDeletedAt() == null
+                        && member.getMembershipStatus() != MembershipStatus.REMOVED)
                 .orElseThrow(() -> new ResourceNotFoundException("Organization member not found"));
     }
 }
