@@ -266,6 +266,7 @@ export const DEFAULT_APPEARANCE_SETTINGS = {
   mode: 'system', // 'light' | 'dark' | 'system'
   layout: {
     sidebarCollapsed: false,
+    sidebarDefaultState: 'expanded', // 'expanded' | 'collapsed'
     density: 'comfortable',    // 'comfortable' | 'compact'
     contentWidth: 'standard',   // 'standard' | 'wide'
     borderRadius: 'medium',     // 'small' | 'medium' | 'large'
@@ -276,7 +277,13 @@ export const DEFAULT_APPEARANCE_SETTINGS = {
     fontSize: 'default',        // 'small' | 'default' | 'large'
     fontFamily: 'default',      // 'default' | 'jakarta' | 'roboto' | 'system'
   },
-  customColors: null, // null or { primary, secondary, accent, background }
+  branding: {
+    lightLogoUrl: '',
+    darkLogoUrl: '',
+    faviconUrl: '',
+  },
+  customOverridesEnabled: false,
+  customColors: null, // null or { primary, secondary, accent, background, surface, card, sidebar, header, textPrimary, textSecondary, border, success, warning, danger, info }
 };
 
 export const STORAGE_KEY = 'erp_appearance_settings';
@@ -488,159 +495,234 @@ export function applyAppearance(settings, orgId = null) {
   const effectiveOrgId = orgId || settings?.organizationId || getActiveOrgId();
 
   // Always persist appearance settings for the ERP application
-  try {
-    const serialized = JSON.stringify(settings);
-    if (effectiveOrgId) {
-      localStorage.setItem(getStorageKey(effectiveOrgId), serialized);
-      setActiveOrgId(effectiveOrgId);
-    }
-    localStorage.setItem(STORAGE_KEY, serialized);
-    localStorage.setItem('theme_mode', settings.mode);
-    if (settings.layout?.sidebarCollapsed !== undefined) {
-      localStorage.setItem('erp_sidebar_collapsed', String(settings.layout.sidebarCollapsed));
-      localStorage.setItem('owner_sidebar_collapsed', String(settings.layout.sidebarCollapsed));
-    }
-  } catch (err) {
-    console.warn('Failed to persist appearance settings:', err);
-  }
+      if (typeof localStorage !== 'undefined') {
+        try {
+          const serialized = JSON.stringify(settings);
+          if (effectiveOrgId) {
+            localStorage.setItem(getStorageKey(effectiveOrgId), serialized);
+            setActiveOrgId(effectiveOrgId);
+          }
+          localStorage.setItem(STORAGE_KEY, serialized);
+          localStorage.setItem('theme_mode', settings.mode);
+          if (settings.layout?.sidebarCollapsed !== undefined) {
+            localStorage.setItem('erp_sidebar_collapsed', String(settings.layout.sidebarCollapsed));
+            localStorage.setItem('owner_sidebar_collapsed', String(settings.layout.sidebarCollapsed));
+          }
+        } catch (err) {
+          console.warn('Failed to persist appearance settings:', err);
+        }
+      }
 
-  if (typeof document === 'undefined') return;
+      if (typeof document === 'undefined') return;
 
-  // If the browser is currently viewing the public Landing Page, apply Sage Nature with selected mode
-  if (isPublicLandingPath()) {
-    const effectiveMode = resolveEffectiveMode(settings.mode);
-    applyLandingSageTheme(effectiveMode);
-    return;
-  }
+      // If the browser is currently viewing the public Landing Page, apply Sage Nature with selected mode
+      if (isPublicLandingPath()) {
+        const effectiveMode = resolveEffectiveMode(settings.mode);
+        applyLandingSageTheme(effectiveMode);
+        return;
+      }
 
-  const root = document.documentElement;
-  const effectiveMode = resolveEffectiveMode(settings.mode);
-  const isDark = effectiveMode === 'dark';
+      const root = document.documentElement;
+      const effectiveMode = resolveEffectiveMode(settings.mode);
+      const isDark = effectiveMode === 'dark';
 
-  // 1. Sync Dark Mode class & color scheme
-  if (isDark) {
-    root.classList.add('dark');
-    root.style.colorScheme = 'dark';
-  } else {
-    root.classList.remove('dark');
-    root.style.colorScheme = 'light';
-  }
+      // 1. Sync Dark Mode class & color scheme
+      if (isDark) {
+        root.classList.add('dark');
+        root.style.colorScheme = 'dark';
+      } else {
+        root.classList.remove('dark');
+        root.style.colorScheme = 'light';
+      }
 
-  // 2. Resolve Color Palette from preset or custom
-  const preset = THEME_PRESETS.find((p) => p.id === settings.themePreset) || THEME_PRESETS[0];
-  const palette = isDark ? preset.dark : preset.light;
+      // 2. Resolve Color Palette from preset or custom
+      const preset = THEME_PRESETS.find((p) => p.id === settings.themePreset) || THEME_PRESETS[0];
+      const palette = isDark ? preset.dark : preset.light;
 
-  // CSS variables mapped globally across all components
-  root.style.setProperty('--color-bg-base', palette.background);
-  root.style.setProperty('--bg', palette.background);
-  root.style.setProperty('--color-surface', palette.surface);
-  root.style.setProperty('--surface', palette.surface);
-  root.style.setProperty('--color-surface-2', palette.surface2);
-  root.style.setProperty('--surface-2', palette.surface2);
-  root.style.setProperty('--color-surface-3', palette.surface3);
-  root.style.setProperty('--color-border', palette.border);
-  root.style.setProperty('--border', palette.border);
-  root.style.setProperty('--color-border-hover', palette.borderHover);
-  root.style.setProperty('--color-primary', palette.primary);
-  root.style.setProperty('--primary', palette.primary);
-  root.style.setProperty('--color-primary-hover', palette.primaryHover);
-  root.style.setProperty('--primary-hover', palette.primaryHover);
-  root.style.setProperty('--color-primary-active', palette.primaryActive);
-  root.style.setProperty('--color-primary-light', palette.primaryLight);
-  root.style.setProperty('--color-text-primary', palette.textPrimary);
-  root.style.setProperty('--text', palette.textPrimary);
-  root.style.setProperty('--color-text-secondary', palette.textSecondary);
-  root.style.setProperty('--color-text-muted', palette.textMuted);
-  root.style.setProperty('--color-sidebar-bg', palette.sidebarBg);
-  root.style.setProperty('--color-sidebar-hover-bg', palette.sidebarHover || palette.sidebarHoverBg);
-  root.style.setProperty('--color-sidebar-active-bg', palette.sidebarActiveBg);
-  root.style.setProperty('--color-sidebar-active-text', palette.sidebarActiveText);
-  root.style.setProperty('--color-sidebar-text', palette.textSecondary);
-  root.style.setProperty('--ring', palette.focusRing);
-  root.style.setProperty('--color-input-bg', isDark ? palette.surface2 : '#FFFFFF');
-  root.style.setProperty('--input-bg', isDark ? palette.surface2 : '#FFFFFF');
-  root.style.setProperty('--color-input-border', palette.border);
-  root.style.setProperty('--input-border', palette.border);
-  root.style.setProperty('--color-input-focus', palette.primary);
-  root.style.setProperty('--color-table-header', palette.tableHeaderBg || palette.surface2);
-  root.style.setProperty('--color-table-row-hover', palette.surface3 || palette.surface2);
-  root.style.setProperty('--color-navbar-bg', palette.surface);
-  root.style.setProperty('--color-navbar-border', palette.border);
-  root.style.setProperty('--color-footer-bg', palette.sidebarBg || palette.surface);
-  root.style.setProperty('--color-modal-bg', palette.surface);
-  root.style.setProperty('--color-dropdown-bg', palette.surface);
+      // CSS variables mapped globally across all components
+      root.style.setProperty('--color-bg-base', palette.background);
+      root.style.setProperty('--bg', palette.background);
+      root.style.setProperty('--color-surface', palette.surface);
+      root.style.setProperty('--surface', palette.surface);
+      root.style.setProperty('--color-surface-2', palette.surface2);
+      root.style.setProperty('--surface-2', palette.surface2);
+      root.style.setProperty('--color-surface-3', palette.surface3);
+      root.style.setProperty('--color-border', palette.border);
+      root.style.setProperty('--border', palette.border);
+      root.style.setProperty('--color-border-hover', palette.borderHover);
+      root.style.setProperty('--color-primary', palette.primary);
+      root.style.setProperty('--primary', palette.primary);
+      root.style.setProperty('--color-primary-hover', palette.primaryHover);
+      root.style.setProperty('--primary-hover', palette.primaryHover);
+      root.style.setProperty('--color-primary-active', palette.primaryActive);
+      root.style.setProperty('--color-primary-light', palette.primaryLight);
+      root.style.setProperty('--color-text-primary', palette.textPrimary);
+      root.style.setProperty('--text', palette.textPrimary);
+      root.style.setProperty('--color-text-secondary', palette.textSecondary);
+      root.style.setProperty('--color-text-muted', palette.textMuted);
+      root.style.setProperty('--color-sidebar-bg', palette.sidebarBg);
+      root.style.setProperty('--color-sidebar-hover-bg', palette.sidebarHover || palette.sidebarHoverBg);
+      root.style.setProperty('--color-sidebar-active-bg', palette.sidebarActiveBg);
+      root.style.setProperty('--color-sidebar-active-text', palette.sidebarActiveText);
+      root.style.setProperty('--color-sidebar-text', palette.textSecondary);
+      root.style.setProperty('--ring', palette.focusRing);
+      root.style.setProperty('--color-input-bg', isDark ? palette.surface2 : '#FFFFFF');
+      root.style.setProperty('--input-bg', isDark ? palette.surface2 : '#FFFFFF');
+      root.style.setProperty('--color-input-border', palette.border);
+      root.style.setProperty('--input-border', palette.border);
+      root.style.setProperty('--color-input-focus', palette.primary);
+      root.style.setProperty('--color-table-header', palette.tableHeaderBg || palette.surface2);
+      root.style.setProperty('--color-table-row-hover', palette.surface3 || palette.surface2);
+      root.style.setProperty('--color-navbar-bg', palette.surface);
+      root.style.setProperty('--color-navbar-border', palette.border);
+      root.style.setProperty('--color-footer-bg', palette.sidebarBg || palette.surface);
+      root.style.setProperty('--color-modal-bg', palette.surface);
+      root.style.setProperty('--color-dropdown-bg', palette.surface);
 
-  // If custom color overrides are present
-  if (settings.customColors) {
-    if (settings.customColors.primary) {
-      root.style.setProperty('--color-primary', settings.customColors.primary);
-      root.style.setProperty('--primary', settings.customColors.primary);
-      root.style.setProperty('--color-sidebar-active-bg', settings.customColors.primary);
-    }
-    if (settings.customColors.secondary) {
-      root.style.setProperty('--color-primary-light', settings.customColors.secondary);
-      root.style.setProperty('--color-text-secondary', settings.customColors.secondary);
-    }
-    if (settings.customColors.background) {
-      root.style.setProperty('--color-bg-base', settings.customColors.background);
-      root.style.setProperty('--bg', settings.customColors.background);
-    }
-  }
+          // Default semantic & status tokens
+          root.style.setProperty('--color-card', isDark ? palette.surface2 : palette.surface);
+          root.style.setProperty('--card', isDark ? palette.surface2 : palette.surface);
+          root.style.setProperty('--color-header', palette.surface);
+          root.style.setProperty('--color-success', '#10B981');
+          root.style.setProperty('--color-warning', '#F59E0B');
+          root.style.setProperty('--color-danger', '#EF4444');
+          root.style.setProperty('--color-info', '#3B82F6');
 
-  // 3. Set Global Data Attributes for Layout & Typography
-  root.setAttribute('data-theme', settings.themePreset || 'sage');
-  if (effectiveOrgId) {
-    root.setAttribute('data-org-id', effectiveOrgId);
-  } else {
-    root.removeAttribute('data-org-id');
-  }
-  root.setAttribute('data-density', settings.layout?.density || 'comfortable');
-  root.setAttribute('data-content-width', settings.layout?.contentWidth || 'standard');
-  root.setAttribute('data-border-radius', settings.layout?.borderRadius || 'medium');
-  root.setAttribute('data-card-shadows', settings.layout?.cardShadows ? 'on' : 'off');
-  root.setAttribute('data-table-density', settings.layout?.tableDensity || 'comfortable');
-  root.setAttribute('data-font-size', settings.typography?.fontSize || 'default');
-  root.setAttribute('data-font-family', settings.typography?.fontFamily || 'default');
+          // If custom color overrides are present and enabled
+          const custom = settings.customColors;
+          const isCustomActive = Boolean(custom && (settings.customOverridesEnabled || Object.keys(custom).length > 0));
 
-  // 4. Update Border Radius variable
-  const radiusMap = {
-    small: '6px',
-    medium: '12px',
-    large: '18px',
-  };
-  root.style.setProperty('--radius-card', radiusMap[settings.layout?.borderRadius] || '12px');
+          if (isCustomActive && custom) {
+            if (custom.primary) {
+              root.style.setProperty('--color-primary', custom.primary);
+              root.style.setProperty('--primary', custom.primary);
+              root.style.setProperty('--color-sidebar-active-bg', custom.primary);
+              root.style.setProperty('--color-input-focus', custom.primary);
+            }
+              if (custom.secondary) {
+                root.style.setProperty('--color-primary-light', custom.secondary);
+                root.style.setProperty('--color-secondary', custom.secondary);
+              }
+                if (custom.accent) {
+                  root.style.setProperty('--color-accent', custom.accent);
+                  root.style.setProperty('--color-primary-hover', custom.accent);
+                }
+                if (custom.background) {
+                  root.style.setProperty('--color-bg-base', custom.background);
+                  root.style.setProperty('--bg', custom.background);
+                  root.style.setProperty('--color-background', custom.background);
+                }
+                if (custom.surface) {
+                  root.style.setProperty('--color-surface', custom.surface);
+                  root.style.setProperty('--surface', custom.surface);
+                }
+                if (custom.card) {
+                  root.style.setProperty('--color-card', custom.card);
+                  root.style.setProperty('--card', custom.card);
+                }
+                if (custom.sidebar) {
+                  root.style.setProperty('--color-sidebar-bg', custom.sidebar);
+                }
+                if (custom.header) {
+                  root.style.setProperty('--color-header', custom.header);
+                  root.style.setProperty('--color-navbar-bg', custom.header);
+                }
+                if (custom.textPrimary) {
+                  root.style.setProperty('--color-text-primary', custom.textPrimary);
+                  root.style.setProperty('--text', custom.textPrimary);
+                }
+                if (custom.textSecondary) {
+                  root.style.setProperty('--color-text-secondary', custom.textSecondary);
+                  root.style.setProperty('--color-sidebar-text', custom.textSecondary);
+                }
+                if (custom.border) {
+                  root.style.setProperty('--color-border', custom.border);
+                  root.style.setProperty('--border', custom.border);
+                  root.style.setProperty('--color-input-border', custom.border);
+                }
+                if (custom.success) {
+                  root.style.setProperty('--color-success', custom.success);
+                }
+                if (custom.warning) {
+                  root.style.setProperty('--color-warning', custom.warning);
+                }
+                if (custom.danger) {
+                  root.style.setProperty('--color-danger', custom.danger);
+                }
+                if (custom.info) {
+                  root.style.setProperty('--color-info', custom.info);
+                }
+              }
 
-  // 5. Update Root Font Size variable
-  const fontSizeMap = {
-    small: '13px',
-    default: '14px',
-    large: '15px',
-  };
-  root.style.setProperty('--font-size-root', fontSizeMap[settings.typography?.fontSize] || '14px');
+              // Dynamic Favicon Update
+              if (typeof document !== 'undefined' && settings.branding?.faviconUrl) {
+                try {
+                  let iconLink = document.querySelector("link[rel*='icon']");
+                  if (!iconLink) {
+                    iconLink = document.createElement('link');
+                    iconLink.rel = 'shortcut icon';
+                    document.getElementsByTagName('head')[0]?.appendChild(iconLink);
+                  }
+                  iconLink.href = settings.branding.faviconUrl;
+                } catch (e) {
+                  console.warn('Could not update favicon dynamically:', e);
+                }
+              }
 
-  // 6. Update Font Family variable
-  const fontFamMap = {
-    default: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    jakarta: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif',
-    roboto: 'Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
-    system: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Segoe UI Web (West European)", "Helvetica Neue", sans-serif',
-  };
-  root.style.setProperty('--font-family-base', fontFamMap[settings.typography?.fontFamily] || fontFamMap.default);
+              // 3. Set Global Data Attributes for Layout & Typography
+              root.setAttribute('data-theme', settings.themePreset || 'sage');
+              if (effectiveOrgId) {
+                root.setAttribute('data-org-id', effectiveOrgId);
+              } else {
+                root.removeAttribute('data-org-id');
+              }
+              root.setAttribute('data-density', settings.layout?.density || 'comfortable');
+              root.setAttribute('data-content-width', settings.layout?.contentWidth || 'standard');
+              root.setAttribute('data-border-radius', settings.layout?.borderRadius || 'medium');
+              root.setAttribute('data-card-shadows', settings.layout?.cardShadows ? 'on' : 'off');
+              root.setAttribute('data-table-density', settings.layout?.tableDensity || 'comfortable');
+              root.setAttribute('data-font-size', settings.typography?.fontSize || 'default');
+              root.setAttribute('data-font-family', settings.typography?.fontFamily || 'default');
 
-  // 7. Save to localStorage (scoped to organization)
-  try {
-    const serialized = JSON.stringify(settings);
-    if (effectiveOrgId) {
-      localStorage.setItem(getStorageKey(effectiveOrgId), serialized);
-      setActiveOrgId(effectiveOrgId);
-    }
-    localStorage.setItem(STORAGE_KEY, serialized);
-    localStorage.setItem('theme_mode', settings.mode);
-    if (settings.layout?.sidebarCollapsed !== undefined) {
-      localStorage.setItem('erp_sidebar_collapsed', String(settings.layout.sidebarCollapsed));
-      localStorage.setItem('owner_sidebar_collapsed', String(settings.layout.sidebarCollapsed));
-    }
-  } catch (err) {
-    console.warn('Failed to persist appearance settings:', err);
-  }
-}
+              // 4. Update Border Radius variable
+              const radiusMap = {
+                small: '6px',
+                medium: '12px',
+                large: '18px',
+              };
+              root.style.setProperty('--radius-card', radiusMap[settings.layout?.borderRadius] || '12px');
+
+              // 5. Update Root Font Size variable
+              const fontSizeMap = {
+                small: '13px',
+                default: '14px',
+                large: '15px',
+              };
+              root.style.setProperty('--font-size-root', fontSizeMap[settings.typography?.fontSize] || '14px');
+
+              // 6. Update Font Family variable
+              const fontFamMap = {
+                default: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                jakarta: '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif',
+                roboto: 'Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
+                system: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Segoe UI Web (West European)", "Helvetica Neue", sans-serif',
+              };
+              root.style.setProperty('--font-family-base', fontFamMap[settings.typography?.fontFamily] || fontFamMap.default);
+
+              // 7. Save to localStorage (scoped to organization)
+              try {
+                const serialized = JSON.stringify(settings);
+                if (effectiveOrgId) {
+                  localStorage.setItem(getStorageKey(effectiveOrgId), serialized);
+                  setActiveOrgId(effectiveOrgId);
+                }
+                localStorage.setItem(STORAGE_KEY, serialized);
+                localStorage.setItem('theme_mode', settings.mode);
+                if (settings.layout?.sidebarCollapsed !== undefined) {
+                  localStorage.setItem('erp_sidebar_collapsed', String(settings.layout.sidebarCollapsed));
+                  localStorage.setItem('owner_sidebar_collapsed', String(settings.layout.sidebarCollapsed));
+                }
+              } catch (err) {
+                console.warn('Failed to persist appearance settings:', err);
+              }
+            }

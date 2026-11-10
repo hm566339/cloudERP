@@ -9,10 +9,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(
-        name = "organization_appearance",
-        uniqueConstraints = @UniqueConstraint(name = "uk_org_appearance_organization", columnNames = {"organization_id"})
-)
+@Table(name = "organization_appearance", uniqueConstraints = @UniqueConstraint(name = "uk_org_appearance_organization", columnNames = {
+        "organization_id" }))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -45,6 +43,63 @@ public class OrganizationAppearance {
     @Builder.Default
     private String fontFamily = "default";
 
+    // ── Layout & Structure Customization ──
+
+    @Column(name = "sidebar_default_state", length = 20)
+    @Builder.Default
+    private String sidebarDefaultState = "expanded";
+
+    @Column(name = "content_width", length = 20)
+    @Builder.Default
+    private String contentWidth = "standard";
+
+    @Column(name = "border_radius", length = 20)
+    @Builder.Default
+    private String borderRadius = "medium";
+
+    @Column(name = "card_shadow")
+    @Builder.Default
+    private Boolean cardShadow = true;
+
+    @Column(name = "table_density", length = 20)
+    @Builder.Default
+    private String tableDensity = "comfortable";
+
+    // ── Typography Customization ──
+
+    @Column(name = "base_font_size", length = 20)
+    @Builder.Default
+    private String baseFontSize = "default";
+
+    // ── Branding Assets & Logo Configuration ──
+
+    @Column(name = "light_logo_url", columnDefinition = "TEXT")
+    private String lightLogoUrl;
+
+    @Column(name = "dark_logo_url", columnDefinition = "TEXT")
+    private String darkLogoUrl;
+
+    @Column(name = "favicon_url", columnDefinition = "TEXT")
+    private String faviconUrl;
+
+    // ── Custom Palette Overrides (Advanced) ──
+
+    @Column(name = "custom_overrides_enabled")
+    @Builder.Default
+    private Boolean customOverridesEnabled = false;
+
+    @Column(name = "custom_palette", columnDefinition = "TEXT")
+    private String customPalette;
+
+    @Column(name = "primary_color", length = 30)
+    private String primaryColor;
+
+    @Column(name = "secondary_color", length = 30)
+    private String secondaryColor;
+
+    @Column(name = "accent_color", length = 30)
+    private String accentColor;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -53,4 +108,3 @@ public class OrganizationAppearance {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }
-

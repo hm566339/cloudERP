@@ -19,6 +19,8 @@ import themeReducer, {
   setThemePreset,
   setLayoutSettings,
   setTypographySettings,
+  setBrandingSettings,
+  setCustomOverridesEnabled,
   setCustomColors,
   applyAllAppearanceSettings,
   resetAppearanceDefaults,
@@ -216,6 +218,28 @@ describe('Global Appearance & Themes Theme Studio Test Suite', () => {
         accent: '#abcdef',
         background: '#fedcba',
       });
+    });
+
+    it('handles setBrandingSettings (lightLogoUrl, darkLogoUrl, faviconUrl)', () => {
+      const state = themeReducer(
+        initialState,
+        setBrandingSettings({
+          lightLogoUrl: 'https://example.com/light.png',
+          darkLogoUrl: 'https://example.com/dark.png',
+          faviconUrl: 'https://example.com/favicon.ico',
+        })
+      );
+      assert.strictEqual(state.branding.lightLogoUrl, 'https://example.com/light.png');
+      assert.strictEqual(state.branding.darkLogoUrl, 'https://example.com/dark.png');
+      assert.strictEqual(state.branding.faviconUrl, 'https://example.com/favicon.ico');
+    });
+
+    it('handles setCustomOverridesEnabled toggle', () => {
+      const stateTrue = themeReducer(initialState, setCustomOverridesEnabled(true));
+      assert.strictEqual(stateTrue.customOverridesEnabled, true);
+
+      const stateFalse = themeReducer(stateTrue, setCustomOverridesEnabled(false));
+      assert.strictEqual(stateFalse.customOverridesEnabled, false);
     });
 
     it('handles applyAllAppearanceSettings atomically', () => {
@@ -447,26 +471,27 @@ describe('Global Appearance & Themes Theme Studio Test Suite', () => {
       assert.strictEqual(classList.has('dark'), false);
     });
 
-    it('validates themeApi endpoint contracts for GET, PUT, and POST /reset', async () => {
-      const { themeApi } = await import('../services/themeApi.js');
-      assert.ok(themeApi.endpoints.getOrganizationAppearance);
-      assert.ok(themeApi.endpoints.updateOrganizationAppearance);
-      assert.ok(themeApi.endpoints.resetOrganizationAppearance);
+      it('validates themeApi endpoint contracts for GET, PUT, POST /reset, and POST /upload-asset', async () => {
+        const { themeApi } = await import('../services/themeApi.js');
+        assert.ok(themeApi.endpoints.getOrganizationAppearance);
+        assert.ok(themeApi.endpoints.updateOrganizationAppearance);
+        assert.ok(themeApi.endpoints.resetOrganizationAppearance);
+        assert.ok(themeApi.endpoints.uploadAppearanceAsset);
 
-      // Verify endpoint definitions
-      const getDef = themeApi.endpoints.getOrganizationAppearance.initiate();
-      assert.ok(getDef);
+        // Verify endpoint definitions
+        const getDef = themeApi.endpoints.getOrganizationAppearance.initiate();
+        assert.ok(getDef);
 
-      const updateDef = themeApi.endpoints.updateOrganizationAppearance.initiate({
-        activeTheme: 'ocean',
-        appearanceMode: 'dark',
-        layoutDensity: 'compact',
-        fontFamily: 'default',
+        const updateDef = themeApi.endpoints.updateOrganizationAppearance.initiate({
+          activeTheme: 'ocean',
+          appearanceMode: 'dark',
+          layoutDensity: 'compact',
+          fontFamily: 'default',
+        });
+        assert.ok(updateDef);
+
+        const resetDef = themeApi.endpoints.resetOrganizationAppearance.initiate();
+        assert.ok(resetDef);
       });
-      assert.ok(updateDef);
-
-      const resetDef = themeApi.endpoints.resetOrganizationAppearance.initiate();
-      assert.ok(resetDef);
     });
   });
-});

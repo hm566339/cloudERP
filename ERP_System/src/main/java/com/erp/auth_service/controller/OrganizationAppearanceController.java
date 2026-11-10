@@ -13,11 +13,14 @@ import com.erp.auth_service.utility.MembershipStatus;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -60,7 +63,8 @@ public class OrganizationAppearanceController {
         UUID orgId = resolveOrgId(organizationId, headerOrgId);
         RequestContext.Context context = RequestContext.get();
         UUID userId = context != null ? context.userId() : null;
-        UpdateOrganizationAppearanceRequest safeRequest = request != null ? request : new UpdateOrganizationAppearanceRequest();
+        UpdateOrganizationAppearanceRequest safeRequest = request != null ? request
+                : new UpdateOrganizationAppearanceRequest();
         OrganizationAppearanceResponse response = appearanceService.updateAppearance(
                 orgId,
                 userId,
@@ -79,6 +83,19 @@ public class OrganizationAppearanceController {
                 orgId,
                 userId);
         return ResponseEntity.ok(ResponseWrapper.success("Appearance settings reset to default", response));
+    }
+
+    @PostMapping(value = "/upload-asset", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<ResponseWrapper<Map<String, Object>>> uploadAsset(
+            @RequestPart("file") MultipartFile file,
+            @RequestParam(value = "assetType", required = false, defaultValue = "asset") String assetType,
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID orgId = resolveOrgId(organizationId, headerOrgId);
+        RequestContext.Context context = RequestContext.get();
+        UUID userId = context != null ? context.userId() : null;
+        Map<String, Object> result = appearanceService.uploadAsset(orgId, userId, file, assetType);
+        return ResponseEntity.ok(ResponseWrapper.success("Branding asset uploaded successfully", result));
     }
 
     private UUID resolveOrgId(UUID explicitOrgId, UUID headerOrgId) {
@@ -112,7 +129,8 @@ public class OrganizationAppearanceController {
         }
 
         if (orgId == null) {
-            log.warn("[RBAC] Organization appearance context resolution failed: no explicit param, header, or active membership found");
+            log.warn(
+                    "[RBAC] Organization appearance context resolution failed: no explicit param, header, or active membership found");
             throw new ForbiddenException("Organization context required");
         }
 
@@ -131,27 +149,22 @@ public class OrganizationAppearanceController {
             var memberOpt = organizationMemberRepository
                     .findByOrganization_IdAndUser_IdAndMembershipStatus(orgId, userId, MembershipStatus.ACTIVE);
             if (memberOpt.isEmpty()) {
-                log.warn("[RBAC] Access denied: User [{}] does not have active membership in organization [{}]", userId, orgId);
+                log.warn("[RBAC] Access denied: User [{}] does not have active membership in organization [{}]", userId,
+                        orgId);
                 throw new ForbiddenException("Active organization membership required");
             }
-            log.debug("[RBAC] User [{}] verified as [{}] in org [{}] via source [{}]", userId, memberOpt.get().getMemberType(), orgId, source);
+            log.debug("[RBAC] User [{}] verified as [{}] in org [{}] via source [{}]", userId,
+                    memberOpt.get().getMemberType(), orgId, source);
         }
 
         UUID companyId = current != null ? current.companyId() : null;
         UUID clientId = current != null ? current.clientId() : null;
-        AccessMode accessMode = current != null && current.accessMode() != null ? current.accessMode() : AccessMode.FULL;
+        AccessMode accessMode = current != null && current.accessMode() != null ? current.accessMode()
+                : AccessMode.FULL;
         RequestContext.set(userId, orgId, companyId, clientId, accessMode);
 
-        log.debug("[RBAC] Organization appearance context resolved: userId={}, orgId={}, source={}", userId, orgId, source);
+        log.debug("[RBAC] Organization appearance context resolved: userId={}, orgId={}, source={}", userId, orgId,
+                source);
         return orgId;
-    }
-
-    private RequestContext.Context requireOrganizationContext() {
-        RequestContext.Context context = RequestContext.get();
-        if (context == null || context.organizationId() == null) {
-            log.warn("Organization appearance request rejected: missing organization context in session");
-            throw new ForbiddenException("Organization context required");
-        }
-        return context;
     }
 }

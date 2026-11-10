@@ -55,6 +55,27 @@ export const themeApi = baseApi.enhanceEndpoints({
       invalidatesTags: ['OrganizationAppearance'],
       transformResponse: (response) => response?.data || response,
     }),
+
+    /**
+     * POST /api/sso/organization/appearance/upload-asset
+     * Uploads organization branding assets (light logo, dark logo, favicon).
+     */
+    uploadAppearanceAsset: builder.mutation({
+      query: ({ file, assetType, organizationId }) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (assetType) formData.append('assetType', assetType);
+        if (organizationId) formData.append('organizationId', organizationId);
+
+        return {
+          url: '/api/sso/organization/appearance/upload-asset',
+          method: 'POST',
+          data: formData,
+        };
+      },
+      invalidatesTags: ['OrganizationAppearance'],
+      transformResponse: (response) => response?.data || response,
+    }),
   }),
   overrideExisting: false,
 });
@@ -63,4 +84,5 @@ export const {
   useGetOrganizationAppearanceQuery,
   useUpdateOrganizationAppearanceMutation,
   useResetOrganizationAppearanceMutation,
+  useUploadAppearanceAssetMutation,
 } = themeApi;

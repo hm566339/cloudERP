@@ -64,7 +64,10 @@ const themeSlice = createSlice({
     layout: initialSettings.layout || DEFAULT_APPEARANCE_SETTINGS.layout,
     // Typography customization options
     typography: initialSettings.typography || DEFAULT_APPEARANCE_SETTINGS.typography,
-    // Optional advanced custom colors
+    // Branding assets
+    branding: initialSettings.branding || DEFAULT_APPEARANCE_SETTINGS.branding,
+    // Custom palette toggle & colors
+    customOverridesEnabled: initialSettings.customOverridesEnabled || false,
     customColors: initialSettings.customColors || null,
   },
   reducers: {
@@ -167,6 +170,40 @@ const themeSlice = createSlice({
         mode: state.mode,
         layout: state.layout,
         typography: state.typography,
+        branding: state.branding,
+        customOverridesEnabled: state.customOverridesEnabled,
+        customColors: state.customColors,
+      };
+      applyAppearance(fullSettings, state.organizationId);
+    },
+
+    setBrandingSettings: (state, action) => {
+      state.branding = { ...state.branding, ...action.payload };
+
+      const fullSettings = {
+        organizationId: state.organizationId,
+        themePreset: state.themePreset,
+        mode: state.mode,
+        layout: state.layout,
+        typography: state.typography,
+        branding: state.branding,
+        customOverridesEnabled: state.customOverridesEnabled,
+        customColors: state.customColors,
+      };
+      applyAppearance(fullSettings, state.organizationId);
+    },
+
+    setCustomOverridesEnabled: (state, action) => {
+      state.customOverridesEnabled = Boolean(action.payload);
+
+      const fullSettings = {
+        organizationId: state.organizationId,
+        themePreset: state.themePreset,
+        mode: state.mode,
+        layout: state.layout,
+        typography: state.typography,
+        branding: state.branding,
+        customOverridesEnabled: state.customOverridesEnabled,
         customColors: state.customColors,
       };
       applyAppearance(fullSettings, state.organizationId);
@@ -193,23 +230,75 @@ const themeSlice = createSlice({
         state.darkMode = resolved === 'dark';
       }
 
+      // Layout properties
       const layoutDensity = payload.layoutDensity || payload.layout?.density;
       if (layoutDensity) {
         state.layout = { ...state.layout, density: layoutDensity };
+      }
+      if (payload.sidebarDefaultState) {
+        state.layout = {
+          ...state.layout,
+          sidebarDefaultState: payload.sidebarDefaultState,
+          sidebarCollapsed: 'collapsed'.equalsIgnoreCase?.(payload.sidebarDefaultState) || payload.sidebarDefaultState === 'collapsed',
+        };
+      }
+      if (payload.contentWidth) {
+        state.layout = { ...state.layout, contentWidth: payload.contentWidth };
+      }
+      if (payload.borderRadius) {
+        state.layout = { ...state.layout, borderRadius: payload.borderRadius };
+      }
+      if (payload.cardShadow !== undefined) {
+        state.layout = { ...state.layout, cardShadows: Boolean(payload.cardShadow) };
+      }
+      if (payload.tableDensity) {
+        state.layout = { ...state.layout, tableDensity: payload.tableDensity };
       }
       if (payload.layout) {
         state.layout = { ...state.layout, ...payload.layout };
       }
 
+      // Typography properties
       const fontFamily = payload.fontFamily || payload.typography?.fontFamily;
       if (fontFamily) {
         state.typography = { ...state.typography, fontFamily };
+      }
+      const fontSize = payload.baseFontSize || payload.typography?.fontSize;
+      if (fontSize) {
+        state.typography = { ...state.typography, fontSize };
       }
       if (payload.typography) {
         state.typography = { ...state.typography, ...payload.typography };
       }
 
-      state.customColors = payload.customColors || null;
+      // Branding properties
+      if (payload.branding) {
+        state.branding = { ...state.branding, ...payload.branding };
+      }
+      if (payload.lightLogoUrl !== undefined || payload.darkLogoUrl !== undefined || payload.faviconUrl !== undefined) {
+        state.branding = {
+          ...state.branding,
+          lightLogoUrl: payload.lightLogoUrl !== undefined ? payload.lightLogoUrl : state.branding.lightLogoUrl,
+          darkLogoUrl: payload.darkLogoUrl !== undefined ? payload.darkLogoUrl : state.branding.darkLogoUrl,
+          faviconUrl: payload.faviconUrl !== undefined ? payload.faviconUrl : state.branding.faviconUrl,
+        };
+      }
+
+      // Custom color properties
+      if (payload.customOverridesEnabled !== undefined) {
+        state.customOverridesEnabled = Boolean(payload.customOverridesEnabled);
+      }
+      if (payload.customColors !== undefined) {
+        state.customColors = payload.customColors;
+      } else if (payload.customPalette) {
+        try {
+          state.customColors = typeof payload.customPalette === 'string'
+            ? JSON.parse(payload.customPalette)
+            : payload.customPalette;
+        } catch {
+          state.customColors = null;
+        }
+      }
 
       applyAppearance({
         organizationId: state.organizationId,
@@ -217,6 +306,8 @@ const themeSlice = createSlice({
         mode: state.mode,
         layout: state.layout,
         typography: state.typography,
+        branding: state.branding,
+        customOverridesEnabled: state.customOverridesEnabled,
         customColors: state.customColors,
       }, state.organizationId);
 
@@ -232,6 +323,8 @@ const themeSlice = createSlice({
       state.darkMode = resolved === 'dark';
       state.layout = { ...DEFAULT_APPEARANCE_SETTINGS.layout };
       state.typography = { ...DEFAULT_APPEARANCE_SETTINGS.typography };
+      state.branding = { ...DEFAULT_APPEARANCE_SETTINGS.branding };
+      state.customOverridesEnabled = false;
       state.customColors = null;
 
       applyAppearance({
@@ -329,11 +422,61 @@ const themeSlice = createSlice({
           state.resolvedTheme = resolved;
           state.darkMode = resolved === 'dark';
         }
+
+        // Layout mapping
         if (data.layoutDensity) {
           state.layout = { ...state.layout, density: data.layoutDensity };
         }
+        if (data.sidebarDefaultState) {
+          state.layout = {
+            ...state.layout,
+            sidebarDefaultState: data.sidebarDefaultState,
+            sidebarCollapsed: data.sidebarDefaultState === 'collapsed',
+          };
+        }
+        if (data.contentWidth) {
+          state.layout = { ...state.layout, contentWidth: data.contentWidth };
+        }
+        if (data.borderRadius) {
+          state.layout = { ...state.layout, borderRadius: data.borderRadius };
+        }
+        if (data.cardShadow !== undefined) {
+          state.layout = { ...state.layout, cardShadows: Boolean(data.cardShadow) };
+        }
+        if (data.tableDensity) {
+          state.layout = { ...state.layout, tableDensity: data.tableDensity };
+        }
+
+        // Typography mapping
         if (data.fontFamily) {
           state.typography = { ...state.typography, fontFamily: data.fontFamily };
+        }
+        if (data.baseFontSize) {
+          state.typography = { ...state.typography, fontSize: data.baseFontSize };
+        }
+
+        // Branding mapping
+        state.branding = {
+          ...state.branding,
+          lightLogoUrl: data.lightLogoUrl || '',
+          darkLogoUrl: data.darkLogoUrl || '',
+          faviconUrl: data.faviconUrl || '',
+        };
+
+        // Custom Palette Overrides
+        if (data.customOverridesEnabled !== undefined) {
+          state.customOverridesEnabled = Boolean(data.customOverridesEnabled);
+        }
+        if (data.customColors) {
+          state.customColors = data.customColors;
+        } else if (data.customPalette) {
+          try {
+            state.customColors = typeof data.customPalette === 'string'
+              ? JSON.parse(data.customPalette)
+              : data.customPalette;
+          } catch {
+            state.customColors = null;
+          }
         }
 
         applyAppearance({
@@ -342,6 +485,8 @@ const themeSlice = createSlice({
           mode: state.mode,
           layout: state.layout,
           typography: state.typography,
+          branding: state.branding,
+          customOverridesEnabled: state.customOverridesEnabled,
           customColors: state.customColors,
         }, state.organizationId);
       }
@@ -355,6 +500,8 @@ export const {
   setThemePreset,
   setLayoutSettings,
   setTypographySettings,
+  setBrandingSettings,
+  setCustomOverridesEnabled,
   setCustomColors,
   applyAllAppearanceSettings,
   resetAppearanceDefaults,

@@ -276,6 +276,101 @@ class OrganizationAppearanceServiceTest {
         assertEquals("system", res.getAppearanceMode());
         assertEquals("comfortable", res.getLayoutDensity());
         assertEquals("default", res.getFontFamily());
+        assertEquals("expanded", res.getSidebarDefaultState());
+        assertEquals("standard", res.getContentWidth());
+        assertEquals("medium", res.getBorderRadius());
+        assertTrue(res.getCardShadow());
+    }
+
+    @Test
+    @DisplayName("Test 8: Owner can update extended appearance (layout, branding URLs, and custom palette)")
+    void ownerCanUpdateExtendedAppearance() {
+        RequestContext.set(ownerAId, orgAId, null, null, AccessMode.FULL);
+        mockActiveMember(orgAId, ownerAId, MemberType.OWNER);
+        when(organizationRepository.findById(orgAId)).thenReturn(Optional.of(orgA));
+        when(appearanceRepository.findByOrganization_Id(orgAId)).thenReturn(Optional.empty());
+        when(appearanceRepository.save(any(OrganizationAppearance.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UpdateOrganizationAppearanceRequest req = UpdateOrganizationAppearanceRequest.builder()
+                .activeTheme("ocean")
+                .appearanceMode("light")
+                .sidebarDefaultState("collapsed")
+                .contentWidth("wide")
+                .borderRadius("large")
+                .cardShadow(false)
+                .tableDensity("compact")
+                .baseFontSize("large")
+                .lightLogoUrl("https://example.com/logo-light.png")
+                .darkLogoUrl("https://example.com/logo-dark.png")
+                .faviconUrl("https://example.com/favicon.ico")
+                .customOverridesEnabled(true)
+                .primaryColor("#123456")
+                .secondaryColor("#654321")
+                .accentColor("#abcdef")
+                .build();
+
+        OrganizationAppearanceResponse res = appearanceService.updateAppearance(orgAId, ownerAId, req);
+
+        assertNotNull(res);
+        assertEquals("ocean", res.getActiveTheme());
+        assertEquals("collapsed", res.getSidebarDefaultState());
+        assertEquals("wide", res.getContentWidth());
+        assertEquals("large", res.getBorderRadius());
+        assertFalse(res.getCardShadow());
+        assertEquals("compact", res.getTableDensity());
+        assertEquals("large", res.getBaseFontSize());
+        assertEquals("https://example.com/logo-light.png", res.getLightLogoUrl());
+        assertEquals("https://example.com/logo-dark.png", res.getDarkLogoUrl());
+        assertEquals("https://example.com/favicon.ico", res.getFaviconUrl());
+        assertTrue(res.getCustomOverridesEnabled());
+        assertEquals("#123456", res.getPrimaryColor());
+    }
+
+    @Test
+    @DisplayName("Test 9: Upload asset with valid PNG updates OrganizationAppearance and returns asset URL")
+    void uploadAssetSuccess() {
+        RequestContext.set(ownerAId, orgAId, null, null, AccessMode.FULL);
+        mockActiveMember(orgAId, ownerAId, MemberType.OWNER);
+        when(organizationRepository.findById(orgAId)).thenReturn(Optional.of(orgA));
+        when(appearanceRepository.findByOrganization_Id(orgAId)).thenReturn(Optional.empty());
+        when(appearanceRepository.save(any(OrganizationAppearance.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        org.springframework.mock.web.MockMultipartFile mockFile =
+                new org.springframework.mock.web.MockMultipartFile(
+                        "file",
+                        "logo.png",
+                        "image/png",
+                        "dummy image content".getBytes()
+                );
+
+        var result = appearanceService.uploadAsset(orgAId, ownerAId, mockFile, "light_logo");
+
+        assertNotNull(result);
+        assertNotNull(result.get("assetUrl"));
+        assertTrue(String.valueOf(result.get("assetUrl")).startsWith("data:image/png;base64,"));
+        assertEquals("light_logo", result.get("assetType"));
+        assertNotNull(result.get("appearance"));
+    }
+
+    @Test
+    @DisplayName("Test 10: Upload asset exceeding 2MB throws IllegalArgumentException")
+    void uploadAssetTooLargeThrowsException() {
+        RequestContext.set(ownerAId, orgAId, null, null, AccessMode.FULL);
+        mockActiveMember(orgAId, ownerAId, MemberType.OWNER);
+
+        byte[] bigContent = new byte[(int) (2.5 * 1024 * 1024)];
+        org.springframework.mock.web.MockMultipartFile mockFile =
+                new org.springframework.mock.web.MockMultipartFile(
+                        "file",
+                        "big.png",
+                        "image/png",
+                        bigContent
+                );
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> appearanceService.uploadAsset(orgAId, ownerAId, mockFile, "favicon"));
+
+        assertTrue(ex.getMessage().contains("2MB"));
     }
 }
 

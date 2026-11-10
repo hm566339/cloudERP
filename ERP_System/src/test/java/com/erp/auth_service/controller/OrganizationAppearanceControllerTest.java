@@ -148,5 +148,31 @@ class OrganizationAppearanceControllerTest {
 
         verify(appearanceService).resetAppearance(orgId, userId);
     }
+
+    @Test
+    @DisplayName("POST /api/sso/organization/appearance/upload-asset handles multipart branding asset upload")
+    void uploadAssetSuccess() throws Exception {
+        RequestContext.set(userId, orgId, null, null, AccessMode.FULL);
+
+        org.springframework.mock.web.MockMultipartFile file =
+                new org.springframework.mock.web.MockMultipartFile("file", "logo.png", "image/png", "sample data".getBytes());
+
+        java.util.Map<String, Object> mockResult = java.util.Map.of(
+                "assetUrl", "https://cdn.example.com/logo.png",
+                "assetType", "light_logo"
+        );
+
+        when(appearanceService.uploadAsset(eq(orgId), eq(userId), any(), eq("light_logo")))
+                .thenReturn(mockResult);
+
+        mockMvc.perform(multipart("/api/sso/organization/appearance/upload-asset")
+                        .file(file)
+                        .param("assetType", "light_logo"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.assetUrl").value("https://cdn.example.com/logo.png"));
+
+        verify(appearanceService).uploadAsset(eq(orgId), eq(userId), any(), eq("light_logo"));
+    }
 }
 
