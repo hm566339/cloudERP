@@ -209,13 +209,13 @@ function OwnerDashboardContent() {
   const effectiveSubscription = liveSubscription || subscription;
 
   const activeCompanyId =
-  selectedCompany?.id || currentCompany?.id || (effectiveCompanies.length > 0 ? effectiveCompanies[0].id : null);
+    selectedCompany?.id || currentCompany?.id || (effectiveCompanies.length > 0 ? effectiveCompanies[0].id : null);
   const activeCompanyCode =
-  selectedCompany?.code || currentCompany?.code || (effectiveCompanies.length > 0 ? effectiveCompanies[0].code : '');
+    selectedCompany?.code || currentCompany?.code || (effectiveCompanies.length > 0 ? effectiveCompanies[0].code : '');
   const activeCompanyName =
     selectedCompany?.name ||
     currentCompany?.name ||
-  (effectiveCompanies.length > 0 ? effectiveCompanies[0].name : 'Primary Company');
+    (effectiveCompanies.length > 0 ? effectiveCompanies[0].name : 'Primary Company');
 
   const {
     isTrial,
@@ -416,48 +416,48 @@ function OwnerDashboardContent() {
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 
           {/* Card 1: Total Companies */}
-            <Link
-              to="/owner/companies"
-              className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between group"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-[#2E3D28] dark:group-hover:text-white transition-colors">
-                      Total Companies
-                    </span>
-                    <div className="w-7 h-7 rounded-lg bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100/60 dark:border-indigo-900/60 flex items-center justify-center shrink-0">
-                      <Building2 size={15} />
-                    </div>
-                </div>
-                <p className="text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none">
-                  {effectiveCompanies.length}
-                </p>
-              </div>
-              <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60 font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>{effectiveCompanies.length > 0 ? `${effectiveCompanies.length} Active` : '0 Active'}</span>
+          <Link
+            to="/owner/companies"
+            className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between group"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-[#2E3D28] dark:group-hover:text-white transition-colors">
+                  Total Companies
                 </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] text-[#485942] dark:text-[#A0A6B5] font-medium group-hover:underline">
-                    <span>View all</span>
-                    <ArrowRight size={11} />
-                  </span>
+                <div className="w-7 h-7 rounded-lg bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100/60 dark:border-indigo-900/60 flex items-center justify-center shrink-0">
+                  <Building2 size={15} />
+                </div>
               </div>
-        </Link>
+              <p className="text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none">
+                {effectiveCompanies.length}
+              </p>
+            </div>
+            <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>{effectiveCompanies.length > 0 ? `${effectiveCompanies.length} Active` : '0 Active'}</span>
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] text-[#485942] dark:text-[#A0A6B5] font-medium group-hover:underline">
+                <span>View all</span>
+                <ArrowRight size={11} />
+              </span>
+            </div>
+          </Link>
 
-        {/* Card 2: Active Modules */}
+          {/* Card 2: Active Modules */}
           <Link
             to="/subscription"
             className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between group"
           >
             <div>
               <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-[#2E3D28] dark:group-hover:text-white transition-colors">
-                    Active Modules
-                  </span>
-                  <div className="w-7 h-7 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100/60 dark:border-emerald-900/60 flex items-center justify-center shrink-0">
-                    <Layers size={15} />
-                  </div>
+                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-[#2E3D28] dark:group-hover:text-white transition-colors">
+                  Active Modules
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100/60 dark:border-emerald-900/60 flex items-center justify-center shrink-0">
+                  <Layers size={15} />
+                </div>
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none">
@@ -478,75 +478,75 @@ function OwnerDashboardContent() {
                 <ArrowRight size={11} />
               </span>
             </div>
-      </Link>
+          </Link>
 
-      {/* Card 3: Subscription Status */}
-        <Link
-          to="/subscription"
-          className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between group"
-        >
-          <div>
-            <div className="flex items-center justify-between mb-2">
+          {/* Card 3: Subscription Status */}
+          <Link
+            to="/subscription"
+            className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between group"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-[#2E3D28] dark:group-hover:text-white transition-colors">
                   Subscription
                 </span>
                 <div className="w-7 h-7 rounded-lg bg-sky-50/80 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-100/60 dark:border-sky-900/60 flex items-center justify-center shrink-0">
                   <CreditCard size={15} />
                 </div>
+              </div>
+              <p className="text-xl sm:text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none truncate capitalize" title={planDisplay}>
+                {planDisplay}
+              </p>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none truncate capitalize" title={planDisplay}>
-              {planDisplay}
-            </p>
-          </div>
-          <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium text-[11px] ${isTrial
+            <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium text-[11px] ${isTrial
                 ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/70 dark:border-amber-900/60'
                 : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/60'
-              }`}>
-              <Clock size={11} />
-              <span>{daysRemaining !== null ? `${daysRemaining} days left` : 'Active'}</span>
-            </span>
+                }`}>
+                <Clock size={11} />
+                <span>{daysRemaining !== null ? `${daysRemaining} days left` : 'Active'}</span>
+              </span>
               <span className="inline-flex items-center gap-1 text-[10px] text-[#485942] dark:text-[#A0A6B5] font-medium group-hover:underline">
                 <span>Details</span>
                 <ArrowRight size={11} />
               </span>
-          </div>
-    </Link>
-
-          {/* Card 4: Organization Owner Profile */ }
-    <Link
-      to="/profile"
-      className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between group"
-    >
-      <div>
-        <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-[#2E3D28] dark:group-hover:text-white transition-colors">
-              Owner Profile
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-[#DCE2CF]/60 dark:bg-[#202922] text-[#2E3D28] dark:text-[#8FA87B] border border-[#D5D8CA] dark:border-[#2E3D31] flex items-center justify-center shrink-0">
-              <ShieldCheck size={15} />
             </div>
-        </div>
-        <p className="text-xl sm:text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none truncate" title={ownerName}>
-          {ownerName}
-        </p>
-      </div>
-      <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#DCE2CF]/60 dark:bg-[#202922] text-[#2E3D28] dark:text-[#8FA87B] border border-[#D5D8CA] dark:border-[#2E3D31] font-medium">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#2E3D28] dark:bg-[#8FA87B]"></span>
-          <span>Verified</span>
-        </span>
-          <span className="inline-flex items-center gap-1 text-[10px] text-[#485942] dark:text-[#A0A6B5] font-medium group-hover:underline">
-            <span>View Profile</span>
-            <ArrowRight size={11} />
-          </span>
-      </div>
+          </Link>
+
+          {/* Card 4: Organization Owner Profile */}
+          <Link
+            to="/profile"
+            className="bg-[#F7F7F0] dark:bg-[#161922] p-4 rounded-xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs hover:border-[#BEC2B0] dark:hover:border-[#3A4154] hover:shadow-xs transition-all relative flex flex-col justify-between group"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold text-[#485942] dark:text-[#A0A6B5] uppercase tracking-wider group-hover:text-[#2E3D28] dark:group-hover:text-white transition-colors">
+                  Owner Profile
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-[#DCE2CF]/60 dark:bg-[#202922] text-[#2E3D28] dark:text-[#8FA87B] border border-[#D5D8CA] dark:border-[#2E3D31] flex items-center justify-center shrink-0">
+                  <ShieldCheck size={15} />
+                </div>
+              </div>
+              <p className="text-xl sm:text-2xl font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight leading-none truncate" title={ownerName}>
+                {ownerName}
+              </p>
+            </div>
+            <div className="pt-2.5 mt-2.5 border-t border-[#D5D8CA]/60 dark:border-[#2A2F3D] flex items-center justify-between gap-1.5 text-[11px]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#DCE2CF]/60 dark:bg-[#202922] text-[#2E3D28] dark:text-[#8FA87B] border border-[#D5D8CA] dark:border-[#2E3D31] font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#2E3D28] dark:bg-[#8FA87B]"></span>
+                <span>Verified</span>
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] text-[#485942] dark:text-[#A0A6B5] font-medium group-hover:underline">
+                <span>View Profile</span>
+                <ArrowRight size={11} />
+              </span>
+            </div>
           </Link >
 
         </section >
 
-    {/* ── 3. Organization Overview Section (Balanced responsive grid without text overlap) ── */ }
-    < section className = "bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs overflow-hidden" >
+        {/* ── 3. Organization Overview Section (Balanced responsive grid without text overlap) ── */}
+        < section className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs overflow-hidden" >
           <div className="px-5 py-4 border-b border-[#D5D8CA] dark:border-[#2A2F3D] flex items-center justify-between">
             <div>
               <h2 className="text-sm font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight">Organization Overview</h2>
@@ -590,8 +590,8 @@ function OwnerDashboardContent() {
           </div>
         </section >
 
-    {/* ── 4. Business Modules (Balanced responsive grid with aligned buttons and wrapping descriptions) ── */ }
-    < section className = "space-y-3.5" >
+        {/* ── 4. Business Modules (Balanced responsive grid with aligned buttons and wrapping descriptions) ── */}
+        < section className="space-y-3.5" >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
             <div>
               <h2 className="text-base font-display font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight">
@@ -613,8 +613,8 @@ function OwnerDashboardContent() {
                 <div
                   key={mod.id}
                   className={`bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl p-5 border border-[#D5D8CA] dark:border-[#2A2F3D] flex flex-col justify-between transition-all duration-200 shadow-2xs hover:shadow-md min-h-[240px] ${mod.isEntitled
-                      ? mod.borderColor
-                      : 'opacity-80 hover:opacity-100 bg-[#EDEEE4]/50 dark:bg-[#1D212C]/40'
+                    ? mod.borderColor
+                    : 'opacity-80 hover:opacity-100 bg-[#EDEEE4]/50 dark:bg-[#1D212C]/40'
                     }`}
                 >
                   <div className="flex-1 flex flex-col">
@@ -674,8 +674,8 @@ function OwnerDashboardContent() {
           </div>
         </section >
 
-    {/* ── 5. Company Management Section ("Your Companies") ── */ }
-    < section className = "bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs overflow-hidden" >
+        {/* ── 5. Company Management Section ("Your Companies") ── */}
+        < section className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] shadow-2xs overflow-hidden" >
           <div className="p-5 border-b border-[#D5D8CA] dark:border-[#2A2F3D] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-display font-bold text-[#2E3D28] dark:text-[#E6E8EE] tracking-tight">
@@ -807,8 +807,8 @@ function OwnerDashboardContent() {
           </div>
         </section >
 
-    {/* ── 6. Subscription Section (Compact enterprise license card) ── */ }
-    < section className = "bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" >
+        {/* ── 6. Subscription Section (Compact enterprise license card) ── */}
+        < section className="bg-[#F7F7F0] dark:bg-[#161922] rounded-2xl border border-[#D5D8CA] dark:border-[#2A2F3D] p-5 sm:p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" >
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="w-11 h-11 rounded-xl bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
               <CreditCard size={20} />
@@ -843,19 +843,7 @@ function OwnerDashboardContent() {
           </div>
         </section >
 
-      </div >
-
-    {/* ── Minimalist Clean Footer matching full content width ── */ }
-    < footer className = "border-t border-[var(--color-border)] bg-[var(--color-surface)] py-4 mt-8" >
-      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
-        <p>© {new Date().getFullYear()} Mark2 ERP. All rights reserved.</p>
-        <div className="flex items-center gap-3">
-          <span>Organization: <strong className="text-[var(--color-text-primary)] font-mono">{orgCode || 'ORG'}</strong></span>
-          <span>•</span>
-          <Link to="/subscription" className="hover:text-[var(--color-text-primary)] transition-colors">Subscription & Billing</Link>
         </div>
-      </div>
-      </footer >
     </div >
   );
 }

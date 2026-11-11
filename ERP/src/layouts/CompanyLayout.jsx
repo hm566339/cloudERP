@@ -22,6 +22,7 @@ import { baseApi } from '../api/common/baseApi'
 import { useGetCompanyModulesQuery } from '../api/sso'
 import { MODULE_DEFINITIONS, getAccessibleModuleKeys, getFirstAccessibleDashboardPath, normalizeModuleKey, getPermissionModuleKeys } from '../utils/moduleAccess'
 import MarkLogo from '../components/common/MarkLogo'
+import AppFooter from '../components/common/AppFooter'
 
 import { useRBAC } from '../utils/rbac'
 import { useRoutePath } from '../hooks/useRoutePath'
@@ -626,21 +627,19 @@ export default function CompanyLayout() {
           <SubscriptionNoticeBanner />
 
           <main className={`flex-1 min-h-0 min-w-0 flex flex-col bg-background dark:bg-[#0F1117] overscroll-contain ${isFullHeightPage ? 'overflow-hidden p-0' : 'overflow-x-hidden overflow-y-auto'}`} >
-            <div className={`w-full flex-1 flex flex-col min-h-0 min-w-0 ${isFullHeightPage ? 'h-full' : 'max-w-[2560px] 5xl:max-w-[3200px] mx-auto'}`}>
-              <ErrorBoundary>
-                <Suspense fallback={<RouteLoading />}>
-                  <Outlet context={{ accessibleModuleKeys, accessLoading, companyModulesData, authContext, isOwner: isOwnerUser }} />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
+              <div className={`w-full flex-1 flex flex-col min-w-0 ${isFullHeightPage ? 'h-full min-h-0' : 'min-h-full max-w-[2560px] 5xl:max-w-[3200px] mx-auto'}`}>
+                <div className="flex-1 flex flex-col min-h-0 min-w-0">
+                  <ErrorBoundary>
+                    <Suspense fallback={<RouteLoading />}>
+                      <Outlet context={{ accessibleModuleKeys, accessLoading, companyModulesData, authContext, isOwner: isOwnerUser }} />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+                {!isFullHeightPage && (
+                  <AppFooter />
+                )}
+              </div>
           </main>
-
-          {/* Footer */}
-          {!isFullHeightPage && (
-            <footer className="flex-none py-4 border-t border-[var(--color-border)] text-center text-[9.6px] font-medium text-zinc-400 bg-transparent">
-              © {new Date().getFullYear()} Mark
-            </footer>
-          )}
         </div>
       </div>
 

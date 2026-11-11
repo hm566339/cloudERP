@@ -429,16 +429,16 @@ export default function CommonWorkspaceView() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-zinc-200/80 dark:border-border-dark bg-white dark:bg-card-dark py-6 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
-          <p>© {new Date().getFullYear()} Cloud ERP. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <span>Organization: <strong className="text-zinc-600 font-mono">{orgCode}</strong></span>
-            <span>•</span>
-            <Link to="/subscription" className="hover:text-zinc-600 transition-colors">Subscription</Link>
+        <footer className="border-t border-zinc-200/80 dark:border-border-dark bg-white dark:bg-card-dark py-6 mt-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
+            <p>© 2026 Mark2. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <span>Organization: <strong className="text-zinc-600 font-mono">{orgCode}</strong></span>
+              <span>•</span>
+              <Link to="/subscription" className="hover:text-zinc-600 transition-colors">Subscription</Link>
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
     </div>
   );
 }

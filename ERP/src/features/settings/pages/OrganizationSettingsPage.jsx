@@ -367,141 +367,136 @@ export default function OrganizationSettingsPage() {
   // Organization Settings Container (Standard layout width & padding: p-4 sm:p-6)
   return (
     <div className="w-full flex-1 flex flex-col min-h-full bg-zinc-50/50 dark:bg-[#0F1117] text-zinc-900 dark:text-[#E6E8EE]">
-            {loadError && (
-              <div className="mx-6 mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
-                <span>Failed to load fresh organization data: {loadError}</span>
-                <button
-                  type="button"
-                  onClick={loadSettingsData}
-                  className="font-bold underline hover:text-amber-950 dark:hover:text-amber-100"
-                >
-                  Retry
-                </button>
-              </div>
-            )}
+      {loadError && (
+        <div className="mx-6 mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
+          <span>Failed to load fresh organization data: {loadError}</span>
+          <button
+            type="button"
+            onClick={loadSettingsData}
+            className="font-bold underline hover:text-amber-950 dark:hover:text-amber-100"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
-            {/* Active Organization Management Section View */}
-            <div className="flex-1 flex flex-col min-h-0">
-              {/* 1. Overview */}
-              {activeSection === 'overview' && (
-                <OrgOverviewView
-                  organization={orgSummary}
-                  user={authUser}
-                  companies={registeredCompanies}
-                  membersCount={registeredCompanies.length}
-                  planName={subscriptionPlanName}
-                  isTrial={isTrial}
-                  twoFactorRequired={twoFactorRequired}
-                  sessionTimeout={sessionTimeout}
-                  currency={currency}
-                  timezone={timezone}
-                  enabledModules={enabledModules}
-                  loginUrl={loginUrl}
-                  onNavigateSection={handleNavigateSection}
-                />
-              )}
+      {/* Active Organization Management Section View */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* 1. Overview */}
+        {activeSection === 'overview' && (
+          <OrgOverviewView
+            organization={orgSummary}
+            user={authUser}
+            companies={registeredCompanies}
+            membersCount={registeredCompanies.length}
+            planName={subscriptionPlanName}
+            isTrial={isTrial}
+            twoFactorRequired={twoFactorRequired}
+            sessionTimeout={sessionTimeout}
+            currency={currency}
+            timezone={timezone}
+            enabledModules={enabledModules}
+            loginUrl={loginUrl}
+            onNavigateSection={handleNavigateSection}
+          />
+        )}
 
-              {/* 2. Organization Profile */}
-              {activeSection === 'profile' && (
-                <OrgProfileView
-                  organization={orgSummary}
-                  initialName={name}
-                  initialEmail={contactEmail}
-                  onSaveProfile={handleSaveProfile}
-                  isSaving={isSaving}
-                />
-              )}
+        {/* 2. Organization Profile */}
+        {activeSection === 'profile' && (
+          <OrgProfileView
+            organization={orgSummary}
+            initialName={name}
+            initialEmail={contactEmail}
+            onSaveProfile={handleSaveProfile}
+            isSaving={isSaving}
+          />
+        )}
 
-              {/* 3. Companies Management */}
-              {activeSection === 'companies' && (
-                <OrgCompaniesView
-                  companies={registeredCompanies}
-                  organization={orgSummary}
-                  maxCapacity={4}
-                />
-              )}
+        {/* 3. Companies Management */}
+        {activeSection === 'companies' && (
+          <OrgCompaniesView
+            companies={registeredCompanies}
+            organization={orgSummary}
+            maxCapacity={4}
+          />
+        )}
 
-              {/* 4. Users & Permissions */}
-              {activeSection === 'users' && (
-                <OrgUsersView
-                  organization={orgSummary}
-                  companies={registeredCompanies}
-                />
-              )}
+        {/* 4. Users & Permissions */}
+        {activeSection === 'users' && (
+          <OrgUsersView
+            organization={orgSummary}
+            companies={registeredCompanies}
+          />
+        )}
 
-              {/* 5. Role Management */}
-              {activeSection === 'roles' && (
-                <OrgRolesView
-                  organization={orgSummary}
-                  companies={registeredCompanies}
-                />
-              )}
+        {/* 5. Role Management */}
+        {activeSection === 'roles' && (
+          <OrgRolesView
+            organization={orgSummary}
+            companies={registeredCompanies}
+          />
+        )}
 
-              {/* 6. Permission Management */}
-              {activeSection === 'permissions' && (
-                <OrgPermissionsView
-                  organization={orgSummary}
-                />
-              )}
+        {/* 6. Permission Management */}
+        {activeSection === 'permissions' && (
+          <OrgPermissionsView
+            organization={orgSummary}
+          />
+        )}
 
-              {/* 7. Portal & Module Access */}
-              {activeSection === 'portal-access' && (
-                <OrgPortalAccessView
-                  organization={orgSummary}
-                  companies={registeredCompanies}
-                />
-              )}
+        {/* 7. Portal & Module Access */}
+        {activeSection === 'portal-access' && (
+          <OrgPortalAccessView
+            organization={orgSummary}
+            companies={registeredCompanies}
+          />
+        )}
 
-              {/* 8. Security & Authentication */}
-              {activeSection === 'security' && (
-                <OrgSecurityView
-                  initialTwoFactor={twoFactorRequired}
-                  initialTimeout={sessionTimeout}
-                  onSaveSecurity={handleSaveSecurity}
-                  isSaving={isSaving}
-                />
-              )}
+        {/* 8. Security & Authentication */}
+        {activeSection === 'security' && (
+          <OrgSecurityView
+            initialTwoFactor={twoFactorRequired}
+            initialTimeout={sessionTimeout}
+            onSaveSecurity={handleSaveSecurity}
+            isSaving={isSaving}
+          />
+        )}
 
-              {/* 9. Organization Login Portal */}
-              {activeSection === 'login-portal' && (
-                <OrgLoginPortalView
-                  organization={orgSummary}
-                  loginUrl={loginUrl}
-                />
-              )}
+        {/* 9. Organization Login Portal */}
+        {activeSection === 'login-portal' && (
+          <OrgLoginPortalView
+            organization={orgSummary}
+            loginUrl={loginUrl}
+          />
+        )}
 
-              {/* 10. Notifications */}
-              {activeSection === 'notifications' && (
-                <OrgNotificationsView
-                  organization={orgSummary}
-                />
-              )}
+        {/* 10. Notifications */}
+        {activeSection === 'notifications' && (
+          <OrgNotificationsView
+            organization={orgSummary}
+          />
+        )}
 
-              {/* 11. Localization & Formats */}
-              {activeSection === 'localization' && (
-                <OrgLocalizationView
-                  initialCurrency={currency}
-                  initialTimezone={timezone}
-                  initialFiscalYear={fiscalYearStart}
-                  initialDateFormat={dateFormat}
-                  initialTimeFormat={timeFormat}
-                  onSaveLocalization={handleSaveRegional}
-                  isSaving={isSaving}
-                />
-              )}
+        {/* 11. Localization & Formats */}
+        {activeSection === 'localization' && (
+          <OrgLocalizationView
+            initialCurrency={currency}
+            initialTimezone={timezone}
+            initialFiscalYear={fiscalYearStart}
+            initialDateFormat={dateFormat}
+            initialTimeFormat={timeFormat}
+            onSaveLocalization={handleSaveRegional}
+            isSaving={isSaving}
+          />
+        )}
 
-              {/* 12. Appearance & Themes */}
-              {activeSection === 'appearance' && (
-                <OrgAppearanceView
-                  organization={orgSummary}
-                />
-              )}
-            </div>
-
-            {/* Bottom Footer matching Customer Management */}
-            <footer className="text-center py-4 text-xs text-zinc-400 dark:text-zinc-500 border-t border-zinc-200/60 dark:border-zinc-800/60">
-              &copy; 2026 Mark
-            </footer>
-          </div>
-          );
+        {/* 12. Appearance & Themes */}
+        {activeSection === 'appearance' && (
+          <OrgAppearanceView
+            organization={orgSummary}
+          />
+        )}
+      </div>
+    </div>
+  );
 }

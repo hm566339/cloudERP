@@ -61,6 +61,7 @@ export { default as SkeletonLoader } from './SkeletonLoader';
 export { default as Pagination } from './Pagination';
 export { default as SearchInput } from './SearchInput';
 export { default as FilterBar } from './FilterBar';
+export { default as AppFooter } from './AppFooter';
 
 // ─── Permission-Aware Components ─────────────────────────────────────────────
 export { default as PermissionGuard } from './PermissionGuard';
