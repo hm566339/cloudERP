@@ -12,6 +12,7 @@ import {
   Loader2,
   CheckCircle2,
   ChevronRight,
+  ChevronLeft,
   LayoutGrid,
   Info,
   X,
@@ -74,6 +75,34 @@ const PermissionCheckbox = ({ checked, indeterminate, disabled, onChange, title 
   );
 };
 
+/**
+ * Helper to compute pagination page numbers with ellipsis (e.g. [1, 2, 3, 4, 5, '...', 18])
+ */
+const getPageNumbers = (current, total) => {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  const pages = [];
+  if (current <= 4) {
+    for (let i = 1; i <= 5; i++) pages.push(i);
+    pages.push('...');
+    pages.push(total);
+  } else if (current >= total - 3) {
+    pages.push(1);
+    pages.push('...');
+    for (let i = total - 4; i <= total; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    pages.push('...');
+    pages.push(current - 1);
+    pages.push(current);
+    pages.push(current + 1);
+    pages.push('...');
+    pages.push(total);
+  }
+  return pages;
+};
+
 export default function OrgRolesView({ organization, companies = [] }) {
   const dispatch = useAppDispatch();
 
@@ -93,6 +122,10 @@ export default function OrgRolesView({ organization, companies = [] }) {
   const [expandedModules, setExpandedModules] = useState(new Set());
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Permissions Table Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Modals
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -247,6 +280,7 @@ export default function OrgRolesView({ organization, companies = [] }) {
       setSelectedPerms(new Set());
       setIsDirty(false);
     }
+    setCurrentPage(1);
   }, [selectedRoleData]);
 
   // Filtered Templates for left panel search
@@ -353,6 +387,73 @@ export default function OrgRolesView({ organization, companies = [] }) {
 
     return result;
   }, [catalogModules, selectedRoleData]);
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Permission Matrix Pagination Data & Slicing
+  // ───────────────────────────────────────────────────────────────────────────
+  // Flatten all catalog features in module and catalog order
+  const allFeatures = useMemo(() => {
+    const list = [];
+    (catalogModules || []).forEach((mod) => {
+      const modName = mod.moduleName || mod.displayName;
+      const modDisplayName = mod.displayName || mod.moduleName;
+      (mod.features || []).forEach((feat) => {
+        const fCode = (feat.featureCode || feat.code || '').toUpperCase().trim();
+        list.push({
+          ...feat,
+          featureCode: fCode,
+          moduleName: modName,
+          moduleDisplayName: modDisplayName,
+        });
+      });
+    });
+    return list;
+  }, [catalogModules]);
+
+  const totalItems = allFeatures.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = totalItems === 0 ? 0 : (safePage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages || newPage === safePage) return;
+    setCurrentPage(newPage);
+  };
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
+
+  const pagedFeatures = useMemo(() => {
+    return allFeatures.slice(startIndex, endIndex);
+  }, [allFeatures, startIndex, endIndex]);
+
+  const pagedModules = useMemo(() => {
+    const groups = [];
+    let currentGroup = null;
+
+    pagedFeatures.forEach((feat) => {
+      if (!currentGroup || currentGroup.moduleName !== feat.moduleName) {
+        currentGroup = {
+          moduleName: feat.moduleName,
+          displayName: feat.moduleDisplayName,
+          features: [],
+        };
+        groups.push(currentGroup);
+      }
+      currentGroup.features.push(feat);
+    });
+
+    return groups;
+  }, [pagedFeatures]);
 
   // ───────────────────────────────────────────────────────────────────────────
   // Permission Checkbox & State Helper Functions
@@ -903,7 +1004,7 @@ export default function OrgRolesView({ organization, companies = [] }) {
   // Render
   // ───────────────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-full bg-[#E8E9DF] dark:bg-[#0F1117] relative">
+    <div className="w-full flex-1 flex flex-col min-h-full bg-[#E8E9DF] dark:bg-[#0F1117] relative">
       {/* ── Breadcrumb Navigation ── */}
       <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 font-medium px-6 pt-5 pb-1">
         <span className="flex items-center gap-1.5 font-bold text-zinc-800 dark:text-zinc-200">
@@ -934,9 +1035,9 @@ export default function OrgRolesView({ organization, companies = [] }) {
       </PageHeader>
 
       {/* ── Main Two-Column Layout ── */}
-      <div className="flex-1 overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-6 p-6">
+      <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 p-6 items-start">
         {/* ── LEFT PANEL: Role Template List ── */}
-        <div className="md:col-span-4 lg:col-span-3 flex flex-col bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+        <div className="md:col-span-4 lg:col-span-3 flex flex-col bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-sm md:sticky md:top-6 self-start overflow-hidden">
           <div className="p-4 border-b border-zinc-100 dark:border-[#2A2F3D] bg-zinc-50/50 dark:bg-[#1D212C]/60 shrink-0">
             <h3 className="font-semibold text-zinc-800 dark:text-zinc-200 mb-1">Roles</h3>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4">
@@ -954,7 +1055,7 @@ export default function OrgRolesView({ organization, companies = [] }) {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+          <div className="overflow-y-auto p-3 space-y-2 custom-scrollbar max-h-[500px] md:max-h-[calc(100vh-14rem)]">
             {isLoading ? (
               <div className="p-8 text-center text-zinc-400">
                 <Loader2 className="animate-spin mx-auto w-6 h-6" />
@@ -1043,7 +1144,7 @@ export default function OrgRolesView({ organization, companies = [] }) {
         </div>
 
         {/* ── RIGHT PANEL: Permissions Matrix & Role Details ── */}
-        <div className="md:col-span-8 lg:col-span-9 flex flex-col bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-sm overflow-hidden">
+        <div className="md:col-span-8 lg:col-span-9 flex flex-col bg-white dark:bg-[#161922] rounded-xl border border-zinc-200/90 dark:border-[#2A2F3D] shadow-sm">
           {selectedRoleData ? (
             <>
               {/* Role Header */}
@@ -1134,7 +1235,7 @@ export default function OrgRolesView({ organization, companies = [] }) {
               </div>
 
               {/* Table Container */}
-              <div className="flex-1 overflow-auto min-w-0 max-w-full custom-scrollbar">
+              <div className="w-full overflow-x-auto min-w-0 custom-scrollbar">
                 {isLoading ? (
                   <div className="p-12 flex justify-center text-zinc-400">
                     <Loader2 className="animate-spin w-8 h-8" />
@@ -1167,41 +1268,55 @@ export default function OrgRolesView({ organization, companies = [] }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-100 dark:divide-[#2A2F3D]">
-                      {catalogModules.map((mod) => {
-                        const modName = mod.moduleName || mod.displayName;
-                        const isExpanded = expandedModules.has(modName);
-                        const modAllState = getModuleAllState(modName);
+                      {pagedModules.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={2 + dynamicActions.length}
+                            className="py-12 text-center text-sm text-zinc-500 dark:text-zinc-400"
+                          >
+                            No permission features available in catalog.
+                          </td>
+                        </tr>
+                      ) : (
+                        pagedModules.map((mod) => {
+                          const modName = mod.moduleName;
+                          const isExpanded = expandedModules.has(modName);
+                          const modAllState = getModuleAllState(modName);
+                          const fullModule = catalogModules.find(
+                            (m) => (m.moduleName || m.displayName) === modName
+                          );
+                          const totalModFeatures = (fullModule?.features || []).length;
 
-                        return (
-                          <React.Fragment key={modName}>
-                            {/* Module Header Row */}
-                            <tr
-                              className={`group transition-colors ${
-                                isExpanded
-                                  ? 'bg-zinc-50/50 dark:bg-[#1D212C]/60'
-                                  : 'bg-white dark:bg-[#161922] hover:bg-zinc-50 dark:hover:bg-[#1D212C]'
-                              }`}
-                            >
-                              <td className="py-3 px-6 min-w-[240px]">
-                                <button
-                                  type="button"
-                                  onClick={() => toggleModuleExpanded(modName)}
-                                  className="flex items-center gap-2.5 w-full text-left font-bold text-zinc-800 dark:text-zinc-200 text-sm"
-                                >
-                                  <div
-                                    className={`text-zinc-400 dark:text-zinc-500 transition-transform duration-150 ${
-                                      isExpanded ? 'rotate-90' : ''
-                                    }`}
+                          return (
+                            <React.Fragment key={`${modName}-${safePage}`}>
+                              {/* Module Header Row */}
+                              <tr
+                                className={`group transition-colors ${
+                                  isExpanded
+                                    ? 'bg-zinc-50/50 dark:bg-[#1D212C]/60'
+                                    : 'bg-white dark:bg-[#161922] hover:bg-zinc-50 dark:hover:bg-[#1D212C]'
+                                }`}
+                              >
+                                <td className="py-3 px-6 min-w-[240px]">
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleModuleExpanded(modName)}
+                                    className="flex items-center gap-2.5 w-full text-left font-bold text-zinc-800 dark:text-zinc-200 text-sm"
                                   >
-                                    <ChevronRight size={16} />
-                                  </div>
-                                  <LayoutGrid size={16} className="text-zinc-400 dark:text-zinc-500" />
-                                  <span>{mod.displayName || mod.moduleName}</span>
-                                  <span className="text-[11px] font-normal text-zinc-400">
-                                    ({(mod.features || []).length} features)
-                                  </span>
-                                </button>
-                              </td>
+                                    <div
+                                      className={`text-zinc-400 dark:text-zinc-500 transition-transform duration-150 ${
+                                        isExpanded ? 'rotate-90' : ''
+                                      }`}
+                                    >
+                                      <ChevronRight size={16} />
+                                    </div>
+                                    <LayoutGrid size={16} className="text-zinc-400 dark:text-zinc-500" />
+                                    <span>{mod.displayName || mod.moduleName}</span>
+                                    <span className="text-[11px] font-normal text-zinc-400">
+                                      ({totalModFeatures} features)
+                                    </span>
+                                  </button>
+                                </td>
                               <td className="py-3 px-2 text-center">
                                 <PermissionCheckbox
                                   checked={modAllState.checked}
@@ -1297,14 +1412,100 @@ export default function OrgRolesView({ organization, companies = [] }) {
                               })}
                           </React.Fragment>
                         );
-                      })}
+                      }))}
                     </tbody>
                   </table>
                 )}
               </div>
 
+              {/* Permissions Table Pagination */}
+              <div className="w-full px-4 py-3 sm:px-6 bg-white dark:bg-[#161922] border-t border-blue-100/80 dark:border-[#2A2F3D] flex flex-wrap items-center justify-between gap-4 text-xs">
+                {/* Left: Summary */}
+                <div className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+                  Showing{' '}
+                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                    {totalItems === 0 ? '0–0' : `${startIndex + 1}–${endIndex}`}
+                  </span>{' '}
+                  of{' '}
+                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                    {totalItems}
+                  </span>{' '}
+                  permissions
+                </div>
+
+                {/* Center: Rows per page */}
+                <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
+                  <label htmlFor="rows-per-page-select" className="whitespace-nowrap">
+                    Rows per page:
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="rows-per-page-select"
+                      value={pageSize}
+                      onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                      className="h-8 pl-2.5 pr-6 py-1 text-xs font-semibold bg-white dark:bg-[#1D212C] border border-blue-200 dark:border-[#2A2F3D] rounded-lg text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer shadow-2xs hover:border-blue-300 dark:hover:border-zinc-600 transition-colors appearance-none"
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                    <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-400">
+                      ▼
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Page Navigation Buttons */}
+                <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(safePage - 1)}
+                    disabled={safePage <= 1}
+                    aria-label="Previous page"
+                    className="h-8 min-w-[32px] px-2 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs active:scale-95"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+
+                  {getPageNumbers(safePage, totalPages).map((p, idx) =>
+                    p === '...' ? (
+                      <span
+                        key={`dots-${idx}`}
+                        className="h-8 min-w-[32px] px-1 flex items-center justify-center text-zinc-400 dark:text-zinc-500 text-xs select-none"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => handlePageChange(p)}
+                        className={`h-8 min-w-[32px] px-2.5 flex items-center justify-center rounded-lg text-xs transition-all shadow-2xs active:scale-95 ${
+                          p === safePage
+                            ? 'font-bold bg-[#1E3A8A] text-white border border-[#1E3A8A] shadow-xs cursor-default'
+                            : 'font-semibold bg-white dark:bg-[#1D212C] text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-[#2A2F3D] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-zinc-600'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => handlePageChange(safePage + 1)}
+                    disabled={safePage >= totalPages}
+                    aria-label="Next page"
+                    className="h-8 min-w-[32px] px-2 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C] text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-[#222736] hover:border-zinc-300 dark:hover:border-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs active:scale-95"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+
               {/* Footer Actions */}
-              <div className="p-4 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C]/80 flex justify-between items-center mt-auto shrink-0">
+              <div className="p-4 border-t border-zinc-200 dark:border-[#2A2F3D] bg-zinc-50/80 dark:bg-[#1D212C]/80 flex justify-between items-center rounded-b-xl shrink-0">
                 <div className="text-xs text-zinc-500 dark:text-zinc-400">
                   {isDirty ? (
                     <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">

@@ -364,8 +364,9 @@ export default function OrganizationSettingsPage() {
     accessMode,
   }), [orgId, authOrg, name, orgCode, contactEmail, status, accessMode]);
 
+  // Organization Settings Container (Standard layout width & padding: p-4 sm:p-6)
   return (
-          <div className="w-full flex-1 flex flex-col min-h-full bg-zinc-50/50 dark:bg-[#0F1117] text-zinc-900 dark:text-[#E6E8EE]">
+    <div className="w-full flex-1 flex flex-col min-h-full bg-zinc-50/50 dark:bg-[#0F1117] text-zinc-900 dark:text-[#E6E8EE]">
             {loadError && (
               <div className="mx-6 mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
                 <span>Failed to load fresh organization data: {loadError}</span>
