@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppDispatch } from '../../../app/hooks';
 import { addAlert } from '../../notifications/notificationSlice';
 import { getRoles } from '../../../api/sso/role';
@@ -103,6 +103,11 @@ import {
     const [roleFetchError, setRoleFetchError] = useState(null);
     const [rolesCache, setRolesCache] = useState({});
 
+    // Dedicated tracking refs to prevent duplicate/repeated API calls
+    const inFlightCompanyRef = useRef(null);
+    const rolesCacheRef = useRef({});
+    const initializedCompanyRef = useRef(null);
+
     // Normalize user company access details
     const userCompanyAccesses = useMemo(() => {
       if (!user) return [];
@@ -145,13 +150,13 @@ import {
 
     // Initialize selected company when opening modal
     useEffect(() => {
-        if (isOpen && availableCompanies.length > 0) {
-          const exists = availableCompanies.some((c) => c.id === selectedCompanyId);
-          if (!selectedCompanyId || !exists) {
-            setSelectedCompanyId(availableCompanies[0].id);
-          }
+      if (isOpen && availableCompanies.length > 0) {
+        const exists = availableCompanies.some((c) => c.id === selectedCompanyId);
+        if (!selectedCompanyId || !exists) {
+          setSelectedCompanyId(availableCompanies[0].id);
         }
-      }, [isOpen, availableCompanies, selectedCompanyId]);
+      }
+    }, [isOpen, availableCompanies, selectedCompanyId]);
 
     // Current company access record for the active company
     const currentCompanyAccess = useMemo(() => {
@@ -182,106 +187,146 @@ import {
           .map((s) => s.trim().toUpperCase())
           .filter(Boolean);
       }
-    return [];
-  }, [currentCompanyAccess]);
+      return [];
+    }, [currentCompanyAccess]);
 
-  // Fetch available roles from backend API for selected company
-  const fetchRolesForCompany = useCallback(async (compId, forceRefresh = false) => {
-    if (!compId) return;
-    if (!forceRefresh && rolesCache[compId]) return;
+    // Completely stable role fetching function (no volatile dependencies)
+    const fetchRolesForCompany = useCallback(async (compId, forceRefresh = false) => {
+      if (!compId) return;
 
-    setIsLoadingRoles(true);
-    setRoleFetchError(null);
-    try {
-      const res = await getRoles({ companyId: compId, status: true, page: 0, pageSize: 200 });
-      let rolesList = [];
-      if (Array.isArray(res)) rolesList = res;
-      else if (Array.isArray(res?.roles)) rolesList = res.roles;
-      else if (Array.isArray(res?.content)) rolesList = res.content;
-      else if (Array.isArray(res?.data?.content)) rolesList = res.data.content;
-      else if (Array.isArray(res?.data)) rolesList = res.data;
-
-      // Filter only active roles
-      const activeRoles = rolesList.filter((r) => r.status !== false);
-      setRolesCache((prev) => ({ ...prev, [compId]: activeRoles }));
-    } catch (err) {
-      console.error('Failed to fetch roles for company:', err);
-      setRoleFetchError(err?.response?.data?.message || err?.message || 'Failed to fetch roles');
-    } finally {
-      setIsLoadingRoles(false);
-    }
-  }, [rolesCache]);
-
-  // Trigger fetch when company changes or modal opens (fresh fetch on modal open)
-  useEffect(() => {
-    if (isOpen && selectedCompanyId && (!passedRoles || passedRoles.length === 0)) {
-      fetchRolesForCompany(selectedCompanyId, true);
-    }
-  }, [isOpen, selectedCompanyId, passedRoles, fetchRolesForCompany]);
-
-  // Resolved list of available roles for the active company
-  const availableRoles = useMemo(() => {
-    if (Array.isArray(passedRoles) && passedRoles.length > 0) {
-      return passedRoles;
-    }
-    return rolesCache[selectedCompanyId] || [];
-  }, [passedRoles, rolesCache, selectedCompanyId]);
-
-  // Determine if target user is an organization/company owner
-  const isTargetUserOwner = Boolean(
-    user?.memberType === 'OWNER' ||
-    user?.isOwner ||
-    user?.role === 'OWNER'
-  );
-
-  // Check if any role templates have been deployed to this company
-  // Roles other than built-in OWNER originate from deployed organization templates or custom company roles
-  const hasDeployedTemplateRoles = useMemo(() => {
-    return (availableRoles || []).some((r) => {
-      const roleName = (r.name || r.roleName || '').trim().toUpperCase();
-      return roleName !== 'OWNER';
-    });
-  }, [availableRoles]);
-
-  // Eligible roles for assignment:
-  // For standard organization members (non-owners), exclude OWNER from eligible operational roles
-  const eligibleRoles = useMemo(() => {
-    return (availableRoles || []).filter((r) => {
-      if (r.status === false) return false;
-      const roleName = (r.name || r.roleName || '').trim().toUpperCase();
-      if (!isTargetUserOwner && roleName === 'OWNER') {
-        return false;
+      // If already cached and forceRefresh is false, do not make network request
+      if (!forceRefresh && rolesCacheRef.current[compId]) {
+        return;
       }
-      return true;
-    });
-  }, [availableRoles, isTargetUserOwner]);
 
-  // Initialize selected roles matching current assignment
-  useEffect(() => {
-    if (isOpen && eligibleRoles.length > 0) {
-      const matchedIds = eligibleRoles
-        .filter((r) => {
-          const idMatches = currentlyAssignedRoleIds.includes(String(r.id));
-          const nameMatches = currentlyAssignedRoleNames.includes(
-            (r.name || r.roleName || '').toUpperCase()
-          );
-          return idMatches || nameMatches;
-        })
-        .map((r) => String(r.id));
+      // Prevent duplicate concurrent requests for the same company
+      if (inFlightCompanyRef.current === compId) {
+        return;
+      }
 
-      setSelectedRoleIds(matchedIds);
-    } else if (isOpen && eligibleRoles.length === 0) {
-      setSelectedRoleIds([]);
-    }
-  }, [isOpen, selectedCompanyId, eligibleRoles, currentlyAssignedRoleIds, currentlyAssignedRoleNames]);
-
-  // Reset search term on modal open/close
-  useEffect(() => {
-    if (!isOpen) {
-      setSearchTerm('');
+      inFlightCompanyRef.current = compId;
+      setIsLoadingRoles(true);
       setRoleFetchError(null);
-    }
-  }, [isOpen]);
+
+      try {
+        const res = await getRoles({ companyId: compId, status: true, page: 0, pageSize: 200 });
+
+        let rolesList = [];
+        if (Array.isArray(res)) {
+          rolesList = res;
+        } else if (Array.isArray(res?.roles)) {
+          rolesList = res.roles;
+        } else if (Array.isArray(res?.content)) {
+          rolesList = res.content;
+        } else if (Array.isArray(res?.data?.roles)) {
+          rolesList = res.data.roles;
+        } else if (Array.isArray(res?.data?.content)) {
+          rolesList = res.data.content;
+        } else if (Array.isArray(res?.data)) {
+          rolesList = res.data;
+        }
+
+        // Filter only active company roles
+        const activeRoles = rolesList.filter((r) => r.status !== false);
+
+        // Update cache ref and state
+        rolesCacheRef.current[compId] = activeRoles;
+        setRolesCache((prev) => ({ ...prev, [compId]: activeRoles }));
+      } catch (err) {
+        console.error('Failed to fetch roles for company:', err);
+        setRoleFetchError(err?.response?.data?.message || err?.message || 'Failed to fetch roles');
+      } finally {
+        if (inFlightCompanyRef.current === compId) {
+          inFlightCompanyRef.current = null;
+        }
+        setIsLoadingRoles(false);
+      }
+    }, []); // Empty dependencies: 100% stable identity!
+
+    // Trigger role fetch ONLY when modal is open and selected company is known
+    useEffect(() => {
+      if (!isOpen || !selectedCompanyId) return;
+      if (Array.isArray(passedRoles) && passedRoles.length > 0) return;
+
+      if (!rolesCacheRef.current[selectedCompanyId]) {
+        fetchRolesForCompany(selectedCompanyId, false);
+      }
+    }, [isOpen, selectedCompanyId, passedRoles, fetchRolesForCompany]);
+
+    // Resolved list of available roles for the active company
+    const availableRoles = useMemo(() => {
+      if (Array.isArray(passedRoles) && passedRoles.length > 0) {
+        return passedRoles;
+      }
+      return rolesCache[selectedCompanyId] || [];
+    }, [passedRoles, rolesCache, selectedCompanyId]);
+
+    // Determine if target user is an organization/company owner
+    const isTargetUserOwner = Boolean(
+      user?.memberType === 'OWNER' ||
+      user?.isOwner ||
+      user?.role === 'OWNER'
+    );
+
+    // Check if any role templates have been deployed to this company
+    // Roles other than built-in OWNER originate from deployed organization templates or custom company roles
+    const hasDeployedTemplateRoles = useMemo(() => {
+      return (availableRoles || []).some((r) => {
+        const roleName = (r.name || r.roleName || '').trim().toUpperCase();
+        return roleName !== 'OWNER';
+      });
+    }, [availableRoles]);
+
+    // Eligible roles for assignment:
+    // For standard organization members (non-owners), exclude OWNER from eligible operational roles
+    const eligibleRoles = useMemo(() => {
+      return (availableRoles || []).filter((r) => {
+        if (r.status === false) return false;
+        const roleName = (r.name || r.roleName || '').trim().toUpperCase();
+        if (!isTargetUserOwner && roleName === 'OWNER') {
+          return false;
+        }
+        return true;
+      });
+    }, [availableRoles, isTargetUserOwner]);
+
+    // Initialize selected roles matching current assignment for the active company
+    useEffect(() => {
+      if (!isOpen) {
+        initializedCompanyRef.current = null;
+        return;
+      }
+
+      if (isOpen && eligibleRoles.length > 0 && initializedCompanyRef.current !== selectedCompanyId) {
+        initializedCompanyRef.current = selectedCompanyId;
+        const matchedIds = eligibleRoles
+          .filter((r) => {
+            const idMatches = currentlyAssignedRoleIds.includes(String(r.id));
+            const nameMatches = currentlyAssignedRoleNames.includes(
+              (r.name || r.roleName || '').toUpperCase()
+            );
+            return idMatches || nameMatches;
+          })
+          .map((r) => String(r.id));
+
+        setSelectedRoleIds(matchedIds);
+      } else if (isOpen && eligibleRoles.length === 0 && !isLoadingRoles) {
+        setSelectedRoleIds([]);
+      }
+    }, [isOpen, selectedCompanyId, eligibleRoles, currentlyAssignedRoleIds, currentlyAssignedRoleNames, isLoadingRoles]);
+
+    // Reset search term, errors, and cache on modal close
+    useEffect(() => {
+      if (!isOpen) {
+        setSearchTerm('');
+        setRoleFetchError(null);
+        setIsLoadingRoles(false);
+        inFlightCompanyRef.current = null;
+        rolesCacheRef.current = {};
+        setRolesCache({});
+        initializedCompanyRef.current = null;
+      }
+    }, [isOpen]);
 
   // Quick deploy active organization templates to this company
   const handleQuickDeployTemplates = async () => {
