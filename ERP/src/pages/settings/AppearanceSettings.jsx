@@ -1437,11 +1437,6 @@ export default function AppearanceSettings() {
           </div>
         </div>
       </div>
-
-      {/* ── Page Footer ── */}
-      <footer className="mt-12 text-center text-xs text-[var(--color-text-muted)] py-4">
-        © 2026 Mark
-      </footer>
     </SettingsLayout>
   );
 }
