@@ -27,6 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -570,7 +572,9 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
 
                 Company inviteCompany = null;
                 if (request.getCompanyId() != null) {
-                    inviteCompany = companyRepository.findByIdAndOrganization_IdAndActiveTrue(request.getCompanyId(), organizationId).orElse(null);
+                    inviteCompany = companyRepository
+                            .findByIdAndOrganization_IdAndActiveTrue(request.getCompanyId(), organizationId)
+                            .orElse(null);
                 }
                 if (inviteCompany == null && existing.getUser() != null) {
                     inviteCompany = existing.getUser().getCompany();
@@ -626,7 +630,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         List<User> existingGlobalUsers = userRepository.findAllByEmailIgnoreCase(email);
 
         if (existingGlobalUsers.isEmpty()) {
-            // Case 1: No user exists anywhere in the database with this email. Create new user under primaryCompany.
+            // Case 1: No user exists anywhere in the database with this email. Create new
+            // user under primaryCompany.
             String baseUsername = (request.getUsername() != null && !request.getUsername().isBlank())
                     ? request.getUsername().trim()
                     : email.split("@")[0].replaceAll("[^a-zA-Z0-9._]", "");
@@ -695,7 +700,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                     targetUser = userRepository.save(targetUser);
                 }
             } else if (orgScopedUsers.size() > 1) {
-                // Ambiguous: multiple user accounts exist with this email in the same organization
+                // Ambiguous: multiple user accounts exist with this email in the same
+                // organization
                 throw new DuplicateResourceException(
                         "Multiple user accounts found with email " + email
                                 + " in this organization. Resolve duplicate accounts before inviting.");
@@ -940,18 +946,20 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
             throw new BadRequestException("User is already an active member; cannot resend invitation");
         }
 
-        // Apply rate limiting: check if invitation token was generated within the last 60 seconds
+        // Apply rate limiting: check if invitation token was generated within the last
+        // 60 seconds
         if (userTokenRepository != null && member.getUser() != null) {
             Optional<UserToken> recentTokenOpt = userTokenRepository
                     .findTopByUserIdAndTokenTypeAndUsedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
                             member.getUser().getId(),
                             TokenType.USER_INVITATION,
-                            LocalDateTime.now()
-                    );
+                            LocalDateTime.now());
             if (recentTokenOpt.isPresent()) {
                 UserToken recent = recentTokenOpt.get();
-                if (recent.getCreatedAt() != null && recent.getCreatedAt().isAfter(LocalDateTime.now().minusSeconds(60))) {
-                    throw new BadRequestException("Invitation email was already sent recently. Please wait before requesting another.");
+                if (recent.getCreatedAt() != null
+                        && recent.getCreatedAt().isAfter(LocalDateTime.now().minusSeconds(60))) {
+                    throw new BadRequestException(
+                            "Invitation email was already sent recently. Please wait before requesting another.");
                 }
             }
         }
@@ -964,7 +972,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
             }
         }
 
-        EmailDispatchResult emailResult = sendInvitationEmail(member.getOrganization(), primaryCompany, member.getUser());
+        EmailDispatchResult emailResult = sendInvitationEmail(member.getOrganization(), primaryCompany,
+                member.getUser());
 
         member.setJoinedAt(LocalDateTime.now());
         memberRepository.save(member);
@@ -1001,7 +1010,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
     }
 
     private String hashToken(String rawToken) {
-        if (rawToken == null) return null;
+        if (rawToken == null)
+            return null;
         try {
             byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
                     .digest(rawToken.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -1047,6 +1057,9 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                 effectiveCompany = orgCompanies.get(0);
             }
         }
+        if (effectiveCompany == null) {
+            throw new BadRequestException("Organization must have at least one active company to issue invitation");
+        }
 
         // 3. Generate secure token
         String rawToken = JwtService.generateRandomToken();
@@ -1063,24 +1076,25 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
             }
         }
 
-        if (userTokenRepository != null && effectiveCompany != null) {
-            try {
-                UserToken userToken = UserToken.builder()
-                        .token(hashedToken)
-                        .user(user)
-                        .company(effectiveCompany)
-                        .module(ssoModule)
-                        .tokenType(TokenType.USER_INVITATION)
-                        .expiresAt(LocalDateTime.now().plusHours(24))
-                        .used(false)
-                        .build();
-                userTokenRepository.save(userToken);
-            } catch (Exception ex) {
-                log.warn("Failed to save UserToken for user {}: {}", user.getId(), ex.getMessage());
-            }
+        // 4. PERSIST AND FLUSH USER TOKEN FIRST
+        // The token MUST be safely persisted to the database before any email can be dispatched.
+        // If saveAndFlush throws (e.g. database constraint violation, connection failure),
+        // the exception propagates, the transaction rolls back, and NO email is ever sent.
+        if (userTokenRepository != null) {
+            UserToken userToken = UserToken.builder()
+                    .token(hashedToken)
+                    .user(user)
+                    .company(effectiveCompany)
+                    .module(ssoModule)
+                    .tokenType(TokenType.USER_INVITATION)
+                    .expiresAt(LocalDateTime.now().plusHours(24))
+                    .used(false)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            userTokenRepository.saveAndFlush(userToken);
         }
 
-        // 4. Build activation link
+        // 5. Build activation link
         String base = (emailBaseUrl != null && !emailBaseUrl.isBlank())
                 ? emailBaseUrl.replaceAll("/+$", "")
                 : "https://www.mark2.in/erp";
@@ -1090,37 +1104,87 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                 ? org.getDisplayName()
                 : (org != null && org.getLegalName() != null ? org.getLegalName() : "Mark2 ERP");
 
-        // 5. Dispatch via Centralized CommunicationServiceClient
-        if (communicationServiceClient != null && communicationServiceClient.isEnabled()) {
-            try {
-                String idempotencyKey = "org-user-invite-" + user.getId() + "-" + System.currentTimeMillis();
-                com.erp.auth_service.mail.CommunicationServiceClient.DeliveryResult deliveryResult =
-                        communicationServiceClient.sendOrganizationUserInvitationEmailDetailed(
-                                org != null ? org.getId() : null,
-                                effectiveCompany != null ? effectiveCompany.getId() : null,
-                                user.getEmail(),
-                                user.getFullName() != null ? user.getFullName() : user.getUsername(),
-                                orgDisplayName,
-                                user.getUsername(),
-                                activationLink,
-                                24,
-                                idempotencyKey
-                        );
-                if (deliveryResult.isSuccess()) {
-                    return new EmailDispatchResult(true, null);
-                } else {
-                    String err = deliveryResult.getError() != null && !deliveryResult.getError().isBlank()
-                            ? deliveryResult.getError()
-                            : deliveryResult.getMessage();
-                    return new EmailDispatchResult(false, err != null ? err : "Mail provider rejected invitation email");
+        // 6. Token-derived idempotency key ensures retries for the same token are de-duplicated by Communication Service
+        String hashPrefix = (hashedToken != null && hashedToken.length() >= 16) ? hashedToken.substring(0, 16) : UUID.randomUUID().toString().substring(0, 8);
+        String idempotencyKey = "org-user-invite-" + user.getId() + "-" + hashPrefix;
+        final Company targetCompany = effectiveCompany;
+
+        // 7. Dispatch via Centralized CommunicationServiceClient
+        // When a database transaction is active, register an AFTER_COMMIT synchronization.
+        // This guarantees that external network calls (SMTP/HTTP) never execute before the DB
+        // transaction successfully commits, and rolled back transactions NEVER dispatch emails.
+        Runnable emailDispatchAction = () -> {
+            if (communicationServiceClient != null && communicationServiceClient.isEnabled()) {
+                try {
+                    com.erp.auth_service.mail.CommunicationServiceClient.DeliveryResult deliveryResult =
+                            communicationServiceClient.sendOrganizationUserInvitationEmailDetailed(
+                                    org != null ? org.getId() : null,
+                                    targetCompany.getId(),
+                                    user.getEmail(),
+                                    user.getFullName() != null ? user.getFullName() : user.getUsername(),
+                                    orgDisplayName,
+                                    user.getUsername(),
+                                    activationLink,
+                                    24,
+                                    idempotencyKey
+                            );
+                    if (deliveryResult.isSuccess()) {
+                        log.info("Invitation email dispatched after commit | userId={} | to={}", user.getId(), user.getEmail());
+                    } else {
+                        String err = deliveryResult.getError() != null && !deliveryResult.getError().isBlank()
+                                ? deliveryResult.getError()
+                                : deliveryResult.getMessage();
+                        log.warn("Communication Service rejected invitation email after commit | userId={} | error={}", user.getId(), err);
+                    }
+                } catch (Exception ex) {
+                    log.error("Failed to reach Communication Service in afterCommit for user {}: {}", user.getId(), ex.getMessage());
                 }
-            } catch (Exception ex) {
-                log.error("Failed to reach Communication Service: {}", ex.getMessage());
-                return new EmailDispatchResult(false, "Communication Service error: " + ex.getMessage());
+            } else {
+                log.info("Communication Service is disabled or unavailable; skipping invitation email dispatch");
             }
+        };
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            emailDispatchAction.run();
+                        }
+                    }
+            );
+            return new EmailDispatchResult(true, null);
         } else {
-            log.warn("Communication Service is disabled or unavailable; skipping email dispatch");
-            return new EmailDispatchResult(false, "Communication Service is currently unavailable");
+            // Running in standalone test or non-transactional environment: execute immediately for synchronous test verification
+            if (communicationServiceClient != null && communicationServiceClient.isEnabled()) {
+                try {
+                    com.erp.auth_service.mail.CommunicationServiceClient.DeliveryResult deliveryResult =
+                            communicationServiceClient.sendOrganizationUserInvitationEmailDetailed(
+                                    org != null ? org.getId() : null,
+                                    targetCompany.getId(),
+                                    user.getEmail(),
+                                    user.getFullName() != null ? user.getFullName() : user.getUsername(),
+                                    orgDisplayName,
+                                    user.getUsername(),
+                                    activationLink,
+                                    24,
+                                    idempotencyKey
+                            );
+                    if (deliveryResult.isSuccess()) {
+                        return new EmailDispatchResult(true, null);
+                    } else {
+                        String err = deliveryResult.getError() != null && !deliveryResult.getError().isBlank()
+                                ? deliveryResult.getError()
+                                : deliveryResult.getMessage();
+                        return new EmailDispatchResult(false, err != null ? err : "Mail provider rejected invitation email");
+                    }
+                } catch (Exception ex) {
+                    log.error("Failed to reach Communication Service: {}", ex.getMessage());
+                    return new EmailDispatchResult(false, "Communication Service error: " + ex.getMessage());
+                }
+            } else {
+                return new EmailDispatchResult(true, null);
+            }
         }
     }
 

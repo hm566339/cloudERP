@@ -68,11 +68,22 @@ class OrganizationUserInvitationE2EWorkflowTest {
     private String commStatusResponse = "ACCEPTED_BY_PROVIDER";
     private String commErrorMessage = null;
 
+    // Token save failure simulation
+    private boolean tokenSaveShouldFail = false;
+    private RuntimeException tokenSaveException = null;
+
     @BeforeEach
     void setUp() {
         userDatabase.clear();
         memberDatabase.clear();
         tokenDatabase.clear();
+
+        tokenSaveShouldFail = false;
+        tokenSaveException = null;
+        lastCommRequest = null;
+        commClientShouldSucceed = true;
+        commStatusResponse = "ACCEPTED_BY_PROVIDER";
+        commErrorMessage = null;
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -251,7 +262,12 @@ class OrganizationUserInvitationE2EWorkflowTest {
                         .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                         .findFirst();
             }
-            if ("save".equals(mName)) {
+            if ("save".equals(mName) || "saveAndFlush".equals(mName)) {
+                if (tokenSaveShouldFail) {
+                    throw tokenSaveException != null ? tokenSaveException
+                            : new org.springframework.dao.DataIntegrityViolationException(
+                                    "new row for relation \"user_token\" violates check constraint \"user_token_token_type_check\"");
+                }
                 UserToken token = (UserToken) args[0];
                 if (token.getId() == null) token.setId(UUID.randomUUID());
                 if (token.getCreatedAt() == null) token.setCreatedAt(LocalDateTime.now());
@@ -592,6 +608,181 @@ class OrganizationUserInvitationE2EWorkflowTest {
 
         assertTrue(passwordEncoder.matches("NewResetPass@2026", existingUser.getPassword()));
         assertTrue(resetToken.getUsed(), "PASSWORD_RESET token must be marked used");
+    }
+
+    @Test
+    @DisplayName("7. Token persistence failure: constraint violation aborts flow and strictly prevents email dispatch")
+    void testTokenPersistenceFailurePreventsEmailDispatch() {
+        tokenSaveShouldFail = true;
+        tokenSaveException = new org.springframework.dao.DataIntegrityViolationException(
+                "ERROR: new row for relation \"user_token\" violates check constraint \"user_token_token_type_check\"");
+
+        String newUserEmail = "abort.user@apex.com";
+        InviteMemberRequest inviteRequest = InviteMemberRequest.builder()
+                .email(newUserEmail)
+                .fullName("Abort User")
+                .memberType(MemberType.MEMBER)
+                .companyId(companyId)
+                .roleIds(List.of(UUID.randomUUID()))
+                .build();
+
+        // Execution must throw the DataIntegrityViolationException without swallowing it
+        org.springframework.dao.DataIntegrityViolationException thrown =
+                assertThrows(org.springframework.dao.DataIntegrityViolationException.class, () ->
+                        orgAdminService.inviteMember(orgId, inviteRequest));
+
+        assertTrue(thrown.getMessage().contains("violates check constraint"));
+
+        // CRITICAL CHECK: Communication Service was NEVER reached, NO email was sent
+        assertNull(lastCommRequest, "Communication Service must NEVER be called if UserToken save fails");
+        assertEquals(0, tokenDatabase.size(), "No token should be stored in database");
+    }
+
+    @Test
+    @DisplayName("8. Safe recovery: Resend invitation recovers pending user who has no active token")
+    void testResendInvitationRecoversOrphanedUserWithoutActiveToken() {
+        // Setup an existing user left behind with INVITED status but NO token in user_token
+        UUID orphanUserId = UUID.randomUUID();
+        User orphanUser = User.builder()
+                .id(orphanUserId)
+                .email("orphaned.pending@apex.com")
+                .username("orphaned.pending")
+                .fullName("Orphaned Pending User")
+                .accountStatus(AccountStatus.INACTIVE)
+                .emailStatus(Status.UNVERIFIED)
+                .company(primaryCompany)
+                .build();
+        userDatabase.put(orphanUserId, orphanUser);
+
+        UUID orphanMemberId = UUID.randomUUID();
+        OrganizationMember orphanMember = OrganizationMember.builder()
+                .id(orphanMemberId)
+                .organization(organization)
+                .user(orphanUser)
+                .memberType(MemberType.MEMBER)
+                .membershipStatus(MembershipStatus.INVITED)
+                .joinedAt(LocalDateTime.now().minusDays(2))
+                .build();
+        memberDatabase.put(orphanMemberId, orphanMember);
+
+        // Confirm database currently has NO tokens for this user
+        assertEquals(0, tokenDatabase.size());
+
+        // Resend invitation: must NOT be blocked by 60s rate limit (since no recent token exists)
+        InviteMemberResponse resendResponse = orgAdminService.resendInvitation(orgId, orphanMemberId);
+
+        assertNotNull(resendResponse);
+        assertTrue(resendResponse.getEmailSent(), "Invitation email should be dispatched");
+        assertEquals("orphaned.pending@apex.com", resendResponse.getEmail());
+
+        // Verify a fresh USER_INVITATION token was generated and persisted
+        assertEquals(1, tokenDatabase.size());
+        UserToken createdToken = tokenDatabase.values().iterator().next();
+        assertEquals(TokenType.USER_INVITATION, createdToken.getTokenType());
+        assertEquals(orphanUserId, createdToken.getUser().getId());
+        assertFalse(createdToken.getUsed());
+
+        // Verify Communication Service received the invitation request
+        assertNotNull(lastCommRequest);
+        assertEquals("orphaned.pending@apex.com", lastCommRequest.get("to"));
+
+        // Verify the user can activate with this token
+        String activationLink = (String) lastCommRequest.get("activationLink");
+        String rawToken = activationLink.substring(activationLink.lastIndexOf("token=") + 6);
+
+        PasswordReset setupReq = new PasswordReset();
+        setupReq.setPassword("OrphanRecovered#2026");
+        Map<String, String> setupResult = authService.resetPasswordWithDetails(setupReq, rawToken);
+
+        assertEquals("Password set successfully", setupResult.get("message"));
+        assertEquals(AccountStatus.ACTIVE, orphanUser.getAccountStatus());
+        assertEquals(Status.VERIFIED, orphanUser.getEmailStatus());
+        assertEquals(MembershipStatus.ACTIVE, orphanMember.getMembershipStatus());
+        assertTrue(createdToken.getUsed());
+    }
+
+    @Test
+    @DisplayName("9. Model & Schema validation: all TokenType enum constants are recognized")
+    void testAllTokenTypesSupportedByEnumType() {
+        Set<String> tokenTypeNames = Arrays.stream(TokenType.values())
+                .map(Enum::name)
+                .collect(java.util.stream.Collectors.toSet());
+
+        assertTrue(tokenTypeNames.contains("EMAIL_VERIFICATION"), "Must support EMAIL_VERIFICATION");
+        assertTrue(tokenTypeNames.contains("PASSWORD_RESET"), "Must support PASSWORD_RESET");
+        assertTrue(tokenTypeNames.contains("PASSWORD_SETUP"), "Must support PASSWORD_SETUP");
+        assertTrue(tokenTypeNames.contains("USER_INVITATION"), "Must support USER_INVITATION");
+        assertEquals(4, tokenTypeNames.size(), "TokenType enum should contain exactly 4 supported types");
+    }
+
+    @Test
+    @DisplayName("10. AFTER_COMMIT listener: email dispatch is deferred until database transaction successfully commits")
+    void testAfterCommitSynchronizationDispatchesEmailOnlyAfterTransactionCommit() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+        try {
+            String newUserEmail = "aftercommit.user@apex.com";
+            InviteMemberRequest inviteRequest = InviteMemberRequest.builder()
+                    .email(newUserEmail)
+                    .fullName("After Commit User")
+                    .memberType(MemberType.MEMBER)
+                    .companyId(companyId)
+                    .roleIds(List.of(UUID.randomUUID()))
+                    .build();
+
+            InviteMemberResponse response = orgAdminService.inviteMember(orgId, inviteRequest);
+            assertNotNull(response);
+
+            // While transaction is in-flight, email must NOT be dispatched yet
+            assertNull(lastCommRequest, "Email must NOT be dispatched while database transaction is in-flight");
+
+            // Verify a synchronization was registered
+            List<org.springframework.transaction.support.TransactionSynchronization> syncs =
+                    org.springframework.transaction.support.TransactionSynchronizationManager.getSynchronizations();
+            assertFalse(syncs.isEmpty(), "An AFTER_COMMIT transaction synchronization must be registered");
+
+            // Simulate successful database transaction commit
+            for (org.springframework.transaction.support.TransactionSynchronization sync : syncs) {
+                sync.afterCommit();
+            }
+
+            // After commit: email must now be dispatched with token-derived idempotency key
+            assertNotNull(lastCommRequest, "Email must be dispatched immediately after transaction commit");
+            assertEquals(newUserEmail, lastCommRequest.get("to"));
+            String idempotencyKey = (String) lastCommRequest.get("idempotencyKey");
+            assertNotNull(idempotencyKey);
+            assertTrue(idempotencyKey.startsWith("org-user-invite-"), "Idempotency key should be structured");
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    @DisplayName("11. Rollback safety: rolled back transaction never executes afterCommit or dispatches emails")
+    void testTransactionRollbackSuppressesEmailDispatch() {
+        org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+        try {
+            String newUserEmail = "rollback.user@apex.com";
+            InviteMemberRequest inviteRequest = InviteMemberRequest.builder()
+                    .email(newUserEmail)
+                    .fullName("Rollback User")
+                    .memberType(MemberType.MEMBER)
+                    .companyId(companyId)
+                    .roleIds(List.of(UUID.randomUUID()))
+                    .build();
+
+            InviteMemberResponse response = orgAdminService.inviteMember(orgId, inviteRequest);
+            assertNotNull(response);
+
+            // During transaction: no email sent
+            assertNull(lastCommRequest);
+
+            // Simulate transaction rollback (afterCommit is NOT called; only clearSynchronization)
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization();
+        }
+
+        // After rollback: email dispatch was never triggered
+        assertNull(lastCommRequest, "Rolled back transaction must never dispatch invitation emails");
     }
 
     private static String hashSha256(String raw) {

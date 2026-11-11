@@ -62,7 +62,7 @@ public class UserToken {
      * MODULE
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "module_id", nullable = false)
+    @JoinColumn(name = "module_id", nullable = true)
     private Module module;
 
     /*
