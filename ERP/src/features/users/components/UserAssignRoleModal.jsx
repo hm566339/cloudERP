@@ -6,6 +6,10 @@ import {
   syncMemberCompanyRoles,
   grantMemberCompanyAccess,
 } from '../../../api/sso/organization.api';
+import {
+  getOrgRoleTemplates,
+  applyOrgRoleTemplate,
+} from '../../../api/sso/roleTemplate.api';
 import CustomSelect from '../../../components/common/CustomSelect';
 import {
   Key,
@@ -95,6 +99,7 @@ import {
     const [selectedRoleIds, setSelectedRoleIds] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+    const [isDeployingTemplates, setIsDeployingTemplates] = useState(false);
     const [roleFetchError, setRoleFetchError] = useState(null);
     const [rolesCache, setRolesCache] = useState({});
 
@@ -181,14 +186,14 @@ import {
   }, [currentCompanyAccess]);
 
   // Fetch available roles from backend API for selected company
-  const fetchRolesForCompany = useCallback(async (compId) => {
+  const fetchRolesForCompany = useCallback(async (compId, forceRefresh = false) => {
     if (!compId) return;
-    if (rolesCache[compId]) return;
+    if (!forceRefresh && rolesCache[compId]) return;
 
     setIsLoadingRoles(true);
     setRoleFetchError(null);
     try {
-      const res = await getRoles({ companyId: compId, page: 0, pageSize: 200 });
+      const res = await getRoles({ companyId: compId, status: true, page: 0, pageSize: 200 });
       let rolesList = [];
       if (Array.isArray(res)) rolesList = res;
       else if (Array.isArray(res?.roles)) rolesList = res.roles;
@@ -196,7 +201,9 @@ import {
       else if (Array.isArray(res?.data?.content)) rolesList = res.data.content;
       else if (Array.isArray(res?.data)) rolesList = res.data;
 
-      setRolesCache((prev) => ({ ...prev, [compId]: rolesList }));
+      // Filter only active roles
+      const activeRoles = rolesList.filter((r) => r.status !== false);
+      setRolesCache((prev) => ({ ...prev, [compId]: activeRoles }));
     } catch (err) {
       console.error('Failed to fetch roles for company:', err);
       setRoleFetchError(err?.response?.data?.message || err?.message || 'Failed to fetch roles');
@@ -205,10 +212,10 @@ import {
     }
   }, [rolesCache]);
 
-  // Trigger fetch when company changes or modal opens
+  // Trigger fetch when company changes or modal opens (fresh fetch on modal open)
   useEffect(() => {
     if (isOpen && selectedCompanyId && (!passedRoles || passedRoles.length === 0)) {
-      fetchRolesForCompany(selectedCompanyId);
+      fetchRolesForCompany(selectedCompanyId, true);
     }
   }, [isOpen, selectedCompanyId, passedRoles, fetchRolesForCompany]);
 
@@ -220,10 +227,39 @@ import {
     return rolesCache[selectedCompanyId] || [];
   }, [passedRoles, rolesCache, selectedCompanyId]);
 
+  // Determine if target user is an organization/company owner
+  const isTargetUserOwner = Boolean(
+    user?.memberType === 'OWNER' ||
+    user?.isOwner ||
+    user?.role === 'OWNER'
+  );
+
+  // Check if any role templates have been deployed to this company
+  // Roles other than built-in OWNER originate from deployed organization templates or custom company roles
+  const hasDeployedTemplateRoles = useMemo(() => {
+    return (availableRoles || []).some((r) => {
+      const roleName = (r.name || r.roleName || '').trim().toUpperCase();
+      return roleName !== 'OWNER';
+    });
+  }, [availableRoles]);
+
+  // Eligible roles for assignment:
+  // For standard organization members (non-owners), exclude OWNER from eligible operational roles
+  const eligibleRoles = useMemo(() => {
+    return (availableRoles || []).filter((r) => {
+      if (r.status === false) return false;
+      const roleName = (r.name || r.roleName || '').trim().toUpperCase();
+      if (!isTargetUserOwner && roleName === 'OWNER') {
+        return false;
+      }
+      return true;
+    });
+  }, [availableRoles, isTargetUserOwner]);
+
   // Initialize selected roles matching current assignment
   useEffect(() => {
-    if (isOpen && availableRoles.length > 0) {
-      const matchedIds = availableRoles
+    if (isOpen && eligibleRoles.length > 0) {
+      const matchedIds = eligibleRoles
         .filter((r) => {
           const idMatches = currentlyAssignedRoleIds.includes(String(r.id));
           const nameMatches = currentlyAssignedRoleNames.includes(
@@ -234,10 +270,10 @@ import {
         .map((r) => String(r.id));
 
       setSelectedRoleIds(matchedIds);
-    } else if (isOpen && availableRoles.length === 0) {
+    } else if (isOpen && eligibleRoles.length === 0) {
       setSelectedRoleIds([]);
     }
-  }, [isOpen, selectedCompanyId, availableRoles, currentlyAssignedRoleIds, currentlyAssignedRoleNames]);
+  }, [isOpen, selectedCompanyId, eligibleRoles, currentlyAssignedRoleIds, currentlyAssignedRoleNames]);
 
   // Reset search term on modal open/close
   useEffect(() => {
@@ -247,10 +283,66 @@ import {
     }
   }, [isOpen]);
 
+  // Quick deploy active organization templates to this company
+  const handleQuickDeployTemplates = async () => {
+    if (!selectedCompanyId) return;
+    setIsDeployingTemplates(true);
+    try {
+      const orgId = organization?.id || organization?.organizationId;
+      const templatesRes = await getOrgRoleTemplates(orgId ? { organizationId: orgId } : {});
+      let templatesList = [];
+      if (Array.isArray(templatesRes)) templatesList = templatesRes;
+      else if (Array.isArray(templatesRes?.content)) templatesList = templatesRes.content;
+      else if (Array.isArray(templatesRes?.templates)) templatesList = templatesRes.templates;
+      else if (Array.isArray(templatesRes?.data)) templatesList = templatesRes.data;
+
+      const activeTemplates = templatesList.filter((t) => t.status !== false);
+      if (activeTemplates.length === 0) {
+        dispatch(
+          addAlert({
+            type: 'warning',
+            message: 'No active organization role templates found to deploy.',
+          })
+        );
+        return;
+      }
+
+      let deployedCount = 0;
+      for (const t of activeTemplates) {
+        await applyOrgRoleTemplate(
+          t.id,
+          { companyIds: [selectedCompanyId], overwriteExisting: false },
+          orgId ? { organizationId: orgId } : {}
+        );
+        deployedCount++;
+      }
+
+      dispatch(
+        addAlert({
+          type: 'success',
+          message: `Successfully deployed ${deployedCount} role templates to ${selectedCompanyName}.`,
+        })
+      );
+
+      // Force refresh roles for this company
+      await fetchRolesForCompany(selectedCompanyId, true);
+    } catch (err) {
+      console.error('Failed to quick-deploy templates:', err);
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: err?.response?.data?.message || err?.message || 'Failed to deploy role templates.',
+        })
+      );
+    } finally {
+      setIsDeployingTemplates(false);
+    }
+  };
+
   if (!isOpen || !user) return null;
 
-  // Filter roles based on user search
-  const filteredRoles = availableRoles.filter((r) => {
+  // Filter eligible roles based on user search
+  const filteredRoles = eligibleRoles.filter((r) => {
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase();
     const nameMatch = (r.name || r.roleName || '').toLowerCase().includes(term);
@@ -495,14 +587,23 @@ import {
                               <div className="flex items-center gap-2">
                                 <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-[#A0A6B5] flex items-center gap-1.5">
                                   <Shield className="w-4 h-4 text-purple-600" />
-                                  Available Company Roles ({availableRoles.length})
+                                  Available Company Roles ({eligibleRoles.length})
                                 </h4>
+                                <button
+                                  type="button"
+                                  onClick={() => fetchRolesForCompany(selectedCompanyId, true)}
+                                  disabled={isLoadingRoles || isSubmitting}
+                                  className="p-1 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+                                  title="Refresh available company roles"
+                                >
+                                  <RefreshCw size={12} className={isLoadingRoles ? 'animate-spin' : ''} />
+                                </button>
                                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
                                   {selectedRoleIds.length} Selected
                                 </span>
                               </div>
 
-                              {availableRoles.length > 0 && (
+                              {eligibleRoles.length > 0 && (
                                 <div className="flex items-center gap-2 text-xs">
                                   <button
                                     type="button"
@@ -526,7 +627,7 @@ import {
                             </div>
 
                             {/* Search Box */}
-                            {availableRoles.length > 3 && (
+                            {eligibleRoles.length > 3 && (
                               <div className="relative">
                                 <Search
                                   size={14}
@@ -561,7 +662,7 @@ import {
                                 </div>
                                 <button
                                   type="button"
-                                  onClick={() => fetchRolesForCompany(selectedCompanyId)}
+                                  onClick={() => fetchRolesForCompany(selectedCompanyId, true)}
                                   className="px-2.5 py-1 rounded bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-200 font-medium hover:bg-red-200"
                                 >
                                   Retry
@@ -569,23 +670,58 @@ import {
                               </div>
                             )}
 
-                            {/* Empty Roles List */}
-                            {!isLoadingRoles && !roleFetchError && filteredRoles.length === 0 && (
+                            {/* Undeployed Templates State */}
+                            {!isLoadingRoles && !roleFetchError && !hasDeployedTemplateRoles && (
+                              <div className="p-6 text-center space-y-3 border border-dashed border-amber-200 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/20 rounded-xl">
+                                <div className="w-10 h-10 mx-auto rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                                  <Shield size={20} />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                                    No company roles available. Deploy organization role templates to this company first.
+                                  </p>
+                                  <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-1">
+                                    Organization role templates must be deployed to <span className="font-semibold">{selectedCompanyName}</span> before roles can be assigned to members.
+                                  </p>
+                                </div>
+                                <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={handleQuickDeployTemplates}
+                                    disabled={isDeployingTemplates || isSubmitting}
+                                    className="btn-primary flex items-center gap-1.5 text-xs py-1.5 px-3 bg-amber-600 hover:bg-amber-700 text-white shadow-2xs"
+                                  >
+                                    {isDeployingTemplates ? (
+                                      <>
+                                        <RefreshCw size={12} className="animate-spin" />
+                                        Deploying Templates...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Shield size={12} />
+                                        Deploy Role Templates to {selectedCompanyName}
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Search with No Results */}
+                            {!isLoadingRoles && !roleFetchError && hasDeployedTemplateRoles && searchTerm && filteredRoles.length === 0 && (
                               <div className="p-6 text-center space-y-2 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
                                 <Shield size={24} className="mx-auto text-zinc-400" />
                                 <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                                  {searchTerm ? 'No roles match your search' : 'No roles available for this company'}
+                                  No roles match your search
                                 </p>
                                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                  {searchTerm
-                                    ? 'Try clearing the search filter.'
-                                    : 'Configure roles in Organization Settings → Role Management to deploy them here.'}
+                                  Try clearing the search filter.
                                 </p>
                               </div>
                             )}
 
                             {/* Role Cards List */}
-                            {!isLoadingRoles && !roleFetchError && filteredRoles.length > 0 && (
+                            {!isLoadingRoles && !roleFetchError && hasDeployedTemplateRoles && filteredRoles.length > 0 && (
                               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                                 {filteredRoles.map((role) => {
                                   const roleIdStr = String(role.id);

@@ -920,7 +920,8 @@ export default function OrgRolesView({ organization, companies = [] }) {
   // Deploy to Operating Companies Handlers
   // ───────────────────────────────────────────────────────────────────────────
   const handleOpenApply = () => {
-    setApplySelectedCompanies(companies.map((c) => c.id));
+    const companyIds = companies.map((c) => c.id || c.companyId).filter(Boolean);
+    setApplySelectedCompanies(companyIds);
     setApplyOverwrite(false);
     setApplyPreview(null);
     setIsApplyOpen(true);
@@ -933,10 +934,11 @@ export default function OrgRolesView({ organization, companies = [] }) {
   };
 
   const handleSelectAllCompanies = () => {
-    if (applySelectedCompanies.length === companies.length) {
+    const allIds = companies.map((c) => c.id || c.companyId).filter(Boolean);
+    if (applySelectedCompanies.length === allIds.length) {
       setApplySelectedCompanies([]);
     } else {
-      setApplySelectedCompanies(companies.map((c) => c.id));
+      setApplySelectedCompanies(allIds);
     }
   };
 
@@ -948,10 +950,14 @@ export default function OrgRolesView({ organization, companies = [] }) {
 
     setIsPreviewing(true);
     try {
-      const res = await previewApplyOrgRoleTemplate(selectedRoleId, {
-        companyIds: applySelectedCompanies,
-        overwriteExisting: applyOverwrite,
-      });
+      const res = await previewApplyOrgRoleTemplate(
+        selectedRoleId,
+        {
+          companyIds: applySelectedCompanies,
+          overwriteExisting: applyOverwrite,
+        },
+        orgId ? { organizationId: orgId } : {}
+      );
       setApplyPreview(res);
     } catch (err) {
       dispatch(
@@ -970,15 +976,19 @@ export default function OrgRolesView({ organization, companies = [] }) {
 
     setIsApplying(true);
     try {
-      const res = await applyOrgRoleTemplate(selectedRoleId, {
-        companyIds: applySelectedCompanies,
-        overwriteExisting: applyOverwrite,
-      });
+      const res = await applyOrgRoleTemplate(
+        selectedRoleId,
+        {
+          companyIds: applySelectedCompanies,
+          overwriteExisting: applyOverwrite,
+        },
+        orgId ? { organizationId: orgId } : {}
+      );
 
       const parts = [];
-      if (res.createdCount > 0) parts.push(`${res.createdCount} created`);
-      if (res.updatedCount > 0) parts.push(`${res.updatedCount} updated`);
-      if (res.skippedCount > 0) parts.push(`${res.skippedCount} skipped`);
+      if (res?.createdCount > 0) parts.push(`${res.createdCount} created`);
+      if (res?.updatedCount > 0) parts.push(`${res.updatedCount} updated`);
+      if (res?.skippedCount > 0) parts.push(`${res.skippedCount} skipped`);
 
       dispatch(
         addAlert({
@@ -1172,6 +1182,11 @@ export default function OrgRolesView({ organization, companies = [] }) {
                       <span>{selectedPerms.size} configured permissions</span>
                       <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
                       <span>Deployed to {selectedRoleData.appliedCompaniesCount ?? 0} companies</span>
+                      {Array.isArray(selectedRoleData.appliedCompanies) && selectedRoleData.appliedCompanies.length > 0 && (
+                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60 font-medium">
+                          ({selectedRoleData.appliedCompanies.map((c) => c.companyName || c.companyCode || 'Company').join(', ')})
+                        </span>
+                      )}
                       {selectedRoleData.description && (
                         <>
                           <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
@@ -1806,27 +1821,42 @@ export default function OrgRolesView({ organization, companies = [] }) {
                 <div className="p-4 text-center text-xs text-zinc-400 italic">No operating companies registered.</div>
               ) : (
                 companies.map((c) => {
-                  const isChecked = applySelectedCompanies.includes(c.id);
+                  const companyId = c.id || c.companyId;
+                  const isChecked = applySelectedCompanies.includes(companyId);
+                  const alreadyDeployed = Array.isArray(selectedRoleData?.appliedCompanies) &&
+                    selectedRoleData.appliedCompanies.some((ac) => ac.companyId === companyId);
+
                   return (
                     <label
-                      key={c.id}
+                      key={companyId}
                       className="flex items-center justify-between p-2.5 hover:bg-white dark:hover:bg-[#1D212C] rounded-md cursor-pointer transition-colors"
                     >
                       <div className="flex items-center gap-2.5">
                         <input
                           type="checkbox"
                           checked={isChecked}
-                          onChange={() => handleToggleCompany(c.id)}
+                          onChange={() => handleToggleCompany(companyId)}
                           className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer"
                         />
                         <div>
-                          <div className="text-xs font-bold text-zinc-800 dark:text-zinc-200">{c.name || c.displayName}</div>
-                          <div className="text-[10px] text-zinc-400 font-mono">{c.code || c.id}</div>
+                          <div className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                            {c.name || c.displayName || c.companyName}
+                          </div>
+                          <div className="text-[10px] text-zinc-400 font-mono">
+                            {c.code || c.companyCode || companyId}
+                          </div>
                         </div>
                       </div>
-                      <span className="text-[10px] text-zinc-400">
-                        {isChecked ? 'Will Deploy' : 'Skipped'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {alreadyDeployed && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                            Already Deployed
+                          </span>
+                        )}
+                        <span className="text-[10px] text-zinc-400">
+                          {isChecked ? 'Will Deploy' : 'Skipped'}
+                        </span>
+                      </div>
                     </label>
                   );
                 })
@@ -1866,23 +1896,38 @@ export default function OrgRolesView({ organization, companies = [] }) {
               <span>{applyPreview ? 'Refresh Deployment Preview' : 'Preview Differences Before Deploying'}</span>
             </button>
 
-            {applyPreview && (
-              <div className="p-3 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-xs space-y-2">
-                <div className="flex items-center justify-between font-semibold border-b border-zinc-100 dark:border-[#2A2F3D] pb-1.5">
-                  <span>Impact Summary</span>
-                  <div className="flex gap-2 text-[11px]">
-                    <span className="text-emerald-600 font-bold">{applyPreview.createdCount ?? 0} to create</span>
-                    <span>•</span>
-                    <span className="text-blue-600 font-bold">{applyPreview.updatedCount ?? 0} to update</span>
-                    <span>•</span>
-                    <span className="text-zinc-400">{applyPreview.skippedCount ?? 0} skipped</span>
+            {applyPreview && (() => {
+              const previewCreated =
+                applyPreview.createdCount ??
+                applyPreview.companies?.filter((c) => !c.hasRole)?.length ??
+                0;
+              const previewUpdated =
+                applyPreview.updatedCount ??
+                (applyOverwrite ? applyPreview.companies?.filter((c) => c.hasRole)?.length : 0) ??
+                0;
+              const previewSkipped =
+                applyPreview.skippedCount ??
+                (!applyOverwrite ? applyPreview.companies?.filter((c) => c.hasRole)?.length : 0) ??
+                0;
+
+              return (
+                <div className="p-3 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] text-xs space-y-2">
+                  <div className="flex items-center justify-between font-semibold border-b border-zinc-100 dark:border-[#2A2F3D] pb-1.5">
+                    <span>Impact Summary</span>
+                    <div className="flex gap-2 text-[11px]">
+                      <span className="text-emerald-600 font-bold">{previewCreated} to create</span>
+                      <span>•</span>
+                      <span className="text-blue-600 font-bold">{previewUpdated} to update</span>
+                      <span>•</span>
+                      <span className="text-zinc-400">{previewSkipped} skipped</span>
+                    </div>
                   </div>
+                  <p className="text-[11px] text-zinc-500">
+                    Deployment is ready. User memberships and assigned credentials will not be altered.
+                  </p>
                 </div>
-                <p className="text-[11px] text-zinc-500">
-                  Deployment is ready. User memberships and assigned credentials will not be altered.
-                </p>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           {/* Footer Actions */}
