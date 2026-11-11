@@ -870,6 +870,21 @@ export default function OrgUsersView({
         />
       )}
 
+      {/* Assign Role Modal */}
+      {selectedUserForRole && (
+        <UserAssignRoleModal
+          isOpen={isRoleModalOpen}
+          onClose={() => {
+            setIsRoleModalOpen(false);
+            setSelectedUserForRole(null);
+          }}
+          user={selectedUserForRole}
+          organization={organization}
+          companies={companies}
+          onSuccess={() => refetchMembers()}
+        />
+      )}
+
       {/* Export Modal */}
       <ExportModal
         isOpen={isExportModalOpen}
