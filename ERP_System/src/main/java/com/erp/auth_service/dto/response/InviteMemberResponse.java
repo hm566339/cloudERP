@@ -26,5 +26,7 @@ public class InviteMemberResponse {
     private UUID companyId;
     private String message;
     private LocalDateTime invitedAt;
+    private Boolean emailSent;
+    private String emailError;
 }
 

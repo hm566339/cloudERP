@@ -13,6 +13,8 @@ import {
   Key,
   Layers,
   UserPlus,
+  Mail,
+  RotateCcw,
 } from 'lucide-react';
 import { useAppDispatch } from '../../../../app/hooks';
 import { addAlert } from '../../../notifications/notificationSlice';
@@ -290,7 +292,7 @@ export default function OrgUsersView({
     setIsInviting(true);
     try {
       const orgId = organization?.id || organization?.organizationId;
-      await apiClient.post(
+      const res = await apiClient.post(
         '/api/sso/organization/members/invite',
         {
           email: inviteEmail.trim().toLowerCase(),
@@ -304,12 +306,22 @@ export default function OrgUsersView({
           params: orgId ? { organizationId: orgId } : undefined,
         }
       );
-      dispatch(
-        addAlert({
-          type: 'success',
-          message: `Invitation successfully sent to ${inviteEmail}`,
-        })
-      );
+      const data = res?.data?.data || res?.data;
+      if (data?.emailSent === false) {
+        dispatch(
+          addAlert({
+            type: 'warning',
+            message: 'User created, but invitation email could not be sent' + (data?.emailError ? `: ${data.emailError}` : ''),
+          })
+        );
+      } else {
+        dispatch(
+          addAlert({
+            type: 'success',
+            message: data?.message || `User created and invitation email sent to ${inviteEmail}`,
+          })
+        );
+      }
       setIsInviteModalOpen(false);
       setInviteEmail('');
       setInviteFullName('');
@@ -325,6 +337,44 @@ export default function OrgUsersView({
       );
     } finally {
       setIsInviting(false);
+    }
+  };
+
+  const handleResendInvite = async (member) => {
+    const orgId = organization?.id || organization?.organizationId;
+    const memberId = member?.memberId || member?.id;
+    try {
+      const res = await apiClient.post(
+        `/api/sso/organization/members/${memberId}/resend-invite`,
+        {},
+        {
+          params: orgId ? { organizationId: orgId } : undefined,
+        }
+      );
+      const data = res?.data?.data || res?.data;
+      if (data?.emailSent === false) {
+        dispatch(
+          addAlert({
+            type: 'warning',
+            message: 'Invitation refreshed, but email could not be sent' + (data?.emailError ? `: ${data.emailError}` : ''),
+          })
+        );
+      } else {
+        dispatch(
+          addAlert({
+            type: 'success',
+            message: data?.message || `Invitation email resent successfully to ${member.email}`,
+          })
+        );
+      }
+      refetchMembers();
+    } catch (err) {
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: err?.response?.data?.message || 'Failed to resend invitation',
+        })
+      );
     }
   };
 
@@ -498,6 +548,15 @@ export default function OrgUsersView({
       onClick: (row) => handleOpenEdit(row),
       tooltip: 'Edit User Profile',
       className: 'hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40',
+    },
+    {
+      key: 'resend-invite',
+      label: 'Resend Invitation',
+      icon: Mail,
+      show: (row) => row.membershipStatus === 'INVITED' || !row.active,
+      onClick: (row) => handleResendInvite(row),
+      tooltip: 'Resend Invitation Email',
+      className: 'hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/40',
     },
     {
       key: 'toggle-status',

@@ -11,6 +11,8 @@ import java.util.UUID;
 public interface OrganizationAdministrationService {
     InviteMemberResponse inviteMember(UUID organizationId, InviteMemberRequest request);
 
+    InviteMemberResponse resendInvitation(UUID organizationId, UUID memberId);
+
     void updateMemberStatus(UUID memberId, String status);
 
     void removeMemberFromOrganization(UUID memberId);

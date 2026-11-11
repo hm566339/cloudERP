@@ -109,4 +109,28 @@ class TemplateEngineServiceTest {
         assertTrue(quote.getHtmlContent().contains("QT-9901"));
         assertTrue(quote.getHtmlContent().contains("INR 1,45,000"));
     }
+
+    @Test
+    @DisplayName("Should render USER_INVITATION template with organization, name, activation link, and HTML escaping")
+    void testRenderUserInvitation() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("fullName", "Jane <script>alert('xss')</script> Smith");
+        data.put("organizationName", "Apex Global Enterprise & Co");
+        data.put("username", "jsmith");
+        data.put("email", "jane.smith@example.com");
+        data.put("activationLink", "https://mark2.in/set-password?token=invitation_tok_abc123");
+        data.put("validityHours", 24);
+
+        RenderedEmail rendered = templateEngineService.render(TemplateCode.USER_INVITATION, null, data);
+
+        assertNotNull(rendered);
+        assertNotNull(rendered.getHtmlContent());
+        assertTrue(rendered.getHtmlContent().contains("Apex Global Enterprise &amp; Co"));
+        // Check XSS escaping
+        assertFalse(rendered.getHtmlContent().contains("<script>alert('xss')</script>"));
+        assertTrue(rendered.getHtmlContent().contains("&lt;script&gt;alert"));
+        assertTrue(rendered.getHtmlContent().contains("https://mark2.in/set-password?token=invitation_tok_abc123"));
+        assertTrue(rendered.getHtmlContent().contains("Activate Account &amp; Set Password"));
+        assertNotNull(rendered.getPlainTextContent());
+    }
 }

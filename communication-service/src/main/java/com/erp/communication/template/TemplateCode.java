@@ -2,6 +2,7 @@ package com.erp.communication.template;
 
 public enum TemplateCode {
     EMPLOYEE_PROVISIONING("email-employee-provisioning", "Your Mark2 ERP Account Is Ready — Set Your Password"),
+    USER_INVITATION("email-user-invitation", "Welcome to {organizationName} - Activate Your Account"),
     USER_VERIFICATION("email-user-verification", "Verify Your Email Address — Mark2 ERP"),
     PASSWORD_RESET("email-password-reset", "Reset Your Password — Mark2 ERP"),
     ORGANIZATION_CREATED("email-organization-created", "Your Mark2 ERP Account Is Ready!"),

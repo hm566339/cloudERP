@@ -161,6 +161,81 @@ class OrganizationAdministrationControllerInviteTest {
     }
 
     @Test
+    @DisplayName("POST /api/sso/organization/members/invite handles IncorrectResultSizeDataAccessException as 409 Conflict")
+    void inviteMemberIncorrectResultSizeDataAccessException() throws Exception {
+        RequestContext.set(userId, orgId, null, null, AccessMode.FULL);
+        fakeService.shouldThrowIncorrectResultSize = true;
+
+        InviteMemberRequest request = InviteMemberRequest.builder()
+                .email("duplicate@example.com")
+                .build();
+
+        mockMvc.perform(post("/api/sso/organization/members/invite")
+                .param("organizationId", orgId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Data conflict: Query returned multiple records where a unique record was expected"));
+    }
+
+    @Test
+    @DisplayName("POST /api/sso/organization/members/invite handles DataIntegrityViolationException as 409 Conflict")
+    void inviteMemberDataIntegrityViolationException() throws Exception {
+        RequestContext.set(userId, orgId, null, null, AccessMode.FULL);
+        fakeService.shouldThrowDataIntegrityViolation = true;
+
+        InviteMemberRequest request = InviteMemberRequest.builder()
+                .email("conflict@example.com")
+                .build();
+
+        mockMvc.perform(post("/api/sso/organization/members/invite")
+                .param("organizationId", orgId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Data integrity conflict: A record with conflicting values already exists"));
+    }
+
+    @Test
+    @DisplayName("POST /api/sso/organization/members/invite handles EntityNotFoundException as 404 Not Found")
+    void inviteMemberEntityNotFoundException() throws Exception {
+        RequestContext.set(userId, orgId, null, null, AccessMode.FULL);
+        fakeService.shouldThrowEntityNotFound = true;
+
+        InviteMemberRequest request = InviteMemberRequest.builder()
+                .email("missing@example.com")
+                .build();
+
+        mockMvc.perform(post("/api/sso/organization/members/invite")
+                .param("organizationId", orgId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("POST /api/sso/organization/members/invite handles AccessDeniedException as 403 Forbidden")
+    void inviteMemberAccessDeniedException() throws Exception {
+        RequestContext.set(userId, orgId, null, null, AccessMode.FULL);
+        fakeService.shouldThrowAccessDenied = true;
+
+        InviteMemberRequest request = InviteMemberRequest.builder()
+                .email("forbidden@example.com")
+                .build();
+
+        mockMvc.perform(post("/api/sso/organization/members/invite")
+                .param("organizationId", orgId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Access denied: You do not have permission to access this resource"));
+    }
+
+    @Test
     @DisplayName("PATCH /api/sso/organization/members/{memberId}/status updates status")
     void updateStatusSuccess() throws Exception {
         UUID targetMemberId = UUID.randomUUID();
@@ -187,6 +262,18 @@ class OrganizationAdministrationControllerInviteTest {
         assertEquals(targetMemberId, fakeService.lastRemovedMemberId);
     }
 
+    @Test
+    @DisplayName("POST /api/sso/organization/members/{memberId}/resend-invite dispatches invitation email")
+    void resendInviteSuccess() throws Exception {
+        UUID targetMemberId = UUID.randomUUID();
+
+        mockMvc.perform(post("/api/sso/organization/members/" + targetMemberId + "/resend-invite")
+                .param("organizationId", orgId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.emailSent").value(true));
+    }
+
     // Fake Service implementation with zero external dependencies / agents
     static class FakeOrganizationAdministrationService implements OrganizationAdministrationService {
         UUID lastOrganizationId;
@@ -197,6 +284,22 @@ class OrganizationAdministrationControllerInviteTest {
 
         boolean shouldThrowDuplicate = false;
         boolean shouldThrowForbidden = false;
+        boolean shouldThrowIncorrectResultSize = false;
+        boolean shouldThrowDataIntegrityViolation = false;
+        boolean shouldThrowEntityNotFound = false;
+        boolean shouldThrowAccessDenied = false;
+
+        @Override
+        public InviteMemberResponse resendInvitation(UUID organizationId, UUID memberId) {
+            this.lastOrganizationId = organizationId;
+            return InviteMemberResponse.builder()
+                    .memberId(memberId)
+                    .organizationId(organizationId)
+                    .email("test@example.com")
+                    .message("Invitation email resent successfully to test@example.com")
+                    .emailSent(true)
+                    .build();
+        }
 
         @Override
         public InviteMemberResponse inviteMember(UUID organizationId, InviteMemberRequest request) {
@@ -208,6 +311,18 @@ class OrganizationAdministrationControllerInviteTest {
             }
             if (shouldThrowForbidden) {
                 throw new ForbiddenException("Only organization OWNER or ADMIN can invite members");
+            }
+            if (shouldThrowIncorrectResultSize) {
+                throw new org.springframework.dao.IncorrectResultSizeDataAccessException("Query did not return a unique result: 2 results were returned", 1, 2);
+            }
+            if (shouldThrowDataIntegrityViolation) {
+                throw new org.springframework.dao.DataIntegrityViolationException("duplicate key value violates unique constraint");
+            }
+            if (shouldThrowEntityNotFound) {
+                throw new jakarta.persistence.EntityNotFoundException("Resource not found");
+            }
+            if (shouldThrowAccessDenied) {
+                throw new org.springframework.security.access.AccessDeniedException("Access is denied");
             }
 
             return InviteMemberResponse.builder()

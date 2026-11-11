@@ -10,34 +10,77 @@ import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import org.springframework.mail.MailException;
 import org.springframework.mail.MailSendException;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessagePreparator;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class SmtpEmailProviderTest {
 
-    private JavaMailSender mailSender;
+    private TestJavaMailSender mailSender;
     private SmtpProperties properties;
     private SmtpEmailProvider smtpProvider;
 
+    static class TestJavaMailSender implements JavaMailSender {
+        List<MimeMessage> sentMessages = new ArrayList<>();
+        MailException sendException;
+
+        @Override
+        public MimeMessage createMimeMessage() {
+            return new MimeMessage(Session.getInstance(new Properties()));
+        }
+
+        @Override
+        public MimeMessage createMimeMessage(InputStream contentStream) {
+            return createMimeMessage();
+        }
+
+        @Override
+        public void send(MimeMessage mimeMessage) throws MailException {
+            if (sendException != null) {
+                throw sendException;
+            }
+            sentMessages.add(mimeMessage);
+        }
+
+        @Override
+        public void send(MimeMessage... mimeMessages) throws MailException {
+            for (MimeMessage msg : mimeMessages) {
+                send(msg);
+            }
+        }
+
+        @Override
+        public void send(MimeMessagePreparator mimeMessagePreparator) throws MailException {}
+
+        @Override
+        public void send(MimeMessagePreparator... mimeMessagePreparators) throws MailException {}
+
+        @Override
+        public void send(SimpleMailMessage simpleMessage) throws MailException {}
+
+        @Override
+        public void send(SimpleMailMessage... simpleMessages) throws MailException {}
+    }
+
     @BeforeEach
     void setUp() {
-        mailSender = mock(JavaMailSender.class);
+        mailSender = new TestJavaMailSender();
         properties = new SmtpProperties();
         properties.setFromAddress("custom-sender@mark2.in");
         properties.setFromName("Mark2 Verification");
         properties.setHost("smtp.example.com");
         properties.setPort(587);
-
-        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
 
         smtpProvider = new SmtpEmailProvider(mailSender, properties);
     }
@@ -67,10 +110,8 @@ class SmtpEmailProviderTest {
         assertEquals("SMTP", result.getProviderName());
         assertNotNull(result.getProviderMessageId());
 
-        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
-        verify(mailSender, times(1)).send(captor.capture());
-
-        MimeMessage sentMessage = captor.getValue();
+        assertEquals(1, mailSender.sentMessages.size());
+        MimeMessage sentMessage = mailSender.sentMessages.get(0);
         assertNotNull(sentMessage.getFrom());
         assertEquals("custom-sender@mark2.in", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getAddress());
         assertEquals("Mark2 Verification", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getPersonal());
@@ -90,14 +131,13 @@ class SmtpEmailProviderTest {
 
         assertFalse(result.isSuccess());
         assertTrue(result.getErrorMessage().contains("Invalid recipient email"));
-        verify(mailSender, never()).send(any(MimeMessage.class));
+        assertEquals(0, mailSender.sentMessages.size());
     }
 
     @Test
     @DisplayName("Should catch SMTP socket exception without printing secrets")
     void testSmtpExceptionHandling() {
-        doThrow(new MailSendException("SMTP server connection timeout: auth password=secret_pw"))
-                .when(mailSender).send(any(MimeMessage.class));
+        mailSender.sendException = new MailSendException("SMTP server connection timeout: auth password=secret_pw");
 
         EmailMessage message = EmailMessage.builder()
                 .notificationId(UUID.randomUUID())
@@ -111,7 +151,6 @@ class SmtpEmailProviderTest {
 
         assertFalse(result.isSuccess());
         assertNotNull(result.getErrorMessage());
-        // Verify password is sanitized
         assertFalse(result.getErrorMessage().contains("secret_pw"));
     }
 
@@ -131,17 +170,15 @@ class SmtpEmailProviderTest {
         assertTrue(result.isSuccess());
         assertEquals("SMTP", result.getProviderName());
 
-        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
-        verify(mailSender, times(1)).send(captor.capture());
-
-        MimeMessage sentMessage = captor.getValue();
+        assertEquals(1, mailSender.sentMessages.size());
+        MimeMessage sentMessage = mailSender.sentMessages.get(0);
         assertEquals("test@example.com", ((jakarta.mail.internet.InternetAddress) sentMessage.getAllRecipients()[0]).getAddress());
         assertEquals("HTML Only Notification", sentMessage.getSubject());
         assertNotNull(sentMessage.getContentType());
     }
 
     @Test
-    @DisplayName("Should compose plain-text and HTML alternative content without attachments (prevents 'Not in multipart mode' error)")
+    @DisplayName("Should compose plain-text and HTML alternative content without attachments")
     void testPlainTextAndHtmlAlternativeContentWithoutAttachments() throws Exception {
         EmailMessage message = EmailMessage.builder()
                 .notificationId(UUID.randomUUID())
@@ -150,23 +187,43 @@ class SmtpEmailProviderTest {
                 .subject("Alternative Text and HTML Test")
                 .textBody("Hello Employee, Welcome to Mark2 ERP! Please visit https://www.mark2.in/erp to login.")
                 .htmlBody("<p>Hello Employee,</p><p>Welcome to <strong>Mark2 ERP</strong>!</p><p><a href='https://www.mark2.in/erp'>Login</a></p>")
-                // No attachments
                 .attachments(null)
                 .build();
 
         CommunicationResult result = smtpProvider.sendEmail(message);
 
-        // Must succeed without throwing IllegalStateException: "Not in multipart mode"
         assertTrue(result.isSuccess(), "Email with alternative plain text and HTML should succeed in multipart mode");
         assertEquals("SMTP", result.getProviderName());
 
-        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
-        verify(mailSender, times(1)).send(captor.capture());
-
-        MimeMessage sentMessage = captor.getValue();
+        assertEquals(1, mailSender.sentMessages.size());
+        MimeMessage sentMessage = mailSender.sentMessages.get(0);
         assertNotNull(sentMessage.getContent());
-        assertTrue(sentMessage.getContentType().toLowerCase().contains("multipart"),
-                "Message Content-Type must be multipart to support alternative text/html parts");
+        assertTrue(sentMessage.getContentType().toLowerCase().contains("multipart"));
+    }
+
+    @Test
+    @DisplayName("Should compose organization user invitation email correctly with branding, recipient, and activation link")
+    void testOrganizationUserInvitationEmailComposition() throws Exception {
+        String activationLink = "https://www.mark2.in/erp/set-password?token=user_invitation_token_123456";
+        String orgName = "Apex Global Enterprise";
+
+        EmailMessage message = EmailMessage.builder()
+                .notificationId(UUID.randomUUID())
+                .companyId(UUID.randomUUID())
+                .recipient("newuser@apex.com")
+                .subject("Welcome to " + orgName + " - Activate Your Account")
+                .textBody("Welcome to " + orgName + "!\n\nPlease activate your account here: " + activationLink)
+                .htmlBody("<div style='font-family:sans-serif;'><h1>Welcome to " + orgName + "</h1><p><a href='" + activationLink + "'>Activate Your Account</a></p></div>")
+                .build();
+
+        CommunicationResult result = smtpProvider.sendEmail(message);
+
+        assertTrue(result.isSuccess());
+        assertEquals(1, mailSender.sentMessages.size());
+        MimeMessage sentMessage = mailSender.sentMessages.get(0);
+        assertEquals("newuser@apex.com", ((jakarta.mail.internet.InternetAddress) sentMessage.getAllRecipients()[0]).getAddress());
+        assertEquals("Welcome to Apex Global Enterprise - Activate Your Account", sentMessage.getSubject());
+        assertEquals("custom-sender@mark2.in", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getAddress());
     }
 
     @Test
@@ -187,10 +244,8 @@ class SmtpEmailProviderTest {
         CommunicationResult result = smtpProvider.sendEmail(message);
 
         assertTrue(result.isSuccess());
-        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
-        verify(mailSender, times(1)).send(captor.capture());
-
-        MimeMessage sentMessage = captor.getValue();
+        assertEquals(1, mailSender.sentMessages.size());
+        MimeMessage sentMessage = mailSender.sentMessages.get(0);
         assertEquals("newhire@acme.com", ((jakarta.mail.internet.InternetAddress) sentMessage.getAllRecipients()[0]).getAddress());
         assertEquals("Your Mark2 ERP Account Is Ready — Set Your Password", sentMessage.getSubject());
         assertEquals("custom-sender@mark2.in", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getAddress());
@@ -234,15 +289,11 @@ class SmtpEmailProviderTest {
         CommunicationResult result = smtpProvider.sendEmail(message);
 
         assertTrue(result.isSuccess());
-        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
-        verify(mailSender, times(1)).send(captor.capture());
-
-        MimeMessage sentMessage = captor.getValue();
-        // From address must be aligned to the authenticated account to prevent Google silent drop
+        assertEquals(1, mailSender.sentMessages.size());
+        MimeMessage sentMessage = mailSender.sentMessages.get(0);
         assertEquals("authenticated-account@gmail.com", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getAddress());
         assertEquals("Mark2 Alerts", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getPersonal());
 
-        // Reply-To must be automatically set to the configured different-sender@gmail.com
         assertNotNull(sentMessage.getReplyTo());
         assertEquals("different-sender@gmail.com", ((jakarta.mail.internet.InternetAddress) sentMessage.getReplyTo()[0]).getAddress());
     }
@@ -266,10 +317,8 @@ class SmtpEmailProviderTest {
         CommunicationResult result = smtpProvider.sendEmail(message);
 
         assertTrue(result.isSuccess());
-        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
-        verify(mailSender, times(1)).send(captor.capture());
-
-        MimeMessage sentMessage = captor.getValue();
+        assertEquals(1, mailSender.sentMessages.size());
+        MimeMessage sentMessage = mailSender.sentMessages.get(0);
         assertEquals("authenticated-account@gmail.com", ((jakarta.mail.internet.InternetAddress) sentMessage.getFrom()[0]).getAddress());
         assertEquals("explicit-support@mark2.in", ((jakarta.mail.internet.InternetAddress) sentMessage.getReplyTo()[0]).getAddress());
     }

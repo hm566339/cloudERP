@@ -1203,7 +1203,6 @@ return (
                           className="text-[10px] font-bold uppercase tracking-wider"
                           style={{ color: previewPalette.textSecondary }}
                         >
-                          Fiscal Revenue (Q3)
                           FISCAL REVENUE (Q3)
                         </span>
                         <p
@@ -1227,7 +1226,6 @@ return (
                         className="text-[10px] font-bold uppercase tracking-wider block"
                         style={{ color: previewPalette.textSecondary }}
                       >
-                        Action Controls
                         ACTION CONTROLS
                       </span>
                       <div className="flex items-center gap-2">
@@ -1261,7 +1259,6 @@ return (
                         className="text-[10px] font-bold uppercase tracking-wider block"
                         style={{ color: previewPalette.textSecondary }}
                       >
-                        Navigation Link States
                         NAVIGATION LINK STATES
                       </span>
                       <div
@@ -1306,7 +1303,6 @@ return (
                         className="text-[10px] font-bold uppercase tracking-wider block"
                         style={{ color: previewPalette.textSecondary }}
                       >
-                        Form Inputs
                         FORM INPUTS
                       </span>
                       <div className="relative">
@@ -1335,7 +1331,6 @@ return (
                         className="text-[10px] font-bold uppercase tracking-wider block"
                         style={{ color: previewPalette.textSecondary }}
                       >
-                        Status Indicators
                         STATUS INDICATORS
                       </span>
                       <div className="flex flex-wrap items-center gap-2">
@@ -1366,7 +1361,6 @@ return (
                         className="text-[10px] font-bold uppercase tracking-wider block"
                         style={{ color: previewPalette.textSecondary }}
                       >
-                        Data Table View
                         DATA TABLE VIEW
                       </span>
                       <div
@@ -1381,9 +1375,6 @@ return (
                             color: previewPalette.textPrimary,
                           }}
                         >
-                          <span>Entity</span>
-                          <span>Status</span>
-                          <span className="text-right">Amount</span>
                           <span>ENTITY</span>
                           <span>STATUS</span>
                           <span className="text-right">AMOUNT</span>

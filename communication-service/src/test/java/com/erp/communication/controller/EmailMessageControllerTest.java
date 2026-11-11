@@ -13,7 +13,6 @@ import com.erp.communication.service.CommunicationDispatchService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -21,8 +20,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -30,11 +27,35 @@ class EmailMessageControllerTest {
 
     private MockMvc mockMvcEmail;
     private MockMvc mockMvcChannel;
-    private CommunicationDispatchService dispatchService;
+    private TestCommunicationDispatchService dispatchService;
+
+    static class TestCommunicationDispatchService extends CommunicationDispatchService {
+        CommunicationResponse emailResponse;
+        RuntimeException channelException;
+        SendEmailRequest lastEmailRequest;
+
+        public TestCommunicationDispatchService() {
+            super(null, null, null, null, null);
+        }
+
+        @Override
+        public CommunicationResponse dispatchEmail(SendEmailRequest request) {
+            this.lastEmailRequest = request;
+            return emailResponse;
+        }
+
+        @Override
+        public CommunicationResponse dispatchChannelMessage(SendChannelMessageRequest request) {
+            if (channelException != null) {
+                throw channelException;
+            }
+            return null;
+        }
+    }
 
     @BeforeEach
     void setUp() {
-        dispatchService = Mockito.mock(CommunicationDispatchService.class);
+        dispatchService = new TestCommunicationDispatchService();
 
         EmailMessageController emailController = new EmailMessageController(dispatchService);
         CommunicationMessageController channelController = new CommunicationMessageController(dispatchService);
@@ -65,7 +86,7 @@ class EmailMessageControllerTest {
                 .message("Email accepted by mail provider for delivery")
                 .build();
 
-        when(dispatchService.dispatchEmail(any(SendEmailRequest.class))).thenReturn(response);
+        dispatchService.emailResponse = response;
 
         String body = """
                 {
@@ -87,10 +108,51 @@ class EmailMessageControllerTest {
     }
 
     @Test
+    @DisplayName("Should successfully accept organization user invitation email request")
+    void testDispatchUserInvitationEmail() throws Exception {
+        UUID notifId = UUID.randomUUID();
+        UUID companyId = UUID.randomUUID();
+
+        CommunicationResponse response = CommunicationResponse.builder()
+                .notificationId(notifId)
+                .companyId(companyId)
+                .channel(CommunicationChannel.EMAIL)
+                .recipientMasked("j***e@acme.com")
+                .status(NotificationStatus.ACCEPTED_BY_PROVIDER)
+                .providerName("SMTP")
+                .createdAt(LocalDateTime.now())
+                .message("Email accepted by mail provider for delivery")
+                .build();
+
+        dispatchService.emailResponse = response;
+
+        String body = """
+                {
+                    "companyId": "%s",
+                    "recipient": "john.doe@acme.com",
+                    "templateCode": "USER_INVITATION",
+                    "templateData": {
+                        "fullName": "John Doe",
+                        "organizationName": "Acme Global",
+                        "username": "john.doe@acme.com",
+                        "activationLink": "https://www.mark2.in/erp/set-password?token=abcdef123456",
+                        "validityHours": 24
+                    }
+                }
+                """.formatted(companyId);
+
+        mockMvcEmail.perform(post("/api/communication/v1/messages/email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.notificationId").value(notifId.toString()))
+                .andExpect(jsonPath("$.status").value("ACCEPTED_BY_PROVIDER"));
+    }
+
+    @Test
     @DisplayName("Should return 422 CHANNEL_NOT_SUPPORTED when requesting WHATSAPP channel")
     void testRejectWhatsAppChannel() throws Exception {
-        when(dispatchService.dispatchChannelMessage(any(SendChannelMessageRequest.class)))
-                .thenThrow(new UnsupportedChannelException(CommunicationChannel.WHATSAPP));
+        dispatchService.channelException = new UnsupportedChannelException(CommunicationChannel.WHATSAPP);
 
         String body = """
                 {

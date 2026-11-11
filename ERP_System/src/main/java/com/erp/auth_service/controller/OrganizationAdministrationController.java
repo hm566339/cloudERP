@@ -44,6 +44,27 @@ public class OrganizationAdministrationController {
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
 
+    @PostMapping("/{memberId}/resend-invite")
+    public ResponseEntity<ResponseWrapper<InviteMemberResponse>> resendInvite(
+            @PathVariable UUID memberId,
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID effectiveOrgId = resolveOrgId(organizationId, headerOrgId, null);
+        InviteMemberResponse response = administrationService.resendInvitation(effectiveOrgId, memberId);
+        return ResponseEntity.ok(ResponseWrapper.success(response));
+    }
+
+    @PostMapping("/user/{userId}/resend-invite")
+    public ResponseEntity<ResponseWrapper<InviteMemberResponse>> resendInviteByUserId(
+            @PathVariable UUID userId,
+            @RequestParam(required = false) UUID organizationId,
+            @RequestHeader(value = "X-Organization-Id", required = false) UUID headerOrgId) {
+        UUID effectiveOrgId = resolveOrgId(organizationId, headerOrgId, null);
+        UUID memberId = administrationService.resolveMemberIdByUserId(userId);
+        InviteMemberResponse response = administrationService.resendInvitation(effectiveOrgId, memberId);
+        return ResponseEntity.ok(ResponseWrapper.success(response));
+    }
+
     @PatchMapping("/{memberId}/status")
     public ResponseEntity<ResponseWrapper<Map<String, String>>> updateStatus(
             @PathVariable UUID memberId,

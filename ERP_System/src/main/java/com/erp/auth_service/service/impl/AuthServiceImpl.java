@@ -2367,7 +2367,8 @@ public class AuthServiceImpl implements AuthService {
                                 });
 
                 if (token.getTokenType() != TokenType.PASSWORD_RESET
-                                && token.getTokenType() != TokenType.PASSWORD_SETUP) {
+                                && token.getTokenType() != TokenType.PASSWORD_SETUP
+                                && token.getTokenType() != TokenType.USER_INVITATION) {
                         log.warn("Password setup/reset failed - invalid token type | token={} | type={}",
                                         maskCode(rawCode), token.getTokenType());
                         throw new BadCredentialsException(
@@ -2428,6 +2429,14 @@ public class AuthServiceImpl implements AuthService {
 
                 if (company.getOrganization() != null) {
                         ensureCompanyMemberAccess(user, company, company.getOrganization());
+                        if (organizationMemberRepository != null) {
+                                organizationMemberRepository.findByOrganization_IdAndUser_Id(company.getOrganization().getId(), user.getId())
+                                        .ifPresent(om -> {
+                                                om.setMembershipStatus(com.erp.auth_service.utility.MembershipStatus.ACTIVE);
+                                                om.setJoinedAt(LocalDateTime.now());
+                                                organizationMemberRepository.save(om);
+                                        });
+                        }
                 }
 
                 token.setUsed(true);

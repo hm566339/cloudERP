@@ -49,6 +49,59 @@ public class GlobalExceptionHandler {
                 return buildResponse(ex.getMessage(), HttpStatus.CONFLICT, Map.of());
         }
 
+        // 409 - Non Unique / Multiple Results Query Exception
+        @ExceptionHandler({
+                org.springframework.dao.IncorrectResultSizeDataAccessException.class,
+                jakarta.persistence.NonUniqueResultException.class,
+                org.hibernate.NonUniqueResultException.class
+        })
+        public ResponseEntity<ResponseWrapper<Object>> handleNonUniqueResult(
+                        Exception ex,
+                        HttpServletRequest request) {
+                log.warn("Multiple records found where single result expected: {}", ex.getMessage());
+                return buildResponse(
+                                "Data conflict: Query returned multiple records where a unique record was expected",
+                                HttpStatus.CONFLICT,
+                                Map.of());
+        }
+
+        // 409 - Data Integrity / Database Constraint Violations
+        @ExceptionHandler({
+                org.springframework.dao.DataIntegrityViolationException.class,
+                org.hibernate.exception.ConstraintViolationException.class
+        })
+        public ResponseEntity<ResponseWrapper<Object>> handleDataIntegrityViolation(
+                        Exception ex,
+                        HttpServletRequest request) {
+                log.warn("Database integrity violation: {}", ex.getMessage());
+                return buildResponse(
+                                "Data integrity conflict: A record with conflicting values already exists",
+                                HttpStatus.CONFLICT,
+                                Map.of());
+        }
+
+        // 403 - Spring Security Access Denied
+        @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+        public ResponseEntity<ResponseWrapper<Object>> handleAccessDenied(
+                        org.springframework.security.access.AccessDeniedException ex,
+                        HttpServletRequest request) {
+                return buildResponse(
+                                "Access denied: You do not have permission to access this resource",
+                                HttpStatus.FORBIDDEN,
+                                Map.of());
+        }
+
+        // 404 - JPA Entity Not Found
+        @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
+        public ResponseEntity<ResponseWrapper<Object>> handleEntityNotFound(
+                        jakarta.persistence.EntityNotFoundException ex,
+                        HttpServletRequest request) {
+                return buildResponse(
+                                ex.getMessage() != null ? ex.getMessage() : "Requested resource not found",
+                                HttpStatus.NOT_FOUND,
+                                Map.of());
+        }
+
         @ExceptionHandler(ServerConnectionFailedException.class)
         public ResponseEntity<ResponseWrapper<Object>> handleServerConnectionFailedException(
                         ServerConnectionFailedException ex,

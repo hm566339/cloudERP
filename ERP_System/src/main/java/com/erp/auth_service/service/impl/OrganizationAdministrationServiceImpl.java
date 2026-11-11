@@ -20,6 +20,8 @@ import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
 import com.erp.auth_service.utility.OrganizationStatus;
 import com.erp.auth_service.utility.Status;
+import com.erp.auth_service.utility.TokenType;
+import com.erp.auth_service.security.JwtService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -68,6 +70,18 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
 
     @Autowired(required = false)
     private SessionRepository sessionRepository;
+
+    @Autowired(required = false)
+    private com.erp.auth_service.mail.CommunicationServiceClient communicationServiceClient;
+
+    @Autowired(required = false)
+    private UserTokenRepository userTokenRepository;
+
+    @Autowired(required = false)
+    private ModuleRepository moduleRepository;
+
+    @org.springframework.beans.factory.annotation.Value("${email.base-url:https://www.mark2.in/erp}")
+    private String emailBaseUrl;
 
     @Autowired
     public OrganizationAdministrationServiceImpl(
@@ -554,7 +568,24 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                             request.getRoleId());
                 }
 
-                trySendInviteEmail(email, org.getDisplayName() != null ? org.getDisplayName() : org.getLegalName());
+                Company inviteCompany = null;
+                if (request.getCompanyId() != null) {
+                    inviteCompany = companyRepository.findByIdAndOrganization_IdAndActiveTrue(request.getCompanyId(), organizationId).orElse(null);
+                }
+                if (inviteCompany == null && existing.getUser() != null) {
+                    inviteCompany = existing.getUser().getCompany();
+                }
+                if (inviteCompany == null) {
+                    List<Company> orgCompanies = companyRepository.findByOrganization_IdAndActiveTrue(organizationId);
+                    if (!orgCompanies.isEmpty()) {
+                        inviteCompany = orgCompanies.get(0);
+                    }
+                }
+                EmailDispatchResult emailResult = sendInvitationEmail(org, inviteCompany, existing.getUser());
+
+                String resMsg = emailResult.sent
+                        ? "Invitation resent successfully to " + email
+                        : "Invitation refreshed, but email could not be sent";
 
                 return InviteMemberResponse.builder()
                         .memberId(existing.getId())
@@ -566,16 +597,16 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                         .memberType(existing.getMemberType())
                         .membershipStatus(existing.getMembershipStatus())
                         .companyId(request.getCompanyId())
-                        .message("Invitation resent successfully to " + email)
+                        .message(resMsg)
                         .invitedAt(existing.getJoinedAt())
+                        .emailSent(emailResult.sent)
+                        .emailError(emailResult.error)
                         .build();
             }
         }
 
-        // Resolve or create User
-        User targetUser;
-        Optional<User> existingGlobalUser = userRepository.findByEmailIgnoreCase(email);
-        Company primaryCompany = null;
+        // Determine primary company for this invitation
+        Company primaryCompany;
         if (request.getCompanyId() != null) {
             primaryCompany = companyRepository
                     .findByIdAndOrganization_IdAndActiveTrue(request.getCompanyId(), organizationId)
@@ -590,18 +621,12 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
             }
         }
 
-        if (existingGlobalUser.isPresent()) {
-            targetUser = existingGlobalUser.get();
-            if (request.getFullName() != null && !request.getFullName().isBlank()
-                    && (targetUser.getFullName() == null || targetUser.getFullName().isBlank())) {
-                targetUser.setFullName(request.getFullName().trim());
-            }
-            if (request.getEffectiveEmployeeId() != null
-                    && (targetUser.getEmpId() == null || targetUser.getEmpId().isBlank())) {
-                targetUser.setEmpId(request.getEffectiveEmployeeId());
-            }
-            targetUser = userRepository.save(targetUser);
-        } else {
+        // Resolve or create User safely handling multi-tenant duplicate email records
+        User targetUser;
+        List<User> existingGlobalUsers = userRepository.findAllByEmailIgnoreCase(email);
+
+        if (existingGlobalUsers.isEmpty()) {
+            // Case 1: No user exists anywhere in the database with this email. Create new user under primaryCompany.
             String baseUsername = (request.getUsername() != null && !request.getUsername().isBlank())
                     ? request.getUsername().trim()
                     : email.split("@")[0].replaceAll("[^a-zA-Z0-9._]", "");
@@ -610,7 +635,7 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
             }
             String finalUsername = baseUsername;
             int counter = 1;
-            while (userRepository.existsByUsernameIgnoreCase(finalUsername)) {
+            while (userRepository.existsByUsernameIgnoreCase(finalUsername) && counter < 100) {
                 finalUsername = baseUsername + counter++;
             }
 
@@ -635,6 +660,131 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                     .failedLoginCount(0)
                     .build();
             targetUser = userRepository.save(targetUser);
+        } else if (existingGlobalUsers.size() == 1) {
+            // Case 2: Exactly one global user exists. Reuse without creating duplicates.
+            targetUser = existingGlobalUsers.get(0);
+            if (request.getFullName() != null && !request.getFullName().isBlank()
+                    && (targetUser.getFullName() == null || targetUser.getFullName().isBlank())) {
+                targetUser.setFullName(request.getFullName().trim());
+                targetUser = userRepository.save(targetUser);
+            }
+            if (request.getEffectiveEmployeeId() != null
+                    && (targetUser.getEmpId() == null || targetUser.getEmpId().isBlank())) {
+                targetUser.setEmpId(request.getEffectiveEmployeeId());
+                targetUser = userRepository.save(targetUser);
+            }
+        } else {
+            // Case 3: Multiple user records exist with this email in the database.
+            // Disambiguate by checking if one belongs to a company in this organization.
+            List<User> orgScopedUsers = existingGlobalUsers.stream()
+                    .filter(u -> u.getCompany() != null && u.getCompany().getOrganization() != null
+                            && organizationId.equals(u.getCompany().getOrganization().getId()))
+                    .toList();
+
+            if (orgScopedUsers.size() == 1) {
+                // Resolved unambiguously within this organization's company scope
+                targetUser = orgScopedUsers.get(0);
+                if (request.getFullName() != null && !request.getFullName().isBlank()
+                        && (targetUser.getFullName() == null || targetUser.getFullName().isBlank())) {
+                    targetUser.setFullName(request.getFullName().trim());
+                    targetUser = userRepository.save(targetUser);
+                }
+                if (request.getEffectiveEmployeeId() != null
+                        && (targetUser.getEmpId() == null || targetUser.getEmpId().isBlank())) {
+                    targetUser.setEmpId(request.getEffectiveEmployeeId());
+                    targetUser = userRepository.save(targetUser);
+                }
+            } else if (orgScopedUsers.size() > 1) {
+                // Ambiguous: multiple user accounts exist with this email in the same organization
+                throw new DuplicateResourceException(
+                        "Multiple user accounts found with email " + email
+                                + " in this organization. Resolve duplicate accounts before inviting.");
+            } else {
+                // Ambiguous: multiple user accounts exist across other organizations
+                throw new DuplicateResourceException(
+                        "Multiple user accounts exist with email " + email
+                                + ". Cannot resolve user unambiguously.");
+            }
+        }
+
+        // Check if an organization membership already exists for this resolved user
+        Optional<OrganizationMember> existingMemberOpt = memberRepository
+                .findByOrganization_IdAndUser_Id(organizationId, targetUser.getId());
+        if (existingMemberOpt.isPresent()) {
+            OrganizationMember existing = existingMemberOpt.get();
+            if (existing.getDeletedAt() == null) {
+                if (existing.getMembershipStatus() == MembershipStatus.ACTIVE) {
+                    throw new DuplicateResourceException(
+                            "User with email " + email + " is already an active member of this organization");
+                }
+                // Resend / refresh invited status
+                existing.setInvitedBy(actor.getUser());
+                existing.setMemberType(requestedMemberType);
+                existing.setJoinedAt(LocalDateTime.now());
+                existing = memberRepository.save(existing);
+
+                if (request.getCompanyId() != null) {
+                    grantCompanyAccessIfRequested(existing, org, request.getCompanyId(), request.getRoleIds(),
+                            request.getRoleId());
+                }
+
+                EmailDispatchResult emailResult = sendInvitationEmail(org, primaryCompany, targetUser);
+
+                String resMsg = emailResult.sent
+                        ? "Invitation resent successfully to " + email
+                        : "Invitation refreshed, but email could not be sent";
+
+                return InviteMemberResponse.builder()
+                        .memberId(existing.getId())
+                        .userId(targetUser.getId())
+                        .organizationId(org.getId())
+                        .email(email)
+                        .username(targetUser.getUsername())
+                        .fullName(targetUser.getFullName())
+                        .memberType(existing.getMemberType())
+                        .membershipStatus(existing.getMembershipStatus())
+                        .companyId(request.getCompanyId())
+                        .message(resMsg)
+                        .invitedAt(existing.getJoinedAt())
+                        .emailSent(emailResult.sent)
+                        .emailError(emailResult.error)
+                        .build();
+            } else {
+                // Reactivate soft-deleted membership
+                existing.setDeletedAt(null);
+                existing.setInvitedBy(actor.getUser());
+                existing.setMemberType(requestedMemberType);
+                existing.setMembershipStatus(MembershipStatus.INVITED);
+                existing.setJoinedAt(LocalDateTime.now());
+                existing = memberRepository.save(existing);
+
+                if (request.getCompanyId() != null) {
+                    grantCompanyAccessIfRequested(existing, org, request.getCompanyId(), request.getRoleIds(),
+                            request.getRoleId());
+                }
+
+                EmailDispatchResult emailResult = sendInvitationEmail(org, primaryCompany, targetUser);
+
+                String resMsg = emailResult.sent
+                        ? "Invitation resent successfully to " + email
+                        : "Invitation refreshed, but email could not be sent";
+
+                return InviteMemberResponse.builder()
+                        .memberId(existing.getId())
+                        .userId(targetUser.getId())
+                        .organizationId(org.getId())
+                        .email(email)
+                        .username(targetUser.getUsername())
+                        .fullName(targetUser.getFullName())
+                        .memberType(existing.getMemberType())
+                        .membershipStatus(existing.getMembershipStatus())
+                        .companyId(request.getCompanyId())
+                        .message(resMsg)
+                        .invitedAt(existing.getJoinedAt())
+                        .emailSent(emailResult.sent)
+                        .emailError(emailResult.error)
+                        .build();
+            }
         }
 
         OrganizationMember newMember = OrganizationMember.builder()
@@ -652,7 +802,11 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                     request.getRoleId());
         }
 
-        trySendInviteEmail(email, org.getDisplayName() != null ? org.getDisplayName() : org.getLegalName());
+        EmailDispatchResult emailResult = sendInvitationEmail(org, primaryCompany, targetUser);
+
+        String successMsg = emailResult.sent
+                ? "Invitation successfully sent to " + email
+                : "User created, but invitation email could not be sent";
 
         return InviteMemberResponse.builder()
                 .memberId(newMember.getId())
@@ -664,8 +818,10 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                 .memberType(newMember.getMemberType())
                 .membershipStatus(newMember.getMembershipStatus())
                 .companyId(request.getCompanyId())
-                .message("Invitation successfully sent to " + email)
+                .message(successMsg)
                 .invitedAt(newMember.getJoinedAt())
+                .emailSent(emailResult.sent)
+                .emailError(emailResult.error)
                 .build();
     }
 
@@ -766,13 +922,205 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         }
     }
 
-    private void trySendInviteEmail(String email, String organizationName) {
-        if (emailService != null) {
-            try {
-                log.info("Dispatching invitation email notification for {} to {}", organizationName, email);
-            } catch (Exception ex) {
-                log.warn("Failed to dispatch invitation email to {}: {}", email, ex.getMessage());
+    @Override
+    @Transactional
+    public InviteMemberResponse resendInvitation(UUID organizationId, UUID memberId) {
+        authorizationService.requireWriteAccess();
+        OrganizationMember actor = actor();
+        if (!actor.getOrganization().getId().equals(organizationId)) {
+            throw new ForbiddenException("Actor does not belong to organization");
+        }
+
+        OrganizationMember member = memberRepository.findById(memberId)
+                .filter(m -> m.getOrganization().getId().equals(organizationId) && m.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("Organization member not found"));
+
+        if (member.getMembershipStatus() == MembershipStatus.ACTIVE
+                && member.getUser() != null && member.getUser().getAccountStatus() == AccountStatus.ACTIVE) {
+            throw new BadRequestException("User is already an active member; cannot resend invitation");
+        }
+
+        // Apply rate limiting: check if invitation token was generated within the last 60 seconds
+        if (userTokenRepository != null && member.getUser() != null) {
+            Optional<UserToken> recentTokenOpt = userTokenRepository
+                    .findTopByUserIdAndTokenTypeAndUsedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
+                            member.getUser().getId(),
+                            TokenType.USER_INVITATION,
+                            LocalDateTime.now()
+                    );
+            if (recentTokenOpt.isPresent()) {
+                UserToken recent = recentTokenOpt.get();
+                if (recent.getCreatedAt() != null && recent.getCreatedAt().isAfter(LocalDateTime.now().minusSeconds(60))) {
+                    throw new BadRequestException("Invitation email was already sent recently. Please wait before requesting another.");
+                }
             }
+        }
+
+        Company primaryCompany = member.getUser() != null ? member.getUser().getCompany() : null;
+        if (primaryCompany == null) {
+            List<Company> orgCompanies = companyRepository.findByOrganization_IdAndActiveTrue(organizationId);
+            if (!orgCompanies.isEmpty()) {
+                primaryCompany = orgCompanies.get(0);
+            }
+        }
+
+        EmailDispatchResult emailResult = sendInvitationEmail(member.getOrganization(), primaryCompany, member.getUser());
+
+        member.setJoinedAt(LocalDateTime.now());
+        memberRepository.save(member);
+
+        String message = emailResult.sent
+                ? "Invitation email resent successfully to " + member.getUser().getEmail()
+                : "Invitation refreshed, but email could not be sent";
+
+        return InviteMemberResponse.builder()
+                .memberId(member.getId())
+                .userId(member.getUser() != null ? member.getUser().getId() : null)
+                .organizationId(organizationId)
+                .email(member.getUser() != null ? member.getUser().getEmail() : null)
+                .username(member.getUser() != null ? member.getUser().getUsername() : null)
+                .fullName(member.getUser() != null ? member.getUser().getFullName() : null)
+                .memberType(member.getMemberType())
+                .membershipStatus(member.getMembershipStatus())
+                .companyId(primaryCompany != null ? primaryCompany.getId() : null)
+                .message(message)
+                .invitedAt(member.getJoinedAt())
+                .emailSent(emailResult.sent)
+                .emailError(emailResult.error)
+                .build();
+    }
+
+    private static class EmailDispatchResult {
+        final boolean sent;
+        final String error;
+
+        EmailDispatchResult(boolean sent, String error) {
+            this.sent = sent;
+            this.error = error;
+        }
+    }
+
+    private String hashToken(String rawToken) {
+        if (rawToken == null) return null;
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(rawToken.trim().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 not available", e);
+        }
+    }
+
+    private EmailDispatchResult sendInvitationEmail(Organization org, Company company, User user) {
+        if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
+            return new EmailDispatchResult(false, "Recipient email is missing");
+        }
+
+        // 1. Invalidate previous unused invitation tokens for this user
+        if (userTokenRepository != null) {
+            try {
+                List<UserToken> previousTokens = userTokenRepository.findByUser_IdAndTokenTypeAndUsedFalse(
+                        user.getId(), TokenType.USER_INVITATION);
+                for (UserToken pt : previousTokens) {
+                    pt.setUsed(true);
+                }
+                if (!previousTokens.isEmpty()) {
+                    userTokenRepository.saveAll(previousTokens);
+                }
+            } catch (Exception ex) {
+                log.warn("Failed to invalidate old tokens for user {}: {}", user.getId(), ex.getMessage());
+            }
+        }
+
+        // 2. Resolve effective company for token and communication-service requirements
+        Company effectiveCompany = company;
+        if (effectiveCompany == null && user.getCompany() != null) {
+            effectiveCompany = user.getCompany();
+        }
+        if (effectiveCompany == null && org != null && companyRepository != null) {
+            List<Company> orgCompanies = companyRepository.findByOrganization_IdAndActiveTrue(org.getId());
+            if (!orgCompanies.isEmpty()) {
+                effectiveCompany = orgCompanies.get(0);
+            }
+        }
+
+        // 3. Generate secure token
+        String rawToken = JwtService.generateRandomToken();
+        String hashedToken = hashToken(rawToken);
+
+        com.erp.auth_service.model.Module ssoModule = null;
+        if (moduleRepository != null) {
+            ssoModule = moduleRepository.findByNameIgnoreCase("SSO").orElse(null);
+            if (ssoModule == null) {
+                List<com.erp.auth_service.model.Module> allMods = moduleRepository.findAll();
+                if (!allMods.isEmpty()) {
+                    ssoModule = allMods.get(0);
+                }
+            }
+        }
+
+        if (userTokenRepository != null && effectiveCompany != null) {
+            try {
+                UserToken userToken = UserToken.builder()
+                        .token(hashedToken)
+                        .user(user)
+                        .company(effectiveCompany)
+                        .module(ssoModule)
+                        .tokenType(TokenType.USER_INVITATION)
+                        .expiresAt(LocalDateTime.now().plusHours(24))
+                        .used(false)
+                        .build();
+                userTokenRepository.save(userToken);
+            } catch (Exception ex) {
+                log.warn("Failed to save UserToken for user {}: {}", user.getId(), ex.getMessage());
+            }
+        }
+
+        // 4. Build activation link
+        String base = (emailBaseUrl != null && !emailBaseUrl.isBlank())
+                ? emailBaseUrl.replaceAll("/+$", "")
+                : "https://www.mark2.in/erp";
+        String activationLink = base + "/set-password?token=" + rawToken;
+
+        String orgDisplayName = (org != null && org.getDisplayName() != null && !org.getDisplayName().isBlank())
+                ? org.getDisplayName()
+                : (org != null && org.getLegalName() != null ? org.getLegalName() : "Mark2 ERP");
+
+        // 5. Dispatch via Centralized CommunicationServiceClient
+        if (communicationServiceClient != null && communicationServiceClient.isEnabled()) {
+            try {
+                String idempotencyKey = "org-user-invite-" + user.getId() + "-" + System.currentTimeMillis();
+                com.erp.auth_service.mail.CommunicationServiceClient.DeliveryResult deliveryResult =
+                        communicationServiceClient.sendOrganizationUserInvitationEmailDetailed(
+                                org != null ? org.getId() : null,
+                                effectiveCompany != null ? effectiveCompany.getId() : null,
+                                user.getEmail(),
+                                user.getFullName() != null ? user.getFullName() : user.getUsername(),
+                                orgDisplayName,
+                                user.getUsername(),
+                                activationLink,
+                                24,
+                                idempotencyKey
+                        );
+                if (deliveryResult.isSuccess()) {
+                    return new EmailDispatchResult(true, null);
+                } else {
+                    String err = deliveryResult.getError() != null && !deliveryResult.getError().isBlank()
+                            ? deliveryResult.getError()
+                            : deliveryResult.getMessage();
+                    return new EmailDispatchResult(false, err != null ? err : "Mail provider rejected invitation email");
+                }
+            } catch (Exception ex) {
+                log.error("Failed to reach Communication Service: {}", ex.getMessage());
+                return new EmailDispatchResult(false, "Communication Service error: " + ex.getMessage());
+            }
+        } else {
+            log.warn("Communication Service is disabled or unavailable; skipping email dispatch");
+            return new EmailDispatchResult(false, "Communication Service is currently unavailable");
         }
     }
 
