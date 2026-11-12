@@ -1,6 +1,8 @@
 package com.erp.auth_service.service.impl;
 
 import com.erp.auth_service.dto.request.CreateRoleRequest;
+import com.erp.auth_service.repository.OrganizationMemberRepository;
+import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.dto.response.PaginationResponse;
 import com.erp.auth_service.dto.response.RoleDetailsResponse;
 import com.erp.auth_service.dto.response.RoleListResponse;
@@ -47,6 +49,7 @@ public class RoleServiceImpl implements RoleService {
         private final RoleMapper roleMapper;
         private final FeaturePermissionRepository featurePermissionRepository;
         private final RolePermissionRepository rolePermissionRepository;
+        private final OrganizationMemberRepository organizationMemberRepository;
 
         /*
          * CREATE ROLE
@@ -353,8 +356,20 @@ public class RoleServiceImpl implements RoleService {
                                 }
                         }
                         if (context.companyId() != null && !context.companyId().equals(company.getId())) {
-                                throw new com.erp.auth_service.exception.ForbiddenException(
-                                                "Access denied: Role does not belong to authorized company context");
+                                boolean isOrgAdmin = false;
+                                if (context.organizationId() != null && context.userId() != null
+                                                && organizationMemberRepository != null) {
+                                        isOrgAdmin = Boolean.TRUE.equals(organizationMemberRepository
+                                                        .findByOrganization_IdAndUser_Id(context.organizationId(),
+                                                                        context.userId())
+                                                        .map(m -> m.getMemberType() == MemberType.OWNER
+                                                                        || m.getMemberType() == MemberType.ADMIN)
+                                                        .orElse(false));
+                                }
+                                if (!isOrgAdmin && !com.erp.auth_service.security.PlatformSecurityUtil.isOwnerOrAdmin()) {
+                                        throw new com.erp.auth_service.exception.ForbiddenException(
+                                                        "Access denied: Role does not belong to authorized company context");
+                                }
                         }
                 }
         }

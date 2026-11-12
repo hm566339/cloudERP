@@ -100,15 +100,17 @@ describe('UserCompanyAccessModal Request Deduplication & Lifecycle Stability Sui
 
     it('verifies main modal open effect is guarded against repeated executions for the same user session', () => {
       assert.ok(
+        modalSource.includes('sessionUserRef.current === userIdentifier') ||
         modalSource.includes('if (hasInitializedRef.current && activeUserIdRef.current === userIdentifier)'),
         'Effect must guard against re-running when modal is already initialized for the active user'
       );
     });
 
-    it('verifies target company role loading effect uses rolesCacheRef to avoid repeated calls', () => {
+    it('verifies target company role loading effect uses roles cache to avoid repeated calls', () => {
       assert.ok(
+        modalSource.includes('moduleRolesCache.has(') ||
         modalSource.includes('if (rolesCacheRef.current[targetCompanyId])'),
-        'Must check rolesCacheRef before triggering network request for target company roles'
+        'Must check roles cache before triggering network request for target company roles'
       );
     });
 
@@ -128,6 +130,21 @@ describe('UserCompanyAccessModal Request Deduplication & Lifecycle Stability Sui
       assert.ok(
         roleApiSource.includes('export const getRoles = async (params = {}, config = {}) =>'),
         'getRoles must accept optional config parameter'
+      );
+    });
+
+    it('verifies target company role loading handles errors cleanly with dedicated rolesLoadError and retry', () => {
+      assert.ok(
+        modalSource.includes('rolesLoadError'),
+        'Modal must define and maintain dedicated rolesLoadError state'
+      );
+      assert.ok(
+        modalSource.includes('Retry') && modalSource.includes('fetchRolesForCompany(targetCompanyId, true)'),
+        'Modal must render Retry button allowing manual retry on role loading failure'
+      );
+      assert.ok(
+        modalSource.includes('rolesLoadError ?') && modalSource.includes('targetRoles.length === 0 ?'),
+        'Modal must distinguish between an API error and legitimately empty roles list'
       );
     });
   });

@@ -33,6 +33,26 @@ import { confirmDialog } from '../../../utils/confirmDialog';
 
 const EMPTY_ARRAY = [];
 
+// Module-level caches and single-flight promise registries
+export const moduleAccessCache = new Map();
+export const moduleAccessPromiseMap = new Map();
+export let moduleCompaniesCache = null;
+export let moduleCompaniesPromise = null;
+export const moduleRolesCache = new Map();
+export const moduleRolesPromiseMap = new Map();
+
+/**
+ * Reset module-level caches for unit testing or cache invalidation.
+ */
+export const clearUserCompanyAccessCaches = () => {
+  moduleAccessCache.clear();
+  moduleAccessPromiseMap.clear();
+  moduleCompaniesCache = null;
+  moduleCompaniesPromise = null;
+  moduleRolesCache.clear();
+  moduleRolesPromiseMap.clear();
+};
+
 /**
  * UserCompanyAccessModal
  * 
@@ -55,10 +75,34 @@ export default function UserCompanyAccessModal({
 }) {
   const dispatch = useAppDispatch();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const userId = user?.id || user?.userId || '';
+  const memberId = initialMemberId || user?.memberId || '';
+  const userIdentifier = String(userId || memberId || '');
+
+  // Passed companies normalization (supports allCompanies or companies prop)
+  const passedCompanies = allCompanies || legacyCompanies || EMPTY_ARRAY;
+
+  const [isLoading, setIsLoading] = useState(() => {
+    if (!isOpen) return false;
+    if (Array.isArray(user?.companyAccess) && user.companyAccess.length > 0) return false;
+    if (userIdentifier && moduleAccessCache.has(userIdentifier)) return false;
+    return Boolean(userIdentifier);
+  });
   const [accessError, setAccessError] = useState(null);
-  const [accessList, setAccessList] = useState(EMPTY_ARRAY);
-  const [fetchedCompanies, setFetchedCompanies] = useState(EMPTY_ARRAY);
+  const [accessList, setAccessList] = useState(() => {
+    if (Array.isArray(user?.companyAccess) && user.companyAccess.length > 0) {
+      return user.companyAccess;
+    }
+    if (userIdentifier && moduleAccessCache.has(userIdentifier)) {
+      return moduleAccessCache.get(userIdentifier);
+    }
+    return EMPTY_ARRAY;
+  });
+  const [fetchedCompanies, setFetchedCompanies] = useState(() => {
+    if (Array.isArray(passedCompanies) && passedCompanies.length > 0) return EMPTY_ARRAY;
+    if (moduleCompaniesCache && moduleCompaniesCache.length > 0) return moduleCompaniesCache;
+    return EMPTY_ARRAY;
+  });
   const [companyRolesMap, setCompanyRolesMap] = useState({});
 
   // Target assignment to a new company
@@ -66,6 +110,7 @@ export default function UserCompanyAccessModal({
   const [targetRoleIds, setTargetRoleIds] = useState(EMPTY_ARRAY);
   const [targetRoles, setTargetRoles] = useState(EMPTY_ARRAY);
   const [isRolesLoading, setIsRolesLoading] = useState(false);
+  const [rolesLoadError, setRolesLoadError] = useState(null);
   const [isAssigning, setIsAssigning] = useState(false);
 
   // Inline role addition to an existing company
@@ -73,12 +118,6 @@ export default function UserCompanyAccessModal({
   const [selectedRoleToAdd, setSelectedRoleToAdd] = useState('');
   const [isAddingRole, setIsAddingRole] = useState(false);
   const [isRemovingRole, setIsRemovingRole] = useState(false);
-
-  const userId = user?.id || user?.userId || '';
-  const memberId = initialMemberId || user?.memberId || '';
-
-  // Passed companies normalization (supports allCompanies or companies prop)
-  const passedCompanies = allCompanies || legacyCompanies || EMPTY_ARRAY;
 
   // Decoupled refs to prevent re-render function churn
   const userRef = useRef(user);
@@ -88,7 +127,7 @@ export default function UserCompanyAccessModal({
   passedCompaniesRef.current = passedCompanies;
   initialMemberIdRef.current = initialMemberId;
 
-  // Dedicated cache and in-flight tracking refs
+  // Dedicated cache and in-flight tracking refs (retained for backward compatibility)
   const inFlightAccessRef = useRef(null);
   const inFlightCompaniesRef = useRef(false);
   const inFlightRolesRef = useRef({});
@@ -98,6 +137,7 @@ export default function UserCompanyAccessModal({
   const activeUserIdRef = useRef(null);
   const abortControllersRef = useRef({ access: null, companies: null, roles: {} });
   const activeAccessRequestIdRef = useRef(0);
+  const sessionUserRef = useRef(null);
 
   // Resolve available companies: prioritize passedCompanies from parent, fallback to fetched
   const availableCompanies = useMemo(() => {
@@ -111,51 +151,88 @@ export default function UserCompanyAccessModal({
     }));
   }, [passedCompanies, fetchedCompanies]);
 
-  // Load user's company access list safely with request deduplication and cancellation
+  // Load user's company access list safely with module-level caching and single-flight deduplication
   const loadAccessData = useCallback(async (forceRefresh = false) => {
-    const effectiveUserId = userRef.current?.id || userRef.current?.userId;
-    const effectiveMemberId = initialMemberIdRef.current || userRef.current?.memberId;
+    const effectiveUserId = userRef.current?.userId || (userRef.current?.id !== userRef.current?.memberId ? userRef.current?.id : null);
+    const effectiveMemberId = initialMemberIdRef.current || userRef.current?.memberId || userRef.current?.id;
 
     if (!effectiveUserId && !effectiveMemberId) {
       setIsLoading(false);
-      return;
+      return [];
     }
 
     const userKey = String(effectiveUserId || effectiveMemberId);
-    if (!forceRefresh && inFlightAccessRef.current === userKey) {
-      return;
+
+    // 1. Cache hit: immediately set state without firing any network call
+    if (!forceRefresh && moduleAccessCache.has(userKey)) {
+      const cached = moduleAccessCache.get(userKey);
+      setAccessList(cached);
+      setAccessError(null);
+      setIsLoading(false);
+      return cached;
     }
 
-    // Cancel any previous in-flight access request
-    if (abortControllersRef.current.access) {
+    // 2. Single-flight deduplication: reuse active in-flight request
+    if (!forceRefresh && moduleAccessPromiseMap.has(userKey)) {
+      setIsLoading(true);
       try {
-        abortControllersRef.current.access.abort();
-      } catch (_) { }
+        const data = await moduleAccessPromiseMap.get(userKey);
+        setAccessList(data);
+        setAccessError(null);
+        return data;
+      } catch (err) {
+        const fallbackUser = userRef.current;
+        if (fallbackUser?.companyAccess && Array.isArray(fallbackUser.companyAccess)) {
+          setAccessList(fallbackUser.companyAccess);
+          setAccessError(null);
+          return fallbackUser.companyAccess;
+        }
+        setAccessError(err?.response?.data?.message || err?.message || 'Failed to load company access details');
+        return [];
+      } finally {
+        setIsLoading(false);
+      }
     }
-    const controller = new AbortController();
-    abortControllersRef.current.access = controller;
-    inFlightAccessRef.current = userKey;
-    const requestId = ++activeAccessRequestIdRef.current;
 
     setIsLoading(true);
     setAccessError(null);
+    inFlightAccessRef.current = userKey;
+
+    const promise = (async () => {
+      try {
+        let resData = [];
+        if (effectiveUserId) {
+          try {
+            resData = await getUserCompanyAccess(effectiveUserId);
+          } catch (err) {
+            if (effectiveMemberId && effectiveMemberId !== effectiveUserId) {
+              resData = await getMemberCompanyAccess(effectiveMemberId);
+            } else {
+              throw err;
+            }
+          }
+        } else if (effectiveMemberId) {
+          resData = await getMemberCompanyAccess(effectiveMemberId);
+        }
+        const validList = Array.isArray(resData) ? resData : (resData?.data || []);
+        moduleAccessCache.set(userKey, validList);
+        return validList;
+      } finally {
+        moduleAccessPromiseMap.delete(userKey);
+        inFlightAccessRef.current = null;
+      }
+    })();
+
+    moduleAccessPromiseMap.set(userKey, promise);
 
     try {
-      let data = [];
-      if (effectiveUserId) {
-        data = await getUserCompanyAccess(effectiveUserId, { signal: controller.signal });
-      } else if (effectiveMemberId) {
-        data = await getMemberCompanyAccess(effectiveMemberId, { signal: controller.signal });
-      }
-
-      if (!controller.signal.aborted && activeAccessRequestIdRef.current === requestId) {
-        const validList = Array.isArray(data) ? data : (data?.data || []);
-        setAccessList(validList);
-        setAccessError(null);
-      }
+      const result = await promise;
+      setAccessList(result);
+      setAccessError(null);
+      return result;
     } catch (err) {
-      if (controller.signal.aborted || err?.name === 'CanceledError' || err?.name === 'AbortError') {
-        return;
+      if (err?.name === 'CanceledError' || err?.name === 'AbortError') {
+        return [];
       }
       console.warn('Failed to load user company access list:', err);
       // Fallback: parse companyAccess or authorizedCompanies from user object if available
@@ -163,6 +240,7 @@ export default function UserCompanyAccessModal({
       if (fallbackUser?.companyAccess && Array.isArray(fallbackUser.companyAccess)) {
         setAccessList(fallbackUser.companyAccess);
         setAccessError(null);
+        return fallbackUser.companyAccess;
       } else if (fallbackUser?.authorizedCompanies && Array.isArray(fallbackUser.authorizedCompanies)) {
         const fallback = fallbackUser.authorizedCompanies.map((name, idx) => ({
           companyId: fallbackUser.authorizedCompanyIds?.[idx] || String(idx),
@@ -172,151 +250,160 @@ export default function UserCompanyAccessModal({
         }));
         setAccessList(fallback);
         setAccessError(null);
+        return fallback;
       } else {
         setAccessError(err?.response?.data?.message || err?.message || 'Failed to load company access details');
+        return [];
       }
     } finally {
-        if (activeAccessRequestIdRef.current === requestId) {
-          inFlightAccessRef.current = null;
-          setIsLoading(false);
-        }
-      }
-    }, []);
+      setIsLoading(false);
+    }
+  }, []);
 
-  // Load organization companies safely with caching and in-flight deduplication
+  // Load organization companies safely with module-level caching and single-flight deduplication
   const loadOrganizationCompanies = useCallback(async (forceRefresh = false) => {
     const currentPassed = passedCompaniesRef.current;
     if (Array.isArray(currentPassed) && currentPassed.length > 0) {
-      return;
+      return currentPassed;
     }
 
-    if (!forceRefresh && companiesCacheRef.current && companiesCacheRef.current.length > 0) {
-      setFetchedCompanies(companiesCacheRef.current);
-      return;
+    // 1. Module cache hit: return cached companies with 0 network calls
+    if (!forceRefresh && moduleCompaniesCache && moduleCompaniesCache.length > 0) {
+      setFetchedCompanies(moduleCompaniesCache);
+      companiesCacheRef.current = moduleCompaniesCache;
+      return moduleCompaniesCache;
     }
 
-    if (inFlightCompaniesRef.current) {
-      return;
-    }
-
-    if (abortControllersRef.current.companies) {
+    // 2. Single-flight deduplication: return existing in-flight request
+    if (!forceRefresh && moduleCompaniesPromise) {
       try {
-        abortControllersRef.current.companies.abort();
-      } catch (_) { }
+        const comps = await moduleCompaniesPromise;
+        setFetchedCompanies(comps);
+        return comps;
+      } catch (err) {
+        return [];
+      }
     }
-    const controller = new AbortController();
-    abortControllersRef.current.companies = controller;
+
     inFlightCompaniesRef.current = true;
 
-    try {
-      const res = await getCompanies({ page: 0, pageSize: 200 }, { signal: controller.signal });
-      const comps = Array.isArray(res)
-        ? res
-        : (res?.companies || res?.content || res?.data?.content || res?.data || []);
-      const mapped = (Array.isArray(comps) ? comps : []).map(c => ({
-        ...c,
-        id: c.id || c.companyId,
-        name: c.companyName || c.name || c.code || 'Unnamed Company',
-      }));
-      companiesCacheRef.current = mapped;
-      if (!controller.signal.aborted) {
-        setFetchedCompanies(mapped);
-      }
-    } catch (err) {
-      if (controller.signal.aborted || err?.name === 'CanceledError' || err?.name === 'AbortError') {
-        return;
-      }
-      console.error('Failed to load companies:', err);
-    } finally {
-      if (abortControllersRef.current.companies === controller) {
+    const promise = (async () => {
+      try {
+        const res = await getCompanies({ page: 0, pageSize: 200 });
+        const comps = Array.isArray(res)
+          ? res
+          : (res?.companies || res?.content || res?.data?.content || res?.data || []);
+        const mapped = (Array.isArray(comps) ? comps : []).map(c => ({
+          ...c,
+          id: c.id || c.companyId,
+          name: c.companyName || c.name || c.code || 'Unnamed Company',
+        }));
+        moduleCompaniesCache = mapped;
+        companiesCacheRef.current = mapped;
+        return mapped;
+      } finally {
+        moduleCompaniesPromise = null;
         inFlightCompaniesRef.current = false;
       }
+    })();
+
+    moduleCompaniesPromise = promise;
+
+    try {
+      const result = await promise;
+      setFetchedCompanies(result);
+      return result;
+    } catch (err) {
+      if (err?.name === 'CanceledError' || err?.name === 'AbortError') {
+        return [];
+      }
+      console.error('Failed to load companies:', err);
+      return [];
     }
   }, []);
 
   // Fetch roles for a specific company on demand and cache them permanently per company
   const fetchRolesForCompany = useCallback(async (compId, forceRefresh = false) => {
     if (!compId) return [];
-    if (!forceRefresh && rolesCacheRef.current[compId]) {
-      return rolesCacheRef.current[compId];
-    }
-    if (inFlightRolesRef.current[compId]) {
-      return inFlightRolesRef.current[compId];
+
+    // 1. Cache hit
+    if (!forceRefresh && moduleRolesCache.has(compId)) {
+      const cached = moduleRolesCache.get(compId);
+      rolesCacheRef.current[compId] = cached;
+      setCompanyRolesMap(prev => ({ ...prev, [compId]: cached }));
+      return cached;
     }
 
-    if (abortControllersRef.current.roles[compId]) {
+    // 2. Single-flight promise
+    if (!forceRefresh && moduleRolesPromiseMap.has(compId)) {
       try {
-        abortControllersRef.current.roles[compId].abort();
-      } catch (_) { }
+        const roles = await moduleRolesPromiseMap.get(compId);
+        setCompanyRolesMap(prev => ({ ...prev, [compId]: roles }));
+        return roles;
+      } catch (err) {
+        throw err;
+      }
     }
-    const controller = new AbortController();
-    abortControllersRef.current.roles[compId] = controller;
 
     const promise = (async () => {
       try {
-        const res = await getRoles({ companyId: compId, page: 0, pageSize: 200 }, { signal: controller.signal });
+        const res = await getRoles({ companyId: compId, page: 0, pageSize: 200 });
         const roles = Array.isArray(res)
           ? res
-          : (res?.roles || res?.content || res?.data?.content || res?.data || []);
-        const validRoles = Array.isArray(roles) ? roles : [];
+          : (res?.roles || res?.content || res?.data?.roles || res?.data?.content || res?.data || []);
+        const validRoles = (Array.isArray(roles) ? roles : []).map(r => ({
+          ...r,
+          id: r.id || r.roleId,
+          name: r.name || r.roleName || r.code || 'Role',
+        }));
+        moduleRolesCache.set(compId, validRoles);
         rolesCacheRef.current[compId] = validRoles;
-        if (!controller.signal.aborted) {
-          setCompanyRolesMap(prev => ({ ...prev, [compId]: validRoles }));
-        }
         return validRoles;
-      } catch (err) {
-        if (controller.signal.aborted || err?.name === 'CanceledError' || err?.name === 'AbortError') {
-          return rolesCacheRef.current[compId] || [];
-        }
-        console.warn(`Failed to fetch roles for company ${compId}:`, err);
-        return [];
       } finally {
-        if (abortControllersRef.current.roles[compId] === controller) {
-          delete inFlightRolesRef.current[compId];
-          delete abortControllersRef.current.roles[compId];
-        }
+        moduleRolesPromiseMap.delete(compId);
       }
     })();
 
-    inFlightRolesRef.current[compId] = promise;
-    return promise;
+    moduleRolesPromiseMap.set(compId, promise);
+
+    try {
+      const result = await promise;
+      setCompanyRolesMap(prev => ({ ...prev, [compId]: result }));
+      return result;
+    } catch (err) {
+      if (err?.name === 'CanceledError' || err?.name === 'AbortError') {
+        return rolesCacheRef.current[compId] || [];
+      }
+      console.warn(`Failed to fetch roles for company ${compId}:`, err);
+      throw err;
+    }
   }, []);
 
-  // Main lifecycle effect: triggers only when modal is opened or user identity changes
+  // Main lifecycle effect: triggers exactly ONCE per open modal session
   useEffect(() => {
     if (!isOpen) {
+      sessionUserRef.current = null;
       hasInitializedRef.current = false;
       activeUserIdRef.current = null;
-      if (abortControllersRef.current.access) {
-        abortControllersRef.current.access.abort();
-        abortControllersRef.current.access = null;
-      }
-      if (abortControllersRef.current.companies) {
-        abortControllersRef.current.companies.abort();
-        abortControllersRef.current.companies = null;
-      }
-      inFlightAccessRef.current = null;
-      inFlightCompaniesRef.current = false;
       setIsLoading(false);
       return;
     }
 
-    const currentUserId = user?.id || user?.userId || '';
-    const currentMemberId = initialMemberId || user?.memberId || '';
-    const userIdentifier = currentUserId || currentMemberId;
-
     if (!userIdentifier) return;
 
-    if (hasInitializedRef.current && activeUserIdRef.current === userIdentifier) {
+    // Guard: Prevent re-running when modal is already open for this user
+    if (sessionUserRef.current === userIdentifier) {
       return;
     }
 
+    sessionUserRef.current = userIdentifier;
     hasInitializedRef.current = true;
     activeUserIdRef.current = userIdentifier;
 
     setTargetCompanyId('');
     setTargetRoleIds(EMPTY_ARRAY);
     setTargetRoles(EMPTY_ARRAY);
+    setRolesLoadError(null);
     setAddingRoleCompanyId(null);
     setSelectedRoleToAdd('');
     setAccessError(null);
@@ -324,20 +411,9 @@ export default function UserCompanyAccessModal({
     loadAccessData(false);
     loadOrganizationCompanies(false);
 
-    return () => {
-      hasInitializedRef.current = false;
-      if (abortControllersRef.current.access) {
-        abortControllersRef.current.access.abort();
-        abortControllersRef.current.access = null;
-      }
-      if (abortControllersRef.current.companies) {
-        abortControllersRef.current.companies.abort();
-        abortControllersRef.current.companies = null;
-      }
-      inFlightAccessRef.current = null;
-      inFlightCompaniesRef.current = false;
-    };
-  }, [isOpen, userId, memberId, loadAccessData, loadOrganizationCompanies]);
+    // CRITICAL: Do NOT wipe caches, abort requests, or reset sessionUserRef in cleanup on ordinary re-renders.
+    // Resetting happens strictly when isOpen transitions to false above.
+  }, [isOpen, userIdentifier, loadAccessData, loadOrganizationCompanies]);
 
   // When targetCompanyId changes in "Assign to Company" form, load that company's roles
   useEffect(() => {
@@ -345,13 +421,15 @@ export default function UserCompanyAccessModal({
       setTargetRoles([]);
       setTargetRoleIds([]);
       setIsRolesLoading(false);
+      setRolesLoadError(null);
       return;
     }
 
     let isMounted = true;
+    setRolesLoadError(null);
 
-    if (rolesCacheRef.current[targetCompanyId]) {
-      const cached = rolesCacheRef.current[targetCompanyId];
+    if (moduleRolesCache.has(targetCompanyId) || rolesCacheRef.current[targetCompanyId]) {
+      const cached = moduleRolesCache.get(targetCompanyId) || rolesCacheRef.current[targetCompanyId];
       setTargetRoles(cached);
       setTargetRoleIds(cached.length > 0 ? [cached[0].id] : []);
       setIsRolesLoading(false);
@@ -363,17 +441,19 @@ export default function UserCompanyAccessModal({
       if (isMounted) {
         setTargetRoles(roles);
         setIsRolesLoading(false);
+        setRolesLoadError(null);
         if (roles.length > 0) {
           setTargetRoleIds([roles[0].id]);
         } else {
           setTargetRoleIds([]);
         }
       }
-    }).catch(() => {
+    }).catch((err) => {
       if (isMounted) {
         setTargetRoles([]);
         setTargetRoleIds([]);
         setIsRolesLoading(false);
+        setRolesLoadError(err?.response?.data?.message || err?.message || 'Failed to load roles for selected company');
       }
     });
 
@@ -418,6 +498,7 @@ export default function UserCompanyAccessModal({
       setTargetCompanyId('');
       setTargetRoleIds([]);
       setTargetRoles([]);
+      moduleAccessCache.delete(String(targetId));
       await loadAccessData(true);
       (onUpdated || onSuccess)?.();
     } catch (err) {
@@ -468,6 +549,7 @@ export default function UserCompanyAccessModal({
       }));
       setAddingRoleCompanyId(null);
       setSelectedRoleToAdd('');
+      moduleAccessCache.delete(String(targetId));
       await loadAccessData(true);
       (onUpdated || onSuccess)?.();
     } catch (err) {
@@ -499,6 +581,7 @@ export default function UserCompanyAccessModal({
             type: 'success',
             message: `Role "${roleName}" removed successfully from "${compName}".`,
           }));
+          moduleAccessCache.delete(String(targetId));
           await loadAccessData(true);
           (onUpdated || onSuccess)?.();
         } catch (err) {
@@ -540,6 +623,7 @@ export default function UserCompanyAccessModal({
             type: 'success',
             message: `Company access revoked for "${compName}".`,
           }));
+          moduleAccessCache.delete(String(targetId));
           await loadAccessData(true);
           (onUpdated || onSuccess)?.();
         } catch (err) {
@@ -813,6 +897,35 @@ export default function UserCompanyAccessModal({
                   ) : !targetCompanyId ? (
                     <div className="text-xs text-zinc-400 p-2.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#1D212C]">
                       Select a company first to load its roles
+                    </div>
+                  ) : rolesLoadError ? (
+                    <div className="text-xs text-red-600 dark:text-red-400 p-2.5 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                        <span className="truncate">{rolesLoadError}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (targetCompanyId) {
+                            setIsRolesLoading(true);
+                            setRolesLoadError(null);
+                            fetchRolesForCompany(targetCompanyId, true)
+                              .then(roles => {
+                                setTargetRoles(roles);
+                                setIsRolesLoading(false);
+                                if (roles.length > 0) setTargetRoleIds([roles[0].id]);
+                              })
+                              .catch(err => {
+                                setIsRolesLoading(false);
+                                setRolesLoadError(err?.response?.data?.message || err?.message || 'Failed to load roles');
+                              });
+                          }
+                        }}
+                        className="text-xs underline font-semibold shrink-0 hover:text-red-700"
+                      >
+                        Retry
+                      </button>
                     </div>
                   ) : targetRoles.length === 0 ? (
                     <div className="text-xs text-amber-600 p-2.5 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20">

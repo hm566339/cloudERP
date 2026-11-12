@@ -524,6 +524,7 @@ export default function OrgUsersView({
           userId: row.userId,
           fullName: row.fullName,
           email: row.email,
+          companyAccess: row.companyAccess,
         });
         setIsAccessModalOpen(true);
       },
