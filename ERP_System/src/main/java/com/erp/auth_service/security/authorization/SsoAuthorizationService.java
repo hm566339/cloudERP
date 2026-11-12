@@ -5,6 +5,7 @@ import com.erp.auth_service.dto.response.UserPermissionDetailDto;
 import com.erp.auth_service.repository.FeaturePermissionRepository;
 import com.erp.auth_service.security.CustomUserDetails;
 import com.erp.auth_service.security.PlatformAdminPrincipal;
+import com.erp.auth_service.security.PlatformSecurityUtil;
 import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.service.PermissionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -62,12 +63,23 @@ public class SsoAuthorizationService {
             return false;
         }
 
+        if (authentication.getPrincipal() instanceof PlatformAdminPrincipal) {
+            return true;
+        }
+        if (PlatformSecurityUtil.isElevatedAdmin()) {
+            return true;
+        }
+
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         if (authorities != null) {
             return authorities.stream().anyMatch(a -> {
                 String authStr = a.getAuthority();
                 return "SYSTEM_ADMIN".equalsIgnoreCase(authStr)
-                        || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(authStr);
+                        || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(authStr)
+                        || "SUPER_ADMIN".equalsIgnoreCase(authStr)
+                        || "ROLE_SUPER_ADMIN".equalsIgnoreCase(authStr)
+                        || "PLATFORM_ADMIN".equalsIgnoreCase(authStr)
+                        || "ROLE_PLATFORM_ADMIN".equalsIgnoreCase(authStr);
             });
         }
         return false;
@@ -111,7 +123,8 @@ public class SsoAuthorizationService {
         String primaryAction = candidateActions.get(0);
         String primaryPermissionCode = featureCode + ":" + primaryAction;
 
-        // Self-identity / current user auth context (/api/sso/me, /api/sso/auth/me) is always allowed for authenticated users
+        // Self-identity / current user auth context (/api/sso/me, /api/sso/auth/me) is
+        // always allowed for authenticated users
         if ("AUTH".equalsIgnoreCase(featureCode) && "READ".equalsIgnoreCase(primaryAction)) {
             return AuthorizationDecision.allow(featureCode, primaryAction, primaryPermissionCode, "AUTH_ME_READ");
         }
@@ -207,10 +220,20 @@ public class SsoAuthorizationService {
         Set<String> codes = new LinkedHashSet<>();
         for (String act : candidateActions) {
             codes.add(featureCode + ":" + act);
+            String lowerAct = act.toLowerCase(Locale.ROOT);
             if ("ORGANIZATION_APPEARANCE".equalsIgnoreCase(featureCode)) {
                 codes.add("ORGANIZATION:" + act);
+                codes.add("organization.appearance." + lowerAct);
+                codes.add("organization.appearance:" + lowerAct);
+                codes.add("organization." + lowerAct);
             } else if ("ORGANIZATION".equalsIgnoreCase(featureCode)) {
                 codes.add("ORGANIZATION_APPEARANCE:" + act);
+                codes.add("organization." + lowerAct);
+                codes.add("organization.appearance." + lowerAct);
+            } else if ("DASHBOARD".equalsIgnoreCase(featureCode)) {
+                codes.add("dashboard." + lowerAct);
+                codes.add("dashboard.view");
+                codes.add("dashboard:" + lowerAct);
             } else if ("ORGANIZATION_PERMISSIONS".equalsIgnoreCase(featureCode)) {
                 codes.add("PERMISSION:" + act);
             } else if ("PERMISSION".equalsIgnoreCase(featureCode)) {
@@ -266,16 +289,17 @@ public class SsoAuthorizationService {
 
             // Organization-level authorization check
             if (isOrganizationFeature(featureCode) && organizationMemberRepository != null) {
+                boolean isElevated = PlatformSecurityUtil.isElevatedAdmin() || isSystemAdmin(authentication);
                 if (orgId != null) {
                     var memberOpt = organizationMemberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
                             orgId, userId, com.erp.auth_service.utility.MembershipStatus.ACTIVE);
-                    if (memberOpt.isEmpty()) {
+                    if (memberOpt.isEmpty() && !isElevated) {
                         log.warn("Access denied: User [{}] has no active membership in target organization [{}]",
                                 userId, orgId);
                         return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode,
                                 "ACTIVE_ORGANIZATION_MEMBERSHIP_REQUIRED");
                     }
-                    if (memberOpt.get().getMemberType() == com.erp.auth_service.utility.MemberType.OWNER) {
+                    if (memberOpt.isPresent() && memberOpt.get().getMemberType() == com.erp.auth_service.utility.MemberType.OWNER) {
                         for (String candidateCode : candidatePermissionCodes) {
                             String upperCode = candidateCode.toUpperCase(Locale.ROOT);
                             if (EXPLICIT_ORG_OWNER_PERMISSIONS.contains(upperCode)) {
@@ -315,10 +339,10 @@ public class SsoAuthorizationService {
                 } else {
                     var activeMembers = organizationMemberRepository.findByUser_IdAndMembershipStatus(
                             userId, com.erp.auth_service.utility.MembershipStatus.ACTIVE);
-                    if (activeMembers.isEmpty()) {
+                    if (activeMembers.isEmpty() && !isElevated) {
                         return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode,
                                 "ACTIVE_ORGANIZATION_MEMBERSHIP_REQUIRED");
-                    } else if (activeMembers.size() > 1) {
+                    } else if (activeMembers.size() > 1 && !isElevated) {
                         return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode,
                                 "ORGANIZATION_CONTEXT_REQUIRED");
                     }

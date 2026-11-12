@@ -193,6 +193,19 @@ public class SsoAuthorizationManager implements AuthorizationManager<RequestAuth
                 }
             }
 
+            if (!granted && uri.contains("/dashboard")) {
+                if (principal instanceof AuthenticatedUser authenticatedUser) {
+                    granted = authenticatedUser.hasPermission("DASHBOARD", action)
+                            || authenticatedUser.hasPermission("INVENTORY_REPORTS", action);
+                }
+                if (!granted) {
+                    granted = SsoAuthorities.hasModuleAction(authorities, "DASHBOARD", action)
+                            || SsoAuthorities.hasFeatureAction(authorities, "DASHBOARD", action)
+                            || SsoAuthorities.hasModuleAction(authorities, "INVENTORY_REPORTS", action)
+                            || SsoAuthorities.hasFeatureAction(authorities, "INVENTORY_REPORTS", action);
+                }
+            }
+
             log.debug("Matching SSO permission for module [{}] action [{}]: {}", requestedModule, action, granted);
             if (granted) {
                 log.debug("Access granted for URI: {} to module: {} with action: {}", uri, requestedModule, action);

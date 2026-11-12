@@ -26,6 +26,7 @@ import com.erp.auth_service.model.SubscriptionPlanModule;
 import com.erp.auth_service.dto.response.EffectivePermissionsResponse;
 import com.erp.auth_service.dto.response.UserPermissionDetailDto;
 import com.erp.auth_service.service.PermissionService;
+import com.erp.auth_service.security.PlatformSecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -417,12 +418,22 @@ public class PermissionServiceImpl implements PermissionService {
         }
 
         boolean isOrgOwner = false;
+        boolean isOrgMember = false;
         if (orgId != null && organizationMemberRepository != null) {
             var memberOpt = organizationMemberRepository
                     .findByOrganization_IdAndUser_IdAndMembershipStatus(
                             orgId, userId, com.erp.auth_service.utility.MembershipStatus.ACTIVE);
-            if (memberOpt.isPresent() && memberOpt.get().getMemberType() == com.erp.auth_service.utility.MemberType.OWNER) {
-                isOrgOwner = true;
+            if (memberOpt.isPresent()) {
+                isOrgMember = true;
+                if (memberOpt.get().getMemberType() == com.erp.auth_service.utility.MemberType.OWNER) {
+                    isOrgOwner = true;
+                }
+            }
+        } else if (organizationMemberRepository != null) {
+            var activeMembers = organizationMemberRepository.findByUser_IdAndMembershipStatus(
+                    userId, com.erp.auth_service.utility.MembershipStatus.ACTIVE);
+            if (!activeMembers.isEmpty()) {
+                isOrgMember = true;
             }
         }
 
@@ -470,6 +481,11 @@ public class PermissionServiceImpl implements PermissionService {
         boolean isSystemAdminUser = user.getUserRoles() != null && user.getUserRoles().stream()
                 .anyMatch(ur -> ur.getRole() != null && ("SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())
                         || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(ur.getRole().getName())));
+
+        if (isOrgMember || isOrgOwner || isSystemAdminUser || PlatformSecurityUtil.isElevatedAdmin()) {
+            roleGrantedPermissions.add("ORGANIZATION_APPEARANCE:READ");
+            roleGrantedPermissions.add("DASHBOARD:READ");
+        }
 
         Set<String> entitledFeatureModules = null;
         if (companyId != null && !isSystemAdminUser) {

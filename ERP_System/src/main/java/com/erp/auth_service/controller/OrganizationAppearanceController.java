@@ -6,6 +6,7 @@ import com.erp.auth_service.dto.response.ResponseWrapper;
 import com.erp.auth_service.exception.ForbiddenException;
 import com.erp.auth_service.security.CustomUserDetails;
 import com.erp.auth_service.security.PlatformAdminPrincipal;
+import com.erp.auth_service.security.PlatformSecurityUtil;
 import com.erp.auth_service.security.RequestContext;
 import com.erp.auth_service.service.OrganizationAppearanceService;
 import com.erp.auth_service.utility.AccessMode;
@@ -146,15 +147,28 @@ public class OrganizationAppearanceController {
         }
 
         if (userId != null && organizationMemberRepository != null) {
-            var memberOpt = organizationMemberRepository
-                    .findByOrganization_IdAndUser_IdAndMembershipStatus(orgId, userId, MembershipStatus.ACTIVE);
-            if (memberOpt.isEmpty()) {
-                log.warn("[RBAC] Access denied: User [{}] does not have active membership in organization [{}]", userId,
-                        orgId);
-                throw new ForbiddenException("Active organization membership required");
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            boolean isElevated = (auth != null && auth.getPrincipal() instanceof PlatformAdminPrincipal)
+                    || PlatformSecurityUtil.isElevatedAdmin()
+                    || (auth != null && auth.getAuthorities() != null && auth.getAuthorities().stream().anyMatch(a ->
+                            "SUPER_ADMIN".equalsIgnoreCase(a.getAuthority())
+                            || "ROLE_SUPER_ADMIN".equalsIgnoreCase(a.getAuthority())
+                            || "SYSTEM_ADMIN".equalsIgnoreCase(a.getAuthority())
+                            || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(a.getAuthority())
+                            || "PLATFORM_ADMIN".equalsIgnoreCase(a.getAuthority())
+                            || "ROLE_PLATFORM_ADMIN".equalsIgnoreCase(a.getAuthority())));
+
+            if (!isElevated) {
+                var memberOpt = organizationMemberRepository
+                        .findByOrganization_IdAndUser_IdAndMembershipStatus(orgId, userId, MembershipStatus.ACTIVE);
+                if (memberOpt.isEmpty()) {
+                    log.warn("[RBAC] Access denied: User [{}] does not have active membership in organization [{}]", userId,
+                            orgId);
+                    throw new ForbiddenException("Active organization membership required");
+                }
+                log.debug("[RBAC] User [{}] verified as [{}] in org [{}] via source [{}]", userId,
+                        memberOpt.get().getMemberType(), orgId, source);
             }
-            log.debug("[RBAC] User [{}] verified as [{}] in org [{}] via source [{}]", userId,
-                    memberOpt.get().getMemberType(), orgId, source);
         }
 
         UUID companyId = current != null ? current.companyId() : null;

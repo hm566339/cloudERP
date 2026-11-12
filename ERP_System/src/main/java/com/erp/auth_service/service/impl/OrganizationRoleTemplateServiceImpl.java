@@ -97,9 +97,16 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
 
                 template = templateRepository.save(template);
 
-                if (request.getPermissionCodes() != null && !request.getPermissionCodes().isEmpty()) {
-                        attachPermissionsToTemplate(template, request.getPermissionCodes());
+                List<String> permissionCodes = request.getPermissionCodes() != null
+                                ? new ArrayList<>(request.getPermissionCodes())
+                                : new ArrayList<>();
+                if (permissionCodes.stream().noneMatch("DASHBOARD:READ"::equalsIgnoreCase)) {
+                        permissionCodes.add("DASHBOARD:READ");
                 }
+                if (permissionCodes.stream().noneMatch("ORGANIZATION_APPEARANCE:READ"::equalsIgnoreCase)) {
+                        permissionCodes.add("ORGANIZATION_APPEARANCE:READ");
+                }
+                attachPermissionsToTemplate(template, permissionCodes);
 
                 List<Company> companies = companyRepository.findByOrganization_Id(organizationId);
                 return mapToDto(template, companies);
@@ -863,54 +870,61 @@ public class OrganizationRoleTemplateServiceImpl implements OrganizationRoleTemp
                 return actor(null);
         }
 
-    private OrganizationMember actor(UUID targetOrgId) {
-        RequestContext.Context context = RequestContext.get();
-        UUID effectiveOrgId = targetOrgId;
-        if (effectiveOrgId == null && context != null) {
-            effectiveOrgId = context.organizationId();
-        }
-        if (effectiveOrgId == null) {
-            log.warn("[RBAC] Context resolution failed: targetOrgId is null and RequestContext has no organizationId");
-            throw new ForbiddenException("Organization context required");
-        }
-        UUID userId = context != null ? context.userId() : null;
-        if (userId == null) {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.getPrincipal() instanceof CustomUserDetails cud && cud.getUser() != null) {
-                userId = cud.getUser().getId();
-            } else if (auth != null && auth.getPrincipal() instanceof PlatformAdminPrincipal pap) {
-                userId = pap.getAdminId();
-            }
-        }
-        if (userId == null) {
-            log.warn("[RBAC] Context resolution failed: authenticated user ID is null for orgId [{}]", effectiveOrgId);
-            throw new ForbiddenException("Organization context required");
-        }
+        private OrganizationMember actor(UUID targetOrgId) {
+                RequestContext.Context context = RequestContext.get();
+                UUID effectiveOrgId = targetOrgId;
+                if (effectiveOrgId == null && context != null) {
+                        effectiveOrgId = context.organizationId();
+                }
+                if (effectiveOrgId == null) {
+                        log.warn("[RBAC] Context resolution failed: targetOrgId is null and RequestContext has no organizationId");
+                        throw new ForbiddenException("Organization context required");
+                }
+                UUID userId = context != null ? context.userId() : null;
+                if (userId == null) {
+                        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails cud
+                                        && cud.getUser() != null) {
+                                userId = cud.getUser().getId();
+                        } else if (auth != null && auth.getPrincipal() instanceof PlatformAdminPrincipal pap) {
+                                userId = pap.getAdminId();
+                        }
+                }
+                if (userId == null) {
+                        log.warn("[RBAC] Context resolution failed: authenticated user ID is null for orgId [{}]",
+                                        effectiveOrgId);
+                        throw new ForbiddenException("Organization context required");
+                }
 
-        final UUID finalUserId = userId;
-        final UUID finalOrgId = effectiveOrgId;
-        OrganizationMember actor = memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
-                finalOrgId, finalUserId, MembershipStatus.ACTIVE)
-                .orElseThrow(() -> {
-                    log.warn("[RBAC] User [{}] does not have active membership in organization [{}]", finalUserId, finalOrgId);
-                    return new ForbiddenException("Active organization membership required");
-                });
+                final UUID finalUserId = userId;
+                final UUID finalOrgId = effectiveOrgId;
+                OrganizationMember actor = memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(
+                                finalOrgId, finalUserId, MembershipStatus.ACTIVE)
+                                .orElseThrow(() -> {
+                                        log.warn("[RBAC] User [{}] does not have active membership in organization [{}]",
+                                                        finalUserId, finalOrgId);
+                                        return new ForbiddenException("Active organization membership required");
+                                });
 
-        if (actor.getMemberType() != MemberType.OWNER && actor.getMemberType() != MemberType.ADMIN) {
-            log.warn("[RBAC] User [{}] in org [{}] is [{}] - OWNER or ADMIN required", userId, effectiveOrgId, actor.getMemberType());
-            throw new ForbiddenException("Organization owner or admin permission required");
+                if (actor.getMemberType() != MemberType.OWNER && actor.getMemberType() != MemberType.ADMIN) {
+                        log.warn("[RBAC] User [{}] in org [{}] is [{}] - OWNER or ADMIN required", userId,
+                                        effectiveOrgId, actor.getMemberType());
+                        throw new ForbiddenException("Organization owner or admin permission required");
+                }
+
+                if (context == null || context.organizationId() == null
+                                || !context.organizationId().equals(effectiveOrgId)) {
+                        UUID companyId = context != null ? context.companyId() : null;
+                        UUID clientId = context != null ? context.clientId() : null;
+                        AccessMode accessMode = context != null && context.accessMode() != null ? context.accessMode()
+                                        : AccessMode.FULL;
+                        RequestContext.set(userId, effectiveOrgId, companyId, clientId, accessMode);
+                }
+
+                log.debug("[RBAC] Resolved actor: userId={}, orgId={}, memberType={}", userId, effectiveOrgId,
+                                actor.getMemberType());
+                return actor;
         }
-
-        if (context == null || context.organizationId() == null || !context.organizationId().equals(effectiveOrgId)) {
-            UUID companyId = context != null ? context.companyId() : null;
-            UUID clientId = context != null ? context.clientId() : null;
-            AccessMode accessMode = context != null && context.accessMode() != null ? context.accessMode() : AccessMode.FULL;
-            RequestContext.set(userId, effectiveOrgId, companyId, clientId, accessMode);
-        }
-
-        log.debug("[RBAC] Resolved actor: userId={}, orgId={}, memberType={}", userId, effectiveOrgId, actor.getMemberType());
-        return actor;
-    }
 
         private void validateOrgMatch(OrganizationMember actor, UUID organizationId) {
                 if (!actor.getOrganization().getId().equals(organizationId)) {

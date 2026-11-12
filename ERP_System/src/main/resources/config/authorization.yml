@@ -92,6 +92,9 @@ sso:
 
       DASHBOARD:
         - "/api/sso/dashboard/**"
+        - "/api/sso/dashboard"
+        - "/api/dashboard/**"
+        - "/api/dashboard"
 
       PLATFORM_ADMIN:
         - "/api/sso/platform/**"

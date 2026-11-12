@@ -27,12 +27,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Filter responsible for resolving, validating, and initializing Organization Context in RequestContext
+ * Filter responsible for resolving, validating, and initializing Organization
+ * Context in RequestContext
  * for authenticated requests.
  *
  * Execution Order:
- * Runs immediately after JwtAuthenticationFilter (which authenticates the user and creates SecurityContext),
- * and before YamlAuthorizationFilter (which evaluates feature-level permissions).
+ * Runs immediately after JwtAuthenticationFilter (which authenticates the user
+ * and creates SecurityContext),
+ * and before YamlAuthorizationFilter (which evaluates feature-level
+ * permissions).
  */
 @Component
 @RequiredArgsConstructor
@@ -51,8 +54,10 @@ public class OrganizationContextFilter extends OncePerRequestFilter {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // 1. If not authenticated or anonymous, pass down without organization resolution
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+        // 1. If not authenticated or anonymous, pass down without organization
+        // resolution
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -70,7 +75,8 @@ public class OrganizationContextFilter extends OncePerRequestFilter {
             rawOrgId = request.getHeader("X-Organization-Id");
             organizationIdSource = rawOrgId != null && !rawOrgId.isBlank() ? "header" : "none";
         }
-        log.debug("Organization context resolving method={} path={} authenticationType={} principalType={} organizationIdSource={} organizationId={}",
+        log.debug(
+                "Organization context resolving method={} path={} authenticationType={} principalType={} organizationIdSource={} organizationId={}",
                 request.getMethod(), request.getRequestURI(), authentication.getClass().getSimpleName(),
                 authentication.getPrincipal() != null
                         ? authentication.getPrincipal().getClass().getSimpleName()
@@ -113,10 +119,12 @@ public class OrganizationContextFilter extends OncePerRequestFilter {
             // Verify user belongs to organization with ACTIVE status
             boolean isSystemAdmin = hasSystemAdminRole(authentication);
             Optional<OrganizationMember> memberOpt = organizationMemberRepository
-                    .findByOrganization_IdAndUser_IdAndMembershipStatus(requestedOrgId, userId, MembershipStatus.ACTIVE);
+                    .findByOrganization_IdAndUser_IdAndMembershipStatus(requestedOrgId, userId,
+                            MembershipStatus.ACTIVE);
 
             if (memberOpt.isEmpty() && !isSystemAdmin) {
-                log.warn("Access denied: User [{}] does not have active membership in organization [{}]", userId, requestedOrgId);
+                log.warn("Access denied: User [{}] does not have active membership in organization [{}]", userId,
+                        requestedOrgId);
                 rejectForbidden(response, "Active organization membership required");
                 return;
             }
@@ -130,7 +138,8 @@ public class OrganizationContextFilter extends OncePerRequestFilter {
             TenantContext.set(org.getOrganizationCode());
 
         } else {
-            // 3. No explicit organization ID supplied - resolve from existing context, company mapping, or single active membership
+            // 3. No explicit organization ID supplied - resolve from existing context,
+            // company mapping, or single active membership
             RequestContext.Context currentCtx = RequestContext.get();
             if (currentCtx == null || currentCtx.organizationId() == null) {
                 UUID effectiveOrgId = null;
@@ -159,7 +168,8 @@ public class OrganizationContextFilter extends OncePerRequestFilter {
                         effectiveAccessMode = org.getAccessMode() != null ? org.getAccessMode() : AccessMode.FULL;
                         orgCode = org.getOrganizationCode();
                     }
-                    // If multiple organizations exist, do not arbitrarily pick one; leave organizationId unset
+                    // If multiple organizations exist, do not arbitrarily pick one; leave
+                    // organizationId unset
                 }
 
                 if (effectiveOrgId != null) {
@@ -176,7 +186,8 @@ public class OrganizationContextFilter extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } finally {
-            // ThreadLocal cleanup is handled by JwtAuthenticationFilter's outer finally block.
+            // ThreadLocal cleanup is handled by JwtAuthenticationFilter's outer finally
+            // block.
         }
     }
 
@@ -195,11 +206,22 @@ public class OrganizationContextFilter extends OncePerRequestFilter {
     }
 
     private boolean hasSystemAdminRole(Authentication authentication) {
+        if (authentication == null) return false;
+        if (authentication.getPrincipal() instanceof PlatformAdminPrincipal) {
+            return true;
+        }
+        if (PlatformSecurityUtil.isElevatedAdmin()) {
+            return true;
+        }
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         if (authorities == null) return false;
         return authorities.stream().anyMatch(a ->
                 "SYSTEM_ADMIN".equalsIgnoreCase(a.getAuthority()) ||
-                "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(a.getAuthority())
+                "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(a.getAuthority()) ||
+                "SUPER_ADMIN".equalsIgnoreCase(a.getAuthority()) ||
+                "ROLE_SUPER_ADMIN".equalsIgnoreCase(a.getAuthority()) ||
+                "PLATFORM_ADMIN".equalsIgnoreCase(a.getAuthority()) ||
+                "ROLE_PLATFORM_ADMIN".equalsIgnoreCase(a.getAuthority())
         );
     }
 

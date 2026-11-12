@@ -1,0 +1,566 @@
+// =============================================================================
+// DBML Schema: Workflow Service
+// Database: PostgreSQL
+// Service: workflow-service
+// Generated from JPA Entities & Flyway Migrations
+// =============================================================================
+
+Project workflow_service {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # ERP Workflow Service Database
+    Generic, company-scoped, configuration-driven Workflow & Document Flow engine.
+    Decoupled architecture: Contains NO foreign key dependencies to external business services.
+  '''
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+Enum approver_type {
+  USER            [note: 'Specific user by UUID']
+  ROLE            [note: 'All users belonging to role']
+  DEPARTMENT      [note: 'All users in department']
+  RULE            [note: 'Dynamic SpEL expression resolution']
+  DOCUMENT_OWNER  [note: 'Original creator/owner of document']
+}
+
+Enum workflow_action_type {
+  SUBMIT          [note: 'Document submitted to workflow']
+  APPROVE         [note: 'Approver approved the task']
+  REJECT          [note: 'Approver rejected the task']
+  RETURN          [note: 'Returned to initiator for corrections']
+  CANCEL          [note: 'Initiator or admin cancelled workflow']
+  DELEGATE        [note: 'Task delegated to another user']
+  ESCALATE        [note: 'SLA escalation triggered']
+  REASSIGN        [note: 'Task reassigned by admin']
+  COMPLETE        [note: 'Final approval reached - workflow completed']
+}
+
+Enum workflow_channel {
+  IN_APP          [note: 'In-application UI notification']
+  EMAIL           [note: 'Email notification']
+  SMS             [note: 'SMS alert']
+}
+
+Enum workflow_execution_type {
+  SEQUENTIAL      [note: 'Approvers approve in defined sequence']
+  PARALLEL        [note: 'All approvers can act simultaneously']
+}
+
+Enum workflow_notification_type {
+  TASK_ASSIGNED   [note: 'New approval task assigned']
+  WORKFLOW_APPROVED [note: 'Workflow fully approved']
+  WORKFLOW_REJECTED [note: 'Workflow rejected']
+  WORKFLOW_CANCELLED [note: 'Workflow cancelled']
+  WORKFLOW_RETURNED [note: 'Workflow returned to initiator']
+  SLA_REMINDER    [note: 'Deadline approaching reminder']
+  SLA_ESCALATED   [note: 'SLA breached escalation']
+  TASK_ESCALATED  [note: 'Task escalated to manager']
+  TASK_DELEGATED  [note: 'Task delegated to another user']
+  WORKFLOW_COMPLETED [note: 'Workflow lifecycle finished']
+}
+
+Enum workflow_rejection_action {
+  REJECT_DOCUMENT    [note: 'Immediately terminate & reject workflow']
+  RETURN_TO_INITIATOR [note: 'Send document back to initiator for edit']
+}
+
+Enum workflow_task_status {
+  PENDING         [note: 'Assigned, waiting for action']
+  APPROVED        [note: 'Approved by assignee']
+  REJECTED        [note: 'Rejected by assignee']
+  RETURNED        [note: 'Returned for correction']
+  DELEGATED       [note: 'Delegated to another user']
+  CANCELLED       [note: 'Cancelled as parent transaction ended']
+  EXPIRED         [note: 'SLA expired without action']
+}
+
+// =============================================================================
+// TABLES
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// 1. Document Flow Configuration
+// -----------------------------------------------------------------------------
+Table document_flow_config {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant / company isolation']
+  module_name varchar(100) [not null, note: 'ERP module name (SALES, PURCHASE, INVENTORY, etc.)']
+  flow_name varchar(150) [not null, note: 'Unique flow identifier name']
+  description text [note: 'Detailed description']
+  is_active boolean [not null, default: true, note: 'Active status']
+  is_default boolean [not null, default: false, note: 'Default flow flag']
+  flow_data text [not null, note: 'Serialized JSON: nodes, tabs, permissions, transitions, automation rules']
+
+  // BaseEntity / Audit fields
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, module_name, flow_name) [unique, name: 'uq_doc_flow_company_module_name']
+    (company_id, module_name, is_active) [name: 'idx_doc_flow_company_module']
+  }
+
+  Note: 'Company-specific Document Flow Configuration across ERP modules defining sequence and automation rules.'
+}
+
+// -----------------------------------------------------------------------------
+// 2. Workflow Definition
+// -----------------------------------------------------------------------------
+Table workflow_definition {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant / company isolation']
+  workflow_code varchar(100) [not null, note: 'Unique code for workflow type, e.g. FISCAL_YEAR_APPROVAL']
+  workflow_name varchar(255) [not null, note: 'Human-readable workflow name']
+  module_name varchar(100) [note: 'Owning ERP module, e.g. ACCOUNT, INVENTORY, CRM']
+  document_type varchar(100) [not null, note: 'Document type handled, e.g. FISCAL_YEAR, STOCK_ADJUSTMENT']
+  description text
+  version int [not null, default: 1, note: 'Definition revision number']
+  is_active boolean [not null, default: false, note: 'Active status flag']
+  is_default boolean [not null, default: false, note: 'Default workflow for document type']
+  effective_from timestamp [note: 'Effective start date']
+  effective_to timestamp [note: 'Effective expiry date']
+  initiated_by_role_id uuid [note: 'Role ID required to initiate']
+  initiated_by_role_name varchar(100) [note: 'Role name required to initiate']
+  customer_scope varchar(50) [default: 'all', note: 'Scope constraint']
+  approval_threshold decimal(19,4) [note: 'Monetary threshold triggering this workflow']
+  is_approval_required boolean [default: true]
+  customer_acceptance boolean [default: false]
+  auto_create_order boolean [default: false]
+  email_notifications boolean [default: true]
+  internal_notes text
+
+  // BaseEntity / Audit fields
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, workflow_code, version) [unique, name: 'uq_workflow_def_company_code_version']
+    (company_id, document_type) [name: 'idx_wf_def_company_doctype']
+    module_name [name: 'idx_wf_def_module']
+  }
+
+  Note: 'Defines a workflow template scoped per company, module, and document type.'
+}
+
+// -----------------------------------------------------------------------------
+// 3. Workflow Stage
+// -----------------------------------------------------------------------------
+Table workflow_stage {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  workflow_definition_id uuid [not null, note: 'FK to workflow_definition']
+  stage_code varchar(100) [not null, note: 'Unique stage code, e.g. MANAGER_APPROVAL']
+  stage_name varchar(255) [not null, note: 'Display name of stage']
+  stage_order int [note: 'Display / visual ordering']
+  sequence_no int [not null, note: 'Execution sequence number']
+  execution_type workflow_execution_type [not null, default: 'SEQUENTIAL']
+  minimum_approvals_required int [not null, default: 1, note: 'Approvals required before moving next']
+  rejection_action workflow_rejection_action [not null, default: 'REJECT_DOCUMENT']
+  is_mandatory boolean [not null, default: true]
+  is_active boolean [not null, default: true]
+
+  // BaseEntity / Audit fields
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    workflow_definition_id [name: 'idx_wf_stage_definition']
+  }
+
+  Note: 'A configured stage / approval level within a workflow definition.'
+}
+
+// -----------------------------------------------------------------------------
+// 4. Workflow Approver
+// -----------------------------------------------------------------------------
+Table workflow_approver {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  workflow_stage_id uuid [not null, note: 'FK to workflow_stage']
+  approver_type approver_type [not null, note: 'USER, ROLE, DEPARTMENT, RULE, or DOCUMENT_OWNER']
+  user_id uuid [note: 'Used when approverType = USER']
+  user_name varchar(255)
+  role_id uuid [note: 'Used when approverType = ROLE']
+  role_name varchar(100)
+  department_id uuid [note: 'Used when approverType = DEPARTMENT']
+  department_name varchar(100)
+  rule_expression text [note: 'Used when approverType = RULE (dynamic SpEL rule)']
+  approval_order int [not null, default: 1, note: 'Order of approval in sequential stage']
+  is_required boolean [not null, default: true, note: 'If true and resolution fails, block submission']
+  can_delegate boolean [not null, default: true, note: 'Allows assignees to delegate this task']
+
+  // BaseEntity / Audit fields
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    workflow_stage_id [name: 'idx_wf_approver_stage']
+  }
+
+  Note: 'Defines eligible approvers and criteria for a specific workflow stage.'
+}
+
+// -----------------------------------------------------------------------------
+// 5. Workflow Transition
+// -----------------------------------------------------------------------------
+Table workflow_transition {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  workflow_definition_id uuid [not null, note: 'FK to workflow_definition']
+  action_type workflow_action_type [not null, note: 'Action that triggers this transition']
+  source_stage_id uuid [note: 'Source workflow stage (null if initial entry)']
+  target_stage_id uuid [note: 'Target workflow stage (null if final completion)']
+  transition_condition text [note: 'SpEL expression condition for evaluating eligibility']
+  allowed_roles varchar(500) [note: 'Comma-separated role names permitted to trigger transition']
+  is_active boolean [not null, default: true]
+
+  // BaseEntity / Audit fields
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    workflow_definition_id [name: 'idx_wf_trans_definition']
+  }
+
+  Note: 'Valid state-machine transitions between stages within a workflow definition.'
+}
+
+// -----------------------------------------------------------------------------
+// 6. Workflow Transaction (Instance)
+// -----------------------------------------------------------------------------
+Table workflow_transaction {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant / company isolation']
+  workflow_definition_id uuid [not null, note: 'FK to workflow_definition']
+
+  // Generic business document linkage (NO external FK constraint)
+  module_name varchar(100) [note: 'Origin ERP module: ACCOUNT, INVENTORY, CRM, etc.']
+  entity_type varchar(100) [note: 'Business entity type: FISCAL_YEAR, STOCK_ADJUSTMENT, etc.']
+  entity_id uuid [note: 'UUID of entity in external business service DB']
+  document_type varchar(100) [not null, note: 'Document type reference']
+  document_id uuid [not null, note: 'Primary key UUID of document in business DB']
+  document_number varchar(100) [note: 'Human-readable reference number, e.g. PO-2026-001']
+  callback_url varchar(500) [note: 'Webhook endpoint called on workflow events']
+
+  // Runtime State
+  current_stage_id uuid [note: 'FK to workflow_stage currently executing']
+  status varchar(50) [not null, default: 'PENDING', note: 'PENDING, IN_PROGRESS, APPROVED, REJECTED, CANCELLED, RETURNED']
+  initiated_by uuid [not null, note: 'User UUID who initiated the workflow']
+  initiated_by_name varchar(255)
+  initiated_at timestamp
+  submitted_at timestamp [not null]
+  completed_at timestamp
+  cancelled_at timestamp
+  version bigint [not null, default: 0, note: 'Optimistic locking version counter']
+
+  // BaseEntity / Audit fields
+  created_at timestamp
+  updated_at timestamp
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, status) [name: 'idx_wf_tx_company_status']
+    (company_id, document_type, document_id) [name: 'idx_wf_tx_company_doc']
+    initiated_by [name: 'idx_wf_tx_initiated_by']
+    workflow_definition_id [name: 'idx_wf_tx_definition']
+    current_stage_id [name: 'idx_wf_tx_stage']
+  }
+
+  Note: 'Active runtime execution instance of a workflow for a specific business document.'
+}
+
+// -----------------------------------------------------------------------------
+// 7. Workflow Task
+// -----------------------------------------------------------------------------
+Table workflow_task {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  workflow_transaction_id uuid [not null, note: 'FK to workflow_transaction']
+  workflow_stage_id uuid [not null, note: 'FK to workflow_stage']
+  assigned_user_id uuid [note: 'User UUID directly assigned to act']
+  assigned_role_name varchar(100) [note: 'Role name eligible to claim/act']
+  delegated_from_user_id uuid [note: 'Original assignor UUID if task was delegated']
+  task_status workflow_task_status [not null, default: 'PENDING']
+  action_taken varchar(50) [note: 'Action executed by approver']
+  assigned_at timestamp [not null]
+  due_at timestamp [note: 'SLA due deadline']
+  completed_at timestamp
+  completed_by uuid [note: 'User UUID who finalized task']
+  completed_by_name varchar(255)
+  comments text [note: 'Comments entered at resolution']
+  version bigint [not null, default: 0, note: 'Optimistic locking version counter']
+
+  // Timestamps & soft delete
+  created_at timestamp
+  updated_at timestamp
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    workflow_transaction_id [name: 'idx_wf_task_transaction']
+    (assigned_user_id, task_status) [name: 'idx_wf_task_user_status']
+    workflow_stage_id [name: 'idx_wf_task_stage']
+  }
+
+  Note: 'Actionable approval task assigned to an individual user or role.'
+}
+
+// -----------------------------------------------------------------------------
+// 8. Workflow Action (Audit Trail)
+// -----------------------------------------------------------------------------
+Table workflow_action {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  workflow_transaction_id uuid [not null, note: 'FK to workflow_transaction']
+  workflow_task_id uuid [note: 'FK to workflow_task (optional)']
+  action_type workflow_action_type [not null, note: 'Action performed']
+  performed_by uuid [not null, note: 'Actor user UUID']
+  performed_by_name varchar(255)
+  previous_status varchar(50)
+  new_status varchar(50)
+  comments text
+  metadata jsonb [note: 'Structured JSON context / metadata']
+  ip_address varchar(100)
+  created_at timestamp [not null, note: 'Immutable audit timestamp']
+
+  indexes {
+    workflow_transaction_id [name: 'idx_wf_action_transaction']
+    (action_type, created_at) [name: 'idx_wf_action_type']
+    workflow_task_id [name: 'idx_wf_action_task']
+  }
+
+  Note: 'Immutable, append-only audit record of every workflow action and state transition.'
+}
+
+// -----------------------------------------------------------------------------
+// 9. Workflow Comment
+// -----------------------------------------------------------------------------
+Table workflow_comment {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  workflow_transaction_id uuid [not null, note: 'FK to workflow_transaction']
+  workflow_task_id uuid [note: 'FK to workflow_task (optional)']
+  user_id uuid [not null, note: 'Commenter user UUID']
+  user_name varchar(255)
+  comment_text text [not null]
+  is_internal boolean [not null, default: false, note: 'Internal comment hidden from document initiator']
+  created_at timestamp
+  updated_at timestamp
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    workflow_transaction_id [name: 'idx_wf_comment_transaction']
+    workflow_task_id [name: 'idx_wf_comment_task']
+  }
+
+  Note: 'User comments and discussion on workflow transactions or specific tasks.'
+}
+
+// -----------------------------------------------------------------------------
+// 10. Workflow Attachment
+// -----------------------------------------------------------------------------
+Table workflow_attachment {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  workflow_transaction_id uuid [not null, note: 'FK to workflow_transaction']
+  workflow_task_id uuid [note: 'FK to workflow_task (optional)']
+  file_name varchar(255) [not null, note: 'Original uploaded file name']
+  stored_file_name varchar(255) [not null, note: 'Unique storage filename']
+  file_url varchar(500) [not null, note: 'Storage URL / key']
+  content_type varchar(100) [not null, note: 'MIME type']
+  file_size bigint [not null, note: 'File size in bytes']
+  uploaded_by uuid [not null, note: 'Uploader user UUID']
+  uploaded_by_name varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    workflow_transaction_id [name: 'idx_wf_attach_transaction']
+    workflow_task_id [name: 'idx_wf_attach_task']
+  }
+
+  Note: 'File metadata for supporting attachments stored in external object storage.'
+}
+
+// -----------------------------------------------------------------------------
+// 11. Workflow SLA
+// -----------------------------------------------------------------------------
+Table workflow_sla {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  workflow_stage_id uuid [not null, note: 'FK to workflow_stage']
+  duration_hours int [not null, note: 'Total SLA execution window in hours']
+  reminder_hours int [note: 'Hours before deadline to dispatch notification']
+  escalation_action varchar(50) [not null, default: 'NOTIFY_MANAGER', note: 'Action triggered when SLA breaches']
+  escalate_to_user_id uuid [note: 'Target user for escalation']
+  escalate_to_role_name varchar(100) [note: 'Target role for escalation']
+  is_active boolean [not null, default: true]
+  created_at timestamp
+  updated_at timestamp
+  is_deleted boolean [not null, default: false]
+
+  indexes {
+    workflow_stage_id [name: 'idx_wf_sla_stage']
+  }
+
+  Note: 'Service Level Agreement deadlines and escalation rules per stage.'
+}
+
+// -----------------------------------------------------------------------------
+// 12. Workflow Notification
+// -----------------------------------------------------------------------------
+Table workflow_notification {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant / company isolation']
+  workflow_transaction_id uuid [not null, note: 'FK to workflow_transaction']
+  workflow_task_id uuid [note: 'FK to workflow_task (optional)']
+  recipient_user_id uuid [not null, note: 'Recipient user UUID']
+  notification_type workflow_notification_type [not null]
+  title varchar(255) [not null]
+  message text [not null]
+  is_read boolean [not null, default: false]
+  read_at timestamp
+  channel workflow_channel [not null, default: 'IN_APP']
+  delivery_status varchar(50) [not null, default: 'SENT']
+  created_at timestamp [not null]
+
+  indexes {
+    (company_id, recipient_user_id, is_read) [name: 'idx_wf_notif_recipient']
+    workflow_transaction_id [name: 'idx_wf_notif_transaction']
+    workflow_task_id [name: 'idx_wf_notif_task']
+  }
+
+  Note: 'Multi-channel notifications generated by workflow lifecycle events.'
+}
+
+// -----------------------------------------------------------------------------
+// 13. Workflow Callback Log
+// -----------------------------------------------------------------------------
+Table workflow_callback_log {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  workflow_transaction_id uuid [not null, note: 'FK to workflow_transaction']
+  event_type varchar(50) [not null, note: 'Dispatched event: APPROVED, REJECTED, etc.']
+  callback_url varchar(500) [not null, note: 'Target webhook URL']
+  request_payload jsonb [note: 'HTTP POST JSON body sent']
+  response_status int [note: 'HTTP response status code']
+  response_body text [note: 'Response text received']
+  attempt_count int [not null, default: 1, note: 'Number of delivery attempts']
+  last_attempted_at timestamp [not null]
+  succeeded boolean [not null, default: false, note: 'Whether callback was delivered successfully']
+  created_at timestamp [not null]
+
+  indexes {
+    workflow_transaction_id [name: 'idx_wf_callback_transaction']
+    (succeeded, last_attempted_at) [name: 'idx_wf_callback_pending']
+  }
+
+  Note: 'Tracks outbound webhook callbacks to business microservices for audit and retry.'
+}
+
+// =============================================================================
+// FOREIGN KEY RELATIONSHIPS
+// =============================================================================
+
+// Workflow Stages & Configuration
+Ref: workflow_stage.workflow_definition_id > workflow_definition.id [delete: cascade]
+Ref: workflow_approver.workflow_stage_id > workflow_stage.id [delete: cascade]
+Ref: workflow_sla.workflow_stage_id > workflow_stage.id [delete: cascade]
+
+// Workflow Transitions
+Ref: workflow_transition.workflow_definition_id > workflow_definition.id [delete: cascade]
+Ref: workflow_transition.source_stage_id > workflow_stage.id
+Ref: workflow_transition.target_stage_id > workflow_stage.id
+
+// Workflow Transactions & Tasks
+Ref: workflow_transaction.workflow_definition_id > workflow_definition.id
+Ref: workflow_transaction.current_stage_id > workflow_stage.id
+Ref: workflow_task.workflow_transaction_id > workflow_transaction.id [delete: cascade]
+Ref: workflow_task.workflow_stage_id > workflow_stage.id
+
+// Actions (Audit Trail)
+Ref: workflow_action.workflow_transaction_id > workflow_transaction.id
+Ref: workflow_action.workflow_task_id > workflow_task.id
+
+// Comments
+Ref: workflow_comment.workflow_transaction_id > workflow_transaction.id
+Ref: workflow_comment.workflow_task_id > workflow_task.id
+
+// Attachments
+Ref: workflow_attachment.workflow_transaction_id > workflow_transaction.id
+Ref: workflow_attachment.workflow_task_id > workflow_task.id
+
+// Notifications
+Ref: workflow_notification.workflow_transaction_id > workflow_transaction.id
+Ref: workflow_notification.workflow_task_id > workflow_task.id
+
+// Callback Webhook Logs
+Ref: workflow_callback_log.workflow_transaction_id > workflow_transaction.id
+
+// =============================================================================
+// TABLE GROUPS
+// =============================================================================
+
+TableGroup Workflow_Configuration {
+  document_flow_config
+  workflow_definition
+  workflow_stage
+  workflow_approver
+  workflow_transition
+  workflow_sla
+}
+
+TableGroup Workflow_Runtime {
+  workflow_transaction
+  workflow_task
+}
+
+TableGroup Workflow_Collaboration_And_Audit {
+  workflow_action
+  workflow_comment
+  workflow_attachment
+  workflow_notification
+  workflow_callback_log
+}
+
