@@ -866,6 +866,7 @@ export default function OrgUsersView({
             setSelectedUserForAccess(null);
           }}
           user={selectedUserForAccess}
+          organizationId={organization?.id || organization?.organizationId}
           companies={companies}
           allCompanies={companies}
           onSuccess={() => refetchMembers()}

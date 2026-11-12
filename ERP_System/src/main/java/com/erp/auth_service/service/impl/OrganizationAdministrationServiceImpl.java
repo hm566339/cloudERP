@@ -82,6 +82,12 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
     @Autowired(required = false)
     private ModuleRepository moduleRepository;
 
+    @Autowired(required = false)
+    private OrganizationRoleTemplateRepository templateRepository;
+
+    @Autowired(required = false)
+    private RolePermissionRepository rolePermissionRepository;
+
     @org.springframework.beans.factory.annotation.Value("${email.base-url:https://www.mark2.in/erp}")
     private String emailBaseUrl;
 
@@ -122,14 +128,10 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
 
         List<Role> targetRoles = new ArrayList<>();
-        if (roleIds != null && !roleIds.isEmpty() && roleRepository != null) {
+        if (roleIds != null && !roleIds.isEmpty()) {
             for (UUID rId : roleIds) {
                 if (rId != null) {
-                    Role r = roleRepository.findById(rId)
-                            .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + rId));
-                    if (r.getCompany() == null || !r.getCompany().getId().equals(companyId)) {
-                        throw new BadRequestException("Role " + r.getName() + " does not belong to selected company");
-                    }
+                    Role r = resolveOrCreateCompanyRole(actor.getOrganization().getId(), companyId, rId, actor);
                     targetRoles.add(r);
                 }
             }
@@ -216,14 +218,10 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         accessRepository.findActiveCompany(target.getId(), actor.getOrganization().getId(), companyId)
                 .orElseThrow(() -> new BadRequestException("User does not have active access to this company"));
 
-        Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
-        if (role.getCompany() == null || !role.getCompany().getId().equals(companyId)) {
-            throw new BadRequestException("Role does not belong to target company");
-        }
+        Role role = resolveOrCreateCompanyRole(actor.getOrganization().getId(), companyId, roleId, actor);
 
         if (userRoleRepository != null) {
-            Optional<UserRole> existing = userRoleRepository.findByUser_IdAndRole_Id(target.getUser().getId(), roleId);
+            Optional<UserRole> existing = userRoleRepository.findByUser_IdAndRole_Id(target.getUser().getId(), role.getId());
             if (existing.isEmpty()) {
                 userRoleRepository.save(UserRole.builder().user(target.getUser()).role(role).build());
             }
@@ -244,13 +242,26 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         accessRepository.findActiveCompany(target.getId(), actor.getOrganization().getId(), companyId)
                 .orElseThrow(() -> new BadRequestException("User does not have active access to this company"));
 
-        if (userRoleRepository != null) {
+        if (userRoleRepository != null && roleId != null) {
             Optional<UserRole> existing = userRoleRepository.findByUser_IdAndRole_Id(target.getUser().getId(), roleId);
             if (existing.isPresent()) {
                 UserRole ur = existing.get();
                 if (ur.getRole() != null && ur.getRole().getCompany() != null
                         && ur.getRole().getCompany().getId().equals(companyId)) {
                     userRoleRepository.delete(ur);
+                }
+            } else if (templateRepository != null) {
+                Optional<OrganizationRoleTemplate> tOpt = templateRepository.findById(roleId);
+                List<UserRole> userRoles = userRoleRepository.findAllByUser_IdAndRole_Company_Id(target.getUser().getId(), companyId);
+                if (userRoles != null) {
+                    for (UserRole ur : userRoles) {
+                        if (ur.getRole() != null && (
+                                (ur.getRole().getTemplate() != null && ur.getRole().getTemplate().getId().equals(roleId))
+                                || (tOpt.isPresent() && ur.getRole().getName().equalsIgnoreCase(tOpt.get().getName()))
+                        )) {
+                            userRoleRepository.delete(ur);
+                        }
+                    }
                 }
             }
         }
@@ -271,14 +282,10 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                 .orElseThrow(() -> new BadRequestException("User does not have active access to this company"));
 
         List<Role> targetRoles = new ArrayList<>();
-        if (roleIds != null && !roleIds.isEmpty() && roleRepository != null) {
+        if (roleIds != null && !roleIds.isEmpty()) {
             for (UUID rId : roleIds) {
                 if (rId != null) {
-                    Role r = roleRepository.findById(rId)
-                            .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + rId));
-                    if (r.getCompany() == null || !r.getCompany().getId().equals(companyId)) {
-                        throw new BadRequestException("Role " + r.getName() + " does not belong to target company");
-                    }
+                    Role r = resolveOrCreateCompanyRole(actor.getOrganization().getId(), companyId, rId, actor);
                     targetRoles.add(r);
                 }
             }
@@ -1206,5 +1213,109 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                         && member.getDeletedAt() == null
                         && member.getMembershipStatus() != MembershipStatus.REMOVED)
                 .orElseThrow(() -> new ResourceNotFoundException("Organization member not found"));
+    }
+
+    private Role resolveOrCreateCompanyRole(UUID organizationId, UUID companyId, UUID roleOrTemplateId, OrganizationMember actor) {
+        if (roleOrTemplateId == null) {
+            throw new BadRequestException("Role ID is required");
+        }
+
+        // 1. Direct role lookup in roleRepository
+        if (roleRepository != null) {
+            Optional<Role> roleOpt = roleRepository.findById(roleOrTemplateId);
+            if (roleOpt.isPresent()) {
+                Role r = roleOpt.get();
+                // If it already belongs to the target company, return directly
+                if (r.getCompany() != null && r.getCompany().getId().equals(companyId)) {
+                    return r;
+                }
+                // Check if target company already has a role with the same name
+                Optional<Role> existingInTarget = roleRepository.findByCompany_IdAndNameIgnoreCase(companyId, r.getName());
+                if (existingInTarget.isPresent()) {
+                    return existingInTarget.get();
+                }
+            }
+        }
+
+        Company company = companyRepository != null
+                ? companyRepository.findByIdAndOrganization_IdAndActiveTrue(companyId, organizationId)
+                        .orElseGet(() -> companyRepository.findById(companyId)
+                                .filter(c -> c.getOrganization() != null && c.getOrganization().getId().equals(organizationId))
+                                .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId)))
+                : null;
+        if (company == null) {
+            throw new ResourceNotFoundException("Company not found: " + companyId);
+        }
+
+        // If role was found and has a linked template, clone into target company
+        if (roleRepository != null) {
+            Optional<Role> roleOpt = roleRepository.findById(roleOrTemplateId);
+            if (roleOpt.isPresent() && roleOpt.get().getTemplate() != null) {
+                return cloneRoleFromTemplate(company, roleOpt.get().getTemplate(), actor);
+            }
+        }
+
+        // 2. OrganizationRoleTemplate lookup
+        if (templateRepository != null) {
+            Optional<OrganizationRoleTemplate> templateOpt = templateRepository.findByIdWithPermissions(organizationId, roleOrTemplateId);
+            if (templateOpt.isEmpty()) {
+                templateOpt = templateRepository.findByOrganization_IdAndId(organizationId, roleOrTemplateId);
+            }
+            if (templateOpt.isPresent()) {
+                OrganizationRoleTemplate template = templateOpt.get();
+                return getOrCreateRoleFromTemplate(company, template, actor);
+            }
+        }
+
+        throw new ResourceNotFoundException("Role or role template not found: " + roleOrTemplateId);
+    }
+
+    private Role getOrCreateRoleFromTemplate(Company company, OrganizationRoleTemplate template, OrganizationMember actor) {
+        if (roleRepository != null) {
+            Optional<Role> existingRoleOpt = roleRepository.findByCompany_IdAndNameIgnoreCase(company.getId(), template.getName());
+            if (existingRoleOpt.isPresent()) {
+                Role existingRole = existingRoleOpt.get();
+                if (existingRole.getTemplate() == null) {
+                    existingRole.setTemplate(template);
+                    roleRepository.save(existingRole);
+                }
+                return existingRole;
+            }
+        }
+        return cloneRoleFromTemplate(company, template, actor);
+    }
+
+    private Role cloneRoleFromTemplate(Company company, OrganizationRoleTemplate template, OrganizationMember actor) {
+        Role newRole = Role.builder()
+                .name(template.getName())
+                .company(company)
+                .template(template)
+                .status(true)
+                .build();
+        if (roleRepository != null) {
+            newRole = roleRepository.save(newRole);
+        }
+
+        OrganizationRoleTemplate templateWithPerms = template;
+        if (templateRepository != null && (template.getPermissions() == null || template.getPermissions().isEmpty())) {
+            templateWithPerms = templateRepository.findByIdWithPermissions(template.getOrganization().getId(), template.getId())
+                    .orElse(template);
+        }
+
+        if (templateWithPerms.getPermissions() != null && !templateWithPerms.getPermissions().isEmpty() && rolePermissionRepository != null) {
+            UUID granterId = (actor != null && actor.getUser() != null) ? actor.getUser().getId() : null;
+            for (OrganizationRoleTemplatePermission tp : templateWithPerms.getPermissions()) {
+                if (tp.getPermission() != null) {
+                    RolePermission rp = RolePermission.builder()
+                            .role(newRole)
+                            .permission(tp.getPermission())
+                            .grantedBy(granterId)
+                            .build();
+                    rolePermissionRepository.save(rp);
+                }
+            }
+        }
+
+        return newRole;
     }
 }

@@ -464,5 +464,85 @@ describe('UserCompanyAccessModal Request Deduplication & Lifecycle Stability Sui
         assert.strictEqual(harness2.companyCalls, 0, 'Company API should NOT be called when multiple companies are provided');
       });
     });
+
+    describe('3. Organization Role Template Assignment & Cross-Company Reusability', () => {
+      it('verifies getOrgRoleTemplates is imported and used in UserCompanyAccessModal', () => {
+        assert.ok(
+          modalSource.includes("import { getOrgRoleTemplates } from '../../../api/sso/roleTemplate.api';"),
+          'Modal must import getOrgRoleTemplates to load organization-level role templates'
+        );
+        assert.ok(
+          modalSource.includes('fetchOrgRoleTemplatesList'),
+          'Modal must implement fetchOrgRoleTemplatesList for role template resolution'
+        );
+      });
+
+      it('verifies templates are filtered by status === true and not by appliedCompanies or selected company', () => {
+        assert.ok(
+          modalSource.includes('t.status === true || t.status === undefined'),
+          'Templates must only be filtered by active status (true or undefined)'
+        );
+        assert.ok(
+          !modalSource.includes('.filter(t => t.appliedCompanies') && !modalSource.includes('.filter(t => t.companyId ==='),
+          'Templates must NOT be filtered by appliedCompanies or companyId so all org templates are reusable'
+        );
+      });
+
+      it('verifies roles already assigned to that user in target company are excluded, while preserving roles across other companies', () => {
+        // Mock role templates
+        const mockOrgTemplates = [
+          { id: 'tpl-accountant', name: 'Accountant', status: true, appliedCompanies: ['Apex India Pvt Ltd'] },
+          { id: 'tpl-admin', name: 'Company Admin', status: true, appliedCompanies: ['Apex India Pvt Ltd'] },
+          { id: 'tpl-hr', name: 'HR Manager', status: true, appliedCompanies: [] },
+          { id: 'tpl-inactive', name: 'Old Role', status: false, appliedCompanies: [] },
+        ];
+
+        // Active templates filtering
+        const activeTemplates = mockOrgTemplates.filter(t => t.status === true || t.status === undefined);
+        assert.strictEqual(activeTemplates.length, 3, 'Only active templates should be retained');
+
+        // User currently has Accountant in Apex India (comp-1), and NO roles in TechNova (comp-2)
+        const userAccessList = [
+          {
+            companyId: 'comp-1',
+            companyName: 'Apex India Pvt Ltd',
+            active: true,
+            roleNames: ['Accountant'],
+            roleIds: ['tpl-accountant'],
+          },
+        ];
+
+        // When target company is TechNova (comp-2)
+        const targetCompanyId = 'comp-2';
+        const currentCompAccess = userAccessList.find(a => String(a.companyId) === String(targetCompanyId));
+        const assignedNames = new Set(
+          (Array.isArray(currentCompAccess?.roleNames) ? currentCompAccess.roleNames : [])
+            .map(n => n.toLowerCase())
+        );
+        const assignedIds = new Set(
+          (Array.isArray(currentCompAccess?.roleIds) ? currentCompAccess.roleIds : [])
+            .map(String)
+        );
+
+        const availableForTechNova = activeTemplates.filter(t => {
+          const nameKey = (t.name || '').trim().toLowerCase();
+          const idKey = String(t.id || '');
+          return !assignedNames.has(nameKey) && !assignedIds.has(idKey);
+        });
+
+        // In TechNova, ALL 3 active organization templates (including Accountant!) must be available
+        assert.strictEqual(availableForTechNova.length, 3);
+        assert.ok(availableForTechNova.some(t => t.name === 'Accountant'), 'Accountant must be assignable to TechNova even though applied to Apex');
+        assert.ok(availableForTechNova.some(t => t.name === 'Company Admin'));
+        assert.ok(availableForTechNova.some(t => t.name === 'HR Manager'));
+
+        // If target company is Apex India (comp-1), Accountant is already assigned and must be excluded
+        const apexAccess = userAccessList.find(a => String(a.companyId) === 'comp-1');
+        const apexAssignedNames = new Set(apexAccess.roleNames.map(n => n.toLowerCase()));
+        const availableForApex = activeTemplates.filter(t => !apexAssignedNames.has((t.name || '').toLowerCase()));
+        assert.strictEqual(availableForApex.length, 2);
+        assert.ok(!availableForApex.some(t => t.name === 'Accountant'), 'Accountant must be excluded for Apex India');
+      });
+    });
   });
 

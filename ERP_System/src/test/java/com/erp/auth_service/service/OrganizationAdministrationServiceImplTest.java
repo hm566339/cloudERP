@@ -22,8 +22,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -52,6 +55,10 @@ class OrganizationAdministrationServiceImplTest {
         private UserPortalAccessRepository userPortalAccessRepository;
         @Mock
         private SessionRepository sessionRepository;
+        @Mock
+        private OrganizationRoleTemplateRepository templateRepository;
+        @Mock
+        private RolePermissionRepository rolePermissionRepository;
 
         private OrganizationAdministrationServiceImpl service;
         private Organization organization;
@@ -73,6 +80,8 @@ class OrganizationAdministrationServiceImplTest {
                 ReflectionTestUtils.setField(service, "companyModuleRepository", companyModuleRepository);
                 ReflectionTestUtils.setField(service, "userPortalAccessRepository", userPortalAccessRepository);
                 ReflectionTestUtils.setField(service, "sessionRepository", sessionRepository);
+                ReflectionTestUtils.setField(service, "templateRepository", templateRepository);
+                ReflectionTestUtils.setField(service, "rolePermissionRepository", rolePermissionRepository);
 
                 organization = Organization.builder().id(UUID.randomUUID()).displayName("Org Alpha")
                                 .legalName("Org Alpha").build();
@@ -307,5 +316,164 @@ class OrganizationAdministrationServiceImplTest {
                 // Test userCompanyAccesses
                 List<MemberCompanyRoleDto> userAccessList = service.userCompanyAccesses(targetUser.getId());
                 assertEquals(2, userAccessList.size());
+        }
+
+        @Test
+        @DisplayName("Assign Organization Role Templates (Inventory Manager & Sales Executive) to TechNova Solutions preserving Accountant in Apex India")
+        void testAssignOrganizationRoleTemplatesToTechNovaPreservingApexIndia() {
+                Company apexIndia = companyA;
+                Company techNova = companyB;
+
+                RequestContext.set(owner.getUser().getId(), organization.getId(), apexIndia.getId(), null, AccessMode.FULL);
+                when(memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(organization.getId(),
+                                owner.getUser().getId(), MembershipStatus.ACTIVE))
+                                .thenReturn(Optional.of(owner));
+                when(memberRepository.findById(targetMember.getId())).thenReturn(Optional.of(targetMember));
+
+                // 1. Existing Accountant assignment in Apex India Pvt Ltd
+                Role roleAccountantApex = Role.builder().id(UUID.randomUUID()).name("Accountant").company(apexIndia).status(true).build();
+                UserRole urAccountantApex = UserRole.builder().user(targetUser).role(roleAccountantApex).build();
+                MemberCompanyAccess accessApex = MemberCompanyAccess.builder()
+                                .organizationMember(targetMember)
+                                .organization(organization)
+                                .company(apexIndia)
+                                .active(true)
+                                .build();
+
+                // 2. Organization Role Templates for Inventory Manager & Sales Executive
+                UUID tplInvId = UUID.randomUUID();
+                UUID tplSalesId = UUID.randomUUID();
+                FeaturePermission permInvRead = FeaturePermission.builder().id(UUID.randomUUID()).permissionCode("INVENTORY:READ").build();
+                FeaturePermission permSalesRead = FeaturePermission.builder().id(UUID.randomUUID()).permissionCode("SALES:READ").build();
+
+                OrganizationRoleTemplate tplInv = OrganizationRoleTemplate.builder()
+                                .id(tplInvId)
+                                .organization(organization)
+                                .name("Inventory Manager")
+                                .status(true)
+                                .permissions(new ArrayList<>())
+                                .build();
+                tplInv.getPermissions().add(OrganizationRoleTemplatePermission.builder()
+                                .roleTemplate(tplInv)
+                                .permission(permInvRead)
+                                .build());
+
+                OrganizationRoleTemplate tplSales = OrganizationRoleTemplate.builder()
+                                .id(tplSalesId)
+                                .organization(organization)
+                                .name("Sales Executive")
+                                .status(true)
+                                .permissions(new ArrayList<>())
+                                .build();
+                tplSales.getPermissions().add(OrganizationRoleTemplatePermission.builder()
+                                .roleTemplate(tplSales)
+                                .permission(permSalesRead)
+                                .build());
+
+                when(templateRepository.findByIdWithPermissions(organization.getId(), tplInvId))
+                                .thenReturn(Optional.of(tplInv));
+                when(templateRepository.findByIdWithPermissions(organization.getId(), tplSalesId))
+                                .thenReturn(Optional.of(tplSales));
+
+                when(companyRepository.findByIdAndOrganization_IdAndActiveTrue(techNova.getId(), organization.getId()))
+                                .thenReturn(Optional.of(techNova));
+
+                // No pre-existing roles in TechNova Solutions
+                when(roleRepository.findById(tplInvId)).thenReturn(Optional.empty());
+                when(roleRepository.findById(tplSalesId)).thenReturn(Optional.empty());
+                when(roleRepository.findByCompany_IdAndNameIgnoreCase(techNova.getId(), "Inventory Manager"))
+                                .thenReturn(Optional.empty());
+                when(roleRepository.findByCompany_IdAndNameIgnoreCase(techNova.getId(), "Sales Executive"))
+                                .thenReturn(Optional.empty());
+
+                Role provisionedInv = Role.builder().id(UUID.randomUUID()).name("Inventory Manager").company(techNova).status(true).build();
+                Role provisionedSales = Role.builder().id(UUID.randomUUID()).name("Sales Executive").company(techNova).status(true).build();
+
+                when(roleRepository.save(any(Role.class))).thenAnswer(invocation -> {
+                        Role r = invocation.getArgument(0);
+                        if ("Inventory Manager".equals(r.getName())) return provisionedInv;
+                        if ("Sales Executive".equals(r.getName())) return provisionedSales;
+                        return r;
+                });
+
+                when(accessRepository.findActiveCompany(targetMember.getId(), organization.getId(), techNova.getId()))
+                                .thenReturn(Optional.empty());
+                when(accessRepository.save(any(MemberCompanyAccess.class))).thenAnswer(i -> i.getArgument(0));
+
+                // 3. Execute grantCompanyAccess to TechNova with both organization role templates
+                service.grantCompanyAccess(targetMember.getId(), techNova.getId(), List.of(tplInvId, tplSalesId));
+
+                // 4. Verify company-level roles were auto-provisioned in TechNova with template linkage
+                verify(roleRepository).save(argThat(r ->
+                                r.getName().equals("Inventory Manager") &&
+                                r.getCompany().getId().equals(techNova.getId()) &&
+                                r.getTemplate().getId().equals(tplInvId)));
+                verify(roleRepository).save(argThat(r ->
+                                r.getName().equals("Sales Executive") &&
+                                r.getCompany().getId().equals(techNova.getId()) &&
+                                r.getTemplate().getId().equals(tplSalesId)));
+
+                // 5. Verify permissions were cloned from template into TechNova's RolePermission
+                verify(rolePermissionRepository).save(argThat(rp ->
+                                rp.getPermission().getPermissionCode().equals("INVENTORY:READ")));
+                verify(rolePermissionRepository).save(argThat(rp ->
+                                rp.getPermission().getPermissionCode().equals("SALES:READ")));
+
+                // 6. Verify UserRole was saved for targetUser in TechNova
+                verify(userRoleRepository).save(argThat(ur ->
+                                ur.getUser().getId().equals(targetUser.getId()) &&
+                                ur.getRole().getName().equals("Inventory Manager")));
+                verify(userRoleRepository).save(argThat(ur ->
+                                ur.getUser().getId().equals(targetUser.getId()) &&
+                                ur.getRole().getName().equals("Sales Executive")));
+
+                // 7. Verify Apex India Pvt Ltd's Accountant assignment remains untouched
+                verify(userRoleRepository, never()).delete(urAccountantApex);
+                verify(accessRepository, never()).delete(accessApex);
+        }
+
+        @Test
+        @DisplayName("Removing role from TechNova Solutions does not affect Apex India Pvt Ltd")
+        void testRemovingRoleFromTechNovaDoesNotAffectApexIndia() {
+                Company apexIndia = companyA;
+                Company techNova = companyB;
+
+                RequestContext.set(owner.getUser().getId(), organization.getId(), apexIndia.getId(), null, AccessMode.FULL);
+                when(memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(organization.getId(),
+                                owner.getUser().getId(), MembershipStatus.ACTIVE))
+                                .thenReturn(Optional.of(owner));
+                when(memberRepository.findById(targetMember.getId())).thenReturn(Optional.of(targetMember));
+
+                // Apex India access & Accountant role
+                Role roleAccountantApex = Role.builder().id(UUID.randomUUID()).name("Accountant").company(apexIndia).status(true).build();
+                UserRole urAccountantApex = UserRole.builder().user(targetUser).role(roleAccountantApex).build();
+                MemberCompanyAccess accessApex = MemberCompanyAccess.builder()
+                                .organizationMember(targetMember).organization(organization).company(apexIndia).active(true).build();
+
+                // TechNova access & Sales Executive role to be removed
+                Role roleSalesTechNova = Role.builder().id(UUID.randomUUID()).name("Sales Executive").company(techNova).status(true).build();
+                UserRole urSalesTechNova = UserRole.builder().user(targetUser).role(roleSalesTechNova).build();
+                MemberCompanyAccess accessTechNova = MemberCompanyAccess.builder()
+                                .organizationMember(targetMember).organization(organization).company(techNova).active(true).build();
+
+                when(accessRepository.findActiveCompany(targetMember.getId(), organization.getId(), techNova.getId()))
+                                .thenReturn(Optional.of(accessTechNova));
+                when(userRoleRepository.findByUser_IdAndRole_Id(targetUser.getId(), roleSalesTechNova.getId()))
+                                .thenReturn(Optional.of(urSalesTechNova));
+
+                // Execute removing Sales Executive from TechNova
+                service.removeCompanyRole(targetMember.getId(), techNova.getId(), roleSalesTechNova.getId());
+
+                // Verify ONLY the TechNova user role was deleted
+                verify(userRoleRepository).delete(urSalesTechNova);
+                verify(userRoleRepository, never()).delete(urAccountantApex);
+
+                // Verify neither TechNova nor Apex India company access was deleted
+                verify(accessRepository, never()).delete(accessTechNova);
+                verify(accessRepository, never()).delete(accessApex);
+
+                // Verify session invalidation was scoped to TechNova
+                verify(sessionRepository).deleteByUser_IdAndCompany_Id(targetUser.getId(), techNova.getId());
+                verify(sessionRepository, never()).deleteByUser_IdAndCompany_Id(targetUser.getId(), apexIndia.getId());
         }
 }

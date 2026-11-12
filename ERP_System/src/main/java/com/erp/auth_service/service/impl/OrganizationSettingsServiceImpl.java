@@ -403,6 +403,7 @@ public class OrganizationSettingsServiceImpl implements OrganizationSettingsServ
                         if (!memberCompanyAccessRepository.existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(member.getId(), savedCompany.getId())) {
                             memberCompanyAccessRepository.save(MemberCompanyAccess.builder()
                                     .organizationMember(member)
+                                    .organization(org)
                                     .company(savedCompany)
                                     .active(true)
                                     .build());

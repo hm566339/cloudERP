@@ -13,6 +13,8 @@ import {
 } from '../../../api/sso/organization.api';
 import { getRoles } from '../../../api/sso/role';
 import { getCompanies } from '../../../api/sso/company';
+import { getOrgRoleTemplates } from '../../../api/sso/roleTemplate.api';
+import { getActiveOrganizationId } from '../../../api/common/roleCompanyContext';
 import CustomSelect from '../../../components/common/CustomSelect';
 import {
   Building2,
@@ -40,6 +42,8 @@ export let moduleCompaniesCache = null;
 export let moduleCompaniesPromise = null;
 export const moduleRolesCache = new Map();
 export const moduleRolesPromiseMap = new Map();
+export let moduleOrgRoleTemplatesCache = null;
+export let moduleOrgRoleTemplatesPromise = null;
 
 /**
  * Reset module-level caches for unit testing or cache invalidation.
@@ -51,6 +55,8 @@ export const clearUserCompanyAccessCaches = () => {
   moduleCompaniesPromise = null;
   moduleRolesCache.clear();
   moduleRolesPromiseMap.clear();
+  moduleOrgRoleTemplatesCache = null;
+  moduleOrgRoleTemplatesPromise = null;
 };
 
 /**
@@ -67,6 +73,7 @@ export default function UserCompanyAccessModal({
   isOpen,
   onClose,
   user,
+  organizationId,
   memberId: initialMemberId,
   allCompanies,
   companies: legacyCompanies,
@@ -78,6 +85,11 @@ export default function UserCompanyAccessModal({
   const userId = user?.id || user?.userId || '';
   const memberId = initialMemberId || user?.memberId || '';
   const userIdentifier = String(userId || memberId || '');
+
+  const effectiveOrgId = organizationId
+    || user?.organizationId
+    || user?.organization?.id
+    || getActiveOrganizationId();
 
   // Passed companies normalization (supports allCompanies or companies prop)
   const passedCompanies = allCompanies || legacyCompanies || EMPTY_ARRAY;
@@ -123,9 +135,11 @@ export default function UserCompanyAccessModal({
   const userRef = useRef(user);
   const passedCompaniesRef = useRef(passedCompanies);
   const initialMemberIdRef = useRef(initialMemberId);
+  const effectiveOrgIdRef = useRef(effectiveOrgId);
   userRef.current = user;
   passedCompaniesRef.current = passedCompanies;
   initialMemberIdRef.current = initialMemberId;
+  effectiveOrgIdRef.current = effectiveOrgId;
 
   // Dedicated cache and in-flight tracking refs (retained for backward compatibility)
   const inFlightAccessRef = useRef(null);
@@ -322,61 +336,58 @@ export default function UserCompanyAccessModal({
     }
   }, []);
 
-  // Fetch roles for a specific company on demand and cache them permanently per company
-  const fetchRolesForCompany = useCallback(async (compId, forceRefresh = false) => {
-    if (!compId) return [];
-
-    // 1. Cache hit
-    if (!forceRefresh && moduleRolesCache.has(compId)) {
-      const cached = moduleRolesCache.get(compId);
-      rolesCacheRef.current[compId] = cached;
-      setCompanyRolesMap(prev => ({ ...prev, [compId]: cached }));
-      return cached;
+  // Load organization-level role templates with module caching and single-flight deduplication
+  const fetchOrgRoleTemplatesList = useCallback(async (orgId, forceRefresh = false) => {
+    if (!forceRefresh && moduleOrgRoleTemplatesCache && moduleOrgRoleTemplatesCache.length > 0) {
+      return moduleOrgRoleTemplatesCache;
     }
 
-    // 2. Single-flight promise
-    if (!forceRefresh && moduleRolesPromiseMap.has(compId)) {
-      try {
-        const roles = await moduleRolesPromiseMap.get(compId);
-        setCompanyRolesMap(prev => ({ ...prev, [compId]: roles }));
-        return roles;
-      } catch (err) {
-        throw err;
-      }
+    if (!forceRefresh && moduleOrgRoleTemplatesPromise) {
+      return moduleOrgRoleTemplatesPromise;
     }
 
     const promise = (async () => {
       try {
-        const res = await getRoles({ companyId: compId, page: 0, pageSize: 200 });
-        const roles = Array.isArray(res)
+        const res = await getOrgRoleTemplates(orgId ? { organizationId: orgId } : {});
+        const rawList = Array.isArray(res)
           ? res
-          : (res?.roles || res?.content || res?.data?.roles || res?.data?.content || res?.data || []);
-        const validRoles = (Array.isArray(roles) ? roles : []).map(r => ({
-          ...r,
-          id: r.id || r.roleId,
-          name: r.name || r.roleName || r.code || 'Role',
-        }));
-        moduleRolesCache.set(compId, validRoles);
-        rolesCacheRef.current[compId] = validRoles;
-        return validRoles;
+          : (res?.data?.data || res?.data || res?.templates || res?.content || []);
+
+        // Requirement 2: Filter active templates: role.status === true.
+        // Do NOT filter using appliedCompanies, appliedCompaniesCount, selected company ID, or permissionCount > 0.
+        const activeTemplates = (Array.isArray(rawList) ? rawList : [])
+          .filter(t => t.status === true || t.status === undefined)
+          .map(t => ({
+            ...t,
+            id: t.id || t.templateId,
+            name: t.name || t.roleName || 'Unnamed Role',
+            description: t.description || '',
+          }));
+
+        moduleOrgRoleTemplatesCache = activeTemplates;
+        return activeTemplates;
       } finally {
-        moduleRolesPromiseMap.delete(compId);
+        moduleOrgRoleTemplatesPromise = null;
       }
     })();
 
-    moduleRolesPromiseMap.set(compId, promise);
+    moduleOrgRoleTemplatesPromise = promise;
 
     try {
       const result = await promise;
-      setCompanyRolesMap(prev => ({ ...prev, [compId]: result }));
       return result;
     } catch (err) {
       if (err?.name === 'CanceledError' || err?.name === 'AbortError') {
-        return rolesCacheRef.current[compId] || [];
+        return moduleOrgRoleTemplatesCache || [];
       }
-      console.warn(`Failed to fetch roles for company ${compId}:`, err);
+      console.warn('Failed to fetch organization role templates:', err);
       throw err;
     }
+  }, []);
+
+  // Backward-compatible role fetching helper (delegates to organization-level role templates)
+  const fetchRolesForCompany = useCallback(async (compId, forceRefresh = false) => {
+    return fetchOrgRoleTemplatesList(effectiveOrgIdRef.current, forceRefresh);
   }, []);
 
   // Main lifecycle effect: triggers exactly ONCE per open modal session
@@ -411,11 +422,15 @@ export default function UserCompanyAccessModal({
     loadAccessData(false);
     loadOrganizationCompanies(false);
 
+    // Pre-fetch organization role templates so they are instantly ready
+    fetchOrgRoleTemplatesList(effectiveOrgIdRef.current, false).catch(() => {});
+
     // CRITICAL: Do NOT wipe caches, abort requests, or reset sessionUserRef in cleanup on ordinary re-renders.
     // Resetting happens strictly when isOpen transitions to false above.
-  }, [isOpen, userIdentifier, loadAccessData, loadOrganizationCompanies]);
+  }, [isOpen, userIdentifier, loadAccessData, loadOrganizationCompanies, fetchOrgRoleTemplatesList]);
 
-  // When targetCompanyId changes in "Assign to Company" form, load that company's roles
+  // When targetCompanyId changes in "Assign to Company" form, load organization role templates
+  // and filter out roles already assigned to that user in this target company
   useEffect(() => {
     if (!isOpen || !targetCompanyId) {
       setTargetRoles([]);
@@ -428,39 +443,66 @@ export default function UserCompanyAccessModal({
     let isMounted = true;
     setRolesLoadError(null);
 
-    if (moduleRolesCache.has(targetCompanyId) || rolesCacheRef.current[targetCompanyId]) {
-      const cached = moduleRolesCache.get(targetCompanyId) || rolesCacheRef.current[targetCompanyId];
-      setTargetRoles(cached);
-      setTargetRoleIds(cached.length > 0 ? [cached[0].id] : []);
+    // Identify roles already assigned to user in the selected target company
+    const currentCompAccess = accessList.find(a => String(a.companyId) === String(targetCompanyId));
+    const assignedNames = new Set(
+      (Array.isArray(currentCompAccess?.roleNames) && currentCompAccess.roleNames.length > 0
+        ? currentCompAccess.roleNames
+        : (currentCompAccess?.roleName ? currentCompAccess.roleName.split(',').map(s => s.trim()) : []))
+        .map(n => n.toLowerCase())
+    );
+    const assignedIds = new Set(
+      (Array.isArray(currentCompAccess?.roleIds) ? currentCompAccess.roleIds : (currentCompAccess?.roleId ? [currentCompAccess.roleId] : []))
+        .map(String)
+    );
+
+    const filterAvailableTemplates = (templates) => {
+      return (templates || []).filter(t => {
+        const nameKey = (t.name || '').trim().toLowerCase();
+        const idKey = String(t.id || '');
+        return !assignedNames.has(nameKey) && !assignedIds.has(idKey);
+      });
+    };
+
+    if (moduleRolesCache.has(targetCompanyId) || (moduleOrgRoleTemplatesCache && moduleOrgRoleTemplatesCache.length > 0)) {
+      const sourceList = (moduleOrgRoleTemplatesCache && moduleOrgRoleTemplatesCache.length > 0)
+        ? moduleOrgRoleTemplatesCache
+        : (moduleRolesCache.get(targetCompanyId) || []);
+      const available = filterAvailableTemplates(sourceList);
+      setTargetRoles(available);
+      setTargetRoleIds(available.length > 0 ? [available[0].id] : []);
       setIsRolesLoading(false);
       return;
     }
 
     setIsRolesLoading(true);
-    fetchRolesForCompany(targetCompanyId).then(roles => {
-      if (isMounted) {
-        setTargetRoles(roles);
-        setIsRolesLoading(false);
-        setRolesLoadError(null);
-        if (roles.length > 0) {
-          setTargetRoleIds([roles[0].id]);
-        } else {
-          setTargetRoleIds([]);
+    fetchOrgRoleTemplatesList(effectiveOrgIdRef.current)
+      .then(templates => {
+        if (isMounted) {
+          const available = filterAvailableTemplates(templates);
+          setTargetRoles(available);
+          setIsRolesLoading(false);
+          setRolesLoadError(null);
+          if (available.length > 0) {
+            setTargetRoleIds([available[0].id]);
+          } else {
+            setTargetRoleIds([]);
+          }
         }
-      }
-    }).catch((err) => {
-      if (isMounted) {
-        setTargetRoles([]);
-        setTargetRoleIds([]);
-        setIsRolesLoading(false);
-        setRolesLoadError(err?.response?.data?.message || err?.message || 'Failed to load roles for selected company');
-      }
-    });
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setTargetRoles([]);
+          setTargetRoleIds([]);
+          setIsRolesLoading(false);
+          setRolesLoadError(err?.response?.data?.message || err?.message || 'Failed to load organization role templates');
+        }
+      });
 
     return () => {
       isMounted = false;
     };
-  }, [isOpen, targetCompanyId, fetchRolesForCompany]);
+  }, [isOpen, targetCompanyId, accessList, fetchOrgRoleTemplatesList]);
 
   // Toggle role selection for target company assignment
   const handleToggleTargetRole = (roleId) => {
@@ -516,15 +558,30 @@ export default function UserCompanyAccessModal({
   const handleOpenAddRole = async (compId) => {
     setAddingRoleCompanyId(compId);
     setSelectedRoleToAdd('');
-    const roles = await fetchRolesForCompany(compId);
-    // Find unassigned roles
-    const currentAccess = accessList.find(a => a.companyId === compId);
-    const assignedIds = new Set(
-      Array.isArray(currentAccess?.roleIds) ? currentAccess.roleIds : (currentAccess?.roleId ? [currentAccess.roleId] : [])
-    );
-    const unassigned = roles.filter(r => !assignedIds.has(r.id));
-    if (unassigned.length > 0) {
-      setSelectedRoleToAdd(unassigned[0].id);
+    try {
+      const allTemplates = await fetchOrgRoleTemplatesList(effectiveOrgIdRef.current);
+      const currentAccess = accessList.find(a => String(a.companyId) === String(compId));
+      const assignedNames = new Set(
+        (Array.isArray(currentAccess?.roleNames) && currentAccess.roleNames.length > 0
+          ? currentAccess.roleNames
+          : (currentAccess?.roleName ? currentAccess.roleName.split(',').map(s => s.trim()) : []))
+          .map(n => n.toLowerCase())
+      );
+      const assignedIds = new Set(
+        (Array.isArray(currentAccess?.roleIds) ? currentAccess.roleIds : (currentAccess?.roleId ? [currentAccess.roleId] : []))
+          .map(String)
+      );
+      const unassigned = (allTemplates || []).filter(t => {
+        const nameKey = (t.name || '').trim().toLowerCase();
+        const idKey = String(t.id || '');
+        return !assignedNames.has(nameKey) && !assignedIds.has(idKey);
+      });
+      setCompanyRolesMap(prev => ({ ...prev, [compId]: unassigned }));
+      if (unassigned.length > 0) {
+        setSelectedRoleToAdd(unassigned[0].id);
+      }
+    } catch (err) {
+      console.warn('Failed to load role templates for company:', compId, err);
     }
   };
 
