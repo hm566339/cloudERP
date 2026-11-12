@@ -4,6 +4,7 @@ import com.erp.auth_service.dto.platform.MemberCompanyRoleDto;
 import com.erp.auth_service.dto.platform.PlatformMemberSummaryResponse;
 import com.erp.auth_service.dto.request.InviteMemberRequest;
 import com.erp.auth_service.dto.response.AccessibleCompanyResponse;
+import com.erp.auth_service.dto.response.DefaultCompanyResponse;
 import com.erp.auth_service.dto.response.InviteMemberResponse;
 import com.erp.auth_service.exception.BadRequestException;
 import com.erp.auth_service.exception.DuplicateResourceException;
@@ -221,7 +222,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         Role role = resolveOrCreateCompanyRole(actor.getOrganization().getId(), companyId, roleId, actor);
 
         if (userRoleRepository != null) {
-            Optional<UserRole> existing = userRoleRepository.findByUser_IdAndRole_Id(target.getUser().getId(), role.getId());
+            Optional<UserRole> existing = userRoleRepository.findByUser_IdAndRole_Id(target.getUser().getId(),
+                    role.getId());
             if (existing.isEmpty()) {
                 userRoleRepository.save(UserRole.builder().user(target.getUser()).role(role).build());
             }
@@ -252,13 +254,14 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                 }
             } else if (templateRepository != null) {
                 Optional<OrganizationRoleTemplate> tOpt = templateRepository.findById(roleId);
-                List<UserRole> userRoles = userRoleRepository.findAllByUser_IdAndRole_Company_Id(target.getUser().getId(), companyId);
+                List<UserRole> userRoles = userRoleRepository
+                        .findAllByUser_IdAndRole_Company_Id(target.getUser().getId(), companyId);
                 if (userRoles != null) {
                     for (UserRole ur : userRoles) {
-                        if (ur.getRole() != null && (
-                                (ur.getRole().getTemplate() != null && ur.getRole().getTemplate().getId().equals(roleId))
-                                || (tOpt.isPresent() && ur.getRole().getName().equalsIgnoreCase(tOpt.get().getName()))
-                        )) {
+                        if (ur.getRole() != null && ((ur.getRole().getTemplate() != null
+                                && ur.getRole().getTemplate().getId().equals(roleId))
+                                || (tOpt.isPresent()
+                                        && ur.getRole().getName().equalsIgnoreCase(tOpt.get().getName())))) {
                             userRoleRepository.delete(ur);
                         }
                     }
@@ -340,6 +343,12 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         // Invalidate sessions for this user in that company
         if (sessionRepository != null) {
             sessionRepository.deleteByUser_IdAndCompany_Id(target.getUser().getId(), companyId);
+        }
+
+        // Clear default company if it pointed to the revoked company
+        if (target.getDefaultCompany() != null && target.getDefaultCompany().getId().equals(companyId)) {
+            target.setDefaultCompany(null);
+            memberRepository.save(target);
         }
     }
 
@@ -477,6 +486,12 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                     }).toList();
 
                     User u = m.getUser();
+                    Company defaultComp = m.getDefaultCompany();
+                    boolean defaultValid = defaultComp != null
+                            && Boolean.TRUE.equals(defaultComp.getActive())
+                            && defaultComp.getOrganization() != null
+                            && organizationId.equals(defaultComp.getOrganization().getId())
+                            && (m.getMemberType() == MemberType.OWNER || companyIds.contains(defaultComp.getId()));
                     return PlatformMemberSummaryResponse.builder()
                             .memberId(m.getId())
                             .userId(u != null ? u.getId() : null)
@@ -488,6 +503,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                             .authorizedCompanies(companyNames)
                             .authorizedCompanyIds(companyIds)
                             .companyAccess(companyAccessList)
+                            .defaultCompanyId(defaultValid ? defaultComp.getId() : null)
+                            .defaultCompanyName(defaultValid ? defaultComp.getCompanyName() : null)
                             .createdAt(m.getCreatedAt())
                             .build();
                 })
@@ -924,11 +941,14 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         if (!targetRoleIds.isEmpty() && roleRepository != null && userRoleRepository != null) {
             for (UUID rId : targetRoleIds) {
                 if (rId != null) {
-                    Role r = roleRepository.findById(rId).orElse(null);
-                    if (r != null && r.getCompany() != null && r.getCompany().getId().equals(company.getId())) {
-                        if (userRoleRepository.findByUser_IdAndRole_Id(member.getUser().getId(), r.getId()).isEmpty()) {
-                            userRoleRepository.save(UserRole.builder().user(member.getUser()).role(r).build());
+                    try {
+                        Role r = resolveOrCreateCompanyRole(org.getId(), company.getId(), rId, null);
+                        if (r != null && r.getCompany() != null && r.getCompany().getId().equals(company.getId())) {
+                            if (userRoleRepository.findByUser_IdAndRole_Id(member.getUser().getId(), r.getId()).isEmpty()) {
+                                userRoleRepository.save(UserRole.builder().user(member.getUser()).role(r).build());
+                            }
                         }
+                    } catch (ResourceNotFoundException ignored) {
                     }
                 }
             }
@@ -1084,9 +1104,12 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         }
 
         // 4. PERSIST AND FLUSH USER TOKEN FIRST
-        // The token MUST be safely persisted to the database before any email can be dispatched.
-        // If saveAndFlush throws (e.g. database constraint violation, connection failure),
-        // the exception propagates, the transaction rolls back, and NO email is ever sent.
+        // The token MUST be safely persisted to the database before any email can be
+        // dispatched.
+        // If saveAndFlush throws (e.g. database constraint violation, connection
+        // failure),
+        // the exception propagates, the transaction rolls back, and NO email is ever
+        // sent.
         if (userTokenRepository != null) {
             UserToken userToken = UserToken.builder()
                     .token(hashedToken)
@@ -1111,20 +1134,25 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                 ? org.getDisplayName()
                 : (org != null && org.getLegalName() != null ? org.getLegalName() : "Mark2 ERP");
 
-        // 6. Token-derived idempotency key ensures retries for the same token are de-duplicated by Communication Service
-        String hashPrefix = (hashedToken != null && hashedToken.length() >= 16) ? hashedToken.substring(0, 16) : UUID.randomUUID().toString().substring(0, 8);
+        // 6. Token-derived idempotency key ensures retries for the same token are
+        // de-duplicated by Communication Service
+        String hashPrefix = (hashedToken != null && hashedToken.length() >= 16) ? hashedToken.substring(0, 16)
+                : UUID.randomUUID().toString().substring(0, 8);
         String idempotencyKey = "org-user-invite-" + user.getId() + "-" + hashPrefix;
         final Company targetCompany = effectiveCompany;
 
         // 7. Dispatch via Centralized CommunicationServiceClient
-        // When a database transaction is active, register an AFTER_COMMIT synchronization.
-        // This guarantees that external network calls (SMTP/HTTP) never execute before the DB
-        // transaction successfully commits, and rolled back transactions NEVER dispatch emails.
+        // When a database transaction is active, register an AFTER_COMMIT
+        // synchronization.
+        // This guarantees that external network calls (SMTP/HTTP) never execute before
+        // the DB
+        // transaction successfully commits, and rolled back transactions NEVER dispatch
+        // emails.
         Runnable emailDispatchAction = () -> {
             if (communicationServiceClient != null && communicationServiceClient.isEnabled()) {
                 try {
-                    com.erp.auth_service.mail.CommunicationServiceClient.DeliveryResult deliveryResult =
-                            communicationServiceClient.sendOrganizationUserInvitationEmailDetailed(
+                    com.erp.auth_service.mail.CommunicationServiceClient.DeliveryResult deliveryResult = communicationServiceClient
+                            .sendOrganizationUserInvitationEmailDetailed(
                                     org != null ? org.getId() : null,
                                     targetCompany.getId(),
                                     user.getEmail(),
@@ -1133,18 +1161,20 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                                     user.getUsername(),
                                     activationLink,
                                     24,
-                                    idempotencyKey
-                            );
+                                    idempotencyKey);
                     if (deliveryResult.isSuccess()) {
-                        log.info("Invitation email dispatched after commit | userId={} | to={}", user.getId(), user.getEmail());
+                        log.info("Invitation email dispatched after commit | userId={} | to={}", user.getId(),
+                                user.getEmail());
                     } else {
                         String err = deliveryResult.getError() != null && !deliveryResult.getError().isBlank()
                                 ? deliveryResult.getError()
                                 : deliveryResult.getMessage();
-                        log.warn("Communication Service rejected invitation email after commit | userId={} | error={}", user.getId(), err);
+                        log.warn("Communication Service rejected invitation email after commit | userId={} | error={}",
+                                user.getId(), err);
                     }
                 } catch (Exception ex) {
-                    log.error("Failed to reach Communication Service in afterCommit for user {}: {}", user.getId(), ex.getMessage());
+                    log.error("Failed to reach Communication Service in afterCommit for user {}: {}", user.getId(),
+                            ex.getMessage());
                 }
             } else {
                 log.info("Communication Service is disabled or unavailable; skipping invitation email dispatch");
@@ -1158,15 +1188,15 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                         public void afterCommit() {
                             emailDispatchAction.run();
                         }
-                    }
-            );
+                    });
             return new EmailDispatchResult(true, null);
         } else {
-            // Running in standalone test or non-transactional environment: execute immediately for synchronous test verification
+            // Running in standalone test or non-transactional environment: execute
+            // immediately for synchronous test verification
             if (communicationServiceClient != null && communicationServiceClient.isEnabled()) {
                 try {
-                    com.erp.auth_service.mail.CommunicationServiceClient.DeliveryResult deliveryResult =
-                            communicationServiceClient.sendOrganizationUserInvitationEmailDetailed(
+                    com.erp.auth_service.mail.CommunicationServiceClient.DeliveryResult deliveryResult = communicationServiceClient
+                            .sendOrganizationUserInvitationEmailDetailed(
                                     org != null ? org.getId() : null,
                                     targetCompany.getId(),
                                     user.getEmail(),
@@ -1175,15 +1205,15 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                                     user.getUsername(),
                                     activationLink,
                                     24,
-                                    idempotencyKey
-                            );
+                                    idempotencyKey);
                     if (deliveryResult.isSuccess()) {
                         return new EmailDispatchResult(true, null);
                     } else {
                         String err = deliveryResult.getError() != null && !deliveryResult.getError().isBlank()
                                 ? deliveryResult.getError()
                                 : deliveryResult.getMessage();
-                        return new EmailDispatchResult(false, err != null ? err : "Mail provider rejected invitation email");
+                        return new EmailDispatchResult(false,
+                                err != null ? err : "Mail provider rejected invitation email");
                     }
                 } catch (Exception ex) {
                     log.error("Failed to reach Communication Service: {}", ex.getMessage());
@@ -1215,7 +1245,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                 .orElseThrow(() -> new ResourceNotFoundException("Organization member not found"));
     }
 
-    private Role resolveOrCreateCompanyRole(UUID organizationId, UUID companyId, UUID roleOrTemplateId, OrganizationMember actor) {
+    private Role resolveOrCreateCompanyRole(UUID organizationId, UUID companyId, UUID roleOrTemplateId,
+            OrganizationMember actor) {
         if (roleOrTemplateId == null) {
             throw new BadRequestException("Role ID is required");
         }
@@ -1230,7 +1261,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
                     return r;
                 }
                 // Check if target company already has a role with the same name
-                Optional<Role> existingInTarget = roleRepository.findByCompany_IdAndNameIgnoreCase(companyId, r.getName());
+                Optional<Role> existingInTarget = roleRepository.findByCompany_IdAndNameIgnoreCase(companyId,
+                        r.getName());
                 if (existingInTarget.isPresent()) {
                     return existingInTarget.get();
                 }
@@ -1240,7 +1272,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         Company company = companyRepository != null
                 ? companyRepository.findByIdAndOrganization_IdAndActiveTrue(companyId, organizationId)
                         .orElseGet(() -> companyRepository.findById(companyId)
-                                .filter(c -> c.getOrganization() != null && c.getOrganization().getId().equals(organizationId))
+                                .filter(c -> c.getOrganization() != null
+                                        && c.getOrganization().getId().equals(organizationId))
                                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId)))
                 : null;
         if (company == null) {
@@ -1257,7 +1290,8 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
 
         // 2. OrganizationRoleTemplate lookup
         if (templateRepository != null) {
-            Optional<OrganizationRoleTemplate> templateOpt = templateRepository.findByIdWithPermissions(organizationId, roleOrTemplateId);
+            Optional<OrganizationRoleTemplate> templateOpt = templateRepository.findByIdWithPermissions(organizationId,
+                    roleOrTemplateId);
             if (templateOpt.isEmpty()) {
                 templateOpt = templateRepository.findByOrganization_IdAndId(organizationId, roleOrTemplateId);
             }
@@ -1270,9 +1304,11 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         throw new ResourceNotFoundException("Role or role template not found: " + roleOrTemplateId);
     }
 
-    private Role getOrCreateRoleFromTemplate(Company company, OrganizationRoleTemplate template, OrganizationMember actor) {
+    private Role getOrCreateRoleFromTemplate(Company company, OrganizationRoleTemplate template,
+            OrganizationMember actor) {
         if (roleRepository != null) {
-            Optional<Role> existingRoleOpt = roleRepository.findByCompany_IdAndNameIgnoreCase(company.getId(), template.getName());
+            Optional<Role> existingRoleOpt = roleRepository.findByCompany_IdAndNameIgnoreCase(company.getId(),
+                    template.getName());
             if (existingRoleOpt.isPresent()) {
                 Role existingRole = existingRoleOpt.get();
                 if (existingRole.getTemplate() == null) {
@@ -1298,11 +1334,13 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
 
         OrganizationRoleTemplate templateWithPerms = template;
         if (templateRepository != null && (template.getPermissions() == null || template.getPermissions().isEmpty())) {
-            templateWithPerms = templateRepository.findByIdWithPermissions(template.getOrganization().getId(), template.getId())
+            templateWithPerms = templateRepository
+                    .findByIdWithPermissions(template.getOrganization().getId(), template.getId())
                     .orElse(template);
         }
 
-        if (templateWithPerms.getPermissions() != null && !templateWithPerms.getPermissions().isEmpty() && rolePermissionRepository != null) {
+        if (templateWithPerms.getPermissions() != null && !templateWithPerms.getPermissions().isEmpty()
+                && rolePermissionRepository != null) {
             UUID granterId = (actor != null && actor.getUser() != null) ? actor.getUser().getId() : null;
             for (OrganizationRoleTemplatePermission tp : templateWithPerms.getPermissions()) {
                 if (tp.getPermission() != null) {
@@ -1317,5 +1355,83 @@ public class OrganizationAdministrationServiceImpl implements OrganizationAdmini
         }
 
         return newRole;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DefaultCompanyResponse getDefaultCompany(UUID memberId) {
+        OrganizationMember actor = actor();
+        UUID orgId = actor.getOrganization().getId();
+        OrganizationMember target = target(memberId, orgId);
+        return buildDefaultCompanyResponse(target, orgId);
+    }
+
+    @Override
+    @Transactional
+    public DefaultCompanyResponse setDefaultCompany(UUID memberId, UUID companyId) {
+        if (companyId == null) {
+            throw new BadRequestException("Company ID is required");
+        }
+        authorizationService.requireWriteAccess();
+        OrganizationMember actor = actor();
+        UUID orgId = actor.getOrganization().getId();
+        OrganizationMember target = target(memberId, orgId);
+
+        if (companyRepository == null) {
+            throw new BadRequestException("Company repository unavailable");
+        }
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+
+        if (company.getOrganization() == null || !company.getOrganization().getId().equals(orgId)) {
+            throw new ForbiddenException("Company does not belong to the active organization");
+        }
+        if (!Boolean.TRUE.equals(company.getActive())) {
+            throw new BadRequestException("Cannot set an inactive company as default");
+        }
+
+        if (target.getMemberType() != MemberType.OWNER) {
+            accessRepository.findActiveCompany(target.getId(), orgId, companyId)
+                    .orElseThrow(() -> new BadRequestException(
+                            "Member does not have active access to the selected company"));
+        }
+
+        target.setDefaultCompany(company);
+        memberRepository.save(target);
+        log.info("Default company updated | orgId={} | memberId={} | defaultCompanyId={} | byActor={}",
+                orgId, target.getId(), company.getId(), actor.getId());
+        return buildDefaultCompanyResponse(target, orgId);
+    }
+
+    @Override
+    @Transactional
+    public DefaultCompanyResponse clearDefaultCompany(UUID memberId) {
+        authorizationService.requireWriteAccess();
+        OrganizationMember actor = actor();
+        UUID orgId = actor.getOrganization().getId();
+        OrganizationMember target = target(memberId, orgId);
+        target.setDefaultCompany(null);
+        memberRepository.save(target);
+        log.info("Default company cleared | orgId={} | memberId={} | byActor={}",
+                orgId, target.getId(), actor.getId());
+        return buildDefaultCompanyResponse(target, orgId);
+    }
+
+    private DefaultCompanyResponse buildDefaultCompanyResponse(OrganizationMember target, UUID orgId) {
+        Company dc = target.getDefaultCompany();
+        boolean valid = dc != null
+                && Boolean.TRUE.equals(dc.getActive())
+                && dc.getOrganization() != null
+                && orgId.equals(dc.getOrganization().getId())
+                && (target.getMemberType() == MemberType.OWNER
+                        || accessRepository.findActiveCompany(target.getId(), orgId, dc.getId()).isPresent());
+        return DefaultCompanyResponse.builder()
+                .memberId(target.getId())
+                .userId(target.getUser() != null ? target.getUser().getId() : null)
+                .organizationId(orgId)
+                .defaultCompanyId(valid ? dc.getId() : null)
+                .defaultCompanyName(valid ? dc.getCompanyName() : null)
+                .defaultCompanyCode(valid ? dc.getCompanyCode() : null)
+                .build();
     }
 }

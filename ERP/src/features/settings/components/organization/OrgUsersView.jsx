@@ -15,10 +15,15 @@ import {
   UserPlus,
   Mail,
   RotateCcw,
+  Star,
 } from 'lucide-react';
 import { useAppDispatch } from '../../../../app/hooks';
 import { addAlert } from '../../../notifications/notificationSlice';
-import { useGetOrgMembersQuery } from '../../../../api/sso/organization.api';
+import {
+  useGetOrgMembersQuery,
+  setMemberDefaultCompany,
+  clearMemberDefaultCompany,
+} from '../../../../api/sso/organization.api';
 import apiClient from '../../../../api/common/client';
 import PageHeader from '../../../../components/common/PageHeader';
 import DataTable, { DataTableStatusBadge } from '../../../../components/data-table';
@@ -34,6 +39,7 @@ const DEFAULT_COLUMNS = [
   'email',
   'empId',
   'company',
+  'defaultCompany',
   'role',
   'status',
   'lastLogin',
@@ -68,6 +74,10 @@ export default function OrgUsersView({
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [defaultCompanyUser, setDefaultCompanyUser] = useState(null);
+  const [isDefaultCompanyModalOpen, setIsDefaultCompanyModalOpen] = useState(false);
+  const [selectedDefaultCompanyId, setSelectedDefaultCompanyId] = useState('');
+  const [isSavingDefaultCompany, setIsSavingDefaultCompany] = useState(false);
 
   // Form states for Invite / New User
   const [inviteEmail, setInviteEmail] = useState('');
@@ -125,6 +135,9 @@ export default function OrgUsersView({
       );
 
       const primaryRole = companyAccess[0]?.roleName || m.roleName || m.role || memberType;
+      const defaultCompanyId = m.defaultCompanyId || null;
+      const matchedDefault = companyAccess.find((ca) => String(ca.companyId) === String(defaultCompanyId));
+      const defaultCompanyName = m.defaultCompanyName || matchedDefault?.companyName || null;
 
       return {
         id,
@@ -138,6 +151,8 @@ export default function OrgUsersView({
         membershipStatus,
         companyAccess,
         assignedCompanyNames,
+        defaultCompanyId,
+        defaultCompanyName,
         primaryRole,
         active: membershipStatus === 'ACTIVE',
         lastLogin: m.lastLoginAt || m.lastLogin || null,
@@ -279,6 +294,41 @@ export default function OrgUsersView({
       );
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleOpenDefaultCompanyModal = (member) => {
+    setDefaultCompanyUser(member);
+    setSelectedDefaultCompanyId(member?.defaultCompanyId ? String(member.defaultCompanyId) : '');
+    setIsDefaultCompanyModalOpen(true);
+  };
+
+  const handleSaveDefaultCompany = async (e) => {
+    e.preventDefault();
+    if (!defaultCompanyUser) return;
+    const targetId = defaultCompanyUser.memberId || defaultCompanyUser.userId || defaultCompanyUser.id;
+    const isUserId = !defaultCompanyUser.memberId && Boolean(defaultCompanyUser.userId);
+    setIsSavingDefaultCompany(true);
+    try {
+      if (selectedDefaultCompanyId) {
+        await setMemberDefaultCompany(targetId, selectedDefaultCompanyId, isUserId);
+        dispatch(addAlert({ type: 'success', message: 'Default login company updated successfully' }));
+      } else {
+        await clearMemberDefaultCompany(targetId, isUserId);
+        dispatch(addAlert({ type: 'success', message: 'Default login company cleared' }));
+      }
+      setIsDefaultCompanyModalOpen(false);
+      setDefaultCompanyUser(null);
+      refetchMembers();
+    } catch (err) {
+      dispatch(
+        addAlert({
+          type: 'error',
+          message: err?.response?.data?.message || 'Failed to update default company',
+        })
+      );
+    } finally {
+      setIsSavingDefaultCompany(false);
     }
   };
 
@@ -454,6 +504,37 @@ export default function OrgUsersView({
       ),
     },
     {
+      id: 'defaultCompany',
+      label: 'Default Company',
+      sortable: true,
+      sortKey: 'defaultCompanyName',
+      render: (val, row) => {
+        if (row.defaultCompanyName) {
+          return (
+            <button
+              type="button"
+              onClick={() => handleOpenDefaultCompanyModal(row)}
+              title="Click to change default login company"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
+            >
+              <Star size={11} className="fill-emerald-500 text-emerald-600 shrink-0" />
+              <span className="truncate max-w-[160px]">{row.defaultCompanyName}</span>
+            </button>
+          );
+        }
+        return (
+          <button
+            type="button"
+            onClick={() => handleOpenDefaultCompanyModal(row)}
+            title="Assign a default login company"
+            className="inline-flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 py-0.5 rounded border border-dashed border-zinc-300 dark:border-zinc-700 transition-colors"
+          >
+            <span>Not Set</span>
+          </button>
+        );
+      },
+    },
+    {
       id: 'role',
       label: 'Member Type',
       sortable: true,
@@ -530,6 +611,14 @@ export default function OrgUsersView({
       },
       tooltip: 'Assign to Multiple Companies',
       className: 'hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40',
+    },
+    {
+      key: 'default-company',
+      label: 'Default Company',
+      icon: Star,
+      onClick: (row) => handleOpenDefaultCompanyModal(row),
+      tooltip: 'Assign Default Login Company',
+      className: 'hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40',
     },
     {
       key: 'assign-role',
@@ -610,6 +699,11 @@ export default function OrgUsersView({
               >
                 <Building2 size={12} className="text-zinc-500" />
                 <span className="font-semibold">{ca.companyName}</span>
+                {member.defaultCompanyId && String(ca.companyId) === String(member.defaultCompanyId) && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                    Default
+                  </span>
+                )}
                 <span className="text-zinc-400">|</span>
                 <span className="text-zinc-600 dark:text-zinc-300 font-mono text-[11px]">{ca.roleName || 'Member'}</span>
               </span>
@@ -856,6 +950,95 @@ export default function OrgUsersView({
           </div>
         </form>
       </Modal>
+
+      {/* Default Company Modal */}
+      {defaultCompanyUser && (
+        <Modal
+          isOpen={isDefaultCompanyModalOpen}
+          onClose={() => {
+            setIsDefaultCompanyModalOpen(false);
+            setDefaultCompanyUser(null);
+          }}
+          title="Assign Default Login Company"
+          size="md"
+        >
+          <form onSubmit={handleSaveDefaultCompany} className="space-y-4">
+            <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700 text-xs space-y-1">
+              <div className="font-semibold text-zinc-900 dark:text-zinc-100">
+                {defaultCompanyUser.fullName}
+              </div>
+              <div className="text-zinc-500 dark:text-zinc-400">{defaultCompanyUser.email}</div>
+            </div>
+
+            {(() => {
+              const authorizedList = (defaultCompanyUser.companyAccess || []).filter(
+                (ca) => ca.active !== false && ca.companyId
+              );
+              const fallbackOwnerList =
+                authorizedList.length === 0 && defaultCompanyUser.memberType === 'OWNER'
+                  ? companies.map((c) => ({
+                    companyId: c.id,
+                    companyName: c.name || c.companyName || c.legalName,
+                    roleName: 'Owner',
+                  }))
+                  : [];
+              const selectableCompanies = authorizedList.length > 0 ? authorizedList : fallbackOwnerList;
+
+              return (
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 mb-1.5">
+                    Default Login Company
+                  </label>
+                  {selectableCompanies.length === 0 ? (
+                    <div className="p-3 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 text-xs text-amber-800 dark:text-amber-300">
+                      This user currently has no authorized companies. Assign company access first before setting a default company.
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        value={selectedDefaultCompanyId}
+                        onChange={(e) => setSelectedDefaultCompanyId(e.target.value)}
+                        aria-label="Default Login Company"
+                        className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary/20"
+                      >
+                        <option value="">No Default Company (Prompt at Login)</option>
+                        {selectableCompanies.map((ca) => (
+                          <option key={ca.companyId} value={ca.companyId}>
+                            {ca.companyName} {ca.roleName ? `(${ca.roleName})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1.5 text-[11px] text-zinc-500 dark:text-zinc-400">
+                        When assigned, this user opens the selected default company dashboard automatically on login without manual company selection. Only authorized companies are available.
+                      </p>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDefaultCompanyModalOpen(false);
+                  setDefaultCompanyUser(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingDefaultCompany || ((defaultCompanyUser.companyAccess || []).filter((ca) => ca.active !== false && ca.companyId).length === 0 && defaultCompanyUser.memberType !== 'OWNER')}
+                className="btn-primary"
+              >
+                {isSavingDefaultCompany ? 'Saving...' : 'Save Default Company'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       {/* Cross-Company Access Assignment Modal */}
       {selectedUserForAccess && (

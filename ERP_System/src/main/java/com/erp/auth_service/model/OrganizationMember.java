@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "organization_member", uniqueConstraints = @UniqueConstraint(name = "uk_organization_member_user", columnNames = {"organization_id", "user_id"}))
+@Table(name = "organization_member", uniqueConstraints = @UniqueConstraint(name = "uk_organization_member_user", columnNames = {
+        "organization_id", "user_id" }))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -48,6 +49,10 @@ public class OrganizationMember {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invited_by")
     private User invitedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "default_company_id")
+    private Company defaultCompany;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;

@@ -129,6 +129,15 @@ public class SsoAuthorizationService {
             return AuthorizationDecision.allow(featureCode, primaryAction, primaryPermissionCode, "AUTH_ME_READ");
         }
 
+        // Authenticated company switching validates org membership + company access
+        // inside AuthService
+        if ("AUTH".equalsIgnoreCase(featureCode)
+                && ("/api/sso/auth/switch-company".equals(requestPath)
+                        || "/api/auth/switch-company".equals(requestPath))) {
+            return AuthorizationDecision.allow(featureCode, primaryAction, primaryPermissionCode,
+                    "AUTH_SWITCH_COMPANY");
+        }
+
         // 4. Check DB permissions
         return evaluateDbAuthorization(authentication, featureCode, candidateActions, primaryAction,
                 primaryPermissionCode);
@@ -299,7 +308,8 @@ public class SsoAuthorizationService {
                         return AuthorizationDecision.deny(featureCode, primaryAction, primaryPermissionCode,
                                 "ACTIVE_ORGANIZATION_MEMBERSHIP_REQUIRED");
                     }
-                    if (memberOpt.isPresent() && memberOpt.get().getMemberType() == com.erp.auth_service.utility.MemberType.OWNER) {
+                    if (memberOpt.isPresent()
+                            && memberOpt.get().getMemberType() == com.erp.auth_service.utility.MemberType.OWNER) {
                         for (String candidateCode : candidatePermissionCodes) {
                             String upperCode = candidateCode.toUpperCase(Locale.ROOT);
                             if (EXPLICIT_ORG_OWNER_PERMISSIONS.contains(upperCode)) {
@@ -319,11 +329,13 @@ public class SsoAuthorizationService {
                                             log.warn("Feature is null for permission [{}]", candidateCode);
                                         }
                                     } catch (Exception e) {
-                                        log.warn("Could not inspect feature active status for permission [{}]: {}", candidateCode, e.getMessage());
+                                        log.warn("Could not inspect feature active status for permission [{}]: {}",
+                                                candidateCode, e.getMessage());
                                         isFeatureActive = false;
                                     }
                                     if (!isPermissionActive || !isFeatureActive) {
-                                        log.warn("Access denied: Permission [{}] is disabled or feature unavailable", candidateCode);
+                                        log.warn("Access denied: Permission [{}] is disabled or feature unavailable",
+                                                candidateCode);
                                         return AuthorizationDecision.deny(featureCode, primaryAction, candidateCode,
                                                 "PERMISSION_DISABLED");
                                     }
@@ -399,7 +411,8 @@ public class SsoAuthorizationService {
                                 log.warn("Feature is null for permission [{}]", candidateCode);
                             }
                         } catch (Exception e) {
-                            log.warn("Could not inspect feature active status for permission [{}]: {}", candidateCode, e.getMessage());
+                            log.warn("Could not inspect feature active status for permission [{}]: {}", candidateCode,
+                                    e.getMessage());
                             isFeatureActive = false;
                         }
                         if (!isPermissionActive || !isFeatureActive) {

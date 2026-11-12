@@ -1422,7 +1422,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public SsoMeResponse getSsoMe(String accessToken, UUID requestedCompanyId) {
 
         if (accessToken == null || accessToken.isBlank()) {
@@ -1472,10 +1472,21 @@ public class UserServiceImpl implements UserService {
 
             if (memberOpt.isPresent()) {
                 OrganizationMember member = memberOpt.get();
+                Company defaultComp = member.getDefaultCompany();
+                boolean defaultValid = defaultComp != null
+                        && Boolean.TRUE.equals(defaultComp.getActive())
+                        && defaultComp.getOrganization() != null
+                        && orgId.equals(defaultComp.getOrganization().getId())
+                        && (member.getMemberType() == MemberType.OWNER
+                                || memberCompanyAccessRepository
+                                        .findActiveCompany(member.getId(), orgId, defaultComp.getId())
+                                        .isPresent());
                 membershipCtx = SsoMeResponse.MembershipContext.builder()
                         .memberId(member.getId())
                         .memberType(member.getMemberType())
                         .membershipStatus(member.getMembershipStatus())
+                        .defaultCompanyId(defaultValid ? defaultComp.getId() : null)
+                        .defaultCompanyName(defaultValid ? defaultComp.getCompanyName() : null)
                         .joinedAt(member.getJoinedAt())
                         .build();
 
@@ -1486,7 +1497,8 @@ public class UserServiceImpl implements UserService {
                             List<com.erp.auth_service.dto.response.RoleResponse> compRoles = new java.util.ArrayList<>();
                             if (userRoleRepository != null) {
                                 try {
-                                    var urs = userRoleRepository.findAllByUser_IdAndRole_Company_Id(userId, mca.getCompany().getId());
+                                    var urs = userRoleRepository.findAllByUser_IdAndRole_Company_Id(userId,
+                                            mca.getCompany().getId());
                                     if (urs != null) {
                                         for (UserRole ur : urs) {
                                             if (ur.getRole() != null && ur.getRole().isStatus()) {
@@ -1498,7 +1510,8 @@ public class UserServiceImpl implements UserService {
                                             }
                                         }
                                     }
-                                } catch (Exception ignored) {}
+                                } catch (Exception ignored) {
+                                }
                             }
                             if (compRoles.isEmpty() && member.getMemberType() == MemberType.OWNER) {
                                 compRoles.add(com.erp.auth_service.dto.response.RoleResponse.builder()
@@ -1506,7 +1519,8 @@ public class UserServiceImpl implements UserService {
                                         .status(true)
                                         .build());
                             }
-                            com.erp.auth_service.dto.response.RoleResponse primaryRole = compRoles.isEmpty() ? null : compRoles.get(0);
+                            com.erp.auth_service.dto.response.RoleResponse primaryRole = compRoles.isEmpty() ? null
+                                    : compRoles.get(0);
 
                             accessibleCompaniesAcc.add(
                                     SsoMeResponse.CompanyContext.builder()
@@ -1517,7 +1531,8 @@ public class UserServiceImpl implements UserService {
                                             .active(mca.getCompany().getActive())
                                             .membership(SsoMeResponse.CompanyMembershipContext.builder()
                                                     .id(mca.getId())
-                                                    .status(Boolean.TRUE.equals(mca.getActive()) ? "ACTIVE" : "INACTIVE")
+                                                    .status(Boolean.TRUE.equals(mca.getActive()) ? "ACTIVE"
+                                                            : "INACTIVE")
                                                     .role(primaryRole)
                                                     .roles(compRoles)
                                                     .build())
@@ -1796,7 +1811,7 @@ public class UserServiceImpl implements UserService {
                     // Fallback if no plan modules mapped (e.g. legacy/mock tests)
                     companyModuleRepository.findByCompany_IdAndActiveTrue(effectiveCompanyId).stream()
                             .filter(cm -> cm.getModule() != null
-                                     && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
+                                    && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
                                     && !"SYSTEM_ADMIN".equalsIgnoreCase(cm.getModule().getName()))
                             .forEach(cm -> authorizedModulesAcc.add(
                                     SsoMeResponse.ModuleContext.builder()
@@ -1925,7 +1940,8 @@ public class UserServiceImpl implements UserService {
         authorizedModules = nestFeaturesAndPermissions(authorizedModules, effective);
 
         // ── Populate accessibleCompanies[].modules ─────────────────────────
-        // For each accessible company, load its active modules and nest its company-specific features+permissions
+        // For each accessible company, load its active modules and nest its
+        // company-specific features+permissions
         if (!accessibleCompanies.isEmpty()) {
             java.util.List<SsoMeResponse.CompanyContext> enrichedCompanies = new java.util.ArrayList<>();
             for (SsoMeResponse.CompanyContext cc : accessibleCompanies) {
@@ -1935,7 +1951,8 @@ public class UserServiceImpl implements UserService {
                 } else {
                     try {
                         if (companyModuleRepository != null) {
-                            java.util.List<CompanyModule> cms = companyModuleRepository.findByCompany_IdAndActiveTrue(cc.getId());
+                            java.util.List<CompanyModule> cms = companyModuleRepository
+                                    .findByCompany_IdAndActiveTrue(cc.getId());
                             for (CompanyModule cm : cms) {
                                 if (cm.getModule() != null && Boolean.TRUE.equals(cm.getModule().getModuleStatus())
                                         && !"SYSTEM_ADMIN".equalsIgnoreCase(cm.getModule().getName())) {
@@ -1952,11 +1969,12 @@ public class UserServiceImpl implements UserService {
                             }
                         }
                         if (permissionService != null) {
-                            com.erp.auth_service.dto.response.EffectivePermissionsResponse compEffective =
-                                    permissionService.getEffectivePermissions(userId, cc.getId());
+                            com.erp.auth_service.dto.response.EffectivePermissionsResponse compEffective = permissionService
+                                    .getEffectivePermissions(userId, cc.getId());
                             compMods = nestFeaturesAndPermissions(compMods, compEffective);
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
                 enrichedCompanies.add(SsoMeResponse.CompanyContext.builder()
                         .id(cc.getId())
@@ -2005,7 +2023,8 @@ public class UserServiceImpl implements UserService {
                                         .role(roles.isEmpty() ? null : roles.get(0))
                                         .roles(roles)
                                         .build())
-                                .modules(authorizedModules != null ? authorizedModules : java.util.Collections.emptyList())
+                                .modules(authorizedModules != null ? authorizedModules
+                                        : java.util.Collections.emptyList())
                                 .build())
                 .companies(accessibleCompanies)
                 .membership(membershipCtx)
@@ -2050,14 +2069,14 @@ public class UserServiceImpl implements UserService {
         }
 
         // Build: moduleName (upper) -> map of featureCode -> FeatureContext
-        java.util.Map<String, java.util.Map<String, SsoMeResponse.FeatureContext>> featsByModule =
-                new java.util.HashMap<>();
+        java.util.Map<String, java.util.Map<String, SsoMeResponse.FeatureContext>> featsByModule = new java.util.HashMap<>();
         if (effective.getPermissions() != null) {
             for (com.erp.auth_service.dto.response.UserPermissionDetailDto perm : effective.getPermissions()) {
                 String modKey = perm.getModuleName() != null
-                        ? perm.getModuleName().toUpperCase(java.util.Locale.ROOT) : "";
-                java.util.Map<String, SsoMeResponse.FeatureContext> featureMap =
-                        featsByModule.computeIfAbsent(modKey, k -> new java.util.LinkedHashMap<>());
+                        ? perm.getModuleName().toUpperCase(java.util.Locale.ROOT)
+                        : "";
+                java.util.Map<String, SsoMeResponse.FeatureContext> featureMap = featsByModule.computeIfAbsent(modKey,
+                        k -> new java.util.LinkedHashMap<>());
                 featureMap.computeIfAbsent(perm.getFeatureCode(), fc -> SsoMeResponse.FeatureContext.builder()
                         .code(perm.getFeatureCode())
                         .name(perm.getFeatureCode())
@@ -2072,7 +2091,8 @@ public class UserServiceImpl implements UserService {
         if (effective.getFeatures() != null) {
             for (com.erp.auth_service.dto.response.UserFeatureDto feat : effective.getFeatures()) {
                 String modKey = feat.getModuleName() != null
-                        ? feat.getModuleName().toUpperCase(java.util.Locale.ROOT) : "";
+                        ? feat.getModuleName().toUpperCase(java.util.Locale.ROOT)
+                        : "";
                 java.util.Map<String, SsoMeResponse.FeatureContext> featureMap = featsByModule.get(modKey);
                 if (featureMap != null && featureMap.containsKey(feat.getFeatureCode())) {
                     SsoMeResponse.FeatureContext fc = featureMap.get(feat.getFeatureCode());
@@ -2085,10 +2105,12 @@ public class UserServiceImpl implements UserService {
         List<SsoMeResponse.ModuleContext> result = new java.util.ArrayList<>();
         for (SsoMeResponse.ModuleContext mc : rawModules) {
             String modKey = mc.getName() != null
-                    ? mc.getName().toUpperCase(java.util.Locale.ROOT) : "";
+                    ? mc.getName().toUpperCase(java.util.Locale.ROOT)
+                    : "";
             java.util.Map<String, SsoMeResponse.FeatureContext> featureMap = featsByModule.get(modKey);
             if (featureMap == null) {
-                for (java.util.Map.Entry<String, java.util.Map<String, SsoMeResponse.FeatureContext>> entry : featsByModule.entrySet()) {
+                for (java.util.Map.Entry<String, java.util.Map<String, SsoMeResponse.FeatureContext>> entry : featsByModule
+                        .entrySet()) {
                     if (modKey.startsWith(entry.getKey()) || entry.getKey().startsWith(modKey)) {
                         featureMap = entry.getValue();
                         break;

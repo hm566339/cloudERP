@@ -83,9 +83,11 @@ export default function CompanyLayout() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [workspacePopupOpen, setWorkspacePopupOpen] = useState(false)
   const [switchTenantPopupOpen, setSwitchTenantPopupOpen] = useState(false)
+  const [headerCompanySwitchOpen, setHeaderCompanySwitchOpen] = useState(false)
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false)
   const [activeSetting, setActiveSetting] = useState('general')
   const workspaceRef = useRef(null)
+  const headerCompanyTriggerRef = useRef(null)
 
   const accountCompanies = useAppSelector(selectAccountCompanies)
 
@@ -419,25 +421,53 @@ export default function CompanyLayout() {
                 <Menu size={20} />
               </button>
 
-              {/* Breadcrumbs */}
+              {/* Breadcrumbs + Header Company Display & Switcher */}
               <nav className="hidden sm:flex items-center gap-2 text-[10.4px] text-zinc-500 dark:text-[#A0A6B5] font-medium">
-                <Link
-                  to={isSuperAdminGlobal ? '/super-admin/dashboard' : (selectedCompany ? buildPath('dashboard') : '/super-admin/dashboard')}
-                  className="hover:text-primary transition-colors flex items-center gap-1.5 bg-[var(--color-surface-2)] dark:bg-[#1D212C] px-2.5 py-1 rounded-md border border-[var(--color-border)] dark:border-[#2A2F3D] text-[var(--color-text-primary)] dark:text-[#E6E8EE] shadow-2xs"
-                >
-                  <LayoutDashboard size={14} className="text-zinc-400 dark:text-[#6B7184]" />
-                  {isSuperAdminGlobal ? (
-                    'Global Console'
-                  ) : organization?.name ? (
-                    <span className="flex items-center gap-1 truncate max-w-[200px] md:max-w-none">
-                      <strong className="capitalize text-zinc-800 dark:text-[#E6E8EE]">{organization.name}</strong>
-                      <span className="text-zinc-300 dark:text-zinc-600">/</span>
-                      <span>{selectedCompany ? selectedCompany.name : 'Workspace'}</span>
-                    </span>
-                  ) : (
-                    selectedCompany ? selectedCompany.name : 'Workspace'
-                  )}
-                </Link>
+                {isSuperAdminGlobal ? (
+                  <Link
+                    to="/super-admin/dashboard"
+                    className="hover:text-primary transition-colors flex items-center gap-1.5 bg-[var(--color-surface-2)] dark:bg-[#1D212C] px-2.5 py-1 rounded-md border border-[var(--color-border)] dark:border-[#2A2F3D] text-[var(--color-text-primary)] dark:text-[#E6E8EE] shadow-2xs"
+                  >
+                    <LayoutDashboard size={14} className="text-zinc-400 dark:text-[#6B7184]" />
+                    Global Console
+                  </Link>
+                ) : (
+                  <div className="relative">
+                    <button
+                      ref={headerCompanyTriggerRef}
+                      type="button"
+                      onClick={() => {
+                        if (canSwitchTenant) {
+                          setHeaderCompanySwitchOpen((prev) => !prev);
+                        }
+                      }}
+                      title={canSwitchTenant ? 'Switch active company' : 'Active company'}
+                      className={`flex items-center gap-1.5 bg-[var(--color-surface-2)] dark:bg-[#1D212C] px-2.5 py-1 rounded-md border border-[var(--color-border)] dark:border-[#2A2F3D] text-[var(--color-text-primary)] dark:text-[#E6E8EE] shadow-2xs transition-colors ${canSwitchTenant ? 'hover:border-primary/50 hover:text-primary cursor-pointer' : ''}`}
+                    >
+                      <Building2 size={14} className="text-zinc-400 dark:text-[#6B7184] shrink-0" />
+                      {organization?.name ? (
+                        <span className="flex items-center gap-1 truncate max-w-[220px] md:max-w-none">
+                          <strong className="capitalize text-zinc-800 dark:text-[#E6E8EE]">{organization.name}</strong>
+                          <span className="text-zinc-300 dark:text-zinc-600">/</span>
+                          <span>{selectedCompany ? selectedCompany.name : 'Workspace'}</span>
+                        </span>
+                      ) : (
+                        <span>{selectedCompany ? selectedCompany.name : 'Workspace'}</span>
+                      )}
+                      {canSwitchTenant && (
+                        <ChevronDown size={13} className={`text-zinc-400 transition-transform ${headerCompanySwitchOpen ? 'rotate-180' : ''}`} />
+                      )}
+                    </button>
+                    {canSwitchTenant && (
+                      <SwitchTenantPopup
+                        open={headerCompanySwitchOpen}
+                        onClose={() => setHeaderCompanySwitchOpen(false)}
+                        placement="top-left"
+                        triggerRef={headerCompanyTriggerRef}
+                      />
+                    )}
+                  </div>
+                )}
                 {breadcrumbs.map((bc, idx) => (
                   <React.Fragment key={bc.url}>
                     <ChevronRight size={14} className="text-zinc-300 dark:text-zinc-600" />
@@ -627,18 +657,18 @@ export default function CompanyLayout() {
           <SubscriptionNoticeBanner />
 
           <main className={`flex-1 min-h-0 min-w-0 flex flex-col bg-background dark:bg-[#0F1117] overscroll-contain ${isFullHeightPage ? 'overflow-hidden p-0' : 'overflow-x-hidden overflow-y-auto'}`} >
-              <div className={`w-full flex-1 flex flex-col min-w-0 ${isFullHeightPage ? 'h-full min-h-0' : 'min-h-full max-w-[2560px] 5xl:max-w-[3200px] mx-auto'}`}>
-                <div className="flex-1 flex flex-col min-h-0 min-w-0">
-                  <ErrorBoundary>
-                    <Suspense fallback={<RouteLoading />}>
-                      <Outlet context={{ accessibleModuleKeys, accessLoading, companyModulesData, authContext, isOwner: isOwnerUser }} />
-                    </Suspense>
-                  </ErrorBoundary>
-                </div>
-                {!isFullHeightPage && (
-                  <AppFooter />
-                )}
+            <div className={`w-full flex-1 flex flex-col min-w-0 ${isFullHeightPage ? 'h-full min-h-0' : 'min-h-full max-w-[2560px] 5xl:max-w-[3200px] mx-auto'}`}>
+              <div className="flex-1 flex flex-col min-h-0 min-w-0">
+                <ErrorBoundary>
+                  <Suspense fallback={<RouteLoading />}>
+                    <Outlet context={{ accessibleModuleKeys, accessLoading, companyModulesData, authContext, isOwner: isOwnerUser }} />
+                  </Suspense>
+                </ErrorBoundary>
               </div>
+              {!isFullHeightPage && (
+                <AppFooter />
+              )}
+            </div>
           </main>
         </div>
       </div>

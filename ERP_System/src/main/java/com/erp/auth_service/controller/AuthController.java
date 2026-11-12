@@ -107,6 +107,45 @@ public class AuthController {
         return ResponseEntity.ok().headers(headers).body(ResponseWrapper.success(response));
     }
 
+    @PostMapping("/auth/switch-company")
+    public ResponseEntity<ResponseWrapper<LoginResponse>> switchCompany(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody(required = false) Map<String, Object> body,
+            HttpServletRequest httpServletRequest) {
+        String token = extractToken(authHeader, httpServletRequest);
+        UUID companyId = extractCompanyIdFromBody(body);
+
+        LoginResponse response = authService.switchCompany(
+                token, companyId, getClientIp(httpServletRequest), httpServletRequest.getHeader("User-Agent"));
+
+        HttpHeaders headers = new HttpHeaders();
+        if (response != null && StringUtils.hasText(response.getAccessToken())) {
+            attachAuthCookies(headers, response.getAccessToken(), response.getRefreshToken(),
+                    isSecureCookie(httpServletRequest));
+        }
+
+        return ResponseEntity.ok().headers(headers).body(ResponseWrapper.success(response));
+    }
+
+    @SuppressWarnings("unchecked")
+    private UUID extractCompanyIdFromBody(Map<String, Object> body) {
+        if (body == null) {
+            return null;
+        }
+        Object raw = body.get("companyId");
+        if (raw == null && body.get("data") instanceof Map<?, ?> nested) {
+            raw = nested.get("companyId");
+        }
+        if (raw == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(String.valueOf(raw).trim());
+        } catch (IllegalArgumentException ex) {
+            throw new com.erp.auth_service.exception.BadRequestException("Invalid companyId format");
+        }
+    }
+
     // ==================== ADMIN LOGIN ====================
     @PostMapping("/auth/admin-login")
     public ResponseEntity<LoginResponse> adminLogin(

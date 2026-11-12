@@ -54,4 +54,6 @@ public interface AuthService {
     LoginResponse adminLogin(LoginRequest request, String ip, String userAgent);
 
     Map<String, Object> authorize(String accessToken, UUID userId, UUID moduleId);
+
+    LoginResponse switchCompany(String accessToken, UUID companyId, String ip, String userAgent);
 }

@@ -25,5 +25,7 @@ public class PlatformMemberSummaryResponse {
     private List<String> authorizedCompanies;
     private List<UUID> authorizedCompanyIds;
     private List<MemberCompanyRoleDto> companyAccess;
+    private UUID defaultCompanyId;
+    private String defaultCompanyName;
     private LocalDateTime createdAt;
 }

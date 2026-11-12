@@ -4,9 +4,11 @@ import com.erp.auth_service.dto.platform.MemberCompanyRoleDto;
 import com.erp.auth_service.dto.platform.PlatformMemberSummaryResponse;
 import com.erp.auth_service.dto.request.AssignRoleRequest;
 import com.erp.auth_service.dto.request.CompanyAccessRequest;
+import com.erp.auth_service.dto.request.DefaultCompanyRequest;
 import com.erp.auth_service.dto.request.InviteMemberRequest;
 import com.erp.auth_service.dto.request.RequestWrapper;
 import com.erp.auth_service.dto.response.AccessibleCompanyResponse;
+import com.erp.auth_service.dto.response.DefaultCompanyResponse;
 import com.erp.auth_service.dto.response.InviteMemberResponse;
 import com.erp.auth_service.dto.response.ResponseWrapper;
 import com.erp.auth_service.exception.BadRequestException;
@@ -245,6 +247,51 @@ public class OrganizationAdministrationController {
     public ResponseEntity<ResponseWrapper<List<MemberCompanyRoleDto>>> getUserCompanyAccess(
             @PathVariable UUID userId) {
         return ResponseEntity.ok(ResponseWrapper.success(administrationService.userCompanyAccesses(userId)));
+    }
+
+    @GetMapping("/{memberId}/default-company")
+    public ResponseEntity<ResponseWrapper<DefaultCompanyResponse>> getMemberDefaultCompany(
+            @PathVariable UUID memberId) {
+        return ResponseEntity.ok(ResponseWrapper.success(administrationService.getDefaultCompany(memberId)));
+    }
+
+    @PutMapping("/{memberId}/default-company")
+    public ResponseEntity<ResponseWrapper<DefaultCompanyResponse>> setMemberDefaultCompany(
+            @PathVariable UUID memberId,
+            @RequestBody DefaultCompanyRequest request) {
+        UUID companyId = request != null ? request.getCompanyId() : null;
+        return ResponseEntity.ok(ResponseWrapper.success(
+                administrationService.setDefaultCompany(memberId, companyId)));
+    }
+
+    @DeleteMapping("/{memberId}/default-company")
+    public ResponseEntity<ResponseWrapper<DefaultCompanyResponse>> clearMemberDefaultCompany(
+            @PathVariable UUID memberId) {
+        return ResponseEntity.ok(ResponseWrapper.success(administrationService.clearDefaultCompany(memberId)));
+    }
+
+    @GetMapping("/user/{userId}/default-company")
+    public ResponseEntity<ResponseWrapper<DefaultCompanyResponse>> getUserDefaultCompany(
+            @PathVariable UUID userId) {
+        UUID memberId = administrationService.resolveMemberIdByUserId(userId);
+        return ResponseEntity.ok(ResponseWrapper.success(administrationService.getDefaultCompany(memberId)));
+    }
+
+    @PutMapping("/user/{userId}/default-company")
+    public ResponseEntity<ResponseWrapper<DefaultCompanyResponse>> setUserDefaultCompany(
+            @PathVariable UUID userId,
+            @RequestBody DefaultCompanyRequest request) {
+        UUID memberId = administrationService.resolveMemberIdByUserId(userId);
+        UUID companyId = request != null ? request.getCompanyId() : null;
+        return ResponseEntity.ok(ResponseWrapper.success(
+                administrationService.setDefaultCompany(memberId, companyId)));
+    }
+
+    @DeleteMapping("/user/{userId}/default-company")
+    public ResponseEntity<ResponseWrapper<DefaultCompanyResponse>> clearUserDefaultCompany(
+            @PathVariable UUID userId) {
+        UUID memberId = administrationService.resolveMemberIdByUserId(userId);
+        return ResponseEntity.ok(ResponseWrapper.success(administrationService.clearDefaultCompany(memberId)));
     }
 
     private UUID resolveOrgId(UUID explicitOrgId, UUID headerOrgId, UUID bodyOrgId) {

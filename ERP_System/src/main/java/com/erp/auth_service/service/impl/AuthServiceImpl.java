@@ -670,7 +670,21 @@ public class AuthServiceImpl implements AuthService {
                         throw new BadCredentialsException("Invalid credentials");
                 }
 
-                if (request.getCompanyId() == null && companies.size() > 1) {
+                Company defaultComp = member.getDefaultCompany();
+                UUID defaultCompanyId = null;
+                String defaultCompanyName = null;
+                if (defaultComp != null
+                                && Boolean.TRUE.equals(defaultComp.getActive())
+                                && (defaultComp.getOrganization() == null
+                                                || organization.getId().equals(defaultComp.getOrganization().getId()))
+                                && access.stream().anyMatch(
+                                                a -> a.getCompany() != null
+                                                                && a.getCompany().getId().equals(defaultComp.getId()))) {
+                        defaultCompanyId = defaultComp.getId();
+                        defaultCompanyName = defaultComp.getCompanyName();
+                }
+
+                if (request.getCompanyId() == null && defaultCompanyId == null && companies.size() > 1) {
                         log.info("Organization login requires company selection | orgCode={} | userId={} | companyCount={}",
                                         request.getOrganizationCode(), user.getId(), companies.size());
                         return LoginResponse.builder()
@@ -683,7 +697,9 @@ public class AuthServiceImpl implements AuthService {
                                         .build();
                 }
 
-                UUID companyId = request.getCompanyId() == null ? companies.get(0).getId() : request.getCompanyId();
+                UUID companyId = request.getCompanyId() != null
+                                ? request.getCompanyId()
+                                : (defaultCompanyId != null ? defaultCompanyId : companies.get(0).getId());
                 Company company = memberCompanyAccessRepository.findActiveCompany(
                                 member.getId(), organization.getId(), companyId)
                                 .map(MemberCompanyAccess::getCompany)
@@ -754,6 +770,9 @@ public class AuthServiceImpl implements AuthService {
                                 .organization(LoginResponse.OrganizationContext.builder()
                                                 .id(organization.getId()).name(organization.getDisplayName())
                                                 .code(organization.getOrganizationCode()).build())
+                                .defaultCompanyId(defaultCompanyId)
+                                .defaultCompanyName(defaultCompanyName)
+                                .companies(companies)
                                 .redirectUrl(redirectUrl);
 
                 if (organizationSecuritySettingsRepository != null && organizationSecuritySettingsRepository
@@ -2430,12 +2449,15 @@ public class AuthServiceImpl implements AuthService {
                 if (company.getOrganization() != null) {
                         ensureCompanyMemberAccess(user, company, company.getOrganization());
                         if (organizationMemberRepository != null) {
-                                organizationMemberRepository.findByOrganization_IdAndUser_Id(company.getOrganization().getId(), user.getId())
-                                        .ifPresent(om -> {
-                                                om.setMembershipStatus(com.erp.auth_service.utility.MembershipStatus.ACTIVE);
-                                                om.setJoinedAt(LocalDateTime.now());
-                                                organizationMemberRepository.save(om);
-                                        });
+                                organizationMemberRepository
+                                                .findByOrganization_IdAndUser_Id(company.getOrganization().getId(),
+                                                                user.getId())
+                                                .ifPresent(om -> {
+                                                        om.setMembershipStatus(
+                                                                        com.erp.auth_service.utility.MembershipStatus.ACTIVE);
+                                                        om.setJoinedAt(LocalDateTime.now());
+                                                        organizationMemberRepository.save(om);
+                                                });
                         }
                 }
 
@@ -2607,10 +2629,6 @@ public class AuthServiceImpl implements AuthService {
                                                                         || "SYSTEM_ADMIN".equalsIgnoreCase(
                                                                                         r.getRole().getName())
                                                                         || "ROLE_SYSTEM_ADMIN".equalsIgnoreCase(
-                                                                                        r.getRole().getName())
-                                                                        || "OWNER".equalsIgnoreCase(
-                                                                                        r.getRole().getName())
-                                                                        || "ROLE_OWNER".equalsIgnoreCase(
                                                                                         r.getRole().getName())))
                                         .map(r -> r.getRole().getName())
                                         .filter(name -> name != null && !name.isBlank())
@@ -3635,5 +3653,188 @@ public class AuthServiceImpl implements AuthService {
                                         .orElse(getAccessTokenExpirationMinutes());
                 }
                 return getAccessTokenExpirationMinutes();
+        }
+
+        @Override
+        @Transactional
+        public LoginResponse switchCompany(String accessToken, UUID companyId, String ip, String userAgent) {
+                if (accessToken == null || accessToken.isBlank()) {
+                        throw new BadCredentialsException("Authentication required");
+                }
+                if (companyId == null) {
+                        throw new BadRequestException("companyId is required");
+                }
+
+                LocalDateTime now = LocalDateTime.now();
+                Session session = sessionRepository.findByAccessToken(accessToken)
+                                .orElseThrow(() -> new BadCredentialsException("Invalid or expired session"));
+                if (session.getAccessTokenValidTill() == null || session.getAccessTokenValidTill().isBefore(now)) {
+                        throw new BadCredentialsException("Session expired. Please login again.");
+                }
+
+                User user = session.getUser();
+                if (user == null || user.getAccountStatus() != AccountStatus.ACTIVE) {
+                        throw new InvalidOperationException("User account is inactive");
+                }
+
+                Organization organization = session.getOrganization();
+                if (organization == null && session.getCompany() != null) {
+                        organization = session.getCompany().getOrganization();
+                }
+                if (organization == null) {
+                        throw new BadCredentialsException("Organization context missing");
+                }
+                final UUID orgId = organization.getId();
+
+                OrganizationMember member = organizationMemberRepository
+                                .findByOrganization_IdAndUser_IdAndMembershipStatus(orgId, user.getId(),
+                                                MembershipStatus.ACTIVE)
+                                .orElseThrow(() -> new ForbiddenException("Active organization membership required"));
+
+                Company targetCompany = companyRepository.findById(companyId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
+
+                if (targetCompany.getOrganization() == null
+                                || !orgId.equals(targetCompany.getOrganization().getId())) {
+                        throw new ForbiddenException(
+                                        "Access denied: Company does not belong to active organization");
+                }
+                if (!Boolean.TRUE.equals(targetCompany.getActive())) {
+                        throw new ForbiddenException("Access denied: Target company is inactive");
+                }
+
+                boolean isOwner = member.getMemberType() == MemberType.OWNER;
+                List<MemberCompanyAccess> activeAccess = memberCompanyAccessRepository
+                                .findActiveForMember(member.getId(), orgId);
+                if (!isOwner) {
+                        memberCompanyAccessRepository.findActiveCompany(member.getId(), orgId, companyId)
+                                        .orElseThrow(() -> new ForbiddenException(
+                                                        "Access denied: User does not have access to requested company"));
+                }
+
+                List<LoginResponse.CompanyChoice> companies = activeAccess.stream()
+                                .filter(a -> a.getCompany() != null)
+                                .map(a -> LoginResponse.CompanyChoice.builder()
+                                                .id(a.getCompany().getId())
+                                                .name(a.getCompany().getCompanyName())
+                                                .code(a.getCompany().getCompanyCode())
+                                                .build())
+                                .toList();
+
+                UUID familyId = UUID.randomUUID();
+                if (refreshTokenRecordRepository != null && session.getRefreshToken() != null
+                                && !session.getRefreshToken().isBlank()) {
+                        Optional<RefreshTokenRecord> currentRtOpt = refreshTokenRecordRepository
+                                        .findByTokenHash(hashRefreshToken(session.getRefreshToken()));
+                        if (currentRtOpt.isPresent()) {
+                                RefreshTokenRecord currentRt = currentRtOpt.get();
+                                if (currentRt.getFamilyId() != null) {
+                                        familyId = currentRt.getFamilyId();
+                                }
+                                if (currentRt.getUsedAt() == null) {
+                                        currentRt.setUsedAt(now);
+                                        refreshTokenRecordRepository.save(currentRt);
+                                }
+                        }
+                }
+
+                Module targetModule = session.getModule();
+                if (!isOwner && targetModule != null) {
+                        boolean moduleAccessible = companyModuleRepository
+                                        .findByCompany_IdAndModule_IdAndActiveTrue(targetCompany.getId(),
+                                                        targetModule.getId())
+                                        .map(cm -> userPortalAccessRepository
+                                                        .findByUser_IdAndCompanyModule_IdAndStatusTrue(user.getId(),
+                                                                        cm.getId())
+                                                        .isPresent())
+                                        .orElse(false);
+                        if (!moduleAccessible) {
+                                targetModule = null;
+                        }
+                }
+
+                int sessionMinutes = resolveSessionTimeoutMinutes(orgId);
+                Map<String, Object> claims;
+                if (isOwner) {
+                        claims = buildOwnerClaims(user, organization);
+                        claims.put("companyId", targetCompany.getId().toString());
+                        claims.put("companyCode", targetCompany.getCompanyCode());
+                        claims.put("companyName", targetCompany.getCompanyName());
+                        claims.put("sessionId", session.getId().toString());
+                } else {
+                        String effectiveClientId = (targetModule != null && targetModule.getClientId() != null)
+                                        ? targetModule.getClientId().toString()
+                                        : "ERP_WORKSPACE";
+                        claims = buildClaims(user, targetCompany, targetModule, effectiveClientId);
+                        claims.put("sessionId", session.getId().toString());
+                }
+
+                String newAccessToken = jwtService.generateAccessToken(user.getUsername(), claims, sessionMinutes);
+                String newRefreshToken = jwtService.generateRefreshToken(user.getUsername(),
+                                targetCompany.getCompanyCode());
+
+                session.setCompany(targetCompany);
+                session.setOrganization(organization);
+                session.setModule(targetModule);
+                session.setAccessToken(newAccessToken);
+                session.setAccessTokenValidTill(now.plusMinutes(sessionMinutes));
+                session.setRefreshToken(newRefreshToken);
+                session.setRefreshTokenValidTill(now.plusDays(REFRESH_TOKEN_DAYS));
+                if (ip != null && !ip.isBlank()) {
+                        session.setIpAddress(ip);
+                }
+                if (userAgent != null && !userAgent.isBlank()) {
+                        session.setUserAgent(userAgent);
+                }
+                Session savedSession = sessionRepository.save(session);
+
+                if (refreshTokenRecordRepository != null
+                                && org.springframework.util.StringUtils.hasText(newRefreshToken)) {
+                        refreshTokenRecordRepository.save(RefreshTokenRecord.builder()
+                                        .session(savedSession)
+                                        .tokenHash(hashRefreshToken(newRefreshToken))
+                                        .familyId(familyId)
+                                        .issuedAt(now)
+                                        .expiresAt(now.plusDays(REFRESH_TOKEN_DAYS))
+                                        .build());
+                }
+
+                Company defaultComp = member.getDefaultCompany();
+                UUID defaultCompanyId = (defaultComp != null && Boolean.TRUE.equals(defaultComp.getActive())
+                                && (defaultComp.getOrganization() == null
+                                                || orgId.equals(defaultComp.getOrganization().getId()))
+                                && (isOwner || activeAccess.stream()
+                                                .anyMatch(a -> a.getCompany() != null
+                                                                && a.getCompany().getId().equals(defaultComp.getId()))))
+                                                                                ? defaultComp.getId()
+                                                                                : null;
+                String defaultCompanyName = defaultCompanyId != null ? defaultComp.getCompanyName() : null;
+
+                log.info("Switched active company for session | sessionId={} | userId={} | orgId={} | companyId={}",
+                                savedSession.getId(), user.getId(), orgId, targetCompany.getId());
+
+                return LoginResponse.builder()
+                                .requiresCompanySelection(false)
+                                .accessToken(newAccessToken)
+                                .refreshToken(newRefreshToken)
+                                .organization(LoginResponse.OrganizationContext.builder()
+                                                .id(organization.getId())
+                                                .name(organization.getDisplayName())
+                                                .code(organization.getOrganizationCode())
+                                                .build())
+                                .defaultCompanyId(defaultCompanyId)
+                                .defaultCompanyName(defaultCompanyName)
+                                .companies(companies)
+                                .user(UserDto.builder()
+                                                .id(user.getId())
+                                                .username(user.getUsername())
+                                                .email(user.getEmail())
+                                                .fullName(user.getFullName())
+                                                .accountStatus(user.getAccountStatus() != null
+                                                                ? user.getAccountStatus().name()
+                                                                : null)
+                                                .build())
+                                .message("Company switched successfully")
+                                .build();
         }
 }

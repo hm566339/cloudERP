@@ -2,6 +2,7 @@ package com.erp.auth_service.service;
 
 import com.erp.auth_service.dto.platform.MemberCompanyRoleDto;
 import com.erp.auth_service.dto.platform.PlatformMemberSummaryResponse;
+import com.erp.auth_service.dto.response.DefaultCompanyResponse;
 import com.erp.auth_service.exception.BadRequestException;
 import com.erp.auth_service.exception.ForbiddenException;
 import com.erp.auth_service.exception.ResourceNotFoundException;
@@ -475,5 +476,125 @@ class OrganizationAdministrationServiceImplTest {
                 // Verify session invalidation was scoped to TechNova
                 verify(sessionRepository).deleteByUser_IdAndCompany_Id(targetUser.getId(), techNova.getId());
                 verify(sessionRepository, never()).deleteByUser_IdAndCompany_Id(targetUser.getId(), apexIndia.getId());
+        }
+
+        @Test
+        @DisplayName("Owner assigns, updates, reads, and clears default company for authorized member")
+        void testOwnerAssignUpdatesReadsAndClearsDefaultCompany() {
+                companyA.setActive(true);
+                companyA.setOrganization(organization);
+                companyB.setActive(true);
+                companyB.setOrganization(organization);
+
+                RequestContext.set(owner.getUser().getId(), organization.getId(), companyA.getId(), null, AccessMode.FULL);
+                when(memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(organization.getId(),
+                                owner.getUser().getId(), MembershipStatus.ACTIVE))
+                                .thenReturn(Optional.of(owner));
+                when(memberRepository.findById(targetMember.getId())).thenReturn(Optional.of(targetMember));
+                when(companyRepository.findById(companyA.getId())).thenReturn(Optional.of(companyA));
+                when(companyRepository.findById(companyB.getId())).thenReturn(Optional.of(companyB));
+
+                MemberCompanyAccess accessA = MemberCompanyAccess.builder()
+                                .organizationMember(targetMember).organization(organization).company(companyA).active(true).build();
+                MemberCompanyAccess accessB = MemberCompanyAccess.builder()
+                                .organizationMember(targetMember).organization(organization).company(companyB).active(true).build();
+                when(accessRepository.findActiveCompany(targetMember.getId(), organization.getId(), companyA.getId()))
+                                .thenReturn(Optional.of(accessA));
+                when(accessRepository.findActiveCompany(targetMember.getId(), organization.getId(), companyB.getId()))
+                                .thenReturn(Optional.of(accessB));
+
+                DefaultCompanyResponse assigned = service.setDefaultCompany(targetMember.getId(), companyA.getId());
+                assertEquals(companyA.getId(), assigned.getDefaultCompanyId());
+                assertEquals(companyA.getCompanyName(), assigned.getDefaultCompanyName());
+                assertEquals(companyA.getId(), targetMember.getDefaultCompany().getId());
+
+                DefaultCompanyResponse updated = service.setDefaultCompany(targetMember.getId(), companyB.getId());
+                assertEquals(companyB.getId(), updated.getDefaultCompanyId());
+
+                DefaultCompanyResponse fetched = service.getDefaultCompany(targetMember.getId());
+                assertEquals(companyB.getId(), fetched.getDefaultCompanyId());
+
+                DefaultCompanyResponse cleared = service.clearDefaultCompany(targetMember.getId());
+                assertNull(cleared.getDefaultCompanyId());
+                assertNull(targetMember.getDefaultCompany());
+        }
+
+        @Test
+        @DisplayName("Default company assignment rejects unauthorized, inactive, or cross-organization company and non-admin callers")
+        void testDefaultCompanyValidationAndSecurity() {
+                companyA.setActive(true);
+                companyA.setOrganization(organization);
+                companyB.setActive(false);
+                companyB.setOrganization(organization);
+
+                Organization otherOrg = Organization.builder().id(UUID.randomUUID()).displayName("Other Org").build();
+                Company otherOrgCompany = Company.builder().id(UUID.randomUUID()).companyName("Foreign Co")
+                                .organization(otherOrg).active(true).build();
+
+                RequestContext.set(owner.getUser().getId(), organization.getId(), companyA.getId(), null, AccessMode.FULL);
+                when(memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(organization.getId(),
+                                owner.getUser().getId(), MembershipStatus.ACTIVE))
+                                .thenReturn(Optional.of(owner));
+                when(memberRepository.findById(targetMember.getId())).thenReturn(Optional.of(targetMember));
+                when(companyRepository.findById(companyA.getId())).thenReturn(Optional.of(companyA));
+                when(companyRepository.findById(companyB.getId())).thenReturn(Optional.of(companyB));
+                when(companyRepository.findById(otherOrgCompany.getId())).thenReturn(Optional.of(otherOrgCompany));
+
+                // Unauthorized company
+                when(accessRepository.findActiveCompany(targetMember.getId(), organization.getId(), companyA.getId()))
+                                .thenReturn(Optional.empty());
+                assertThrows(BadRequestException.class,
+                                () -> service.setDefaultCompany(targetMember.getId(), companyA.getId()));
+
+                // Inactive company
+                assertThrows(BadRequestException.class,
+                                () -> service.setDefaultCompany(targetMember.getId(), companyB.getId()));
+
+                // Cross-org company
+                assertThrows(ForbiddenException.class,
+                                () -> service.setDefaultCompany(targetMember.getId(), otherOrgCompany.getId()));
+
+                // Non-admin member cannot set default company
+                RequestContext.set(targetUser.getId(), organization.getId(), companyA.getId(), null, AccessMode.FULL);
+                when(memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(organization.getId(),
+                                targetUser.getId(), MembershipStatus.ACTIVE))
+                                .thenReturn(Optional.of(targetMember));
+                assertThrows(ForbiddenException.class,
+                                () -> service.setDefaultCompany(targetMember.getId(), companyA.getId()));
+        }
+
+        @Test
+        @DisplayName("Revoking access to member default company clears defaultCompanyId and summary reflects valid default company")
+        void testRevokingAccessClearsDefaultCompanyAndOrganizationMembersSummary() {
+                companyA.setActive(true);
+                companyA.setOrganization(organization);
+                companyB.setActive(true);
+                companyB.setOrganization(organization);
+                targetMember.setDefaultCompany(companyA);
+
+                RequestContext.set(owner.getUser().getId(), organization.getId(), companyA.getId(), null, AccessMode.FULL);
+                when(memberRepository.findByOrganization_IdAndUser_IdAndMembershipStatus(organization.getId(),
+                                owner.getUser().getId(), MembershipStatus.ACTIVE))
+                                .thenReturn(Optional.of(owner));
+                when(memberRepository.findById(targetMember.getId())).thenReturn(Optional.of(targetMember));
+
+                MemberCompanyAccess accessA = MemberCompanyAccess.builder()
+                                .organizationMember(targetMember).organization(organization).company(companyA).active(true).build();
+                MemberCompanyAccess accessB = MemberCompanyAccess.builder()
+                                .organizationMember(targetMember).organization(organization).company(companyB).active(true).build();
+                when(memberRepository.findByOrganization_Id(organization.getId())).thenReturn(List.of(targetMember));
+                when(accessRepository.findActiveForMember(targetMember.getId(), organization.getId()))
+                                .thenReturn(List.of(accessA, accessB));
+
+                List<PlatformMemberSummaryResponse> beforeRevoke = service.organizationMembers(organization.getId());
+                assertEquals(companyA.getId(), beforeRevoke.get(0).getDefaultCompanyId());
+                assertEquals(companyA.getCompanyName(), beforeRevoke.get(0).getDefaultCompanyName());
+
+                when(accessRepository.findActiveCompany(targetMember.getId(), organization.getId(), companyA.getId()))
+                                .thenReturn(Optional.of(accessA));
+                service.revokeCompanyAccess(targetMember.getId(), companyA.getId());
+
+                assertNull(targetMember.getDefaultCompany());
+                verify(memberRepository).save(targetMember);
         }
 }

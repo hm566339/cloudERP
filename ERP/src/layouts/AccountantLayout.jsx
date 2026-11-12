@@ -81,6 +81,7 @@ export default function AccountantLayout() {
 
   const [workspacePopupOpen, setWorkspacePopupOpen] = useState(false)
   const [switchTenantPopupOpen, setSwitchTenantPopupOpen] = useState(false)
+  const [headerCompanySwitchOpen, setHeaderCompanySwitchOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false)
   const [activeSetting, setActiveSetting] = useState('general')
@@ -323,222 +324,236 @@ export default function AccountantLayout() {
                 <Menu size={20} />
               </button>
 
-              {/* Breadcrumbs */}
+              {/* Breadcrumbs + Header Company Display & Switcher */}
               <nav className="hidden sm:flex items-center gap-2 text-[10.4px] text-zinc-500 dark:text-zinc-400 font-medium">
-                <span className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-800 px-2.5 py-1 rounded-md border border-zinc-200/60 dark:border-zinc-700/60 shadow-sm text-zinc-700 dark:text-zinc-300">
-                  <LayoutDashboard size={14} className="text-zinc-400" />
-                  {organization?.name ? (
-                    <span className="flex items-center gap-1 truncate max-w-[200px] md:max-w-none">
-                      <strong className="capitalize text-zinc-800 dark:text-zinc-200">{organization.name}</strong>
-                      <span className="text-zinc-300 dark:text-zinc-600">/</span>
-                      <span>{selectedCompany?.name || 'Workspace'}</span>
-                    </span>
-                  ) : (
-                    selectedCompany?.name || 'Workspace'
-                  )}
-                </span>
-                {breadcrumbs.map((bc, idx) => (
-                  <React.Fragment key={bc.url}>
-                    <ChevronRight size={14} className="text-zinc-300 dark:text-zinc-600" />
-                    {idx === breadcrumbs.length - 1 ? (
-                      <span className="text-zinc-900 dark:text-zinc-100 font-bold bg-zinc-100/50 dark:bg-zinc-800/50 px-2 py-1 rounded-md">{bc.label}</span>
-                    ) : (
-                      <Link to={bc.url} className="hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800">
-                        {bc.label}
-                      </Link>
-                    )}
-                  </React.Fragment>
-                ))}
-              </nav>
-            </div>
-
-            {/* Global Account Search */}
-            <div className="hidden md:flex items-center flex-1 max-w-sm mx-4">
-              <SearchAccount className="w-full" />
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Subtle Trial / Subscription Status Indicator Badge */}
-              {isTrial && (
-                <Link
-                  to="/subscription"
-                  title="View Subscription Details"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/80 transition-colors shrink-0 shadow-sm"
-                >
-                  <Clock size={12} className="text-emerald-600 dark:text-emerald-400" />
-                  <span className="hidden sm:inline">Trial • {daysRemaining !== null ? `${daysRemaining} days remaining` : 'Active'}</span>
-                  <span className="sm:hidden">Trial • {daysRemaining !== null ? `${daysRemaining}d` : 'Active'}</span>
-                </Link>
-              )}
-              {isReadOnly && (
-                <Link
-                  to="/subscription"
-                  title="Trial Expired • Read-Only Mode"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-800 transition-colors shrink-0 shadow-sm"
-                >
-                  <AlertTriangle size={12} className="text-amber-600 dark:text-amber-400" />
-                  <span className="hidden sm:inline">Trial Expired • Read-Only</span>
-                  <span className="sm:hidden">Read-Only</span>
-                </Link>
-              )}
-              {isBlocked && (
-                <div
-                  title="Account Access Restricted"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-400 border border-rose-200 dark:border-rose-800 shrink-0"
-                >
-                  <ShieldAlert size={12} className="text-rose-600 dark:text-rose-400" />
-                  <span className="hidden sm:inline">Access Restricted</span>
-                  <span className="sm:hidden">Restricted</span>
-                </div>
-              )}
-              {isActive && !isTrial && (
-                <Link
-                  to="/subscription"
-                  title="Subscription Active"
-                  className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/80 transition-colors shrink-0"
-                >
-                  <Sparkles size={11} className="text-indigo-600 dark:text-indigo-400" />
-                  <span>Active</span>
-                </Link>
-              )}
-
-              {/* Notifications */}
-              <button className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-zinc-100 dark:hover:bg-[#222736] text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-700 dark:hover:text-[#E6E8EE] transition-colors group border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D]">
-                <Bell size={18} className="group-hover:animate-wiggle" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white dark:border-[#161922] rounded-full shadow-sm" />
-              </button>
-
-              {/* Theme Toggle */}
-              <ThemeToggle />
-
-              {/* Settings Drawer Trigger */}
-              <button
-                type="button"
-                aria-label="Settings"
-                title="Settings"
-                onClick={() => setSettingsDrawerOpen(true)}
-                className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-zinc-100 dark:hover:bg-[#222736] text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-700 dark:hover:text-[#E6E8EE] transition-colors group border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D]"
-              >
-                <Settings size={18} className="transition-transform duration-300 group-hover:rotate-45" />
-              </button>
-
-              {/* Profile Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-xl transition-all duration-200 border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D] hover:shadow-sm group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-700 dark:from-blue-600 dark:to-indigo-600 text-white font-bold flex items-center justify-center text-[10.4px] shadow-sm group-hover:shadow transition-all">
-                    {currentUser?.fullName?.charAt(0)?.toUpperCase() || currentUser?.username?.charAt(0)?.toUpperCase() || 'U'}
-                  </div>
-                  <div className="hidden md:block text-left">
-                    <p className="text-[10.4px] font-bold text-zinc-800 dark:text-[#E6E8EE] leading-none">{currentUser?.fullName || currentUser?.username || 'User'}</p>
-                    <p className="text-[10px] font-medium text-zinc-400 dark:text-[#A0A6B5] leading-tight mt-0.5 capitalize">{userRole.replace(/_/g, ' ')}</p>
-                  </div>
-                  <ChevronDown size={14} className="text-zinc-400 dark:text-[#A0A6B5] hidden md:block ml-1 group-hover:text-zinc-600 dark:group-hover:text-[#E6E8EE] transition-colors" />
-                </button>
-
-                {profileOpen && (
-                  <>
-                    <div className="fixed inset-0 z-30" onClick={() => setProfileOpen(false)} />
-                    <div className="absolute right-0 top-[110%] w-72 bg-white/90 dark:bg-[#161922]/95 backdrop-blur-xl border border-zinc-200/80 dark:border-[#2A2F3D] rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] py-2 z-40 animate-slide-up origin-top-right">
-                      <div className="px-4 py-3.5 border-b border-zinc-100/80 dark:border-[#2A2F3D] mb-2 bg-zinc-50/50 dark:bg-[#1D212C] mx-2 rounded-xl space-y-1">
-                        <p className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] truncate">{currentUser?.fullName || currentUser?.username || 'User'}</p>
-                        <p className="text-[8.8px] font-semibold text-zinc-500 dark:text-[#A0A6B5] capitalize truncate">{userRole.replace(/_/g, ' ')}</p>
-                        <p className="text-[9.6px] font-medium text-zinc-400 dark:text-[#6B7184] truncate">{currentUser?.email}</p>
-                      </div>
-
-                      <div className="px-4 py-2.5 mx-2 rounded-xl bg-zinc-50/80 dark:bg-[#1D212C] border border-zinc-100/60 dark:border-[#2A2F3D] space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[8.8px] font-semibold text-zinc-400 dark:text-[#A0A6B5] uppercase">Company Code</span>
-                          <span className="text-[9.6px] font-medium text-zinc-800 dark:text-[#E6E8EE] font-mono">{currentUser?.companyCode || '—'}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[8.8px] font-semibold text-zinc-400 dark:text-[#A0A6B5] uppercase">Employee ID</span>
-                          <span className="text-[9.6px] font-medium text-zinc-800 dark:text-[#E6E8EE] font-mono">{currentUser?.empId || '—'}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[8.8px] font-semibold text-zinc-400 dark:text-[#A0A6B5] uppercase">Status</span>
-                          <span className={`inline-flex items-center gap-1 text-[8.8px] font-semibold px-2 py-0.5 rounded-full ${currentUser?.accountStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400'
-                            }`}>
-                            {currentUser?.accountStatus === 'ACTIVE' ? 'Active' : (currentUser?.accountStatus || '—')}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[8.8px] font-semibold text-zinc-400 dark:text-[#A0A6B5] uppercase">Email</span>
-                          <span className={`inline-flex items-center gap-1 text-[8.8px] font-semibold px-2 py-0.5 rounded-full ${currentUser?.emailStatus === 'VERIFIED' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
-                            }`}>
-                            {currentUser?.emailStatus === 'VERIFIED' ? 'Verified' : (currentUser?.emailStatus || '—')}
-                          </span>
-                        </div>
-                      </div>
-
-                      <Link
-                        to="/subscription"
-                        onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-[10.4px] font-semibold text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-primary transition-colors mx-1 rounded-lg"
-                      >
-                        <CreditCard size={15} />
-                        Subscription & Plan
-                      </Link>
-
-                      {(authContext?.membership?.memberType === 'OWNER' || currentUser?.role === 'owner') && (
-                        <Link
-                          to="/owner/dashboard"
-                          onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-[10.4px] font-semibold text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-primary transition-colors mx-1 rounded-lg"
-                        >
-                          <ShieldCheck size={15} className="text-emerald-600 dark:text-emerald-400" />
-                          Organization Control Center
-                        </Link>
-                      )}
-
-                      <div className="border-t border-zinc-100 dark:border-[#2A2F3D] mt-2 pt-2 px-1">
+                      <div className="relative">
                         <button
-                          onClick={handleLogout}
-                          className="w-[calc(100%-8px)] flex items-center gap-3 px-3 py-2.5 text-[10.4px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300 transition-colors text-left mx-1 rounded-lg"
+                          type="button"
+                          onClick={() => setHeaderCompanySwitchOpen((prev) => !prev)}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          title="Switch active company"
+                          className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-800 px-2.5 py-1 rounded-md border border-zinc-200/60 dark:border-zinc-700/60 shadow-sm text-zinc-700 dark:text-zinc-300 hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
                         >
-                          <LogOut size={15} />
-                          Log Out
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+                          <Building2 size={14} className="text-zinc-400 shrink-0" />
+                          {organization?.name ? (
+                            <span className="flex items-center gap-1 truncate max-w-[220px] md:max-w-none">
+                              <strong className="capitalize text-zinc-800 dark:text-zinc-200">{organization.name}</strong>
+                              <span className="text-zinc-300 dark:text-zinc-600">/</span>
+                              <span>{selectedCompany?.name || 'Workspace'}</span>
+                            </span>
+                          ) : (
+                            <span>{selectedCompany?.name || 'Workspace'}</span>
+                  )}
+                  <ChevronDown size={13} className={`text-zinc-400 transition-transform ${headerCompanySwitchOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <SwitchTenantPopup
+                  open={headerCompanySwitchOpen}
+                  onClose={() => setHeaderCompanySwitchOpen(false)}
+                  placement="top-left"
+                />
             </div>
-          </header>
-
-          <SubscriptionNoticeBanner />
-
-          <main className={`flex-1 min-h-0 min-w-0 flex flex-col bg-zinc-50/30 dark:bg-[#0F1117] overscroll-contain ${isFullHeightPage ? 'overflow-hidden p-0' : 'overflow-x-hidden overflow-y-auto'}`}>
-              <div className={`w-full flex-1 flex flex-col min-w-0 ${isFullHeightPage ? 'h-full min-h-0' : 'min-h-full max-w-[2560px] 5xl:max-w-[3200px] mx-auto'}`}>
-                <div className="flex-1 flex flex-col min-h-0 min-w-0">
-                  <ErrorBoundary>
-                    <Suspense fallback={<RouteLoading />}>
-                      <Outlet context={{ accessibleModuleKeys: ['account', 'inventory', 'crm', 'purchases', 'workflow'], accessLoading: false, authContext, isOwner: false }} />
-                    </Suspense>
-                  </ErrorBoundary>
-                </div>
-                {!isFullHeightPage && (
-                  <AppFooter />
+            {breadcrumbs.map((bc, idx) => (
+              <React.Fragment key={bc.url}>
+                <ChevronRight size={14} className="text-zinc-300 dark:text-zinc-600" />
+                {idx === breadcrumbs.length - 1 ? (
+                  <span className="text-zinc-900 dark:text-zinc-100 font-bold bg-zinc-100/50 dark:bg-zinc-800/50 px-2 py-1 rounded-md">{bc.label}</span>
+                ) : (
+                  <Link to={bc.url} className="hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800">
+                    {bc.label}
+                  </Link>
                 )}
-              </div>
-          </main>
+              </React.Fragment>
+            ))}
+          </nav>
         </div>
-      </div>
 
-      <ToastNotification />
+        {/* Global Account Search */}
+        <div className="hidden md:flex items-center flex-1 max-w-sm mx-4">
+          <SearchAccount className="w-full" />
+        </div>
 
-      {/* ── Right-Side Settings Sidebar Drawer ── */}
-      <SettingsSidebar
-        isOpen={settingsDrawerOpen}
-        onClose={() => setSettingsDrawerOpen(false)}
-        activeSetting={activeSetting}
-        onSettingSelect={(settingId) => {
-          setActiveSetting(settingId)
-        }}
-      />
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Subtle Trial / Subscription Status Indicator Badge */}
+          {isTrial && (
+            <Link
+              to="/subscription"
+              title="View Subscription Details"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/80 transition-colors shrink-0 shadow-sm"
+            >
+              <Clock size={12} className="text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden sm:inline">Trial • {daysRemaining !== null ? `${daysRemaining} days remaining` : 'Active'}</span>
+              <span className="sm:hidden">Trial • {daysRemaining !== null ? `${daysRemaining}d` : 'Active'}</span>
+            </Link>
+          )}
+          {isReadOnly && (
+            <Link
+              to="/subscription"
+              title="Trial Expired • Read-Only Mode"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-800 transition-colors shrink-0 shadow-sm"
+            >
+              <AlertTriangle size={12} className="text-amber-600 dark:text-amber-400" />
+              <span className="hidden sm:inline">Trial Expired • Read-Only</span>
+              <span className="sm:hidden">Read-Only</span>
+            </Link>
+          )}
+          {isBlocked && (
+            <div
+              title="Account Access Restricted"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-400 border border-rose-200 dark:border-rose-800 shrink-0"
+            >
+              <ShieldAlert size={12} className="text-rose-600 dark:text-rose-400" />
+              <span className="hidden sm:inline">Access Restricted</span>
+              <span className="sm:hidden">Restricted</span>
+            </div>
+          )}
+          {isActive && !isTrial && (
+            <Link
+              to="/subscription"
+              title="Subscription Active"
+              className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/80 transition-colors shrink-0"
+            >
+              <Sparkles size={11} className="text-indigo-600 dark:text-indigo-400" />
+              <span>Active</span>
+            </Link>
+          )}
+
+          {/* Notifications */}
+          <button className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-zinc-100 dark:hover:bg-[#222736] text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-700 dark:hover:text-[#E6E8EE] transition-colors group border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D]">
+            <Bell size={18} className="group-hover:animate-wiggle" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white dark:border-[#161922] rounded-full shadow-sm" />
+          </button>
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
+          {/* Settings Drawer Trigger */}
+          <button
+            type="button"
+            aria-label="Settings"
+            title="Settings"
+            onClick={() => setSettingsDrawerOpen(true)}
+            className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-zinc-100 dark:hover:bg-[#222736] text-zinc-500 dark:text-[#A0A6B5] hover:text-zinc-700 dark:hover:text-[#E6E8EE] transition-colors group border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D]"
+          >
+            <Settings size={18} className="transition-transform duration-300 group-hover:rotate-45" />
+          </button>
+
+          {/* Profile Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-zinc-50 dark:hover:bg-[#222736] rounded-xl transition-all duration-200 border border-transparent hover:border-zinc-200 dark:hover:border-[#2A2F3D] hover:shadow-sm group"
+            >
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-700 dark:from-blue-600 dark:to-indigo-600 text-white font-bold flex items-center justify-center text-[10.4px] shadow-sm group-hover:shadow transition-all">
+                {currentUser?.fullName?.charAt(0)?.toUpperCase() || currentUser?.username?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <div className="hidden md:block text-left">
+                <p className="text-[10.4px] font-bold text-zinc-800 dark:text-[#E6E8EE] leading-none">{currentUser?.fullName || currentUser?.username || 'User'}</p>
+                <p className="text-[10px] font-medium text-zinc-400 dark:text-[#A0A6B5] leading-tight mt-0.5 capitalize">{userRole.replace(/_/g, ' ')}</p>
+              </div>
+              <ChevronDown size={14} className="text-zinc-400 dark:text-[#A0A6B5] hidden md:block ml-1 group-hover:text-zinc-600 dark:group-hover:text-[#E6E8EE] transition-colors" />
+            </button>
+
+            {profileOpen && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setProfileOpen(false)} />
+                <div className="absolute right-0 top-[110%] w-72 bg-white/90 dark:bg-[#161922]/95 backdrop-blur-xl border border-zinc-200/80 dark:border-[#2A2F3D] rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] py-2 z-40 animate-slide-up origin-top-right">
+                  <div className="px-4 py-3.5 border-b border-zinc-100/80 dark:border-[#2A2F3D] mb-2 bg-zinc-50/50 dark:bg-[#1D212C] mx-2 rounded-xl space-y-1">
+                    <p className="text-sm font-bold text-zinc-900 dark:text-[#E6E8EE] truncate">{currentUser?.fullName || currentUser?.username || 'User'}</p>
+                    <p className="text-[8.8px] font-semibold text-zinc-500 dark:text-[#A0A6B5] capitalize truncate">{userRole.replace(/_/g, ' ')}</p>
+                    <p className="text-[9.6px] font-medium text-zinc-400 dark:text-[#6B7184] truncate">{currentUser?.email}</p>
+                  </div>
+
+                  <div className="px-4 py-2.5 mx-2 rounded-xl bg-zinc-50/80 dark:bg-[#1D212C] border border-zinc-100/60 dark:border-[#2A2F3D] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8.8px] font-semibold text-zinc-400 dark:text-[#A0A6B5] uppercase">Company Code</span>
+                      <span className="text-[9.6px] font-medium text-zinc-800 dark:text-[#E6E8EE] font-mono">{currentUser?.companyCode || '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8.8px] font-semibold text-zinc-400 dark:text-[#A0A6B5] uppercase">Employee ID</span>
+                      <span className="text-[9.6px] font-medium text-zinc-800 dark:text-[#E6E8EE] font-mono">{currentUser?.empId || '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8.8px] font-semibold text-zinc-400 dark:text-[#A0A6B5] uppercase">Status</span>
+                      <span className={`inline-flex items-center gap-1 text-[8.8px] font-semibold px-2 py-0.5 rounded-full ${currentUser?.accountStatus === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400'
+                        }`}>
+                        {currentUser?.accountStatus === 'ACTIVE' ? 'Active' : (currentUser?.accountStatus || '—')}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8.8px] font-semibold text-zinc-400 dark:text-[#A0A6B5] uppercase">Email</span>
+                      <span className={`inline-flex items-center gap-1 text-[8.8px] font-semibold px-2 py-0.5 rounded-full ${currentUser?.emailStatus === 'VERIFIED' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
+                        }`}>
+                        {currentUser?.emailStatus === 'VERIFIED' ? 'Verified' : (currentUser?.emailStatus || '—')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Link
+                    to="/subscription"
+                    onClick={() => setProfileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2 text-[10.4px] font-semibold text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-primary transition-colors mx-1 rounded-lg"
+                  >
+                    <CreditCard size={15} />
+                    Subscription & Plan
+                  </Link>
+
+                  {(authContext?.membership?.memberType === 'OWNER' || currentUser?.role === 'owner') && (
+                    <Link
+                      to="/owner/dashboard"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2 text-[10.4px] font-semibold text-zinc-700 dark:text-[#E6E8EE] hover:bg-zinc-50 dark:hover:bg-[#222736] hover:text-primary transition-colors mx-1 rounded-lg"
+                    >
+                      <ShieldCheck size={15} className="text-emerald-600 dark:text-emerald-400" />
+                      Organization Control Center
+                    </Link>
+                  )}
+
+                  <div className="border-t border-zinc-100 dark:border-[#2A2F3D] mt-2 pt-2 px-1">
+                    <button
+                      onClick={handleLogout}
+                      className="w-[calc(100%-8px)] flex items-center gap-3 px-3 py-2.5 text-[10.4px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300 transition-colors text-left mx-1 rounded-lg"
+                    >
+                      <LogOut size={15} />
+                      Log Out
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <SubscriptionNoticeBanner />
+
+      <main className={`flex-1 min-h-0 min-w-0 flex flex-col bg-zinc-50/30 dark:bg-[#0F1117] overscroll-contain ${isFullHeightPage ? 'overflow-hidden p-0' : 'overflow-x-hidden overflow-y-auto'}`}>
+        <div className={`w-full flex-1 flex flex-col min-w-0 ${isFullHeightPage ? 'h-full min-h-0' : 'min-h-full max-w-[2560px] 5xl:max-w-[3200px] mx-auto'}`}>
+          <div className="flex-1 flex flex-col min-h-0 min-w-0">
+            <ErrorBoundary>
+              <Suspense fallback={<RouteLoading />}>
+                <Outlet context={{ accessibleModuleKeys: ['account', 'inventory', 'crm', 'purchases', 'workflow'], accessLoading: false, authContext, isOwner: false }} />
+              </Suspense>
+            </ErrorBoundary>
+          </div>
+          {!isFullHeightPage && (
+            <AppFooter />
+          )}
+        </div>
+      </main>
     </div>
+      </div >
+
+    <ToastNotification />
+
+  {/* ── Right-Side Settings Sidebar Drawer ── */ }
+  <SettingsSidebar
+    isOpen={settingsDrawerOpen}
+    onClose={() => setSettingsDrawerOpen(false)}
+    activeSetting={activeSetting}
+    onSettingSelect={(settingId) => {
+      setActiveSetting(settingId)
+    }}
+  />
+    </div >
   )
 }

@@ -397,14 +397,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     isOrgOwner = true;
                 }
             }
-            if (!isOrgOwner && organizationMemberRepository != null) {
+            if (!isOrgOwner && effectiveOrg == null && organizationMemberRepository != null) {
                 var activeMembers = organizationMemberRepository.findByUser_IdAndMembershipStatus(
                         session.getUser().getId(), MembershipStatus.ACTIVE);
-                if (activeMembers.stream().anyMatch(m -> m.getMemberType() == MemberType.OWNER)) {
+                if (activeMembers.size() == 1 && activeMembers.get(0).getMemberType() == MemberType.OWNER) {
                     isOrgOwner = true;
-                    if (effectiveOrg == null && activeMembers.size() == 1) {
-                        effectiveOrg = activeMembers.get(0).getOrganization();
-                    }
+                    effectiveOrg = activeMembers.get(0).getOrganization();
                 }
             }
 
@@ -607,7 +605,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         int authorityCount = authentication.getAuthorities() != null
                 ? authentication.getAuthorities().size()
                 : 0;
-        log.debug("JWT filter populated security context method={} path={} authenticationType={} principalType={} authenticated={} authorityCount={}",
+        log.debug(
+                "JWT filter populated security context method={} path={} authenticationType={} principalType={} authenticated={} authorityCount={}",
                 request.getMethod(), request.getRequestURI(), authentication.getClass().getSimpleName(),
                 principal != null ? principal.getClass().getSimpleName() : "none",
                 authentication.isAuthenticated(), authorityCount);

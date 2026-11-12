@@ -30,6 +30,7 @@ import {
 } from '../store/accountCompanySlice';
 import {
   useSelectCompanyMutation,
+  useSwitchCompanyMutation,
   authApi,
 } from '../../auth/services/authApi';
 import { useGetCompaniesQuery } from '../../../api/sso/company.api';
@@ -67,59 +68,70 @@ function normalizeCompanyRecord(c) {
   };
 }
 
-export default function SwitchTenantPopup({ open, onClose, className = '' }) {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const params = useParams();
+  export default function SwitchTenantPopup({
+    open,
+    onClose,
+    className = '',
+    placement = 'bottom-up',
+    triggerRef = null,
+  }) {
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const params = useParams();
 
-  const containerRef = useRef(null);
-  const searchInputRef = useRef(null);
+    const containerRef = useRef(null);
+    const searchInputRef = useRef(null);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isSwitching, setIsSwitching] = useState(false);
-  const [switchingTargetId, setSwitchingTargetId] = useState(null);
-  const [errorMessage, setErrorMessage] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isSwitching, setIsSwitching] = useState(false);
+    const [switchingTargetId, setSwitchingTargetId] = useState(null);
+    const [errorMessage, setErrorMessage] = useState(null);
 
-  const authContext = useAppSelector(selectAuthContext);
-  const currentUser = useAppSelector(selectCurrentUser);
-  const selectedCompany = useAppSelector(selectSelectedCompany);
-  const authCompanies = useAppSelector(selectAccessibleCompanies);
-  const accountCompanies = useAppSelector(selectAccountCompanies);
-  const reduxCompanyList = useAppSelector(selectCompanyList);
+    const authContext = useAppSelector(selectAuthContext);
+    const currentUser = useAppSelector(selectCurrentUser);
+    const selectedCompany = useAppSelector(selectSelectedCompany);
+    const authCompanies = useAppSelector(selectAccessibleCompanies);
+    const accountCompanies = useAppSelector(selectAccountCompanies);
+    const reduxCompanyList = useAppSelector(selectCompanyList);
 
-  const effectiveUser = currentUser || authContext?.user;
-  const rawRole = effectiveUser?.role || 'employee';
-  const userRole = String(
-    Array.isArray(rawRole) ? (rawRole[0]?.name || rawRole[0]) : (rawRole?.name || rawRole)
-  ).toLowerCase();
-  const isSuperAdmin = userRole === 'super_admin';
-  const isOwner =
-    authContext?.membership?.memberType === 'OWNER' ||
-    userRole === 'owner' ||
-    Boolean(authContext?.isOwner);
+    const effectiveUser = currentUser || authContext?.user;
+    const rawRole = effectiveUser?.role || 'employee';
+    const userRole = String(
+      Array.isArray(rawRole) ? (rawRole[0]?.name || rawRole[0]) : (rawRole?.name || rawRole)
+    ).toLowerCase();
+    const isSuperAdmin = userRole === 'super_admin';
+    const isOwner =
+      authContext?.membership?.memberType === 'OWNER' ||
+      userRole === 'owner' ||
+      Boolean(authContext?.isOwner);
 
-  const organization = authContext?.organization || effectiveUser?.organization;
-  const organizationId = organization?.id || effectiveUser?.organizationId;
-  const organizationName = organization?.name || effectiveUser?.organizationName || 'Organization';
+    const organization = authContext?.organization || effectiveUser?.organization;
+    const organizationId = organization?.id || effectiveUser?.organizationId;
+    const organizationName = organization?.name || effectiveUser?.organizationName || 'Organization';
 
-  // Lazy queries if user is owner/super-admin or if organization ID is known
-  const { data: ssoCompaniesData } = useGetCompaniesQuery(
-    { page: 0, pageSize: 200 },
-    { skip: !isSuperAdmin && authCompanies.length > 0 }
-  );
+    const hasAuthoritativeCompanies =
+      (Array.isArray(authCompanies) && authCompanies.length > 0) ||
+      (Array.isArray(authContext?.companies) && authContext.companies.length > 0);
+    const canQueryOrgCompanies = isSuperAdmin || isOwner;
 
-  const { data: orgCompaniesData } = useGetOrganizationCompaniesQuery(
-    { organizationId },
-    { skip: !organizationId || authCompanies.length > 0 }
-  );
+    // Lazy queries ONLY for super-admin/owner when authoritative company list isn't populated
+    const { data: ssoCompaniesData } = useGetCompaniesQuery(
+      { page: 0, pageSize: 200 },
+    { skip: !open || !isSuperAdmin || hasAuthoritativeCompanies }
+    );
 
-  // Trigger account companies fetch if empty
-  useEffect(() => {
-    if (open && accountCompanies.length === 0) {
-      dispatch(fetchAccountCompanies());
-    }
-  }, [open, accountCompanies.length, dispatch]);
+    const { data: orgCompaniesData } = useGetOrganizationCompaniesQuery(
+      { organizationId },
+    { skip: !open || !canQueryOrgCompanies || !organizationId || hasAuthoritativeCompanies }
+    );
+
+    // Trigger account companies fetch only when owner/super-admin needs fallback list
+    useEffect(() => {
+        if (open && canQueryOrgCompanies && !hasAuthoritativeCompanies && accountCompanies.length === 0) {
+          dispatch(fetchAccountCompanies());
+        }
+  }, [open, canQueryOrgCompanies, hasAuthoritativeCompanies, accountCompanies.length, dispatch]);
 
   // Focus search input when opened
   useEffect(() => {
@@ -139,6 +151,9 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
     if (!open) return;
 
     function handleMouseDown(e) {
+      if (triggerRef?.current && triggerRef.current.contains(e.target)) {
+        return;
+      }
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         onClose();
       }
@@ -159,7 +174,7 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
     };
   }, [open, onClose]);
 
-  // Merge and deduplicate all dynamic companies from existing data sources
+  // Merge and deduplicate companies, strictly scoping regular members to authorized companies
   const companyList = useMemo(() => {
     const rawList = [];
 
@@ -171,64 +186,64 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
       rawList.push(...authContext.companies);
     }
 
-    // 2. Account microservice companies
-    if (Array.isArray(accountCompanies) && accountCompanies.length > 0) {
-      rawList.push(...accountCompanies);
-    }
-
-    // 3. Redux company-management list
-    if (Array.isArray(reduxCompanyList) && reduxCompanyList.length > 0) {
-      rawList.push(...reduxCompanyList);
-    }
-
-    // 4. API Query results
-    if (ssoCompaniesData?.companies && Array.isArray(ssoCompaniesData.companies)) {
-      rawList.push(...ssoCompaniesData.companies);
-    }
-    if (orgCompaniesData?.companies && Array.isArray(orgCompaniesData.companies)) {
-      rawList.push(...orgCompaniesData.companies);
-    }
-
-    // 5. Fallback to current company if list is still empty
-    if (rawList.length === 0) {
-      if (selectedCompany) rawList.push(selectedCompany);
-      if (authContext?.currentCompany) rawList.push(authContext.currentCompany);
-      if (effectiveUser?.companyId || effectiveUser?.companyCode) {
-        rawList.push({
-          id: effectiveUser.companyId || effectiveUser.companyCode,
-          name: effectiveUser.companyName || 'Assigned Company',
-          code: effectiveUser.companyCode || effectiveUser.companyId,
-          active: true,
-        });
+      // 2. Owner/SuperAdmin-only fallback sources when org/all companies are permitted
+      if (isSuperAdmin || isOwner) {
+        if (Array.isArray(accountCompanies) && accountCompanies.length > 0) {
+          rawList.push(...accountCompanies);
+        }
+        if (Array.isArray(reduxCompanyList) && reduxCompanyList.length > 0) {
+          rawList.push(...reduxCompanyList);
+        }
+        if (ssoCompaniesData?.companies && Array.isArray(ssoCompaniesData.companies)) {
+          rawList.push(...ssoCompaniesData.companies);
+        }
+        if (orgCompaniesData?.companies && Array.isArray(orgCompaniesData.companies)) {
+          rawList.push(...orgCompaniesData.companies);
+        }
       }
-    }
 
-    // Deduplicate by normalized id and code
-    const seen = new Set();
-    const result = [];
-
-    for (const item of rawList) {
-      const norm = normalizeCompanyRecord(item);
-      if (!norm) continue;
-      const key = norm.id.toLowerCase();
-      if (!seen.has(key)) {
-        seen.add(key);
-        result.push(norm);
+      // 3. Fallback to current company if list is still empty
+      if (rawList.length === 0) {
+        if (selectedCompany) rawList.push(selectedCompany);
+        if (authContext?.currentCompany) rawList.push(authContext.currentCompany);
+        if (effectiveUser?.companyId || effectiveUser?.companyCode) {
+          rawList.push({
+            id: effectiveUser.companyId || effectiveUser.companyCode,
+            name: effectiveUser.companyName || 'Assigned Company',
+            code: effectiveUser.companyCode || effectiveUser.companyId,
+            active: true,
+          });
+        }
       }
-    }
 
-    return result;
-  }, [
-    authCompanies,
-    authContext?.companies,
-    authContext?.currentCompany,
-    accountCompanies,
-    reduxCompanyList,
-    ssoCompaniesData,
-    orgCompaniesData,
-    selectedCompany,
-    effectiveUser,
-  ]);
+      // Deduplicate by normalized id and omit inactive companies
+      const seen = new Set();
+      const result = [];
+
+      for (const item of rawList) {
+        const norm = normalizeCompanyRecord(item);
+        if (!norm || norm.active === false) continue;
+        const key = norm.id.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(norm);
+        }
+      }
+
+      return result;
+    }, [
+      isSuperAdmin,
+      isOwner,
+      authCompanies,
+      authContext?.companies,
+      authContext?.currentCompany,
+      accountCompanies,
+      reduxCompanyList,
+      ssoCompaniesData,
+      orgCompaniesData,
+      selectedCompany,
+      effectiveUser,
+    ]);
 
   // Active company identifiers
   const activeCompanyId = String(
@@ -260,6 +275,7 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
   }, [companyList, searchTerm]);
 
   const [selectCompanyApi] = useSelectCompanyMutation();
+  const [switchCompanyApi] = useSwitchCompanyMutation();
 
   /**
    * Handle switching to target company
@@ -304,8 +320,40 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
       let switchSuccess = false;
       let newMeContext = null;
 
-      // 1. Backend validation & Context Fetch via ssoGetMe
-      // Sourced canonically from GET /api/sso/auth/me?companyId={companyId}
+      // 1. Call authenticated backend company-switch endpoint to validate access,
+      // update session.company, and rotate JWT/refresh tokens cleanly without re-login.
+      try {
+        const switchRes = await switchCompanyApi({ companyId: targetCompany.id }).unwrap();
+        const switchData = switchRes?.data || switchRes;
+        const newToken = switchData?.accessToken || switchData?.access_token || switchData?.token;
+        if (newToken) {
+          const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+          const secureAttr = isHttps ? '; Secure' : '';
+          document.cookie = `ACCESS_TOKEN=${newToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
+          clearLegacyAuthCookies();
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('ACCESS_TOKEN', newToken);
+            try {
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('access_token');
+            } catch (_) { }
+          }
+        }
+        switchSuccess = true;
+      } catch (switchErr) {
+        console.warn('[SwitchTenant] switchCompanyApi failed:', switchErr);
+        const status = switchErr?.status || switchErr?.originalStatus;
+        if (status === 401 || status === 403) {
+          throw new Error(
+            switchErr?.data?.message || 'Access denied: You do not have permission to access this company.'
+          );
+        }
+      }
+
+      // 2. Clear cached domain/API queries BEFORE fetching fresh company context
+      dispatch(baseApi.util.resetApiState());
+
+      // 3. Backend validation & Context Fetch via ssoGetMe using rotated JWT
       try {
         const meResult = await dispatch(
           authApi.endpoints.ssoGetMe.initiate(
@@ -320,13 +368,12 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
         }
       } catch (meErr) {
         console.warn('[SwitchTenant] ssoGetMe with companyId failed:', meErr);
-        // If server returns 403, tenant access was explicitly rejected by backend authorization
         if (meErr?.status === 403 || meErr?.originalStatus === 403) {
           throw new Error('Access denied: You do not have permission to access this company.');
         }
       }
 
-      // 2. Secondary Backend Switch Attempt (select-company mutation) if needed
+      // 4. Secondary fallback (select-company mutation) only if switch & ssoGetMe both failed
       if (!switchSuccess) {
         try {
           const orgCode = organization?.code || effectiveUser?.organizationCode;
@@ -354,6 +401,10 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
         } catch (selErr) {
           console.warn('[SwitchTenant] selectCompanyApi failed:', selErr);
         }
+      }
+
+      if (!switchSuccess) {
+        throw new Error('Unable to switch company session. Please try again.');
       }
 
       // 3. Prepare normalized company record
@@ -420,21 +471,15 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
         console.warn('[SwitchTenant] Could not update auth_user in storage:', storageErr);
       }
 
-      // 5. Data Isolation: Purge all stale cached RTK Query state across accounts, sales, inventory, etc.
-      dispatch(baseApi.util.resetApiState());
-
-      // 6. User Feedback Notification
+      // 5. Notify user, close popup & load the selected company's dashboard/workspace
       dispatch(
         addAlert({
           type: 'success',
           message: `Switched active workspace to ${targetCompany.name}`,
         })
       );
-
-      // 7. Close Popup
       onClose();
 
-      // 8. Load the selected company's dashboard and workspace
       if (targetCompany?.id) {
         navigate(`/company/${encodeURIComponent(targetCompany.id)}/dashboard`);
       } else {
@@ -453,13 +498,20 @@ export default function SwitchTenantPopup({ open, onClose, className = '' }) {
 
   if (!open) return null;
 
+  const placementClasses =
+    placement === 'top-left'
+      ? 'top-full left-0 mt-2 w-80 sm:w-96'
+      : placement === 'top-right'
+        ? 'top-full right-0 mt-2 w-80 sm:w-96'
+        : 'bottom-full left-0 right-0 mb-2 w-full';
+
   return (
     <div
       ref={containerRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="switch-tenant-title"
-      className={`absolute bottom-full left-0 right-0 mb-2 w-full min-w-[280px] sm:min-w-[320px] bg-[var(--color-surface)] dark:bg-[#161922] border border-[var(--color-border)] dark:border-[#2A2F3D] rounded-2xl shadow-2xl z-50 overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 ${className}`}
+      className={`absolute ${placementClasses} min-w-[280px] sm:min-w-[320px] bg-[var(--color-surface)] dark:bg-[#161922] border border-[var(--color-border)] dark:border-[#2A2F3D] rounded-2xl shadow-2xl z-50 overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95 ${className}`}
     >
       {/* ── Top Header ── */}
       <div className="flex items-center justify-between px-3.5 py-3 border-b border-[var(--color-border)] dark:border-[#2A2F3D] bg-[var(--color-surface-2)]/70 dark:bg-[#1D212C]/60">

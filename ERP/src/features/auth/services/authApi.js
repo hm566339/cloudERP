@@ -73,21 +73,31 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: ['Auth', 'Session', 'Company'],
     }),
 
+    /** POST /api/sso/auth/switch-company — Switch active company and rotate session tokens */
+    switchCompany: builder.mutation({
+      query: ({ companyId }) => ({
+        url: '/api/sso/auth/switch-company',
+        method: 'POST',
+        data: { companyId },
+      }),
+      invalidatesTags: ['Auth', 'Session', 'Company'],
+    }),
+
     /** GET /api/sso/auth/me — Get current SSO user profile (Authorization header) */
     ssoGetMe: builder.query({
       query: (arg) => {
         let token = '';
         if (typeof document !== 'undefined') {
           const match = document.cookie.match(new RegExp('(^| )ACCESS_TOKEN=([^;]+)')) ||
-                        document.cookie.match(new RegExp('(^| )auth_token=([^;]+)')) ||
-                        document.cookie.match(new RegExp('(^| )access_token=([^;]+)'));
+            document.cookie.match(new RegExp('(^| )auth_token=([^;]+)')) ||
+            document.cookie.match(new RegExp('(^| )access_token=([^;]+)'));
           if (match) token = match[2];
         }
         if (!token && typeof localStorage !== 'undefined') {
           token = localStorage.getItem('ACCESS_TOKEN') ||
-                  localStorage.getItem('auth_token') ||
-                  localStorage.getItem('token') ||
-                  '';
+            localStorage.getItem('auth_token') ||
+            localStorage.getItem('token') ||
+            '';
         }
         let requestedCompanyId = null;
         if (typeof arg === 'string' || typeof arg === 'number') {
@@ -242,6 +252,7 @@ export const {
   useGetOrganizationQuery,
   useLazyGetOrganizationQuery,
   useSelectCompanyMutation,
+  useSwitchCompanyMutation,
   useSsoGetMeQuery,
   useLazySsoGetMeQuery,
 

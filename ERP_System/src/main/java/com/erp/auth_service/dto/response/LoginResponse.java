@@ -30,6 +30,8 @@ public class LoginResponse {
     private Boolean requiresCompanySelection;
     private Boolean requires2FA;
     private OrganizationContext organization;
+    private UUID defaultCompanyId;
+    private String defaultCompanyName;
     private List<CompanyChoice> companies;
 
     @Getter

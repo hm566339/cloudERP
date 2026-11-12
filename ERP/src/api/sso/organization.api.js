@@ -570,6 +570,35 @@ export const organizationApiSlice = baseApi.injectEndpoints({
       invalidatesTags: ['OrganizationMembers', 'Organization', 'User'],
     }),
 
+    // GET /api/sso/organization/members/{memberId}/default-company
+    getMemberDefaultCompany: builder.query({
+      query: (memberId) => ({
+        url: `/api/sso/organization/members/${memberId}/default-company`,
+        method: 'GET',
+      }),
+      transformResponse: (response) => response?.data || response || null,
+      providesTags: (result, error, memberId) => [{ type: 'OrganizationMembers', id: memberId }],
+    }),
+
+    // PUT /api/sso/organization/members/{memberId}/default-company
+    setMemberDefaultCompany: builder.mutation({
+      query: ({ memberId, companyId }) => ({
+        url: `/api/sso/organization/members/${memberId}/default-company`,
+        method: 'PUT',
+        body: { companyId },
+      }),
+      invalidatesTags: ['OrganizationMembers', 'Organization', 'User'],
+    }),
+
+    // DELETE /api/sso/organization/members/{memberId}/default-company
+    clearMemberDefaultCompany: builder.mutation({
+      query: (memberId) => ({
+        url: `/api/sso/organization/members/${memberId}/default-company`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['OrganizationMembers', 'Organization', 'User'],
+    }),
+
   }),
 });
 
@@ -607,6 +636,9 @@ export const {
   useGrantMemberCompanyAccessMutation,
   useUpdateMemberCompanyRoleMutation,
   useRevokeMemberCompanyAccessMutation,
+  useGetMemberDefaultCompanyQuery,
+  useSetMemberDefaultCompanyMutation,
+  useClearMemberDefaultCompanyMutation,
 } = organizationApiSlice;
 
   export const grantMemberCompanyAccess = async (targetId, companyId, roleIdOrRoleIds, isUserId = false) => {
@@ -672,4 +704,28 @@ export const {
     export const getMemberCompanyAccess = async (memberId, config = {}) => {
       const res = await apiClient.get(`/api/sso/organization/members/${memberId}/companies/access`, config);
       return res.data?.data || res.data || [];
+    };
+
+    export const getMemberDefaultCompany = async (targetId, isUserId = false, config = {}) => {
+      const path = isUserId
+        ? `/api/sso/organization/members/user/${targetId}/default-company`
+        : `/api/sso/organization/members/${targetId}/default-company`;
+      const res = await apiClient.get(path, config);
+      return res.data?.data || res.data || null;
+    };
+
+    export const setMemberDefaultCompany = async (targetId, companyId, isUserId = false) => {
+      const path = isUserId
+        ? `/api/sso/organization/members/user/${targetId}/default-company`
+        : `/api/sso/organization/members/${targetId}/default-company`;
+      const res = await apiClient.put(path, { companyId });
+      return res.data?.data || res.data || null;
+    };
+
+    export const clearMemberDefaultCompany = async (targetId, isUserId = false) => {
+      const path = isUserId
+        ? `/api/sso/organization/members/user/${targetId}/default-company`
+        : `/api/sso/organization/members/${targetId}/default-company`;
+      const res = await apiClient.delete(path);
+      return res.data?.data || res.data || null;
     };

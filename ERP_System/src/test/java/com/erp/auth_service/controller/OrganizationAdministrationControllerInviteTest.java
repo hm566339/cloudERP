@@ -4,6 +4,7 @@ import com.erp.auth_service.dto.platform.MemberCompanyRoleDto;
 import com.erp.auth_service.dto.platform.PlatformMemberSummaryResponse;
 import com.erp.auth_service.dto.request.InviteMemberRequest;
 import com.erp.auth_service.dto.response.AccessibleCompanyResponse;
+import com.erp.auth_service.dto.response.DefaultCompanyResponse;
 import com.erp.auth_service.dto.response.InviteMemberResponse;
 import com.erp.auth_service.exception.BadRequestException;
 import com.erp.auth_service.exception.DuplicateResourceException;
@@ -405,6 +406,21 @@ class OrganizationAdministrationControllerInviteTest {
         @Override
         public UUID resolveMemberIdByUserId(UUID userId) {
             return UUID.randomUUID();
+        }
+
+        @Override
+        public DefaultCompanyResponse getDefaultCompany(UUID memberId) {
+            return DefaultCompanyResponse.builder().memberId(memberId).build();
+        }
+
+        @Override
+        public DefaultCompanyResponse setDefaultCompany(UUID memberId, UUID companyId) {
+            return DefaultCompanyResponse.builder().memberId(memberId).defaultCompanyId(companyId).build();
+        }
+
+        @Override
+        public DefaultCompanyResponse clearDefaultCompany(UUID memberId) {
+            return DefaultCompanyResponse.builder().memberId(memberId).build();
         }
     }
 }

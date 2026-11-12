@@ -217,6 +217,8 @@ public class SsoMeResponse {
         private UUID memberId;
         private MemberType memberType;
         private MembershipStatus membershipStatus;
+        private UUID defaultCompanyId;
+        private String defaultCompanyName;
         private LocalDateTime joinedAt;
     }
 
