@@ -566,40 +566,11 @@ export const attachResponseInterceptor = (instance) => {
       const moduleName = detectModule(requestUrl) || 'sso';
 
       // If the REFRESH endpoint itself returned 401, token is irrecoverably expired — logout
-      if (isRefreshEndpoint(requestUrl)) {
+      if (originalRequest?._isRefreshRequest || isRefreshEndpoint(requestUrl)) {
         console.error(`[Auth] Refresh endpoint returned 401 for module "${moduleName}" — logging out.`);
         dispatchLogout();
         return Promise.reject(error);
       }
-
-      // ── Refresh queue logic ────────────────────────────────────────────
-
-      // If a refresh is already in-flight for this module, queue this request
-      if (isModuleRefreshing(moduleName)) {
-        originalRequest._retry = true;
-        try {
-          const newToken = await enqueue(moduleName);
-          const freshToken = newToken || getFreshAccessToken();
-          if (freshToken && originalRequest?.headers) {
-            if (typeof originalRequest.headers.set === 'function') {
-              originalRequest.headers.set('Authorization', `Bearer ${freshToken}`);
-              originalRequest.headers.set('authorization', `Bearer ${freshToken}`);
-            }
-            if (typeof originalRequest.headers === 'object') {
-              originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
-              originalRequest.headers['authorization'] = `Bearer ${freshToken}`;
-            }
-          }
-          // Refresh succeeded — retry the original request
-          return instance(originalRequest);
-        } catch (queueError) {
-          // Refresh failed — reject this request too
-          return Promise.reject(queueError);
-        }
-      }
-
-      // No refresh in progress — initiate single-flight refresh
-      originalRequest._retry = true;
 
       // Only platform super/system admin (loginType === 'ADMIN') uses /admin/token/refresh.
       // Organization owners and regular members use the canonical SSO /api/sso/token/refresh.
@@ -631,9 +602,58 @@ export const attachResponseInterceptor = (instance) => {
       };
 
       const isSystemAdmin = isPlatformSuperAdmin();
-      let refreshEndpoint = isSystemAdmin
+      const refreshEndpoint = isSystemAdmin
         ? '/api/sso/admin/token/refresh'
         : (getRefreshEndpoint(moduleName) || '/api/sso/token/refresh');
+      // Deduplicate concurrent 401s across all SSO-backed modules onto one shared single-flight key
+      const refreshKey = refreshEndpoint === '/api/sso/token/refresh'
+        ? 'sso'
+        : refreshEndpoint === '/api/sso/admin/token/refresh'
+          ? 'sso_admin'
+          : moduleName;
+
+      const applyAuthHeaderToConfig = (reqConfig, freshToken) => {
+        if (!reqConfig?.headers) return;
+        if (freshToken) {
+          if (typeof reqConfig.headers.set === 'function') {
+            reqConfig.headers.set('Authorization', `Bearer ${freshToken}`);
+            reqConfig.headers.set('authorization', `Bearer ${freshToken}`);
+          }
+          if (typeof reqConfig.headers === 'object') {
+            reqConfig.headers['Authorization'] = `Bearer ${freshToken}`;
+            reqConfig.headers['authorization'] = `Bearer ${freshToken}`;
+          }
+        } else if (refreshEndpoint.includes('/admin/')) {
+          if (typeof reqConfig.headers.delete === 'function') {
+            reqConfig.headers.delete('Authorization');
+            reqConfig.headers.delete('authorization');
+          }
+          if (typeof reqConfig.headers === 'object') {
+            delete reqConfig.headers['Authorization'];
+            delete reqConfig.headers['authorization'];
+          }
+        }
+      };
+
+      // ── Refresh queue logic ────────────────────────────────────────────
+
+      // If a refresh is already in-flight for this refresh endpoint, queue this request
+      if (isModuleRefreshing(refreshKey)) {
+        originalRequest._retry = true;
+        try {
+          const freshToken = await enqueue(refreshKey);
+          applyAuthHeaderToConfig(originalRequest, freshToken);
+          // Refresh succeeded — retry the original request
+          return instance(originalRequest);
+        } catch (queueError) {
+          // Refresh failed — reject this request too
+          return Promise.reject(queueError);
+        }
+      }
+
+      // No refresh in progress — initiate single-flight refresh
+      originalRequest._retry = true;
+
       let requestBody = {};
       let refreshToken = null;
 
@@ -672,6 +692,7 @@ export const attachResponseInterceptor = (instance) => {
             withCredentials: true,
             headers: { 'Content-Type': 'application/json' },
             timeout: 15000,
+            _isRefreshRequest: true,
           },
         );
 
@@ -717,51 +738,55 @@ export const attachResponseInterceptor = (instance) => {
           }
           if (newRefreshToken) {
             localStorage.setItem('ACCESS_TOKEN_REFRESH', newRefreshToken);
+          } else {
+            // Do not leave a pre-rotation refresh token in localStorage when the backend
+            // relies on an HttpOnly refresh cookie; otherwise future refreshes may replay it.
+            try {
+              localStorage.removeItem('ACCESS_TOKEN_REFRESH');
+              localStorage.removeItem('refreshToken');
+              localStorage.removeItem('refresh_token');
+            } catch (_) {}
           }
         }
 
-        return newAccessToken || getFreshAccessToken();
+        if (!newAccessToken && !refreshEndpoint.includes('/admin/')) {
+          throw new Error('Refresh response did not include a new access token');
+        }
+
+        return newAccessToken || null;
       };
 
       const refreshPromise = performRefresh();
-      setModuleRefreshPromise(moduleName, refreshPromise);
+      setModuleRefreshPromise(refreshKey, refreshPromise);
 
       try {
         const freshToken = await refreshPromise;
 
         // Atomically update default common headers first so any newly triggered request inherits the fresh token
-        if (freshToken) {
-          if (instance.defaults?.headers?.common) {
+        if (instance.defaults?.headers?.common) {
+          if (freshToken) {
             instance.defaults.headers.common['Authorization'] = `Bearer ${freshToken}`;
             instance.defaults.headers.common['authorization'] = `Bearer ${freshToken}`;
+          } else if (refreshEndpoint.includes('/admin/')) {
+            delete instance.defaults.headers.common['Authorization'];
+            delete instance.defaults.headers.common['authorization'];
           }
         }
 
         // Release refreshing lock and drain all queued requests IMMEDIATELY with the fresh token
-        setRefreshing(moduleName, false);
-        processQueue(moduleName, null, freshToken);
+        setRefreshing(refreshKey, false);
+        processQueue(refreshKey, null, freshToken);
 
-        if (freshToken) {
-          if (originalRequest?.headers) {
-            if (typeof originalRequest.headers.set === 'function') {
-              originalRequest.headers.set('Authorization', `Bearer ${freshToken}`);
-              originalRequest.headers.set('authorization', `Bearer ${freshToken}`);
-            }
-            if (typeof originalRequest.headers === 'object') {
-              originalRequest.headers['Authorization'] = `Bearer ${freshToken}`;
-              originalRequest.headers['authorization'] = `Bearer ${freshToken}`;
-            }
-          }
-        }
+        applyAuthHeaderToConfig(originalRequest, freshToken);
 
         // Retry the original request
         return instance(originalRequest);
       } catch (refreshError) {
-        setRefreshing(moduleName, false);
-        processQueue(moduleName, refreshError);
+        setRefreshing(refreshKey, false);
+        processQueue(refreshKey, refreshError);
 
         console.error(
-          `[Auth] Token refresh failed for module "${moduleName}":`,
+          `[Auth] Token refresh failed for module "${moduleName}" (key="${refreshKey}"):`,
           refreshError?.response?.status || refreshError.message,
         );
 
@@ -777,7 +802,7 @@ export const attachResponseInterceptor = (instance) => {
         dispatchLogout();
         return Promise.reject(refreshError);
       } finally {
-        setRefreshing(moduleName, false);
+        setRefreshing(refreshKey, false);
       }
     },
   );

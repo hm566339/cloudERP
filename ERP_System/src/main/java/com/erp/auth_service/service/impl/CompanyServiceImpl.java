@@ -463,7 +463,66 @@ public class CompanyServiceImpl implements CompanyService {
                                                         "Company not found with provided companyCode"));
                 }
 
+                assertCompanyVerifyAccess(company);
+
                 return companyMapper.toCompanyResponse(company);
+        }
+
+        /**
+         * Enforces strict multi-tenant access rules for /company-verify:
+         * company must be active; non-elevated callers must belong to the
+         * company's organization with ACTIVE membership and active MemberCompanyAccess
+         * (unless they are an organization OWNER).
+         */
+        private void assertCompanyVerifyAccess(Company company) {
+                if (!Boolean.TRUE.equals(company.getActive())) {
+                        throw new ForbiddenException("Company is inactive");
+                }
+
+                if (PlatformSecurityUtil.isElevatedAdmin()) {
+                        return;
+                }
+
+                RequestContext.Context context = RequestContext.get();
+                if (context == null) {
+                        org.springframework.security.core.Authentication auth =
+                                        org.springframework.security.core.context.SecurityContextHolder
+                                                        .getContext().getAuthentication();
+                        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                                throw new ForbiddenException("Access denied: Tenant context required");
+                        }
+                        return;
+                }
+
+                if (context.userId() == null) {
+                        throw new ForbiddenException("Authentication context required");
+                }
+
+                if (company.getOrganization() == null || context.organizationId() == null
+                                || !company.getOrganization().getId().equals(context.organizationId())) {
+                        throw new ForbiddenException(
+                                        "Access denied: Company does not belong to authorized organization");
+                }
+
+                OrganizationMember member = organizationMemberRepository
+                                .findByOrganization_IdAndUser_Id(company.getOrganization().getId(), context.userId())
+                                .orElseThrow(() -> new ForbiddenException(
+                                                "Access denied: User does not belong to this organization"));
+
+                if (member.getMembershipStatus() != MembershipStatus.ACTIVE || member.getDeletedAt() != null) {
+                        throw new ForbiddenException("Access denied: Organization membership is inactive");
+                }
+
+                boolean isOwnerUser = member.getMemberType() == MemberType.OWNER || isOwner(context);
+                if (!isOwnerUser) {
+                        boolean hasActiveAccess = memberCompanyAccessRepository
+                                        .existsByOrganizationMember_IdAndCompany_IdAndActiveTrue(
+                                                        member.getId(), company.getId());
+                        if (!hasActiveAccess) {
+                                throw new ForbiddenException(
+                                                "Access denied: User does not have active access to this company");
+                        }
+                }
         }
 
 }

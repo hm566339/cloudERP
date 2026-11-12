@@ -37,7 +37,7 @@ import { useGetCompaniesQuery } from '../../../api/sso/company.api';
 import { useGetOrganizationCompaniesQuery } from '../../../api/sso/organization.api';
 import { baseApi } from '../../../api/common/baseApi';
 import { addAlert } from '../../notifications/notificationSlice';
-import { clearLegacyAuthCookies } from '../../../utils/cookieHelper';
+import { applySwitchedAuthTokens } from '../utils/switchTenantTokens';
 
 /**
  * Normalizes a company object from any slice/API into a consistent shape.
@@ -325,20 +325,7 @@ function normalizeCompanyRecord(c) {
       try {
         const switchRes = await switchCompanyApi({ companyId: targetCompany.id }).unwrap();
         const switchData = switchRes?.data || switchRes;
-        const newToken = switchData?.accessToken || switchData?.access_token || switchData?.token;
-        if (newToken) {
-          const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-          const secureAttr = isHttps ? '; Secure' : '';
-          document.cookie = `ACCESS_TOKEN=${newToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-          clearLegacyAuthCookies();
-          if (typeof localStorage !== 'undefined') {
-            localStorage.setItem('ACCESS_TOKEN', newToken);
-            try {
-              localStorage.removeItem('auth_token');
-              localStorage.removeItem('access_token');
-            } catch (_) { }
-          }
-        }
+        applySwitchedAuthTokens(switchData);
         switchSuccess = true;
       } catch (switchErr) {
         console.warn('[SwitchTenant] switchCompanyApi failed:', switchErr);
@@ -383,19 +370,8 @@ function normalizeCompanyRecord(c) {
           }).unwrap();
 
           const selectData = selectRes?.data || selectRes;
-          const newToken = selectData?.accessToken || selectData?.access_token || selectData?.token;
+          const { newToken } = applySwitchedAuthTokens(selectData);
           if (newToken) {
-            const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-            const secureAttr = isHttps ? '; Secure' : '';
-            document.cookie = `ACCESS_TOKEN=${newToken}; path=/; max-age=86400; SameSite=Lax${secureAttr}`;
-            clearLegacyAuthCookies();
-            if (typeof localStorage !== 'undefined') {
-              localStorage.setItem('ACCESS_TOKEN', newToken);
-              try {
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('access_token');
-              } catch (_) { }
-            }
             switchSuccess = true;
           }
         } catch (selErr) {

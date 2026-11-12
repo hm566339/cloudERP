@@ -138,6 +138,17 @@ public class SsoAuthorizationService {
                     "AUTH_SWITCH_COMPANY");
         }
 
+        // Authenticated company verification enforces active company, org membership,
+        // and active MemberCompanyAccess (or owner/system admin) inside CompanyService
+        if ("GET".equalsIgnoreCase(httpMethod)
+                && ("/api/sso/company/company-verify".equals(requestPath)
+                        || "/api/sso/companies/company-verify".equals(requestPath)
+                        || "/api/company/company-verify".equals(requestPath)
+                        || "/api/companies/company-verify".equals(requestPath))) {
+            return AuthorizationDecision.allow(featureCode, primaryAction, primaryPermissionCode,
+                    "COMPANY_VERIFY_AUTHENTICATED");
+        }
+
         // 4. Check DB permissions
         return evaluateDbAuthorization(authentication, featureCode, candidateActions, primaryAction,
                 primaryPermissionCode);

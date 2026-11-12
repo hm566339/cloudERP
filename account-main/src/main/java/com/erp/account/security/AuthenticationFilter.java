@@ -136,6 +136,14 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                         path);
                 // The frontend interceptor will handle the 401 and call
                 // /api/account/auth/refresh
+            } catch (CompanyTenantVerificationException ex) {
+                log.warn("Company tenant verification denied for path [{}]: {}", path, ex.getMessage());
+                SecurityContextHolder.clearContext();
+                CurrentUserContext.clear();
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"success\":false,\"message\":\"Company access could not be verified\"}");
+                return;
             } catch (Exception ex) {
                 log.warn("Authentication failed for path [{}]: {}", path, ex.getMessage());
             }
@@ -224,6 +232,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                     CurrentUserContext.setCompanyId(companyId);
                 } catch (Exception ex) {
                     log.error("Failed to provision company from SSO for code {}: {}", companyCode, ex.getMessage());
+                    throw new CompanyTenantVerificationException(
+                            "Failed to verify company access for code " + companyCode, ex);
                 }
             }
         } else {
@@ -286,5 +296,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private static final class CompanyTenantVerificationException extends RuntimeException {
+        CompanyTenantVerificationException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 }
