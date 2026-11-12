@@ -866,7 +866,9 @@ export default function OrgUsersView({
           }}
           user={selectedUserForAccess}
           companies={companies}
+          allCompanies={companies}
           onSuccess={() => refetchMembers()}
+          onUpdated={() => refetchMembers()}
         />
       )}
 

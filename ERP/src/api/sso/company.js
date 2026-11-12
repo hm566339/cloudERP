@@ -1,6 +1,6 @@
 import apiClient from '../common/client';
 
-export const getCompanies = async (params = {}) => {
+export const getCompanies = async (params = {}, config = {}) => {
   const page = params?.page ?? 0;
   const pageSize = params?.pageSize ?? 200;
   const query = new URLSearchParams();
@@ -9,7 +9,7 @@ export const getCompanies = async (params = {}) => {
   if (params?.search) query.append('search', params.search);
   if (params?.active !== undefined) query.append('active', params.active);
 
-  const response = await apiClient.get(`/api/sso/company?${query.toString()}`);
+  const response = await apiClient.get(`/api/sso/company?${query.toString()}`, config);
   return response.data?.data || response.data;
 };
 

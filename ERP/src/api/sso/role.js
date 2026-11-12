@@ -1,7 +1,7 @@
 import apiClient from '../common/client.js';
 import { useState, useEffect } from 'react';
 
-export const getRoles = async (params = {}) => {
+export const getRoles = async (params = {}, config = {}) => {
   const { companyId, search, status } = params;
   if (!companyId) throw new Error('Company ID is required to fetch roles');
   
@@ -15,7 +15,7 @@ export const getRoles = async (params = {}) => {
   if (search) query.append('search', search);
   if (status !== undefined && status !== '') query.append('status', status);
 
-  const response = await apiClient.get(`/api/sso/role?${query.toString()}`);
+  const response = await apiClient.get(`/api/sso/role?${query.toString()}`, config);
   return response.data?.data || response.data;
 };
 

@@ -664,12 +664,12 @@ export const {
       return res.data;
     };
 
-    export const getUserCompanyAccess = async (userId) => {
-      const res = await apiClient.get(`/api/sso/organization/members/user/${userId}/companies/access`);
+    export const getUserCompanyAccess = async (userId, config = {}) => {
+      const res = await apiClient.get(`/api/sso/organization/members/user/${userId}/companies/access`, config);
       return res.data?.data || res.data || [];
     };
 
-    export const getMemberCompanyAccess = async (memberId) => {
-      const res = await apiClient.get(`/api/sso/organization/members/${memberId}/companies/access`);
+    export const getMemberCompanyAccess = async (memberId, config = {}) => {
+      const res = await apiClient.get(`/api/sso/organization/members/${memberId}/companies/access`, config);
       return res.data?.data || res.data || [];
     };

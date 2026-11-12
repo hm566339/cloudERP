@@ -1,0 +1,2011 @@
+// =============================================================================
+// DBML Schema: Enterprise CRM Module (Mark2 Cloud ERP)
+// Database: PostgreSQL
+// Microservice: crm-service
+// Architecture Pattern: Microservices / Database-Per-Service / Event-Driven Outbox
+// Author: Principal Solution Architect & Senior Database Architect
+// Compatible with: dbdiagram.io / DBML v2
+// =============================================================================
+
+Project mark2_crm {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # Mark2 Cloud ERP - Enterprise CRM Database Schema
+    Production-grade multi-tenant CRM database schema tailored for Indian and global enterprise markets.
+    
+    ## Architectural Foundations:
+    1. **Strict Multi-Tenancy**: Every business record is isolated by `company_id uuid not null`.
+    2. **Decoupled Microservice Boundaries**: Interacts with `account-main`, `workflow-service`, `inventory`, `ERP_System` (SSO), and `communication-service` via REST APIs and RabbitMQ events. Zero cross-database foreign key constraints.
+    3. **Universal Auditing (BaseEntity)**: Standardized `created_at`, `created_by`, `created_by_username`, `updated_at`, `updated_by`, `updated_by_username`, `is_deleted`, `deleted_at`, `deleted_by`, `deleted_by_username`.
+    4. **Indian B2B Lead Ingestion**: High-throughput normalized webhook ingestion for IndiaMART, TradeIndia, Justdial, Sulekha, ExportersIndia, Meta Lead Ads, Google Ads, LinkedIn, WhatsApp Cloud, IVR/Cloud Telephony (Exotel, Ozonetel).
+    5. **Workflow Service Reuse**: Reuses generic `workflow-service` for Quotation, Discount, and Sales Order approval hierarchies via external document references.
+    6. **Transactional Outbox**: Guaranteed at-least-once event publication to RabbitMQ.
+  '''
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+Enum lead_status_category {
+  OPEN          [note: 'Active lead being pursued']
+  QUALIFIED     [note: 'Validated lead meeting sales criteria']
+  CONVERTED     [note: 'Converted to Account, Contact, and Opportunity']
+  UNQUALIFIED   [note: 'Spam, invalid number, or bad fit']
+  RECYCLED      [note: 'Cold lead returned to nurturing pool']
+}
+
+Enum lead_stage {
+  RAW           [note: 'Unscreened incoming inquiry']
+  INQUIRY       [note: 'Customer initiated contact or catalog query']
+  MQL           [note: 'Marketing Qualified Lead']
+  SQL           [note: 'Sales Qualified Lead']
+  UNQUALIFIED   [note: 'Disqualified lead']
+}
+
+Enum lead_rating {
+  HOT           [note: 'Immediate purchase intent (< 15 days)']
+  WARM          [note: 'Active project, evaluating vendors (15-60 days)']
+  COLD          [note: 'Long-term requirement or exploratory (> 60 days)']
+}
+
+Enum account_type {
+  PROSPECT      [note: 'Prospective company account']
+  CUSTOMER      [note: 'Transacting client with active account']
+  PARTNER       [note: 'Channel or distribution partner']
+  VENDOR        [note: 'Supplier or vendor organization']
+  RESELLER      [note: 'Authorized reseller']
+}
+
+Enum business_type {
+  PVT_LTD       [note: 'Private Limited Company']
+  PUBLIC_LTD    [note: 'Public Limited Company']
+  LLP           [note: 'Limited Liability Partnership']
+  PROPRIETORSHIP [note: 'Sole Proprietorship']
+  PARTNERSHIP   [note: 'Partnership Firm']
+  TRUST_NGO     [note: 'Trust / Society / NGO']
+  GOVERNMENT    [note: 'Government or PSU Body']
+  OTHER         [note: 'Other enterprise structure']
+}
+
+Enum account_tier {
+  TIER_1        [note: 'Strategic Enterprise Account']
+  TIER_2        [note: 'Mid-Market Account']
+  TIER_3        [note: 'Small Business / Retail Account']
+}
+
+Enum decision_maker_role {
+  DECISION_MAKER [note: 'Final financial and operational approver']
+  INFLUENCER     [note: 'Technical or functional recommender']
+  EVALUATOR      [note: 'Procurement / evaluation team member']
+  END_USER       [note: 'Operational staff using product/service']
+  GATEKEEPER     [note: 'Administrative assistant / receptionist']
+}
+
+Enum address_type {
+  BILLING            [note: 'Official billing address']
+  SHIPPING           [note: 'Goods delivery / warehouse address']
+  REGISTERED_OFFICE  [note: 'Corporate registered address (MCA/GST)']
+  BRANCH_OFFICE      [note: 'Regional / branch office']
+  SITE_LOCATION      [note: 'Project or implementation site']
+}
+
+Enum pipeline_stage_category {
+  PROSPECTING   [note: 'Initial qualification & discovery']
+  QUALIFICATION [note: 'Needs analysis and budget confirmation']
+  PROPOSAL      [note: 'Formal quote or proposal submitted']
+  NEGOTIATION   [note: 'Commercial or legal terms negotiation']
+  WON           [note: 'Deal won / contract executed']
+  LOST          [note: 'Deal lost to competitor or abandoned']
+}
+
+Enum opportunity_deal_type {
+  NEW_BUSINESS      [note: 'First-time customer acquisition']
+  EXISTING_UPSELL   [note: 'Additional products/services to existing client']
+  RENEWAL           [note: 'Contract or annual subscription renewal']
+}
+
+Enum opportunity_deal_status {
+  OPEN          [note: 'Under active sales pursuit']
+  WON           [note: 'Successfully closed']
+  LOST          [note: 'Lost to competition or budget cancellation']
+  ABANDONED     [note: 'Client ghosted or project indefinitely shelved']
+}
+
+Enum task_type {
+  CALL          [note: 'Outbound or inbound telephone touchpoint']
+  MEETING       [note: 'Physical or in-person business meeting']
+  DEMO          [note: 'Product demonstration or presentation']
+  EMAIL         [note: 'Follow-up email communication']
+  SITE_VISIT    [note: 'Physical plant, warehouse or site inspection']
+  QUOTE_PREP    [note: 'Quotation or proposal drafting']
+  FOLLOW_UP     [note: 'Generic commercial follow-up']
+}
+
+Enum task_priority {
+  LOW           [note: 'Low urgency task']
+  MEDIUM        [note: 'Standard priority task']
+  HIGH          [note: 'High priority commercial task']
+  URGENT        [note: 'Critical milestone or SLA escalation']
+}
+
+Enum task_status {
+  PENDING       [note: 'Waiting to be executed']
+  IN_PROGRESS   [note: 'Currently being worked on']
+  COMPLETED     [note: 'Successfully completed']
+  CANCELLED     [note: 'Cancelled or rendered redundant']
+  OVERDUE       [note: 'Past due date without completion']
+}
+
+Enum communication_channel {
+  WHATSAPP      [note: 'WhatsApp Business API messaging']
+  EMAIL         [note: 'SMTP / SES / Corporate email exchange']
+  SMS           [note: 'Transactional / promotional SMS']
+  PHONE_CALL    [note: 'Cloud telephony / manual phone call']
+  WEB_CHAT      [note: 'Website live chat widget']
+}
+
+Enum message_direction {
+  INBOUND       [note: 'Incoming communication from customer']
+  OUTBOUND      [note: 'Outgoing communication from sales representative']
+}
+
+Enum message_delivery_status {
+  QUEUED        [note: 'Queued for transmission in communication-service']
+  SENT          [note: 'Dispatched to telecom/messaging gateway']
+  DELIVERED     [note: 'Delivered to handset/inbox']
+  READ          [note: 'Read receipt received']
+  FAILED        [note: 'Delivery failed / rejected']
+}
+
+Enum call_status {
+  ANSWERED      [note: 'Call connected and spoken']
+  MISSED        [note: 'Customer missed call']
+  BUSY          [note: 'Line busy']
+  NO_ANSWER     [note: 'Ringing without answer']
+  FAILED        [note: 'Carrier or routing failure']
+}
+
+Enum quotation_status {
+  DRAFT                 [note: 'Work-in-progress draft quotation']
+  PENDING_APPROVAL      [note: 'Submitted to Workflow Service for approval']
+  APPROVED              [note: 'Approved by internal authorities']
+  DISPATCHED            [note: 'Sent to customer via WhatsApp/Email']
+  ACCEPTED              [note: 'Accepted by customer']
+  REJECTED              [note: 'Rejected by customer or workflow approver']
+  EXPIRED               [note: 'Validity period elapsed']
+  CANCELLED             [note: 'Revoked by sales representative']
+  CONVERTED_TO_ORDER    [note: 'Transformed into ERP Sales Order in account-main']
+}
+
+Enum quotation_approval_status {
+  NONE          [note: 'No workflow approval required']
+  PENDING       [note: 'Workflow transaction currently active']
+  APPROVED      [note: 'Workflow fully approved']
+  REJECTED      [note: 'Workflow rejected by approver']
+}
+
+Enum discount_type {
+  PERCENTAGE    [note: 'Discount expressed as percentage (0-100%)']
+  FIXED_AMOUNT  [note: 'Fixed lump-sum monetary discount']
+}
+
+Enum integration_provider {
+  INDIAMART             [note: 'IndiaMART Leads API / Push Webhook']
+  TRADEINDIA            [note: 'TradeIndia Inquiries API']
+  JUSTDIAL              [note: 'Justdial Lead Push Service']
+  SULEKHA               [note: 'Sulekha B2B Lead Service']
+  EXPORTERSINDIA        [note: 'ExportersIndia B2B Portal']
+  META_LEAD_ADS         [note: 'Facebook & Instagram Lead Generation Ads']
+  GOOGLE_LEAD_FORMS     [note: 'Google Ads Lead Form Assets Webhook']
+  LINKEDIN_GEN          [note: 'LinkedIn Lead Gen Forms API']
+  EXOTEL_IVR            [note: 'Exotel Cloud Telephony Webhook']
+  OZONETEL              [note: 'Ozonetel Cloud Telephony Webhook']
+  KNOWLARITY            [note: 'Knowlarity SuperReceptionist API']
+  MCUBE                 [note: 'MCube Cloud Telephony Webhook']
+  WHATSAPP_CLOUD        [note: 'WhatsApp Cloud API Webhook']
+  WEBHOOK               [note: 'Generic inbound custom JSON webhook']
+  WEBSITE_FORM          [note: 'Direct CMS / WordPress form capture']
+  CSV_IMPORT            [note: 'Batch Excel/CSV lead import']
+  REST_API              [note: 'Direct REST API lead creation']
+}
+
+Enum integration_sync_status {
+  ACTIVE        [note: 'Operational and healthy']
+  PAUSED        [note: 'Temporarily paused by tenant administrator']
+  ERROR         [note: 'Encountering API errors or retry exhaustion']
+  AUTH_EXPIRED  [note: 'OAuth token or API key expired']
+}
+
+Enum webhook_processing_status {
+  RECEIVED          [note: 'Raw payload stored in webhook log']
+  NORMALIZED        [note: 'Standardized into canonical CRM lead DTO']
+  PROCESSED         [note: 'Successfully converted to CRM lead']
+  DUPLICATE_SKIPPED [note: 'Identified as duplicate and linked/skipped']
+  FAILED            [note: 'Payload parsing or validation failure']
+  DEAD_LETTER       [note: 'Moved to dead letter queue after max retries']
+}
+
+Enum custom_field_data_type {
+  TEXT          [note: 'Single-line text string']
+  TEXTAREA      [note: 'Multi-line text']
+  NUMBER        [note: 'Integer number']
+  DECIMAL       [note: 'Floating point or monetary decimal']
+  DATE          [note: 'Calendar date']
+  DATETIME      [note: 'Timestamp with time']
+  BOOLEAN       [note: 'True/false boolean']
+  SELECT        [note: 'Single selection dropdown']
+  MULTI_SELECT  [note: 'Multiple selection checkboxes']
+  URL           [note: 'Hyperlink URL']
+}
+
+Enum automation_trigger {
+  LEAD_CREATED              [note: 'Fired when a new lead is ingested or created']
+  LEAD_SCORE_CHANGED        [note: 'Fired when lead qualification score reaches threshold']
+  LEAD_STATUS_CHANGED       [note: 'Fired when lead changes status']
+  OPPORTUNITY_STAGE_CHANGED [note: 'Fired when deal progresses in pipeline']
+  TASK_OVERDUE              [note: 'Fired when follow-up task crosses due date']
+  INACTIVITY_TIMEOUT        [note: 'Fired when no activity logged for N days']
+  WEBHOOK_RECEIVED          [note: 'Fired upon specific external event']
+}
+
+Enum automation_action_type {
+  AUTO_ASSIGN_ROUND_ROBIN   [note: 'Assign lead evenly across sales pool']
+  SEND_NOTIFICATION         [note: 'Send system/app alert to sales rep']
+  DISPATCH_WHATSAPP         [note: 'Trigger automated WhatsApp template message']
+  DISPATCH_EMAIL            [note: 'Trigger automated email communication']
+  CREATE_TASK               [note: 'Automatically schedule follow-up call or meeting']
+  UPDATE_FIELD              [note: 'Update entity property (e.g. status or rating)']
+  CALL_WEBHOOK              [note: 'Post event payload to external third-party URL']
+  INITIATE_WORKFLOW_APPROVAL [note: 'Submit document to Workflow Service']
+}
+
+Enum round_robin_strategy {
+  ROUND_ROBIN           [note: 'Strict sequential circular assignment']
+  WEIGHTED_CAPACITY     [note: 'Proportional distribution based on rep quota']
+  AVAILABILITY_BASED    [note: 'Considers rep working hours, shift and leave']
+}
+
+Enum outbox_status {
+  PENDING       [note: 'Awaiting dispatch worker pick-up']
+  PROCESSED     [note: 'Dispatched to RabbitMQ exchange']
+  FAILED        [note: 'Publishing failure; scheduled for retry']
+}
+
+// =============================================================================
+// TABLE GROUP 1: CRM CONFIGURATION & MASTER DATA
+// =============================================================================
+
+Table crm_company_setting {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, unique, note: 'Tenant isolation: references sso.company.id']
+  default_pipeline_id uuid [note: 'Default sales pipeline for company']
+  default_lead_source_id uuid [note: 'Default lead source for company']
+  auto_assign_leads boolean [not null, default: true, note: 'Enable automated round-robin lead assignment']
+  round_robin_strategy round_robin_strategy [not null, default: 'ROUND_ROBIN']
+  quotation_validity_days int [not null, default: 30, note: 'Default validity days for dispatched quotes']
+  require_discount_approval boolean [not null, default: true, note: 'Require Workflow Service approval for high discounts']
+  discount_approval_threshold decimal(5,2) [not null, default: 15.00, note: 'Discount percentage triggering workflow approval']
+  enable_deduplication boolean [not null, default: true, note: 'Enable automatic duplicate checking on incoming leads']
+  dedup_match_fields varchar(255) [default: 'PHONE,EMAIL', note: 'Comma-separated match criteria']
+  base_currency varchar(3) [not null, default: 'INR', note: 'Default operating currency (ISO-4217)']
+  business_hours_start time [default: '09:30:00', note: 'Daily business start time']
+  business_hours_end time [default: '18:30:00', note: 'Daily business close time']
+  working_days varchar(50) [default: 'MON,TUE,WED,THU,FRI,SAT', note: 'Operating days for SLA calculations']
+  sla_first_response_hours int [default: 4, note: 'Target hours to first contact new lead']
+  enable_ai_scoring boolean [not null, default: false, note: 'Enable predictive/heuristic lead scoring']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    company_id [unique, name: 'uq_crm_setting_company']
+  }
+
+  Note: 'Company-specific CRM operational settings, rules, and governance thresholds.'
+}
+
+Table crm_lead_status {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  status_code varchar(50) [not null, note: 'System code, e.g. NEW, CONTACTED, QUALIFIED, WON, LOST']
+  status_name varchar(100) [not null, note: 'Display label']
+  status_category lead_status_category [not null, default: 'OPEN']
+  display_order int [not null, default: 0, note: 'Sequence in UI kanban / dropdowns']
+  color_code varchar(20) [default: '#3B82F6', note: 'Hex color for badge rendering']
+  is_default boolean [not null, default: false, note: 'Default status for newly ingested leads']
+  is_active boolean [not null, default: true]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, status_code) [unique, name: 'uq_crm_lead_status_company_code']
+    (company_id, is_active, display_order) [name: 'idx_crm_lead_status_company_order']
+  }
+
+  Note: 'Configurable lead statuses representing the qualification and sales lifecycle.'
+}
+
+Table crm_lead_source {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  source_code varchar(50) [not null, note: 'Code matching integration_provider or custom source']
+  source_name varchar(100) [not null, note: 'Human-readable label, e.g. IndiaMART Portal']
+  source_category varchar(50) [default: 'DIGITAL', note: 'INBOUND, OUTBOUND, B2B_MARKETPLACE, DIGITAL_ADS, REFERRAL, OFFLINE']
+  is_active boolean [not null, default: true]
+  is_system boolean [not null, default: false, note: 'System default source cannot be deleted']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, source_code) [unique, name: 'uq_crm_lead_source_company_code']
+    (company_id, is_active) [name: 'idx_crm_lead_source_company_active']
+  }
+
+  Note: 'Configurable lead acquisition sources for multi-channel tracking and attribution.'
+}
+
+Table crm_lost_reason {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  reason_code varchar(50) [not null, note: 'Code, e.g. PRICE_TOO_HIGH, COMPETITOR_CHOSEN']
+  reason_label varchar(200) [not null, note: 'User visible explanation label']
+  applicable_to varchar(30) [not null, default: 'BOTH', note: 'LEAD, OPPORTUNITY, or BOTH']
+  is_active boolean [not null, default: true]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, reason_code) [unique, name: 'uq_crm_lost_reason_company_code']
+  }
+
+  Note: 'Standardized loss reasons for disqualified leads and lost pipeline deals.'
+}
+
+Table crm_tag {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  tag_name varchar(50) [not null, note: 'Tag title, e.g. High Value, VIP, Urgent, Export']
+  color_code varchar(20) [default: '#10B981', note: 'Hex color badge']
+  entity_scope varchar(50) [default: 'GLOBAL', note: 'GLOBAL, LEAD, ACCOUNT, CONTACT, OPPORTUNITY']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, tag_name) [unique, name: 'uq_crm_tag_company_name']
+    (company_id, id) [unique, name: 'uq_crm_tag_company_id']
+  }
+
+  Note: 'Tenant-scoped labels for cross-cutting classification of CRM entities.'
+}
+
+Table crm_custom_field_definition {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  entity_name varchar(50) [not null, note: 'LEAD, ACCOUNT, CONTACT, OPPORTUNITY, QUOTATION']
+  field_key varchar(50) [not null, note: 'Snake_case key, e.g. gst_certificate_number']
+  field_label varchar(100) [not null, note: 'User-facing label']
+  data_type custom_field_data_type [not null, default: 'TEXT']
+  options_json text [note: 'JSON array of string choices for SELECT and MULTI_SELECT']
+  default_value text [note: 'Default initial value']
+  is_required boolean [not null, default: false]
+  is_searchable boolean [not null, default: false]
+  validation_regex varchar(255) [note: 'Optional regex pattern validator']
+  display_order int [not null, default: 0]
+  is_active boolean [not null, default: true]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, entity_name, field_key) [unique, name: 'uq_crm_cf_def_company_entity_key']
+    (company_id, entity_name, is_active) [name: 'idx_crm_cf_def_company_entity']
+  }
+
+  Note: 'Schema definition for dynamic tenant-level custom attributes across CRM entities.'
+}
+
+Table crm_custom_field_value {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  custom_field_id uuid [not null, note: 'FK to crm_custom_field_definition']
+  entity_type varchar(50) [not null, note: 'LEAD, ACCOUNT, CONTACT, OPPORTUNITY, QUOTATION']
+  entity_id uuid [not null, note: 'Primary key of the specific entity instance']
+  value_text text [note: 'Storage for TEXT, SELECT, URL, TEXTAREA']
+  value_number bigint [note: 'Storage for integer numbers and boolean (0/1)']
+  value_decimal decimal(19,4) [note: 'Storage for floating point / currency']
+  value_date timestamp [note: 'Storage for DATE and DATETIME']
+  value_json text [note: 'Storage for MULTI_SELECT values array']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (custom_field_id, entity_id) [unique, name: 'uq_crm_cf_val_field_entity']
+    (company_id, entity_type, entity_id) [name: 'idx_crm_cf_val_company_entity']
+  }
+
+  Note: 'EAV attribute value storage for dynamic custom fields.'
+}
+
+// =============================================================================
+// TABLE GROUP 2: LEAD ACQUISITION & INTEGRATIONS
+// =============================================================================
+
+Table crm_integration_channel {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  provider_code integration_provider [not null, unique, note: 'Canonical provider enum key']
+  provider_name varchar(100) [not null, note: 'Display name, e.g. IndiaMART B2B Portal']
+  provider_category varchar(50) [not null, note: 'B2B_MARKETPLACE, AD_PLATFORM, TELEPHONY, MESSAGING, WEB']
+  supports_pull boolean [not null, default: false, note: 'True if provider supports scheduled REST polling']
+  supports_push boolean [not null, default: true, note: 'True if provider pushes real-time webhooks']
+  supports_oauth boolean [not null, default: false, note: 'True if OAuth2 flow required']
+  auth_instructions text [note: 'Documentation on generating API credentials']
+  documentation_url varchar(500)
+  icon_url varchar(500)
+  is_active boolean [not null, default: true]
+
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  Note: 'Master registry of external lead channels supported by the CRM platform.'
+}
+
+Table crm_tenant_integration {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  integration_channel_id uuid [not null, note: 'FK to crm_integration_channel']
+  connection_name varchar(150) [not null, note: 'User-assigned name, e.g. North India IndiaMART Account']
+  auth_type varchar(30) [not null, default: 'API_KEY', note: 'API_KEY, OAUTH2, WEBHOOK_SECRET, BASIC_AUTH']
+  credential_vault_ref varchar(255) [note: 'Secure reference key to AWS Secrets Manager / Vault / Encrypted Storage (NEVER plaintext)']
+  webhook_secret_hash varchar(255) [note: 'Hashed verification secret for incoming signature validation']
+  webhook_slug varchar(120) [not null, unique, note: 'Unique URL slug for tenant webhook routing, e.g. im-corp1-98a7c2']
+  sync_frequency_minutes int [default: 15, note: 'Polling interval if pull-based']
+  sync_status integration_sync_status [not null, default: 'ACTIVE']
+  last_sync_at timestamp [note: 'Timestamp of last successful pull/push event']
+  last_error_message text [note: 'Error message from most recent failed sync']
+  consecutive_failures int [not null, default: 0]
+  settings_json text [note: 'JSON object for field mappings, default owner_user_id, default tags, filters']
+  is_enabled boolean [not null, default: true]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, integration_channel_id) [name: 'idx_crm_tint_company_channel']
+    (webhook_slug) [unique, name: 'uq_crm_tint_webhook_slug']
+    (sync_status, is_enabled) [name: 'idx_crm_tint_status_enabled']
+  }
+
+  Note: 'Tenant-specific configuration and credentials for external lead sources.'
+}
+
+Table crm_integration_webhook_log {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  tenant_integration_id uuid [note: 'FK to crm_tenant_integration']
+  provider_code integration_provider [not null, note: 'External provider code']
+  external_event_id varchar(255) [note: 'Provider transaction or message ID for idempotency']
+  source_ip varchar(64) [note: 'IP address of inbound webhook client']
+  headers_json text [note: 'HTTP headers for audit and signature verification']
+  raw_payload text [not null, note: 'Exact unparsed JSON or XML payload from provider']
+  idempotency_hash varchar(64) [not null, note: 'SHA-256 hash of payload + external ID to enforce exact-once delivery']
+  processing_status webhook_processing_status [not null, default: 'RECEIVED']
+  retry_count int [not null, default: 0]
+  max_retries int [not null, default: 3]
+  next_retry_at timestamp
+  lead_id uuid [note: 'Generated or linked crm_lead.id if processed']
+  error_message text
+  processed_at timestamp
+
+  // Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (company_id, idempotency_hash) [unique, name: 'uq_crm_webhook_company_idempotency']
+    (processing_status, next_retry_at) [name: 'idx_crm_webhook_status_retry']
+    (company_id, created_at) [name: 'idx_crm_webhook_company_created']
+    (lead_id) [name: 'idx_crm_webhook_lead']
+  }
+
+  Note: 'High-volume raw inbound event audit log for integrations with guaranteed idempotency.'
+}
+
+Table crm_lead_import_batch {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  file_name varchar(255) [not null, note: 'Original uploaded filename']
+  file_storage_url varchar(500) [not null, note: 'Storage path/URL in S3 / MinIO']
+  total_records int [not null, default: 0]
+  imported_count int [not null, default: 0]
+  duplicate_count int [not null, default: 0]
+  failed_count int [not null, default: 0]
+  status varchar(30) [not null, default: 'PENDING', note: 'PENDING, PROCESSING, COMPLETED, FAILED']
+  mapping_config_json text [not null, note: 'JSON column mapping configuration']
+  error_report_url varchar(500) [note: 'Download URL for generated error CSV']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, created_at) [name: 'idx_crm_import_company_created']
+  }
+
+  Note: 'Batch tracking for manual CSV/Excel lead imports with column mapping.'
+}
+
+// =============================================================================
+// TABLE GROUP 3: LEAD MANAGEMENT CORE
+// =============================================================================
+
+Table crm_lead {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation: references sso.company.id']
+  lead_code varchar(50) [not null, note: 'Human-friendly reference, e.g. LD-2026-00389']
+
+  // Contact Details
+  salutation varchar(20) [note: 'Mr., Ms., Dr., Shri']
+  first_name varchar(100) [not null]
+  last_name varchar(100)
+  display_name varchar(200) [not null, note: 'Computed or full display name']
+  email varchar(255)
+  normalized_email varchar(255) [note: 'Trimmed, lowercased for deduplication']
+  phone varchar(30) [note: 'Formatted telephone number with country code, e.g. +91 98765 43210']
+  normalized_phone varchar(20) [note: 'E.164 digits only, e.g. 919876543210 for dedup indexing']
+  alternate_phone varchar(30)
+  website varchar(255)
+
+  // Company / Commercial Inquirer Info
+  organization_name varchar(255) [note: 'Prospect enterprise/business entity name']
+  designation varchar(100) [note: 'Job title, e.g. Purchase Manager, Director']
+  industry varchar(100) [note: 'Manufacturing, Pharma, Real Estate, FMCG, Textile']
+  annual_revenue decimal(19,4) [note: 'Estimated annual turnover']
+  company_size varchar(50) [note: '1-10, 11-50, 51-200, 201-500, 500+ employees']
+
+  // Indian Statutory / Tax Identifiers
+  gstin varchar(15) [note: '15-character Goods and Services Tax Identification Number']
+  pan varchar(10) [note: '10-character Permanent Account Number']
+
+  // Geographic Address
+  address_line1 varchar(255)
+  address_line2 varchar(255)
+  city varchar(100)
+  state varchar(100) [note: 'Indian State or Union Territory']
+  state_code varchar(10) [note: 'GST 2-digit state code, e.g. 27 for Maharashtra, 07 for Delhi']
+  postal_code varchar(20) [note: 'PIN code']
+  country varchar(100) [default: 'India']
+
+  // Acquisition & Source Attribution
+  lead_source_id uuid [note: 'FK to crm_lead_source']
+  tenant_integration_id uuid [note: 'FK to crm_tenant_integration if ingested via integration']
+  external_lead_id varchar(255) [note: 'Provider lead ID (e.g. IndiaMART query ID, Meta Lead ID)']
+  external_lead_url varchar(500) [note: 'Direct link to inquiry on provider portal']
+  campaign_id uuid [note: 'FK to crm_campaign']
+  utm_source varchar(100)
+  utm_medium varchar(100)
+  utm_campaign varchar(100)
+  utm_content varchar(100)
+  utm_term varchar(100)
+  raw_inquiry_text text [note: 'Original inquiry message from customer']
+
+  // Qualification & Lifecycle Status
+  lead_status_id uuid [not null, note: 'FK to crm_lead_status']
+  lead_stage lead_stage [not null, default: 'RAW']
+  lead_score int [not null, default: 0, note: 'Calculated qualification score (0 - 100)']
+  score_grade lead_rating [default: 'COLD']
+  is_qualified boolean [not null, default: false]
+  qualified_at timestamp
+  qualified_by_user_id uuid [note: 'User UUID from sso.user']
+
+  // Ownership & Assignment
+  owner_user_id uuid [note: 'Assigned sales representative (sso.user.id)']
+  assigned_team_id uuid [note: 'Assigned departmental sales team']
+  assigned_at timestamp
+  last_contacted_at timestamp
+  next_follow_up_date timestamp
+
+  // Conversion Linkage
+  is_converted boolean [not null, default: false]
+  converted_at timestamp
+  converted_by_user_id uuid
+  converted_account_id uuid [note: 'FK to crm_account created upon conversion']
+  converted_contact_id uuid [note: 'FK to crm_contact created upon conversion']
+  converted_opportunity_id uuid [note: 'FK to crm_opportunity created upon conversion']
+
+  // Loss & Recycling
+  is_lost boolean [not null, default: false]
+  lost_reason_id uuid [note: 'FK to crm_lost_reason']
+  lost_details text
+  lost_at timestamp
+  is_recycled boolean [not null, default: false]
+  recycled_at timestamp
+
+  // Deduplication & Merge Tracking
+  is_duplicate boolean [not null, default: false]
+  primary_lead_id uuid [note: 'Self-reference to primary lead if merged']
+  dedup_fingerprint varchar(64) [note: 'Hash of company_id + normalized_phone/email for fast lookup']
+
+  // Privacy & Consent (DPDP Act 2023)
+  consent_given boolean [not null, default: false]
+  consent_timestamp timestamp
+  consent_source varchar(100) [note: 'WEBSITE_CHECKBOX, WHATSAPP_OPTIN, INDIAMART_OPTIN']
+  opt_out_email boolean [not null, default: false]
+  opt_out_whatsapp boolean [not null, default: false]
+  opt_out_sms boolean [not null, default: false]
+  opt_out_call boolean [not null, default: false]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, lead_code) [unique, name: 'uq_crm_lead_company_code']
+    (company_id, id) [unique, name: 'uq_crm_lead_company_id']
+    (company_id, normalized_phone) [name: 'idx_crm_lead_company_phone']
+    (company_id, normalized_email) [name: 'idx_crm_lead_company_email']
+    (company_id, external_lead_id) [name: 'idx_crm_lead_external_id']
+    (company_id, owner_user_id, is_converted) [name: 'idx_crm_lead_owner_converted']
+    (company_id, lead_status_id) [name: 'idx_crm_lead_status']
+    (company_id, lead_score) [name: 'idx_crm_lead_score']
+    (company_id, next_follow_up_date) [name: 'idx_crm_lead_followup']
+    (company_id, created_at) [name: 'idx_crm_lead_created']
+  }
+
+  Note: 'Primary lead table representing prospective business inquiries and lifecycle management.'
+}
+
+Table crm_lead_assignment_history {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  lead_id uuid [not null, note: 'FK to crm_lead']
+  from_user_id uuid [note: 'Previous owner (null if first assignment)']
+  to_user_id uuid [not null, note: 'New owner assigned']
+  assigned_by_user_id uuid [note: 'User who triggered reassignment (null if auto-assigned)']
+  assignment_method varchar(50) [not null, default: 'MANUAL', note: 'MANUAL, ROUND_ROBIN, RULE_BASED, ESCALATION']
+  reason text [note: 'Explanation for reassignment']
+
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    lead_id [name: 'idx_crm_lead_assign_lead']
+    (company_id, to_user_id) [name: 'idx_crm_lead_assign_user']
+  }
+
+  Note: 'Audit log of every ownership transition for accountability and performance tracking.'
+}
+
+Table crm_lead_merge_history {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  primary_lead_id uuid [not null, note: 'Surviving primary lead']
+  merged_lead_id uuid [not null, note: 'Merged and retired duplicate lead']
+  merged_lead_snapshot_json text [not null, note: 'Complete JSON snapshot of retired lead before merge']
+  merged_by_user_id uuid [not null, note: 'User performing merge']
+  merge_reason text
+
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    primary_lead_id [name: 'idx_crm_lead_merge_primary']
+    merged_lead_id [name: 'idx_crm_lead_merge_merged']
+  }
+
+  Note: 'Immutable history of merged duplicate leads with data preservation snapshot.'
+}
+
+Table crm_lead_score_log {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  lead_id uuid [not null, note: 'FK to crm_lead']
+  rule_code varchar(100) [not null, note: 'Identifier of rule, e.g. HAS_GSTIN, BUDGET_GT_10L, EMAIL_OPENED']
+  score_delta int [not null, note: 'Points added or deducted (+15, -10)']
+  previous_score int [not null]
+  new_score int [not null]
+  trigger_event varchar(100) [not null]
+
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    lead_id [name: 'idx_crm_lead_score_lead']
+  }
+
+  Note: 'Transparent audit breakdown of points awarded to calculate lead qualification score.'
+}
+
+Table crm_lead_tag_mapping {
+  company_id uuid [not null, note: 'Tenant isolation']
+  lead_id uuid [not null, note: 'FK to crm_lead']
+  tag_id uuid [not null, note: 'FK to crm_tag']
+
+  indexes {
+    (company_id, lead_id, tag_id) [pk]
+    (company_id, tag_id) [name: 'idx_crm_lead_tag_company_tag']
+  }
+
+  Note: 'Tenant-isolated many-to-many junction between leads and descriptive tags.'
+}
+
+Table crm_lead_product_interest {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  lead_id uuid [not null, note: 'FK to crm_lead']
+  product_id uuid [note: 'Logical reference to inventory.product.id (NO cross-DB FK)']
+  product_name varchar(255) [not null, note: 'Inquired product/service item name']
+  product_code varchar(100) [note: 'SKU or catalog code']
+  quantity decimal(19,4) [default: 1.0000]
+  uom varchar(50) [default: 'PCS', note: 'Unit of measure']
+  estimated_budget decimal(19,4)
+  currency varchar(3) [default: 'INR']
+  specifications text [note: 'Custom technical requirements or dimensions from inquiry']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    lead_id [name: 'idx_crm_lead_prod_lead']
+    (company_id, product_id) [name: 'idx_crm_lead_prod_company_product']
+  }
+
+  Note: 'Products, materials, or services that a prospective lead has inquired about.'
+}
+
+// =============================================================================
+// TABLE GROUP 4: ACCOUNT & CONTACT MANAGEMENT
+// =============================================================================
+
+Table crm_account {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation: references sso.company.id']
+  account_code varchar(50) [not null, note: 'Human-friendly identifier, e.g. ACC-2026-00104']
+  account_name varchar(255) [not null, note: 'Company or enterprise legal name']
+  account_type account_type [not null, default: 'PROSPECT']
+  parent_account_id uuid [note: 'Self-reference for corporate parent / holding / branch hierarchy']
+  industry varchar(100) [note: 'Industry classification']
+  business_type business_type [default: 'PVT_LTD']
+  tier account_tier [default: 'TIER_2']
+
+  // Indian Statutory Information
+  gstin varchar(15) [note: 'Goods & Services Tax Identification Number']
+  pan varchar(10) [note: 'Permanent Account Number']
+
+  // Contact Info
+  website varchar(255)
+  phone varchar(30)
+  email varchar(255)
+  annual_revenue decimal(19,4)
+  employee_count int
+  credit_rating varchar(50)
+
+  // Ownership & Relations
+  owner_user_id uuid [note: 'Account Manager / Sales Owner (sso.user.id)']
+  billing_address_id uuid [note: 'FK to crm_address']
+  shipping_address_id uuid [note: 'FK to crm_address']
+  is_active boolean [not null, default: true]
+
+  // Integration to Accounting ERP Master
+  account_main_customer_id uuid [note: 'Logical reference to account-main.customer.id when onboarded!']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, account_code) [unique, name: 'uq_crm_account_company_code']
+    (company_id, id) [unique, name: 'uq_crm_account_company_id']
+    (company_id, gstin) [name: 'idx_crm_account_gstin']
+    (company_id, pan) [name: 'idx_crm_account_pan']
+    (company_id, owner_user_id) [name: 'idx_crm_account_owner']
+    (account_main_customer_id) [name: 'idx_crm_account_customer_ref']
+  }
+
+  Note: 'B2B Client Company Accounts with hierarchy, GSTIN/PAN compliance, and ERP customer linkage.'
+}
+
+Table crm_contact {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  account_id uuid [note: 'FK to crm_account (null if standalone B2C contact)']
+  contact_code varchar(50) [not null, note: 'Unique identifier, e.g. CON-2026-00451']
+  salutation varchar(20)
+  first_name varchar(100) [not null]
+  last_name varchar(100)
+  display_name varchar(200) [not null]
+  designation varchar(100) [note: 'Job title, e.g. Vice President Procurement']
+  department_name varchar(100) [note: 'Department, e.g. Purchase, IT, Operations']
+  email varchar(255)
+  normalized_email varchar(255)
+  phone varchar(30)
+  normalized_phone varchar(20)
+  mobile varchar(30)
+  is_primary_contact boolean [not null, default: false, note: 'Primary contact for account communication']
+  decision_maker_role decision_maker_role [default: 'EVALUATOR']
+  linkedin_url varchar(255)
+  owner_user_id uuid [note: 'Relationship manager (sso.user.id)']
+  is_active boolean [not null, default: true]
+
+  // Consent & Privacy
+  consent_given boolean [not null, default: false]
+  opt_out_email boolean [not null, default: false]
+  opt_out_whatsapp boolean [not null, default: false]
+  opt_out_sms boolean [not null, default: false]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, contact_code) [unique, name: 'uq_crm_contact_company_code']
+    (company_id, id) [unique, name: 'uq_crm_contact_company_id']
+    (company_id, account_id) [name: 'idx_crm_contact_account']
+    (company_id, normalized_phone) [name: 'idx_crm_contact_phone']
+    (company_id, normalized_email) [name: 'idx_crm_contact_email']
+  }
+
+  Note: 'Individual persons associated with accounts or independent business relationships.'
+}
+
+Table crm_address {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  entity_type varchar(50) [not null, note: 'ACCOUNT, CONTACT, QUOTATION']
+  entity_id uuid [not null, note: 'FK to owning record']
+  address_type address_type [not null, default: 'BILLING']
+  address_line1 varchar(255) [not null]
+  address_line2 varchar(255)
+  city varchar(100) [not null]
+  state varchar(100) [not null]
+  state_code varchar(10) [not null, note: 'GST 2-digit state code (01 - 38) for tax computation']
+  postal_code varchar(20) [not null, note: 'PIN code']
+  country varchar(100) [not null, default: 'India']
+  gstin_for_address varchar(15) [note: 'Address-specific GSTIN if multi-state registered']
+  is_default boolean [not null, default: false]
+  is_active boolean [not null, default: true]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, entity_type, entity_id) [name: 'idx_crm_address_entity']
+    (company_id, state_code) [name: 'idx_crm_address_state_code']
+  }
+
+  Note: 'Normalized multi-address storage with GST state codes for tax determination.'
+}
+
+Table crm_account_contact_relation {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  account_id uuid [not null, note: 'FK to crm_account']
+  contact_id uuid [not null, note: 'FK to crm_contact']
+  relationship_title varchar(100) [note: 'External Consultant, Board Member, Authorized Signatory']
+  is_active boolean [not null, default: true]
+
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (company_id, account_id, contact_id) [unique, name: 'uq_crm_acc_contact_rel']
+    (company_id, contact_id) [name: 'idx_crm_acc_contact_rel_contact']
+  }
+
+  Note: 'Tenant-isolated many-to-many relationship supporting contacts representing multiple accounts.'
+}
+
+// =============================================================================
+// TABLE GROUP 5: SALES PIPELINE & OPPORTUNITY MANAGEMENT
+// =============================================================================
+
+Table crm_sales_pipeline {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  pipeline_code varchar(50) [not null, note: 'Unique code, e.g. DOMESTIC_SALES, EXPORT_SALES, TENDER_SALES']
+  pipeline_name varchar(100) [not null, note: 'Human-readable name']
+  description text
+  is_default boolean [not null, default: false, note: 'Default pipeline for new opportunities']
+  is_active boolean [not null, default: true]
+  display_order int [not null, default: 0]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, pipeline_code) [unique, name: 'uq_crm_pipeline_company_code']
+    (company_id, is_active) [name: 'idx_crm_pipeline_active']
+  }
+
+  Note: 'Multiple distinct sales funnels per company (e.g., Domestic, Export, Tender).'
+}
+
+Table crm_pipeline_stage {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  pipeline_id uuid [not null, note: 'FK to crm_sales_pipeline']
+  stage_code varchar(50) [not null, note: 'Stage code, e.g. DISCOVERY, PROPOSAL, NEGOTIATION, WON']
+  stage_name varchar(100) [not null, note: 'Display label']
+  stage_order int [not null, default: 1, note: 'Horizontal progression sequence']
+  stage_category pipeline_stage_category [not null, default: 'PROSPECTING']
+  win_probability_pct int [not null, default: 10, note: 'Probability for weighted forecasting (0 - 100)']
+  rotting_days int [default: 14, note: 'Days before deal is flagged as rotting in kanban']
+  sla_days int [default: 7, note: 'Target days to move deal out of this stage']
+  color_code varchar(20) [default: '#6366F1', note: 'UI column color']
+  is_active boolean [not null, default: true]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (pipeline_id, stage_code) [unique, name: 'uq_crm_stage_pipeline_code']
+    (pipeline_id, stage_order) [name: 'idx_crm_stage_pipeline_order']
+  }
+
+  Note: 'Customizable sequential stages within a sales pipeline with weighted win probabilities.'
+}
+
+Table crm_opportunity {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation: references sso.company.id']
+  opportunity_code varchar(50) [not null, note: 'Reference, e.g. OPP-2026-00912']
+  opportunity_name varchar(255) [not null, note: 'Deal title, e.g. 500KW Solar Plant for Tata Steel']
+  pipeline_id uuid [not null, note: 'FK to crm_sales_pipeline']
+  current_stage_id uuid [not null, note: 'FK to crm_pipeline_stage']
+  account_id uuid [note: 'FK to crm_account (associated client organization)']
+  primary_contact_id uuid [note: 'FK to crm_contact (key stakeholder)']
+  origin_lead_id uuid [note: 'FK to crm_lead (origin lead if converted)']
+
+  // Commercial Values & Forecast
+  deal_value decimal(19,4) [not null, default: 0.0000, note: 'Total contract or proposal value']
+  currency varchar(3) [not null, default: 'INR']
+  expected_close_date date [not null, note: 'Target closing deadline']
+  probability_pct int [not null, default: 10, note: 'Override or stage probability percentage']
+  weighted_value decimal(19,4) [not null, default: 0.0000, note: 'deal_value * probability_pct / 100']
+
+  // Ownership & Categorization
+  owner_user_id uuid [not null, note: 'Deal Owner (sso.user.id)']
+  assigned_team_id uuid [note: 'Sales Team identifier']
+  deal_type opportunity_deal_type [not null, default: 'NEW_BUSINESS']
+  deal_status opportunity_deal_status [not null, default: 'OPEN']
+
+  // Outcome Tracking
+  won_at timestamp
+  lost_at timestamp
+  lost_reason_id uuid [note: 'FK to crm_lost_reason if deal is lost']
+  lost_notes text
+  win_notes text
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, opportunity_code) [unique, name: 'uq_crm_opp_company_code']
+    (company_id, pipeline_id, current_stage_id) [name: 'idx_crm_opp_pipeline_stage']
+    (company_id, owner_user_id, deal_status) [name: 'idx_crm_opp_owner_status']
+    (company_id, expected_close_date) [name: 'idx_crm_opp_close_date']
+    (company_id, account_id) [name: 'idx_crm_opp_account']
+  }
+
+  Note: 'Sales deals / opportunities tracking revenue forecast and pipeline velocity.'
+}
+
+Table crm_opportunity_item {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  opportunity_id uuid [not null, note: 'FK to crm_opportunity']
+  product_id uuid [note: 'Logical reference to inventory.product.id (NO cross-DB FK)']
+  product_code varchar(100) [note: 'SKU code']
+  product_name varchar(255) [not null]
+  description text
+  quantity decimal(19,4) [not null, default: 1.0000]
+  uom varchar(50) [default: 'PCS']
+  unit_price decimal(19,4) [not null, default: 0.0000]
+  discount_pct decimal(5,2) [default: 0.00]
+  discount_amount decimal(19,4) [default: 0.0000]
+  tax_pct decimal(5,2) [default: 18.00]
+  total_amount decimal(19,4) [not null, default: 0.0000]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    opportunity_id [name: 'idx_crm_opp_item_opp']
+    (company_id, product_id) [name: 'idx_crm_opp_item_product']
+  }
+
+  Note: 'Products or services bundled into an opportunity.'
+}
+
+Table crm_opportunity_competitor {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  opportunity_id uuid [not null, note: 'FK to crm_opportunity']
+  competitor_name varchar(200) [not null]
+  strengths text
+  weaknesses text
+  pricing_comparison varchar(50) [note: 'HIGHER, LOWER, SIMILAR']
+  threat_level varchar(30) [default: 'MEDIUM', note: 'LOW, MEDIUM, HIGH']
+  is_winner boolean [not null, default: false, note: 'True if client awarded contract to this competitor']
+
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    opportunity_id [name: 'idx_crm_opp_comp_opp']
+  }
+
+  Note: 'Market competitors competing for a specific sales opportunity.'
+}
+
+Table crm_opportunity_stage_history {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  opportunity_id uuid [not null, note: 'FK to crm_opportunity']
+  from_stage_id uuid [note: 'FK to crm_pipeline_stage (null if initial creation)']
+  to_stage_id uuid [not null, note: 'FK to crm_pipeline_stage']
+  stage_entry_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  stage_exit_at timestamp
+  duration_seconds bigint [note: 'Time spent in from_stage for pipeline velocity metrics']
+  changed_by_user_id uuid [not null]
+  reason_for_change text
+
+  indexes {
+    opportunity_id [name: 'idx_crm_opp_hist_opp']
+    (company_id, to_stage_id) [name: 'idx_crm_opp_hist_stage']
+  }
+
+  Note: 'Historical transition logs measuring velocity, cycle time, and bottleneck stages.'
+}
+
+// =============================================================================
+// TABLE GROUP 6: ACTIVITY, TASK & FOLLOW-UP MANAGEMENT
+// =============================================================================
+
+Table crm_activity {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  entity_type varchar(50) [not null, note: 'LEAD, ACCOUNT, CONTACT, OPPORTUNITY, QUOTATION']
+  entity_id uuid [not null, note: 'Target entity ID']
+  activity_type varchar(50) [not null, note: 'CALL, MEETING, EMAIL, NOTE, TASK, WHATSAPP, STATUS_CHANGE, STAGE_CHANGE']
+  subject varchar(255) [not null]
+  description text
+  activity_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  performed_by_user_id uuid [not null, note: 'sso.user.id who logged or performed activity']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, entity_type, entity_id, activity_at) [name: 'idx_crm_activity_timeline']
+    (company_id, performed_by_user_id) [name: 'idx_crm_activity_user']
+  }
+
+  Note: 'Unified chronological activity stream and notes across all CRM business objects.'
+}
+
+Table crm_task {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  entity_type varchar(50) [not null, note: 'LEAD, ACCOUNT, CONTACT, OPPORTUNITY']
+  entity_id uuid [not null, note: 'Associated business record']
+  task_type task_type [not null, default: 'FOLLOW_UP']
+  title varchar(255) [not null]
+  description text
+  priority task_priority [not null, default: 'MEDIUM']
+  status task_status [not null, default: 'PENDING']
+  due_date date [not null]
+  due_time time
+  completed_at timestamp
+  assigned_to_user_id uuid [not null, note: 'Assignee sales representative (sso.user.id)']
+  created_by_user_id uuid [not null]
+  reminder_at timestamp [note: 'Alarm notification timestamp']
+  reminder_sent boolean [not null, default: false]
+  is_recurring boolean [not null, default: false]
+  recurrence_pattern varchar(50) [note: 'DAILY, WEEKLY, MONTHLY']
+  calendar_event_id varchar(255) [note: 'External Google / Outlook calendar event reference']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, assigned_to_user_id, status, due_date) [name: 'idx_crm_task_user_status_due']
+    (company_id, entity_type, entity_id) [name: 'idx_crm_task_entity']
+    (status, reminder_at, reminder_sent) [name: 'idx_crm_task_reminder']
+  }
+
+  Note: 'Actionable follow-up tasks, calls, demos, and calendar meetings with reminders.'
+}
+
+Table crm_attachment {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  entity_type varchar(50) [not null, note: 'LEAD, ACCOUNT, CONTACT, OPPORTUNITY, QUOTATION']
+  entity_id uuid [not null, note: 'Owning entity ID']
+  file_name varchar(255) [not null, note: 'Original uploaded filename']
+  file_type varchar(100) [note: 'RFP, NDA, PROPOSAL, GST_CERT, PO_COPY, SPECIFICATION']
+  file_size_bytes bigint [not null]
+  storage_provider varchar(50) [not null, default: 'S3', note: 'S3, MINIO, LOCAL']
+  storage_path_url varchar(1000) [not null, note: 'Secure storage object path (NO binary BLOBs in PostgreSQL)']
+  mime_type varchar(100) [not null]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, entity_type, entity_id) [name: 'idx_crm_attach_entity']
+  }
+
+  Note: 'Object-storage metadata references for customer RFPs, quotes, and legal documents.'
+}
+
+// =============================================================================
+// TABLE GROUP 7: OMNICHANNEL COMMUNICATION & MESSAGING
+// =============================================================================
+
+Table crm_conversation {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  channel communication_channel [not null, default: 'WHATSAPP']
+  entity_type varchar(50) [not null, note: 'LEAD, CONTACT, ACCOUNT']
+  entity_id uuid [not null, note: 'Associated customer entity']
+  customer_identifier varchar(255) [not null, note: 'Phone number or email address']
+  external_thread_id varchar(255) [note: 'WhatsApp conversation ID or Email Message-ID thread']
+  subject varchar(255) [note: 'Conversation topic / subject']
+  status varchar(30) [not null, default: 'OPEN', note: 'OPEN, ASSIGNED, SNOOZED, RESOLVED']
+  assigned_agent_id uuid [note: 'sso.user.id currently handling thread']
+  unread_count int [not null, default: 0]
+  last_message_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, channel, customer_identifier) [name: 'idx_crm_conv_company_channel_id']
+    (company_id, entity_type, entity_id) [name: 'idx_crm_conv_entity']
+    (company_id, assigned_agent_id, status) [name: 'idx_crm_conv_agent_status']
+    (company_id, last_message_at) [name: 'idx_crm_conv_last_msg']
+  }
+
+  Note: 'Unified customer conversation thread across WhatsApp, Email, SMS, and Webchat.'
+}
+
+Table crm_message {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  conversation_id uuid [not null, note: 'FK to crm_conversation']
+  direction message_direction [not null]
+  channel communication_channel [not null]
+  sender_identifier varchar(255) [not null]
+  recipient_identifier varchar(255) [not null]
+  subject varchar(500) [note: 'Email subject line']
+  body_text text [not null, note: 'Plain text message content']
+  body_html text [note: 'Rendered HTML content for emails']
+  media_storage_url varchar(1000) [note: 'Storage URL if audio voice note, document, or image']
+  delivery_status message_delivery_status [not null, default: 'QUEUED']
+  external_message_id varchar(255) [note: 'Meta WAMID, AWS SES Message-Id, Twilio SID']
+  error_code varchar(100)
+  error_message text
+  sent_at timestamp
+  delivered_at timestamp
+  read_at timestamp
+
+  // Linkage to communication-service microservice
+  notification_request_id uuid [note: 'Logical reference to communication-service.notification_request.id']
+
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    conversation_id [name: 'idx_crm_msg_conv']
+    (company_id, external_message_id) [name: 'idx_crm_msg_ext_id']
+    (delivery_status, created_at) [name: 'idx_crm_msg_delivery_status']
+    (notification_request_id) [name: 'idx_crm_msg_notif_req']
+  }
+
+  Note: 'Granular inbound and outbound messages with delivery receipts.'
+}
+
+Table crm_call_log {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  entity_type varchar(50) [not null, note: 'LEAD, CONTACT, ACCOUNT']
+  entity_id uuid [not null]
+  call_direction message_direction [not null, default: 'OUTBOUND']
+  provider_name varchar(50) [not null, default: 'EXOTEL', note: 'EXOTEL, OZONETEL, KNOWLARITY, MCUBE, MANUAL']
+  telephony_call_id varchar(255) [note: 'Cloud telephony provider call SID / transaction ID']
+  caller_number varchar(30) [not null]
+  recipient_number varchar(30) [not null]
+  agent_user_id uuid [note: 'Sales representative (sso.user.id)']
+  call_status call_status [not null, default: 'ANSWERED']
+  start_time timestamp [not null]
+  end_time timestamp
+  duration_seconds int [not null, default: 0]
+  recording_storage_url varchar(1000) [note: 'Secure S3 / MinIO link to audio recording (NO BLOBs)']
+  call_notes text [note: 'Sales rep notes following the conversation']
+  sentiment varchar(30) [note: 'POSITIVE, NEUTRAL, NEGATIVE']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, entity_type, entity_id) [name: 'idx_crm_call_entity']
+    (company_id, agent_user_id, start_time) [name: 'idx_crm_call_agent_time']
+    (company_id, telephony_call_id) [name: 'idx_crm_call_telephony_id']
+  }
+
+  Note: 'Cloud telephony call CDRs, duration, and object-storage recording references.'
+}
+
+Table crm_consent_log {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  entity_type varchar(50) [not null, note: 'LEAD, CONTACT']
+  entity_id uuid [not null]
+  channel communication_channel [not null]
+  consent_action varchar(30) [not null, note: 'OPT_IN, OPT_OUT, EXPLICIT_WITHDRAWAL']
+  consent_source varchar(100) [not null, note: 'LANDING_PAGE_FORM, WHATSAPP_REPLY, UNSUBSCRIBE_LINK']
+  consent_text_snapshot text [note: 'Exact disclosure text shown when consent was captured']
+  ip_address varchar(64)
+  user_agent varchar(255)
+  captured_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (company_id, entity_type, entity_id) [name: 'idx_crm_consent_entity']
+    (company_id, channel, consent_action) [name: 'idx_crm_consent_channel']
+  }
+
+  Note: 'DPDP Act 2023 & GDPR compliant immutable audit log of customer communication consents.'
+}
+
+// =============================================================================
+// TABLE GROUP 8: MARKETING CAMPAIGNS & ATTRIBUTION
+// =============================================================================
+
+Table crm_campaign {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  campaign_code varchar(50) [not null, note: 'Reference, e.g. CMP-2026-DIWALI']
+  campaign_name varchar(200) [not null, note: 'Diwali B2B Industrial Promotion']
+  channel communication_channel [note: 'Primary channel']
+  status varchar(30) [not null, default: 'ACTIVE', note: 'PLANNING, ACTIVE, PAUSED, COMPLETED, CANCELLED']
+  start_date date [not null]
+  end_date date
+  budget_currency varchar(3) [not null, default: 'INR']
+  allocated_budget decimal(19,4) [not null, default: 0.0000]
+  actual_spend decimal(19,4) [not null, default: 0.0000]
+  target_leads int [default: 0]
+  actual_leads_count int [not null, default: 0]
+  actual_conversions_count int [not null, default: 0]
+  actual_revenue_won decimal(19,4) [not null, default: 0.0000]
+  utm_campaign_param varchar(100) [note: 'utm_campaign parameter value for automated matching']
+  owner_user_id uuid [note: 'Campaign Manager (sso.user.id)']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, campaign_code) [unique, name: 'uq_crm_campaign_company_code']
+    (company_id, utm_campaign_param) [name: 'idx_crm_campaign_utm']
+    (company_id, status) [name: 'idx_crm_campaign_status']
+  }
+
+  Note: 'Marketing campaigns tracking budgets, lead generation volume, and return on investment.'
+}
+
+Table crm_lead_attribution {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  lead_id uuid [not null, note: 'FK to crm_lead']
+  campaign_id uuid [note: 'FK to crm_campaign (null if organic)']
+  touchpoint_type varchar(50) [not null, note: 'FIRST_TOUCH, LEAD_CREATION, MID_NURTURE, OPPORTUNITY_CREATION, LAST_TOUCH']
+  touchpoint_timestamp timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  channel communication_channel [not null]
+  utm_source varchar(100)
+  utm_medium varchar(100)
+  utm_campaign varchar(100)
+  utm_content varchar(100)
+  attribution_weight decimal(5,4) [not null, default: 1.0000, note: 'Weighted percentage (e.g. 0.40 for W-model)']
+
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    lead_id [name: 'idx_crm_attrib_lead']
+    (company_id, campaign_id) [name: 'idx_crm_attrib_campaign']
+  }
+
+  Note: 'Multi-touch attribution log mapping marketing spend to pipeline revenue generation.'
+}
+
+// =============================================================================
+// TABLE GROUP 9: CONFIGURATION-DRIVEN AUTOMATION ENGINE
+// =============================================================================
+
+Table crm_automation_rule {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  rule_name varchar(150) [not null, note: 'Descriptive title, e.g. Auto-Assign IndiaMART Leads in MH']
+  rule_code varchar(100) [not null, note: 'Unique identifier code']
+  description text
+  trigger_event automation_trigger [not null]
+  entity_type varchar(50) [not null, note: 'LEAD, OPPORTUNITY, TASK, CONTACT']
+  filter_conditions_json text [not null, note: 'JSON declarative conditions, e.g. source: INDIAMART, state: Maharashtra']
+  execution_order int [not null, default: 10]
+  is_active boolean [not null, default: true]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, rule_code) [unique, name: 'uq_crm_auto_rule_code']
+    (company_id, trigger_event, is_active, execution_order) [name: 'idx_crm_auto_rule_eval']
+  }
+
+  Note: 'Event-driven automation rules triggering actions based on configurable conditions.'
+}
+
+Table crm_automation_action {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  rule_id uuid [not null, note: 'FK to crm_automation_rule']
+  action_order int [not null, default: 1]
+  action_type automation_action_type [not null]
+  action_payload_json text [not null, note: 'JSON payload with action parameters (pool ID, email template ID, task specs)']
+  delay_minutes int [not null, default: 0, note: 'Delay before executing this action (0 for instant)']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    rule_id [name: 'idx_crm_auto_action_rule']
+  }
+
+  Note: 'Ordered action steps (notifications, assignments, webhooks, tasks) executed by a rule.'
+}
+
+Table crm_automation_execution_log {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  rule_id uuid [not null, note: 'FK to crm_automation_rule']
+  action_id uuid [note: 'FK to crm_automation_action']
+  entity_type varchar(50) [not null]
+  entity_id uuid [not null]
+  status varchar(30) [not null, default: 'SUCCESS', note: 'SUCCESS, FAILED, SKIPPED, RETRYING']
+  executed_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  duration_ms bigint [not null, default: 0]
+  error_message text
+  execution_context_json text [note: 'Diagnostic snapshot of entity data at execution time']
+
+  indexes {
+    (company_id, executed_at) [name: 'idx_crm_auto_log_company_time']
+    (rule_id, status) [name: 'idx_crm_auto_log_rule_status']
+    (entity_type, entity_id) [name: 'idx_crm_auto_log_entity']
+  }
+
+  Note: 'Audit execution logs of automation actions with error diagnostics and latency tracking.'
+}
+
+Table crm_round_robin_pool {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  pool_name varchar(100) [not null, note: 'Sales Inbound Reps - Solar Division']
+  pool_code varchar(50) [not null, note: 'INBOUND_SOLAR_REPS']
+  routing_strategy round_robin_strategy [not null, default: 'ROUND_ROBIN']
+  is_active boolean [not null, default: true]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, pool_code) [unique, name: 'uq_crm_rr_pool_company_code']
+  }
+
+  Note: 'Sales rep distribution pool definitions for automated lead assignment.'
+}
+
+Table crm_round_robin_member {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  pool_id uuid [not null, note: 'FK to crm_round_robin_pool']
+  user_id uuid [not null, note: 'Sales representative (sso.user.id)']
+  weight int [not null, default: 1, note: 'Relative capacity weight (e.g. 1 for junior, 3 for senior)']
+  max_daily_leads int [default: 50, note: 'Maximum leads quota per day']
+  current_leads_today int [not null, default: 0]
+  last_assigned_at timestamp [note: 'Used for strict round-robin rotation sorting']
+  is_active boolean [not null, default: true, note: 'Toggle to pause assignment when rep is on leave']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (pool_id, user_id) [unique, name: 'uq_crm_rr_member_pool_user']
+    (pool_id, is_active, last_assigned_at) [name: 'idx_crm_rr_member_rotation']
+  }
+
+  Note: 'Sales representatives participating in automated lead distribution with capacity limits.'
+}
+
+// =============================================================================
+// TABLE GROUP 10: QUOTATION & SALES OPERATIONS
+// =============================================================================
+
+Table crm_quotation {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation: references sso.company.id']
+  quotation_number varchar(50) [not null, note: 'Human-readable quotation number, e.g. QT-2026-00452']
+  quotation_date date [not null]
+  valid_until date [not null]
+  opportunity_id uuid [note: 'FK to crm_opportunity (parent commercial deal)']
+  account_id uuid [not null, note: 'FK to crm_account (prospect or client company)']
+  contact_id uuid [note: 'FK to crm_contact (recipient stakeholder)']
+  revision_number int [not null, default: 1, note: 'Revision index (1, 2, 3...)']
+  parent_quotation_id uuid [note: 'Self-reference to original quote if this is an amended revision']
+
+  // Financial Figures (INR standard with 4 decimal places)
+  currency varchar(3) [not null, default: 'INR']
+  exchange_rate decimal(19,6) [not null, default: 1.000000]
+  subtotal decimal(19,4) [not null, default: 0.0000]
+  discount_type discount_type [not null, default: 'PERCENTAGE']
+  discount_pct decimal(5,2) [not null, default: 0.00]
+  discount_amount decimal(19,4) [not null, default: 0.0000]
+  tax_amount decimal(19,4) [not null, default: 0.0000, note: 'Sum of CGST + SGST + IGST + Cess']
+  freight_charges decimal(19,4) [default: 0.0000]
+  other_charges decimal(19,4) [default: 0.0000]
+  round_off decimal(19,4) [default: 0.0000]
+  total_amount decimal(19,4) [not null, default: 0.0000]
+
+  // Indian GST & Supply Place Determination
+  place_of_supply_state_code varchar(10) [not null, note: 'GST 2-digit state code (determines CGST+SGST vs IGST)']
+  billing_address_id uuid [note: 'FK to crm_address']
+  shipping_address_id uuid [note: 'FK to crm_address']
+
+  // Commercial Terms & Conditions
+  payment_terms text
+  delivery_terms text
+  warranty_terms text
+  terms_and_conditions text
+  internal_notes text
+  customer_notes text
+
+  // Lifecycle & Status
+  status quotation_status [not null, default: 'DRAFT']
+  owner_user_id uuid [not null, note: 'Sales representative who authored quote (sso.user.id)']
+
+  // Workflow Service Integration (External Document Pattern)
+  workflow_transaction_id uuid [note: 'Logical reference to workflow-service.workflow_transaction.id']
+  approval_status quotation_approval_status [not null, default: 'NONE']
+  discount_approval_required boolean [not null, default: false]
+  approved_by_user_id uuid [note: 'sso.user.id who approved workflow']
+  approved_at timestamp
+
+  // ERP Synchronization (account-main linkage)
+  account_main_quotation_id uuid [note: 'Logical reference to account-main.quotation.id if synchronized']
+  account_main_sales_order_id uuid [note: 'Logical reference to account-main.sales_order.id when converted!']
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    (company_id, quotation_number, revision_number) [unique, name: 'uq_crm_quote_comp_num_rev']
+    (company_id, opportunity_id) [name: 'idx_crm_quote_opp']
+    (company_id, account_id) [name: 'idx_crm_quote_account']
+    (company_id, status) [name: 'idx_crm_quote_status']
+    (workflow_transaction_id) [name: 'idx_crm_quote_workflow_txn']
+    (account_main_sales_order_id) [name: 'idx_crm_quote_so_ref']
+  }
+
+  Note: 'Commercial sales quotations with Indian GST compliance, revisions, and Workflow Service approvals.'
+}
+
+Table crm_quotation_item {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  quotation_id uuid [not null, note: 'FK to crm_quotation']
+  item_order int [not null, default: 1, note: 'Display position in quote table']
+  product_id uuid [note: 'Logical reference to inventory.product.id (NO cross-DB FK)']
+  product_code varchar(100) [note: 'SKU code']
+  product_name varchar(255) [not null]
+  hsn_sac_code varchar(20) [not null, note: 'Indian HSN (goods) or SAC (services) tax code']
+  description text
+  quantity decimal(19,4) [not null, default: 1.0000]
+  uom varchar(50) [not null, default: 'PCS']
+  unit_price decimal(19,4) [not null, default: 0.0000]
+  discount_pct decimal(5,2) [not null, default: 0.00]
+  discount_amount decimal(19,4) [not null, default: 0.0000]
+  taxable_amount decimal(19,4) [not null, default: 0.0000, note: '(quantity * unit_price) - discount_amount']
+
+  // Indian GST Breakdown
+  cgst_rate decimal(5,2) [default: 0.00]
+  cgst_amount decimal(19,4) [default: 0.0000]
+  sgst_rate decimal(5,2) [default: 0.00]
+  sgst_amount decimal(19,4) [default: 0.0000]
+  igst_rate decimal(5,2) [default: 0.00]
+  igst_amount decimal(19,4) [default: 0.0000]
+  cess_rate decimal(5,2) [default: 0.00]
+  cess_amount decimal(19,4) [default: 0.0000]
+  total_amount decimal(19,4) [not null, default: 0.0000]
+
+  // BaseEntity Auditing
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  created_by uuid
+  created_by_username varchar(255)
+  updated_by uuid
+  updated_by_username varchar(255)
+  is_deleted boolean [not null, default: false]
+  deleted_by uuid
+  deleted_by_username varchar(255)
+  deleted_at timestamp
+
+  indexes {
+    quotation_id [name: 'idx_crm_quote_item_quote']
+    (company_id, product_id) [name: 'idx_crm_quote_item_product']
+  }
+
+  Note: 'Line items within quotation with statutory HSN/SAC codes and GST breakdown.'
+}
+
+Table crm_quotation_revision {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  quotation_id uuid [not null, note: 'FK to crm_quotation']
+  revision_number int [not null]
+  revision_notes text [note: 'Commercial reason for price / scope amendment']
+  snapshot_json text [not null, note: 'Full immutable JSON snapshot of entire quotation header and lines']
+  revised_by_user_id uuid [not null]
+  revised_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (quotation_id, revision_number) [unique, name: 'uq_crm_quote_rev_quote_num']
+  }
+
+  Note: 'Immutable historical audit revisions of quotations throughout price negotiations.'
+}
+
+// =============================================================================
+// TABLE GROUP 11: TRANSACTIONAL OUTBOX & EVENT ARCHITECTURE
+// =============================================================================
+
+Table crm_outbox {
+  id uuid [pk, default: `gen_random_uuid()`, note: 'Primary Key']
+  company_id uuid [not null, note: 'Tenant isolation']
+  aggregate_type varchar(100) [not null, note: 'LEAD, OPPORTUNITY, QUOTATION, ACCOUNT, INTEGRATION']
+  aggregate_id uuid [not null, note: 'Primary key of the aggregate root entity']
+  event_type varchar(100) [not null, note: 'LEAD_CREATED, LEAD_CONVERTED, QUOTATION_SUBMITTED, QUOTATION_APPROVED, QUOTATION_CONVERTED_TO_ORDER']
+  idempotency_key varchar(255) [not null, note: 'Unique message identifier for consumer deduplication within company']
+  payload text [not null, note: 'Serialized JSON event payload']
+  status outbox_status [not null, default: 'PENDING']
+  retry_count int [not null, default: 0]
+  next_attempt_at timestamp
+  last_error text
+  processed_at timestamp
+
+  created_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  updated_at timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (status, next_attempt_at) [name: 'idx_crm_outbox_status_attempt']
+    (company_id, aggregate_type, aggregate_id) [name: 'idx_crm_outbox_aggregate']
+    (company_id, idempotency_key) [unique, name: 'uq_crm_outbox_company_idempotency']
+  }
+
+  Note: 'Guaranteed at-least-once asynchronous event publishing to RabbitMQ broker.'
+}
+
+// =============================================================================
+// RELATIONSHIPS (FOREIGN KEYS WITHIN CRM DATABASE)
+// =============================================================================
+
+// Configuration & Custom Fields
+Ref: crm_custom_field_value.custom_field_id > crm_custom_field_definition.id [delete: cascade]
+
+// Integrations
+Ref: crm_tenant_integration.integration_channel_id > crm_integration_channel.id
+Ref: crm_integration_webhook_log.tenant_integration_id > crm_tenant_integration.id [delete: set null]
+
+// Lead Core
+Ref: crm_lead.lead_source_id > crm_lead_source.id
+Ref: crm_lead.tenant_integration_id > crm_tenant_integration.id [delete: set null]
+Ref: crm_lead.campaign_id > crm_campaign.id [delete: set null]
+Ref: crm_lead.lead_status_id > crm_lead_status.id
+Ref: crm_lead.lost_reason_id > crm_lost_reason.id
+Ref: crm_lead.primary_lead_id - crm_lead.id
+Ref: crm_lead.converted_account_id > crm_account.id
+Ref: crm_lead.converted_contact_id > crm_contact.id
+Ref: crm_lead.converted_opportunity_id > crm_opportunity.id
+
+Ref: crm_lead_assignment_history.lead_id > crm_lead.id [delete: cascade]
+Ref: crm_lead_merge_history.primary_lead_id > crm_lead.id
+Ref: crm_lead_merge_history.merged_lead_id > crm_lead.id
+Ref: crm_lead_score_log.lead_id > crm_lead.id [delete: cascade]
+Ref: crm_lead_tag_mapping.(company_id, lead_id) > crm_lead.(company_id, id) [delete: cascade]
+Ref: crm_lead_tag_mapping.(company_id, tag_id) > crm_tag.(company_id, id) [delete: cascade]
+Ref: crm_lead_product_interest.lead_id > crm_lead.id [delete: cascade]
+
+// Accounts & Contacts
+Ref: crm_account.parent_account_id - crm_account.id
+Ref: crm_account.billing_address_id > crm_address.id [delete: set null]
+Ref: crm_account.shipping_address_id > crm_address.id [delete: set null]
+
+Ref: crm_contact.account_id > crm_account.id [delete: set null]
+Ref: crm_account_contact_relation.(company_id, account_id) > crm_account.(company_id, id) [delete: cascade]
+Ref: crm_account_contact_relation.(company_id, contact_id) > crm_contact.(company_id, id) [delete: cascade]
+
+// Sales Pipeline & Opportunity
+Ref: crm_pipeline_stage.pipeline_id > crm_sales_pipeline.id [delete: cascade]
+Ref: crm_opportunity.pipeline_id > crm_sales_pipeline.id
+Ref: crm_opportunity.current_stage_id > crm_pipeline_stage.id
+Ref: crm_opportunity.account_id > crm_account.id
+Ref: crm_opportunity.primary_contact_id > crm_contact.id
+Ref: crm_opportunity.origin_lead_id > crm_lead.id
+Ref: crm_opportunity.lost_reason_id > crm_lost_reason.id
+
+Ref: crm_opportunity_item.opportunity_id > crm_opportunity.id [delete: cascade]
+Ref: crm_opportunity_competitor.opportunity_id > crm_opportunity.id [delete: cascade]
+Ref: crm_opportunity_stage_history.opportunity_id > crm_opportunity.id [delete: cascade]
+Ref: crm_opportunity_stage_history.from_stage_id > crm_pipeline_stage.id
+Ref: crm_opportunity_stage_history.to_stage_id > crm_pipeline_stage.id
+
+// Communication
+Ref: crm_message.conversation_id > crm_conversation.id [delete: cascade]
+
+// Marketing
+Ref: crm_lead_attribution.lead_id > crm_lead.id [delete: cascade]
+Ref: crm_lead_attribution.campaign_id > crm_campaign.id [delete: set null]
+
+// Automation Engine
+Ref: crm_automation_action.rule_id > crm_automation_rule.id [delete: cascade]
+Ref: crm_automation_execution_log.rule_id > crm_automation_rule.id [delete: cascade]
+Ref: crm_automation_execution_log.action_id > crm_automation_action.id [delete: set null]
+Ref: crm_round_robin_member.pool_id > crm_round_robin_pool.id [delete: cascade]
+
+// Quotation Operations
+Ref: crm_quotation.opportunity_id > crm_opportunity.id [delete: set null]
+Ref: crm_quotation.account_id > crm_account.id
+Ref: crm_quotation.contact_id > crm_contact.id
+Ref: crm_quotation.parent_quotation_id - crm_quotation.id
+Ref: crm_quotation.billing_address_id > crm_address.id [delete: set null]
+Ref: crm_quotation.shipping_address_id > crm_address.id [delete: set null]
+
+Ref: crm_quotation_item.quotation_id > crm_quotation.id [delete: cascade]
+Ref: crm_quotation_revision.quotation_id > crm_quotation.id [delete: cascade]
+
+// =============================================================================
+// TABLE GROUPS
+// =============================================================================
+
+TableGroup CRM_Configuration {
+  crm_company_setting
+  crm_lead_status
+  crm_lead_source
+  crm_lost_reason
+  crm_tag
+  crm_custom_field_definition
+  crm_custom_field_value
+}
+
+TableGroup CRM_Lead_Integrations {
+  crm_integration_channel
+  crm_tenant_integration
+  crm_integration_webhook_log
+  crm_lead_import_batch
+}
+
+TableGroup CRM_Lead_Management {
+  crm_lead
+  crm_lead_assignment_history
+  crm_lead_merge_history
+  crm_lead_score_log
+  crm_lead_tag_mapping
+  crm_lead_product_interest
+}
+
+TableGroup CRM_Account_Contact {
+  crm_account
+  crm_contact
+  crm_address
+  crm_account_contact_relation
+}
+
+TableGroup CRM_Sales_Pipeline {
+  crm_sales_pipeline
+  crm_pipeline_stage
+  crm_opportunity
+  crm_opportunity_item
+  crm_opportunity_competitor
+  crm_opportunity_stage_history
+}
+
+TableGroup CRM_Activity_Tasks {
+  crm_activity
+  crm_task
+  crm_attachment
+}
+
+TableGroup CRM_Communication {
+  crm_conversation
+  crm_message
+  crm_call_log
+  crm_consent_log
+}
+
+TableGroup CRM_Marketing_Attribution {
+  crm_campaign
+  crm_lead_attribution
+}
+
+TableGroup CRM_Automation_Engine {
+  crm_automation_rule
+  crm_automation_action
+  crm_automation_execution_log
+  crm_round_robin_pool
+  crm_round_robin_member
+}
+
+TableGroup CRM_Quotation_Operations {
+  crm_quotation
+  crm_quotation_item
+  crm_quotation_revision
+}
+
+TableGroup CRM_Event_Outbox {
+  crm_outbox
+}
+
