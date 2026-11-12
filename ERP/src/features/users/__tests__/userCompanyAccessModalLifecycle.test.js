@@ -382,6 +382,70 @@ describe('UserCompanyAccessModal Request Deduplication & Lifecycle Stability Sui
       assert.strictEqual(harness.activeUserIdRef.current, null);
       assert.ok(harness.abortedCalls.includes('access'), 'Access controller was aborted on close');
     });
+
+    it('React 18 StrictMode double-mount simulation completes successfully without getting stuck in loading', async () => {
+      const harness = new ModalLifecycleHarness();
+      const user = { id: 'user-100', fullName: 'Test User' };
+
+      // Mount 1
+      harness.open(user, [{ id: 'c1', name: 'C1' }]);
+      assert.strictEqual(harness.hasInitializedRef.current, true);
+
+      // StrictMode simulated unmount cleanup
+      harness.hasInitializedRef.current = false;
+      if (harness.abortControllersRef.current.access) {
+        harness.abortControllersRef.current.access.abort();
+        harness.abortControllersRef.current.access = null;
+      }
+      harness.inFlightAccessRef.current = null;
+
+      // Mount 2 (remount)
+      harness.open(user, [{ id: 'c1', name: 'C1' }]);
+      await Promise.resolve();
+
+      // Access data should be populated and valid
+      assert.strictEqual(harness.accessList.length, 1);
+      assert.strictEqual(harness.accessList[0].companyId, 'comp-1');
+    });
+
+      it('closing and reopening the modal does not cause duplicate requests and loads cleanly', async () => {
+        const harness = new ModalLifecycleHarness();
+        const user = { id: 'user-100', fullName: 'Test User' };
+        const companies = [{ id: 'c1', name: 'Company 1' }];
+
+        // 1. Initial open
+        harness.open(user, companies);
+        await Promise.resolve();
+        assert.strictEqual(harness.accessCalls, 1, 'First open makes exactly 1 access call');
+        assert.strictEqual(harness.companyCalls, 0, 'First open makes 0 company calls');
+
+        // 2. Close modal
+        harness.close();
+        assert.strictEqual(harness.isOpen, false);
+
+        // 3. Reopen modal
+        harness.open(user, companies);
+        await Promise.resolve();
+        assert.strictEqual(harness.accessCalls, 2, 'Reopening makes exactly 1 additional fresh access call');
+        assert.strictEqual(harness.companyCalls, 0, 'Reopening still makes 0 company calls');
+        assert.strictEqual(harness.accessList.length, 1);
+      });
+
+      it('verifies company API is never called when companies are passed via allCompanies or companies', async () => {
+        const harness1 = new ModalLifecycleHarness();
+        const user = { id: 'user-100', fullName: 'Test User' };
+
+        // Passed via companies
+        harness1.open(user, [{ id: 'comp-10', name: 'Alpha Corp' }]);
+        await Promise.resolve();
+        assert.strictEqual(harness1.companyCalls, 0, 'Company API should NOT be called when companies are provided');
+
+        // Passed via allCompanies (multiple companies)
+        const harness2 = new ModalLifecycleHarness();
+        harness2.open(user, [{ id: 'comp-1', name: 'C1' }, { id: 'comp-2', name: 'C2' }]);
+        await Promise.resolve();
+        assert.strictEqual(harness2.companyCalls, 0, 'Company API should NOT be called when multiple companies are provided');
+      });
+    });
   });
-});
 

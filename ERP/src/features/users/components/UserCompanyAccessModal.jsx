@@ -56,6 +56,7 @@ export default function UserCompanyAccessModal({
   const dispatch = useAppDispatch();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [accessError, setAccessError] = useState(null);
   const [accessList, setAccessList] = useState(EMPTY_ARRAY);
   const [fetchedCompanies, setFetchedCompanies] = useState(EMPTY_ARRAY);
   const [companyRolesMap, setCompanyRolesMap] = useState({});
@@ -73,8 +74,8 @@ export default function UserCompanyAccessModal({
   const [isAddingRole, setIsAddingRole] = useState(false);
   const [isRemovingRole, setIsRemovingRole] = useState(false);
 
-  const userId = user?.id || user?.userId;
-  const memberId = initialMemberId || user?.memberId;
+  const userId = user?.id || user?.userId || '';
+  const memberId = initialMemberId || user?.memberId || '';
 
   // Passed companies normalization (supports allCompanies or companies prop)
   const passedCompanies = allCompanies || legacyCompanies || EMPTY_ARRAY;
@@ -82,10 +83,10 @@ export default function UserCompanyAccessModal({
   // Decoupled refs to prevent re-render function churn
   const userRef = useRef(user);
   const passedCompaniesRef = useRef(passedCompanies);
-  useEffect(() => {
-    userRef.current = user;
-    passedCompaniesRef.current = passedCompanies;
-  });
+  const initialMemberIdRef = useRef(initialMemberId);
+  userRef.current = user;
+  passedCompaniesRef.current = passedCompanies;
+  initialMemberIdRef.current = initialMemberId;
 
   // Dedicated cache and in-flight tracking refs
   const inFlightAccessRef = useRef(null);
@@ -96,6 +97,7 @@ export default function UserCompanyAccessModal({
   const hasInitializedRef = useRef(false);
   const activeUserIdRef = useRef(null);
   const abortControllersRef = useRef({ access: null, companies: null, roles: {} });
+  const activeAccessRequestIdRef = useRef(0);
 
   // Resolve available companies: prioritize passedCompanies from parent, fallback to fetched
   const availableCompanies = useMemo(() => {
@@ -112,9 +114,12 @@ export default function UserCompanyAccessModal({
   // Load user's company access list safely with request deduplication and cancellation
   const loadAccessData = useCallback(async (forceRefresh = false) => {
     const effectiveUserId = userRef.current?.id || userRef.current?.userId;
-    const effectiveMemberId = initialMemberId || userRef.current?.memberId;
+    const effectiveMemberId = initialMemberIdRef.current || userRef.current?.memberId;
 
-    if (!effectiveUserId && !effectiveMemberId) return;
+    if (!effectiveUserId && !effectiveMemberId) {
+      setIsLoading(false);
+      return;
+    }
 
     const userKey = String(effectiveUserId || effectiveMemberId);
     if (!forceRefresh && inFlightAccessRef.current === userKey) {
@@ -123,13 +128,18 @@ export default function UserCompanyAccessModal({
 
     // Cancel any previous in-flight access request
     if (abortControllersRef.current.access) {
-      abortControllersRef.current.access.abort();
+      try {
+        abortControllersRef.current.access.abort();
+      } catch (_) { }
     }
     const controller = new AbortController();
     abortControllersRef.current.access = controller;
     inFlightAccessRef.current = userKey;
+    const requestId = ++activeAccessRequestIdRef.current;
 
     setIsLoading(true);
+    setAccessError(null);
+
     try {
       let data = [];
       if (effectiveUserId) {
@@ -138,8 +148,10 @@ export default function UserCompanyAccessModal({
         data = await getMemberCompanyAccess(effectiveMemberId, { signal: controller.signal });
       }
 
-      if (!controller.signal.aborted) {
-        setAccessList(Array.isArray(data) ? data : []);
+      if (!controller.signal.aborted && activeAccessRequestIdRef.current === requestId) {
+        const validList = Array.isArray(data) ? data : (data?.data || []);
+        setAccessList(validList);
+        setAccessError(null);
       }
     } catch (err) {
       if (controller.signal.aborted || err?.name === 'CanceledError' || err?.name === 'AbortError') {
@@ -150,6 +162,7 @@ export default function UserCompanyAccessModal({
       const fallbackUser = userRef.current;
       if (fallbackUser?.companyAccess && Array.isArray(fallbackUser.companyAccess)) {
         setAccessList(fallbackUser.companyAccess);
+        setAccessError(null);
       } else if (fallbackUser?.authorizedCompanies && Array.isArray(fallbackUser.authorizedCompanies)) {
         const fallback = fallbackUser.authorizedCompanies.map((name, idx) => ({
           companyId: fallbackUser.authorizedCompanyIds?.[idx] || String(idx),
@@ -158,16 +171,17 @@ export default function UserCompanyAccessModal({
           roleName: fallbackUser.role || 'USER',
         }));
         setAccessList(fallback);
+        setAccessError(null);
+      } else {
+        setAccessError(err?.response?.data?.message || err?.message || 'Failed to load company access details');
       }
     } finally {
-      if (inFlightAccessRef.current === userKey) {
-        inFlightAccessRef.current = null;
+        if (activeAccessRequestIdRef.current === requestId) {
+          inFlightAccessRef.current = null;
+          setIsLoading(false);
+        }
       }
-      if (!controller.signal.aborted) {
-        setIsLoading(false);
-      }
-    }
-  }, [initialMemberId]);
+    }, []);
 
   // Load organization companies safely with caching and in-flight deduplication
   const loadOrganizationCompanies = useCallback(async (forceRefresh = false) => {
@@ -186,7 +200,9 @@ export default function UserCompanyAccessModal({
     }
 
     if (abortControllersRef.current.companies) {
-      abortControllersRef.current.companies.abort();
+      try {
+        abortControllersRef.current.companies.abort();
+      } catch (_) { }
     }
     const controller = new AbortController();
     abortControllersRef.current.companies = controller;
@@ -212,7 +228,9 @@ export default function UserCompanyAccessModal({
       }
       console.error('Failed to load companies:', err);
     } finally {
-      inFlightCompaniesRef.current = false;
+      if (abortControllersRef.current.companies === controller) {
+        inFlightCompaniesRef.current = false;
+      }
     }
   }, []);
 
@@ -227,7 +245,9 @@ export default function UserCompanyAccessModal({
     }
 
     if (abortControllersRef.current.roles[compId]) {
-      abortControllersRef.current.roles[compId].abort();
+      try {
+        abortControllersRef.current.roles[compId].abort();
+      } catch (_) { }
     }
     const controller = new AbortController();
     abortControllersRef.current.roles[compId] = controller;
@@ -251,8 +271,10 @@ export default function UserCompanyAccessModal({
         console.warn(`Failed to fetch roles for company ${compId}:`, err);
         return [];
       } finally {
-        delete inFlightRolesRef.current[compId];
-        delete abortControllersRef.current.roles[compId];
+        if (abortControllersRef.current.roles[compId] === controller) {
+          delete inFlightRolesRef.current[compId];
+          delete abortControllersRef.current.roles[compId];
+        }
       }
     })();
 
@@ -273,12 +295,17 @@ export default function UserCompanyAccessModal({
         abortControllersRef.current.companies.abort();
         abortControllersRef.current.companies = null;
       }
+      inFlightAccessRef.current = null;
+      inFlightCompaniesRef.current = false;
+      setIsLoading(false);
       return;
     }
 
-    const currentUserId = user?.id || user?.userId;
-    const currentMemberId = initialMemberId || user?.memberId;
+    const currentUserId = user?.id || user?.userId || '';
+    const currentMemberId = initialMemberId || user?.memberId || '';
     const userIdentifier = currentUserId || currentMemberId;
+
+    if (!userIdentifier) return;
 
     if (hasInitializedRef.current && activeUserIdRef.current === userIdentifier) {
       return;
@@ -288,15 +315,17 @@ export default function UserCompanyAccessModal({
     activeUserIdRef.current = userIdentifier;
 
     setTargetCompanyId('');
-    setTargetRoleIds([]);
-    setTargetRoles([]);
+    setTargetRoleIds(EMPTY_ARRAY);
+    setTargetRoles(EMPTY_ARRAY);
     setAddingRoleCompanyId(null);
     setSelectedRoleToAdd('');
+    setAccessError(null);
 
     loadAccessData(false);
     loadOrganizationCompanies(false);
 
     return () => {
+      hasInitializedRef.current = false;
       if (abortControllersRef.current.access) {
         abortControllersRef.current.access.abort();
         abortControllersRef.current.access = null;
@@ -305,6 +334,8 @@ export default function UserCompanyAccessModal({
         abortControllersRef.current.companies.abort();
         abortControllersRef.current.companies = null;
       }
+      inFlightAccessRef.current = null;
+      inFlightCompaniesRef.current = false;
     };
   }, [isOpen, userId, memberId, loadAccessData, loadOrganizationCompanies]);
 
@@ -353,7 +384,7 @@ export default function UserCompanyAccessModal({
 
   // Toggle role selection for target company assignment
   const handleToggleTargetRole = (roleId) => {
-    setTargetRoleIds(prev => 
+    setTargetRoleIds(prev =>
       prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]
     );
   };
@@ -579,6 +610,20 @@ export default function UserCompanyAccessModal({
               <RefreshCw className="w-4 h-4 animate-spin" />
               Loading company access details...
             </div>
+          ) : accessError ? (
+            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 flex items-center justify-between text-xs text-red-600 dark:text-red-400">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{accessError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => loadAccessData(true)}
+                className="font-medium underline hover:text-red-700 dark:hover:text-red-300 ml-2"
+              >
+                Retry
+              </button>
+            </div>
           ) : activeAccessList.length === 0 ? (
             <div className="p-4 rounded-lg bg-zinc-50 dark:bg-[#161922] border border-zinc-200 dark:border-[#2A2F3D] text-center text-xs text-zinc-500">
               No active company access found for this user.
@@ -630,8 +675,8 @@ export default function UserCompanyAccessModal({
                           disabled={activeAccessList.length <= 1}
                           title={activeAccessList.length <= 1 ? "Cannot revoke the user's only company access" : "Revoke Company Access"}
                           className={`p-1 text-xs font-semibold rounded-lg border transition-colors ${activeAccessList.length <= 1
-                              ? 'text-zinc-300 dark:text-zinc-700 border-zinc-200 dark:border-zinc-800 cursor-not-allowed'
-                              : 'text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                            ? 'text-zinc-300 dark:text-zinc-700 border-zinc-200 dark:border-zinc-800 cursor-not-allowed'
+                            : 'text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/40'
                             }`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -782,15 +827,13 @@ export default function UserCompanyAccessModal({
                             key={r.id}
                             type="button"
                             onClick={() => handleToggleTargetRole(r.id)}
-                            className={`text-xs px-2.5 py-1 rounded-md font-medium border flex items-center gap-1.5 transition-colors ${
-                              isSelected
+                            className={`text-xs px-2.5 py-1 rounded-md font-medium border flex items-center gap-1.5 transition-colors ${isSelected
                                 ? 'bg-indigo-50 border-indigo-300 text-indigo-700 dark:bg-indigo-950/60 dark:border-indigo-700 dark:text-indigo-300'
                                 : 'bg-zinc-50 border-zinc-200 text-zinc-600 dark:bg-[#161922] dark:border-[#2A2F3D] dark:text-[#A0A6B5]'
-                            }`}
+                              }`}
                           >
-                            <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${
-                              isSelected ? 'bg-indigo-600 text-white' : 'border border-zinc-300 dark:border-zinc-600'
-                            }`}>
+                            <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${isSelected ? 'bg-indigo-600 text-white' : 'border border-zinc-300 dark:border-zinc-600'
+                              }`}>
                               {isSelected ? <Check className="w-2.5 h-2.5" /> : null}
                             </span>
                             <span>{r.name || r.roleName}</span>
