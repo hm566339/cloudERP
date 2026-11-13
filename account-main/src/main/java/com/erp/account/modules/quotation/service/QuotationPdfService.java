@@ -6,5 +6,7 @@ public interface QuotationPdfService {
 
     byte[] generateQuotationPdf(UUID quotationId, UUID companyId);
 
+    byte[] generateQuotationPdf(UUID quotationId, UUID companyId, String rawToken);
+
     byte[] generatePublicQuotationPdf(UUID quotationId);
 }

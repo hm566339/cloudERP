@@ -333,6 +333,13 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
             definition.setInternalNotes(request.getInternalNotes());
         }
 
+        // If this company workflow originated from an organization template, mark as customized
+        if (definition.getTemplateId() != null) {
+            definition.setIsCustomized(true);
+            log.info("[WF_SVC] Workflow definition id={} companyId={} marked as customized from templateId={}",
+                    definition.getId(), definition.getCompanyId(), definition.getTemplateId());
+        }
+
         UUID currentUserId = SecurityUtils.getCurrentUserId().orElse(null);
         String currentUsername = SecurityUtils.getCurrentUsername();
         definition.setUpdatedBy(currentUserId);
@@ -658,6 +665,10 @@ public class WorkflowDefinitionServiceImpl implements WorkflowDefinitionService 
         return WorkflowDefinitionResponse.builder()
                 .id(def.getId())
                 .companyId(def.getCompanyId())
+                .organizationId(def.getOrganizationId())
+                .templateId(def.getTemplateId())
+                .templateVersion(def.getTemplateVersion())
+                .isCustomized(def.getIsCustomized())
                 .workflowCode(def.getWorkflowCode())
                 .workflowName(def.getWorkflowName())
                 .moduleName(def.getModuleName())

@@ -14,6 +14,8 @@ sso:
       WORKFLOW_DEFINITIONS:
         - "/api/v1/workflow/definitions"
         - "/api/v1/workflow/definitions/**"
+        - "/api/v1/workflow/organization-templates"
+        - "/api/v1/workflow/organization-templates/**"
       WORKFLOW_TRANSACTIONS:
         - "/api/v1/workflow/transactions"
         - "/api/v1/workflow/transactions/**"
@@ -63,6 +65,9 @@ sso:
       "/upload": "CREATE"
       "/export": "EXPORT"
       "/retry": "UPDATE"
+      "/propagate": "UPDATE"
+      "/reconcile": "UPDATE"
+      "/provision-company": "CREATE"
 
     feature-groups:
       WORKFLOW_ADMIN:

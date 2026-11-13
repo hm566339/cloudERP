@@ -344,15 +344,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 || SecurityUtils.getCurrentUser().isPresent()
                 || CurrentUserContext.isAuthenticated();
 
-        if (!isSystemAdmin && hasSecurityContext
-                && (task.getAssignedUserId() != null || task.getAssignedRoleName() != null)) {
-            boolean userMatched = task.getAssignedUserId() != null && task.getAssignedUserId().equals(userId);
-            boolean roleMatched = task.getAssignedRoleName() != null
-                    && SecurityUtils.hasRole(task.getAssignedRoleName());
-            if (!userMatched && !roleMatched) {
-                log.warn("Unauthorized task action attempt: user {} does not have role {} or match assignee {}",
-                        userId, task.getAssignedRoleName(), task.getAssignedUserId());
-                throw new UnauthorizedWorkflowActionException("You are not authorized to action this workflow task.");
+        if (!isSystemAdmin && hasSecurityContext) {
+            if (task.getAssignedUserId() != null || task.getAssignedRoleName() != null) {
+                boolean userMatched = task.getAssignedUserId() != null && task.getAssignedUserId().equals(userId);
+                boolean roleMatched = task.getAssignedRoleName() != null
+                        && SecurityUtils.hasRole(task.getAssignedRoleName());
+                if (!userMatched && !roleMatched) {
+                    log.warn("Unauthorized task action attempt: user {} does not have role {} or match assignee {}",
+                            userId, task.getAssignedRoleName(), task.getAssignedUserId());
+                    throw new UnauthorizedWorkflowActionException("You are not authorized to action this workflow task.");
+                }
+            } else if (!SecurityUtils.hasRole("OWNER") && !SecurityUtils.hasRole("ADMIN") && !SecurityUtils.hasRole("COMPANY_ADMIN")) {
+                log.warn("Unassigned task action attempt by non-admin user {}", userId);
+                throw new UnauthorizedWorkflowActionException("You are not authorized to action unassigned workflow tasks.");
             }
         }
     }

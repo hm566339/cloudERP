@@ -31,6 +31,7 @@ import com.erp.auth_service.repository.OrganizationMemberRepository;
 import com.erp.auth_service.repository.MemberCompanyAccessRepository;
 import com.erp.auth_service.repository.RoleRepository;
 import com.erp.auth_service.repository.UserRoleRepository;
+import com.erp.auth_service.client.WorkflowProvisioningClient;
 import com.erp.auth_service.utility.MemberType;
 import com.erp.auth_service.utility.MembershipStatus;
 import com.erp.auth_service.utility.SubscriptionStatus;
@@ -51,6 +52,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -72,6 +74,9 @@ public class CompanyServiceImpl implements CompanyService {
         private final MemberCompanyAccessRepository memberCompanyAccessRepository;
         private final RoleRepository roleRepository;
         private final UserRoleRepository userRoleRepository;
+
+        @org.springframework.beans.factory.annotation.Autowired(required = false)
+        private WorkflowProvisioningClient workflowProvisioningClient;
 
         @Value("${strapi.server}")
         private String coreServerUrl;
@@ -213,6 +218,30 @@ public class CompanyServiceImpl implements CompanyService {
                                                                         .build());
                                                 }
                                         });
+                }
+
+                // Auto-provision Organization Default Workflow for the new company (idempotent, safe fallback)
+                if (workflowProvisioningClient != null) {
+                        try {
+                                List<Role> companyRoles = roleRepository.findByCompany_Id(savedCompany.getId());
+                                Map<String, UUID> roleMap = companyRoles != null ? companyRoles.stream()
+                                                .filter(r -> r.getName() != null)
+                                                .collect(Collectors.toMap(
+                                                                r -> r.getName().toUpperCase(),
+                                                                Role::getId,
+                                                                (existing, duplicate) -> existing
+                                                )) : Collections.emptyMap();
+
+                                workflowProvisioningClient.provisionCompanyWorkflow(
+                                                organizationId,
+                                                savedCompany.getId(),
+                                                roleMap,
+                                                token
+                                );
+                        } catch (Exception e) {
+                                log.warn("Non-blocking failure provisioning default workflow for company {}: {}",
+                                                savedCompany.getId(), e.getMessage());
+                        }
                 }
 
                 log.info("Company saved successfully with code: {}", savedCompany.getCompanyCode());

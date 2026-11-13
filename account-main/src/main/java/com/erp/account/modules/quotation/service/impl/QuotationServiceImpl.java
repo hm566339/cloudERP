@@ -75,6 +75,7 @@ public class QuotationServiceImpl implements QuotationService {
     private final QuotationEmailService quotationEmailService;
     private final QuotationPdfService quotationPdfService;
     private final WorkflowClient workflowClient;
+    private final com.erp.account.modules.quotation.service.QuotationAcceptanceTokenService tokenService;
 
     @Override
     @Transactional
@@ -440,7 +441,13 @@ public class QuotationServiceImpl implements QuotationService {
     @Override
     @Transactional
     public QuotationResponse cancelQuotation(UUID companyId, UUID id) {
-        return changeStatus(companyId, id, QuotationStatus.CANCELLED);
+        QuotationResponse response = changeStatus(companyId, id, QuotationStatus.CANCELLED);
+        try {
+            tokenService.revokeTokensForQuotation(id);
+        } catch (Exception ex) {
+            log.warn("Could not revoke tokens for cancelled quotation {}: {}", id, ex.getMessage());
+        }
+        return response;
     }
 
     @Override
@@ -463,12 +470,13 @@ public class QuotationServiceImpl implements QuotationService {
                 .recipientEmail(quotation.getCustomer().getEmail());
 
         try {
-            byte[] pdfBytes = quotationPdfService.generateQuotationPdf(id, resolvedCompanyId);
-            quotationEmailService.sendQuotationEmail(quotation, pdfBytes);
+            String rawToken = tokenService.getOrCreateToken(quotation);
+            byte[] pdfBytes = quotationPdfService.generateQuotationPdf(id, resolvedCompanyId, rawToken);
+            quotationEmailService.sendQuotationEmail(quotation, pdfBytes, rawToken);
             responseBuilder.emailStatus("SENT");
-            log.info("Successfully resent quotation email for quotation {}", id);
+            log.info("Successfully sent quotation email with shared token for quotation {}", id);
         } catch (Exception e) {
-            log.error("Failed to resend quotation email for quotation {}", id, e);
+            log.error("Failed to send quotation email for quotation {}", id, e);
             responseBuilder.emailStatus("FAILED");
         }
 

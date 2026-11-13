@@ -42,10 +42,20 @@ public class QuotationPdfServiceImpl implements QuotationPdfService {
     private final GstStateCodeRepository gstStateCodeRepository;
     private final GstRegistrationRepository gstRegistrationRepository;
     private final BankAccountService bankAccountService;
+    private final com.erp.account.modules.quotation.service.QuotationAcceptanceTokenService tokenService;
+
+    @org.springframework.beans.factory.annotation.Value("${frontend.base:${frontend.url:http://localhost:5173}}")
+    private String frontendUrl;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public byte[] generateQuotationPdf(UUID quotationId, UUID companyId) {
+        return generateQuotationPdf(quotationId, companyId, null);
+    }
+
+    @Override
+    @Transactional
+    public byte[] generateQuotationPdf(UUID quotationId, UUID companyId, String rawToken) {
         Quotation quotation = quotationRepository.findById(quotationId)
                 .orElseThrow(() -> new QuotationNotFoundException(quotationId));
 
@@ -56,18 +66,32 @@ public class QuotationPdfServiceImpl implements QuotationPdfService {
             }
         }
 
-        return generatePdf(quotation);
+        if (!org.springframework.util.StringUtils.hasText(rawToken)) {
+            try {
+                rawToken = tokenService.getOrCreateToken(quotation);
+            } catch (Exception ex) {
+                log.warn("Could not generate acceptance token for quotation PDF {}: {}", quotation.getQuotationNumber(), ex.getMessage());
+            }
+        }
+
+        return generatePdf(quotation, rawToken);
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public byte[] generatePublicQuotationPdf(UUID quotationId) {
         Quotation quotation = quotationRepository.findById(quotationId)
                 .orElseThrow(() -> new QuotationNotFoundException(quotationId));
-        return generatePdf(quotation);
+        String rawToken = null;
+        try {
+            rawToken = tokenService.getOrCreateToken(quotation);
+        } catch (Exception ex) {
+            log.warn("Could not generate acceptance token for public quotation PDF {}: {}", quotation.getQuotationNumber(), ex.getMessage());
+        }
+        return generatePdf(quotation, rawToken);
     }
 
-    private byte[] generatePdf(Quotation quotation) {
+    private byte[] generatePdf(Quotation quotation, String rawToken) {
         Company company = quotation.getCompany();
         Customer customer = quotation.getCustomer();
 
@@ -252,7 +276,15 @@ public class QuotationPdfServiceImpl implements QuotationPdfService {
         context.setVariable("formattedTerms", formattedTerms);
 
         // Generate QR Code safely
-        String qrData = "Quotation: " + quotation.getQuotationNumber() + ", Date: " + quotation.getQuotationDate();
+        String qrData;
+        if (org.springframework.util.StringUtils.hasText(rawToken)) {
+            String baseUrl = (frontendUrl != null && !frontendUrl.trim().isEmpty())
+                    ? frontendUrl.trim().replaceAll("/$", "")
+                    : "http://localhost:5173";
+            qrData = baseUrl + "/quotation/accept/" + rawToken;
+        } else {
+            qrData = "Quotation: " + quotation.getQuotationNumber() + ", Date: " + quotation.getQuotationDate();
+        }
         try {
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(qrData, BarcodeFormat.QR_CODE, 150, 150);

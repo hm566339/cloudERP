@@ -71,4 +71,15 @@ public interface WorkflowDefinitionRepository extends JpaRepository<WorkflowDefi
     Integer findMaxVersionByCompanyIdAndWorkflowCode(
             @Param("companyId") UUID companyId,
             @Param("workflowCode") String workflowCode);
+
+    List<WorkflowDefinition> findByTemplateIdAndIsDeletedFalse(UUID templateId);
+
+    List<WorkflowDefinition> findByCompanyIdAndTemplateIdAndIsDeletedFalse(UUID companyId, UUID templateId);
+
+    Optional<WorkflowDefinition> findFirstByCompanyIdAndTemplateIdAndIsDeletedFalseOrderByVersionDesc(UUID companyId, UUID templateId);
+
+    Optional<WorkflowDefinition> findFirstByCompanyIdAndDocumentTypeAndIsDefaultTrueAndIsDeletedFalseOrderByVersionDesc(
+            UUID companyId, String documentType);
+
+    List<WorkflowDefinition> findByOrganizationIdAndIsDeletedFalse(UUID organizationId);
 }

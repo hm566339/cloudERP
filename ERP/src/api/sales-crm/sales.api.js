@@ -124,10 +124,22 @@ export const salesApiSlice = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Sales"],
     }),
+    getPublicQuotationByToken: builder.query({
+      query: (token) => `/api/account/v1/quotations/public/${token}`,
+      providesTags: ["Sales"],
+    }),
     acceptQuotationByToken: builder.mutation({
       query: ({ token }) => ({
         url: `/api/account/v1/quotations/public/accept/${token}`,
         method: "POST",
+      }),
+      invalidatesTags: ["Sales"],
+    }),
+    rejectQuotationByToken: builder.mutation({
+      query: ({ token, reason }) => ({
+        url: `/api/account/v1/quotations/public/reject/${token}`,
+        method: "POST",
+        body: { reason },
       }),
       invalidatesTags: ["Sales"],
     }),
@@ -787,6 +799,8 @@ export const {
   useGenerateInvoiceFromSalesOrderMutation,
   useGenerateInvoiceFromDeliveryChallanMutation,
   useAcceptQuotationByTokenMutation,
+  useGetPublicQuotationByTokenQuery,
+  useRejectQuotationByTokenMutation,
 } = salesApiSlice;
 
 

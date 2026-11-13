@@ -59,7 +59,7 @@ public class SecurityConfig {
                                                                 "/api/account/companies/**",
                                                                 "/api/account/auth/callback",
                                                                 "/api/account/v1/quotations/accept/**",
-                                                                "/api/account/v1/quotations/public/accept/**",
+                                                                "/api/account/v1/quotations/public/**",
                                                                 "/swagger-ui/**",
                                                                 "/swagger-ui.html",
                                                                 "/v3/api-docs/**",

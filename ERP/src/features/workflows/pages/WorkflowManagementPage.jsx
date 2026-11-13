@@ -28,6 +28,7 @@ import {
   workflowAuditApi,
   workflowDefinitionApi,
 } from '../services/workflowService';
+import { organizationWorkflowTemplatesApi } from '../../../api/account/workflowDefinitions';
 import useListQuery from '../../../hooks/useListQuery';
 import SearchInput from '../../../components/common/SearchInput';
 import Pagination from '../../../components/common/Pagination';
@@ -696,6 +697,27 @@ export default function WorkflowManagementPage() {
             <User size={13} className="text-zinc-500 dark:text-[#A0A6B5]" />
             <span>Profile</span>
           </button>
+          {isOwnerOrAdmin && (
+            <button
+              type="button"
+              className="btn-secondary h-8 px-3 text-xs inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-[#2A2F3D] bg-white dark:bg-[#161922] hover:bg-zinc-50 dark:hover:bg-[#1D212C] text-zinc-700 dark:text-[#E6E8EE] font-medium transition-all shadow-sm"
+              title="Synchronize organization default workflows"
+              disabled={isSaving || isDeleting}
+              onClick={async () => {
+                try {
+                  dispatch(addAlert({ type: 'info', message: 'Reconciling organization default workflows...' }));
+                  await organizationWorkflowTemplatesApi.reconcile();
+                  await reloadDefinitions();
+                  dispatch(addAlert({ type: 'success', message: 'Workflows synchronized successfully from organization default template.' }));
+                } catch (err) {
+                  dispatch(addAlert({ type: 'error', message: err?.response?.data?.message || err?.message || 'Sync failed' }));
+                }
+              }}
+            >
+              <GitBranch size={13} className="text-zinc-500 dark:text-[#A0A6B5]" />
+              <span>Sync Org Default</span>
+            </button>
+          )}
           {canCreate && (
             <button
               type="button"
@@ -824,7 +846,19 @@ export default function WorkflowManagementPage() {
                         <span className={`text-xs font-semibold truncate ${isSelected ? 'text-zinc-950 dark:text-[#E6E8EE] font-bold' : 'text-zinc-800 dark:text-[#D1D5DB]'}`}>
                           {item.name}
                         </span>
-                        <StatusBadge active={item.active} />
+                        <div className="flex items-center gap-1">
+                          {item.templateId && !item.isCustomized && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800" title="Provisioned from Organization Default Workflow Template">
+                              Org Default
+                            </span>
+                          )}
+                          {item.templateId && item.isCustomized && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800" title="Customized at company level">
+                              Customized
+                            </span>
+                          )}
+                          <StatusBadge active={item.active} />
+                        </div>
                       </div>
                       <p className="mt-1 line-clamp-2 text-[11px] text-zinc-500 dark:text-[#A0A6B5] leading-relaxed">
                         {item.description || 'No description provided.'}

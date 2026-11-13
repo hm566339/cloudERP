@@ -20,6 +20,10 @@ public class WorkflowDefinitionResponse {
 
     private UUID id;
     private UUID companyId;
+    private UUID organizationId;
+    private UUID templateId;
+    private Integer templateVersion;
+    private Boolean isCustomized;
     private String workflowCode;
     private String workflowName;
     private String moduleName;

@@ -404,6 +404,11 @@ const normalizeWorkflowDefinition = (item = {}, companyId) => {
     active: item.isActive ?? item.active ?? false,
     isDefault: item.isDefault ?? false,
     status: item.isActive ?? item.active ? 'active' : 'inactive',
+    organizationId: item.organizationId,
+    templateId: item.templateId,
+    templateVersion: item.templateVersion,
+    isCustomized: item.isCustomized ?? false,
+    isTemplateManaged: Boolean(item.templateId),
     initiatedBy: item.initiatedBy || item.initiatedByRoleId || item.initiatedByRoleName || extra.initiatedBy || '',
     initiatedByRoleId: item.initiatedByRoleId || extra.initiatedByRoleId || (isUUID(item.initiatedBy) ? item.initiatedBy : undefined),
     initiatedByRoleName: item.initiatedByRoleName || extra.initiatedByRoleName || (!isUUID(item.initiatedBy) ? item.initiatedBy : undefined),
@@ -1178,6 +1183,26 @@ export const workflowExecutionApi = {
     const params = { status: 'PENDING', page, size };
     if (companyId) params.companyId = companyId;
     const response = await apiClient.get('/api/v1/workflow/tasks/my-tasks', { params });
+    return unwrapApiData(response);
+  },
+
+  getOrgDefaultTemplate: async (organizationId) => {
+    const params = organizationId ? { organizationId } : undefined;
+    const response = await apiClient.get('/api/v1/workflow/organization-templates/default', { params });
+    return unwrapApiData(response);
+  },
+
+  propagateOrgTemplate: async (templateId, forceUpdateCustomized = false) => {
+    const response = await apiClient.post(
+      `/api/v1/workflow/organization-templates/${templateId}/propagate?forceUpdateCustomized=${forceUpdateCustomized}`
+    );
+    return unwrapApiData(response);
+  },
+
+  reconcileOrgWorkflows: async ({ organizationId, forceUpdateCustomized = false } = {}) => {
+    const params = { forceUpdateCustomized };
+    if (organizationId) params.organizationId = organizationId;
+    const response = await apiClient.post('/api/sso/organization/workflows/reconcile', null, { params });
     return unwrapApiData(response);
   },
 };

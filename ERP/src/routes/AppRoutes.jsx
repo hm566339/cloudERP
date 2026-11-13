@@ -617,9 +617,11 @@ export default function AppRoutes() {
             <Route path="/set-password/:token" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/quotation/accept/:token" element={<QuotationAcceptancePage />} />
             <Route path="/403" element={<NotAuthorized />} />
           </Route>
+
+          {/* ── STANDALONE FULL-SCREEN: Public Quotation Acceptance & Verification ── */}
+          <Route path="/quotation/accept/:token" element={<QuotationAcceptancePage />} />
 
           {/* ── STANDALONE FULL-SCREEN: New Purchase Requisition (no app shell) ── */}
           <Route

@@ -1,9 +1,14 @@
 package com.erp.account.modules.quotation.service;
 
 import com.erp.account.common.exception.BadRequestException;
+import com.erp.account.modules.company.entity.Company;
+import com.erp.account.modules.customer.entity.Customer;
 import com.erp.account.modules.quotation.dto.response.QuotationAcceptResponse;
+import com.erp.account.modules.quotation.dto.response.QuotationPublicViewResponse;
+import com.erp.account.modules.quotation.dto.response.QuotationRejectResponse;
 import com.erp.account.modules.quotation.entity.Quotation;
 import com.erp.account.modules.quotation.entity.QuotationAcceptanceToken;
+import com.erp.account.modules.quotation.entity.QuotationItem;
 import com.erp.account.modules.quotation.entity.QuotationStatus;
 import com.erp.account.modules.quotation.repository.QuotationAcceptanceTokenRepository;
 import com.erp.account.modules.quotation.repository.QuotationRepository;
@@ -17,12 +22,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,6 +64,8 @@ public class QuotationAcceptanceTokenServiceTest {
     void generateToken_ShouldSaveAndReturnRawToken() {
         Quotation quotation = new Quotation();
         quotation.setId(UUID.randomUUID());
+        quotation.setQuotationNumber("QTN-2026-001");
+        quotation.setValidUntil(LocalDate.now().plusDays(15));
 
         String rawToken = tokenService.generateToken(quotation);
 
@@ -66,6 +77,38 @@ public class QuotationAcceptanceTokenServiceTest {
         assertEquals(quotation.getId(), savedToken.getQuotationId());
         assertNotNull(savedToken.getTokenHash());
         assertNotNull(savedToken.getExpiresAt());
+        assertEquals(LocalDate.now().plusDays(15), savedToken.getExpiresAt().toLocalDate());
+    }
+
+    @Test
+    void generateToken_ExpiredQuotation_ShouldThrowException() {
+        Quotation quotation = new Quotation();
+        quotation.setId(UUID.randomUUID());
+        quotation.setValidUntil(LocalDate.now().minusDays(1));
+
+        assertThrows(BadRequestException.class, () -> tokenService.generateToken(quotation));
+    }
+
+    @Test
+    void getOrCreateToken_ShouldReuseCachedToken() {
+        Quotation quotation = new Quotation();
+        quotation.setId(UUID.randomUUID());
+        quotation.setQuotationNumber("QTN-2026-002");
+        quotation.setValidUntil(LocalDate.now().plusDays(5));
+
+        String token1 = tokenService.generateToken(quotation);
+
+        QuotationAcceptanceToken activeToken = QuotationAcceptanceToken.builder()
+                .quotationId(quotation.getId())
+                .expiresAt(LocalDateTime.now().plusDays(5))
+                .build();
+        when(tokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(activeToken));
+
+        String token2 = tokenService.getOrCreateToken(quotation);
+
+        assertEquals(token1, token2);
+        // Only one save call from the first generateToken
+        verify(tokenRepository, times(1)).save(any(QuotationAcceptanceToken.class));
     }
 
     @Test
@@ -82,7 +125,7 @@ public class QuotationAcceptanceTokenServiceTest {
 
         String rawToken = "dummyRawToken";
 
-        when(tokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(token));
+        when(tokenRepository.findByTokenHashWithLock(anyString())).thenReturn(Optional.of(token));
 
         QuotationAcceptResponse response = tokenService.acceptQuotation(rawToken);
 
@@ -101,19 +144,19 @@ public class QuotationAcceptanceTokenServiceTest {
         QuotationAcceptanceToken token = new QuotationAcceptanceToken();
         token.setExpiresAt(LocalDateTime.now().minusDays(1));
 
-        when(tokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(token));
+        when(tokenRepository.findByTokenHashWithLock(anyString())).thenReturn(Optional.of(token));
 
         assertThrows(BadRequestException.class, () -> tokenService.acceptQuotation("token"));
     }
-    
+
     @Test
-    void acceptQuotation_AlreadyUsedToken_ShouldReturnIdempotentSuccess() {
+    void acceptQuotation_AlreadyUsedToken_ShouldReturnIdempotentResponse() {
         QuotationAcceptanceToken token = new QuotationAcceptanceToken();
         token.setExpiresAt(LocalDateTime.now().plusDays(1));
         token.setUsedAt(LocalDateTime.now().minusMinutes(5));
         token.setQuotationId(UUID.randomUUID());
 
-        when(tokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(token));
+        when(tokenRepository.findByTokenHashWithLock(anyString())).thenReturn(Optional.of(token));
 
         QuotationAcceptResponse response = tokenService.acceptQuotation("token");
         assertFalse(response.isSuccess());
@@ -121,63 +164,108 @@ public class QuotationAcceptanceTokenServiceTest {
     }
 
     @Test
-    void acceptQuotation_AutoCreateOrderEnabled_ShouldCreateSalesOrder() {
-        UUID companyId = UUID.randomUUID();
-        UUID quotationId = UUID.randomUUID();
-
+    void rejectQuotation_ValidToken_ShouldRejectQuotation() {
         Quotation quotation = new Quotation();
-        quotation.setId(quotationId);
-        quotation.setCompanyId(companyId);
-        quotation.setQuotationNumber("QT-2026-001");
+        quotation.setId(UUID.randomUUID());
         quotation.setStatus(QuotationStatus.SENT);
 
         QuotationAcceptanceToken token = new QuotationAcceptanceToken();
         token.setId(UUID.randomUUID());
-        token.setQuotationId(quotationId);
+        token.setQuotationId(quotation.getId());
         token.setQuotation(quotation);
         token.setExpiresAt(LocalDateTime.now().plusDays(1));
 
-        when(tokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(token));
-        when(salesOrderRepository.existsBySourceQuotationIdAndCompanyIdAndIsDeletedFalse(quotationId, companyId))
-                .thenReturn(false);
+        when(tokenRepository.findByTokenHashWithLock(anyString())).thenReturn(Optional.of(token));
 
-        com.erp.account.integration.workflow.dto.WorkflowDefinitionDto defDto = com.erp.account.integration.workflow.dto.WorkflowDefinitionDto.builder()
-                .autoCreateOrder(true)
-                .build();
-        when(workflowServiceClient.getActiveDefinition(companyId, "SALES", "SALES"))
-                .thenReturn(com.erp.account.common.dto.response.ApiResponse.success(defDto));
-
-        QuotationAcceptResponse response = tokenService.acceptQuotation("valid-token");
+        QuotationRejectResponse response = tokenService.rejectQuotation("dummyToken", "Price is higher than budget");
 
         assertTrue(response.isSuccess());
-        verify(salesOrderService, times(1)).createDirectFromQuotation(companyId, quotationId);
+        assertEquals(QuotationStatus.REJECTED, quotation.getStatus());
+        assertTrue(quotation.getNotes().contains("Price is higher than budget"));
+        assertNotNull(token.getUsedAt());
+
+        verify(quotationRepository).save(quotation);
+        verify(tokenRepository).save(token);
     }
 
     @Test
-    void acceptQuotation_AutoCreateOrderEnabled_DuplicatePrevented() {
-        UUID companyId = UUID.randomUUID();
-        UUID quotationId = UUID.randomUUID();
-
+    void rejectQuotation_AlreadyAccepted_ShouldThrowBadRequest() {
         Quotation quotation = new Quotation();
-        quotation.setId(quotationId);
-        quotation.setCompanyId(companyId);
-        quotation.setQuotationNumber("QT-2026-001");
-        quotation.setStatus(QuotationStatus.SENT);
+        quotation.setId(UUID.randomUUID());
+        quotation.setStatus(QuotationStatus.ACCEPTED);
 
         QuotationAcceptanceToken token = new QuotationAcceptanceToken();
         token.setId(UUID.randomUUID());
-        token.setQuotationId(quotationId);
+        token.setQuotationId(quotation.getId());
         token.setQuotation(quotation);
         token.setExpiresAt(LocalDateTime.now().plusDays(1));
 
+        when(tokenRepository.findByTokenHashWithLock(anyString())).thenReturn(Optional.of(token));
+
+        assertThrows(BadRequestException.class, () -> tokenService.rejectQuotation("dummyToken", "Declining"));
+    }
+
+    @Test
+    void getPublicQuotation_ValidToken_ShouldReturnSanitizedDto() {
+        UUID quotationId = UUID.randomUUID();
+        Company company = Company.builder()
+                .legalName("Acme Enterprise")
+                .gstin("27AABCU9603R1ZM")
+                .build();
+        Customer customer = Customer.builder()
+                .customerName("Global Tech")
+                .gstin("27AAACG0564C1Z9")
+                .build();
+
+        QuotationItem item = QuotationItem.builder()
+                .itemName("Consulting Service")
+                .quantity(new BigDecimal("10.00"))
+                .unitPrice(new BigDecimal("5000.00"))
+                .taxAmount(new BigDecimal("9000.00"))
+                .totalAmount(new BigDecimal("59000.00"))
+                .build();
+
+        Quotation quotation = Quotation.builder()
+                .quotationNumber("QTN-2026-999")
+                .quotationDate(LocalDate.now())
+                .validUntil(LocalDate.now().plusDays(10))
+                .status(QuotationStatus.SENT)
+                .quotationCurrency("INR")
+                .company(company)
+                .customer(customer)
+                .quotationItems(Set.of(item))
+                .subtotal(new BigDecimal("50000.00"))
+                .taxAmount(new BigDecimal("9000.00"))
+                .totalAmount(new BigDecimal("59000.00"))
+                .build();
+        quotation.setId(quotationId);
+
+        QuotationAcceptanceToken token = QuotationAcceptanceToken.builder()
+                .id(UUID.randomUUID())
+                .quotationId(quotationId)
+                .quotation(quotation)
+                .expiresAt(LocalDateTime.now().plusDays(10))
+                .build();
+
         when(tokenRepository.findByTokenHash(anyString())).thenReturn(Optional.of(token));
-        // Duplicate exists:
-        when(salesOrderRepository.existsBySourceQuotationIdAndCompanyIdAndIsDeletedFalse(quotationId, companyId))
-                .thenReturn(true);
 
-        QuotationAcceptResponse response = tokenService.acceptQuotation("valid-token");
+        QuotationPublicViewResponse response = tokenService.getPublicQuotation("dummyToken");
 
-        assertTrue(response.isSuccess());
-        verify(salesOrderService, never()).createDirectFromQuotation(any(), any());
+        assertNotNull(response);
+        assertEquals("QTN-2026-999", response.getQuotationNumber());
+        assertEquals("Acme Enterprise", response.getCompanyName());
+        assertEquals("Global Tech", response.getCustomerName());
+        assertEquals(1, response.getItems().size());
+        assertEquals("Consulting Service", response.getItems().get(0).getItemName());
+        assertEquals(new BigDecimal("59000.00"), response.getTotalAmount());
+        assertFalse(response.isAccepted());
+        assertFalse(response.isExpired());
+    }
+
+    @Test
+    void revokeTokensForQuotation_ShouldCallRepository() {
+        UUID quotationId = UUID.randomUUID();
+        tokenService.revokeTokensForQuotation(quotationId);
+        verify(tokenRepository).revokeActiveTokensByQuotationId(eq(quotationId), any(LocalDateTime.class));
     }
 }

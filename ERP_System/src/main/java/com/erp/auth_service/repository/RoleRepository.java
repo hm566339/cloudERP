@@ -100,4 +100,6 @@ public interface RoleRepository extends JpaRepository<Role, UUID> {
 
         List<Role> findByCompany_Organization_Id(UUID organizationId);
 
+        List<Role> findByCompany_Id(UUID companyId);
+
 }

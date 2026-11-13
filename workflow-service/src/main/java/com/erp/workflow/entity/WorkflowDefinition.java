@@ -32,6 +32,19 @@ public class WorkflowDefinition extends BaseEntity {
     @Column(name = "company_id", nullable = false)
     private UUID companyId;
 
+    @Column(name = "organization_id")
+    private UUID organizationId;
+
+    @Column(name = "template_id")
+    private UUID templateId;
+
+    @Column(name = "template_version")
+    private Integer templateVersion;
+
+    @Builder.Default
+    @Column(name = "is_customized", nullable = false)
+    private Boolean isCustomized = false;
+
     /** Unique code for this workflow type, e.g. FISCAL_YEAR_APPROVAL */
     @Column(name = "workflow_code", nullable = false, length = 100)
     private String workflowCode;

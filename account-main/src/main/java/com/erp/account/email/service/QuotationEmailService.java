@@ -13,4 +13,12 @@ public interface QuotationEmailService {
      */
     void sendQuotationEmail(Quotation quotation, byte[] pdfBytes);
 
+    /**
+     * Prepares and sends a quotation email with an explicit raw acceptance token shared with the PDF.
+     *
+     * @param quotation The quotation entity
+     * @param pdfBytes  The generated PDF file bytes to attach
+     * @param rawToken  The raw token to embed in the email acceptance URL
+     */
+    void sendQuotationEmail(Quotation quotation, byte[] pdfBytes, String rawToken);
 }
