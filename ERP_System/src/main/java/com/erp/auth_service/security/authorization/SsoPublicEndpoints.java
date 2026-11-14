@@ -52,6 +52,8 @@ public final class SsoPublicEndpoints {
             "/api/sso/session/sso/logout",
 
             "/api/sso/module-routes/internal/routes",
+            "/api/sso/organization/workflows/internal/**",
+            "/api/organization/workflows/internal/**",
 
             // Swagger
             "/swagger-ui/**",

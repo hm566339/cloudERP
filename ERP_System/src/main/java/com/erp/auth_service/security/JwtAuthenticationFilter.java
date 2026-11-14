@@ -113,6 +113,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.equals("/api/sso/session/sso/refresh")
                 || path.equals("/api/sso/session/sso/logout")
                 || path.equals("/api/sso/module-routes/internal/routes")
+                || path.startsWith("/api/sso/organization/workflows/internal/")
+                || path.startsWith("/api/organization/workflows/internal/")
                 || path.startsWith("/swagger-ui")
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/api-docs")
