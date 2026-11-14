@@ -64,15 +64,15 @@ describe('Settings Pages Content Width & Layout Alignment with Account Dashboard
   });
 
   describe('3. Organization Settings Page Expansion', () => {
-    it('OrganizationSettingsPage uses w-full and eliminates max-w-6xl mx-auto', () => {
+    it('OrganizationSettingsPage uses w-full and eliminates max-w-6xl, max-w-7xl, and mx-auto', () => {
       assert.ok(
         orgSettingsCode.includes('w-full'),
         'OrganizationSettingsPage must use w-full'
       );
       assert.doesNotMatch(
         orgSettingsCode,
-        /max-w-6xl/,
-        'OrganizationSettingsPage must not contain max-w-6xl'
+        /max-w-[567]xl/,
+        'OrganizationSettingsPage must not contain max-w-5xl, max-w-6xl, or max-w-7xl'
       );
       assert.doesNotMatch(
         orgSettingsCode,
@@ -82,6 +82,11 @@ describe('Settings Pages Content Width & Layout Alignment with Account Dashboard
       assert.ok(
         orgSettingsCode.includes('p-4 sm:p-6'),
         'OrganizationSettingsPage must use standard p-4 sm:p-6 padding'
+      );
+      assert.doesNotMatch(
+        orgSettingsCode,
+        /bg-\[#E8E9DF\]/,
+        'OrganizationSettingsPage must use dynamic theme tokens instead of hardcoded Sage Green'
       );
     });
   });

@@ -361,19 +361,19 @@ export default function OrganizationSettingsPage() {
   }), [orgId, authOrg, name, orgCode, contactEmail, status, accessMode]);
 
   return (
-    <div className="w-full flex-1 flex flex-col min-h-screen bg-[#E8E9DF] dark:bg-[#0F1117] text-zinc-900 dark:text-[#E6E8EE]">
+    <div className="w-full flex-1 flex flex-col min-h-screen bg-[var(--color-bg-base)] dark:bg-[#0F1117] text-[var(--color-text-primary)] dark:text-[#E6E8EE]">
       {/* Global Breadcrumbs & Quick Bar */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#F7F7F0]/60 dark:bg-[#161922]/60 border-b border-[#D5D8CA] dark:border-[#2A2F3D] text-xs shrink-0">
-        <div className="flex items-center gap-1.5 text-[#485942] dark:text-[#A0A6B5] flex-wrap">
-          <Link to="/owner/dashboard" className="hover:text-[#2E3D28] dark:hover:text-[#E6E8EE] font-medium">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-[var(--color-bg-card)]/80 dark:bg-[#161922]/60 border-b border-[var(--color-border)] dark:border-[#2A2F3D] text-xs shrink-0 w-full">
+        <div className="flex items-center gap-1.5 text-[var(--color-text-secondary)] dark:text-[#A0A6B5] flex-wrap">
+          <Link to="/owner/dashboard" className="hover:text-[var(--color-primary)] dark:hover:text-[#E6E8EE] font-medium">
             Owner Dashboard
           </Link>
-          <ChevronRight size={13} className="text-[#8B9382] dark:text-[#6B7184] shrink-0" />
-          <Link to={basePath} className="hover:text-[#2E3D28] dark:hover:text-[#E6E8EE] font-medium">
+          <ChevronRight size={13} className="text-zinc-400 dark:text-[#6B7184] shrink-0" />
+          <Link to={basePath} className="hover:text-[var(--color-primary)] dark:hover:text-[#E6E8EE] font-medium">
             Organization Management
           </Link>
-          <ChevronRight size={13} className="text-[#8B9382] dark:text-[#6B7184] shrink-0" />
-          <span className="text-[#2E3D28] dark:text-[#E6E8EE] font-bold">
+          <ChevronRight size={13} className="text-zinc-400 dark:text-[#6B7184] shrink-0" />
+          <span className="text-[var(--color-text-primary)] dark:text-[#E6E8EE] font-bold">
             {activeSectionMeta.label}
           </span>
         </div>
@@ -383,7 +383,7 @@ export default function OrganizationSettingsPage() {
             type="button"
             onClick={loadSettingsData}
             disabled={isLoading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#2E3D28] dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-[#D5D8CA] dark:border-[#2A2F3D] hover:bg-[#EDEEE4] dark:hover:bg-[#222736] rounded-lg transition-all shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--color-text-primary)] dark:text-[#E6E8EE] bg-white dark:bg-[#1D212C] border border-[var(--color-border)] dark:border-[#2A2F3D] hover:bg-[var(--color-bg-hover)] dark:hover:bg-[#222736] rounded-lg transition-all shadow-2xs"
           >
             <RefreshCw size={12} className={isLoading ? 'animate-spin' : ''} />
             <span>Refresh</span>
@@ -392,8 +392,8 @@ export default function OrganizationSettingsPage() {
       </div>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 w-full overflow-y-auto">
+        <div className="flex-1 p-4 sm:p-6 w-full min-w-0">
           {loadError && (
             <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between">
               <span>Failed to load fresh organization data: {loadError}</span>

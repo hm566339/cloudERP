@@ -105,7 +105,7 @@ export default function OrgLocalizationView({
         </PageHeader>
 
             {/* Main Content Area */}
-            <div className="flex-1 p-6 overflow-y-auto space-y-6 max-w-5xl">
+            <div className="flex-1 p-6 overflow-y-auto space-y-6 w-full">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Card 1: Regional & Language */}
                 <div className="bg-white dark:bg-[#161922] p-6 rounded-2xl border border-zinc-200 dark:border-[#2A2F3D] shadow-xs space-y-4">

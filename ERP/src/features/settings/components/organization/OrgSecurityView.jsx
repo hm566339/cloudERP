@@ -144,7 +144,7 @@ export default function OrgSecurityView({
         </PageHeader>
 
                   {/* Main Content Area */}
-                  <div className="flex-1 p-6 overflow-y-auto space-y-6 max-w-5xl">
+                  <div className="flex-1 p-6 overflow-y-auto space-y-6 w-full">
                     <form onSubmit={handleSubmit} className="space-y-6">
                       {/* Policy 1: Two-Factor Authentication Card */}
                       <div className="bg-white dark:bg-[#161922] p-6 rounded-2xl border border-zinc-200 dark:border-[#2A2F3D] shadow-xs space-y-4">

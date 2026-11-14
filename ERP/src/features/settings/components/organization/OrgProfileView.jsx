@@ -120,7 +120,7 @@ export default function OrgProfileView({
 
                 {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-y-auto">
-                <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl">
+        <form onSubmit={handleSubmit} className="space-y-6 w-full">
                   {/* Identity & Legal Entity Card */}
                   <div className="bg-white dark:bg-[#161922] p-6 rounded-2xl border border-zinc-200 dark:border-[#2A2F3D] shadow-xs space-y-4">
                     <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">

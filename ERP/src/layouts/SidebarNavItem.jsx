@@ -74,9 +74,10 @@ function SidebarNavItem({ item, location, level = 0, onLinkClick }) {
         type="button"
         onClick={() => toggleMenu(item.id)}
         className={`sidebar-item ${level > 0 ? 'sidebar-child-item' : ''} ${isParentActive ? (level === 0 ? 'text-[var(--color-primary)] font-bold bg-[var(--color-sidebar-hover-bg)]/70 border border-[var(--color-border)] shadow-2xs' : 'text-[var(--color-text-primary)] font-medium') : (level > 0 ? 'sidebar-child-inactive' : 'sidebar-item-inactive')}`}
+        title={item.label}
       >
         {Icon && <Icon size={level > 0 ? 16 : 18} className={`shrink-0 transition-colors ${isParentActive ? 'text-zinc-900 dark:text-[#E6E8EE]' : 'text-zinc-400 dark:text-[#6B7184]'}`} />}
-        <span className="flex-1 text-left truncate">{item.label}</span>
+        <span className={`flex-1 text-left truncate ${level === 0 ? 'text-xs font-semibold tracking-tight' : 'text-xs'}`} title={item.label}>{item.label}</span>
         <ChevronDown
           size={14}
           className={`shrink-0 text-zinc-400 dark:text-[#6B7184] transition-transform duration-standard ease-move ${open ? '' : '-rotate-90'}`}
