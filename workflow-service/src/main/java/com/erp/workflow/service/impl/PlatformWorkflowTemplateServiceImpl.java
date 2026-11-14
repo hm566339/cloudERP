@@ -416,8 +416,6 @@ public class PlatformWorkflowTemplateServiceImpl implements PlatformWorkflowTemp
                         propagateToCompanies(orgId, newOt, mode == PlatformRolloutMode.FORCE_ALL, result);
                     }
                 } else {
-                    OrganizationWorkflowTemplate ot = existingOtOpt.get();
-
                     if (Boolean.TRUE.equals(ot.getIsCustomized()) && mode != PlatformRolloutMode.FORCE_ALL) {
                         // Preserve customization in NON_CUSTOMIZED mode
                         result.setOrganizationsSkippedCustomized(result.getOrganizationsSkippedCustomized() + 1);
